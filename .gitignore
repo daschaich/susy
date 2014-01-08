@@ -1,0 +1,16 @@
+*.2o
+*.a
+*.o
+*.swo
+*.swp
+.lastmake*
+gmon.out
+localmake
+remez-milc
+susy_bilin
+susy_corr
+susy_eig
+susy_hmc
+susy_phase
+susy_spill
+tests
