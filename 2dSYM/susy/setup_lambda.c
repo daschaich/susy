@@ -115,7 +115,7 @@ void setup_lambda() {
 #ifdef DEBUG_CHECK
   int k, l, a;
   complex trace, tt;
-  node0_printf("Computing generators for SU(N)\n");
+  node0_printf("Computing generators for U(N)\n");
 #endif
 
   my_gen();

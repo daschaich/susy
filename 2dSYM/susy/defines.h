@@ -38,7 +38,7 @@
 #define DET                 // Determinant term in the action
 //#define DEBUG_CHECK         // Print lambdas, offsets, etc.
 
-#define NUMLINK 2           // Number of A2* links per site, and offsets
+#define NUMLINK 2           // Number of gauge links per site, and offsets
 #define NUMGEN (NCOL*NCOL)  // Number of U(N) generators
 // -----------------------------------------------------------------
 

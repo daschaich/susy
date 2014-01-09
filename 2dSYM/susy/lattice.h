@@ -123,7 +123,9 @@ EXTERN double_prn node_prn;
 // Stuff for derivative and link terms
 EXTERN int offset[NUMLINK][NDIMS];    // Path along each link
 EXTERN int label[NUMLINK];
-EXTERN int goffset[NUMLINK];          // For gathers
+
+// Stuff for gathers -- both forwards and backwards
+EXTERN int goffset[2 * NUMLINK];
 EXTERN su3_vector *tsite[NUMLINK];    // For DbminusLtoS
 
 // Persistent site, link and plaq fermions for matrix--vector operation
@@ -152,6 +154,11 @@ EXTERN double *eigVal;
 EXTERN Twist_Fermion **eigVec;
 EXTERN Real eig_tol;          // Tolerance for the eigenvalue computation
 EXTERN int maxIter;           // Maximum iterations
+#endif
+
+#ifdef PHASE
+// Pfaffian phase stuff
+EXTERN Twist_Fermion *src, *res;    // For fieldwise matvec
 #endif
 
 // Up to 20 concurrent timers for timing, not currently being used

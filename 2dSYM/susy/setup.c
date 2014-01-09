@@ -225,5 +225,10 @@ void make_fields() {
   FIELD_ALLOC_VEC(link_dest2, su3_vector, NUMLINK);
   FIELD_ALLOC_MAT(plaq_src, su3_vector, NUMLINK, NUMLINK);
   FIELD_ALLOC_MAT(plaq_dest, su3_vector, NUMLINK, NUMLINK);
+
+#ifdef PHASE
+  FIELD_ALLOC(src, Twist_Fermion);
+  FIELD_ALLOC(res, Twist_Fermion);
+#endif
 }
 // -----------------------------------------------------------------
