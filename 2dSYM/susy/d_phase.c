@@ -187,7 +187,7 @@ void d_phase() {
     }
   }
 
-//#ifdef DEBUG_CHECK
+#ifdef DEBUG_CHECK
   // Checks on Q from hep-lat/0305002:
   // <e_j | D | e_i> = 0 except
   // <e_{i + 1} | D | e_i> = 1 for i even
@@ -195,22 +195,22 @@ void d_phase() {
   complex one = cmplx(1.0, 0.0);
   for (i = 0; i < volume * Ndat; i++) {   // ALL columns
     matvec(Q[i], MonC);
-    for (j = 0; j < sites_on_node * Ndat; j++) {
+    for (j = 0; j < volume * Ndat; j++) { // ALL columns
       temp = dot(Q[j], MonC);
-      if (shift + j == i + 1 && i % 2 == 0) {
+      if (j == i + 1 && i % 2 == 0) {
         CDIF(temp, one);    // Should vanish
       } // Braces suppress compiler warning
-      else if (shift + j == i - 1 && i % 2 == 1)
+      else if (j == i - 1 && i % 2 == 1)
         CSUM(temp, one);    // Should vanish
 
       if (temp.real > PFA_TOL || temp.imag > PFA_TOL) {
         temp = dot(Q[j], MonC);
-        printf("PROBLEM: <%d | D | %d> = (%.4g, %.4g)\n",
-               j, i, temp.real, temp.imag);
+        printf("d_phase: <%d | D | %d> = (%.4g, %.4g) on node %d\n",
+               j, i, temp.real, temp.imag, this_node);
       }
     }
   }
-//#endif
+#endif
   free(MonC);   // Done with this
 
   // Q is triangular by construction

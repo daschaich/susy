@@ -658,7 +658,7 @@ static void sort_site_list(
 {
   register int j,k,in1,in2,flag;
   register site *s;
-  int x,y,z,t;
+  int x, t;
   int *key;
 
   if (n == 0)
@@ -699,7 +699,7 @@ static void sort_site_list(
 
 // Make comlink for send or receive
 static comlink* make_send_receive_list(
-  void (*func)(int, int, int, int, int *, int, int *, int *, int *, int *),
+  void (*func)(int, int, int*, int, int*, int*),
             /* function which defines sites to gather from */
   int *args,    /* list of arguments, to be passed to function */
   int want_even_odd,  /* ALLOW_EVEN_ODD or NO_EVEN_ODD */
@@ -713,7 +713,7 @@ static comlink* make_send_receive_list(
   int *sbuf[NUM_SUBL];  /* to be malloc'd */
   int *tbuf;          /* to be malloc'd */
   comlink **combuf; /* to be malloc'd, remember where comlinks are */
-  comlink *compt,**comptpt;
+  comlink *compt, **comptpt;
   comlink *firstpt;
 
   /* make temporary buffers of numnodes() integers to count numbers of
@@ -725,13 +725,14 @@ static comlink* make_send_receive_list(
       sbuf[subl][i] = 0;
   }
   tbuf = malloc(numnodes() * sizeof(*tbuf));
-  for (i = 0; i < numnodes(); i++) tbuf[i] = 0;
-  combuf = (comlink **)malloc(numnodes()*sizeof(comlink *));
+  for (i = 0; i < numnodes(); i++)
+    tbuf[i] = 0;
+  combuf = malloc(numnodes() * sizeof(comlink *));
 
   /* scan sites in lattice */
   FORALLSITES(i, s) {
     /* find coordinates, node, and sublattice of receiving site */
-    if (send_recv==RECEIVE) {
+    if (send_recv == RECEIVE) {
       func(s->x, s->t, args, forw_back, &x, &t);
       subl = parity_function(s->x, s->t);
     }
@@ -792,14 +793,14 @@ static comlink* make_send_receive_list(
       subl = parity_function(s->x, s->t);
     }
     else {  /* SEND */
-      func(s->x, s->y, s->z, s->t, args, -forw_back, &x,&y,&z,&t);
+      func(s->x, s->t, args, -forw_back, &x, &t);
       subl = parity_function(x, t);
     }
     j = node_number(x, t);
 
     /* if neighbor is offnode, add to list in appropriate comlink */
     if (j != mynode()) {
-      if (want_even_odd==NO_EVEN_ODD) subl = 0;
+      if (want_even_odd == NO_EVEN_ODD) subl = 0;
       combuf[j]->sitelist[subl][sbuf[subl][j]] = i;
       ++sbuf[subl][j];
     }
@@ -887,7 +888,7 @@ int make_gather(
 {
   int i, j, subl;
   site *s;
-  int dir, x, y, z, t;
+  int dir, x, t;
   int *send_subl;       /* sublist of sender for a given receiver */
 
   // We will have one or two more gathers
@@ -960,7 +961,7 @@ int make_gather(
 
       if (parity_conserve == SAME_PARITY && s_subl != r_subl) {
         printf("Gather mapping does not obey claimed SAME_PARITY\n");
-        printf("It mapped %d %d with %d to %d %d %d %d with %d\n",
+        printf("It mapped %d %d with %d to %d %d with %d\n",
                s->x, s->t, r_subl, x, t, s_subl);
         terminate(1);
       }
@@ -1043,7 +1044,7 @@ int make_gather(
   /* scan sites in lattice */
   FORALLSITES(i, s) {
     // Find coordinates of neighbor who sends us data
-    func(s->x, s->y, s->z, s->t, args, BACKWARDS, &x, &t);
+    func(s->x, s->t, args, BACKWARDS, &x, &t);
     j = node_number(x, t); /* node for neighbor site */
 
     /* if neighbor is on node, set up pointer */
@@ -1053,14 +1054,14 @@ int make_gather(
       gather_array[dir].neighbor[i] = NOWHERE;
   }
 
-  if (parity_conserve==SAME_PARITY || want_even_odd==NO_EVEN_ODD) {
+  if (parity_conserve == SAME_PARITY || want_even_odd == NO_EVEN_ODD) {
     /* Use same comlinks as inverse gather, switching send and receive.
        Nearest neighbor gathers are an example of this case. */
     gather_array[dir].neighborlist = gather_array[dir-1].neighborlist_send;
     gather_array[dir].neighborlist_send = gather_array[dir-1].neighborlist;
     gather_array[dir].n_recv_msgs = gather_array[dir-1].n_send_msgs;
     gather_array[dir].n_send_msgs = gather_array[dir-1].n_recv_msgs;
-  } else if (parity_conserve==SWITCH_PARITY) {
+  } else if (parity_conserve == SWITCH_PARITY) {
     /* make new comlinks, but use same lists as inverse gather, switching
        send and receive, switching even and odd. */
     gather_array[dir].neighborlist =
@@ -1780,9 +1781,10 @@ msg_tag* start_general_strided_gather(
   tsize = 2 * sizeof(int) + size;   // Align pointer to double word
   tdest = dest;
   /* find parity of sites that may be sent */
-  if ((displacement[XUP]+displacement[YUP]+displacement[ZUP]+
-       displacement[TUP])%2 == 0) disp_parity = EVEN;
-  else disp_parity = ODD;
+  if ((displacement[XUP] + displacement[TUP]) % 2 == 0)
+    disp_parity = EVEN;
+  else
+    disp_parity = ODD;
   switch(parity) {
     case EVEN:
       if (disp_parity == EVEN)
@@ -1841,17 +1843,17 @@ msg_tag* start_general_strided_gather(
   /* scan sites of parity we are sending, make list of nodes to which
      we must send messages and the number of messages to each. */
   FORSOMEPARITY(i, s, send_parity) {
-    if (displacement[XUP]!=0) tx = (s->x - displacement[XUP] + nx)%nx;
-    else                     tx = s->x;
-    if (displacement[YUP]!=0) ty = (s->y - displacement[YUP] + ny)%ny;
-    else                     ty = s->y;
-    if (displacement[ZUP]!=0) tz = (s->z - displacement[ZUP] + nz)%nz;
-    else                     tz = s->z;
-    if (displacement[TUP]!=0) tt = (s->t - displacement[TUP] + nt)%nt;
-    else                     tt = s->t;
+    if (displacement[XUP] != 0)
+      tx = (s->x - displacement[XUP] + nx) % nx;
+    else
+      tx = s->x;
+    if (displacement[TUP] != 0)
+      tt = (s->t - displacement[TUP] + nt) % nt;
+    else
+      tt = s->t;
     othernode = node_number(tx, tt);
     if (othernode != this_node) {
-      for (j=0;j<n_send_msgs;j++) if (to_nodes[j].node==othernode) break;
+      for (j = 0; j < n_send_msgs; j++) if (to_nodes[j].node == othernode) break;
       if (j < n_send_msgs) {
   to_nodes[j].count++;
       }
@@ -1863,8 +1865,7 @@ msg_tag* start_general_strided_gather(
     n_send_msgs++;
   }
   else {
-    to_nodes = (struct msg_tmp *)
-      realloc(to_nodes, (n_send_msgs+1)*sizeof(struct msg_tmp));
+    to_nodes = realloc(to_nodes, (n_send_msgs + 1) * sizeof(*to_nodes));
     to_nodes[j].node = othernode;
     to_nodes[j].count = 1;
     n_send_msgs++;
@@ -1933,18 +1934,17 @@ msg_tag* start_general_strided_gather(
   }
 
   /* reset to_node counters */
-  for (i = 0; i < n_send_msgs; i++) to_nodes[i].count = 0;
+  for (i = 0; i < n_send_msgs; i++)
+    to_nodes[i].count = 0;
   /* gather data into the buffers. Each entry in the buffers consists
      of the index of the site to which the data is sent, followed by
      the actual data */
   FORSOMEPARITY(i, s, send_parity) {
-    tx = (s->x - displacement[XUP] + nx)%nx;
-    ty = (s->y - displacement[YUP] + ny)%ny;
-    tz = (s->z - displacement[ZUP] + nz)%nz;
-    tt = (s->t - displacement[TUP] + nt)%nt;
+    tx = (s->x - displacement[XUP] + nx) % nx;
+    tt = (s->t - displacement[TUP] + nt) % nt;
     othernode = node_number(tx, tt);
     if (othernode != this_node) {
-      for (j=0; j<n_send_msgs; j++) if (to_nodes[j].node==othernode) break;
+      for (j = 0; j < n_send_msgs; j++) if (to_nodes[j].node == othernode) break;
       tpt = msend[j].msg_buf + to_nodes[j].count*tsize;
       *(int *)tpt = node_index(tx, tt);
       /* index of site on other node */
@@ -1957,12 +1957,13 @@ msg_tag* start_general_strided_gather(
   for (i = 0; i < n_send_msgs; i++) {
     nsites = to_nodes[i].count;
     MPI_Isend(msend[i].msg_buf, nsites*tsize, MPI_BYTE,
-         to_nodes[i].node, GENERAL_GATHER_ID,
-         MPI_COMM_WORLD, &msend[i].msg_req);
+              to_nodes[i].node, GENERAL_GATHER_ID,
+              MPI_COMM_WORLD, &msend[i].msg_req);
   }
 
   /* free temporary arrays */
-  if (n_send_msgs>0) free(to_nodes);
+  if (n_send_msgs > 0)
+    free(to_nodes);
   /* mark gather in progress and return */
   g_gather_flag = 1;
 
