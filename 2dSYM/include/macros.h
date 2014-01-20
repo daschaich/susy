@@ -1,33 +1,36 @@
+// -----------------------------------------------------------------
+// Macros common to all applications
 #ifndef _MACROS_H
 #define _MACROS_H
 
 #include <defines.h>
+// -----------------------------------------------------------------
 
-/* Macros common to all applications */
 
-/* ---------------------------------------------------------- */
-/* Constants */
-#define PI 3.14159265358979323846
 
-/* ---------------------------------------------------------- */
-/* Conventions for defining checkerboard parity of inversions */
+// -----------------------------------------------------------------
+// Constants
+#define    PI 3.14159265358979323846
+#define TWOPI 6.283185307179586
+
+// Conventions for defining checkerboard parity
 #define EVEN 0x02
 #define ODD 0x01
 #define EVENANDODD 0x03
 
-/* ---------------------------------------------------------- */
-/* Storage constants */
-#define MAXFILENAME 256   /* ASCII string length for all file names */
+// ASCII string length for all file names
+#define MAXFILENAME 256
 
-/* ---------------------------------------------------------- */
-/* Names of gauge fixing options */
-
+// Gauge fixing options
 #define NO_GAUGE_FIX 30
 #define COULOMB_GAUGE_FIX 31
+// -----------------------------------------------------------------
 
-/* ---------------------------------------------------------- */
-/* "field offset" and "field pointer" */
-/* used when fields are arguments to subroutines */
+
+
+// -----------------------------------------------------------------
+// field offset and field pointer
+// Used when fields in the site are arguments to subroutines
 /* Usage:  fo = F_OFFSET( field ), where "field" is the name of a field
   in lattice.
      address = F_PT( &site , fo ), where &site is the address of the
@@ -38,10 +41,12 @@ typedef int field_offset;
 #define F_OFFSET(a) \
   ((field_offset)(((char *)&(lattice[0]. a ))-((char *)&(lattice[0])) ))
 #define F_PT( site , fo )  ((char *)( site ) + (fo))
+// -----------------------------------------------------------------
 
-/* ---------------------------------------------------------- */
-/* Macros for looping over directions */
 
+
+// -----------------------------------------------------------------
+// Macros for looping over directions
 #define FORALLUPDIR(dir) for(dir=XUP; dir<=TUP; dir++)
 
 #define FORALLUPDIRBUT(direction,dir) \
@@ -49,38 +54,38 @@ typedef int field_offset;
 
 // Switches EVEN and ODD, nulls EVENANDODD
 #define OPP_PAR(parity) (0x03 ^ parity)
+// -----------------------------------------------------------------
 
-/* ---------------------------------------------------------- */
-/* printf on node zero only */
+
+
+// -----------------------------------------------------------------
+// printf on node zero only
 #define node0_printf if(this_node==0)printf
 
-/* ---------------------------------------------------------- */
 #define ON 1
 #define OFF 0
+// -----------------------------------------------------------------
 
-/* ---------------------------------------------------------- */
-/* Macros for looping over sites on a node */
 
-/**********************************************************************/
-/* WARNING: FORSOMEPARITY is redefined in some
-   routines if LOOPEND is specified.  See loopend.h */
-/**********************************************************************/
+
+// -----------------------------------------------------------------
+// Macros for looping over sites on a node
+// Usage:
+//  int i;      // Index of the site on the node
+//  site *s;    // Pointer to the current site
+//  FORALLSITES(i, s) {
+//    ...
+//  }
+//
+//  int subl;   // Sublattice to loop over
+//  FORSOMESUBLATTICE(i, s, subl) {
+//    ...
+//  }
+
+// See loopend.h for FORSOMEPARITY definition
 
 #ifndef N_SUBL32
-/*--------------*/
-
-/* Standard red-black checkerboard */
-
-/* macros to loop over sites of a given parity.
-   Usage:
-  int i;
-  site *s;
-  FOREVENSITES(i,s){
-      commands, where s is a pointer to the current site and i is
-      the index of the site on the node
-  }
-*/
-
+// Standard red-black checkerboard
 #define FOREVENSITES(i,s) \
     for(i=0,s=lattice;i<even_sites_on_node;i++,s++)
 #define FORODDSITES(i,s) \
@@ -92,33 +97,21 @@ typedef int field_offset;
     i++,s++)
 #define FORALLSITES(i,s) \
     for(i=0,s=lattice;i<sites_on_node;i++,s++)
-
-/*--------------*/
-#else /* N_SUBL32 */
-/*--------------*/
-
-/*  32 sublattice checkerboard */
-
-/* macros to loop over sites in a given sublattice.
-   Usage:
-  int i, subl;
-  site *s;
-  FORSOMESUBLATTICE(i,s,subl){
-      commands, where s is a pointer to the current site and i is
-      the index of the site on the node
-  }
-*/
+#else
+// 32 sublattice checkerboard
 #define FORALLSITES(i,s) \
     for(i=0,s=lattice;i<sites_on_node;i++,s++)
 #define FORSOMESUBLATTICE(i,s,subl) \
     for (i=(subl*subl_sites_on_node), s= &(lattice[i]), \
    last_in_loop=((subl+1)*subl_sites_on_node); \
    i< last_in_loop; i++,s++)
+#endif
+// -----------------------------------------------------------------
 
-/*--------------*/
-#endif  /* N_SUBL32 */
 
-/* Timing switches */
+
+// -----------------------------------------------------------------
+// Timing switches
 #ifdef TIMING
 #define TIC(n) tmptime[n] = -dclock();
 #define TOC(n,mytimer) tmptime[n] += dclock(); mytimer+=tmptime[n];
@@ -127,4 +120,5 @@ typedef int field_offset;
 #define TOC(n,mytimer)
 #endif
 
-#endif  /* _MACROS_H */
+#endif
+// -----------------------------------------------------------------
