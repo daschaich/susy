@@ -103,7 +103,7 @@ void d_phase() {
   int Ndat = 4 * DIMF, shift = this_node * sites_on_node * Ndat;
   double phase, log_mag, tr, dtime;
   complex temp, temp2;
-  complex *diag = malloc(sites_on_node * Ndat * sizeof(*diag));
+  complex *diag = malloc(volume * Ndat * sizeof(*diag));
   complex *MonC = malloc(sites_on_node * Ndat * sizeof(*MonC));
   complex **Q = malloc(volume * Ndat * sizeof(complex*));
 
@@ -121,7 +121,7 @@ void d_phase() {
     for (j = 0; j < sites_on_node * Ndat; j++)
       Q[i][j] = cmplx(0.0, 0.0);
 
-    // Somewhat hakcy: below we will only set diag[i] on the appropriate node
+    // Somewhat hacky: below we will only set diag[i] on the appropriate node
     // and then scatter it by summing over nodes
     diag[i] = cmplx(0.0, 0.0);
   }
@@ -137,7 +137,7 @@ void d_phase() {
 
   // Cycle over ALL pairs of columns
   for (i = 0; i < volume * Ndat - 1; i += 2) {
-    node0_printf("Column %d of %d: ", i, volume * Ndat - 2);
+    node0_printf("Columns %d--%d of %d: ", i + 1, i + 2, volume * Ndat);
     Nmatvecs = 0;
     dtime = -dclock();
 
@@ -209,7 +209,7 @@ void d_phase() {
     // Note that Q[i][i - shift] = 1
     if (0 <= i + 1 - shift && i + 1 - shift < sites_on_node * Ndat)
       set_complex_equal(&(Q[i + 1][i + 1 - shift]), &(diag[i + 1]));
-    g_dcomplexsum(&(diag[i + 1]));
+    g_complexsum(&(diag[i + 1]));
     node0_printf("%.8g %.8g\n", diag[i + 1].real, diag[i + 1].imag);
     fflush(stdout);
 
@@ -223,35 +223,26 @@ void d_phase() {
   // Q is triangular by construction
   // Compute its determinant from its non-trivial diagonal elements diag[i + 1]
   // expressed as the phase and (the log of) the magnitude
-  // The diagonal elements are distributed across different nodes
-  // according to shift = this_node * sites_on_node * Ndat defined above
+  // Every node has a copy of the diagonal elements, see above
   phase = 0.0;
   log_mag = 0.0;
-  for (i = 1; i < sites_on_node * Ndat; i += 2) {   // Start at 1, use diag[i]
-#ifdef DEBUG_CHECK
-    // Check: print out all diagonal elements
-    printf("%d+%d: (%.4g, %.4g) --> exp[%.4g + %.4gi]\n",
-           this_node, i, diag[i].real, diag[i].imag,
-           log(cabs_sq(&(diag[i]))) / 2.0, carg(&(diag[i])));
-#endif
+  if (this_node == 0) {
+    for (i = 1; i < volume * Ndat; i += 2) {   // Start at 1, use diag[i]
+      phase += carg(&(diag[i]));
+      log_mag += log(cabs_sq(&(diag[i]))) / 2.0;
+    }
 
-    phase += carg(&(diag[i]));
-    log_mag += log(cabs_sq(&(diag[i]))) / 2.0;
+    // pf(M) = (det Q)^{-1}
+    // Negate log of magnitude and phase
+    // Following the C++ code, keep phase in [0, 2pi)
+    tr = fmod(-1.0 * phase, TWOPI);
+    if (tr < 0)
+      phase = tr + TWOPI;
+    else
+      phase = tr;
   }
-
-  // Accumulate phase and (log of) magnitude across all nodes
-  g_doublesum(&phase);
-  g_doublesum(&log_mag);
-
-  // pf(M) = (det Q)^{-1}
-  // Negate log of magnitude and phase
-  // Following the C++ code, keep phase in [0, 2pi)
-  tr = fmod(-1.0 * phase, TWOPI);
-  if (tr < 0)
-    phase = tr + TWOPI;
-  else
-    phase = tr;
   node0_printf("PFAFF %.8g %.8g %.8g %.8g\n", -1.0 * log_mag, phase,
                fabs(cos(phase)), fabs(sin(phase)));
+  free(diag);
 }
 // -----------------------------------------------------------------
