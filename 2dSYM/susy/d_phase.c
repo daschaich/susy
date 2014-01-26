@@ -9,14 +9,14 @@
 
 
 // -----------------------------------------------------------------
-// Return the inner product of two complex vectors, (a b)
+// Return a_i * b_i for two complex vectors (no conjugation!)
 double_complex dot(complex *a, complex *b) {
   int i, Ndat = 4 * DIMF;
   complex tc;
   double_complex dot = cmplx(0.0, 0.0);
 
   for (i = 0; i < sites_on_node * Ndat; i++) {
-    CMUL(a[i], b[i], tc);   // !!! Note no conjugation!
+    CMUL(a[i], b[i], tc);
     CSUM(dot, tc);
   }
   // Accumulate inner product across all nodes
@@ -63,19 +63,11 @@ void matvec(complex *in, complex *out) {
            iter, sites_on_node * Ndat);
     terminate(1);
   }
-
-  // Check that in and src have the same magnitude
-  complex tc = dot(in, in);
-  printf(" in magsq = %.4g\n", tc.real);
-
-  Real tr = 0.0;
-  FORALLSITES(i, s)
-    tr += magsq_TF(&(src[i]));
-  printf("src magsq = %.4g\n", tr);
 #endif
 
   fermion_op(src, res, 1);    // D
 //  fermion_op(src, res, -1);    // Ddag
+  Nmatvecs++;
 
   // Copy the resulting Twist_Fermion res back to complex vector y
   iter = 0;
@@ -99,15 +91,6 @@ void matvec(complex *in, complex *out) {
            iter, sites_on_node * Ndat);
     terminate(1);
   }
-
-  // Check that out and res have the same magnitude
-  tr = 0.0;
-  FORALLSITES(i, s)
-    tr += magsq_TF(&(res[i]));
-  printf(" res magsq = %.4g\n", tr);
-
-  tc = dot(out, out);
-  printf(" out magsq = %.4g\n", tc.real);
 #endif
 }
 // -----------------------------------------------------------------
@@ -118,10 +101,17 @@ void matvec(complex *in, complex *out) {
 void d_phase() {
   register int i, j, k;
   int Ndat = 4 * DIMF, shift = this_node * sites_on_node * Ndat;
-  double phase, log_mag, tr;
+  double phase, log_mag, tr, dtime;
   complex temp, temp2;
+  complex *diag = malloc(sites_on_node * Ndat * sizeof(*diag));
   complex *MonC = malloc(sites_on_node * Ndat * sizeof(*MonC));
   complex **Q = malloc(volume * Ndat * sizeof(complex*));
+
+  if (Q == NULL) {
+    printf("d_phase: can't malloc Q\n");
+    fflush(stdout);
+    terminate(1);
+  }
 
   // Allocate and initialize Q to unit matrix
   // Each Twist_Fermion has Ndat = 4DIMF non-trivial complex components
@@ -130,6 +120,15 @@ void d_phase() {
     Q[i] = malloc(sites_on_node * Ndat * sizeof(complex));
     for (j = 0; j < sites_on_node * Ndat; j++)
       Q[i][j] = cmplx(0.0, 0.0);
+
+    // Somewhat hakcy: below we will only set diag[i] on the appropriate node
+    // and then scatter it by summing over nodes
+    diag[i] = cmplx(0.0, 0.0);
+  }
+  if (Q[volume * Ndat - 1] == NULL) {
+    printf("d_phase: can't malloc Q[i]\n");
+    fflush(stdout);
+    terminate(1);
   }
   // The diagonal elements are distributed across different nodes
   // according to shift = this_node * sites_on_node * Ndat defined above
@@ -138,101 +137,107 @@ void d_phase() {
 
   // Cycle over ALL pairs of columns
   for (i = 0; i < volume * Ndat - 1; i += 2) {
+    node0_printf("Column %d of %d: ", i, volume * Ndat - 2);
+    Nmatvecs = 0;
+    dtime = -dclock();
+
     // q_{i + 1} --> q_{i + 1} / <q_{i + 1} | D | q_i>
     // But only if <q_{i + 1} | D | q_i> is non-zero!
     matvec(Q[i], MonC);
-#ifdef DEBUG_CHECK
-    // Check magnitude of MonC, compare with magnitude of res above
-    temp = dot(MonC, MonC);
-    printf("MonC magsq = %.4g\n", temp.real);
-#endif
-
     temp = dot(Q[i + 1], MonC);
-    // !!! Must require non-vanishing matrix element!
+    // !!! Must have non-vanishing matrix element!
     if (cabs_sq(&temp) < PFA_TOL) {
       printf("d_phase: <i+1 | D | i> = (%.4g, %.4g) too small for i = %d\n",
              temp.real, temp.imag, i);
       terminate(1);
     }
-#ifdef DEBUG_CHECK
-    // Check complex number by which we're dividing
-    printf("(%.4g, %.4g)\n", temp.real, temp.imag);
-#endif
-    for (j = 0; j < sites_on_node * Ndat; j++) {    // Parallel
-      CDIV(Q[i + 1][j], temp, temp2);
-      set_complex_equal(&temp2, &(Q[i + 1][j]));
+
+    // All loops over j (the elements of the given column) run in parallel
+    // We can shorten many of them since Q is upper-triangular
+    if (i + 1 < sites_on_node * Ndat) {
+      for (j = 0; j < i + 2; j++) {
+        CDIV(Q[i + 1][j], temp, temp2);
+        set_complex_equal(&temp2, &(Q[i + 1][j]));
+      }
+    }
+    else {
+      for (j = 0; j < sites_on_node * Ndat; j++) {
+        CDIV(Q[i + 1][j], temp, temp2);
+        set_complex_equal(&temp2, &(Q[i + 1][j]));
+      }
     }
 
     // Cycle over ALL subsequent columns
     for (k = i + 2; k < volume * Ndat; k++) {
-      // e_k --> e_k - e_i <e_{i + 1} | D | e_k> - e_{i + 1} <e_i | D | e_k>
+      // q_k --> q_k - q_i <q_{i + 1} | D | q_k> - q_{i + 1} <q_i | D | q_k>
       matvec(Q[k], MonC);
-#ifdef DEBUG_CHECK
-      // Check magnitude of MonC, compare with magnitude of res above
-      temp = dot(MonC, MonC);
-      printf("MonC magsq = %.4g\n", temp.real);
-#endif
-
       temp = dot(Q[i + 1], MonC);
-      for (j = 0; j < sites_on_node * Ndat; j++) {    // Parallel
-        CMUL(Q[i][j], temp, temp2);
-        CDIF(Q[k][j], temp2);
+      if (i + 1 < sites_on_node * Ndat) {
+        for (j = 0; j < i + 2; j++) {
+          CMUL(Q[i][j], temp, temp2);
+          CDIF(Q[k][j], temp2);
+        }
+      }
+      else {
+        for (j = 0; j < sites_on_node * Ndat; j++) {
+          CMUL(Q[i][j], temp, temp2);
+          CDIF(Q[k][j], temp2);
+        }
       }
 
       temp = dot(Q[i], MonC);
-      for (j = 0; j < sites_on_node * Ndat; j++) {    // Parallel
-        CMUL(Q[i + 1][j], temp, temp2);
-        CSUM(Q[k][j], temp2);
+      if (i + 1 < sites_on_node * Ndat) {
+        for (j = 0; j < i + 2; j++) {
+          CMUL(Q[i + 1][j], temp, temp2);
+          CSUM(Q[k][j], temp2);
+        }
+      }
+      else {
+        for (j = 0; j < sites_on_node * Ndat; j++) {
+          CMUL(Q[i + 1][j], temp, temp2);
+          CSUM(Q[k][j], temp2);
+        }
       }
     }
-  }
+    // Print some timing information
+    // and make sure diagonal elements are still sane
+    dtime += dclock();
+    node0_printf("%d matvecs in %.4g seconds ", Nmatvecs, dtime);
 
-#ifdef DEBUG_CHECK
-  // Checks on Q from hep-lat/0305002:
-  // <e_j | D | e_i> = 0 except
-  // <e_{i + 1} | D | e_i> = 1 for i even
-  // <e_{i - 1} | D | e_i> = -1 for i odd
-  complex one = cmplx(1.0, 0.0);
-  for (i = 0; i < volume * Ndat; i++) {   // ALL columns
-    matvec(Q[i], MonC);
-    for (j = 0; j < volume * Ndat; j++) { // ALL columns
-      temp = dot(Q[j], MonC);
-      if (j == i + 1 && i % 2 == 0) {
-        CDIF(temp, one);    // Should vanish
-      } // Braces suppress compiler warning
-      else if (j == i - 1 && i % 2 == 1)
-        CSUM(temp, one);    // Should vanish
+    // Save diagonal element and free columns i and i+1
+    // We use shift to single out the appropriate node, then sum
+    // Note that Q[i][i - shift] = 1
+    if (0 <= i + 1 - shift && i + 1 - shift < sites_on_node * Ndat)
+      set_complex_equal(&(Q[i + 1][i + 1 - shift]), &(diag[i + 1]));
+    g_dcomplexsum(&(diag[i + 1]));
+    node0_printf("%.8g %.8g\n", diag[i + 1].real, diag[i + 1].imag);
+    fflush(stdout);
 
-      if (temp.real > PFA_TOL || temp.imag > PFA_TOL) {
-        temp = dot(Q[j], MonC);
-        printf("d_phase: <%d | D | %d> = (%.4g, %.4g) on node %d\n",
-               j, i, temp.real, temp.imag, this_node);
-      }
-    }
+    // Done with these
+    free(Q[i]);
+    free(Q[i + 1]);
   }
-#endif
-  free(MonC);   // Done with this
+  free(MonC);
+  free(Q);
 
   // Q is triangular by construction
-  // Compute its determinant from its diagonal elements
+  // Compute its determinant from its non-trivial diagonal elements diag[i + 1]
   // expressed as the phase and (the log of) the magnitude
   // The diagonal elements are distributed across different nodes
   // according to shift = this_node * sites_on_node * Ndat defined above
   phase = 0.0;
   log_mag = 0.0;
-  for (i = 0; i < sites_on_node * Ndat; i++) {
+  for (i = 1; i < sites_on_node * Ndat; i += 2) {   // Start at 1, use diag[i]
 #ifdef DEBUG_CHECK
     // Check: print out all diagonal elements
     printf("%d+%d: (%.4g, %.4g) --> exp[%.4g + %.4gi]\n",
-           this_node, i, Q[shift + i][i].real, Q[shift + i][i].imag,
-           log(cabs_sq(&(Q[shift + i][i]))) / 2.0, carg(&(Q[shift + i][i])));
+           this_node, i, diag[i].real, diag[i].imag,
+           log(cabs_sq(&(diag[i]))) / 2.0, carg(&(diag[i])));
 #endif
 
-    phase += carg(&(Q[shift + i][i]));
-    log_mag += log(cabs_sq(&(Q[shift + i][i]))) / 2.0;
-    free(Q[i]);
+    phase += carg(&(diag[i]));
+    log_mag += log(cabs_sq(&(diag[i]))) / 2.0;
   }
-  free(Q);
 
   // Accumulate phase and (log of) magnitude across all nodes
   g_doublesum(&phase);

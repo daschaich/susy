@@ -159,6 +159,7 @@ EXTERN int maxIter;           // Maximum iterations
 #ifdef PHASE
 // Pfaffian phase stuff
 EXTERN Twist_Fermion *src, *res;    // For fieldwise matvec
+EXTERN int Nmatvecs;                // For timing/counting
 #endif
 
 // Up to 20 concurrent timers for timing, not currently being used

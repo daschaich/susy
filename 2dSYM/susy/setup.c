@@ -2,38 +2,11 @@
 // Supersymmetric setup
 #include "susy_includes.h"
 
-int initial_set();
-void make_fields();
 #define IF_OK if(status==0)
 
 // Each node has a params structure for passing simulation parameters
 #include "params.h"
 params par_buf;
-// -----------------------------------------------------------------
-
-
-
-// -----------------------------------------------------------------
-int setup() {
-  int prompt;
-
-  // Print banner, get volume and seed
-  prompt = initial_set();
-  // Initialize the node random number generator
-  initialize_prn(&node_prn, iseed, volume + mynode());
-  // Initialize the layout functions, which decide where sites live
-  setup_layout();
-  // Allocate space for lattice, set up coordinate fields
-  make_lattice();
-  // Set up neighbor pointers and comlink structures
-  make_nn_gathers();
-  // Set up offset tables for the five paths
-  setup_offset();
-  // Allocate space for fields
-  make_fields();
-
-  return prompt;
-}
 // -----------------------------------------------------------------
 
 
@@ -88,6 +61,66 @@ int initial_set() {
   number_of_nodes = numnodes();
   volume = nx * nt;
   total_iters = 0;
+  return prompt;
+}
+// -----------------------------------------------------------------
+
+
+
+// -----------------------------------------------------------------
+// Allocate space for fields
+void make_fields() {
+  double size = (double)(2 + 4 * NUMLINK + 2 * NUMLINK * NUMLINK)
+                * sites_on_node * sizeof(su3_vector);
+
+  FIELD_ALLOC_VEC(tsite, su3_vector, NUMLINK);
+
+  FIELD_ALLOC(site_src, su3_vector);
+  FIELD_ALLOC(site_dest, su3_vector);
+  FIELD_ALLOC_VEC(link_src, su3_vector, NUMLINK);
+  FIELD_ALLOC_VEC(link_dest, su3_vector, NUMLINK);
+  FIELD_ALLOC_VEC(link_dest2, su3_vector, NUMLINK);
+  FIELD_ALLOC_MAT(plaq_src, su3_vector, NUMLINK, NUMLINK);
+  FIELD_ALLOC_MAT(plaq_dest, su3_vector, NUMLINK, NUMLINK);
+
+  node0_printf("Mallocing %.1f MBytes per core for fields\n", size / 1e6);
+
+#ifdef PHASE
+  FIELD_ALLOC(src, Twist_Fermion);
+  FIELD_ALLOC(res, Twist_Fermion);
+
+  int Ndat = 4 * DIMF;
+  double tr = (double)volume * Ndat * sites_on_node * Ndat;
+
+  // Total number of matvecs is (volume * Ndat)^2 / 4
+  Nmatvecs = volume * Ndat * volume * DIMF;
+  node0_printf("Q has %d columns --> %d matvecs and %.1f MBytes per core...",
+               volume * Ndat, Nmatvecs, tr * sizeof(complex) / 1e6);
+#endif
+}
+// -----------------------------------------------------------------
+
+
+
+// -----------------------------------------------------------------
+int setup() {
+  int prompt;
+
+  // Print banner, get volume and seed
+  prompt = initial_set();
+  // Initialize the node random number generator
+  initialize_prn(&node_prn, iseed, volume + mynode());
+  // Initialize the layout functions, which decide where sites live
+  setup_layout();
+  // Allocate space for lattice, set up coordinate fields
+  make_lattice();
+  // Set up neighbor pointers and comlink structures
+  make_nn_gathers();
+  // Set up offset tables for the five paths
+  setup_offset();
+  // Allocate space for fields
+  make_fields();
+
   return prompt;
 }
 // -----------------------------------------------------------------
@@ -207,28 +240,5 @@ int readin(int prompt) {
   // Generate the irrep lattice
   fermion_rep();
   return 0;
-}
-// -----------------------------------------------------------------
-
-
-
-// -----------------------------------------------------------------
-// Allocate space for fields
-void make_fields() {
-  node0_printf("Mallocing fields\n");
-  FIELD_ALLOC_VEC(tsite, su3_vector, NUMLINK);
-
-  FIELD_ALLOC(site_src, su3_vector);
-  FIELD_ALLOC(site_dest, su3_vector);
-  FIELD_ALLOC_VEC(link_src, su3_vector, NUMLINK);
-  FIELD_ALLOC_VEC(link_dest, su3_vector, NUMLINK);
-  FIELD_ALLOC_VEC(link_dest2, su3_vector, NUMLINK);
-  FIELD_ALLOC_MAT(plaq_src, su3_vector, NUMLINK, NUMLINK);
-  FIELD_ALLOC_MAT(plaq_dest, su3_vector, NUMLINK, NUMLINK);
-
-#ifdef PHASE
-  FIELD_ALLOC(src, Twist_Fermion);
-  FIELD_ALLOC(res, Twist_Fermion);
-#endif
 }
 // -----------------------------------------------------------------
