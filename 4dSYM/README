@@ -1,7 +1,4 @@
-SUSY LATTICE is parallel code for RHMC simulations of N=4 supersymmetric
-Yang--Mills theory in four dimensions, and related measurements. Historically
-based on the MILC code, this package supersedes the serial C++ code presented
-in arXiv:1108.1503.
+This directory of SUSY LATTICE contains parallel code for RHMC simulations of N=4 supersymmetric Yang--Mills theory in four dimensions, including related measurements.
 
 See susy/README for the real README!
 
@@ -9,4 +6,4 @@ Top-level directories mostly follow the MILC layout:
 generic   -- Procedures common to most applications: communications, I/O, data layout, etc.
 include   -- Header files for common procedures
 libraries -- Single processor linear algebra routines
-susy      -- Four-dimensional N=4 supersymmetric Yang--Mills theory: HMC and various measurements (many under development)
+susy      -- RHMC and measurements

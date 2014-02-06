@@ -1,7 +1,9 @@
+This directory of SUSY LATTICE contains parallel code for RHMC simulations of N=(2,2) supersymmetric Yang--Mills theory in two dimensions, including related measurements.
+
 See susy/README for the real README!
 
 Top-level directories mostly follow the MILC layout:
 generic   -- Procedures common to most applications: communications, I/O, data layout, etc.
 include   -- Header files for common procedures
 libraries -- Single processor linear algebra routines
-susy      -- Two-dimensional N=2 supersymmetric Yang--Mills theory (under development)
+susy      -- RHMC and measurements

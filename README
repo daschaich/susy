@@ -1,3 +1,8 @@
+SUSY LATTICE is parallel code for RHMC simulations of extended-supersymmetric
+Yang--Mills theories in two and four dimensions, including related measurements.
+Historically based on the MILC code, this package supersedes the serial C++ code
+presented in arXiv:1108.1503.
+
 See subdirectories for real READMEs!
 
 2dSYM -- Two-dimensional N=(2,2) supersymmetric Yang--Mills theory
