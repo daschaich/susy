@@ -1,0 +1,33 @@
+# Makefile for Libraries for QCD programs
+#
+# Library routines involve no communication, so are compiled
+# as for a scalar processor.
+
+# The specialized Makefiles are for processors for which we
+# have some assembly coded substitutes.
+#
+# This Makefile builds the purely C coded versions and should work
+# for all architectures with a suitable choice of CFLAGS and 
+# CC below
+
+# The FAST option uses "fast" variants of the code, where available, and is 
+# recommended.  The fast variants are C-coded with explicit loop unrolling
+# and inlining.
+
+# The SHORT32 option is required on machines with 64-bit int's
+
+MAKEFILE = Make_mpi
+
+#----------------------------------------------------------------------
+CC               = /usr/local/mvapich/bin/mpicc
+OPT              = -O3 # ( -g -O, etc )
+CODETYPE         = # -DFAST # Only works if NCOL=DIMF=3
+
+AR = ar
+# Also check include/config.h
+#----------------------------------------------------------------------
+
+# Complete set of compiler flags - do not change
+CFLAGS = ${OPT} ${OCFLAGS} ${CODETYPE}
+
+include Make_template

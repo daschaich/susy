@@ -1,0 +1,55 @@
+# ------------------------------------------------------------------
+MAKEFILE = Make_mpi
+
+MPP            = true
+PRECISION      = 2
+CC             = /usr/local/mvapich/bin/mpicc
+OPT            = -O3 -DPREFETCH -Wall -fno-strict-aliasing
+CLFS           = -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE64
+                 # Large files gcc only
+MACHINE_DEP_IO = io_ansi.o
+
+LD             = ${CC}
+PLIB           = ../PRIMME/libzprimme.a
+LIBADD         =
+INLINEOPT      = -DINLINE # -DC_GLOBAL_INLINE # -DSSE_GLOBAL_INLINE -DC_INLINE
+CTIME          = # -DCGTIME -DFFTIME -DLLTIME -DGFTIME -DREMAP
+CPROF          =
+CDEBUG         =
+CPREFETCH      =
+CODETYPE       = ${CTIME} ${CPROF} ${CDEBUG} ${CPREFETCH}
+
+MAKELIBRARIES  = Make_mpi
+
+# Also check include/config.h
+# ------------------------------------------------------------------
+
+
+
+# ------------------------------------------------------------------
+# Stuff below shouldn't change
+ifeq ($(strip ${MPP}),true)
+  COMMTYPE = MPI
+  COMMPKG = com_mpi.o
+else
+   COMMTYPE = SINGLE
+   COMMPKG = com_vanilla.o
+endif
+
+PREC = -DPRECISION=${PRECISION}
+
+# Complete set of compiler flags - do not change
+CFLAGS = ${OPT} -D${COMMTYPE} ${CODETYPE} ${INLINEOPT} \
+         ${PREC} ${CLFS} -I${MYINCLUDEDIR} ${DEFINES} \
+         ${DARCH} ${IMPI}
+
+ILIB = ${LMPI} ${LIBADD}
+
+check:
+	make -f Make_test check
+
+test_clean:
+	make -f Make_test test_clean
+
+include Make_template
+# ------------------------------------------------------------------
