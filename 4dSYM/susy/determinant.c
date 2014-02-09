@@ -22,7 +22,8 @@ void ludcmp_cx(su3_matrix_f *a, int *indx, Real *d) {
         big = ct.real;
     }
     if (big == 0.0) {
-      node0_printf("Singular matrix in routine LUDCMP");
+      node0_printf("Singular matrix in routine LUDCMP:\n");
+      dumpmat_f(a);
       exit(1);
     }
     vv[i] = 1.0 / sqrt(big);
@@ -106,28 +107,6 @@ complex find_det(su3_matrix_f *Q) {
 #endif
 //  printf("DETER %.4g %.4g\n", det.real, det.imag);
   return det;
-}
-#endif
-// -----------------------------------------------------------------
-
-
-
-// -----------------------------------------------------------------
-#ifdef DET
-void adjugate(su3_matrix_f *src, su3_matrix_f *dest) {
-#if (NCOL == 1)
-  dest->e[0][0] = cmplx(1.0, 0.0);
-#endif
-#if (NCOL == 2)
-  dest->e[0][0] = src->e[1][1];
-  dest->e[1][1] = src->e[0][0];
-  CMULREAL(src->e[1][0], -1.0, dest->e[1][0]);
-  CMULREAL(src->e[0][1], -1.0, dest->e[0][1]);
-#endif
-#if (NCOL > 2)
-  node0_printf("Haven't coded derivative for other than 2 colors\n");
-  exit(1);
-#endif
 }
 #endif
 // -----------------------------------------------------------------

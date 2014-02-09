@@ -6,6 +6,80 @@
 
 
 // -----------------------------------------------------------------
+// Transpose of the cofactor matrix
+#ifdef DET
+void adjugate(su3_matrix_f *src, su3_matrix_f *dest) {
+#if (NCOL == 1)
+  dest->e[0][0] = cmplx(1.0, 0.0);
+#endif
+#if (NCOL == 2)
+  dest->e[0][0] = src->e[1][1];
+  dest->e[1][1] = src->e[0][0];
+  CMULREAL(src->e[0][1], -1.0, dest->e[0][1]);
+  CMULREAL(src->e[1][0], -1.0, dest->e[1][0]);
+#endif
+#if (NCOL == 3)
+  complex tc1, tc2;
+
+  // Take the straightforward approach
+  // With extra negative sign for 01, 10, 12, 21, we have
+  // d[0][0] = COF[0][0] =  s[1][1] * s[2][2] - s[2][1] * s[1][2];
+  // d[0][1] = COF[1][0] = -s[0][1] * s[2][2] + s[2][1] * s[0][2];
+  // d[0][2] = COF[2][0] =  s[0][1] * s[1][2] - s[1][1] * s[0][2];
+  // d[1][0] = COF[0][1] = -s[1][0] * s[2][2] + s[2][0] * s[1][2];
+  // d[1][1] = COF[1][1] =  s[0][0] * s[2][2] - s[2][0] * s[0][2];
+  // d[1][2] = COF[2][1] = -s[0][0] * s[1][2] + s[1][0] * s[0][2];
+  // d[2][0] = COF[0][2] =  s[1][0] * s[2][1] - s[2][0] * s[1][1];
+  // d[2][1] = COF[1][2] = -s[0][0] * s[2][1] + s[2][0] * s[0][1];
+  // d[2][2] = COF[2][2] =  s[0][0] * s[1][1] - s[1][0] * s[0][1];
+
+  CMUL(src->e[1][1], src->e[2][2], tc1);
+  CMUL(src->e[2][1], src->e[1][2], tc2);
+  CSUB(tc1, tc2, dest->e[0][0]);
+
+  CMUL(src->e[0][1], src->e[2][2], tc1);
+  CMUL(src->e[2][1], src->e[0][2], tc2);
+  CSUB(tc2, tc1, dest->e[0][1]);
+
+  CMUL(src->e[0][1], src->e[1][2], tc1);
+  CMUL(src->e[1][1], src->e[0][2], tc2);
+  CSUB(tc1, tc2, dest->e[0][2]);
+
+  CMUL(src->e[1][0], src->e[2][2], tc1);
+  CMUL(src->e[2][0], src->e[1][2], tc2);
+  CSUB(tc2, tc1, dest->e[1][0]);
+
+  CMUL(src->e[0][0], src->e[2][2], tc1);
+  CMUL(src->e[2][0], src->e[0][2], tc2);
+  CSUB(tc1, tc2, dest->e[1][1]);
+
+  CMUL(src->e[0][0], src->e[1][2], tc1);
+  CMUL(src->e[1][0], src->e[0][2], tc2);
+  CSUB(tc2, tc1, dest->e[1][2]);
+
+  CMUL(src->e[1][0], src->e[2][1], tc1);
+  CMUL(src->e[2][0], src->e[1][1], tc2);
+  CSUB(tc1, tc2, dest->e[2][0]);
+
+  CMUL(src->e[0][0], src->e[2][1], tc1);
+  CMUL(src->e[2][0], src->e[0][1], tc2);
+  CSUB(tc2, tc1, dest->e[2][1]);
+
+  CMUL(src->e[0][0], src->e[1][1], tc1);
+  CMUL(src->e[1][0], src->e[0][1], tc2);
+  CSUB(tc1, tc2, dest->e[2][2]);
+#endif
+#if (NCOL > 3)
+  node0_printf("Haven't coded derivative for more than 3 colors\n");
+  exit(1);
+#endif
+}
+#endif
+// -----------------------------------------------------------------
+
+
+
+// -----------------------------------------------------------------
 #ifdef DET
 double det_force(Real eps) {
   register int i, dir1, dir2;

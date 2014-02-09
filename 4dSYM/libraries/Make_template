@@ -98,6 +98,9 @@ byterevn.o : ../include/int32type.h
 gaussrand.1o : ../include/random.h
 gaussrand.2o : ../include/random.h
 
+${SU3OBJS1} : ${HEADERS} ${ALLMAKES} ${LASTMAKE}
+${SU3OBJS2} : ${HEADERS} ${ALLMAKES} ${LASTMAKE}
+
 su3.1.a::	 ${SU3OBJS1}
 	${AR} rcs $@ ${SU3OBJS1}
 
