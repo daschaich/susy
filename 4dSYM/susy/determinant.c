@@ -6,64 +6,6 @@
 
 // -----------------------------------------------------------------
 #ifdef DET
-complex find_det(su3_matrix_f *Q) {
-  complex det;
-
-#if (NCOL == 1)
-  det = Q->e[0][0];
-#endif
-#if (NCOL == 2)
-  complex det2;
-
-  CMUL(Q->e[0][0], Q->e[1][1], det);
-  CMUL(Q->e[0][1], Q->e[1][0], det2);
-  CSUB(det, det2, det);
-#endif
-#if (NCOL > 2)
-  int indx[NCOL];
-  Real d;
-  su3_matrix_f QQ;
-
-  su3mat_copy_f(Q, &QQ);
-  ludcmp_cx(&QQ, indx, &d);
-  det = cmplx(d, 0.0);
-  for (i = 0; i < NCOL; i++) {
-    CMUL(det, QQ.e[i][i], det2);
-    det = det2;
-  }
-#endif
-//  printf("DETER %.4g %.4g\n", det.real, det.imag);
-  return det;
-}
-#endif
-// -----------------------------------------------------------------
-
-
-
-// -----------------------------------------------------------------
-#ifdef DET
-void adjugate(su3_matrix_f *src, su3_matrix_f *dest) {
-#if (NCOL == 1)
-  dest->e[0][0] = cmplx(1.0, 0.0);
-#endif
-#if (NCOL == 2)
-  dest->e[0][0] = src->e[1][1];
-  dest->e[1][1] = src->e[0][0];
-  CMULREAL(src->e[1][0], -1.0, dest->e[1][0]);
-  CMULREAL(src->e[0][1], -1.0, dest->e[0][1]);
-#endif
-#if (NCOL > 2)
-  node0_printf("Haven't coded derivative for other than 2 colors\n");
-  exit(1);
-#endif
-}
-#endif
-// -----------------------------------------------------------------
-
-
-
-// -----------------------------------------------------------------
-#ifdef DET
 void ludcmp_cx(su3_matrix_f *a, int *indx, Real *d) {
   int i, imax, j, k;
   Real big, fdum;
@@ -127,6 +69,65 @@ void ludcmp_cx(su3_matrix_f *a, int *indx, Real *d) {
       }
     }
   }
+}
+#endif
+// -----------------------------------------------------------------
+
+
+
+// -----------------------------------------------------------------
+#ifdef DET
+complex find_det(su3_matrix_f *Q) {
+  complex det;
+
+#if (NCOL == 1)
+  det = Q->e[0][0];
+#endif
+#if (NCOL == 2)
+  complex det2;
+
+  CMUL(Q->e[0][0], Q->e[1][1], det);
+  CMUL(Q->e[0][1], Q->e[1][0], det2);
+  CSUB(det, det2, det);
+#endif
+#if (NCOL > 2)
+  int i, indx[NCOL];
+  Real d;
+  complex det2;
+  su3_matrix_f QQ;
+
+  su3mat_copy_f(Q, &QQ);
+  ludcmp_cx(&QQ, indx, &d);
+  det = cmplx(d, 0.0);
+  for (i = 0; i < NCOL; i++) {
+    CMUL(det, QQ.e[i][i], det2);
+    det = det2;
+  }
+#endif
+//  printf("DETER %.4g %.4g\n", det.real, det.imag);
+  return det;
+}
+#endif
+// -----------------------------------------------------------------
+
+
+
+// -----------------------------------------------------------------
+#ifdef DET
+void adjugate(su3_matrix_f *src, su3_matrix_f *dest) {
+#if (NCOL == 1)
+  dest->e[0][0] = cmplx(1.0, 0.0);
+#endif
+#if (NCOL == 2)
+  dest->e[0][0] = src->e[1][1];
+  dest->e[1][1] = src->e[0][0];
+  CMULREAL(src->e[1][0], -1.0, dest->e[1][0]);
+  CMULREAL(src->e[0][1], -1.0, dest->e[0][1]);
+#endif
+#if (NCOL > 2)
+  node0_printf("Haven't coded derivative for other than 2 colors\n");
+  exit(1);
+#endif
 }
 #endif
 // -----------------------------------------------------------------
@@ -336,12 +337,12 @@ void monopole() {
   // Finally accumulate and print global quantities
   total = 0;
   total_abs = 0;
-  for (dir1 = 0; dir1 < NUMLINK - 1; dir1++) {
+  for (dir1 = XUP; dir1 < NUMLINK - 1; dir1++) {
     total_mono_p[dir1] = 0;
     total_mono_m[dir1] = 0;
   }
   FORALLSITES(i, s) {
-    for (dir1 = 0; dir1 < NUMLINK - 1; dir1++) {
+    for (dir1 = XUP; dir1 < NUMLINK - 1; dir1++) {
       if (charge[dir1][i] > 0)
         total_mono_p[dir1] += charge[dir1][i];
       if (charge[dir1][i] < 0)
@@ -355,7 +356,7 @@ void monopole() {
   total = 0;
   total_abs = 0;
   node0_printf("MONOPOLE ");
-  for (dir1 = 0; dir1 < NUMLINK - 1; dir1++) {
+  for (dir1 = XUP; dir1 < NUMLINK - 1; dir1++) {
     total += total_mono_p[dir1] + total_mono_m[dir1];
     total_abs += total_mono_p[dir1] - total_mono_m[dir1];
     node0_printf("%d %d  ", total_mono_p[dir1], total_mono_m[dir1]);

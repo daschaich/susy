@@ -237,8 +237,8 @@ void d_phase() {
 
   // Cycle over ALL pairs of columns after ckpt_load
   for (i = ckpt_load; i < volume * Ndat - 1; i += 2) {
-    // Save checkpoint if requested
-    if (i == ckpt_save || i + 1 == ckpt_save)
+    // Checkpoint if requested -- make sure ckpt_save = 0 doesn't trigger this
+    if (i + 1 == ckpt_save || i + 2 == ckpt_save)
       break;
 
     node0_printf("Columns %d--%d of %d: ", i + 1, i + 2, volume * Ndat);

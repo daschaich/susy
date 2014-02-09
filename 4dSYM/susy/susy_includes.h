@@ -123,7 +123,6 @@ void shiftmat(field_offset src, field_offset dest, int dir);
 void measure_det();
 void adjugate(su3_matrix_f *src, su3_matrix_f *dest);
 complex find_det(su3_matrix_f *Q);
-void ludcmp_cx(su3_matrix_f *a, int *indx, Real *d);
 
 void monopole();
 
