@@ -238,8 +238,10 @@ void d_phase() {
   // Cycle over ALL pairs of columns after ckpt_load
   for (i = ckpt_load; i < volume * Ndat - 1; i += 2) {
     // Checkpoint if requested -- make sure ckpt_save = 0 doesn't trigger this
-    if (i + 1 == ckpt_save || i + 2 == ckpt_save)
-      break;
+    if (i == ckpt_save || i + 1 == ckpt_save) {
+      if (ckpt_save > 0)
+        break;
+    }
 
     node0_printf("Columns %d--%d of %d: ", i + 1, i + 2, volume * Ndat);
     Nmatvecs = 0;
@@ -251,7 +253,7 @@ void d_phase() {
     temp = dot(Q[i + 1], MonC);
     // !!! Must have non-vanishing matrix element!
     if (cabs_sq(&temp) < PFA_TOL) {
-      printf("d_phase: <%d | D | %d> = (%.4g, %.4g) too small\n",
+      node0_printf("d_phase: <%d | D | %d> = (%.4g, %.4g) too small\n",
              i + 2, i + 1, temp.real, temp.imag);
       terminate(1);
     }
