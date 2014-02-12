@@ -1,17 +1,18 @@
 // -----------------------------------------------------------------
 // Create link in adjoint rep from linkf in fundamental rep
+// Allow SU(N) in addition to U(N)
 #include "susy_includes.h"
 
-#if (DIMF != NCOL*NCOL)
-  #error "Wrong version of fermion_rep!"
+#if (DIMF != NCOL * NCOL && DIMF != NCOL * NCOL - 1)
+  #error "Wrong DIMF for this version of fermion_rep!"
 #endif
 
-#if (NUMGEN != NCOL*NCOL)
-  #error "Wrong version of fermion_rep!"
+#if (NUMGEN != NCOL * NCOL && NUMGEN != NCOL * NCOL - 1)
+  #error "Wrong NUMGEN for this version of fermion_rep!"
 #endif
 
 #if (FREP != adjoint)
-  #error "Wrong version of fermion_rep!"
+  #error "Wrong FREP for this version of fermion_rep!"
 #endif
 // -----------------------------------------------------------------
 

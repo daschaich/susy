@@ -20,14 +20,17 @@
 // U(2)
 #define NCOL 2
 #define DIMF 4
+#define NUMGEN 4
 
 // U(3)
 //#define NCOL 3
 //#define DIMF 9
+//#define NUMGEN 9
 
 // SU(2)
 //#define NCOL 2
 //#define DIMF 3
+//#define NUMGEN 3
 
 // Restrictions due to anti_hermitian structs
 #if (NCOL > 4)

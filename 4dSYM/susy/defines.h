@@ -44,7 +44,6 @@
 #define DIR_5 4             // The direction of the diagonal link
 #define NQLINK 28           // Number of offsets for Q-closed terms
 #define NTERMS 30           // Number of DbmP, DbpP F1Q and F2Q terms
-#define NUMGEN (NCOL*NCOL)  // Number of U(N) generators
 // -----------------------------------------------------------------
 
 
