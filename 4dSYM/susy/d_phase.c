@@ -316,7 +316,7 @@ void d_phase() {
     if (0 <= i + 1 - shift && i + 1 - shift < sites_on_node * Ndat)
       set_complex_equal(&(Q[i + 1][i + 1 - shift]), &(diag[i + 1]));
     g_complexsum(&(diag[i + 1]));
-    node0_printf("%.8g %.8g\n", diag[i + 1].real, diag[i + 1].imag);
+    node0_printf("%.16g %.16g\n", diag[i + 1].real, diag[i + 1].imag);
     fflush(stdout);
 
     // Done with these
