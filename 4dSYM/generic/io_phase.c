@@ -11,41 +11,24 @@
 
 // -----------------------------------------------------------------
 #ifdef PHASE
-void loadQ(complex **Q, complex *diag, int ckpt_load) {
-  int i, j, Ndat = 16 * DIMF;
+void load_diag(complex *diag, int ckpt_load) {
+  int i;
   char infile[80];
-  FILE *fp = NULL, *fd = NULL;
+  FILE *fp = NULL;
 
-  node0_printf("Reloading columns %d--%d\n", ckpt_load + 1, volume * Ndat);
-
-  // First load remaining columns of Q
-  sprintf(infile, "%s.Q%d-node%d", startfile, ckpt_load, this_node);
-  fp = fopen(infile, "r");    // Open to read
-  if (fp == NULL) {
-    printf("loadQ: node%d can't open file %s\n", this_node, infile);
-    fflush(stdout);
-    terminate(1);
-  }
-
-  for (i = ckpt_load; i < volume * Ndat; i++) {
-    for (j = 0; j < sites_on_node * Ndat; j++)
-      fscanf(fp, "%lg\n%lg\n", &(Q[i][j].real), &(Q[i][j].imag));
-  }
-  fclose(fp);
-
-  // Now load completed diagonal elements only on node0
+  // Only load completed diagonal elements on node0
   if (this_node == 0) {
     sprintf(infile, "%s.diag%d", startfile, ckpt_load);
-    fd = fopen(infile, "r");    // Open to read
-    if (fd == NULL) {
+    fp = fopen(infile, "r");    // Open to read
+    if (fp == NULL) {
       printf("saveQ: node0 can't open file %s\n", infile);
       fflush(stdout);
       terminate(1);
     }
 
     for (i = 1; i < ckpt_load; i += 2)  // Every other is trivial
-      fscanf(fd, "%lg\n%lg\n", &(diag[i].real), &(diag[i].imag));
-    fclose(fd);
+      fscanf(fp, "%lg\n%lg\n", &(diag[i].real), &(diag[i].imag));
+    fclose(fp);
   }
 }
 #endif
@@ -55,29 +38,71 @@ void loadQ(complex **Q, complex *diag, int ckpt_load) {
 
 // -----------------------------------------------------------------
 #ifdef PHASE
-void saveQ(complex **Q, complex *diag, int ckpt_save) {
+void loadQ(complex **Q, int ckpt_load) {
   int i, j, Ndat = 16 * DIMF;
+  char infile[80];
+  Real re, im;
+  FILE *fp = NULL;
+
+  node0_printf("Reloading columns %d--%d\n", ckpt_load + 1, volume * Ndat);
+  sprintf(infile, "%s.Q%d-node%d", startfile, ckpt_load, this_node);
+  fp = fopen(infile, "r");    // Open to read
+  if (fp == NULL) {
+    printf("loadQ: node%d can't open file %s\n", this_node, infile);
+    fflush(stdout);
+    terminate(1);
+  }
+
+  i = 1;
+  while (i > 0) {
+    fscanf(fp, "%d\t%d\t%lg\t%lg\n", &i, &j, &re, &im);
+    if (i == -1)    // End of file key
+      break;
+    Q[i][j].real = re;
+    Q[i][j].imag = im;
+  }
+  fclose(fp);
+}
+#endif
+// -----------------------------------------------------------------
+
+
+
+// -----------------------------------------------------------------
+#ifdef PHASE
+void save_diag(complex *diag, int ckpt_save) {
+  int i;
   char outfile[80];
-  FILE *fp = NULL, *fd = NULL;
+  FILE *fp = NULL;
 
-  node0_printf("Dumping columns %d--%d\n", ckpt_save + 1, volume * Ndat);
-
-  // First save completed diagonal elements only on node0
+  // Only save completed diagonal elements on node0
   if (this_node == 0) {
     sprintf(outfile, "%s.diag%d", startfile, ckpt_save);
-    fd = fopen(outfile, "w");    // Open to write
-    if (fd == NULL) {
+    fp = fopen(outfile, "w");    // Open to write
+    if (fp == NULL) {
       printf("saveQ: node%d can't open file %s\n", this_node, outfile);
       fflush(stdout);
       terminate(1);
     }
 
     for (i = 1; i < ckpt_save; i += 2)  // Every other is trivial
-      fprintf(fd, "%.16g\n%.16g\n", diag[i].real, diag[i].imag);
-    fclose(fd);
+      fprintf(fp, "%.16g\n%.16g\n", diag[i].real, diag[i].imag);
+    fclose(fp);
   }
+}
+#endif
+// -----------------------------------------------------------------
 
-  // Then save remaining columns of Q
+
+
+// -----------------------------------------------------------------
+#ifdef PHASE
+void saveQ(complex **Q, int ckpt_save) {
+  int i, j, Ndat = 16 * DIMF;
+  char outfile[80];
+  FILE *fp = NULL;
+
+  node0_printf("Dumping columns %d--%d\n", ckpt_save + 1, volume * Ndat);
   sprintf(outfile, "%s.Q%d-node%d", startfile, ckpt_save, this_node);
   fp = fopen(outfile, "w");    // Open to write
   if (fp == NULL) {
@@ -86,14 +111,18 @@ void saveQ(complex **Q, complex *diag, int ckpt_save) {
     terminate(1);
   }
 
-  // This will save lots of zeros on some nodes
-  // but it's the easy way to keep from missing data on other nodes
+  // Try to avoid reading and writing lots of zeros
   for (i = ckpt_save; i < volume * Ndat; i++) {
     for (j = 0; j < sites_on_node * Ndat; j++)
-      fprintf(fp, "%.16g\n%.16g\n", Q[i][j].real, Q[i][j].imag);
+      if (Q[i][j].real != 0.0 || Q[i][j].real != 0.0) { // Loose condition
+        fprintf(fp, "%d\t%d\t%.16g\t%.16g\n",
+                    i, j, Q[i][j].real, Q[i][j].imag);
+    }
     free(Q[i]);
   }
+  fprintf(fp, "-1\t-1\t-1\t-1\n");  // End of file key
   fclose(fp);
 }
 #endif
 // -----------------------------------------------------------------
+

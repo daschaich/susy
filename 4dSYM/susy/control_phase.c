@@ -76,36 +76,6 @@ int main(int argc, char *argv[]) {
   node0_printf("AFTER  %.8g %.8g\n", dssplaq, dstplaq);
 #endif
 
-#ifdef PBC
-  // Normalize all links by their determinant^{1/N} to get them into SU(N)
-  // Drop the U(1) part by using DIMF=3
-#if (DIMF != 3)
-  #error "Use SU(N) gauge group for PBC pfaffian"
-#endif
-
-  register int i;
-  register site *s;
-  int mu;
-  Real frac = -1.0 / (Real)NCOL;
-  complex c1, c2;
-  su3_matrix_f tmat;
-
-  FORALLSITES(i, s) {
-    for (mu = XUP; mu < NUMLINK; mu++) {
-      // Divide out the det raised to fractional power as x^y = exp[y log x]
-      c1 = find_det(&(s->linkf[mu]));
-      c2 = clog(&c1);
-      CMULREAL(c2, frac, c1);
-      c2 = cexp(&c1);
-      c_scalar_mult_su3mat_f(&(s->linkf[mu]), &c2, &tmat);
-      su3mat_copy_f(&tmat, &(s->linkf[mu]));
-    }
-  }
-
-  // Update fermion-rep links with the normalized SU(N) gauge links
-  fermion_rep();
-#endif
-
   // Main measurement: pfaffian phase
   d_phase();
 

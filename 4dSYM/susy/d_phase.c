@@ -213,7 +213,8 @@ void d_phase() {
     for (i = ckpt_load; i < volume * Ndat; i++)
       Q[i] = malloc(sites_on_node * Ndat * sizeof(complex));
 
-    loadQ(Q, diag, ckpt_load);
+    load_diag(diag, ckpt_load);
+    loadQ(Q, ckpt_load);
   }
   else {
     ckpt_load = 0;
@@ -324,7 +325,8 @@ void d_phase() {
     free(Q[i + 1]);
   }
   if (ckpt_save > 0) {
-    saveQ(Q, diag, ckpt_save);
+    save_diag(diag, ckpt_save);
+    saveQ(Q, ckpt_save);
     return;   // Not ready for pfaffian yet
   }
   free(MonC);
