@@ -39,7 +39,7 @@ void load_diag(complex *diag, int ckpt_load) {
 // -----------------------------------------------------------------
 #ifdef PHASE
 void loadQ(complex **Q, int ckpt_load) {
-  int i, j, Ndat = 16 * DIMF;
+  int i, j, ret = 1, Ndat = 16 * DIMF;
   char infile[80];
   Real re, im;
   FILE *fp = NULL;
@@ -54,12 +54,20 @@ void loadQ(complex **Q, int ckpt_load) {
   }
 
   i = 1;
-  while (i > 0) {
-    fscanf(fp, "%d\t%d\t%lg\t%lg\n", &i, &j, &re, &im);
-    if (i == -1)    // End of file key
+  while (ret != EOF && i > 0) {
+    ret = fscanf(fp, "%d\t%d\t%lg\t%lg\n", &i, &j, &re, &im);
+    if (ret == EOF || i == -1)    // End of file key
       break;
     Q[i][j].real = re;
     Q[i][j].imag = im;
+  }
+  // Check that we reached the end
+  // If not, that's bad since the previous round will have to be re-run
+  // TODO: Replace this with an actual checksum
+  if (i != -1) {
+    printf("loadQ: node%d didn't reach the end of Q\n", this_node);
+    fflush(stdout);
+    terminate(1);
   }
   fclose(fp);
 }
@@ -120,7 +128,7 @@ void saveQ(complex **Q, int ckpt_save) {
     }
     free(Q[i]);
   }
-  fprintf(fp, "-1\t-1\t-1\t-1\n");  // End of file key
+  fprintf(fp, "-1\t-1\t-1\t-1\n");  // To check that we reached the end
   fclose(fp);
 }
 #endif
