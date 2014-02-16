@@ -64,7 +64,7 @@
 
 // -----------------------------------------------------------------
 // Copy NUMLINK single precision fundamental matrices to generic precision
-void f2d_NUMLINKmat(fsu3_matrix_f *a, su3_matrix_f *b) {
+void f2d_mat(fsu3_matrix_f *a, su3_matrix_f *b) {
   int dir, i, j;
 
   for (dir = 0; dir < NUMLINK; dir++) {
@@ -76,7 +76,7 @@ void f2d_NUMLINKmat(fsu3_matrix_f *a, su3_matrix_f *b) {
 }
 
 // Copy NUMLINK generic precision fundamental matrices to single precision
-void d2f_NUMLINKmat(su3_matrix_f *a, fsu3_matrix_f *b) {
+void d2f_mat(su3_matrix_f *a, fsu3_matrix_f *b) {
   int dir, i, j;
 
   for (dir = 0; dir < NUMLINK; dir++) {
@@ -218,7 +218,7 @@ static void send_buf_to_node0(fsu3_matrix_f *tbuf, int tbuf_length,
 
 
 // -----------------------------------------------------------------
-// Only node 0 writes the gauge configuration gf to a binary file
+// Only node 0 writes the gauge configuration to a binary file gf
 void w_serial(gauge_file *gf) {
   FILE *fp = NULL;
   gauge_header *gh = NULL;
@@ -247,7 +247,8 @@ void w_serial(gauge_file *gf) {
     lbuf = malloc(MAX_BUF_LENGTH * NUMLINK * sizeof(*lbuf));
     if (lbuf == NULL) {
       printf("w_serial: node0 can't malloc lbuf\n");
-      fflush(stdout);terminate(1);
+      fflush(stdout);
+      terminate(1);
     }
 
     fp = gf->fp;
@@ -264,9 +265,9 @@ void w_serial(gauge_file *gf) {
 
     offset = head_size + gauge_check_size;
 
-    if (fseeko(fp,offset,SEEK_SET) < 0) {
+    if (fseeko(fp, offset, SEEK_SET) < 0) {
       printf("w_serial: node%d fseeko %lld failed error %d file %s\n",
-             this_node,(long long)offset, errno, gf->filename);
+             this_node, (long long)offset, errno, gf->filename);
       fflush(stdout);
       terminate(1);
     }
@@ -323,7 +324,7 @@ void w_serial(gauge_file *gf) {
           // The node with the data just appends to its tbuf
           if (this_node == currentnode) {
             i = node_index(x, y, z, t);
-            d2f_NUMLINKmat(&lattice[i].linkf[0], &tbuf[NUMLINK * tbuf_length]);
+            d2f_mat(&lattice[i].linkf[0], &tbuf[NUMLINK * tbuf_length]);
           }
 
           if (this_node == currentnode || this_node == 0)
@@ -341,7 +342,7 @@ void w_serial(gauge_file *gf) {
 
   if (this_node == 0) {
     flush_tbuf_to_lbuf(gf, &rank29, &rank31, lbuf, &buf_length,
-           tbuf, tbuf_length);
+                       tbuf, tbuf_length);
     flush_lbuf_to_file(gf, lbuf, &buf_length);
   }
 
@@ -443,7 +444,7 @@ void r_serial(gauge_file *gf) {
   g_sync();
 
   /* node0 reads and deals out the values */
-  for (rcv_rank=0; rcv_rank<volume; rcv_rank++) {
+  for (rcv_rank = 0; rcv_rank < volume; rcv_rank++) {
     /* If file is in coordinate natural order, receiving coordinate
        is given by rank. Otherwise, it is found in the table */
 
@@ -518,11 +519,15 @@ void r_serial(gauge_file *gf) {
            k++, val++) {
         test_gc.sum29 ^= (*val)<<rank29 | (*val)>>(32-rank29);
         test_gc.sum31 ^= (*val)<<rank31 | (*val)>>(32-rank31);
-        rank29++; if (rank29 >= 29)rank29 = 0;
-        rank31++; if (rank31 >= 31)rank31 = 0;
+        rank29++;
+        if (rank29 >= 29)
+          rank29 = 0;
+        rank31++;
+        if (rank31 >= 31)
+          rank31 = 0;
       }
       // Copy NUMLINK matrices to generic-precision lattice[idest]
-      f2d_NUMLINKmat(tmpsu3, &lattice[idest].linkf[0]);
+      f2d_mat(tmpsu3, &lattice[idest].linkf[0]);
     }
     else {
       rank29 += NUMLINK * sizeof(fsu3_matrix_f) / sizeof(int32type);

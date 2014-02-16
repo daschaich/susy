@@ -67,7 +67,7 @@ void swrite_data(FILE* fp, void *src, size_t size,
 
   if (fwrite(src, size, 1, fp) != 1) {
     printf("%s: Node %d %s write error %d\n",
-           myname,this_node,descrip,errno);
+           myname, this_node, descrip, errno);
     fflush(stdout);
     terminate(1);
   }
@@ -144,7 +144,7 @@ int write_gauge_info_item(FILE *fpout,    /* ascii file pointer */
   float tt;
 
   // Check for valid keyword
-  for (i=0;strlen(gauge_info_keyword[i])>0 &&
+  for (i = 0; strlen(gauge_info_keyword[i]) > 0 &&
       strcmp(gauge_info_keyword[i],keyword) != 0; i++);
   if (strlen(gauge_info_keyword[i]) == 0)
     printf("write_gauge_info_item: WARNING: keyword %s not in table\n",

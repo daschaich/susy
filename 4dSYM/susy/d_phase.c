@@ -324,9 +324,15 @@ void d_phase() {
     free(Q[i]);
     free(Q[i + 1]);
   }
-  if (ckpt_save > 0) {
+  if (ckpt_save > 0) {    // Write out from ckpt_save to the end and finish
     save_diag(diag, ckpt_save);
+    free(diag);
+
     saveQ(Q, ckpt_save);
+    for (i = ckpt_save; i < volume * Ndat; i++)
+      free(Q[i]);
+    free(Q);
+    free(MonC);
     return;   // Not ready for pfaffian yet
   }
   free(MonC);
