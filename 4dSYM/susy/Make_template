@@ -142,7 +142,7 @@ susy_hmc_corr::
 
 susy_bilin::
 	${MAKE} -f ${MAKEFILE} target "MYTARGET= $@" \
-	"DEFINES = ${DEFINES} -DPHI_ALGORITHM -DPL_CORR -DCORR -DWLOOP -DBILIN" \
+	"DEFINES = ${DEFINES} -DPHI_ALGORITHM -DCORR -DWLOOP -DBILIN" \
 	"EXTRA_OBJECTS = control_corr.o setup_rhmc.o d_bilinear.o d_correlator.o \
 	                 d_flavor.o ploop_corr.o print_var3.o hvy_pot.o \
 	                 hvy_pot_polar.o unit.o gaugefix.o restrict_fourier.o \

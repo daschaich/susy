@@ -26,10 +26,13 @@ int main(int argc, char *argv[]) {
   setup_PtoP();
   setup_FQ();
 
-#ifdef PL_CORR
-  // Set up Fourier transform for Polyakov loop correlator
+#ifdef WLOOP
   register int i;
   register site *s;
+#endif
+
+#ifdef PL_CORR
+  // Set up Fourier transform for Polyakov loop correlator
   int key[4] = {1, 1, 1, 0};
   int restrict[4];
   Real space_vol = (Real)(nx * ny * nz);
@@ -191,11 +194,11 @@ int main(int argc, char *argv[]) {
   d_flavor();
 
 #ifdef WLOOP
-  hvy_pot_rest_loop();
+//  hvy_pot_rest_loop();
 #endif
 
   // Measure density of monopole world lines in non-diagonal cubes
-  monopole();
+//  monopole();
 #endif
 
   node0_printf("RUNNING COMPLETED\n");
