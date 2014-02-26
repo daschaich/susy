@@ -209,31 +209,31 @@ void d_phase() {
   // We keep part of every column on this node
   // The diagonal elements are distributed across different nodes
   // according to shift = this_node * sites_on_node * Ndat defined above
-  if (ckpt_load > 0) {
-    for (i = ckpt_load; i < volume * Ndat; i++)
-      Q[i] = malloc(sites_on_node * Ndat * sizeof(complex));
-
-    load_diag(diag, ckpt_load);
-    loadQ(Q, ckpt_load);
-  }
-  else {
-    ckpt_load = 0;
-    for (i = 0; i < volume * Ndat; i++) {
-      Q[i] = malloc(sites_on_node * Ndat * sizeof(complex));
-      for (j = 0; j < sites_on_node * Ndat; j++)
-        Q[i][j] = cmplx(0.0, 0.0);
-
-      // Somewhat hacky: below we will only set diag[i] on the appropriate node
-      // and then scatter it by summing over nodes
-      diag[i] = cmplx(0.0, 0.0);
-    }
-    for (i = 0; i < sites_on_node * Ndat; i++)
-      Q[shift + i][i] = cmplx(1.0, 0.0);
+  // Below we will only set diag[i] on the appropriate node
+  // and then scatter it by summing over nodes
+  if (ckpt_load < 0)
+    ckpt_load = 0;    // Cheap trick to allocate minimum necessary columns
+  for (i = ckpt_load; i < volume * Ndat; i++) {
+    Q[i] = malloc(sites_on_node * Ndat * sizeof(complex));
+    diag[i] = cmplx(0.0, 0.0);    // Initialize to zero
   }
   if (Q[volume * Ndat - 1] == NULL) {
     printf("d_phase: can't malloc Q[i]\n");
     fflush(stdout);
     terminate(1);
+  }
+
+  if (ckpt_load > 0) {    // Load from files
+    load_diag(diag, ckpt_load);   // Overwrite initial zeroes above
+    loadQ(Q, ckpt_load);
+  }
+  else {                  // Initialize to zero
+    for (i = 0; i < volume * Ndat; i++) {
+      for (j = 0; j < sites_on_node * Ndat; j++)
+        Q[i][j] = cmplx(0.0, 0.0);
+    }
+    for (i = 0; i < sites_on_node * Ndat; i++)
+      Q[shift + i][i] = cmplx(1.0, 0.0);
   }
 
   // Cycle over ALL pairs of columns after ckpt_load

@@ -21,7 +21,7 @@ void load_diag(complex *diag, int ckpt_load) {
     sprintf(infile, "%s.diag%d", startfile, ckpt_load);
     fp = fopen(infile, "r");    // Open to read
     if (fp == NULL) {
-      printf("saveQ: node0 can't open file %s\n", infile);
+      printf("load_diag: node0 can't open file %s\n", infile);
       fflush(stdout);
       terminate(1);
     }
@@ -173,7 +173,7 @@ void save_diag(complex *diag, int ckpt_save) {
     sprintf(outfile, "%s.diag%d", startfile, ckpt_save);
     fp = fopen(outfile, "w");    // Open to write
     if (fp == NULL) {
-      printf("saveQ: node%d can't open file %s\n", this_node, outfile);
+      printf("save_diag: node%d can't open file %s\n", this_node, outfile);
       fflush(stdout);
       terminate(1);
     }
