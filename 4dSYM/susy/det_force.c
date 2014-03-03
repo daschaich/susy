@@ -6,6 +6,67 @@
 
 
 // -----------------------------------------------------------------
+// Cofactor of src matrix omitting row row and column col
+#ifdef DET
+complex cofactor(su3_matrix_f *src, int row, int col) {
+  int a = 0, b = 0, i, j;
+  complex submat[NCOL - 1][NCOL - 1], tc1, tc2, cof;
+
+  // Set up submatrix omitting row row and column col
+  for (i = 0; i < NCOL; i++) {
+    if (i != row) {
+      for (j = 0; j < NCOL; j++) {
+        if (j != col) {
+          set_complex_equal(&(src->e[i][j]), &(submat[a][b]));
+          b++;
+        }
+      }
+      a++;
+    }
+    b = 0;
+  }
+
+#if (NCOL == 3)
+  // Here things are easy
+  CMUL(submat[0][0], submat[1][1], tc1);
+  CMUL(submat[1][0], submat[0][1], tc2);
+  CSUB(tc1, tc2, cof);
+#endif
+#if (NCOL == 4)
+  // Here things are less fun, but still not tough
+  // det = 00(11*22 - 21*12) - 01(10*22 - 20*12) + 02(10*21 - 20*11)
+  complex tc3, sav;
+  CMUL(submat[1][1], submat[2][2], tc1);
+  CMUL(submat[2][1], submat[1][2], tc2);
+  CSUB(tc1, tc2, tc3);
+  CMUL(submat[0][0], tc3, cof);
+
+  CMUL(submat[1][0], submat[2][2], tc1);
+  CMUL(submat[2][0], submat[1][2], tc2);
+  CSUB(tc2, tc1, tc3);    // Absorb negative sign
+  CMUL(submat[0][1], tc3, sav);
+  CSUM(cof, sav);
+
+  CMUL(submat[1][0], submat[2][1], tc1);
+  CMUL(submat[2][0], submat[1][1], tc2);
+  CSUB(tc1, tc2, tc3);
+  CMUL(submat[0][2], tc3, sav);
+  CSUM(cof, sav);
+#endif
+#if (NCOL > 4)
+  node0_printf("Haven't coded cofactor for more than 4 colors\n");
+  exit(1);
+#endif
+  return cof;
+}
+#endif
+// -----------------------------------------------------------------
+
+
+
+
+
+// -----------------------------------------------------------------
 // Transpose of the cofactor matrix
 #ifdef DET
 void adjugate(su3_matrix_f *src, su3_matrix_f *dest) {
@@ -18,58 +79,19 @@ void adjugate(su3_matrix_f *src, su3_matrix_f *dest) {
   CMULREAL(src->e[0][1], -1.0, dest->e[0][1]);
   CMULREAL(src->e[1][0], -1.0, dest->e[1][0]);
 #endif
-#if (NCOL == 3)
-  complex tc1, tc2;
+#if (NCOL < 5)    // Given cofactor(), this should work generically
+  int i, j;
 
-  // Take the straightforward approach
-  // With extra negative sign for 01, 10, 12, 21, we have
-  // d[0][0] = COF[0][0] =  s[1][1] * s[2][2] - s[2][1] * s[1][2];
-  // d[0][1] = COF[1][0] = -s[0][1] * s[2][2] + s[2][1] * s[0][2];
-  // d[0][2] = COF[2][0] =  s[0][1] * s[1][2] - s[1][1] * s[0][2];
-  // d[1][0] = COF[0][1] = -s[1][0] * s[2][2] + s[2][0] * s[1][2];
-  // d[1][1] = COF[1][1] =  s[0][0] * s[2][2] - s[2][0] * s[0][2];
-  // d[1][2] = COF[2][1] = -s[0][0] * s[1][2] + s[1][0] * s[0][2];
-  // d[2][0] = COF[0][2] =  s[1][0] * s[2][1] - s[2][0] * s[1][1];
-  // d[2][1] = COF[1][2] = -s[0][0] * s[2][1] + s[2][0] * s[0][1];
-  // d[2][2] = COF[2][2] =  s[0][0] * s[1][1] - s[1][0] * s[0][1];
-
-  CMUL(src->e[1][1], src->e[2][2], tc1);
-  CMUL(src->e[2][1], src->e[1][2], tc2);
-  CSUB(tc1, tc2, dest->e[0][0]);
-
-  CMUL(src->e[0][1], src->e[2][2], tc1);
-  CMUL(src->e[2][1], src->e[0][2], tc2);
-  CSUB(tc2, tc1, dest->e[0][1]);
-
-  CMUL(src->e[0][1], src->e[1][2], tc1);
-  CMUL(src->e[1][1], src->e[0][2], tc2);
-  CSUB(tc1, tc2, dest->e[0][2]);
-
-  CMUL(src->e[1][0], src->e[2][2], tc1);
-  CMUL(src->e[2][0], src->e[1][2], tc2);
-  CSUB(tc2, tc1, dest->e[1][0]);
-
-  CMUL(src->e[0][0], src->e[2][2], tc1);
-  CMUL(src->e[2][0], src->e[0][2], tc2);
-  CSUB(tc1, tc2, dest->e[1][1]);
-
-  CMUL(src->e[0][0], src->e[1][2], tc1);
-  CMUL(src->e[1][0], src->e[0][2], tc2);
-  CSUB(tc2, tc1, dest->e[1][2]);
-
-  CMUL(src->e[1][0], src->e[2][1], tc1);
-  CMUL(src->e[2][0], src->e[1][1], tc2);
-  CSUB(tc1, tc2, dest->e[2][0]);
-
-  CMUL(src->e[0][0], src->e[2][1], tc1);
-  CMUL(src->e[2][0], src->e[0][1], tc2);
-  CSUB(tc2, tc1, dest->e[2][1]);
-
-  CMUL(src->e[0][0], src->e[1][1], tc1);
-  CMUL(src->e[1][0], src->e[0][1], tc2);
-  CSUB(tc1, tc2, dest->e[2][2]);
+  for (i = 0; i < NCOL; i++) {
+    for (j = 0; j < NCOL; j++) {
+      dest->e[i][j] = cofactor(src, j, i);    // Note transpose!
+      // Extra negative sign for 01, 03, 10, 12, 21, 23, 30 and 32
+      if ((i + j) % 2 == 1)
+        CNEGATE(dest->e[i][j], dest->e[i][j]);
+    }
+  }
 #endif
-#if (NCOL > 3)
+#if (NCOL > 4)
   node0_printf("Haven't coded derivative for more than 3 colors\n");
   exit(1);
 #endif
