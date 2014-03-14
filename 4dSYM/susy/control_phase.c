@@ -7,6 +7,56 @@
 
 
 // -----------------------------------------------------------------
+// Normalize all links by the square root of their determinant
+// to get them into SU(2), resolving the two-fold phase ambiguity
+#if (DIMF == 3)
+#define NORM_TOL 1e-12
+void normalize_links() {
+  register int i;
+  register site *s;
+  int mu;
+  Real frac = -1.0 / (Real)NCOL;
+  complex c1, c2;
+  su3_matrix_f tmat;
+
+  FORALLSITES(i, s) {
+    for (mu = XUP; mu < NUMLINK; mu++) {
+      // Divide out the det raised to fractional power as x^y = exp[y log x]
+      c1 = find_det(&(s->linkf[mu]));
+      c2 = clog(&c1);
+      CMULREAL(c2, frac, c1);
+      c2 = cexp(&c1);
+      c_scalar_mult_su3mat_f(&(s->linkf[mu]), &c2, &tmat);
+
+      // If tmat is not unitary, try the other sign
+      c1 = find_det(&tmat);   // Should be either 1 or -1...
+      if (fabs(c1.real - 1.0) > NORM_TOL || fabs(c1.imag) > NORM_TOL) {
+        CNEGATE(c2, c1);
+        c_scalar_mult_su3mat_f(&(s->linkf[mu]), &c1, &tmat);
+
+        // Monitor whether this ever actually has any effect
+        printf("normalize_links: negating det at site %dx%d[%d]\n",
+               this_node, i, mu);
+      }
+      su3mat_copy_f(&tmat, &(s->linkf[mu]));
+
+//#ifdef DEBUG_CHECK
+      // Check that final result really is in SU(2)
+      c1 = find_det(&(s->linkf[mu]));
+      if (fabs(c1.real - 1.0) > NORM_TOL || fabs(c1.imag) > NORM_TOL) {
+        printf("normalize_links: det(U_%d[%d]) = (%.4g, %.4g)...\n",
+               mu, i, c1.real, c2.imag);
+      }
+//#endif
+    }
+  }
+}
+#endif
+// -----------------------------------------------------------------
+
+
+
+// -----------------------------------------------------------------
 int main(int argc, char *argv[]) {
   int prompt;
   double dssplaq, dstplaq, dtime;
@@ -75,6 +125,19 @@ int main(int argc, char *argv[]) {
   d_plaquette(&dssplaq, &dstplaq);
   node0_printf("AFTER  %.8g %.8g\n", dssplaq, dstplaq);
 #endif
+
+#if (DIMF == 3)
+#if (NCOL != 2)
+  #error "I'm so confused: How does DIMF=3 without NCOL=2"
+#endif
+  // Normalize all links by the square root of their determinant
+  // to get them into SU(2)
+  normalize_links();
+
+  // Update fermion-rep links with the normalized SU(N) gauge links
+  fermion_rep();
+#endif
+
 
   // Main measurement: pfaffian phase
   d_phase();

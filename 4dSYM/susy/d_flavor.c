@@ -65,6 +65,7 @@ void d_flavor() {
 #ifdef DEBUG_CHECK
 #define INV_TOL 1e-12
       // Check inversion
+      // TODO: add fabs to ensure components are positive...
       mult_su3_nn_f(&(s->mom[dir]), &(s->linkf[dir]), &tmat);
       if (1 - tmat.e[0][0].real > INV_TOL
           || tmat.e[0][0].imag > INV_TOL

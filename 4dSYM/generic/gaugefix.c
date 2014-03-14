@@ -153,27 +153,26 @@ void do_hit(int gauge_dir, int parity, int p, int q, Real relax_boost,
        a3 =  s->diffmat.e[p][p].imag - s->diffmat.e[q][q].imag;
        */
     if (sumvec_offset >= 0)
-      a0 =     ((su3_vector_f *)F_PT(s,sumvec_offset))->c[p].real +
-        ((su3_vector_f *)F_PT(s,sumvec_offset))->c[q].real;
+      a0 = ((su3_vector_f *)F_PT(s, sumvec_offset))->c[p].real
+         + ((su3_vector_f *)F_PT(s, sumvec_offset))->c[q].real;
     else
-      a0 =     sumvecp[i].c[p].real +  sumvecp[i].c[q].real;
+      a0 = sumvecp[i].c[p].real +  sumvecp[i].c[q].real;
 
     if (diffmat_offset >= 0) {
-      a1 =     ((su3_matrix_f *)F_PT(s,diffmat_offset))->e[q][p].imag +
-        ((su3_matrix_f *)F_PT(s,diffmat_offset))->e[p][q].imag;
-      a2 =    -((su3_matrix_f *)F_PT(s,diffmat_offset))->e[q][p].real +
-        ((su3_matrix_f *)F_PT(s,diffmat_offset))->e[p][q].real;
-      a3 =     ((su3_matrix_f *)F_PT(s,diffmat_offset))->e[p][p].imag -
-        ((su3_matrix_f *)F_PT(s,diffmat_offset))->e[q][q].imag;
+      a1 = ((su3_matrix_f *)F_PT(s, diffmat_offset))->e[q][p].imag
+         + ((su3_matrix_f *)F_PT(s, diffmat_offset))->e[p][q].imag;
+      a2 = -((su3_matrix_f *)F_PT(s, diffmat_offset))->e[q][p].real
+         + ((su3_matrix_f *)F_PT(s, diffmat_offset))->e[p][q].real;
+      a3 = ((su3_matrix_f *)F_PT(s, diffmat_offset))->e[p][p].imag
+         - ((su3_matrix_f *)F_PT(s, diffmat_offset))->e[q][q].imag;
     }
     else {
-      a1 =     diffmatp[i].e[q][p].imag + diffmatp[i].e[p][q].imag;
-      a2 =    -diffmatp[i].e[q][p].real + diffmatp[i].e[p][q].real;
-      a3 =     diffmatp[i].e[p][p].imag - diffmatp[i].e[q][q].imag;
+      a1 = diffmatp[i].e[q][p].imag + diffmatp[i].e[p][q].imag;
+      a2 = -diffmatp[i].e[q][p].real + diffmatp[i].e[p][q].real;
+      a3 = diffmatp[i].e[p][p].imag - diffmatp[i].e[q][q].imag;
     }
 
     /* Over-relaxation boost */
-
     /* This algorithm is designed to give little change for large |a| */
     /* and to scale up the gauge transformation by a factor of relax_boost*/
     /* for small |a| */

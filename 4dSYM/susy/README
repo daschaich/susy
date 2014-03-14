@@ -69,14 +69,13 @@ Nvecs 100             # Number of eigenvalues to calculate -- only include with 
 eig_tol 1e-6          # Eigenvalue convergence criterion -- only include with -DEIG
 maxIter 500           # Maximum number of eigenvalue iterations -- only include with -DEIG
 
-                      # WARNING: The pfaffian checkpoint routines are not yet robust
-                      # The file names are hard-coded based on the loaded lattice
-                      # The user must pass the correct columns, and the layout must remain fixed
+                      # Checkpointed pfaffian I/O currently hard-codes the file names to save and load,
+                      # based on the following two parameters
 ckpt_load -1          # If positive, load all subsequent columns of Q from dumped files -- only include with -DPHASE
 ckpt_save -1          # If positive, dump all subsequent columns of Q -- only include with -DPHASE
 
 fresh                 # What to do with lattice at start: only fresh, continue or reload_serial
-coulomb_gauge_fix     # Only coulomb_gauge_fix and no_gauge_fix supported
+coulomb_gauge_fix     # Only coulomb_gauge_fix and no_gauge_fix supported -- BROKEN FOR NCOL=4
 forget                # What to do with lattice at end: only forget or save_serial
 # ------------------------------------------------------------------
 
