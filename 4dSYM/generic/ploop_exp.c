@@ -1,7 +1,7 @@
 // -----------------------------------------------------------------
 // Evaluate the Polyakov loops using general_gathers
 // Compute the Polyakov loop "at" the even sites in the first two time slices
-// This version considers the traceless part
+// This version considers the (exponentiated) traceless part
 #include "generic_includes.h"
 
 complex ploop_exp() {
@@ -56,8 +56,10 @@ complex ploop_exp() {
   }
 
   g_complexsum(&sum);
-  plp.real = sum.real / ((Real)(nx * ny * nz));
-  plp.imag = sum.imag / ((Real)(nx * ny * nz));
+  CDIVREAL(sum, ((Real)(nx * ny * nz)), tc)
+  sum = cexp(&tc);
+  plp.real = sum.real;
+  plp.imag = sum.imag;
   return plp;
 }
 // -----------------------------------------------------------------
