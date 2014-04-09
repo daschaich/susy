@@ -10,7 +10,7 @@
 #ifdef DET
 complex cofactor(su3_matrix_f *src, int row, int col) {
   int a = 0, b = 0, i, j;
-  complex submat[NCOL - 1][NCOL - 1], tc1, tc2, cof;
+  complex submat[NCOL - 1][NCOL - 1], cof = cmplx(0.0, 0.0);
 
   // Set up submatrix omitting row row and column col
   for (i = 0; i < NCOL; i++) {
@@ -28,6 +28,7 @@ complex cofactor(su3_matrix_f *src, int row, int col) {
 
 #if (NCOL == 3)
   // Here things are easy
+  complex tc1, tc2;
   CMUL(submat[0][0], submat[1][1], tc1);
   CMUL(submat[1][0], submat[0][1], tc2);
   CSUB(tc1, tc2, cof);
@@ -35,7 +36,7 @@ complex cofactor(su3_matrix_f *src, int row, int col) {
 #if (NCOL == 4)
   // Here things are less fun, but still not tough
   // det = 00(11*22 - 21*12) - 01(10*22 - 20*12) + 02(10*21 - 20*11)
-  complex tc3, sav;
+  complex tc1, tc2, tc3, sav;
   CMUL(submat[1][1], submat[2][2], tc1);
   CMUL(submat[2][1], submat[1][2], tc2);
   CSUB(tc1, tc2, tc3);
@@ -79,7 +80,7 @@ void adjugate(su3_matrix_f *src, su3_matrix_f *dest) {
   CMULREAL(src->e[0][1], -1.0, dest->e[0][1]);
   CMULREAL(src->e[1][0], -1.0, dest->e[1][0]);
 #endif
-#if (NCOL < 5)    // Given cofactor(), this should work generically
+#if (NCOL == 3 || NCOL == 4)    // Given cofactor(), this should work generically
   int i, j;
 
   for (i = 0; i < NCOL; i++) {

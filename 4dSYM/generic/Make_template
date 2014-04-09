@@ -22,6 +22,7 @@ G_ALL = \
  make_lattice.o \
  nersc_cksum.o \
  ploop_dist.o \
+ ploop_exp.o \
  ranstuff.o \
  remap_stdio_from_args.o \
  restrict_fourier.o
@@ -78,6 +79,8 @@ make_lattice.o: ../generic/make_lattice.c
 nersc_cksum.o: ../generic/nersc_cksum.c
 	${CC} -c ${CFLAGS} $<
 ploop_dist.o: ../generic/ploop_dist.c
+	${CC} -c ${CFLAGS} $<
+ploop_exp.o: ../generic/ploop_exp.c
 	${CC} -c ${CFLAGS} $<
 ranstuff.o: ../generic/ranstuff.c
 	${CC} -c ${CFLAGS} $<

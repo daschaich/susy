@@ -1,28 +1,32 @@
 // -----------------------------------------------------------------
 // Evaluate the Polyakov loops using general_gathers
 // Compute the Polyakov loop "at" the even sites in the first two time slices
-// If PLOOPDIST dist defined (currently broken!),
-// report the distribution of ploop values as a function of each x y z
+// This version considers the traceless part
 #include "generic_includes.h"
 
-complex ploop() {
+complex ploop_exp() {
   register int i, t;
   register site *s;
   int d[4] = {0, 0, 0, 0};    // Path from which to gather
-  complex sum  = cmplx(0.0, 0.0), plp;
+  Real norm = -1.0 / ((Real)NCOL);    // Will be added
+  complex sum  = cmplx(0.0, 0.0), plp, tc, trace;
   msg_tag *tag;
-#ifdef PLOOPDIST
-  int x, y, z;
-  node0_printf("PLOOPDIST currently broken!");
-  terminate(1);
-#endif
 
-  // First multiply the link on every even site by the link above it
-  tag = start_gather_site(F_OFFSET(linkf[TUP]), sizeof(su3_matrix_f),
+  // First subtract the trace from each temporal link
+  // Temporarily store traceless part in mom[TUP]
+  FORALLSITES(i, s) {
+    su3mat_copy_f(&(s->linkf[TUP]), &(s->mom[TUP]));
+    trace = trace_su3_f(&(s->linkf[TUP]));
+    CMULREAL(trace, norm, tc);
+    c_scalar_add_diag_su3_f(&(s->mom[TUP]), &tc);
+  }
+
+  // Now multiply the link on every even site by the link above it
+  tag = start_gather_site(F_OFFSET(mom[TUP]), sizeof(su3_matrix_f),
                           TUP, EVEN, gen_pt[0] );
   wait_gather(tag);
   FOREVENSITES(i, s) {
-    mult_su3_nn_f(&(s->linkf[TUP]), (su3_matrix_f *)gen_pt[0][i],
+    mult_su3_nn_f(&(s->mom[TUP]), (su3_matrix_f *)gen_pt[0][i],
                   &(s->tempmat1));
   }
   cleanup_gather(tag);
@@ -48,33 +52,8 @@ complex ploop() {
     if (s->t > 1)
       continue;
     plp = trace_su3_f(&(s->tempmat1));
-#ifdef PLOOPDIST
-    // Save result in tempmat1 for t = 0 or 1 slice
-    THIS IS WRONG
-    s->tempmat1.e[0][0] = plp;
-#endif
     CSUM(sum, plp);
   }
-
-#ifdef PLOOPDIST
-  // Report ploop distribution
-  for (x = 0; x < nx; x++) {
-    for (y = 0; y < ny; y++) {
-      for (z = 0; z < nz; z++) {
-        t = (x + y + z) % 2;
-        i = node_index(x, y, z, t);
-        if (node_number(x, y, z, t) != mynode())
-          plp = cmplx(0.0, 0.0);
-        THIS IS WRONG
-        else
-          plp = lattice[i].tempmat1.e[0][0];
-        g_sync();
-        g_complexsum(&plp);
-        node0_printf("PLOOP %d %d %d %.4g %.4g\n", x, y, z, plp.real, plp.imag);
-      }
-    }
-  }
-#endif
 
   g_complexsum(&sum);
   plp.real = sum.real / ((Real)(nx * ny * nz));

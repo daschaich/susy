@@ -9,6 +9,7 @@
 #   susy_phi uses phi algorithm
 #   susy_hmc uses hybrid Monte Carlo algorithm, i.e., phi + accept/reject
 #   susy_corr calculates scalar correlators (Konishi, supergravity, Polyakov loops, Wilson loops)
+#   susy_poly fills in traceless Polyakov loop calculations
 #   susy_bilin calculates fermion bilinears
 #   susy_eig calculates eigenvalues using PRIMME
 #   susy_phase calculates the pfaffian phase
@@ -120,6 +121,11 @@ susy_corr::
 	                 gaugefix.o restrict_fourier.o \
 	                 hvy_pot_loop.o hvy_pot_polar_loop.o path.o \
 	                 hvy_pot_rest_loop.o path2.o "
+
+susy_poly::
+	${MAKE} -f ${MAKEFILE} target "MYTARGET= $@" \
+	"DEFINES = ${DEFINES} -DPHI_ALGORITHM " \
+	"EXTRA_OBJECTS = control_poly.o ploop_exp.o "
 
 susy_hyp::
 	${MAKE} -f ${MAKEFILE} target "MYTARGET= $@" \

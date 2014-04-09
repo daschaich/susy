@@ -28,26 +28,9 @@ void normalize_links() {
       c2 = cexp(&c1);
       c_scalar_mult_su3mat_f(&(s->linkf[mu]), &c2, &tmat);
 
-      // If tmat is not unitary, try the other sign
-      c1 = find_det(&tmat);   // Should be either 1 or -1...
-      if (fabs(c1.real - 1.0) > NORM_TOL || fabs(c1.imag) > NORM_TOL) {
-        CNEGATE(c2, c1);
-        c_scalar_mult_su3mat_f(&(s->linkf[mu]), &c1, &tmat);
+      ...RESOLVE AMBIGUITY...
 
-        // Monitor whether this ever actually has any effect
-        printf("normalize_links: negating det at site %dx%d[%d]\n",
-               this_node, i, mu);
-      }
-      su3mat_copy_f(&tmat, &(s->linkf[mu]));
-
-//#ifdef DEBUG_CHECK
-      // Check that final result really is in SU(2)
-      c1 = find_det(&(s->linkf[mu]));
-      if (fabs(c1.real - 1.0) > NORM_TOL || fabs(c1.imag) > NORM_TOL) {
-        printf("normalize_links: det(U_%d[%d]) = (%.4g, %.4g)...\n",
-               mu, i, c1.real, c2.imag);
-      }
-//#endif
+      scalar_mult_su3_matrix_f(&tmat, 1.0, &(s->linkf[mu]));
     }
   }
 }

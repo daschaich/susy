@@ -19,7 +19,7 @@ void hvy_pot_polar() {
   msg_tag *mtag0;
   field_offset oldmat, newmat, tt;
 
-  node0_printf("hvy_pot_polar(): MAX_T = %d, MAX_X = %d\n", MAX_T, MAX_X);
+  node0_printf("hvy_pot_polar: MAX_T = %d, MAX_X = %d\n", MAX_T, MAX_X);
 
   FORALLSITES(i, s) {
    // Polar projection of gauge-fixed links

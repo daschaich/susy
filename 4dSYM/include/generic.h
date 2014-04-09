@@ -66,6 +66,9 @@ u_int32type nersc_cksum();
 // ploop_dist.c
 complex ploop();
 
+// ploop_exp.c
+complex ploop_exp();
+
 // ranmom.c
 void ranmom();
 
