@@ -69,14 +69,11 @@ int main(int argc, char *argv[]) {
   node0_printf("%.8g\n", dssplaq / (double)volume);
   node0_printf("BACTION %.8g\n", dssplaq / (double)volume);
 
-#ifdef HYP
-  // Optionally HYP smear before main measurements
-  // Need to be more clever about setting these smearing parameters
-  alpha_smear[0] = 0.75;
-  alpha_smear[1] = 0.6;
-  alpha_smear[2] = 0.3;
-  node0_printf("HYP smearing with (%.4g, %.4g, %.4g)...\n",
-               alpha_smear[0], alpha_smear[1], alpha_smear[2]);
+#ifdef STOUT
+  // Optionally smear before main measurements
+  // Need to be more clever about setting this smearing parameter
+  rho = 0.25;
+  node0_printf("Stout smearing with rho=%.4g...\n", rho);
 
 #define MIN_PLAQ
   // Check minimum plaquette in addition to averages
@@ -85,7 +82,7 @@ int main(int argc, char *argv[]) {
   node0_printf(" %.8g %.8g\n", dssplaq, dstplaq);
 
   // Overwrites s->linkf, saving original values in thin_link field
-  block_hyp();
+  block_stout();
   node0_printf("AFTER  ");
   d_plaquette_lcl(&dssplaq, &dstplaq);    // Prints out MIN_PLAQ
   node0_printf(" %.8g %.8g\n", dssplaq, dstplaq);

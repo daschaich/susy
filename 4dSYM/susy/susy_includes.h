@@ -161,9 +161,9 @@ void hvy_pot_rest_loop();    // Uses find_det
 #endif
 #endif
 
-// HYP smearing
-#ifdef HYP
-void block_hyp();
+// Stout smearing
+#ifdef STOUT
+void block_stout();
 #endif
 // -----------------------------------------------------------------
 

@@ -56,7 +56,7 @@ d_plaq4_lcl.o: ../generic/d_plaq4_lcl.c
 	${CC} -c ${CFLAGS} $<
 gaugefix.o: ../generic/gaugefix.c
 	${CC} -c ${CFLAGS} $<
-hyp.o: ../generic/hyp.c
+stout.o: ../generic/stout.c
 	${CC} -c ${CFLAGS} $<
 io_ansi.o: ../generic/io_ansi.c
 	${CC} -c ${CFLAGS} $<

@@ -164,14 +164,14 @@ EXTERN site *lattice;
 #define N_POINTERS 10
 EXTERN char **gen_pt[N_POINTERS];
 
-#ifdef HYP
-// HYP smearing stuff
-EXTERN double alpha_smear[3];
+#ifdef STOUT
+// Stout smearing stuff
+EXTERN double rho;
 EXTERN su3_matrix_f *thin_link[NUMLINK];
 EXTERN su3_matrix_f *smeared_link[NUMLINK];
-EXTERN su3_matrix_f *hyplink1[NUMLINK][NUMLINK];
-EXTERN su3_matrix_f *hyplink2[NUMLINK][NUMLINK];
-EXTERN su3_matrix_f *tempmat;
+EXTERN su3_matrix_f *stp[NUMLINK];    // Staples
+EXTERN anti_hermitmat *Q[NUMLINK];    // To be exponentiated
+EXTERN su3_matrix_f *tempmat;         // Staple storage
 #endif
 
 #ifdef EIG
@@ -193,7 +193,7 @@ EXTERN int ckpt_load, ckpt_save;    // For checkpointing
 // Up to 20 concurrent timers for timing, not currently being used
 #ifdef TIMING
 EXTERN double tmptime[20];
-EXTERN double time_block_hyp;    // Uses tmptime[0] in block_hyp
+EXTERN double time_block_stout;     // Uses tmptime[0] in block_stout
 #endif
 
 #endif // _LATTICE_H
