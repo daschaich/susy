@@ -6,6 +6,7 @@ susy_hmc and susy_phi for evolution with and without accept/reject step
 susy_hmc_pg and susy_phi_pg for testing with gauge fields only (no fermions)
 susy_hmc_sc for reverse compatibility with Simon's HMC algorithm including momenta for the pseudofermions (NOT WELL DEBUGGED)
 susy_corr for correlator measurements on saved configurations
+susy_stout for stout-smeared correlator measurements on saved configurations
 susy_bilin for fermion bilinear (and correlator) measurements on saved configurations
 susy_hmc_corr for evolution along with correlator measurements
 susy_eig for eigenvalue measurements on saved configurations
@@ -21,13 +22,14 @@ susy_phase for pfaffian phase measurements on saved configurations
 -DWLOOP switches on the gauge-fixed Wilson loop calculation
 -DBILIN switches on the fermion bilinear calculation
 -DEIG switches on the PRIMME eigenvalue calculation
+-DSTOUT switches on stout smearing for correlator measurements
 -DCATTERALL_ALG switches on momenta for the pseudofermions (NOT WELL DEBUGGED)
 
 # Gauge group and fermion rep:
 NCOL and DIMF defined in ../include/su3.h
 For now we fix U(NCOL) gauge group with DIMF=NCOL*NCOL for adjoint rep
 
-# Boundary conditions:
+# Boundary conditions for fermions:
 Only supports periodic spatial boundary conditions for now
 PBC = +/-1 chooses periodic or anti-periodic temporal boundary conditions, defined in defines.h
 # ------------------------------------------------------------------
@@ -60,6 +62,9 @@ lambda 1.5            # 't Hooft coupling
 kappa_u1 2.0          # Determinant coupling -- only include with -DDET
 bmass 1.0             # Bosonic mass
 fmass 0.05            # Fermion mass
+
+Nstout 1              # Number of stout smearing steps -- only include with -DSTOUT
+rho 0.25              # Stout smearing parameter -- only include with -DSTOUT
 
 max_cg_iterations 500 # Maximum number of CG iterations
 error_per_site 1e-5   # Stopping condition for CG (will be squared)
@@ -151,12 +156,13 @@ nersc_cksum.c           -- Compute link trace sum for lattice I/O (cksum itself 
 ranstuff.c              -- Random number stuff, both for serial and parallel running
 remap_stdio_from_args.c -- For reading input parameters
 layout_hyper_prime.c    -- Layout lattice on processors
+stout.c                 -- Stout smearing on A4* lattice (UNDER DEVELOPMENT)
 
 # 2b) Measurement-specific files
 gaugefix.c          -- Fixes to Coulomb gauge (UNDER DEVELOPMENT)
 restrict_fourier.c  -- Fast Fourier transform routine
 d_plaq4_lcl.c       -- Calculates the plaquette with options to print more info
-                       Used to monitor minimum plaquette when HYP smearing
+                       Used to monitor minimum plaquette when smearing
 io_phase.c          -- Primitive (for now) dump and load routines for checkpointing pfaffian computations
 # ------------------------------------------------------------------
 

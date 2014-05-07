@@ -163,7 +163,7 @@ void hvy_pot_rest_loop();    // Uses find_det
 
 // Stout smearing
 #ifdef STOUT
-void block_stout();
+void block_stout(int Nstout, double rho);
 #endif
 // -----------------------------------------------------------------
 

@@ -166,6 +166,7 @@ EXTERN char **gen_pt[N_POINTERS];
 
 #ifdef STOUT
 // Stout smearing stuff
+EXTERN int Nstout;
 EXTERN double rho;
 EXTERN su3_matrix_f *thin_link[NUMLINK];
 EXTERN su3_matrix_f *smeared_link[NUMLINK];

@@ -36,6 +36,12 @@ typedef struct {
   Real eig_tol;
 #endif
 
+#ifdef STOUT
+  // Stout-smearing parameters
+  int Nstout;
+  Real rho;
+#endif
+
 #ifdef PHASE
   // Pfaffian parameters
   int ckpt_load, ckpt_save;

@@ -71,9 +71,8 @@ int main(int argc, char *argv[]) {
 
 #ifdef STOUT
   // Optionally smear before main measurements
-  // Need to be more clever about setting this smearing parameter
-  rho = 0.25;
-  node0_printf("Stout smearing with rho=%.4g...\n", rho);
+  node0_printf("Doing %d stout smearing steps with rho=%.4g...\n",
+               Nstout, rho);
 
 #define MIN_PLAQ
   // Check minimum plaquette in addition to averages
@@ -82,7 +81,7 @@ int main(int argc, char *argv[]) {
   node0_printf(" %.8g %.8g\n", dssplaq, dstplaq);
 
   // Overwrites s->linkf, saving original values in thin_link field
-  block_stout();
+  block_stout(Nstout, rho);
   node0_printf("AFTER  ");
   d_plaquette_lcl(&dssplaq, &dstplaq);    // Prints out MIN_PLAQ
   node0_printf(" %.8g %.8g\n", dssplaq, dstplaq);

@@ -176,6 +176,12 @@ int readin(int prompt) {
     IF_OK status += get_f(stdin, prompt, "bmass", &par_buf.bmass);
     IF_OK status += get_f(stdin, prompt, "fmass", &par_buf.fmass);
 
+#ifdef STOUT
+    // Stout smearing stuff
+    IF_OK status += get_i(stdin, prompt, "Nstout", &par_buf.Nstout);
+    IF_OK status += get_f(stdin, prompt, "rho", &par_buf.rho);
+#endif
+
     // Maximum conjugate gradient iterations
     IF_OK status += get_i(stdin, prompt, "max_cg_iterations", &par_buf.niter);
 
@@ -249,6 +255,10 @@ int readin(int prompt) {
   Nvec = par_buf.Nvec;
   eig_tol = par_buf.eig_tol;
   maxIter = par_buf.maxIter;
+#endif
+#ifdef STOUT
+  Nstout = par_buf.Nstout;
+  rho = par_buf.rho;
 #endif
 #ifdef PHASE
   ckpt_load = par_buf.ckpt_load;

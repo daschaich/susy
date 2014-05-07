@@ -1,6 +1,8 @@
 // -----------------------------------------------------------------
 // Construct stout-smeared links, following the standard procedure,
 // Morningstar and Peardon, hep-lat/0311018
+// The application program must define and allocate staples stp,
+// and anti-hermitian matrices Q
 #include "generic_includes.h"
 // -----------------------------------------------------------------
 
@@ -126,8 +128,8 @@ void exp_mult() {
 // -----------------------------------------------------------------
 // Do stout smearing
 // Overwrite s->linkf and save original values in thin_link field
-void block_stout() {
-  register int i, dir, dir2;
+void block_stout(int Nstout, double rho) {
+  register int i, n, dir, dir2;
   register site *s;
   su3_matrix_f tmat;
 
@@ -140,31 +142,33 @@ void block_stout() {
       su3mat_copy_f(&(s->linkf[dir]), &(thin_link[dir][i]));
   }
 
-  for (dir = XUP; dir < NUMLINK; dir++) {
-    FORALLSITES(i, s)
-      clear_su3mat_f(&(stp[dir][i]));    // Initialize staple sum
+  for (n = 0; n < Nstout; n++) {
+    for (dir = XUP; dir < NUMLINK; dir++) {
+      FORALLSITES(i, s)
+        clear_su3mat_f(&(stp[dir][i]));    // Initialize staple sum
 
-    // Compute staple sums
-    for (dir2 = XUP; dir2 < NUMLINK; dir2++) {
-      if (dir != dir2)                 // Accumulate staples
-        directional_staple(dir, dir2, F_OFFSET(linkf[dir]),
-                           F_OFFSET(linkf[dir2]), stp[dir]);
+      // Compute staple sums
+      for (dir2 = XUP; dir2 < NUMLINK; dir2++) {
+        if (dir != dir2)                 // Accumulate staples
+          directional_staple(dir, dir2, F_OFFSET(linkf[dir]),
+                             F_OFFSET(linkf[dir2]), stp[dir]);
+      }
+
+      // Multiply by rho Udag, take traceless anti-hermitian part
+      FORALLSITES(i, s) {
+        mult_su3_na_f(&(stp[dir][i]), &(s->linkf[dir]), &tmat);  // C.Udag
+        scalar_mult_su3_matrix_f(&tmat, rho, &(stp[dir][i]));
+        make_anti_hermitian(&(stp[dir][i]), &(Q[dir][i]));
+      }
     }
 
-    // Multiply by rho Udag, take traceless anti-hermitian part
-    FORALLSITES(i, s) {
-      mult_su3_na_f(&(stp[dir][i]), &(s->linkf[dir]), &tmat);  // C.Udag
-      scalar_mult_su3_matrix_f(&tmat, rho, &(stp[dir][i]));
-      make_anti_hermitian(&(stp[dir][i]), &(Q[dir][i]));
+    // Do all exponentiations at once to reuse divisions
+    exp_mult();
+
+    for (dir = XUP; dir < NUMLINK; dir++) {
+      FORALLSITES(i, s)
+        su3mat_copy_f(&(smeared_link[dir][i]), &(s->linkf[dir]));
     }
-  }
-
-  // Do all exponentiations at once to reuse divisions
-  exp_mult();
-
-  for (dir = XUP; dir < NUMLINK; dir++) {
-    FORALLSITES(i, s)
-      su3mat_copy_f(&(smeared_link[dir][i]), &(s->linkf[dir]));
   }
 
 #ifdef TIMING
