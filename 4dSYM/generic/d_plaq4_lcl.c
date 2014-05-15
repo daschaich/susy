@@ -29,7 +29,7 @@ static int print_dir = 0;   // Controls printing out MY_DIR
 
 // -----------------------------------------------------------------
 void d_plaquette_lcl(double *ss_plaq, double *st_plaq) {
-  register int i, dir1, dir2;
+  register int i, dir, dir2;
   register site *s;
   register su3_matrix_f *m1, *m4;
   su3_matrix_f mtmp;
@@ -57,22 +57,23 @@ void d_plaquette_lcl(double *ss_plaq, double *st_plaq) {
     terminate(1);
   }
 
-  for (dir1 = YUP; dir1 <= TUP; dir1++) {
-    for (dir2 = XUP; dir2 < dir1; dir2++) {
+  // We can exploit a symmetry under dir<-->dir2
+  for (dir = YUP; dir < NUMLINK; dir++) {
+    for (dir2 = XUP; dir2 < dir; dir2++) {
       mtag0 = start_gather_site(F_OFFSET(linkf[dir2]), sizeof(su3_matrix_f),
-                                dir1, EVENANDODD, gen_pt[0]);
-      mtag1 = start_gather_site(F_OFFSET(linkf[dir1]), sizeof(su3_matrix_f),
-                                dir2, EVENANDODD, gen_pt[1]);
+                                goffset[dir], EVENANDODD, gen_pt[0]);
+      mtag1 = start_gather_site(F_OFFSET(linkf[dir]), sizeof(su3_matrix_f),
+                                goffset[dir2], EVENANDODD, gen_pt[1]);
 
       FORALLSITES(i, s) {
-        m1 = &(s->linkf[dir1]);
+        m1 = &(s->linkf[dir]);
         m4 = &(s->linkf[dir2]);
-        mult_su3_an_f(m4,m1,&su3mat[i]);
+        mult_su3_an_f(m4, m1, &su3mat[i]);
       }
       wait_gather(mtag0);
       wait_gather(mtag1);
 
-      if (dir1 == TUP) {
+      if (dir == TUP || dir2 == TUP) {
         FORALLSITES(i, s) {
           mult_su3_nn_f(&(su3mat[i]), (su3_matrix_f *)(gen_pt[0][i]), &mtmp);
           cur_plaq = (double)realtrace_su3_f((su3_matrix_f *)(gen_pt[1][i]),
@@ -83,7 +84,7 @@ void d_plaquette_lcl(double *ss_plaq, double *st_plaq) {
 #endif
           st_sum += cur_plaq;
 #ifdef LOCAL_PLAQ
-          if (dir1 == MY_DIR || dir2 == MY_DIR)
+          if (dir == MY_DIR || dir2 == MY_DIR)
             plaq_perp[s->MY_X] += cur_plaq;
           else
             plaq_prll[s->MY_X] += cur_plaq;
@@ -101,7 +102,7 @@ void d_plaquette_lcl(double *ss_plaq, double *st_plaq) {
 #endif
           ss_sum += cur_plaq;
 #ifdef LOCAL_PLAQ
-          if (dir1 == MY_DIR || dir2 == MY_DIR)
+          if (dir == MY_DIR || dir2 == MY_DIR)
             plaq_perp[s->MY_X] += cur_plaq;
           else
             plaq_prll[s->MY_X] += cur_plaq;
@@ -115,9 +116,10 @@ void d_plaquette_lcl(double *ss_plaq, double *st_plaq) {
   g_doublesum(&ss_sum);
   g_doublesum(&st_sum);
 
-  // Average over three space-space and three time-space plaquettes
-  *ss_plaq = ss_sum / ((double)(3.0 * volume));
-  *st_plaq = st_sum / ((double)(3.0 * volume));
+  // Average over four plaquettes that involve the temporal link
+  // and six that do not
+  *ss_plaq = ss_sum / ((double)(6.0 * volume));
+  *st_plaq = st_sum / ((double)(4.0 * volume));
 
   free(su3mat);
 
@@ -166,9 +168,9 @@ void d_plaquette_lcl(double *ss_plaq, double *st_plaq) {
 #ifndef PURE_GAUGE
 // Irrep plaquette
 void d_plaquette_frep_lcl(double *ss_plaq_frep, double *st_plaq_frep) {
-  register int i,dir1,dir2;
+  register int i, dir, dir2;
   register site *s;
-  register su3_matrix *m1,*m4;
+  register su3_matrix *m1, *m4;
   su3_matrix mtmp;
   double ss_sum = 0.0, st_sum = 0.0, cur_plaq;
 #ifdef MIN_PLAQ
@@ -189,27 +191,27 @@ void d_plaquette_frep_lcl(double *ss_plaq_frep, double *st_plaq_frep) {
 #endif
 
   if (su3mat == NULL) {
-    printf("plaquette: can't malloc su3mat\n");
+    printf("plaquette_frep: can't malloc su3mat\n");
     fflush(stdout);
     terminate(1);
   }
 
-  for (dir1 = YUP; dir1 <= TUP; dir1++) {
-    for (dir2 = XUP; dir2 < dir1; dir2++) {
+  for (dir = YUP; dir < NUMLINK; dir++) {
+    for (dir2 = XUP; dir2 < dir; dir2++) {
       mtag0 = start_gather_site(F_OFFSET(link[dir2]), sizeof(su3_matrix),
-                                dir1, EVENANDODD, gen_pt[0]);
-      mtag1 = start_gather_site(F_OFFSET(link[dir1]), sizeof(su3_matrix),
-                                dir2, EVENANDODD, gen_pt[1]);
+                                goffset[dir], EVENANDODD, gen_pt[0]);
+      mtag1 = start_gather_site(F_OFFSET(link[dir]), sizeof(su3_matrix),
+                                goffset[dir2], EVENANDODD, gen_pt[1]);
 
       FORALLSITES(i, s) {
-        m1 = &(s->link[dir1]);
+        m1 = &(s->link[dir]);
         m4 = &(s->link[dir2]);
         mult_su3_an(m4, m1, &su3mat[i]);
       }
 
       wait_gather(mtag0);
       wait_gather(mtag1);
-      if (dir1 == TUP) {
+      if (dir == TUP || dir2 == TUP) {
         FORALLSITES(i, s) {
           mult_su3_nn(&(su3mat[i]), (su3_matrix *)(gen_pt[0][i]), &mtmp);
           cur_plaq = (double)realtrace_su3((su3_matrix *)(gen_pt[1][i]),
@@ -220,11 +222,11 @@ void d_plaquette_frep_lcl(double *ss_plaq_frep, double *st_plaq_frep) {
 #endif
 #ifdef ALL_PLAQ
           printf("ALL_PLAQ %d %d %d %d %d %d %e\n",
-                 s->x, s->y, s->z, s->t, dir1, dir2, cur_plaq);
+                 s->x, s->y, s->z, s->t, dir, dir2, cur_plaq);
 #endif
           st_sum += cur_plaq;
 #ifdef LOCAL_PLAQ
-          if (dir1 == MY_DIR || dir2 == MY_DIR)
+          if (dir == MY_DIR || dir2 == MY_DIR)
             plaq_perp[s->MY_X] += cur_plaq;
           else
             plaq_prll[s->MY_X] += cur_plaq;
@@ -242,11 +244,11 @@ void d_plaquette_frep_lcl(double *ss_plaq_frep, double *st_plaq_frep) {
 #endif
 #ifdef ALL_PLAQ
           printf("ALL_PLAQ %d %d %d %d %d %d %e\n",
-                 s->x, s->y, s->z, s->t, dir1, dir2, cur_plaq);
+                 s->x, s->y, s->z, s->t, dir, dir2, cur_plaq);
 #endif
           ss_sum += cur_plaq;
 #ifdef LOCAL_PLAQ
-          if (dir1 == MY_DIR || dir2 == MY_DIR)
+          if (dir == MY_DIR || dir2 == MY_DIR)
             plaq_perp[s->MY_X] += cur_plaq;
           else
             plaq_prll[s->MY_X] += cur_plaq;
@@ -260,9 +262,10 @@ void d_plaquette_frep_lcl(double *ss_plaq_frep, double *st_plaq_frep) {
   g_doublesum(&ss_sum);
   g_doublesum(&st_sum);
 
-  // Average over three space-space and three time-space plaquettes
-  *ss_plaq_frep = ss_sum / ((double)(3.0 * volume));
-  *st_plaq_frep = st_sum / ((double)(3.0 * volume));
+  // Average over four plaquettes that involve the temporal link
+  // and six that do not
+  *ss_plaq_frep = ss_sum / ((double)(6.0 * volume));
+  *st_plaq_frep = st_sum / ((double)(4.0 * volume));
 
   free(su3mat);
 

@@ -17,7 +17,7 @@ void d_plaquette(double *ss_plaq, double *st_plaq) {
   su3_matrix_f *su3mat = malloc(sites_on_node * sizeof(*su3mat));
 
   if (su3mat == NULL) {
-    printf("d_plaquette: can't malloc su3mat\n");
+    printf("plaquette: can't malloc su3mat\n");
     fflush(stdout);
     terminate(1);
   }
@@ -86,7 +86,7 @@ void d_plaquette_frep(double *ss_plaq_frep, double *st_plaq_frep) {
   su3_matrix *su3mat = malloc(sites_on_node * sizeof(*su3mat));
 
   if (su3mat == NULL) {
-    printf("d_plaquette_frep: can't malloc su3mat\n");
+    printf("plaquette_frep: can't malloc su3mat\n");
     fflush(stdout);
     terminate(1);
   }
