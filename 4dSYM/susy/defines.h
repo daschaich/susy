@@ -37,7 +37,6 @@
 #define SV                  // Site/vector terms in action
 #define VP                  // Vector/plaquette terms in action
 #define QCLOSED             // Q-closed terms in action
-#define DET                 // Determinant term in the action
 //#define DEBUG_CHECK         // Print lambdas, offsets, etc.
 
 #define NUMLINK 5           // Number of A4* links per site, and offsets

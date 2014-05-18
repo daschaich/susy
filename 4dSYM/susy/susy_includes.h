@@ -67,9 +67,7 @@ double d_fermion_action();
 
 double gauge_force(Real eps);
 double fermion_force(Real eps, Twist_Fermion *source, Twist_Fermion **psim);
-#ifdef DET
 double det_force(Real eps);
-#endif
 
 // Reproduces void Dplus(Link_Field *src, Plaq_Field *dest);
 void Dplus(su3_vector *src[NUMLINK], su3_vector *dest[NUMLINK][NUMLINK]);
@@ -118,53 +116,59 @@ void scalar_mult_TF(Twist_Fermion *src, Real s, Twist_Fermion *dest);
 void gauge_field_copy_f(field_offset src, field_offset dest);
 void shiftmat(field_offset src, field_offset dest, int dir);
 
-// More determinant routines
-#ifdef DET
+// Determinant-related routines
 void measure_det();
 complex find_det(su3_matrix_f *Q);
 
-void monopole();
+// Adjugate matrix needed by det_force
+void adjugate(su3_matrix_f *in, su3_matrix_f *out);
 
+// Matrix invert is just adjugate divided by determinant
 void invert(su3_matrix_f *in, su3_matrix_f *out);
-void d_flavor();    // Uses find_det
-#endif
 // -----------------------------------------------------------------
 
 
 
 // -----------------------------------------------------------------
-// Correlators and Wilson loops
+// More measurements
 #ifdef CORR
-void d_correlator();    // Konishi and SUGRA correlators
+// Konishi and SUGRA correlators
+void d_correlator();
 #endif
-#ifdef BILIN            // vevs to explore susy breaking
+#ifdef BILIN
+// vevs to explore susy breaking
 int d_bilinear();       // Fermion bilinear
 int d_susyTrans();      // Supersymmetry transformation
 #endif
 #ifdef PL_CORR
-void ploop_c();         // Polyakov loop correlator
+// Polyakov loop correlator -- NOT CURRENTLY IN USE
+void ploop_c();
 void print_var3(char *label);
 #endif
 #ifdef WLOOP
+// Wilson loops -- including determinant division and polar projection
+// These look at correlators of products of temporal links,
+// which requires gauge fixing before 
 void hvy_pot();
 void polar(su3_matrix_f *a, su3_matrix_f *b);
 void hvy_pot_polar();
 
+// These construct explicit paths along lattice principal axes, for checking
 void path(int *dir, int *sign, int length);
 void hvy_pot_loop();
 void hvy_pot_polar_loop();
 
-#ifdef DET
-// Modified Wilson loops
-void path2(int *dir, int *sign, int *kind, int length);
-void hvy_pot_rest_loop();    // Uses find_det
-#endif
+// Modified Wilson loops use invert in determinant.c
+void rsymm();
 #endif
 
-// Stout smearing
 #ifdef STOUT
+// Stout smearing
 void block_stout(int Nstout, double rho);
 #endif
+
+// Monopole computation uses find_det
+void monopole();
 // -----------------------------------------------------------------
 
 

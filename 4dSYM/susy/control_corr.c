@@ -70,11 +70,11 @@ int main(int argc, char *argv[]) {
   node0_printf("BACTION %.8g\n", dssplaq / (double)volume);
 
 #ifdef STOUT
+#define MIN_PLAQ
   // Optionally smear before main measurements
   node0_printf("Doing %d stout smearing steps with rho=%.4g...\n",
                Nstout, rho);
 
-#define MIN_PLAQ
   // Check minimum plaquette in addition to averages
   node0_printf("BEFORE ");
   d_plaquette_lcl(&dssplaq, &dstplaq);    // Prints out MIN_PLAQ
@@ -88,10 +88,8 @@ int main(int argc, char *argv[]) {
 #endif
 
   // Main measurements
-#ifdef DET
   // Plaquette determinant
   measure_det();
-#endif
 
 #ifdef PL_CORR
   // Polyakov loop correlator
@@ -115,8 +113,6 @@ int main(int argc, char *argv[]) {
     CDIVREAL((s->print_var), space_vol * space_vol, (s->print_var));
 
   print_var3("PLCORR");
-
-  // !!! TODO: Add projected / divided observables
 #endif
 
 #ifdef CORR
@@ -129,6 +125,12 @@ int main(int argc, char *argv[]) {
   int avm_iters = d_bilinear();
   avm_iters += d_susyTrans();
 #endif
+
+  // R symmetry transformations -- use find_det and adjugate
+  rsymm();
+
+  // Measure density of monopole world lines in non-diagonal cubes
+//  monopole();
 
 #ifdef WLOOP
   // Gauge-fixed Wilson loops
@@ -160,19 +162,15 @@ int main(int argc, char *argv[]) {
   // with the correct data structures (su3_matrix instead of su3_matrix_f)
   hvy_pot();
 
-  // Polar projection overwrites temporal links
-  // Need to save and restore if checking effect of gauge transformation
+  // Save and restore temporal links overwritten by polar projection
   FORALLSITES(i, s)
     su3mat_copy_f(&(s->linkf[TUP]), &(s->mom[TUP]));
-
   hvy_pot_polar();
-
-  // Restore non-unitary temporal links
   FORALLSITES(i, s)
     su3mat_copy_f(&(s->mom[TUP]), &(s->linkf[TUP]));
 
-  // Check more direct calculation of loops
-  // Here the polar projection overwrites all links
+  // Check more direct calculation of loops using explicit paths
+  // Save and restore all links overwritten by polar projection
   hvy_pot_loop();
   FORALLSITES(i, s) {
     for (mu = XUP; mu < NUMLINK; mu++)
@@ -183,18 +181,6 @@ int main(int argc, char *argv[]) {
     for (mu = XUP; mu < NUMLINK; mu++)
       su3mat_copy_f(&(s->mom[mu]), &(s->linkf[mu]));
   }
-#endif
-
-#ifdef DET
-  // Flavor transformation observables -- use find_det
-  d_flavor();
-
-#ifdef WLOOP
-//  hvy_pot_rest_loop();
-#endif
-
-  // Measure density of monopole world lines in non-diagonal cubes
-//  monopole();
 #endif
 
   node0_printf("RUNNING COMPLETED\n");

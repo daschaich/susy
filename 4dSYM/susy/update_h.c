@@ -105,9 +105,7 @@ double gauge_force(Real eps) {
   g_doublesum(&returnit);
 
   // Add in force from determinant term
-#ifdef DET
   returnit += det_force(eps);
-#endif
   return (eps * sqrt(returnit) / volume);
 }
 // -----------------------------------------------------------------

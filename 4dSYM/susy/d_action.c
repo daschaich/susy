@@ -122,7 +122,6 @@ double d_fermion_action(Twist_Fermion *src, Twist_Fermion **sol) {
 
 
 // -----------------------------------------------------------------
-#ifdef DET
 double d_det_action() {
   register int i, dir1, dir2;
   register site *s;
@@ -161,7 +160,6 @@ double d_det_action() {
   g_doublesum(&det_action);
   return det_action;
 }
-#endif
 // -----------------------------------------------------------------
 
 
@@ -173,9 +171,7 @@ double d_action(Twist_Fermion *src, Twist_Fermion **sol) {
   g_act = d_gauge_action();
   bmass_act = d_bmass_action();
   h_act = d_hmom_action();
-#ifdef DET
   det_act = d_det_action();
-#endif
 #ifndef PUREGAUGE
   f_act = d_fermion_action(src, sol);
 #endif

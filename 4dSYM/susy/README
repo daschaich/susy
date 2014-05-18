@@ -16,13 +16,12 @@ susy_phase for pfaffian phase measurements on saved configurations
 -DPHI_ALGORITHM for the basic phi algorithm (REQUIRED)
 -DHMC_ALGORITHM switches on the accept/reject step
 -DPUREGAUGE switches off the fermions for testing
--DDET switches on the plaquette determinant term in the action, defined in defines.h
--DPL_CORR switches on the Polyakov loop correlator calculation
 -DCORR switches on the Konishi and SUGRA correlator calculation
+-DSTOUT switches on stout smearing for correlator measurements
 -DWLOOP switches on the gauge-fixed Wilson loop calculation
 -DBILIN switches on the fermion bilinear calculation
 -DEIG switches on the PRIMME eigenvalue calculation
--DSTOUT switches on stout smearing for correlator measurements
+-DPL_CORR switches on the Polyakov loop correlator calculation (NOT CURRENTLY IN USE)
 -DCATTERALL_ALG switches on momenta for the pseudofermions (NOT WELL DEBUGGED)
 
 # Gauge group and fermion rep:
@@ -59,9 +58,9 @@ nstep_gauge 10        # Gauge steps per fermion step
 traj_between_meas 1   # How many trajectories to skip between less-frequent measurements
 
 lambda 1.5            # 't Hooft coupling
-kappa_u1 2.0          # Determinant coupling -- only include with -DDET
-bmass 1.0             # Bosonic mass
-fmass 0.05            # Fermion mass
+kappa_u1 0.6          # Determinant coupling
+bmass 0.2             # Bosonic mass
+fmass 0.0             # Fermion mass
 
 Nstout 1              # Number of stout smearing steps -- only include with -DSTOUT
 rho 0.25              # Stout smearing parameter -- only include with -DSTOUT
@@ -80,7 +79,7 @@ ckpt_load -1          # If positive, load all subsequent columns of Q from dumpe
 ckpt_save -1          # If positive, dump all subsequent columns of Q -- only include with -DPHASE
 
 fresh                 # What to do with lattice at start: only fresh, continue or reload_serial
-coulomb_gauge_fix     # Only coulomb_gauge_fix and no_gauge_fix supported -- BROKEN FOR NCOL=4
+coulomb_gauge_fix     # Only coulomb_gauge_fix and no_gauge_fix supported
 forget                # What to do with lattice at end: only forget or save_serial
 # ------------------------------------------------------------------
 
@@ -131,9 +130,7 @@ hvy_pot_loop.c        -- Computes more standard Wilson loops
 hvy_pot_polar_loop.c  -- Computes more standard Wilson loops of polar-projected links
                          (NB: overwrites links, as above)
 path.c                -- Used to construct Wilson loops for hvy_pot_loop.c and hvy_pot_polar_loop.c
-d_flavor.c            -- Four-link observables related to flavor (R symmetry) transformations
-hvy_pot_rest_loop.c   -- Larger loops similarly related to flavor (R symmetry) transformations
-path2.c               -- Used to construct modified loops for hvy_pot_rest_loop.c
+rsymm.c               -- Modified Wilson loops related to R symmetry transformations
 eig.c                 -- Eigenvalue measurements using PRIMME
                          Must specify path to libzprimme.a as PLIB in makefile
                          Also need LAPACK and BLAS in linkable location
@@ -156,13 +153,13 @@ nersc_cksum.c           -- Compute link trace sum for lattice I/O (cksum itself 
 ranstuff.c              -- Random number stuff, both for serial and parallel running
 remap_stdio_from_args.c -- For reading input parameters
 layout_hyper_prime.c    -- Layout lattice on processors
-stout.c                 -- Stout smearing on A4* lattice (UNDER DEVELOPMENT)
+stout.c                 -- Stout smearing on A4* lattice
 
 # 2b) Measurement-specific files
-gaugefix.c          -- Fixes to Coulomb gauge (UNDER DEVELOPMENT)
-restrict_fourier.c  -- Fast Fourier transform routine
+gaugefix.c          -- Fixes to Coulomb gauge (requires even number of sites in all directions)
+restrict_fourier.c  -- Fast Fourier transform routine only used with -DPL_CORR
 d_plaq4_lcl.c       -- Calculates the plaquette with options to print more info
-                       Used to monitor minimum plaquette when smearing
+                       Used to monitor minimum plaquette when smearing with -DSTOUT
 io_phase.c          -- Primitive (for now) dump and load routines for checkpointing pfaffian computations
 # ------------------------------------------------------------------
 

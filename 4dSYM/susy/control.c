@@ -95,15 +95,8 @@ int main(int argc, char *argv[]) {
 
     // Less frequent measurements every "propinterval" trajectories
     if ((traj_done % propinterval) == (propinterval - 1)) {
-#ifdef DET
       // Plaquette determinant
       measure_det();
-
-#ifdef WLOOP
-      // Flavor transformation observables -- uses find_det
-      d_flavor();
-#endif
-#endif
 
 #ifdef PL_CORR
       // Polyakov loop correlator
@@ -173,16 +166,19 @@ int main(int argc, char *argv[]) {
       // with the correct data structures (su3_matrix instead of su3_matrix_f)
       hvy_pot();
 
-      // Polar projection overwrites temporal links -- save them in momenta
+      // Save and restore temporal links overwritten by polar projection
       FORALLSITES(i, s)
         su3mat_copy_f(&(s->linkf[TUP]), &(s->mom[TUP]));
-
       hvy_pot_polar();
-
-      // Restore non-unitary temporal links
       FORALLSITES(i, s)
         su3mat_copy_f(&(s->mom[TUP]), &(s->linkf[TUP]));
+
+      // R symmetry transformations -- use find_det and adjugate
+      rsymm();
 #endif
+
+      // Measure density of monopole world lines in non-diagonal cubes
+//      monopole();
     }
     fflush(stdout);
   }

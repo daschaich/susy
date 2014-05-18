@@ -170,9 +170,7 @@ int readin(int prompt) {
 
     // lambda, kappa_u1, bmass, fmass
     IF_OK status += get_f(stdin, prompt, "lambda", &par_buf.lambda);
-#ifdef DET
     IF_OK status += get_f(stdin, prompt, "kappa_u1", &par_buf.kappa_u1);
-#endif
     IF_OK status += get_f(stdin, prompt, "bmass", &par_buf.bmass);
     IF_OK status += get_f(stdin, prompt, "fmass", &par_buf.fmass);
 
@@ -241,9 +239,7 @@ int readin(int prompt) {
   rsqmin = par_buf.rsqmin;
 
   lambda = par_buf.lambda;
-#ifdef DET
   kappa_u1 = par_buf.kappa_u1;
-#endif
   bmass = par_buf.bmass;
   fmass = par_buf.fmass;
   kappa = (Real)NCOL * 0.5 / lambda;

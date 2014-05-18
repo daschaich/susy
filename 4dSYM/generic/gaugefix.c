@@ -12,6 +12,10 @@
 // The other links need attention from both checkerboards,
 // so they must be passed back and forth
 
+// NB: This means that gauge-fixing will fail on lattices with an odd number
+// of sites in any direction.
+// We check for this and terminate if the check fails
+
 // Prototype:
 // void gaugefix(int gauge_dir, Real relax_boost, int max_gauge_iter,
 //               Real gauge_fix_tol, field_offset diffmat, field_offset sumvec,
@@ -408,6 +412,13 @@ void gaugefix(int gauge_dir, Real relax_boost, int max_gauge_iter,
   // Require at least 10 gen_pt values for gauge fixing
   if (N_POINTERS < 10) {
     node0_printf("gaugefix: N_POINTERS must be at least 10\n");
+    fflush(stdout);
+    terminate(1);
+  }
+
+  // Require an even number of sites in each direction
+  if (nx % 2 == 1 || ny % 2 == 1 || nz % 2 == 1 || nt % 2 == 1) {
+    node0_printf("gaugefix: Need even number of sites in all directions\n");
     fflush(stdout);
     terminate(1);
   }

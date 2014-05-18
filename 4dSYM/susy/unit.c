@@ -154,8 +154,8 @@ void jacobi(Real **a, int n, Real d[], Real **v, int *nrot) {
 // Given matrix aa, calculate the unitary polar decomposition element
 // bb = [1 / (aadag.aa)].u
 // Use the Jacobi eigenvalue algorithm from Numerical Recipes
-// to diagonalize usquared = aadag.a,
-// then project out by the matrix 1 / (aadig.a)
+// to diagonalize usquared = aa.aadag,
+// then project out by the matrix 1 / (aadag.a)
 // Not returning the real matrix, but could add that if necessary
 void polar(su3_matrix_f *aa, su3_matrix_f *bb) {
   int ci, cf, kt, jt = 1, nmat = 2 * NCOL, ntot;
@@ -169,7 +169,7 @@ void polar(su3_matrix_f *aa, su3_matrix_f *bb) {
   mult_su3_na_f(aa, aa, &usquared);
 //  dumpmat_f(&usquared);
 
-  // Load the input su3_matrix_f aa into a real-valued data structure
+  // Load usquared into a real-valued data structure "a"
   a = matrix(1, nmat, 1, nmat);
   v = matrix(1, nmat, 1, nmat);
   w = vector(1, nmat);
@@ -217,6 +217,16 @@ void polar(su3_matrix_f *aa, su3_matrix_f *bb) {
   for (cf = 0; cf < NCOL; cf++) {
     weig.e[cf][cf].real = 1.0 / sqrt(w[kt]);
     kt += 2;
+  }
+
+  // Check for degenerate eigenvalues in w[1]... w[2(N - 1) + 1]
+  for (ci = 0; ci < NCOL; ci++) {
+    for (cf = ci + 1; cf < NCOL; cf++) {
+      if (fabs(w[2 * ci + 1] - w[2 * cf + 1]) < 1.0e-6) {
+        node0_printf("WARNING: w[%d] = w[%d] = %.8g\n",
+                     ci, cf, w[2 * ci + 1]);
+      }
+    }
   }
 
   // seig are the eigenvectors
