@@ -118,8 +118,10 @@ void monopole() {
                 charge[a][i] += (mono[c][d][i] - ip2);
               if (permm < 0.0)
                 charge[a][i] -= (mono[c][d][i] - ip2);
-              //if (s->x ==0 && s->y==0 && s->z==0 && s->t == 0)
-              //printf("a %d b %d c %d d %d %d %d\n",a,b,c,d,mono[c][d][i],ip2);
+//              if (s->x == 0 && s->y == 0 && s->z == 0 && s->t == 0) {
+//                printf("a %d b %d c %d d %d %d %d\n",
+//                       a, b, c, d, mono[c][d][i], ip2);
+//              }
             }
             cleanup_gather(mtag0);
           }

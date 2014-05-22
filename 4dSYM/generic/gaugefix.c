@@ -456,5 +456,7 @@ void gaugefix(int gauge_dir, Real relax_boost, int max_gauge_iter,
 
   node0_printf("GFIX ended at step %d. Ave gf action %.6g, delta %.3g\n",
                gauge_iter, current_av, del_av);
+  if (gauge_iter == max_gauge_iter)
+    node0_printf("WARNING: max_gauge_iter %d saturated\n", gauge_iter);
 }
 // -----------------------------------------------------------------
