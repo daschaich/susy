@@ -114,13 +114,14 @@ void rsymm_path(int *dir, int *sign, int *kind, int length) {
 
 
 // -----------------------------------------------------------------
+// Print both usual and transformed Wilson loops
 void rsymm() {
   register int i;
   register site *s;
   int dir_normal, dir_inv, dist, dist_inv, mu, length;
   int rsymm_max = MAX_X + 1;    // Go out to L/2 x L/2 loops
   int dir[4 * rsymm_max], sign[4 * rsymm_max], kind[4 * rsymm_max];
-  double wloop, invlink[NUMLINK], invlink_sum = 0.0;
+  double rsymm_loop, wloop, invlink[NUMLINK], invlink_sum = 0.0;
   complex tc;
   su3_matrix_f tmat;
 
@@ -234,18 +235,26 @@ void rsymm() {
           node0_printf("\n");
 #endif
 
-          // rsymm_path accumulates the product in tempmat1
-          rsymm_path(dir, sign, kind, length);
+          // path and rsymm_path accumulate the product in tempmat1
+          path(dir, sign, length);
           wloop = 0.0;
           FORALLSITES(i, s) {
-            tmat = s->tempmat1;
-            tc= trace_su3_f(&tmat);
+            tc = trace_su3_f(&(s->tempmat1));
             wloop += tc.real;
           }
           g_doublesum(&wloop);
+
+          rsymm_path(dir, sign, kind, length);
+          rsymm_loop = 0.0;
+          FORALLSITES(i, s) {
+            tc = trace_su3_f(&(s->tempmat1));
+            rsymm_loop += tc.real;
+          }
+          g_doublesum(&rsymm_loop);
           // Format: # normal, dir normal, # inverted, dir inverted, result
-          node0_printf("RSYMM %d [%d] %d [%d] %.8g\n",
-                       dist, dir_normal, dist_inv, dir_inv, wloop / volume);
+          node0_printf("RSYMM %d [%d] %d [%d] %.8g %.8g\n",
+                       dist, dir_normal, dist_inv, dir_inv,
+                       wloop / volume, rsymm_loop / volume);
         } // dist_inv
       } // dist
     } // dir_inv
