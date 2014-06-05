@@ -36,11 +36,12 @@ double d_hmom_action() {
 
 
 // -----------------------------------------------------------------
+// Include tunable coefficient C2 in the d^2 term
 double d_gauge_action() {
   register int i;
   register site *s;
   int mu, nu;
-  double g_action = 0.0;
+  double g_action = 0.0, norm = 0.5 * C2;
   complex cg_action;
   su3_matrix_f tmpmat;
 
@@ -48,7 +49,7 @@ double d_gauge_action() {
   FORALLSITES(i, s) {
     mult_su3_nn_f(&(s->DmuUmu), &(s->DmuUmu), &tmpmat);
     cg_action = trace_su3_f(&tmpmat);
-    g_action += 0.5 * cg_action.real;
+    g_action += norm * cg_action.real;
   }
 
   compute_Fmunu();
@@ -142,7 +143,7 @@ double d_det_action() {
 
       wait_gather(mtag0);
       FORALLSITES(i, s) {
-        mult_su3_nn_f(&(s->tempmat1),(su3_matrix_f *)(gen_pt[0][i]),
+        mult_su3_nn_f(&(s->tempmat1), (su3_matrix_f *)(gen_pt[0][i]),
                       &(s->staple));
       }
       wait_gather(mtag1);

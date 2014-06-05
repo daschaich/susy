@@ -179,13 +179,14 @@ This is the gauge momenta contribution to the action, from d_hmom_action(),
   g_doublesum(&sum);
 
 # g_act:
-This is the gauge action itself, from d_gauge_action(),
+This is the gauge action itself, from d_gauge_action()
+We include a tunable parameter in the DmuUmu^2 term, norm=0.5C_2
   double g_action = 0;
   compute_DmuUmu();
   FORALLSITES(i, s) {
     mult_su3_nn_f(&(s->DmuUmu), &(s->DmuUmu), &tmpmat);
     cg_action = trace_su3_f(&tmpmat);
-    g_action += 0.5 * cg_action.real;
+    g_action += norm * cg_action.real;
   }
 
   compute_Fmunu();
@@ -200,7 +201,7 @@ This is the gauge action itself, from d_gauge_action(),
   g_doublesum(&g_action);
 
 # bmass_act:
-This is the mass term for the U(1) mode, with normalization changed from 17 January 2013, from d_bmass_action(),
+This is the mass term for the U(1) mode, with normalization changed from 17 January 2013, from d_bmass_action()
   double sum = 0;
   for (mu = 0; mu < NUMLINK; mu++) {
     FORALLSITES(i, s) {
@@ -211,7 +212,7 @@ This is the mass term for the U(1) mode, with normalization changed from 17 Janu
   g_doublesum(&sum);
 
 # det_act:
-This is the squared determinant term, from d_det_action(),
+This is the squared determinant term, from d_det_action()
   double det_action = 0.0;
   for (dir1 =1; dir1 < NUMLINK; dir1++) {
     for (dir2 =0; dir2 < dir1; dir2++) {

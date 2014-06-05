@@ -9,6 +9,7 @@
 
 // -----------------------------------------------------------------
 // Update mom[NUMLINK] with the gauge force
+// Include tunable coefficient C2 in the d^2 term of the action
 double gauge_force(Real eps) {
   register int i, mu, nu;
   register site *s;
@@ -35,7 +36,8 @@ double gauge_force(Real eps) {
     FORALLSITES(i, s) {
       mult_su3_an_f(&(s->linkf[mu]), &(s->DmuUmu), &tmat1);
       mult_su3_na_f((su3_matrix_f *)gen_pt[mu][i], &(s->linkf[mu]), &tmat2);
-      sub_su3_matrix_f(&tmat1, &tmat2, &(s->f_U[mu]));
+      sub_su3_matrix_f(&tmat1, &tmat2, &tmat3);
+      scalar_mult_su3_matrix_f(&tmat3, C2, &(s->f_U[mu]));    // Initialize
     }
     cleanup_gather(tag[mu]);
   }
