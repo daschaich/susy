@@ -178,7 +178,7 @@ void rsymm() {
   // First check average value of the inverted link
   // Tr[U^{-1} (U^{-1})^dag] / N
   // Just like d_link() but use s->mom instead of s->linkf
-    for (dir_inv = XUP; dir_inv < NUMLINK; dir_inv++) {
+  for (dir_inv = XUP; dir_inv < NUMLINK; dir_inv++) {
     invlink[dir_inv] = 0;
     FORALLSITES(i, s)
       invlink[dir_inv] += realtrace_su3_f(&(s->mom[dir_inv]),
@@ -251,7 +251,7 @@ void rsymm() {
             rsymm_loop += tc.real;
           }
           g_doublesum(&rsymm_loop);
-          // Format: # normal, dir normal, # inverted, dir inverted, result
+          // Format: normal [dir] inverted [dir] usual transformed
           node0_printf("RSYMM %d [%d] %d [%d] %.8g %.8g\n",
                        dist, dir_normal, dist_inv, dir_inv,
                        wloop / volume, rsymm_loop / volume);
