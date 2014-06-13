@@ -68,8 +68,9 @@ int main(int argc, char *argv[]) {
   double gtime = -dclock();
 
   // Gauge fixing arguments explained in generic/gaugefix.c
-  gaugefix(TUP, 1.5, 500, GAUGE_FIX_TOL, -1, -1,
-           0, NULL, NULL);
+  // With first argument > TUP,
+  // first four links are included in gauge-fixing condition
+  gaugefix(8, 1.5, 500, GAUGE_FIX_TOL, -1, -1, 0, NULL, NULL);
   gtime += dclock();
   node0_printf("GFIX time = %.4g seconds\n", gtime);
   node0_printf("BEFORE %.8g %.8g\n", dssplaq, dstplaq);

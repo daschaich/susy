@@ -140,8 +140,9 @@ int main(int argc, char *argv[]) {
     double gtime = -dclock();
 
     // Gauge fixing arguments explained in generic/gaugefix.c
-    gaugefix(TUP, 1.5, 500, GAUGE_FIX_TOL, -1, -1,
-             0, NULL, NULL);
+    // With first argument > TUP,
+    // first four links are included in gauge-fixing condition
+    gaugefix(8, 1.5, 500, GAUGE_FIX_TOL, -1, -1, 0, NULL, NULL);
     gtime += dclock();
     node0_printf("GFIX time = %.4g seconds\n", gtime);
     node0_printf("BEFORE %.8g %.8g\n", dssplaq, dstplaq);
@@ -162,12 +163,12 @@ int main(int argc, char *argv[]) {
   // with the correct data structures (su3_matrix instead of su3_matrix_f)
   hvy_pot();
 
-  // Save and restore temporal links overwritten by polar projection
+  // Save and restore DIR_5 links overwritten by polar projection
   FORALLSITES(i, s)
-    su3mat_copy_f(&(s->linkf[TUP]), &(s->mom[TUP]));
+    su3mat_copy_f(&(s->linkf[DIR_5]), &(s->mom[DIR_5]));
   hvy_pot_polar();
   FORALLSITES(i, s)
-    su3mat_copy_f(&(s->mom[TUP]), &(s->linkf[TUP]));
+    su3mat_copy_f(&(s->mom[DIR_5]), &(s->linkf[DIR_5]));
 
   // Check more direct calculation of loops using explicit paths
   // Save and restore all links overwritten by polar projection

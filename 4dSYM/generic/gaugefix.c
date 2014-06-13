@@ -31,7 +31,8 @@
 // gauge_dir is the "time" direction used to define Coulomb or Lorentz gauge:
 //   TUP for evaluating propagators in the time-like direction
 //   ZUP for screening lengths
-//   8 for Lorentz gauge
+//   8 (or anything except 0, 1, 2, 3) for Lorentz gauge
+//   (cf. definition of FORALLUPDIRBUT in ../include/macros.h)
 // relax_boost is the overrelaxation parameter
 // max_gauge_iter is the maximum number of gauge-fixing iterations
 // gauge_fix_tol tells us to stop if the action change is less than this
@@ -142,44 +143,42 @@ void do_hit(int gauge_dir, int parity, int p, int q, Real relax_boost,
   accum_gauge_hit(gauge_dir, parity);
 
   FORSOMEPARITY(i, s, parity) {
-    /* The SU(2) hit matrix is represented as a0 + i * Sum j (sigma j * aj)*/
-    /* The locally optimum unnormalized components a0, aj are determined */
-    /* from the current link in direction dir and the link downlink */
-    /* in the same direction on the neighbor in the direction opposite dir */
-    /* The expression is */
-    /* a0 = Sum dir Tr Re 1       * (downlink dir + link dir) */
-    /* aj = Sum dir Tr Im sigma j * (downlink dir - link dir)  j = 1,2, 3 */
-    /*   where 1, sigma j are unit and Pauli matrices on the p,q subspace */
-    /*
-       a0 =  s->sumvec.c[p].real + s->sumvec.c[q].real;
-       a1 =  s->diffmat.e[q][p].imag + s->diffmat.e[p][q].imag;
-       a2 = -s->diffmat.e[q][p].real + s->diffmat.e[p][q].real;
-       a3 =  s->diffmat.e[p][p].imag - s->diffmat.e[q][q].imag;
-       */
+    // The SU(2) hit matrix is represented as a0 + i * Sum j (sigma j * aj)
+    // The locally optimum unnormalized components a0, aj are determined
+    // from the current link in direction dir and the link downlink
+    // in the same direction on the neighbor in the direction opposite dir
+    // The expression is
+    //   a0 = Sum dir Tr Re 1       * (downlink dir + link dir)
+    //   aj = Sum dir Tr Im sigma j * (downlink dir - link dir), j = 1, 2, 3
+    // where 1, sigma j are unit and Pauli matrices on the p, q subspace
+    // a0 =  s->sumvec.c[p].real + s->sumvec.c[q].real;
+    // a1 =  s->diffmat.e[q][p].imag + s->diffmat.e[p][q].imag;
+    // a2 = -s->diffmat.e[q][p].real + s->diffmat.e[p][q].real;
+    // a3 =  s->diffmat.e[p][p].imag - s->diffmat.e[q][q].imag;
     if (sumvec_offset >= 0)
       a0 = ((su3_vector_f *)F_PT(s, sumvec_offset))->c[p].real
          + ((su3_vector_f *)F_PT(s, sumvec_offset))->c[q].real;
     else
-      a0 = sumvecp[i].c[p].real +  sumvecp[i].c[q].real;
+      a0 = sumvecp[i].c[p].real + sumvecp[i].c[q].real;
 
     if (diffmat_offset >= 0) {
-      a1 = ((su3_matrix_f *)F_PT(s, diffmat_offset))->e[q][p].imag
-         + ((su3_matrix_f *)F_PT(s, diffmat_offset))->e[p][q].imag;
+      a1 =  ((su3_matrix_f *)F_PT(s, diffmat_offset))->e[q][p].imag
+         +  ((su3_matrix_f *)F_PT(s, diffmat_offset))->e[p][q].imag;
       a2 = -((su3_matrix_f *)F_PT(s, diffmat_offset))->e[q][p].real
-         + ((su3_matrix_f *)F_PT(s, diffmat_offset))->e[p][q].real;
-      a3 = ((su3_matrix_f *)F_PT(s, diffmat_offset))->e[p][p].imag
-         - ((su3_matrix_f *)F_PT(s, diffmat_offset))->e[q][q].imag;
+         +  ((su3_matrix_f *)F_PT(s, diffmat_offset))->e[p][q].real;
+      a3 =  ((su3_matrix_f *)F_PT(s, diffmat_offset))->e[p][p].imag
+         -  ((su3_matrix_f *)F_PT(s, diffmat_offset))->e[q][q].imag;
     }
     else {
-      a1 = diffmatp[i].e[q][p].imag + diffmatp[i].e[p][q].imag;
+      a1 =  diffmatp[i].e[q][p].imag + diffmatp[i].e[p][q].imag;
       a2 = -diffmatp[i].e[q][p].real + diffmatp[i].e[p][q].real;
-      a3 = diffmatp[i].e[p][p].imag - diffmatp[i].e[q][q].imag;
+      a3 =  diffmatp[i].e[p][p].imag - diffmatp[i].e[q][q].imag;
     }
 
-    /* Over-relaxation boost */
-    /* This algorithm is designed to give little change for large |a| */
-    /* and to scale up the gauge transformation by a factor of relax_boost*/
-    /* for small |a| */
+    // Over-relaxation boost
+    // This algorithm is designed to give little change for large |a|
+    // and to scale up the gauge transformation by a factor of relax_boost
+    // for small |a|
     asq = a1 * a1 + a2 * a2 + a3 * a3;
     a0sq = a0 * a0;
     x = (relax_boost * a0sq + asq) / (a0sq + asq);
@@ -213,10 +212,10 @@ void do_hit(int gauge_dir, int parity, int p, int q, Real relax_boost,
   wait_gather(mtag0);
 
   FORSOMEPARITY(i, s, parity) {
-    /* Note that we are hitting the links (on this checkerboard) on the left, and the
-       gathered links, from site (x - mu), on the right. This must be modified to hit the link
-       in direction NUMLINK on both sides, and we must not touch the link in direction NUMLINK
-       on the other checkerboard */
+    // Note that we are hitting the links (on this checkerboard) on the left,
+    // and the gathered links, from site (x - mu), on the right
+    // This must be modified to hit the NUMLINK link on both sides,
+    // and we must not touch the NUMLINK link on the other checkerboard
     // Do SU(2) hit on all upward non-diagonal links
     FORALLUPDIR(dir)
       left_su2_hit_n_f(&u[i], p, q, &(s->linkf[dir]));
