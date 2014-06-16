@@ -19,7 +19,7 @@ complex ploop() {
 
   // First multiply the link on every even site by the link above it
   tag = start_gather_site(F_OFFSET(linkf[TUP]), sizeof(su3_matrix_f),
-                          TUP, EVEN, gen_pt[0] );
+                          TUP, EVEN, gen_pt[0]);
   wait_gather(tag);
   FOREVENSITES(i, s) {
     mult_su3_nn_f(&(s->linkf[TUP]), (su3_matrix_f *)gen_pt[0][i],
@@ -30,7 +30,7 @@ complex ploop() {
   for (t = 2; t < nt; t += 2) {
     d[TUP] = t;               // Path from which to gather
     tag = start_general_gather_site(F_OFFSET(tempmat1), sizeof(su3_matrix_f),
-                                    d, EVEN, gen_pt[0] );
+                                    d, EVEN, gen_pt[0]);
     wait_general_gather(tag);
 
     // Overwrite tempmat1 on the first two time slices

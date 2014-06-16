@@ -118,6 +118,7 @@ int main(int argc, char *argv[]) {
 #ifdef CORR
   // Konishi and SUGRA correlators
   d_correlator();
+  d_correlator_r();
 #endif
 
 #ifdef BILIN

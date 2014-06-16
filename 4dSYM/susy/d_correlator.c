@@ -6,7 +6,7 @@
 
 
 // -----------------------------------------------------------------
-// Both Konishi and SUGRA correlators at the same time
+// Both Konishi and SUGRA correlators, projected to zero spatial momentum
 void d_correlator() {
   register int i;
   register site *s;
