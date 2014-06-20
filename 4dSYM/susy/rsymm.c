@@ -119,13 +119,12 @@ void rsymm() {
   register int i;
   register site *s;
   int dir_normal, dir_inv, dist, dist_inv, mu, length;
-  int rsymm_max = MAX_X + 1;    // Go out to L/2 x L/2 loops
-  int dir[4 * rsymm_max], sign[4 * rsymm_max], kind[4 * rsymm_max];
+  int dir[4 * MAX_X], sign[4 * MAX_X], kind[4 * MAX_X];
   double rsymm_loop, wloop, invlink[NUMLINK], invlink_sum = 0.0;
   complex tc;
   su3_matrix_f tmat;
 
-  node0_printf("rsymm: MAX = %d\n", rsymm_max);
+  node0_printf("rsymm: MAX = %d\n", MAX_X);
 
   // Compute and optionally check inverse matrices
   // Temporarily store the adjoint of the inverse in momentum matrices,
@@ -195,7 +194,7 @@ void rsymm() {
   }
   node0_printf(" %.6g\n", invlink_sum / ((double)(NUMLINK)));
 
-  // Construct and print all loops up to rsymm_max x rsymm_max
+  // Construct and print all loops up to MAX_X x MAX_X
   // in all NUMLINK * (NUMLINK - 1) directions
   // Invert all links in the second direction in each loop
   for (dir_normal = XUP; dir_normal < NUMLINK; dir_normal++) {
@@ -203,8 +202,8 @@ void rsymm() {
       if (dir_inv == dir_normal)
         continue;
 
-      for (dist = 1; dist <= rsymm_max; dist++) {
-        for (dist_inv = 1; dist_inv <= rsymm_max; dist_inv++) {
+      for (dist = 1; dist <= MAX_X; dist++) {
+        for (dist_inv = 1; dist_inv <= MAX_X; dist_inv++) {
           // Set up rectangular Wilson loop path as list of dir, sign * kind
           length = 2 * (dist + dist_inv);
           for (i = 0; i < dist; i++) {
