@@ -25,7 +25,6 @@ void d_correlator_r() {
 
   // On each site, first NUMLINK * NUMLINK components of ops are SUGRA_{ab}
   // The last component is the Konishi, which we initialize to zero
-  // Allocate operators and initialize Konishi to zero
   FORALLSITES(i, s) {
     index = i * len + len - 1;
     ops[index] = 0.0;

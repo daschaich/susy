@@ -195,7 +195,7 @@ void do_hit(int gauge_dir, int parity, int p, int q, Real relax_boost,
     u[i].e[0][0] = cmplx(a0, a3);
     u[i].e[0][1] = cmplx(a2, a1);
     u[i].e[1][0] = cmplx(-a2, a1);
-    u[i].e[1][1] = cmplx(a0,-a3);
+    u[i].e[1][1] = cmplx(a0, -a3);
     // Check
 //    printf("U %d %d %d %d %d\n", i, s->x, s->y, s->z, s->t);
 //    dumpsu2(&u[i]);
@@ -204,21 +204,21 @@ void do_hit(int gauge_dir, int parity, int p, int q, Real relax_boost,
   // We just saved the gauge transformations on every site
   // Now re-loop and apply them
 
-  // Gather from direction NUMLINK - 1 to transform the diagonal link
+  // Gather from direction DIR_5 to transform the diagonal link
   // This link stays on its own parity
   // rather than respecting the red--black checkerboard of the other links
   mtag0 = start_gather_field(u, sizeof(su2_matrix),
-                             goffset[NUMLINK - 1], EVENANDODD, gen_pt[9]);
+                             goffset[DIR_5], EVENANDODD, gen_pt[9]);
   wait_gather(mtag0);
 
   FORSOMEPARITY(i, s, parity) {
     // Note that we are hitting the links (on this checkerboard) on the left,
     // and the gathered links, from site (x - mu), on the right
-    // This must be modified to hit the NUMLINK link on both sides,
-    // and we must not touch the NUMLINK link on the other checkerboard
+    // This must be modified to hit the DIR_5 link on both sides,
+    // and we must not touch the DIR_5 link on the other checkerboard
     // Do SU(2) hit on all upward non-diagonal links
     FORALLUPDIR(dir)
-      left_su2_hit_n_f(&u[i], p, q, &(s->linkf[dir]));
+      left_su2_hit_n_f(&(u[i]), p, q, &(s->linkf[dir]));
 
     // Now deal with the diagonal link, hitting it on right, too
     left_su2_hit_n_f(&(u[i]), p, q, &(s->linkf[DIR_5]));

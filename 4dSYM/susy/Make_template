@@ -161,7 +161,7 @@ susy_phase::
 susy_spill::
 	${MAKE} -f ${MAKEFILE} target "MYTARGET= $@" \
 	"DEFINES = ${DEFINES} -DPHI_ALGORITHM " \
-	"EXTRA_OBJECTS = control_spill.o "
+	"EXTRA_OBJECTS = control_spill.o gaugefix.o "
 
 # The targets below have not been used recently and may no longer function
 susy_phi::
