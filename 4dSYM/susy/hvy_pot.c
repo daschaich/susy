@@ -22,25 +22,25 @@ void hvy_pot() {
 
   node0_printf("hvy_pot: MAX_T = %d, MAX_X = %d\n", MAX_T, MAX_X);
 
-  // Use tempmat1 to construct DIR_5-direction path from each point
+  // Use tempmat1 to construct time direction path from each point
   for (t_dist = 1; t_dist <= MAX_T; t_dist++) {
     if (t_dist == 1) {
       FORALLSITES(i, s)
-        su3mat_copy_f(&(s->linkf[DIR_5]), &(s->tempmat1));
+        su3mat_copy_f(&(s->linkf[TUP]), &(s->tempmat1));
     }
     else {
       mtag0 = start_gather_site(F_OFFSET(tempmat1), sizeof(su3_matrix_f),
-                                goffset[DIR_5], EVENANDODD, gen_pt[0]);
+                                goffset[TUP], EVENANDODD, gen_pt[0]);
       wait_gather(mtag0);
       FORALLSITES(i, s) {
-        mult_su3_nn_f(&(s->linkf[DIR_5]), (su3_matrix_f *)gen_pt[0][i],
+        mult_su3_nn_f(&(s->linkf[TUP]), (su3_matrix_f *)gen_pt[0][i],
                       &(s->staple));
       }
       cleanup_gather(mtag0);
       FORALLSITES(i, s)
         su3mat_copy_f(&(s->staple), &(s->tempmat1));
     }
-    // Now tempmat1 is path of length t_dist in DIR_5 direction
+    // Now tempmat1 is path of length t_dist in time direction
     oldmat = F_OFFSET(tempmat2);
     newmat = F_OFFSET(staple);    // Will switch these two
 
