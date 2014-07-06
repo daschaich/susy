@@ -17,7 +17,7 @@ void hvy_pot() {
   double wloop, detloop;
   complex det_wloop, c_loop, c1, c2, mult;
   su3_matrix_f tmat;
-  msg_tag *mtag0;
+  msg_tag *mtag;
   field_offset oldmat, newmat, tt;
 
   node0_printf("hvy_pot: MAX_T = %d, MAX_X = %d\n", MAX_T, MAX_X);
@@ -29,18 +29,18 @@ void hvy_pot() {
         su3mat_copy_f(&(s->linkf[DIR_5]), &(s->tempmat1));
     }
     else {
-      mtag0 = start_gather_site(F_OFFSET(tempmat1), sizeof(su3_matrix_f),
-                                goffset[DIR_5], EVENANDODD, gen_pt[0]);
-      wait_gather(mtag0);
+      mtag = start_gather_site(F_OFFSET(tempmat1), sizeof(su3_matrix_f),
+                               goffset[DIR_5], EVENANDODD, gen_pt[0]);
+      wait_gather(mtag);
       FORALLSITES(i, s) {
         mult_su3_nn_f(&(s->linkf[DIR_5]), (su3_matrix_f *)gen_pt[0][i],
                       &(s->staple));
       }
-      cleanup_gather(mtag0);
+      cleanup_gather(mtag);
       FORALLSITES(i, s)
         su3mat_copy_f(&(s->staple), &(s->tempmat1));
     }
-    // Now tempmat1 is path of length t_dist in time direction
+    // Now tempmat1 is product of t_dist links at each (x, y, z)
     oldmat = F_OFFSET(tempmat2);
     newmat = F_OFFSET(staple);    // Will switch these two
 
@@ -50,13 +50,13 @@ void hvy_pot() {
         FORALLSITES(i, s)
           su3mat_copy_f(&(s->tempmat1), (su3_matrix_f *)F_PT(s, oldmat));
         for (i = 0; i < x_dist; i++) {
-          shiftmat(oldmat, newmat, XUP);
+          shiftmat(oldmat, newmat, goffset[XUP]);
           tt = oldmat;
           oldmat = newmat;
           newmat = tt;
         }
         for (i = 0; i < y_dist; i++) {
-          shiftmat(oldmat, newmat, YUP);
+          shiftmat(oldmat, newmat, goffset[YUP]);
           tt = oldmat;
           oldmat = newmat;
           newmat = tt;
@@ -66,16 +66,14 @@ void hvy_pot() {
           wloop = 0.0;
           detloop = 0.0;
           FORALLSITES(i, s) {
-            wloop += (double)realtrace_su3_f(&(s->tempmat1),
-                             (su3_matrix_f *)F_PT(s, oldmat));
-
             // Compute the actual Coulomb gauge Wilson loop product
             mult_su3_na_f(&(s->tempmat1),
                           (su3_matrix_f *)F_PT(s, oldmat), &tmat);
+            c_loop = trace_su3_f(&tmat);
+            wloop += c_loop.real;
 
             // Divide out the det raised to fractional power as
             // x^y = exp[y log x]
-            c_loop = trace_su3_f(&tmat);
             det_wloop = find_det(&tmat);
             c1 = clog(&det_wloop);
             CMULREAL(c1, frac, c2);
@@ -91,7 +89,7 @@ void hvy_pot() {
                        x_dist, y_dist, z_dist, t_dist, detloop / volume);
 
           // As we increment z, shift in z direction
-          shiftmat(oldmat, newmat, ZUP);
+          shiftmat(oldmat, newmat, goffset[ZUP]);
           tt = oldmat;
           oldmat = newmat;
           newmat = tt;

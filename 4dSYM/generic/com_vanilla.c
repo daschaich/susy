@@ -333,10 +333,10 @@ void sort_eight_gathers(int index) {
   int i;
 
   for (i = 0; i < 8; i++)
-    memcpy(&tt[i], &gather_array[index+i], sizeof(gather_t));
-  for (i=XUP; i<=TUP; i++) {
-    memcpy(&gather_array[index+i], &tt[2*i], sizeof(gather_t));
-    memcpy(&gather_array[index+OPP_DIR(i)], &tt[2*i+1], sizeof(gather_t));
+    memcpy(&tt[i], &gather_array[index + i], sizeof(gather_t));
+  for (i = XUP; i <= TUP; i++) {
+    memcpy(&gather_array[index + i], &tt[2 * i], sizeof(gather_t));
+    memcpy(&gather_array[index + OPP_DIR(i)], &tt[2 * i + 1], sizeof(gather_t));
   }
 }
 

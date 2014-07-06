@@ -1,10 +1,12 @@
 // -----------------------------------------------------------------
-// Directions, and a macro to give the opposite direction
-// These must go from 0 to 7 because they will be used to index an array
-// Also define NDIRS = number of directions
+// Directions, links, and macros to give their opposites
+// MPI communications assume directions from 0 to 7
+// So TDOWN is the same as DIR_5 -- use each only in its own context
 #ifndef _DIRS_H
 #define _DIRS_H
 
+#define NDIMS 4       // Number of dimensions
+#define NODIR -1      // Not a direction
 #define XUP 0
 #define YUP 1
 #define ZUP 2
@@ -13,12 +15,11 @@
 #define ZDOWN 5
 #define YDOWN 6
 #define XDOWN 7
+#define OPP_DIR(dir) (7 - (dir))  // Opposite direction in hypercube
 
-#define NODIR -1      // Not a direction
-
-#define OPP_DIR(dir) (7 - (dir))  // Opposite direction
-#define NDIRS 8       // Number of directions
-#define NDIMS 4       // Number of dimensions
+#define NUMLINK 5
+#define DIR_5 4
+#define OPP_LDIR(dir) (9 - (dir)) // Opposite link direction
 
 #endif
 // -----------------------------------------------------------------

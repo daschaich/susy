@@ -40,7 +40,7 @@ PBC = +/-1 chooses periodic or anti-periodic temporal boundary conditions, defin
 lambda   -- 't Hooft coupling, used to set kappa=NCOL/(2lambda) in setup.c
 bmass    -- bosonic mass
 fmass    -- fermion mass, the RHMC uses D^dag D + fmass^2
-kappa_u1 -- determinant coupling
+kappa_u1 -- plaquette determinant coupling
 
 # Sample input file with explanations:
 prompt 0              # 0 (1) to read in parameters without (with) prompts
@@ -58,12 +58,12 @@ nstep_gauge 10        # Gauge steps per fermion step
 traj_between_meas 1   # How many trajectories to skip between less-frequent measurements
 
 lambda 1.5            # 't Hooft coupling
-kappa_u1 0.6          # Determinant coupling
+kappa_u1 0.6          # Plaquette determinant coupling
 bmass 0.2             # Bosonic mass
 fmass 0.0             # Fermion mass
 
 Nstout 1              # Number of stout smearing steps -- only include with -DSTOUT
-rho 0.25              # Stout smearing parameter -- only include with -DSTOUT
+rho 0.1               # Stout smearing parameter -- only include with -DSTOUT
 
 max_cg_iterations 500 # Maximum number of CG iterations
 error_per_site 1e-5   # Stopping condition for CG (will be squared)

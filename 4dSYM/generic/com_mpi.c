@@ -961,7 +961,7 @@ int make_gather(
           send_subl[r_subl] = s_subl;
         else if (send_subl[r_subl] != s_subl) {
           printf("Gather mixes up sublattices: %d vs %d\n",
-              send_subl[r_subl], s_subl);
+                 send_subl[r_subl], s_subl);
           printf("on mapping %d %d %d %d -> %d %d %d %d\n",
                  s->x, s->y, s->z, s->t, x, y, z, t);
           terminate(1);
@@ -1021,12 +1021,14 @@ int make_gather(
     if (want_even_odd==NO_EVEN_ODD || parity_conserve==SAME_PARITY) {
       gather_array[dir].neighborlist_send = gather_array[dir].neighborlist;
       gather_array[dir].n_send_msgs = gather_array[dir].n_recv_msgs;
-    } else {
+    }
+    else {
       gather_array[dir].neighborlist_send =
   copy_list_switch(gather_array[dir].neighborlist, send_subl);
       gather_array[dir].n_send_msgs = gather_array[dir].n_recv_msgs;
     }
-  } else {
+  }
+  else {
     /* Make new linked list of comlinks for send lists */
     gather_array[dir].neighborlist_send =
       make_send_receive_list(func, args, want_even_odd, FORWARDS, SEND,
@@ -2054,75 +2056,94 @@ msg_tag* start_general_strided_gather(
      list of nodes from whom we expect messages */
   if (subl == EVENANDODD) {
     FORALLSITES(i, s) {
-      if (displacement[XUP]!=0) tx = (s->x + displacement[XUP] + nx)%nx;
-      else                     tx = s->x;
-      if (displacement[YUP]!=0) ty = (s->y + displacement[YUP] + ny)%ny;
-      else                     ty = s->y;
-      if (displacement[ZUP]!=0) tz = (s->z + displacement[ZUP] + nz)%nz;
-      else                     tz = s->z;
-      if (displacement[TUP]!=0) tt = (s->t + displacement[TUP] + nt)%nt;
-      else                     tt = s->t;
+      if (displacement[XUP] != 0)
+        tx = (s->x + displacement[XUP] + nx) % nx;
+      else
+        tx = s->x;
+      if (displacement[YUP] != 0)
+        ty = (s->y + displacement[YUP] + ny) % ny;
+      else
+        ty = s->y;
+      if (displacement[ZUP] != 0)
+        tz = (s->z + displacement[ZUP] + nz) % nz;
+      else
+        tz = s->z;
+      if (displacement[TUP] != 0)
+        tt = (s->t + displacement[TUP] + nt) % nt;
+      else
+        tt = s->t;
       othernode = node_number(tx, ty, tz, tt);
-      if (othernode==this_node) {
-  dest[i] = field + node_index(tx, ty, tz, tt) * stride;
-      }
+      if (othernode == this_node)
+        dest[i] = field + node_index(tx, ty, tz, tt) * stride;
       else {
-  for (j=0;j<n_recv_msgs;j++) if (from_nodes[j].node==othernode) break;
-  if (j < n_recv_msgs) {
-    from_nodes[j].count++;
-  }
-  else {
-    if (n_recv_msgs == 0) {
-      from_nodes = malloc(sizeof(*from_nodes));
-      from_nodes[0].node = othernode;
-      from_nodes[0].count = 1;
-      n_recv_msgs++;
-    }
-    else {
-      from_nodes = realloc(from_nodes,
-                           (n_recv_msgs + 1) * sizeof(*from_nodes));
-      from_nodes[j].node = othernode;
-      from_nodes[j].count = 1;
-      n_recv_msgs++;
-    }
-  }
+        for (j = 0; j < n_recv_msgs; j++) {
+          if (from_nodes[j].node == othernode)
+            break;
+        }
+        if (j < n_recv_msgs)
+          from_nodes[j].count++;
+        else {
+          if (n_recv_msgs == 0) {
+            from_nodes = malloc(sizeof(*from_nodes));
+            from_nodes[0].node = othernode;
+            from_nodes[0].count = 1;
+            n_recv_msgs++;
+          }
+          else {
+            from_nodes = realloc(from_nodes,
+                                 (n_recv_msgs + 1) * sizeof(*from_nodes));
+            from_nodes[j].node = othernode;
+            from_nodes[j].count = 1;
+            n_recv_msgs++;
+          }
+        }
       }
     }
   }
   else {
     FORSOMESUBLATTICE(i, s, subl) {
-      if (displacement[XUP]!=0) tx = (s->x + displacement[XUP] + nx)%nx;
-      else                     tx = s->x;
-      if (displacement[YUP]!=0) ty = (s->y + displacement[YUP] + ny)%ny;
-      else                     ty = s->y;
-      if (displacement[ZUP]!=0) tz = (s->z + displacement[ZUP] + nz)%nz;
-      else                     tz = s->z;
-      if (displacement[TUP]!=0) tt = (s->t + displacement[TUP] + nt)%nt;
-      else                     tt = s->t;
+      if (displacement[XUP] != 0)
+        tx = (s->x + displacement[XUP] + nx) % nx;
+      else
+        tx = s->x;
+      if (displacement[YUP] != 0)
+        ty = (s->y + displacement[YUP] + ny) % ny;
+      else
+        ty = s->y;
+      if (displacement[ZUP] != 0)
+        tz = (s->z + displacement[ZUP] + nz) % nz;
+      else
+        tz = s->z;
+      if (displacement[TUP] != 0)
+        tt = (s->t + displacement[TUP] + nt) % nt;
+      else
+        tt = s->t;
       othernode = node_number(tx, ty, tz, tt);
-      if (othernode==this_node) {
-  dest[i] = field + node_index(tx, ty, tz, tt) * stride;
-      }
+      if (othernode == this_node)
+        dest[i] = field + node_index(tx, ty, tz, tt) * stride;
       else {
-  for (j=0;j<n_recv_msgs;j++) if (from_nodes[j].node==othernode) break;
-  if (j < n_recv_msgs) {
-    from_nodes[j].count++;
-  }
-  else {
-    if (n_recv_msgs == 0) {
-      from_nodes = malloc(sizeof(*from_nodes));
-      from_nodes[0].node = othernode;
-      from_nodes[0].count = 1;
-      n_recv_msgs++;
-    }
-    else {
-      from_nodes = realloc(from_nodes,
-                           (n_recv_msgs + 1) * sizeof(*from_nodes));
-      from_nodes[j].node = othernode;
-      from_nodes[j].count = 1;
-      n_recv_msgs++;
-    }
-  }
+        for (j = 0; j < n_recv_msgs; j++) {
+          if (from_nodes[j].node == othernode)
+            break;
+        }
+        if (j < n_recv_msgs) {
+          from_nodes[j].count++;
+        }
+        else {
+          if (n_recv_msgs == 0) {
+            from_nodes = malloc(sizeof(*from_nodes));
+            from_nodes[0].node = othernode;
+            from_nodes[0].count = 1;
+            n_recv_msgs++;
+          }
+          else {
+            from_nodes = realloc(from_nodes,
+                                 (n_recv_msgs + 1) * sizeof(*from_nodes));
+            from_nodes[j].node = othernode;
+            from_nodes[j].count = 1;
+            n_recv_msgs++;
+          }
+        }
       }
     }
   }
@@ -2131,66 +2152,89 @@ msg_tag* start_general_strided_gather(
      we must send messages and the number of messages to each. */
   if (subl == EVENANDODD) {
     FORALLSITES(i, s) {
-      if (displacement[XUP]!=0) tx = (s->x - displacement[XUP] + nx)%nx;
-      else                     tx = s->x;
-      if (displacement[YUP]!=0) ty = (s->y - displacement[YUP] + ny)%ny;
-      else                     ty = s->y;
-      if (displacement[ZUP]!=0) tz = (s->z - displacement[ZUP] + nz)%nz;
-      else                     tz = s->z;
-      if (displacement[TUP]!=0) tt = (s->t - displacement[TUP] + nt)%nt;
-      else                     tt = s->t;
+      if (displacement[XUP] != 0)
+        tx = (s->x - displacement[XUP] + nx) % nx;
+      else
+        tx = s->x;
+      if (displacement[YUP] != 0)
+        ty = (s->y - displacement[YUP] + ny) % ny;
+      else
+        ty = s->y;
+      if (displacement[ZUP] != 0)
+        tz = (s->z - displacement[ZUP] + nz) % nz;
+      else
+        tz = s->z;
+      if (displacement[TUP] != 0)
+        tt = (s->t - displacement[TUP] + nt) % nt;
+      else
+        tt = s->t;
       othernode = node_number(tx, ty, tz, tt);
       if (othernode != this_node) {
-  for (j=0;j<n_send_msgs;j++) if (to_nodes[j].node==othernode) break;
-  if (j < n_send_msgs) {
-    to_nodes[j].count++;
-  }
-  else {
-    if (n_send_msgs == 0) {
-      to_nodes = malloc(sizeof(*to_nodes));
-      to_nodes[0].node = othernode;
-      to_nodes[0].count = 1;
-      n_send_msgs++;
-    }
-    else {
-      to_nodes = realloc(to_nodes, (n_send_msgs + 1) * sizeof(*to_nodes));
-      to_nodes[j].node = othernode;
-      to_nodes[j].count = 1;
-      n_send_msgs++;
-    }
-  }
+        for (j = 0; j < n_send_msgs; j++) {
+          if (to_nodes[j].node == othernode)
+            break;
+        }
+        if (j < n_send_msgs)
+          to_nodes[j].count++;
+        else {
+          if (n_send_msgs == 0) {
+            to_nodes = malloc(sizeof(*to_nodes));
+            to_nodes[0].node = othernode;
+            to_nodes[0].count = 1;
+            n_send_msgs++;
+          }
+          else {
+            to_nodes = realloc(to_nodes,
+                               (n_send_msgs + 1) * sizeof(*to_nodes));
+            to_nodes[j].node = othernode;
+            to_nodes[j].count = 1;
+            n_send_msgs++;
+          }
+        }
       }
     }
   }
   else {
     FORSOMESUBLATTICE(i, s, send_subl) {
-      if (displacement[XUP]!=0) tx = (s->x - displacement[XUP] + nx)%nx;
-      else                     tx = s->x;
-      if (displacement[YUP]!=0) ty = (s->y - displacement[YUP] + ny)%ny;
-      else                     ty = s->y;
-      if (displacement[ZUP]!=0) tz = (s->z - displacement[ZUP] + nz)%nz;
-      else                     tz = s->z;
-      if (displacement[TUP]!=0) tt = (s->t - displacement[TUP] + nt)%nt;
-      else                     tt = s->t;
+      if (displacement[XUP] != 0)
+        tx = (s->x - displacement[XUP] + nx) % nx;
+      else
+        tx = s->x;
+      if (displacement[YUP] != 0)
+        ty = (s->y - displacement[YUP] + ny) % ny;
+      else
+        ty = s->y;
+      if (displacement[ZUP] != 0)
+        tz = (s->z - displacement[ZUP] + nz) % nz;
+      else
+        tz = s->z;
+      if (displacement[TUP] != 0)
+        tt = (s->t - displacement[TUP] + nt) % nt;
+      else
+        tt = s->t;
       othernode = node_number(tx, ty, tz, tt);
       if (othernode != this_node) {
-  for (j=0;j<n_send_msgs;j++) if (to_nodes[j].node==othernode) break;
-  if (j < n_send_msgs)
-    to_nodes[j].count++;
-  else {
-    if (n_send_msgs == 0) {
-      to_nodes = malloc(sizeof(*to_nodes));
-      to_nodes[0].node = othernode;
-      to_nodes[0].count = 1;
-      n_send_msgs++;
-    }
-    else {
-      to_nodes = realloc(to_nodes, (n_send_msgs + 1) * sizeof(*to_nodes));
-      to_nodes[j].node = othernode;
-      to_nodes[j].count = 1;
-      n_send_msgs++;
-    }
-  }
+        for (j = 0; j < n_send_msgs; j++) {
+          if (to_nodes[j].node == othernode)
+            break;
+        }
+        if (j < n_send_msgs)
+          to_nodes[j].count++;
+        else {
+          if (n_send_msgs == 0) {
+            to_nodes = malloc(sizeof(*to_nodes));
+            to_nodes[0].node = othernode;
+            to_nodes[0].count = 1;
+            n_send_msgs++;
+          }
+          else {
+            to_nodes = realloc(to_nodes,
+                               (n_send_msgs + 1) * sizeof(*to_nodes));
+            to_nodes[j].node = othernode;
+            to_nodes[j].count = 1;
+            n_send_msgs++;
+          }
+        }
       }
     }
   }

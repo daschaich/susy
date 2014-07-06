@@ -146,19 +146,18 @@ void setup_bc() {
           s->bc3[OPP_LDIR(dir1)][OPP_LDIR(dir2)][OPP_LDIR(dir3)] = 1.0;
 
           tocheck = s->t + offset[dir1][TUP] + offset[dir2][TUP]
-                          + offset[dir3][TUP];
+                         + offset[dir3][TUP];
           if (tocheck < 0)
             s->bc3[dir1][dir2][dir3] = PBC;
           else if (tocheck > nt - 1)
             s->bc3[dir1][dir2][dir3] = PBC;
 
           tocheck = s->t - offset[dir1][TUP] - offset[dir2][TUP]
-                          - offset[dir3][TUP];
+                         - offset[dir3][TUP];
           if (tocheck < 0)
             s->bc3[OPP_LDIR(dir1)][OPP_LDIR(dir2)][OPP_LDIR(dir3)] = PBC;
           else if (tocheck > nt - 1)
             s->bc3[OPP_LDIR(dir1)][OPP_LDIR(dir2)][OPP_LDIR(dir3)] = PBC;
-
         }
       }
     }
@@ -180,7 +179,7 @@ void setup_offset() {
     offset[i][i] = 1;
   }
   for (k = 0; k < NDIMS; k++)
-    offset[NUMLINK - 1][k] = -1;
+    offset[DIR_5][k] = -1;
 
 #ifdef DEBUG_CHECK
   node0_printf("There are %d distinct paths:\n", NUMLINK);

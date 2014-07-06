@@ -33,14 +33,13 @@ int main(int argc, char *argv[]) {
   setup_FQ();
   setup_rhmc();
 
-#ifdef CATTERALL_ALG
-  initialize_TF();
+#ifdef WLOOP
+  register int i;
+  register site *s;
 #endif
 
 #ifdef PL_CORR
   // Set up Fourier transform for Polyakov loop correlator
-  register int i;
-  register site *s;
   int key[4] = {1, 1, 1, 0};
   int restrict[4];
   Real space_vol = (Real)(nx * ny * nz);
@@ -120,13 +119,12 @@ int main(int argc, char *argv[]) {
         CDIVREAL((s->print_var), space_vol * space_vol, (s->print_var));
 
       print_var3("PLCORR");
-
-      // !!! TODO: Add projected / divided observables
 #endif
 
 #ifdef CORR
       // Konishi and SUGRA correlators
       d_correlator();
+      d_correlator_r();
 #endif
 
 #ifdef BILIN
@@ -136,10 +134,37 @@ int main(int argc, char *argv[]) {
       avm_iters += d_susyTrans();
 #endif
 
+#ifdef CORR
+  // R symmetry transformations -- use find_det and adjugate
+  rsymm();
+
+  // Measure density of monopole world lines in non-diagonal cubes
+//  monopole();
+#endif
+
 #ifdef WLOOP
-      // Gauge-fixed Wilson loops
+      // First calculate a few Wilson loops more directly, using explicit paths
+      // Save and restore all links overwritten by polar projection
+      hvy_pot_loop();
+      FORALLSITES(i, s) {
+        for (mu = XUP; mu < NUMLINK; mu++)
+          su3mat_copy_f(&(s->linkf[mu]), &(s->mom[mu]));
+      }
+      hvy_pot_polar_loop();
+      FORALLSITES(i, s) {
+        for (mu = XUP; mu < NUMLINK; mu++)
+          su3mat_copy_f(&(s->mom[mu]), &(s->linkf[mu]));
+      }
+
+      // Now gauge fix to easily access arbitrary displacements
+      // Save un-fixed links to be saved if requested
       if (fixflag == COULOMB_GAUGE_FIX) {
         d_plaquette(&dssplaq, &dstplaq);    // To be printed below
+        FORALLSITES(i, s) {
+          for (mu = XUP; mu < NUMLINK; mu++)
+            su3mat_copy_f(&(s->linkf[mu]), &(s->mom[mu]));
+        }
+
         node0_printf("Fixing to Coulomb gauge...\n");
         double gtime = -dclock();
 
@@ -161,25 +186,24 @@ int main(int argc, char *argv[]) {
         node0_printf("and NO_GAUGE_FIX supported\n");
         terminate(1);
       }
-
-      // We only consider the fundamental links
-      // The irrep links would require separate routines
-      // with the correct data structures (su3_matrix instead of su3_matrix_f)
       hvy_pot();
 
       // Save and restore links overwritten by polar projection
+      // Don't use mom[DIR_5], which is already storing the un-fixed links
       FORALLSITES(i, s)
-        su3mat_copy_f(&(s->linkf[DIR_5]), &(s->mom[DIR_5]));
+        su3mat_copy_f(&(s->linkf[DIR_5]), &(s->f_U[DIR_5]));
       hvy_pot_polar();
       FORALLSITES(i, s)
-        su3mat_copy_f(&(s->mom[DIR_5]), &(s->linkf[DIR_5]));
+        su3mat_copy_f(&(s->f_U[DIR_5]), &(s->linkf[DIR_5]));
 
-      // R symmetry transformations -- use find_det and adjugate
-      rsymm();
+      // Restore the un-fixed links to be saved if requested
+      if (fixflag == COULOMB_GAUGE_FIX) {
+        FORALLSITES(i, s) {
+          for (mu = XUP; mu < NUMLINK; mu++)
+            su3mat_copy_f(&(s->mom[mu]), &(s->linkf[mu]));
+        }
+      }
 #endif
-
-      // Measure density of monopole world lines in non-diagonal cubes
-//      monopole();
     }
     fflush(stdout);
   }

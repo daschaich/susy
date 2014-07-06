@@ -57,13 +57,13 @@ void hvy_pot_polar() {
         FORALLSITES(i, s)
           su3mat_copy_f(&(s->tempmat1), (su3_matrix_f *)F_PT(s, oldmat));
         for (i = 0; i < x_dist; i++) {
-          shiftmat(oldmat, newmat, XUP);
+          shiftmat(oldmat, newmat, goffset[XUP]);
           tt = oldmat;
           oldmat = newmat;
           newmat = tt;
         }
         for (i = 0; i < y_dist; i++) {
-          shiftmat(oldmat, newmat, YUP);
+          shiftmat(oldmat, newmat, goffset[YUP]);
           tt = oldmat;
           oldmat = newmat;
           newmat = tt;
@@ -80,7 +80,7 @@ void hvy_pot_polar() {
                        x_dist, y_dist, z_dist, t_dist, wloop / volume);
 
           // As we increment z, shift in z direction
-          shiftmat(oldmat, newmat, ZUP);
+          shiftmat(oldmat, newmat, goffset[ZUP]);
           tt = oldmat;
           oldmat = newmat;
           newmat = tt;

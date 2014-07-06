@@ -24,10 +24,8 @@
 
 
 // -----------------------------------------------------------------
-// Temporal boundary condition stuff
-// The usual OPP_DIR is the opposite 4d spacetime direction
-#define OPP_LDIR(Ldir) (9 - (Ldir))   // Opposite link direction
-#define PBC -1.0    // 1.0 for PBC, -1.0 for APBC
+// Temporal boundary condition: 1.0 for PBC, -1.0 for APBC
+#define PBC -1.0
 // -----------------------------------------------------------------
 
 
@@ -39,8 +37,6 @@
 #define QCLOSED             // Q-closed terms in action
 //#define DEBUG_CHECK         // Print lambdas, offsets, etc.
 
-#define NUMLINK 5           // Number of A4* links per site, and offsets
-#define DIR_5 4             // The direction of the diagonal link
 #define NQLINK 28           // Number of offsets for Q-closed terms
 #define NTERMS 30           // Number of DbmP, DbpP F1Q and F2Q terms
 

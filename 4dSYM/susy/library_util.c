@@ -186,14 +186,15 @@ void gauge_field_copy_f(field_offset src, field_offset dest) {
 
 
 // -----------------------------------------------------------------
-// Shift, without parallel transport, a matrix from direction dir
-void shiftmat(field_offset src, field_offset dest, int dir) {
+// Shift a matrix without parallel transport
+// The tag is the desired index of goffset
+void shiftmat(field_offset src, field_offset dest, int tag) {
   register int i;
   register site *s;
   msg_tag *mtag;
 
   mtag = start_gather_site(src, sizeof(su3_matrix_f),
-                           dir, EVENANDODD, gen_pt[0]);
+                           tag, EVENANDODD, gen_pt[0]);
   wait_gather(mtag);
   FORALLSITES(i, s) {
     su3mat_copy_f((su3_matrix_f *)gen_pt[0][i],
