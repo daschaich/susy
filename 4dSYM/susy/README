@@ -4,7 +4,6 @@ Four-dimensional N=4 supersymmetric Yang--Mills theory
 # Targets:
 susy_hmc and susy_phi for evolution with and without accept/reject step
 susy_hmc_pg and susy_phi_pg for testing with gauge fields only (no fermions)
-susy_hmc_sc for reverse compatibility with Simon's HMC algorithm including momenta for the pseudofermions (NOT WELL DEBUGGED)
 susy_corr for correlator measurements on saved configurations
 susy_stout for stout-smeared correlator measurements on saved configurations
 susy_bilin for fermion bilinear (and correlator) measurements on saved configurations
@@ -22,7 +21,6 @@ susy_phase for pfaffian phase measurements on saved configurations
 -DBILIN switches on the fermion bilinear calculation
 -DEIG switches on the PRIMME eigenvalue calculation
 -DPL_CORR switches on the Polyakov loop correlator calculation (NOT CURRENTLY IN USE)
--DCATTERALL_ALG switches on momenta for the pseudofermions (NOT WELL DEBUGGED)
 
 # Gauge group and fermion rep:
 NCOL and DIMF defined in ../include/su3.h

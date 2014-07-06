@@ -156,14 +156,14 @@ susy_phase::
 	"DEFINES = ${DEFINES} -DPHI_ALGORITHM -DPHASE " \
 	"EXTRA_OBJECTS = control_phase.o d_phase.o gaugefix.o io_phase.o "
 
-# This target may be useful for debugging:
 # Convert configuration into format the serial C++ code can read
+# for testing/debugging
 susy_spill::
 	${MAKE} -f ${MAKEFILE} target "MYTARGET= $@" \
 	"DEFINES = ${DEFINES} -DPHI_ALGORITHM " \
 	"EXTRA_OBJECTS = control_spill.o gaugefix.o "
 
-# The targets below have not been used recently and may no longer function
+# The targets below have not been used/tested recently
 susy_phi::
 	${MAKE} -f ${MAKEFILE} target "MYTARGET= $@" \
 	"DEFINES = ${DEFINES} -DPHI_ALGORITHM " \
@@ -177,11 +177,6 @@ susy_phi_pg::
 susy_hmc_pg::
 	${MAKE} -f ${MAKEFILE} target "MYTARGET= $@" \
 	"DEFINES = ${DEFINES} -DPHI_ALGORITHM -DHMC_ALGORITHM -DPUREGAUGE " \
-	"EXTRA_OBJECTS = control.o update_o.o update_h.o setup_rhmc.o det_force.o "
-
-susy_hmc_sc::
-	${MAKE} -f ${MAKEFILE} target "MYTARGET= $@" \
-	"DEFINES = ${DEFINES} -DPHI_ALGORITHM -DHMC_ALGORITHM -DCATTERALL_ALG " \
 	"EXTRA_OBJECTS = control.o update_o.o update_h.o setup_rhmc.o det_force.o "
 
 clean:

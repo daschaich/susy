@@ -20,15 +20,6 @@ double d_hmom_action() {
   }
   g_doublesum(&sum);
 //  node0_printf("gauge momentum %e\n",sum);
-
-#ifdef CATTERALL_ALG
-  double sum_TF = 0;
-  FORALLSITES(i, s)
-    sum_TF += magsq_TF(&(s->p_F));
-  g_doublesum(&sum_TF);
-  node0_printf("p_F term %e\n",sum_TF);
-  sum += sum_TF;
-#endif
   return sum;
 }
 // -----------------------------------------------------------------

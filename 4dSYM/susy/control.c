@@ -13,11 +13,6 @@ int main(int argc, char *argv[]) {
   double dssplaq, dstplaq, dtime;//, dssplaq_frep, dstplaq_frep;
   complex plp = cmplx(99, 99);
 
-#ifdef CATTERALL_ALG
-  int i;
-  register site *s;
-#endif
-
   // Setup
   setlinebuf(stdout); // DEBUG
   initialize_machine(&argc, &argv);

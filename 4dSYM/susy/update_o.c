@@ -108,19 +108,9 @@ int update() {
 
   // Set up the fermion variables, if needed
 #ifndef PUREGAUGE
-#ifdef CATTERALL_ALG
-  // In Simon's algorithm, the pseudofermion source doesn't change
-  register site *s;
-  FORALLSITES(i, s) {
-    copy_TF(&(s->F), &(src[i]));
-    copy_TF(&(s->F), &(s->old_F));
-  }
-  // But you need to refresh the momenta
-  initialize_p_F();
-#else
-  // For usual RHMC setup, compute g and src = (Mdag M)^(-1 / 8) g, etc.
+  // Compute g and src = (Mdag M)^(-1 / 8) g, etc.
   iters += grsource(src);
-#endif
+
   // Do a CG to get psim, components of (Mdag M)^(-1 / 4) src = (Mdag M)^(-1 / 8) R
   for (i = 0; i < Norder; i++)
     shift[i] = shift4[i];
@@ -169,10 +159,6 @@ int update() {
   if (exp(-change) < (double)xrandom) {
     if (traj_length > 0) {
       gauge_field_copy_f(F_OFFSET(old_linkf[0]), F_OFFSET(linkf[0]));
-#ifdef CATTERALL_ALG
-      FORALLSITES(i, s)
-        copy_TF(&(s->old_F), &(s->F));
-#endif
       fermion_rep();
     }
     node0_printf("REJECT: delta S = %.4g start S = %.12g end S = %.12g\n",
@@ -181,21 +167,8 @@ int update() {
   else {
     node0_printf("ACCEPT: delta S = %.4g start S = %.12g end S = %.12g\n",
                  change, startaction, endaction);
-
-#ifdef CATTERALL_ALG
-    // Slightly annoying: the subroutine mallocs its own source,
-    // but SC's algorithm needs to keep the source around, as s->F
-    // May be cleaner to make the source part of the site structure
-    FORALLSITES(i, s)
-      copy_TF(&(src[i]), &(s->F));
-#endif
   }
 #else
-    // phi algorithm and Catterall algorithm, update the pseudofermion
-#ifdef CATTERALL_ALG
-    FORALLSITES(i, s)
-      copy_TF(&(src[i]),&(s->F));
-#endif
   // Only print check if not doing HMC
   node0_printf("CHECK: delta S = %.4g\n", (double)(change));
 #endif // ifdef HMC

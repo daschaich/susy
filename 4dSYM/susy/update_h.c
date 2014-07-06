@@ -560,24 +560,12 @@ double fermion_force(Real eps, Twist_Fermion *src, Twist_Fermion **sol) {
   clear_su3mat_f(&tmat1);
 #endif
 
-#ifdef CATTERALL_ALG
-  Twist_Fermion c_f_F;
-  Twist_Fermion *f_F = malloc(sites_on_node * sizeof(*f_F));
-#endif
-
   fullforce = malloc(NUMLINK * sizeof(*fullforce));
   for (mu = 0; mu < NUMLINK; mu++) {
     fullforce[mu] = malloc(sites_on_node * sizeof(su3_matrix_f));
       FORALLSITES(i, s)
         clear_su3mat_f(&(fullforce[mu][i]));
   }
-
-#ifdef CATTERALL_ALG
-  FORALLSITES(i, s) {
-    conjTF(&(s->F), &(c_f_F));
-    scalar_mult_TF(&c_f_F, -ampdeg4, &(f_F[i]));
-  }
-#endif
 
   for (n = 0; n < Norder; n++) {
     fermion_op(sol[n], psol, PLUS);
@@ -665,18 +653,6 @@ double fermion_force(Real eps, Twist_Fermion *src, Twist_Fermion **sol) {
       }
     }
 #endif  // End of scan of the fermion action
-
-#ifdef CATTERALL_ALG
-    FORALLSITES(i, s) {
-      conjTF(&(sol[n][i]), &c_f_F);
-      scalar_mult_add_TF(&(f_F[i]), &c_f_F, -amp4[n], &(f_F[i]));
-    }
-
-    FORALLSITES(i, s) {
-      conjTF(&(f_F[i]),&c_f_F);
-      scalar_mult_add_TF(&(s->p_F),&c_f_F,eps,&(s->p_F));
-    }
-#endif
   }
 
   // Update the momentum from the fermion force -- sum or eps

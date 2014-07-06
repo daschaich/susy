@@ -42,10 +42,6 @@ void apply_bc(su3_matrix *sigma, int dir, int t);
 // -----------------------------------------------------------------
 // Susy routines
 // Lots of things to initialize and set up
-#ifdef CATTERALL_ALG
-void initialize_TF();
-void initialize_p_F();
-#endif
 void compute_Fmunu();
 void compute_DmuUmu();
 void setup_lambda();

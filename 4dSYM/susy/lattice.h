@@ -48,10 +48,6 @@ typedef struct {
   // Momentum matrices in each direction are just U(N) matrices
   // as opposed to anti-hermitian matrices
   su3_matrix_f mom[NUMLINK];
-#ifdef CATTERALL_ALG
-  Twist_Fermion F, old_F;
-  Twist_Fermion p_F;
-#endif
 
   // Used in assemble_fermion_force
   su3_vector site_sol, link_sol[NUMLINK], plaq_sol[NUMLINK][NUMLINK];
