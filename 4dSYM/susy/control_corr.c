@@ -134,16 +134,29 @@ int main(int argc, char *argv[]) {
 //  monopole();
 
 #ifdef WLOOP
-  // Gauge-fixed Wilson loops
+  // First calculate a few Wilson loops more directly, using explicit paths
+  // Save and restore all links overwritten by polar projection
+  hvy_pot_loop();
+  FORALLSITES(i, s) {
+    for (mu = XUP; mu < NUMLINK; mu++)
+      su3mat_copy_f(&(s->linkf[mu]), &(s->mom[mu]));
+  }
+  hvy_pot_polar_loop();
+  FORALLSITES(i, s) {
+    for (mu = XUP; mu < NUMLINK; mu++)
+      su3mat_copy_f(&(s->mom[mu]), &(s->linkf[mu]));
+  }
+
+  // Now gauge fix to easily access arbitrary displacements
   if (fixflag == COULOMB_GAUGE_FIX) {
     d_plaquette(&dssplaq, &dstplaq);    // To be printed below
     node0_printf("Fixing to Coulomb gauge...\n");
     double gtime = -dclock();
 
     // Gauge fixing arguments explained in generic/gaugefix.c
-    // With first argument > TUP,
+    // With first argument outside XUP, ..., TUP,
     // first four links are included in gauge-fixing condition
-    gaugefix(4, 1.5, 5000, GAUGE_FIX_TOL, -1, -1, 0, NULL, NULL);
+    gaugefix(TUP, 1.5, 5000, GAUGE_FIX_TOL, -1, -1, 0, NULL, NULL);
     gtime += dclock();
     node0_printf("GFIX time = %.4g seconds\n", gtime);
     node0_printf("BEFORE %.8g %.8g\n", dssplaq, dstplaq);
@@ -158,10 +171,6 @@ int main(int argc, char *argv[]) {
     node0_printf("and NO_GAUGE_FIX supported\n");
     terminate(1);
   }
-
-  // We only consider the fundamental links
-  // The irrep links would require separate routines
-  // with the correct data structures (su3_matrix instead of su3_matrix_f)
   hvy_pot();
 
   // Save and restore temporal links overwritten by polar projection
@@ -170,19 +179,6 @@ int main(int argc, char *argv[]) {
   hvy_pot_polar();
   FORALLSITES(i, s)
     su3mat_copy_f(&(s->mom[TUP]), &(s->linkf[TUP]));
-
-  // Check more direct calculation of loops using explicit paths
-  // Save and restore all links overwritten by polar projection
-  hvy_pot_loop();
-  FORALLSITES(i, s) {
-    for (mu = XUP; mu < NUMLINK; mu++)
-      su3mat_copy_f(&(s->linkf[mu]), &(s->mom[mu]));
-  }
-  hvy_pot_polar_loop();
-  FORALLSITES(i, s) {
-    for (mu = XUP; mu < NUMLINK; mu++)
-      su3mat_copy_f(&(s->mom[mu]), &(s->linkf[mu]));
-  }
 #endif
 
   node0_printf("RUNNING COMPLETED\n");
