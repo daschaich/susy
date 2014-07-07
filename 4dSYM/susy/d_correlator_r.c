@@ -18,7 +18,7 @@ void d_correlator_r() {
   Real dum = 0.0, corr;
   Real *ops = malloc(sites_on_node * len * sizeof(Real*));
   complex ctmp;
-  msg_tag *tag;
+  msg_tag *mtag;
   su3_matrix_f *B[NUMLINK], tmat;
 
   node0_printf("d_correlator_r: MAX_T = %d, MAX_X = %d\n", MAX_T, MAX_X);
@@ -93,9 +93,9 @@ void d_correlator_r() {
         d[ZUP] = z_dist;
         for (t_dist = 0; t_dist <= MAX_T; t_dist++) {
           d[TUP] = t_dist;
-          tag = start_general_gather_field(ops, len * sizeof(Real),
-                                           d, EVENANDODD, gen_pt[0]);
-          wait_general_gather(tag);
+          mtag = start_general_gather_field(ops, len * sizeof(Real),
+                                            d, EVENANDODD, gen_pt[0]);
+          wait_general_gather(mtag);
 
           // Konishi
           corr = 0.0;
@@ -119,7 +119,7 @@ void d_correlator_r() {
           node0_printf("CORR_S %d %d %d %d %.6g\n",
                        x_dist, y_dist, z_dist, t_dist,
                        corr / (volume * NUMLINK * NUMLINK));
-          cleanup_general_gather(tag);
+          cleanup_general_gather(mtag);
         } // t_dist
       } // z_dist
     } // y dist

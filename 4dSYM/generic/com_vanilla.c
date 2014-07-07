@@ -140,7 +140,7 @@ void normal_exit(int status) {
 // Terminate for scalar processes
 void terminate(int status) {
   time_stamp("termination");
-  printf("Termination: node %d, status = %d\n", this_node, status);
+  printf("Termination: node%d, status = %d\n", this_node, status);
   fflush(stdout);
   exit(status);
 }
@@ -373,7 +373,7 @@ void make_nn_gathers() {
 
   gather_array_len = 8;
   gather_array = malloc(gather_array_len * sizeof(*gather_array));
-  if (gather_array==NULL) {
+  if (gather_array == NULL) {
     printf("error: not enough room for gather_array in make_nn_gathers\n");
     terminate(1);
   }
@@ -588,10 +588,10 @@ int make_gather(
     ** do other stuff **
   wait_gather(tag);
     ** gen_pt[0][i] now contains the address of the modified phi.
-     The restart-wait may be repeated as often as desired.  **
+     The restart-wait may be repeated as often as desired
   cleanup_gather(tag);
     ** subsequent calls will overwrite the gathered fields. but if you
-     don't clean up, you will eventually run out of space **
+     don't clean up, you will eventually run out of space
 */
 
 // Return msg_tag containing details for specific gather
