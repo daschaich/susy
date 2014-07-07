@@ -18,27 +18,27 @@ void rsymm_path(int *dir, int *sign, int *kind, int length) {
   register int i;
   register site *s;
   int j;
-  msg_tag *mtag0 = NULL;
+  msg_tag *mtag = NULL;
 
   // Initialize tempmat1 with first link in path
-  if (sign[0] > 0) {    // Gather forwards, no adjoint
+  if (sign[0] > 0) {    // Gather backwards, no adjoint
     if (kind[0] > 0) {
-      mtag0 = start_gather_site(F_OFFSET(linkf[dir[0]]), sizeof(su3_matrix_f),
-                                goffset[dir[0]] + 1, EVENANDODD, gen_pt[0]);
+      mtag = start_gather_site(F_OFFSET(linkf[dir[0]]), sizeof(su3_matrix_f),
+                               goffset[dir[0]] + 1, EVENANDODD, gen_pt[0]);
     }
     else if (kind[0] < 0) {
-      mtag0 = start_gather_site(F_OFFSET(mom[dir[0]]), sizeof(su3_matrix_f),
-                                goffset[dir[0]] + 1, EVENANDODD, gen_pt[0]);
+      mtag = start_gather_site(F_OFFSET(mom[dir[0]]), sizeof(su3_matrix_f),
+                               goffset[dir[0]] + 1, EVENANDODD, gen_pt[0]);
     }
     else {
       node0_printf("rsymm_path: unrecognized kind[0] = %d\n", kind[0]);
       terminate(1);
     }
 
-    wait_gather(mtag0);
+    wait_gather(mtag);
     FORALLSITES(i, s)
       su3mat_copy_f((su3_matrix_f *)(gen_pt[0][i]), &(s->tempmat1));
-    cleanup_gather(mtag0);
+    cleanup_gather(mtag);
   }
 
   else if (sign[0] < 0) {    // Take adjoint, no gather
@@ -71,20 +71,20 @@ void rsymm_path(int *dir, int *sign, int *kind, int length) {
           terminate(1);
         }
       }
-      mtag0 = start_gather_site(F_OFFSET(tempmat2), sizeof(su3_matrix_f),
-                                goffset[dir[j]] + 1, EVENANDODD, gen_pt[0]);
+      mtag = start_gather_site(F_OFFSET(tempmat2), sizeof(su3_matrix_f),
+                               goffset[dir[j]] + 1, EVENANDODD, gen_pt[0]);
 
-      wait_gather(mtag0);
+      wait_gather(mtag);
       FORALLSITES(i, s)
         su3mat_copy_f((su3_matrix_f *)(gen_pt[0][i]), &(s->tempmat1));
-      cleanup_gather(mtag0);
+      cleanup_gather(mtag);
     }
 
     else if (sign[j] < 0) {    // Gather forwards then mult_su3_na_f
-      mtag0 = start_gather_site(F_OFFSET(tempmat1), sizeof(su3_matrix_f),
-                                goffset[dir[j]], EVENANDODD, gen_pt[1]);
+      mtag = start_gather_site(F_OFFSET(tempmat1), sizeof(su3_matrix_f),
+                               goffset[dir[j]], EVENANDODD, gen_pt[1]);
 
-      wait_gather(mtag0);
+      wait_gather(mtag);
       FORALLSITES(i, s) {
         if (kind[j] > 0) {
           mult_su3_na_f((su3_matrix_f *)(gen_pt[1][i]), &(s->linkf[dir[j]]),
@@ -101,7 +101,7 @@ void rsymm_path(int *dir, int *sign, int *kind, int length) {
       }
       FORALLSITES(i, s)   // Don't want to overwrite tempmat1 too soon
         su3mat_copy_f(&(s->tempmat2), &(s->tempmat1));
-      cleanup_gather(mtag0);
+      cleanup_gather(mtag);
     }
     else {
       node0_printf("rsymm_path: unrecognized sign[%d] = %d\n", j, sign[j]);

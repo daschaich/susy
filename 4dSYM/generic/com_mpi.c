@@ -1,6 +1,6 @@
 // -----------------------------------------------------------------
 // Communications routines for MPI
-/* Exported Functions:
+/* Exported functions:
    initialize_machine()   Do machine dependent setup at the very beginning
    normal_exit()          Close communications and exit
    terminate()            Halt program abruptly and exit
@@ -1188,7 +1188,7 @@ msg_tag* declare_strided_gather(
   else {
     FORSOMEPARITY(i, s, subl) {
       if (gt->neighbor[i] != NOWHERE)
-      dest[i] = (char *)field + gt->neighbor[i] * stride;
+        dest[i] = (char *)field + gt->neighbor[i] * stride;
     }
   }
 

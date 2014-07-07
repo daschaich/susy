@@ -185,9 +185,12 @@ void setup_offset() {
   node0_printf("There are %d distinct paths:\n", NUMLINK);
 #endif
   // Now make the gather tables
-  for (i = 0; i < NUMLINK; i++) {
+  // Slightly awkward: Don't allow EVEN or ODD for fifth link
+  for (i = 0; i < DIR_5; i++) {
     goffset[i] = make_gather(cubic_neighbor, offset[i],
-                             WANT_INVERSE, NO_EVEN_ODD, SCRAMBLE_PARITY);
+                             WANT_INVERSE, ALLOW_EVEN_ODD, SWITCH_PARITY);
+  goffset[DIR_5] = make_gather(cubic_neighbor, offset[DIR_5],
+                               WANT_INVERSE, NO_EVEN_ODD, SAME_PARITY);
 
 #ifdef DEBUG_CHECK
     int mu;
