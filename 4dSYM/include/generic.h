@@ -27,8 +27,7 @@ void d_plaquette_frep_lcl(double *ss_plaq_frep, double *st_plaq_frep);
 
 // gaugefix.c
 void gaugefix(int gauge_dir,Real relax_boost,int max_gauge_iter,
-              Real gauge_fix_tol, field_offset diffmat, field_offset sumvec,
-              int Nah, field_offset ah_offset[], int ah_parity[]);
+              Real gfix_tol, field_offset diffmat, field_offset sumvec);
 
 /* io_helpers.c */
 gauge_file *save_lattice(int flag, char *filename, char *stringLFN);

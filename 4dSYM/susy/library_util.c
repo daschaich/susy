@@ -187,7 +187,7 @@ void gauge_field_copy_f(field_offset src, field_offset dest) {
 
 // -----------------------------------------------------------------
 // Shift a matrix without parallel transport
-// The tag is the desired index of goffset
+// The tag is the desired content of goffset
 void shiftmat(field_offset src, field_offset dest, int tag) {
   register int i;
   register site *s;

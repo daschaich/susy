@@ -92,14 +92,6 @@
 
 // Macro to compute the message id
 #define GATHER_ID(x) (GATHER_BASE_ID+(x))
-
-// Hacks needed to unify even/odd and 32 sublattice cases
-#ifdef N_SUBL32
-#define NUM_SUBL 32
-#define FORSOMEPARITY FORSOMESUBLATTICE
-#else
-#define NUM_SUBL 2
-#endif
 // -----------------------------------------------------------------
 
 
@@ -116,15 +108,14 @@
 typedef struct comlink {
   struct comlink *nextcomlink;  /* pointer to next in list, NULL if last */
   int othernode;                /* number of the node to which we connect */
-  int n_subl_connected[NUM_SUBL+1];
+  int n_subl_connected[3];
   /* Number of sites on this node that have neighbors on other node connected
      by this "comlink" of certain parity of the receiver.
-     The indicies 0..NUM_SUBL-1 refer to a specific parity and the
-     index NUM_SUBL refers to all parities */
-  int *sitelist[NUM_SUBL+1];
-  /* Address of list of indices of a certain receiver parity whose
-     neighbors are found through this comlink.  The index is the same as for
-     n_subl_connected above. */
+     The indices 0 and 1 refer to specific parities and the
+     index 2 refers to all parities */
+  int *sitelist[3];
+  // Address of list of indices of a certain receiver parity whose
+  // neighbors are found through this comlink.  The index is the same as above.
   /* Different comlink structures may point to the same list.
      For example, the receive list for one gather may be a send list for
      the opposite gather. */
@@ -618,12 +609,7 @@ void make_nn_gathers() {
 #define SEND    1
 
 static int parity_function(int x, int y, int z, int t) {
-#ifndef N_SUBL32
   return (x + y + z + t)&1;
-#else
-  return ((x % 2) + 2 * (y % 2) + 4 * (z % 2) + 8 * (t % 2)
-          + 16 * ((x / 2 + y / 2 + z / 2 + t / 2) % 2));
-#endif
 }
 
 // Copy a linked list of comlinks, switching send and receive parity
@@ -637,13 +623,13 @@ static comlink* copy_list_switch(comlink *old_compt, int *send_subl) {
 
   do {
     compt->othernode = old_compt->othernode;
-    for (r_subl=0; r_subl<NUM_SUBL; r_subl++) {
+    for (r_subl=0; r_subl<2; r_subl++) {
       s_subl = send_subl[r_subl];
       compt->n_subl_connected[s_subl] = old_compt->n_subl_connected[r_subl];
       compt->sitelist[s_subl] = old_compt->sitelist[r_subl];
     }
-    compt->n_subl_connected[NUM_SUBL] = old_compt->n_subl_connected[NUM_SUBL];
-    compt->sitelist[NUM_SUBL] = old_compt->sitelist[NUM_SUBL];
+    compt->n_subl_connected[2] = old_compt->n_subl_connected[2];
+    compt->sitelist[2] = old_compt->sitelist[2];
     if (old_compt->nextcomlink != NULL)
       compt->nextcomlink = (comlink *)malloc(sizeof(comlink));
     else compt->nextcomlink = NULL;
@@ -717,7 +703,7 @@ static comlink* make_send_receive_list(
   int i, j, subl;
   site *s;
   int x, y, z, t;
-  int *sbuf[NUM_SUBL];  /* to be malloc'd */
+  int *sbuf[2];  /* to be malloc'd */
   int *tbuf;          /* to be malloc'd */
   comlink **combuf; /* to be malloc'd, remember where comlinks are */
   comlink *compt,**comptpt;
@@ -725,7 +711,7 @@ static comlink* make_send_receive_list(
 
   /* make temporary buffers of numnodes() integers to count numbers of
      neighbors in each sublattice on each node */
-  for (subl=0; subl<NUM_SUBL; subl++) {
+  for (subl=0; subl<2; subl++) {
     sbuf[subl] = malloc(numnodes() * sizeof(int));
     // Clear neighbor_numbers
     for (i = 0; i < numnodes(); i++)
@@ -772,13 +758,13 @@ static comlink* make_send_receive_list(
     combuf[j] = compt;  /* to make it easy to find again */
     compt->nextcomlink = NULL;  /* currently terminates list */
     compt->othernode = j;
-    compt->n_subl_connected[NUM_SUBL] = tbuf[j];
-    for (subl = 0; subl < NUM_SUBL; subl++) {
+    compt->n_subl_connected[2] = tbuf[j];
+    for (subl = 0; subl < 2; subl++) {
       compt->n_subl_connected[subl] = sbuf[subl][j];
     }
-    compt->sitelist[0] = compt->sitelist[NUM_SUBL] =
+    compt->sitelist[0] = compt->sitelist[2] =
       (int *)malloc(tbuf[j]*sizeof(int));
-    for (subl=1; subl<NUM_SUBL; subl++)
+    for (subl=1; subl<2; subl++)
       compt->sitelist[subl] = (compt->sitelist[subl-1]) + sbuf[subl-1][j];
     /* sitelist[...] must be filled in later */
     comptpt = &(compt->nextcomlink);  /* linked list, if we
@@ -787,7 +773,7 @@ static comlink* make_send_receive_list(
   }
 
   /* clear neighbor_numbers, to be used as counters now */
-  for (subl=0; subl<NUM_SUBL; subl++) {
+  for (subl=0; subl<2; subl++) {
     for (i = 0; i < numnodes(); i++) sbuf[subl][i] = 0;
   }
 
@@ -821,7 +807,7 @@ static comlink* make_send_receive_list(
     if (send_recv == RECEIVE)
       i = forw_back;
     else i = -forw_back;
-    for (subl = 0; subl < NUM_SUBL; subl++)
+    for (subl = 0; subl < 2; subl++)
       sort_site_list(compt->n_subl_connected[subl],
           compt->sitelist[subl], func, args, i);
   }
@@ -829,7 +815,7 @@ static comlink* make_send_receive_list(
   // Free temporary storage
   free(combuf);
   free(tbuf);
-  for (subl = 0; subl < NUM_SUBL; subl++)
+  for (subl = 0; subl < 2; subl++)
     free(sbuf[subl]);
 
   return firstpt;
@@ -926,12 +912,12 @@ int make_gather(
   }
 
   if (want_even_odd == ALLOW_EVEN_ODD && parity_conserve != SCRAMBLE_PARITY) {
-    send_subl = malloc(NUM_SUBL * sizeof(*send_subl));
+    send_subl = malloc(2 * sizeof(*send_subl));
     if (send_subl == NULL) {
       printf("node%d: no room for send_subl\n", this_node);
       terminate(1);
     }
-    for (subl = 0; subl < NUM_SUBL; subl++)
+    for (subl = 0; subl < 2; subl++)
       send_subl[subl] = NOWHERE;
   }
   else
@@ -1192,16 +1178,12 @@ msg_tag* declare_strided_gather(
     }
   }
 
-#ifndef N_SUBL32
   switch(subl) {
     case EVEN:        subl = 0; break;
     case ODD:         subl = 1; break;
     case EVENANDODD:  subl = 2; break;
     default:  printf("ERROR: bad sublattice\n"); terminate(subl);
   }
-#else
-  if (subl == EVENANDODD) subl = NUM_SUBL;
-#endif
 
   // Allocate the message tag
   mtag = malloc(sizeof(*mtag));
@@ -1760,8 +1742,6 @@ static char **tdest;     /* tdest is copy of dest */
    works because we allow only one general_gather in progress at a
    time. */
 
-#ifndef N_SUBL32
-
 msg_tag* start_general_strided_gather(
   char *field,          /* source buffer aligned to desired field */
   int stride,           /* bytes between fields in source buffer */
@@ -1985,378 +1965,6 @@ msg_tag* start_general_strided_gather(
 
   return mtag;
 }
-
-#else /* N_SUBL32 */
-
-msg_tag* start_general_strided_gather(
-  char *field,          /* source buffer aligned to desired field */
-  int stride,           /* bytes between fields in source buffer */
-  int size,   /* size in bytes of the field (eg sizeof(su3_vector))*/
-  int *displacement,  /* displacement to gather from. four components */
-  int subl,   /* subl of sites whose neighbors we gather.
-         It is EVENANDODD, if all sublattices are done. */
-  char **dest)   /* one of the vectors of pointers */
-{
-  register int i, j;
-  register site *s;
-  register char *tpt; /* scratch pointer in buffers */
-  int nsites;   /* number of sites in this receive or send */
-  int send_subl;    /* sublattice of sites that may be sent */
-  int tx, ty, tz, tt;  /* temporary coordinates */
-  int othernode;    /* node sent to or received from */
-  msg_sr_t *mrecv, *msend;
-  msg_tag *mtag;    /* message tag, to be returned */
-  int n_send_msgs, n_recv_msgs;
-
-  /* check for gather already in progress */
-  if (g_gather_flag!=0) {
-    printf("ERROR: node%d, two general_gathers() at once!\n", mynode());
-    terminate(1);
-  }
-  n_recv_msgs = n_send_msgs = 0;
-  tsize = 2 * sizeof(int) + size;
-  /* Use 2*sizeof int so pointer will be aligned to double word */
-  tdest = dest;
-
-  /* find sublattice of sites that may be sent */
-  /* This is not needed for EVENANDODD */
-  send_subl = subl;
-  if (subl != EVENANDODD) {
-    // Displacements by multiples of 4 in any direction
-    // do not change sublattice
-    tx = displacement[XUP] % 4;
-    ty = displacement[YUP] % 4;
-    tz = displacement[ZUP] % 4;
-    tt = displacement[TUP] % 4;
-    if (tx < 0) {
-      for (i = 0;i<(-tx);i++) send_subl = neighsubl[send_subl][XDOWN];
-    }
-    else {
-      for (i = 0;i<tx;i++) send_subl = neighsubl[send_subl][XUP];
-    }
-    if (ty < 0) {
-      for (i = 0;i<(-ty);i++) send_subl = neighsubl[send_subl][YDOWN];
-    }
-    else
-      for (i = 0;i<ty;i++) send_subl = neighsubl[send_subl][YUP];
-    if (tz < 0) {
-      for (i = 0;i<(-tz);i++) send_subl = neighsubl[send_subl][ZDOWN];
-    }
-    else
-      for (i = 0;i<tz;i++) send_subl = neighsubl[send_subl][ZUP];
-    if (tt < 0) {
-      for (i = 0;i<(-tt);i++) send_subl = neighsubl[send_subl][TDOWN];
-    }
-    else
-      for (i = 0;i<tt;i++) send_subl = neighsubl[send_subl][TUP];
-  }
-
-  /* set pointers in sites whose neighbors are on this node.  (If all
-     neighbors are on this node, this is the only thing done.) Make
-     list of nodes from whom we expect messages */
-  if (subl == EVENANDODD) {
-    FORALLSITES(i, s) {
-      if (displacement[XUP] != 0)
-        tx = (s->x + displacement[XUP] + nx) % nx;
-      else
-        tx = s->x;
-      if (displacement[YUP] != 0)
-        ty = (s->y + displacement[YUP] + ny) % ny;
-      else
-        ty = s->y;
-      if (displacement[ZUP] != 0)
-        tz = (s->z + displacement[ZUP] + nz) % nz;
-      else
-        tz = s->z;
-      if (displacement[TUP] != 0)
-        tt = (s->t + displacement[TUP] + nt) % nt;
-      else
-        tt = s->t;
-      othernode = node_number(tx, ty, tz, tt);
-      if (othernode == this_node)
-        dest[i] = field + node_index(tx, ty, tz, tt) * stride;
-      else {
-        for (j = 0; j < n_recv_msgs; j++) {
-          if (from_nodes[j].node == othernode)
-            break;
-        }
-        if (j < n_recv_msgs)
-          from_nodes[j].count++;
-        else {
-          if (n_recv_msgs == 0) {
-            from_nodes = malloc(sizeof(*from_nodes));
-            from_nodes[0].node = othernode;
-            from_nodes[0].count = 1;
-            n_recv_msgs++;
-          }
-          else {
-            from_nodes = realloc(from_nodes,
-                                 (n_recv_msgs + 1) * sizeof(*from_nodes));
-            from_nodes[j].node = othernode;
-            from_nodes[j].count = 1;
-            n_recv_msgs++;
-          }
-        }
-      }
-    }
-  }
-  else {
-    FORSOMESUBLATTICE(i, s, subl) {
-      if (displacement[XUP] != 0)
-        tx = (s->x + displacement[XUP] + nx) % nx;
-      else
-        tx = s->x;
-      if (displacement[YUP] != 0)
-        ty = (s->y + displacement[YUP] + ny) % ny;
-      else
-        ty = s->y;
-      if (displacement[ZUP] != 0)
-        tz = (s->z + displacement[ZUP] + nz) % nz;
-      else
-        tz = s->z;
-      if (displacement[TUP] != 0)
-        tt = (s->t + displacement[TUP] + nt) % nt;
-      else
-        tt = s->t;
-      othernode = node_number(tx, ty, tz, tt);
-      if (othernode == this_node)
-        dest[i] = field + node_index(tx, ty, tz, tt) * stride;
-      else {
-        for (j = 0; j < n_recv_msgs; j++) {
-          if (from_nodes[j].node == othernode)
-            break;
-        }
-        if (j < n_recv_msgs) {
-          from_nodes[j].count++;
-        }
-        else {
-          if (n_recv_msgs == 0) {
-            from_nodes = malloc(sizeof(*from_nodes));
-            from_nodes[0].node = othernode;
-            from_nodes[0].count = 1;
-            n_recv_msgs++;
-          }
-          else {
-            from_nodes = realloc(from_nodes,
-                                 (n_recv_msgs + 1) * sizeof(*from_nodes));
-            from_nodes[j].node = othernode;
-            from_nodes[j].count = 1;
-            n_recv_msgs++;
-          }
-        }
-      }
-    }
-  }
-
-  /* scan sites of sublattice we are sending, make list of nodes to which
-     we must send messages and the number of messages to each. */
-  if (subl == EVENANDODD) {
-    FORALLSITES(i, s) {
-      if (displacement[XUP] != 0)
-        tx = (s->x - displacement[XUP] + nx) % nx;
-      else
-        tx = s->x;
-      if (displacement[YUP] != 0)
-        ty = (s->y - displacement[YUP] + ny) % ny;
-      else
-        ty = s->y;
-      if (displacement[ZUP] != 0)
-        tz = (s->z - displacement[ZUP] + nz) % nz;
-      else
-        tz = s->z;
-      if (displacement[TUP] != 0)
-        tt = (s->t - displacement[TUP] + nt) % nt;
-      else
-        tt = s->t;
-      othernode = node_number(tx, ty, tz, tt);
-      if (othernode != this_node) {
-        for (j = 0; j < n_send_msgs; j++) {
-          if (to_nodes[j].node == othernode)
-            break;
-        }
-        if (j < n_send_msgs)
-          to_nodes[j].count++;
-        else {
-          if (n_send_msgs == 0) {
-            to_nodes = malloc(sizeof(*to_nodes));
-            to_nodes[0].node = othernode;
-            to_nodes[0].count = 1;
-            n_send_msgs++;
-          }
-          else {
-            to_nodes = realloc(to_nodes,
-                               (n_send_msgs + 1) * sizeof(*to_nodes));
-            to_nodes[j].node = othernode;
-            to_nodes[j].count = 1;
-            n_send_msgs++;
-          }
-        }
-      }
-    }
-  }
-  else {
-    FORSOMESUBLATTICE(i, s, send_subl) {
-      if (displacement[XUP] != 0)
-        tx = (s->x - displacement[XUP] + nx) % nx;
-      else
-        tx = s->x;
-      if (displacement[YUP] != 0)
-        ty = (s->y - displacement[YUP] + ny) % ny;
-      else
-        ty = s->y;
-      if (displacement[ZUP] != 0)
-        tz = (s->z - displacement[ZUP] + nz) % nz;
-      else
-        tz = s->z;
-      if (displacement[TUP] != 0)
-        tt = (s->t - displacement[TUP] + nt) % nt;
-      else
-        tt = s->t;
-      othernode = node_number(tx, ty, tz, tt);
-      if (othernode != this_node) {
-        for (j = 0; j < n_send_msgs; j++) {
-          if (to_nodes[j].node == othernode)
-            break;
-        }
-        if (j < n_send_msgs)
-          to_nodes[j].count++;
-        else {
-          if (n_send_msgs == 0) {
-            to_nodes = malloc(sizeof(*to_nodes));
-            to_nodes[0].node = othernode;
-            to_nodes[0].count = 1;
-            n_send_msgs++;
-          }
-          else {
-            to_nodes = realloc(to_nodes,
-                               (n_send_msgs + 1) * sizeof(*to_nodes));
-            to_nodes[j].node = othernode;
-            to_nodes[j].count = 1;
-            n_send_msgs++;
-          }
-        }
-      }
-    }
-  }
-
-  mtag = malloc(sizeof(*mtag));
-  if (n_recv_msgs == 0)
-    mrecv = NULL;
-  else {
-    mrecv = malloc(n_recv_msgs * sizeof(*mrecv));
-    if (mrecv == NULL) {
-      printf("start_general_strided_gather: node%d can't malloc mrecv\n",
-             mynode());
-      terminate(1);
-    }
-  }
-  if (n_send_msgs == 0)
-    msend = NULL;
-  else {
-    msend = malloc(n_send_msgs * sizeof(*msend));
-    if (msend == NULL) {
-      printf("start_general_strided_gather: node%d can't malloc msend\n",
-             mynode());
-      terminate(1);
-    }
-  }
-
-  mtag->recv_msgs = mrecv;
-  mtag->send_msgs = msend;
-
-  mtag->nrecvs = n_recv_msgs;
-  mtag->nsends = n_send_msgs;
-
-  /* for each node which has neighbors of my sites */
-  for (i = 0; i < n_recv_msgs; i++) {
-    /* allocate buffer to receive neighbors */
-    nsites = from_nodes[i].count;
-    mrecv[i].msg_node = from_nodes[i].node;
-    mrecv[i].msg_size = nsites * tsize;
-    mrecv[i].msg_buf = malloc(nsites * tsize);
-    if (mrecv[i].msg_buf == NULL) {
-      printf("start_general_strided_gather: node%d can't malloc msg_buf\n",
-             this_node);
-      terminate(1);
-    }
-    /* post receive */
-    MPI_Irecv(mrecv[i].msg_buf, nsites*tsize, MPI_BYTE,
-         from_nodes[i].node, GENERAL_GATHER_ID,
-         MPI_COMM_WORLD, &mrecv[i].msg_req);
-  }
-
-  /* for each node whose neighbors I have */
-  for (i = 0; i < n_send_msgs; i++) {
-    // Allocate buffer to gather data
-    tpt = malloc(to_nodes[i].count * tsize);
-    if (tpt == NULL) {
-      printf("start_general_strided_gather: node%d can't malloc tpt\n",
-             this_node);
-      terminate(1);
-    }
-    msend[i].msg_node = to_nodes[i].node;
-    msend[i].msg_size = to_nodes[i].count*tsize;
-    msend[i].msg_buf = tpt;
-  }
-
-  /* reset to_node counters */
-  for (i = 0; i < n_send_msgs; i++)
-    to_nodes[i].count = 0;
-  /* gather data into the buffers. Each entry in the buffers consists
-     of the index of the site to which the data is sent, followed by
-     the actual data */
-  if (subl == EVENANDODD) {
-    FORALLSITES(i, s) {
-      tx = (s->x - displacement[XUP] + nx) % nx;
-      ty = (s->y - displacement[YUP] + ny) % ny;
-      tz = (s->z - displacement[ZUP] + nz) % nz;
-      tt = (s->t - displacement[TUP] + nt) % nt;
-      othernode = node_number(tx, ty, tz, tt);
-      if (othernode != this_node) {
-  for (j=0; j<n_send_msgs; j++) if (to_nodes[j].node==othernode) break;
-  tpt = msend[j].msg_buf + to_nodes[j].count*tsize;
-  *(int *)tpt = node_index(tx, ty, tz, tt);
-  /* index of site on other node */
-  memcpy(tpt+2*sizeof(int), field+i*stride, size);
-  to_nodes[j].count++;
-      }
-    }
-  }
-  else {
-    FORSOMESUBLATTICE(i, s, send_subl) {
-      tx = (s->x - displacement[XUP] + nx) % nx;
-      ty = (s->y - displacement[YUP] + ny) % ny;
-      tz = (s->z - displacement[ZUP] + nz) % nz;
-      tt = (s->t - displacement[TUP] + nt) % nt;
-      othernode = node_number(tx, ty, tz, tt);
-      if (othernode != this_node) {
-  for (j=0; j<n_send_msgs; j++) if (to_nodes[j].node==othernode) break;
-  tpt = msend[j].msg_buf + to_nodes[j].count*tsize;
-  *(int *)tpt = node_index(tx, ty, tz, tt);
-  /* index of site on other node */
-  memcpy(tpt+2*sizeof(int), field+i*stride, size);
-  to_nodes[j].count++;
-      }
-    }
-  }
-
-  /* start the sends */
-  for (i = 0; i < n_send_msgs; i++) {
-    nsites = to_nodes[i].count;
-    MPI_Isend(msend[i].msg_buf, nsites*tsize, MPI_BYTE,
-         to_nodes[i].node, GENERAL_GATHER_ID,
-         MPI_COMM_WORLD, &msend[i].msg_req);
-  }
-
-  // Free temporary arrays
-  if (n_send_msgs > 0)
-    free(to_nodes);
-  // Mark gather in progress and return
-  g_gather_flag = 1;
-  return mtag;
-}
-
-#endif  /* N_SUBL32 */
 
 msg_tag* start_general_gather_site(
   field_offset field, /* which field? Some member of structure "site" */

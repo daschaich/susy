@@ -18,8 +18,7 @@
 
 // Prototype:
 // void gaugefix(int gauge_dir, Real relax_boost, int max_gauge_iter,
-//               Real gauge_fix_tol, field_offset diffmat, field_offset sumvec,
-//               int Nah, field_offset ah_offset[], int ah_parity[]);
+//               Real gfix_tol, field_offset diffmat, field_offset sumvec);
 //
 // EXAMPLE: Fixing only the fundamental link matrices to Coulomb gauge,
 //          using scratch space in the site structure
@@ -35,13 +34,10 @@
 //   (cf. definition of FORALLUPDIRBUT in ../include/macros.h)
 // relax_boost is the overrelaxation parameter
 // max_gauge_iter is the maximum number of gauge-fixing iterations
-// gauge_fix_tol tells us to stop if the action change is less than this
+// gfix_tol tells us to stop if the action change is less than this
 // diffmat is scratch space for an su3 matrix
 // sumvec is scratch space for an su3 vector
 // If diffmat or sumvec are negative, scratch space is malloced here
-// The last three arguments allow Nah gauge momenta (anti-hermitian) fields
-// to be simultaneously transformed with the fundamental link matrices
-// Gauge fixing with matter fields in higher reps is not yet implemented
 #include "generic_includes.h"
 
 // Scratch space
@@ -129,15 +125,12 @@ void accum_gauge_hit(int gauge_dir, int parity) {
 // Do optimum SU(2) gauge hit for p, q subspace
 // Store the gauge transformation matrix
 // in order to deal with the diagonal link
-void do_hit(int gauge_dir, int parity, int p, int q, Real relax_boost,
-            int Nah, field_offset ah_offset[], int ah_parity[]) {
-
-  register int dir, i, j;
+void do_hit(int gauge_dir, int parity, int p, int q, Real relax_boost) {
+  register int dir, i;
   register site *s;
   Real a0, a1, a2, a3, asq, a0sq, x, r, xdr;
   su2_matrix *u = malloc(sites_on_node * sizeof(*u));
-  su3_matrix_f htemp;
-  msg_tag *mtag0 = NULL;
+  msg_tag *mtag = NULL;
 
   // Accumulate sums for determining optimum gauge hit
   accum_gauge_hit(gauge_dir, parity);
@@ -207,9 +200,9 @@ void do_hit(int gauge_dir, int parity, int p, int q, Real relax_boost,
   // Gather from direction DIR_5 to transform the diagonal link
   // This link stays on its own parity
   // rather than respecting the red--black checkerboard of the other links
-  mtag0 = start_gather_field(u, sizeof(su2_matrix),
-                             goffset[DIR_5], EVENANDODD, gen_pt[9]);
-  wait_gather(mtag0);
+  mtag = start_gather_field(u, sizeof(su2_matrix),
+                            goffset[DIR_5], EVENANDODD, gen_pt[9]);
+  wait_gather(mtag);
 
   FORSOMEPARITY(i, s, parity) {
     // Note that we are hitting the links (on this checkerboard) on the left,
@@ -227,24 +220,9 @@ void do_hit(int gauge_dir, int parity, int p, int q, Real relax_boost,
     // Do SU(2) hit on all downward links, don't touch the diagonal one
     FORALLUPDIR(dir)
       right_su2_hit_a_f(&(u[i]), p, q, (su3_matrix_f *)gen_pt[dir][i]);
-
-    // Transform antihermitian gauge momenta matrices if requested
-    // WARNING: This code is not tested!!!
-    for (j = 0; j < Nah; j++) {
-      // ah <-- u * ah * udag
-      if (ah_parity[j] == EVENANDODD || ah_parity[j] == parity) {
-        uncompress_anti_hermitian((anti_hermitmat *)F_PT(s, ah_offset[j]),
-                                  &htemp);
-        // If the next 2 steps prove too time consuming,
-        // they can be simplified algebraically, and sped up by ~2x
-        left_su2_hit_n_f(&(u[i]), p, q, &htemp);
-        right_su2_hit_a_f(&(u[i]), p, q, &htemp);
-        make_anti_hermitian(&htemp, (anti_hermitmat *)F_PT(s, ah_offset[j]));
-      }
-    }
   }
   // Exit with modified downward links left in communications buffer
-  cleanup_gather(mtag0);
+  cleanup_gather(mtag);
   free(u);
 }
 // -----------------------------------------------------------------
@@ -293,8 +271,7 @@ double get_gauge_fix_action(int gauge_dir, int parity) {
 // -----------------------------------------------------------------
 // Carries out one iteration in the gauge-fixing process
 void gaugefixstep(int gauge_dir, double *av_gauge_fix_action,
-                  Real relax_boost, int Nah, field_offset ah_offset[],
-                  int ah_parity[]) {
+                  Real relax_boost) {
 
   register int dir, i, c1, c2;
   register site *s;
@@ -318,10 +295,8 @@ void gaugefixstep(int gauge_dir, double *av_gauge_fix_action,
 
     // Do optimum gauge hit on all subspaces
     for (c1 = 0; c1 < NCOL - 1; c1++) {
-      for (c2 = c1 + 1; c2 < NCOL; c2++) {
-        do_hit(gauge_dir, parity, c1, c2, relax_boost,
-               Nah, ah_offset, ah_parity);
-      }
+      for (c2 = c1 + 1; c2 < NCOL; c2++)
+        do_hit(gauge_dir, parity, c1, c2, relax_boost);
     }
 
     // Total gauge fixing action for sites of this parity
@@ -402,8 +377,7 @@ void gaugefixscratch(field_offset diffmat, field_offset sumvec) {
 
 // -----------------------------------------------------------------
 void gaugefix(int gauge_dir, Real relax_boost, int max_gauge_iter,
-              Real gauge_fix_tol, field_offset diffmat, field_offset sumvec,
-              int Nah, field_offset ah_offset[], int ah_parity[]) {
+              Real gfix_tol, field_offset diffmat, field_offset sumvec) {
 
   int gauge_iter;
   double current_av, old_av = 0, del_av = 0;
@@ -427,14 +401,13 @@ void gaugefix(int gauge_dir, Real relax_boost, int max_gauge_iter,
 
   // Do at most max_gauge_iter iterations
   // Stop after second step if the change in the average gauge fixing action
-  // is smaller than gauge_fix_tol
+  // is smaller than gfix_tol
   for (gauge_iter = 0; gauge_iter < max_gauge_iter; gauge_iter++) {
-    gaugefixstep(gauge_dir, &current_av, relax_boost,
-                 Nah, ah_offset, ah_parity);
+    gaugefixstep(gauge_dir, &current_av, relax_boost);
 
     if (gauge_iter != 0) {
       del_av = current_av - old_av;
-      if (fabs(del_av) < gauge_fix_tol)
+      if (fabs(del_av) < gfix_tol)
         break;
     }
     old_av = current_av;

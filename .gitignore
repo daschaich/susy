@@ -7,12 +7,12 @@
 gmon.out
 localmake
 remez-milc
-susy_bilin
+susy_bilin*
 susy_corr
 susy_eig
 susy_hmc*
-susy_hyp
-susy_phase
+susy_phase*
+susy_rhmc*
 susy_spill
-susy_stout
+susy_stout*
 tests

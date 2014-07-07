@@ -61,9 +61,6 @@ typedef int field_offset;
 // -----------------------------------------------------------------
 // printf on node zero only
 #define node0_printf if(this_node==0)printf
-
-#define ON 1
-#define OFF 0
 // -----------------------------------------------------------------
 
 
@@ -84,7 +81,6 @@ typedef int field_offset;
 
 // See loopend.h for FORSOMEPARITY definition
 
-#ifndef N_SUBL32
 // Standard red-black checkerboard
 #define FOREVENSITES(i,s) \
     for(i=0,s=lattice;i<even_sites_on_node;i++,s++)
@@ -97,15 +93,6 @@ typedef int field_offset;
     i++,s++)
 #define FORALLSITES(i,s) \
     for(i=0,s=lattice;i<sites_on_node;i++,s++)
-#else
-// 32 sublattice checkerboard
-#define FORALLSITES(i,s) \
-    for(i=0,s=lattice;i<sites_on_node;i++,s++)
-#define FORSOMESUBLATTICE(i,s,subl) \
-    for (i=(subl*subl_sites_on_node), s= &(lattice[i]), \
-   last_in_loop=((subl+1)*subl_sites_on_node); \
-   i< last_in_loop; i++,s++)
-#endif
 // -----------------------------------------------------------------
 
 

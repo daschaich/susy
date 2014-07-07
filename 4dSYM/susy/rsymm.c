@@ -21,7 +21,7 @@ void rsymm_path(int *dir, int *sign, int *kind, int length) {
   msg_tag *mtag = NULL;
 
   // Initialize tempmat1 with first link in path
-  if (sign[0] > 0) {    // Gather backwards, no adjoint
+  if (sign[0] > 0) {    // Gather from site - dir[0], no adjoint
     if (kind[0] > 0) {
       mtag = start_gather_site(F_OFFSET(linkf[dir[0]]), sizeof(su3_matrix_f),
                                goffset[dir[0]] + 1, EVENANDODD, gen_pt[0]);
@@ -60,7 +60,7 @@ void rsymm_path(int *dir, int *sign, int *kind, int length) {
 
   // Accumulate subsequent links in product in tempmat1
   for (j = 1; j < length; j++) {
-    if (sign[j] > 0) {    // mult_su3_nn_f then gather backwards
+    if (sign[j] > 0) {    // mult_su3_nn_f then gather from site - dir[j]
       FORALLSITES(i, s) {
         if (kind[j] > 0)
           mult_su3_nn_f(&(s->tempmat1), &(s->linkf[dir[j]]), &(s->tempmat2));
@@ -80,7 +80,7 @@ void rsymm_path(int *dir, int *sign, int *kind, int length) {
       cleanup_gather(mtag);
     }
 
-    else if (sign[j] < 0) {    // Gather forwards then mult_su3_na_f
+    else if (sign[j] < 0) {    // Gather from site + dir[j] then mult_su3_na_f
       mtag = start_gather_site(F_OFFSET(tempmat1), sizeof(su3_matrix_f),
                                goffset[dir[j]], EVENANDODD, gen_pt[1]);
 

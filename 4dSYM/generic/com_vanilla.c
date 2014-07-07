@@ -77,14 +77,6 @@
 #include "generic_includes.h"
 
 #define NOWHERE -1      // Not an index in array of fields
-
-// Hacks needed to unify even/odd and 32 sublattice cases
-#ifdef N_SUBL32
-#define NUM_SUBL 32
-#define FORSOMEPARITY FORSOMESUBLATTICE
-#else
-#define NUM_SUBL 2
-#endif
 // -----------------------------------------------------------------
 
 
@@ -409,12 +401,7 @@ void make_nn_gathers() {
 #define SEND    1
 
 static int parity_function(int x, int y, int z, int t) {
-#ifndef N_SUBL32
   return (x + y + z + t)&1;
-#else
-  return ((x % 2) + 2 * (y % 2) + 4 * (z % 2) + 8 * (t % 2)
-          + 16 * ((x / 2 + y / 2 + z / 2 + t / 2) % 2));
-#endif
 }
 
 // Add another gather to the list of tables
@@ -460,12 +447,12 @@ int make_gather(
   }
 
   if (want_even_odd == ALLOW_EVEN_ODD && parity_conserve != SCRAMBLE_PARITY) {
-    send_subl = malloc(NUM_SUBL * sizeof(*send_subl));
+    send_subl = malloc(2 * sizeof(*send_subl));
     if (send_subl == NULL) {
       printf("node%d: no room for send_subl\n", this_node);
       terminate(1);
     }
-    for (subl = 0; subl < NUM_SUBL; subl++)
+    for (subl = 0; subl < 2; subl++)
       send_subl[subl] = NOWHERE;
   }
   else
