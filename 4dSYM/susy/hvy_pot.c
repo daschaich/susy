@@ -13,12 +13,12 @@ void hvy_pot() {
   register int i;
   register site *s;
   int t_dist, x_dist, y_dist, z_dist;
-  int d[4] = {0, 0, 0, 0};
   Real frac = -1.0 / (Real)NCOL;
   double wloop, detloop;
   complex det_wloop, c_loop, c1, c2, mult;
   su3_matrix_f tmat;
   msg_tag *mtag = NULL;
+  field_offset oldmat, newmat, tt;
 
   node0_printf("hvy_pot: MAX_T = %d, MAX_X = %d\n", MAX_T, MAX_X);
 
@@ -40,26 +40,35 @@ void hvy_pot() {
       FORALLSITES(i, s)
         su3mat_copy_f(&(s->staple), &(s->tempmat1));
     }
-
     // Now tempmat1 is product of t_dist links at each (x, y, z)
-    // Construct and print correlator, using general gathers for now
-    for (x_dist = 0; x_dist <= MAX_X; x_dist++) {
-      d[XUP] = x_dist;
-      for (y_dist = 0; y_dist <= MAX_X; y_dist++) {
-        d[YUP] = y_dist;
-        for (z_dist = 0; z_dist <= MAX_X; z_dist++) {
-          d[ZUP] = z_dist;
-          mtag = start_general_gather_site(F_OFFSET(tempmat1),
-                                           sizeof(su3_matrix_f), d,
-                                           EVENANDODD, gen_pt[0]);
-          wait_general_gather(mtag);
+    oldmat = F_OFFSET(tempmat2);
+    newmat = F_OFFSET(staple);    // Will switch these two
 
+    for (x_dist = 0; x_dist <= MAX_X; x_dist++) {
+      for (y_dist = 0; y_dist <= MAX_X; y_dist++) {
+        // Gather from spatial dirs, compute products of paths
+        FORALLSITES(i, s)
+          su3mat_copy_f(&(s->tempmat1), (su3_matrix_f *)F_PT(s, oldmat));
+        for (i = 0; i < x_dist; i++) {
+          shiftmat(oldmat, newmat, goffset[XUP]);
+          tt = oldmat;
+          oldmat = newmat;
+          newmat = tt;
+        }
+        for (i = 0; i < y_dist; i++) {
+          shiftmat(oldmat, newmat, goffset[YUP]);
+          tt = oldmat;
+          oldmat = newmat;
+          newmat = tt;
+        }
+        for (z_dist = 0; z_dist <= MAX_X; z_dist++) {
           // Evaluate potential at this separation
           wloop = 0.0;
           detloop = 0.0;
           FORALLSITES(i, s) {
             // Compute the actual Coulomb gauge Wilson loop product
-            mult_su3_na_f(&(s->tempmat1), (su3_matrix_f *)gen_pt[0][i], &tmat);
+            mult_su3_na_f(&(s->tempmat1),
+                          (su3_matrix_f *)F_PT(s, oldmat), &tmat);
             c_loop = trace_su3_f(&tmat);
             wloop += c_loop.real;
 
@@ -78,7 +87,12 @@ void hvy_pot() {
                        x_dist, y_dist, z_dist, t_dist, wloop / volume);
           node0_printf("D_LOOP   %d %d %d %d %.6g\n",
                        x_dist, y_dist, z_dist, t_dist, detloop / volume);
-          cleanup_general_gather(mtag);
+
+          // As we increment z, shift in z direction
+          shiftmat(oldmat, newmat, goffset[ZUP]);
+          tt = oldmat;
+          oldmat = newmat;
+          newmat = tt;
         } // z_dist
       } // y_dist
     } // x_dist
