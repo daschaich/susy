@@ -35,7 +35,7 @@ void hvy_pot_loop() {
           sign[i] = 1;
         }
         for (i = x_dist[mu]; i < x_dist[mu] + t_dist; i++) {
-          dir[i] = DIR_5;
+          dir[i] = TUP;
           sign[i] = 1;
         }
         for (i = x_dist[mu] + t_dist; i < 2 * x_dist[mu] + t_dist; i++) {
@@ -43,7 +43,7 @@ void hvy_pot_loop() {
           sign[i] = -1;
         }
         for (i = 2 * x_dist[mu] + t_dist; i < length; i++) {
-          dir[i] = DIR_5;
+          dir[i] = TUP;
           sign[i] = -1;
         }
 #ifdef DEBUG_CHECK

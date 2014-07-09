@@ -23,7 +23,7 @@ void hvy_pot_polar_loop() {
     for (mu = 0; mu < NUMLINK; mu++) {
       // Polar projection of all links (even the unused diagonal link)
       // To be multiplied together after projecting
-      // !!! Links overwritten
+      // !!! Overwrites links
       polar(&(s->linkf[mu]), &tmat);
       su3mat_copy_f(&tmat, &(s->linkf[mu]));
     }
@@ -45,7 +45,7 @@ void hvy_pot_polar_loop() {
           sign[i] = 1;
         }
         for (i = x_dist[mu]; i < x_dist[mu] + t_dist; i++) {
-          dir[i] = DIR_5;
+          dir[i] = TUP;
           sign[i] = 1;
         }
         for (i = x_dist[mu] + t_dist; i < 2 * x_dist[mu] + t_dist; i++) {
@@ -53,7 +53,7 @@ void hvy_pot_polar_loop() {
           sign[i] = -1;
         }
         for (i = 2 * x_dist[mu] + t_dist; i < length; i++) {
-          dir[i] = DIR_5;
+          dir[i] = TUP;
           sign[i] = -1;
         }
 #ifdef DEBUG_CHECK

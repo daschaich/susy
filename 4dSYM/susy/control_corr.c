@@ -156,7 +156,7 @@ int main(int argc, char *argv[]) {
     // Gauge fixing arguments explained in generic/gaugefix.c
     // With first argument outside XUP, ..., TUP,
     // first four links are included in gauge-fixing condition
-    gaugefix(NODIR, 1.5, 5000, GAUGE_FIX_TOL, -1, -1);
+    gaugefix(TUP, 1.5, 5000, GAUGE_FIX_TOL, -1, -1);
     gtime += dclock();
     node0_printf("GFIX time = %.4g seconds\n", gtime);
     node0_printf("BEFORE %.8g %.8g\n", dssplaq, dstplaq);
@@ -175,10 +175,10 @@ int main(int argc, char *argv[]) {
 
   // Save and restore links overwritten by polar projection
   FORALLSITES(i, s)
-    su3mat_copy_f(&(s->linkf[DIR_5]), &(s->mom[DIR_5]));
+    su3mat_copy_f(&(s->linkf[TUP]), &(s->mom[TUP]));
   hvy_pot_polar();
   FORALLSITES(i, s)
-    su3mat_copy_f(&(s->mom[DIR_5]), &(s->linkf[DIR_5]));
+    su3mat_copy_f(&(s->mom[TUP]), &(s->linkf[TUP]));
 #endif
 
   node0_printf("RUNNING COMPLETED\n");

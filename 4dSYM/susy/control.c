@@ -166,7 +166,7 @@ int main(int argc, char *argv[]) {
         // Gauge fixing arguments explained in generic/gaugefix.c
         // With first argument outside XUP, ..., TUP,
         // first four links are included in gauge-fixing condition
-        gaugefix(NODIR, 1.5, 5000, GAUGE_FIX_TOL, -1, -1);
+        gaugefix(TUP, 1.5, 5000, GAUGE_FIX_TOL, -1, -1);
         gtime += dclock();
         node0_printf("GFIX time = %.4g seconds\n", gtime);
         node0_printf("BEFORE %.8g %.8g\n", dssplaq, dstplaq);
@@ -184,12 +184,12 @@ int main(int argc, char *argv[]) {
       hvy_pot();
 
       // Save and restore links overwritten by polar projection
-      // Don't use mom[DIR_5], which is already storing the un-fixed links
+      // Don't use mom[TUP], which is already storing the un-fixed links
       FORALLSITES(i, s)
-        su3mat_copy_f(&(s->linkf[DIR_5]), &(s->f_U[DIR_5]));
+        su3mat_copy_f(&(s->linkf[TUP]), &(s->f_U[TUP]));
       hvy_pot_polar();
       FORALLSITES(i, s)
-        su3mat_copy_f(&(s->f_U[DIR_5]), &(s->linkf[DIR_5]));
+        su3mat_copy_f(&(s->f_U[TUP]), &(s->linkf[TUP]));
 
       // Restore the un-fixed links to be saved if requested
       if (fixflag == COULOMB_GAUGE_FIX) {
