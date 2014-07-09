@@ -9,28 +9,28 @@
    mynode()               Return node number of this node
    numnodes()             Return number of nodes
    g_sync()               Provide a synchronization point for all nodes
-   g_floatsum()           Sum a float over all nodes
+   g_floatsum()           Sum a Real over all nodes
    g_vecfloatsum()        Sum a vector of Reals over all nodes
    g_doublesum()          Sum a double over all nodes
    g_vecdoublesum()       Sum a vector of doubles over all nodes
-   g_complexsum()         Sum a single precision complex number over all nodes
-   g_veccomplexsum()      Sum a vector of single precision complex numbers
+   g_complexsum()         Sum a generic precision complex number over all nodes
+   g_veccomplexsum()      Sum a vector of generic precision complex numbers
                             over all nodes
    g_dcomplexsum()        Sum a double precision complex number over all nodes
    g_vecdcomplexsum()     Sum a vector of double_complex over all nodes
    g_xor32()              Find global exclusive or of 32-bit word
-   g_floatmax()           Find maximum Realing point number over all nodes
+   g_floatmax()           Find maximum Real over all nodes
    g_doublemax()          Find maximum double over all nodes
-   broadcast_float()      Broadcast a single precision number from
+   broadcast_float()      Broadcast a generic precision number from
                             node 0 to all nodes
    broadcast_double()     Broadcast a double precision number
-   broadcast_complex()    Broadcast a single precision complex number
+   broadcast_complex()    Broadcast a generic precision complex number
    broadcast_dcomplex()   Broadcast a double precision complex number
    broadcast_bytes()      Broadcast a number of bytes
    send_integer()         Send an integer to one other node
    receive_integer()      Receive an integer
-   send_field()           Send a field to one other node.
-   get_field()            Receive a field from some other node.
+   send_field()           Send a field to one other node
+   get_field()            Receive a field from some other node
    dclock()               Return a double precision time, with arbitrary zero
    time_stamp()           Print wall clock time with message
    sort_four_gathers()    Sort four contiguous gathers
@@ -64,7 +64,7 @@
                              to gather fields at arbitrary displacement.
    start_general_gather_field() starts asynchronous sends and receives
                              required to gather neighbors from a temporary
-           array of fields.
+           array of fields
    wait_general_gather()   waits for receives to finish, insuring that the
                              data has actually arrived, and sets pointers to
            received data.
@@ -76,14 +76,6 @@
 #include "generic_includes.h"
 
 #define NOWHERE -1      // Not an index in array of fields
-
-// Hacks needed to unify even/odd and 32 sublattice cases
-#ifdef N_SUBL32
-#define NUM_SUBL 32
-#define FORSOMEPARITY FORSOMESUBLATTICE
-#else
-#define NUM_SUBL 2
-#endif
 // -----------------------------------------------------------------
 
 
@@ -144,7 +136,7 @@ void normal_exit(int status) {
   exit(status);
 }
 
-// Exit for scalar processes
+// Terminate for scalar processes
 void terminate(int status) {
   time_stamp("termination");
   printf("Termination: node%d, status = %d\n", this_node, status);
@@ -223,8 +215,13 @@ void g_floatmax(Real *fpt) {
 // Find maximum of double over all nodes
 void g_doublemax(double *dpt) {
 }
+// -----------------------------------------------------------------
 
-// Broadcast float from node zero
+
+
+// -----------------------------------------------------------------
+// Broadcasts
+// Broadcast Real from node zero
 void broadcast_float(Real *fpt) {
 }
 
@@ -232,7 +229,7 @@ void broadcast_float(Real *fpt) {
 void broadcast_double(double *dpt) {
 }
 
-// Broadcast single precision complex number from node zero
+// Broadcast generic precision complex number from node zero
 void broadcast_complex(complex *cpt) {
 }
 
@@ -327,7 +324,7 @@ void sort_four_gathers(int index) {
   int i;
 
   for (i = 0; i < 4; i++)
-    memcpy(&tt[i], &gather_array[index+i], sizeof(gather_t));
+    memcpy(&tt[i], &gather_array[index + i], sizeof(gather_t));
   for (i = XUP; i <= TUP; i++) {
     memcpy(&gather_array[index + i], &tt[2 * i], sizeof(gather_t));
     memcpy(&gather_array[index + OPP_DIR(i)], &tt[2 * i + 1], sizeof(gather_t));
@@ -368,9 +365,8 @@ void make_nn_gathers() {
 
   gather_array_len = 4;
   gather_array = malloc(gather_array_len * sizeof(*gather_array));
-
-  if (gather_array==NULL) {
-    printf("error: not enought room for gather_array in make_nn_gathers\n");
+  if (gather_array == NULL) {
+    printf("error: not enough room for gather_array in make_nn_gathers\n");
     terminate(1);
   }
 
@@ -397,11 +393,7 @@ void make_nn_gathers() {
 #define SEND    1
 
 static int parity_function(int x, int t) {
-#ifndef N_SUBL32
   return (x + t)&1;
-#else
-  return (x % 2) + 2 * (t % 2) + 4 * ((x / 2 + t / 2) % 2);
-#endif
 }
 
 // Add another gather to the list of tables
@@ -434,25 +426,25 @@ int make_gather(
   dir = n_gathers - 1;  // Index of gather we are working on
   gather_array[dir].neighbor = malloc(sites_on_node * sizeof(int));
   if (gather_array[dir].neighbor == NULL) {
-    printf("make_gather: NODE%d: no room for neighbor vector\n", this_node);
+    printf("make_gather: node%d: no room for neighbor vector\n", this_node);
     terminate(1);
   }
   if (inverse == WANT_INVERSE) {
     dir = n_gathers - 2;  // Index of gather we are working on
     gather_array[dir].neighbor = malloc(sites_on_node * sizeof(int));
     if (gather_array[dir].neighbor==NULL) {
-      printf("make_gather: NODE%d no room for neighbor vector\n", this_node);
+      printf("make_gather: node%d no room for neighbor vector\n", this_node);
       terminate(1);
     }
   }
 
   if (want_even_odd == ALLOW_EVEN_ODD && parity_conserve != SCRAMBLE_PARITY) {
-    send_subl = malloc(NUM_SUBL * sizeof(*send_subl));
+    send_subl = malloc(2 * sizeof(*send_subl));
     if (send_subl == NULL) {
-      printf("NODE%d: no room for send_subl\n", this_node);
+      printf("node%d: no room for send_subl\n", this_node);
       terminate(1);
     }
-    for (subl = 0; subl < NUM_SUBL; subl++)
+    for (subl = 0; subl < 2; subl++)
       send_subl[subl] = NOWHERE;
   }
   else
@@ -480,7 +472,7 @@ int make_gather(
           send_subl[r_subl] = s_subl;
         }
         else if (send_subl[r_subl] != s_subl) {
-          printf("DUMMY! Your gather mixes up sublattices: %d vs %d\n",
+          printf("Gather mixes up sublattices: %d vs %d\n",
                  send_subl[r_subl], s_subl);
           printf("on mapping %i %i -> %i %i\n",
                  s->x, s->t, x, t);
@@ -849,7 +841,7 @@ void declare_accumulate_gather_field(
 // start_general_gather_site returns a msg_tag to be used as input
 // to subsequent wait_general_gather and cleanup_general_gather calls
 
-// Usage: tag = start_general_gather_site(src, size, disp, parity, dest);
+// Usage: tag = start_general_gather_site(src, size, disp, parity, dest)
 // Example:
 //  msg_tag *tag;
 //  int disp[2];    // Displacement
