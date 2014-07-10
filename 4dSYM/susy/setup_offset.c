@@ -171,12 +171,10 @@ void setup_offset() {
   // In order to use XDOWN ~ XUP + 1, etc., we make the next ten elements
   //   XUP, XDOWN, YUP, YDOWN, ZUP, ZDOWN, TUP, TDOWN, DIR_5, -DIR_5
   // Then goffset[0]=8, goffset[1]=10, ..., goffset[4]=16
-  // The fifth link cannot be used in EVEN or ODD gathers
-  for (i = 0; i < DIR_5; i++) {
+  // But we can't use these in EVEN or ODD gathers!
+  for (i = 0; i < NUMLINK; i++) {
     goffset[i] = make_gather(cubic_neighbor, offset[i],
-                             WANT_INVERSE, ALLOW_EVEN_ODD, SWITCH_PARITY);
-  goffset[DIR_5] = make_gather(cubic_neighbor, offset[DIR_5],
-                               WANT_INVERSE, NO_EVEN_ODD, SAME_PARITY);
+                             WANT_INVERSE, NO_EVEN_ODD, SCRAMBLE_PARITY);
 
 #ifdef DEBUG_CHECK
     int mu;
