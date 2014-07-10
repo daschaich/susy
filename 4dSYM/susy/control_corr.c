@@ -1,5 +1,7 @@
 // -----------------------------------------------------------------
-// Main procedure for N=4 SYM correlator and bilinear measurements
+// Main procedure for N=4 SYM measurements on saved configurations,
+// including scalar correlators, Wilson loops, Ward identity violations
+// and discrete R symmetry observables
 #define CONTROL
 #include "susy_includes.h"
 // -----------------------------------------------------------------
@@ -122,16 +124,22 @@ int main(int argc, char *argv[]) {
 #endif
 
 #ifdef BILIN
-  // Fermion bilinear and supersymmetry transformation vevs
-  int avm_iters = d_bilinear();
-  avm_iters += d_susyTrans();
+  // Ward identity violations
+  int avm_iters = d_susyTrans();
+
+  // Don't run d_bilinear() for now
+  // In the future it may be useful
+  // to compare U(1) vs. SU(N) contributions
+//  avm_iters += d_bilinear();
 #endif
 
+#ifdef CORR
   // R symmetry transformations -- use find_det and adjugate
   rsymm();
 
   // Measure density of monopole world lines in non-diagonal cubes
 //  monopole();
+#endif
 
 #ifdef WLOOP
   // First calculate a few Wilson loops more directly, using explicit paths

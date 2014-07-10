@@ -1,0 +1,25 @@
+prompt 0
+nx 4
+ny 4
+nz 4
+nt 4
+iseed 41
+
+warms 0
+trajecs 3
+traj_length 1
+nstep 7
+nstep_gauge 4
+traj_between_meas 3
+
+lambda 1.0
+kappa_u1 1.0
+bmass 1.0
+fmass 0.0
+
+max_cg_iterations 5000
+error_per_site 1e-5
+nsrc 3
+reload_serial config.U4.4444
+coulomb_gauge_fix
+forget

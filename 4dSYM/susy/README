@@ -67,9 +67,9 @@ max_cg_iterations 500 # Maximum number of CG iterations
 error_per_site 1e-5   # Stopping condition for CG (will be squared)
 nsrc 5                # Number of stochastic sources for vev calculations
 
-Nvecs 100             # Number of eigenvalues to calculate -- only include with -DEIG
-eig_tol 1e-6          # Eigenvalue convergence criterion -- only include with -DEIG
-maxIter 500           # Maximum number of eigenvalue iterations -- only include with -DEIG
+Nvec 100              # Number of eigenvalues to calculate -- only include with -DEIG
+eig_tol 1e-8          # Eigenvalue convergence criterion -- only include with -DEIG
+maxIter 5000          # Maximum number of eigenvalue iterations -- only include with -DEIG
 
                       # Checkpointed pfaffian I/O currently hard-codes the file names to save and load,
                       # based on the following two parameters

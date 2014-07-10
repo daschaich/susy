@@ -1,6 +1,7 @@
 *.2o
 *.a
 *.o
+*.out
 *.swo
 *.swp
 .lastmake*

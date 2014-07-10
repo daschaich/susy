@@ -29,7 +29,7 @@ int main(int argc, char *argv[]) {
   setup_rhmc();
 
 #ifdef WLOOP
-  register int i;
+  register int i, mu;
   register site *s;
 #endif
 
@@ -123,18 +123,22 @@ int main(int argc, char *argv[]) {
 #endif
 
 #ifdef BILIN
-      // Fermion bilinear and superpartner Konishi correlator
+      // Ward identity violations
       Nmeas++;
-      avm_iters += d_bilinear();
       avm_iters += d_susyTrans();
+
+      // Don't run d_bilinear() for now
+      // In the future it may be useful
+      // to compare U(1) vs. SU(N) contributions
+//      avm_iters += d_bilinear();
 #endif
 
 #ifdef CORR
   // R symmetry transformations -- use find_det and adjugate
-  rsymm();
+      rsymm();
 
   // Measure density of monopole world lines in non-diagonal cubes
-//  monopole();
+//      monopole();
 #endif
 
 #ifdef WLOOP

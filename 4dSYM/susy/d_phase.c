@@ -1,7 +1,7 @@
 // -----------------------------------------------------------------
 // Measure the phase of the pfaffian
 // Based on the algorithm in the appendix of hep-lat/0305002
-// hep-lat/9903014 provides important definitions and caveats (!!!)
+// !!! hep-lat/9903014 provides important definitions and caveats
 #include "susy_includes.h"
 #define PFA_TOL 1e-12
 // -----------------------------------------------------------------
