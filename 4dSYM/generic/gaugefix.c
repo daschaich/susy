@@ -288,7 +288,7 @@ void gaugefixstep(int gauge_dir, double *av_gauge_fix_action,
     // Gather all downward links at once
     FORALLUPDIR(dir) {
       mtag[dir] = start_gather_site(F_OFFSET(linkf[dir]), sizeof(su3_matrix_f),
-                                    goffset[dir] + 1, parity, gen_pt[dir]);
+                                    OPP_DIR(dir), parity, gen_pt[dir]);
     }
     FORALLUPDIR(dir)
       wait_gather(mtag[dir]);
