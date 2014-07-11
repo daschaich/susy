@@ -1,0 +1,84 @@
+N=4 SYM, Nc = 2, DIMF = 4, fermion rep = adjoint
+Microcanonical simulation with refreshing
+Machine = MPI (portable), with 2 nodes
+Hybrid Monte Carlo algorithm
+Phi algorithm
+start: Thu Jul 10 14:24:21 2014
+
+type 0 for no prompts  or 1 for prompts
+nx 4
+ny 4
+nz 4
+nt 4
+iseed 41
+LAYOUT = Hypercubes, options = hyper_prime,
+ON EACH NODE 2 x 4 x 4 x 4
+Mallocing 2.2 MBytes per core for lattice
+Antiperiodic temporal boundary conditions
+Mallocing 0.8 MBytes per core for fields
+RHMC Norder 15 for spectral range [0.0000001, 1000]
+
+
+warms 0
+trajecs 3
+traj_length 1
+nstep 7
+nstep_gauge 4
+traj_between_meas 3
+lambda 1
+kappa_u1 1
+bmass 1
+fmass 0
+max_cg_iterations 500
+error_per_site 1e-05
+nsrc 3
+reload_serial config.U2.4444
+coulomb_gauge_fix
+forget
+lambda=1 --> kappa=Nc/(2lambda)=1
+C2=1
+Restored binary gauge configuration serially from file config.U2.4444
+Time stamp Sun Feb  9 13:12:59 2014
+Checksums be30095 b19f9ad8 OK
+Time to reload gauge configuration = 1.298189e-03
+CHECK PLAQ: 1.9081702017469617e+00 1.8927824330549272e+00
+CHECK NERSC LINKTR: -5.5492308298425996e-03 CKSUM: 0
+START 1.9081702 1.8927824 3.8009526 15.784656
+FLINK 1.05139 1.08554 1.06469 1.06721 1.06032 1.06583
+f_eps 0.1429 g_eps 0.01786
+WARMUPS COMPLETED
+action: gauge 4040.8721 bmass 43.445846 det 500.10386 fermion 13785.543 hmom 5029.9007 sum 23399.865
+action: gauge 3973.381 bmass 44.961094 det 516.08863 fermion 13786.441 hmom 5078.8187 sum 23399.69
+ACCEPT: delta S = -0.1749 start S = 23399.8650338 end S = 23399.6901497
+IT_PER_TRAJ 785
+MONITOR_FORCE_GAUGE 0.02274
+MONITOR_FORCE_FERMION0 0.02541
+FLINK 1.05555 1.07933 1.0749 1.05711 1.04664 1.06271
+GMES -1.4861958 1.1141466 785 1.9130865 1.8758369 15.52102
+BACTION 15.52102
+action: gauge 3973.381 bmass 44.961094 det 516.08863 fermion 13465.579 hmom 5074.2308 sum 23074.24
+action: gauge 4071.9827 bmass 44.49706 det 516.85908 fermion 13445.977 hmom 4994.9877 sum 23074.303
+ACCEPT: delta S = 0.06265 start S = 23074.2403841 end S = 23074.3030384
+IT_PER_TRAJ 781
+MONITOR_FORCE_GAUGE 0.02275
+MONITOR_FORCE_FERMION0 0.02483
+FLINK 1.03179 1.08382 1.05204 1.0859 1.05947 1.0626
+GMES -1.4953558 1.3009048 781 1.8720728 1.9187722 15.906182
+BACTION 15.906182
+action: gauge 4071.9827 bmass 44.49706 det 516.85908 fermion 13738.659 hmom 5112.8507 sum 23484.848
+action: gauge 4017.5037 bmass 46.852917 det 530.78325 fermion 13700.25 hmom 5189.3401 sum 23484.73
+ACCEPT: delta S = -0.1182 start S = 23484.8482792 end S = 23484.7301157
+IT_PER_TRAJ 803
+MONITOR_FORCE_GAUGE 0.02304
+MONITOR_FORCE_FERMION0 0.02527
+FLINK 1.0611 1.0686 1.06272 1.03722 1.08985 1.0639
+GMES -1.4198887 1.0232255 803 1.9170908 1.8676649 15.693374
+BACTION 15.693374
+DET 0.839019 0.00130582 0.802597 0.0827772
+RUNNING COMPLETED
+STOP 1.9170908 1.8676649 3.7847558 15.693374
+Average CG iters for steps: 789.7
+
+Time = 28.11 seconds
+total_iters = 2369
+

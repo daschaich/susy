@@ -1,5 +1,9 @@
 #!/bin/bash
-# This script needs to be run from 4dSYM/testsuite/scalar directory
+# This script needs to be run from 4dSYM/testsuite/mpi directory
+
+# Customization for the HET cluster at the University of Colorado
+makefile=Make_CU
+run=/usr/local/mpich2-1.4.1p1/bin/mpirun -np 2
 
 # Allow user to specify particular target
 if [ $# -gt 1 ]; then
@@ -15,23 +19,23 @@ if [ $# -gt 1 ]; then
 
   # Compile
   echo "Compiling susy_$target..."
-  if ! make -f Make_scalar susy_$target >& /dev/null ; then
+  if ! make -f $makefile susy_$target >& /dev/null ; then
     echo "ERROR: susy_$target compilation failed"
     exit
   fi
 
   # Run
   cd ../testsuite/
-  rm -f scalar/$target.U$N.out
+  rm -f mpi/$target.U$N.out
   echo "Running susy_$target..."
   if [ -f in.U$N.$target ]; then
-    ../susy/susy_$target < in.U$N.$target > scalar/$target.U$N.out
+    $run ../susy/susy_$target < in.U$N.$target > mpi/$target.U$N.out
   else
-    ../susy/susy_$target < in.U$N > scalar/$target.U$N.out
+    $run ../susy/susy_$target < in.U$N > mpi/$target.U$N.out
   fi
 
   # Check
-  cd scalar/
+  cd mpi/
   d="`diff -I'Time' -I'time' -I'seconds' -I'^start' $target.U$N.out $target.U$N.ref`"
   if [ -n "$d" ] ; then   # Non-zero string length
     echo "$target.U$N.out and $target.U$N.ref differ:"
@@ -62,7 +66,7 @@ for N in 2 3 4 ; do
   awk -v"X=#define NUMGEN $NSq" '{sub(/^#define NUMGEN .*/,X);print}' ../include/su3.h > TEMP && mv TEMP ../include/su3.h
   for target in hmc corr stout hmc_corr bilin eig phase ; do
     echo "Compiling susy_$target..."
-    if ! make -f Make_scalar susy_$target >& /dev/null ; then
+    if ! make -f $makefile susy_$target >& /dev/null ; then
       echo "ERROR: susy_$target compilation failed"
       exit
     fi
@@ -70,33 +74,33 @@ for N in 2 3 4 ; do
 
   # Run
   cd ../testsuite/
-  rm -f scalar/stout.U$N.out scalar/eig.U$N.out scalar/phase.U$N.out scalar/phase_part1.U$N.out scalar/phase_part2.U$N.out
+  rm -f mpi/stout.U$N.out mpi/eig.U$N.out mpi/phase.U$N.out mpi/phase_part1.U$N.out mpi/phase_part2.U$N.out
   for target in hmc corr hmc_corr bilin ; do
-    rm -f scalar/$target.U$N.out
+    rm -f mpi/$target.U$N.out
     echo "Running susy_$target..."
-    ../susy/susy_$target < in.U$N > scalar/$target.U$N.out
+    $run ../susy/susy_$target < in.U$N > mpi/$target.U$N.out
   done
   echo "Running susy_stout..."
-  ../susy/susy_stout < in.U$N.stout > scalar/stout.U$N.out
+  $run ../susy/susy_stout < in.U$N.stout > mpi/stout.U$N.out
   echo "Running susy_eig..."
-  ../susy/susy_eig < in.U$N.eig > scalar/eig.U$N.out
+  $run ../susy/susy_eig < in.U$N.eig > mpi/eig.U$N.out
   echo "Running susy_phase..."
-  ../susy/susy_phase < in.U$N.phase > scalar/phase.U$N.out
+  $run ../susy/susy_phase < in.U$N.phase > mpi/phase.U$N.out
 
   # Checkpointed pfaffian computation
   cp in.U$N.phase SAV
   awk -v"X=ckpt_save 256" '{sub(/ckpt_save 0/,X);print}' in.U$N.phase > TEMP && mv TEMP in.U$N.phase
   echo "Running checkpointed susy_phase part 1 of 2..."
-  ../susy/susy_phase < in.U$N.phase > scalar/phase_part1.U$N.out
+  $run ../susy/susy_phase < in.U$N.phase > mpi/phase_part1.U$N.out
   cp SAV in.U$N.phase
   awk -v"X=ckpt_load 256" '{sub(/ckpt_load 0/,X);print}' in.U$N.phase > TEMP && mv TEMP in.U$N.phase
   echo "Running checkpointed susy_phase part 2 of 2..."
-  ../susy/susy_phase < in.U$N.phase > scalar/phase_part2.U$N.out
+  $run ../susy/susy_phase < in.U$N.phase > mpi/phase_part2.U$N.out
   mv SAV in.U$N.phase
   rm -f config.U$N.2222.diag256 config.U$N.2222.Q256
 
   # Check
-  cd scalar/
+  cd mpi/
   for target in hmc corr stout hmc_corr bilin eig phase phase_part1 phase_part2 ; do
     d="`diff -I'Time' -I'time' -I'seconds' -I'^start' $target.U$N.out $target.U$N.ref`"
     if [ -n "$d" ] ; then   # Non-zero string length

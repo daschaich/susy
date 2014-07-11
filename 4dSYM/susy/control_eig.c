@@ -97,6 +97,20 @@ int main(int argc, char *argv[]) {
   check_Dmat(Nvec, eigVec);
 
   // Calculate and print largest eigenvalues, for tuning RHMC
+  // Don't need to compute so many here...
+  if (Nvec > 12) {
+    Nvec = 12;
+    free(eigVal);
+    eigVal = malloc(Nvec * sizeof(*eigVal));
+
+    for (ivec = 0; ivec < Nvec; ivec++)
+      free(eigVec[ivec]);
+    free(eigVec);
+
+    eigVec = malloc(Nvec * sizeof(*eigVec));
+    for (ivec = 0; ivec < Nvec; ivec++)
+      eigVec[ivec] = malloc(sites_on_node * sizeof(Twist_Fermion));
+  }
   total_iters += make_evs(Nvec, eigVec, eigVal, -1);
 
   node0_printf("RUNNING COMPLETED\n");

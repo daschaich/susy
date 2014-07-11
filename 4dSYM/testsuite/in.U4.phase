@@ -1,8 +1,8 @@
 prompt 0
-nx 4
-ny 4
-nz 4
-nt 4
+nx 2
+ny 2
+nz 2
+nt 2
 iseed 41
 
 warms 0
@@ -20,6 +20,10 @@ fmass 0.0
 max_cg_iterations 5000
 error_per_site 1e-5
 nsrc 3
-reload_serial config.U3.4444
+
+ckpt_load 0
+ckpt_save 0
+
+reload_serial config.U4.2222
 coulomb_gauge_fix
 forget
