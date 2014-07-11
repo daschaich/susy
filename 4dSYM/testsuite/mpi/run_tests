@@ -3,7 +3,7 @@
 
 # Customization for the HET cluster at the University of Colorado
 makefile=Make_CU
-run=/usr/local/mpich2-1.4.1p1/bin/mpirun -np 2
+run="/usr/local/mpich2-1.4.1p1/bin/mpirun -np 2"
 
 # Allow user to specify particular target
 if [ $# -gt 1 ]; then
