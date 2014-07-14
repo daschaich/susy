@@ -2,7 +2,7 @@ N=4 SYM, Nc = 3, DIMF = 9, fermion rep = adjoint
 Microcanonical simulation with refreshing
 Machine = Scalar processor, with 1 nodes
 Phi algorithm
-start: Thu Jul 10 11:19:12 2014
+start: Mon Jul 14 18:30:05 2014
 
 type 0 for no prompts  or 1 for prompts
 nx 4
@@ -40,7 +40,7 @@ C2=1
 Restored binary gauge configuration serially from file config.U3.4444
 Time stamp Tue Feb 11 07:46:13 2014
 Checksums e3b56d40 95cf7e82 OK
-Time to reload gauge configuration = 2.520084e-04
+Time to reload gauge configuration = 5.431175e-04
 CHECK PLAQ: 2.9556839704854103e+00 2.9582681279807388e+00
 CHECK NERSC LINKTR: -4.4520577753720163e-03 CKSUM: 0
 START 2.955684 2.9582681 5.9139521 38.30443
@@ -403,36 +403,24 @@ PLOT_LOOP 0 0 1 2 3.33849
 DL_LOOP   0 0 1 2 3.56994
 PLOT_LOOP 0 0 2 2 3.44094
 DL_LOOP   0 0 2 2 3.78297
-WARNING: w[0] = w[2] = 0.86505876
-Error getting unitary piece: trace = 5
-WARNING: w[0] = w[2] = 0.62182267
-Error getting unitary piece: trace = 5
-WARNING: w[1] = w[2] = 0.85517297
-Error getting unitary piece: trace = 5
-WARNING: w[1] = w[2] = 0.90932866
-Error getting unitary piece: trace = 5
-WARNING: w[1] = w[2] = 0.76795384
-Error getting unitary piece: trace = 5
-WARNING: w[1] = w[2] = 1.0179738
-Error getting unitary piece: trace = 5
 hvy_pot_polar_loop: MAX_T = 2, MAX_X = 2
-PLOLAR_LOOP 0 0 0 1 3.02344
-PLOLAR_LOOP 1 0 0 1 2.92886
-PLOLAR_LOOP 2 0 0 1 2.88685
-PLOLAR_LOOP 0 1 0 1 2.93076
-PLOLAR_LOOP 0 2 0 1 2.88993
-PLOLAR_LOOP 0 0 1 1 2.92759
-PLOLAR_LOOP 0 0 2 1 2.88872
-PLOLAR_LOOP 0 0 0 2 3.04688
-PLOLAR_LOOP 1 0 0 2 2.88542
-PLOLAR_LOOP 2 0 0 2 2.82247
-PLOLAR_LOOP 0 1 0 2 2.88587
-PLOLAR_LOOP 0 2 0 2 2.81582
-PLOLAR_LOOP 0 0 1 2 2.88243
-PLOLAR_LOOP 0 0 2 2 2.82518
+PLOLAR_LOOP 0 0 0 1 3
+PLOLAR_LOOP 1 0 0 1 2.9285
+PLOLAR_LOOP 2 0 0 1 2.88093
+PLOLAR_LOOP 0 1 0 1 2.93051
+PLOLAR_LOOP 0 2 0 1 2.88873
+PLOLAR_LOOP 0 0 1 1 2.9274
+PLOLAR_LOOP 0 0 2 1 2.88807
+PLOLAR_LOOP 0 0 0 2 3
+PLOLAR_LOOP 1 0 0 2 2.88489
+PLOLAR_LOOP 2 0 0 2 2.81559
+PLOLAR_LOOP 0 1 0 2 2.88557
+PLOLAR_LOOP 0 2 0 2 2.81547
+PLOLAR_LOOP 0 0 1 2 2.88217
+PLOLAR_LOOP 0 0 2 2 2.82502
 Fixing to Coulomb gauge...
 GFIX ended at step 104. Ave gf action 0.697084, delta 9.8e-08
-GFIX time = 0.06719 seconds
+GFIX time = 0.06701 seconds
 BEFORE 3.1738971 3.1848719
 AFTER  3.1738971 3.1848719
 hvy_pot: MAX_T = 2, MAX_X = 2
@@ -601,4 +589,4 @@ POLAR_LOOP 2 2 1 2 0.566626
 POLAR_LOOP 2 2 2 2 0.522237
 RUNNING COMPLETED
 
-Time = 0.119 seconds
+Time = 0.1203 seconds

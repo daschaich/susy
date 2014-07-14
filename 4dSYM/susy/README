@@ -11,6 +11,10 @@ susy_hmc_corr for evolution along with correlator measurements
 susy_eig for eigenvalue measurements on saved configurations
 susy_phase for pfaffian phase measurements on saved configurations
 
+# Dependences:
+Measurements involving polar-projected matrices (susy_corr, susy_stout, susy_bilin and susy_hmc_corr) require LAPACK
+Eigenvalue measurements (susy_eig) require PRIMME and LAPACK -- PRIMME can be obtained from http://www.cs.wm.edu/~andreas/software/
+
 # Defines for compilation:
 -DPHI_ALGORITHM for the basic phi algorithm (REQUIRED)
 -DHMC_ALGORITHM switches on the accept/reject step

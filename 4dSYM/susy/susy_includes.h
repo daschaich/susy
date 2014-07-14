@@ -145,15 +145,28 @@ void print_var3(char *label);
 #ifdef WLOOP
 // Wilson loops -- including determinant division and polar projection
 // These look at correlators of products of temporal links,
-// which requires gauge fixing before 
+// which requires gauge fixing
 void hvy_pot();
-void polar(su3_matrix_f *a, su3_matrix_f *b);
 void hvy_pot_polar();
 
 // These construct explicit paths along lattice principal axes, for checking
 void path(int *dir, int *sign, int length);
 void hvy_pot_loop();
 void hvy_pot_polar_loop();
+
+// Use LAPACK in the polar projection
+// http://www.physics.orst.edu/~rubin/nacphy/lapack/routines/zheev.html
+// First argument turns on eigenvector computations
+// Second argument chooses between storing upper or lower triangle
+// Third and fifth arguments are the dimensions of the matrix
+// Fourth argument is that matrix, overwritten by the eigenvectors
+// Sixth argument holds the computed eigenvalues
+// Seventh argument is real workspace of size given by the eighth argument
+// Ninth argument is real workspace of size 3 * NCOL - 2
+// Final argument reports success or information about failure
+void zheev_(char *doV, char *uplo, int *N1, double *store, int *N2,
+            double *eigs, double *work, int *Nwork, double *Rwork, int *stat);
+void polar(su3_matrix_f *a, su3_matrix_f *b);
 
 // Modified Wilson loops use invert in determinant.c
 void rsymm();
@@ -177,7 +190,7 @@ void monopole();
 int make_evs(int Nvec, Twist_Fermion **eigVec, double *eigVal, int flag);
 void check_Dmat(int Nvec, Twist_Fermion **eigVec);
 
-// LAPACK is only used to diagonalize <psi_j | D | psi_i>
+// Use LAPACK to diagonalize <psi_j | D | psi_i>
 // on the subspace of Ddag.D eigenvalues psi
 // http://www.physics.orst.edu/~rubin/nacphy/lapack/routines/zgeev.html
 // First two arguments turn off eigenvector computations

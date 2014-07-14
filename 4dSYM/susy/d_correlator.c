@@ -62,7 +62,7 @@ void d_correlator() {
         ctmp = trace_su3_f(&tmat);
 
         // Make sure Tr(B_a * B_b) really is real
-        if (abs(ctmp.imag) > IMAG_TOL) {
+        if (fabs(ctmp.imag) > IMAG_TOL) {
           printf("node%d WARNING: Im(X[%d][%d][%d]) = %.4g > %.4g)\n",
                  this_node, a, b, i, ctmp.imag, IMAG_TOL);
         }
