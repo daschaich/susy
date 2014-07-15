@@ -54,8 +54,8 @@ void polar(su3_matrix_f *in, su3_matrix_f *out) {
   for (row = 0; row < NCOL; row++) {
     for (col = row + 1; col < NCOL; col++) {
       if (fabs(Pinv.e[row][row].real - Pinv.e[col][col].real) < 1.0e-6) {
-        node0_printf("WARNING: w[%d] = w[%d] = %.8g\n",
-                     row, col, Pinv.e[row][row].real);
+        printf("WARNING: w[%d] = w[%d] = %.8g\n",
+               row, col, Pinv.e[row][row].real);
       }
     }
   }
@@ -68,7 +68,7 @@ void polar(su3_matrix_f *in, su3_matrix_f *out) {
   // Check unitarity of out
   testtrace = realtrace_su3_f(out, out);
   if (fabs(testtrace / (Real)NCOL - 1.0) > 1.0e-6)
-    node0_printf("Error getting unitary piece: trace = %.4g\n", testtrace);
+    printf("Error getting unitary piece: trace = %.4g\n", testtrace);
 
   // Free double arrays used by LAPACK
   free(store);
