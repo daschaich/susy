@@ -104,17 +104,18 @@ void d_correlator() {
     node0_printf("KONISHI %d %.8g\n", t, corr);
   }
 
-  // SUGRA -- print out all 25
-  for (a = 0; a < NUMLINK; a++) {
-    for (b = 0; b < NUMLINK; b++) {
-      for (t = 0; t <= (int)(nt / 2); t++) {
-        corr = tS[a][b][0] * tS[a][b][t];
-        for (tt = 1; tt < nt; tt++)
+  // SUGRA -- average over all 25 components
+  norm = (Real)(25.0 * nx * ny * nz * volume);
+  for (t = 0; t <= (int)(nt / 2); t++) {
+    corr = 0.0;
+    for (a = 0; a < NUMLINK; a++) {
+      for (b = 0; b < NUMLINK; b++) {
+        for (tt = 0; tt < nt; tt++)
           corr += tS[a][b][tt] * tS[a][b][(t + tt) % nt];
-        corr /= norm;
-        node0_printf("SUGRA %d %d %d %.8g\n", a, b, t, corr);
       }
     }
+    corr /= norm;
+    node0_printf("SUGRA %d %.8g\n", t, corr);
   }
 
   free(tK);

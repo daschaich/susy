@@ -13,6 +13,7 @@ void d_correlator_r() {
   register int i;
   register site *s;
   int a, b, index, x_dist, y_dist, z_dist, t_dist;
+  int y_start, z_start, t_start;
   int len = NUMLINK * NUMLINK + 1;
   int d[4] = {0, 0, 0, 0};
   Real dum = 0.0, corr;
@@ -87,11 +88,32 @@ void d_correlator_r() {
   // Use general gathers, at least for now
   for (x_dist = 0; x_dist <= MAX_X; x_dist++) {
     d[XUP] = x_dist;
-    for (y_dist = 0; y_dist <= MAX_X; y_dist++) {
+
+    // Don't need negative y_dist when x_dist = 0
+    if (x_dist > 0)
+      y_start = -MAX_X;
+    else
+      y_start = 0;
+
+    for (y_dist = y_start; y_dist <= MAX_X; y_dist++) {
       d[YUP] = y_dist;
-      for (z_dist = 0; z_dist <= MAX_X; z_dist++) {
+
+      // Don't need negative z_dist when both x, y non-positive
+      if (x_dist > 0 || y_dist > 0)
+        z_start = -MAX_X;
+      else
+        z_start = 0;
+
+      for (z_dist = z_start; z_dist <= MAX_X; z_dist++) {
         d[ZUP] = z_dist;
-        for (t_dist = 0; t_dist <= MAX_T; t_dist++) {
+
+        // Don't need negative t_dist when x, y and z are all non-positive
+        if (x_dist > 0 || y_dist > 0 || z_dist > 0)
+          t_start = -MAX_X;
+        else
+          t_start = 0;
+
+        for (t_dist = t_start; t_dist <= MAX_T; t_dist++) {
           d[TUP] = t_dist;
           mtag = start_general_gather_field(ops, len * sizeof(Real),
                                             d, EVENANDODD, gen_pt[0]);
