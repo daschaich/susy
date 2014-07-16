@@ -53,7 +53,7 @@
 #define IMAG_TOL 1e-12
 
 // Maximum time value and spatial distance for Wilson loops
-#define MAX_T (nt / 2)
-#define MAX_X (nx / 2)
+#define MAX_T (nt / 2 - 1)
+#define MAX_X (nx / 2 - 1)
 #endif
 // -----------------------------------------------------------------

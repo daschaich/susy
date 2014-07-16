@@ -12,7 +12,7 @@
 void hvy_pot() {
   register int i;
   register site *s;
-  int t_dist, x_dist, y_dist, z_dist;
+  int t_dist, x_dist, y_dist, z_dist, y_start, z_start;
   Real frac = -1.0 / (Real)NCOL;
   double wloop, detloop;
   complex det_wloop, c_loop, c1, c2, mult;
@@ -45,7 +45,11 @@ void hvy_pot() {
     newmat = F_OFFSET(staple);    // Will switch these two
 
     for (x_dist = 0; x_dist <= MAX_X; x_dist++) {
-      for (y_dist = 0; y_dist <= MAX_X; y_dist++) {
+      if (x_dist > 0)
+        y_start = -MAX_X;
+      else
+        y_start = 0;    // Don't need negative y_dist when x_dist = 0
+      for (y_dist = y_start; y_dist <= MAX_X; y_dist++) {
         // Gather from spatial dirs, compute products of paths
         FORALLSITES(i, s)
           su3mat_copy_f(&(s->tempmat1), (su3_matrix_f *)F_PT(s, oldmat));
@@ -55,13 +59,36 @@ void hvy_pot() {
           oldmat = newmat;
           newmat = tt;
         }
-        for (i = 0; i < y_dist; i++) {
-          shiftmat(oldmat, newmat, goffset[YUP]);
+        if (y_dist > 0) {
+          for (i = 0; i < y_dist; i++) {
+            shiftmat(oldmat, newmat, goffset[YUP]);
+            tt = oldmat;
+            oldmat = newmat;
+            newmat = tt;
+          }
+        }
+        else if (y_dist < 0) {
+          for (i = y_dist; i < 0; i++) {
+            shiftmat(oldmat, newmat, goffset[YUP] + 1);
+            tt = oldmat;
+            oldmat = newmat;
+            newmat = tt;
+          }
+        }
+
+        // If either x_dist or y_dist are positive,
+        // we need to start with MAX_X shifts in the -z direction
+        if (x_dist > 0 || y_dist > 0)
+          z_start = -MAX_X;
+        else
+          z_start = 0;
+        for (i = z_start; i < 0; i++) {
+          shiftmat(oldmat, newmat, goffset[ZUP] + 1);
           tt = oldmat;
           oldmat = newmat;
           newmat = tt;
         }
-        for (z_dist = 0; z_dist <= MAX_X; z_dist++) {
+        for (z_dist = z_start; z_dist <= MAX_X; z_dist++) {
           // Evaluate potential at this separation
           wloop = 0.0;
           detloop = 0.0;

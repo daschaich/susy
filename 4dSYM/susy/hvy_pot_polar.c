@@ -1,7 +1,7 @@
 // -----------------------------------------------------------------
-// Static potential for fundamental links, doing all displacements
+// Static potential for all displacements
 // Evaluate in different spatial dirs to check rotational invariance
-// Must gauge fix to Coulomb gauge before calling to do spatial segments
+// Must gauge fix to Coulomb gauge before calling
 // Gauge-fixed links unitarized via polar projection -- overwritten!!!
 // This version computes spatial correlators of temporal products
 #include "susy_includes.h"
@@ -13,10 +13,10 @@
 void hvy_pot_polar() {
   register int i;
   register site *s;
-  int t_dist, x_dist, y_dist, z_dist;
+  int t_dist, x_dist, y_dist, z_dist, y_start, z_start;
   double wloop;
   su3_matrix_f tmat;
-  msg_tag *mtag0;
+  msg_tag *mtag;
   field_offset oldmat, newmat, tt;
 
   node0_printf("hvy_pot_polar: MAX_T = %d, MAX_X = %d\n", MAX_T, MAX_X);
@@ -30,29 +30,33 @@ void hvy_pot_polar() {
   }
 
   // Use tempmat1 to construct linear product from each point
-  for (t_dist = 1; t_dist <= MAX_T; t_dist ++) {
+  for (t_dist = 1; t_dist <= MAX_T; t_dist++) {
     if (t_dist == 1) {
       FORALLSITES(i, s)
         su3mat_copy_f(&(s->linkf[TUP]), &(s->tempmat1));
     }
     else {
-      mtag0 = start_gather_site(F_OFFSET(tempmat1), sizeof(su3_matrix_f),
-                                goffset[TUP], EVENANDODD, gen_pt[0]);
-      wait_gather(mtag0);
+      mtag = start_gather_site(F_OFFSET(tempmat1), sizeof(su3_matrix_f),
+                               goffset[TUP], EVENANDODD, gen_pt[0]);
+      wait_gather(mtag);
       FORALLSITES(i, s) {
         mult_su3_nn_f(&(s->linkf[TUP]), (su3_matrix_f *)gen_pt[0][i],
                       &(s->staple));
       }
-      cleanup_gather(mtag0);
+      cleanup_gather(mtag);
       FORALLSITES(i, s)
         su3mat_copy_f(&(s->staple), &(s->tempmat1));
     }
-    // Now tempmat1 is path of length t_dist in time direction
+    // Now tempmat1 is product of t_dist links at each (x, y, z)
     oldmat = F_OFFSET(tempmat2);
     newmat = F_OFFSET(staple);    // Will switch these two
 
     for (x_dist = 0; x_dist <= MAX_X; x_dist++) {
-      for (y_dist = 0; y_dist <= MAX_X; y_dist++) {
+      if (x_dist > 0)
+        y_start = -MAX_X;
+      else
+        y_start = 0;    // Don't need negative y_dist when x_dist = 0
+      for (y_dist = y_start; y_dist <= MAX_X; y_dist++) {
         // Gather from spatial dirs, compute products of paths
         FORALLSITES(i, s)
           su3mat_copy_f(&(s->tempmat1), (su3_matrix_f *)F_PT(s, oldmat));
@@ -62,13 +66,36 @@ void hvy_pot_polar() {
           oldmat = newmat;
           newmat = tt;
         }
-        for (i = 0; i < y_dist; i++) {
-          shiftmat(oldmat, newmat, goffset[YUP]);
+        if (y_dist > 0) {
+          for (i = 0; i < y_dist; i++) {
+            shiftmat(oldmat, newmat, goffset[YUP]);
+            tt = oldmat;
+            oldmat = newmat;
+            newmat = tt;
+          }
+        }
+        else if (y_dist < 0) {
+          for (i = y_dist; i < 0; i++) {
+            shiftmat(oldmat, newmat, goffset[YUP] + 1);
+            tt = oldmat;
+            oldmat = newmat;
+            newmat = tt;
+          }
+        }
+
+        // If either x_dist or y_dist are positive,
+        // we need to start with MAX_X shifts in the -z direction
+        if (x_dist > 0 || y_dist > 0)
+          z_start = -MAX_X;
+        else
+          z_start = 0;
+        for (i = z_start; i < 0; i++) {
+          shiftmat(oldmat, newmat, goffset[ZUP] + 1);
           tt = oldmat;
           oldmat = newmat;
           newmat = tt;
         }
-        for (z_dist = 0; z_dist <= MAX_X; z_dist++) {
+        for (z_dist = z_start; z_dist <= MAX_X; z_dist++) {
           // Evaluate potential at this separation
           wloop = 0.0;
           FORALLSITES(i, s) {
@@ -85,8 +112,8 @@ void hvy_pot_polar() {
           oldmat = newmat;
           newmat = tt;
         } // z_dist
-      } // y dist
-    } // x dist
+      } // y_dist
+    } // x_dist
   } // t_dist
 }
 // -----------------------------------------------------------------
