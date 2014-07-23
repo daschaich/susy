@@ -3,7 +3,17 @@ Yang--Mills theories in two and four dimensions, including related measurements.
 This package evolved from the MILC code, and supersedes supersedes the serial
 C++ code presented in arXiv:1108.1503.
 
-See subdirectories for real READMEs!
-
+See subdirectories for more detailed READMEs:
 2dSYM -- Two-dimensional N=(2,2) supersymmetric Yang--Mills theory
 4dSYM -- Four-dimensional N=4 supersymmetric Yang--Mills theory
+
+Feel free to contact David Schaich with any questions, requests for new
+features, or (especially) bug reports:
+http://dschaich.expressions.syr.edu
+
+Authors:
+Thomas DeGrand (University of Colorado Boulder)
+David Schaich (Syracuse University)
+
+Development was supported in part by the U.S. Department of Energy under grants
+DE-FG02-04ER41290, DE-SC0010005, DE-SC0008669 and DE-SC0009998.
