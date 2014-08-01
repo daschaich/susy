@@ -12,77 +12,58 @@
 void d_correlator_r() {
   register int i;
   register site *s;
-  int a, b, index, x_dist, y_dist, z_dist, t_dist;
-  int y_start, z_start, t_start;
-  int len = NUMLINK * NUMLINK + 1;
-  int d[4] = {0, 0, 0, 0};
-  Real dum = 0.0, corr;
+  int a, b, mu, nu, index, x_dist, y_dist, z_dist, t_dist;
+  int y_start, z_start, t_start, len = 11;
+  int d[NDIMS] = {0, 0, 0, 0};
+  Real tr, corr, sub;
   Real *ops = malloc(sites_on_node * len * sizeof(Real*));
-  complex ctmp;
   msg_tag *mtag;
-  su3_matrix_f *B[NUMLINK], tmat;
 
   node0_printf("d_correlator_r: MAX_T = %d, MAX_X = %d\n", MAX_T, MAX_X);
 
-  // On each site, first NUMLINK * NUMLINK components of ops are SUGRA_{ab}
-  // The last component is the Konishi, which we initialize to zero
+  // Initialize Konishi and SUGRA operators
+  // On each site, components [0, 9] of ops are the SUGRA, last is Konishi
   FORALLSITES(i, s) {
-    index = i * len + len - 1;
-    ops[index] = 0.0;
-  }
-
-  // Allocate B_a and start calculating
-  for (a = 0; a < NUMLINK; a++)
-    B[a] = malloc(sites_on_node * sizeof(su3_matrix_f));
-
-  FORALLSITES(i, s) {
-    for (a = 0; a < NUMLINK; a++)
-      dum += realtrace_su3_f(&(s->linkf[a]), &(s->linkf[a]));
-  }       // realtrace_su3_f(A, B) returns ReTr(Adag B)
-  g_doublesum(&dum);
-  dum /= (Real)(NCOL * NUMLINK * volume);
-
-  // B_a = U_a Udag_a - Sum_{a, x} ReTr(U_a Udag_a) / (5Nc vol)
-  FORALLSITES(i, s) {
-    for (a = 0; a < NUMLINK; a++) {
-      mult_su3_na_f(&(s->linkf[a]), &(s->linkf[a]), &(B[a][i]));
-      for (b = 0; b < NCOL; b++)
-        B[a][i].e[b][b].real -= dum;    // Subtract volume average
+    index = i * len;
+    for (a = 0; a < len; a++) {
+      ops[index] = 0.0;
+      index++;
     }
   }
+
+  // Compute at each site B_a = U_a Udag_a - volume average
+  // as well as traceBB[mu][nu] = tr[B_mu(x) B_nu(x)]
+  // Now stored in the site structure
+  compute_Bmu();
 
   // Construct the operators
   FORALLSITES(i, s) {
     for (a = 0; a < NUMLINK; a++) {
       for (b = 0; b < NUMLINK; b++) {
-        mult_su3_nn_f(&(B[a][i]), &(B[b][i]), &tmat);
-        ctmp = trace_su3_f(&tmat);
+        // Konishi is easy -- normalized below
+        index = i * len + len - 1;
+        ops[index] += s->traceBB[a][b];
 
-        // Make sure Tr(B_a * B_b) really is real
-        if (abs(ctmp.imag) > IMAG_TOL) {
-          printf("node%d WARNING: Im(X[%d][%d][%d]) = %.4g > %.4g)\n",
-                 this_node, a, b, i, ctmp.imag, IMAG_TOL);
-        }
+        // Compute mu--nu trace to be subtracted
+        sub = P[0][a] * P[0][b] * s->traceBB[a][b];
+        for (mu = 1; mu < NDIMS ; mu++)
+          sub += P[mu][a] * P[mu][b] * s->traceBB[a][b];
 
-        index = i * len + a * NUMLINK + b;
-        ops[index] = ctmp.real;
-        if (a == b) {
-          index = i * len + len - 1;
-          ops[index] += ctmp.real;   // Sum, not average
+        // Now SUGRA with mu--nu trace subtraction
+        index = i * len;
+        for (mu = 0; mu < NDIMS ; mu++) {
+          ops[index] -= 0.25 * sub;
+          for (nu = mu; nu < NDIMS ; nu++) {
+            tr = P[mu][a] * P[nu][b] + P[mu][a] * P[nu][b];
+            ops[index] += 0.5 * tr * s->traceBB[a][b];
+            index++;
+          }
         }
       }
     }
-    // Subtract trace from SUGRA operator
-    for (a = 0; a < NUMLINK; a++) {
-      index = i * len + len - 1;
-      dum = ops[index] / (Real)NUMLINK;
-      index = i * len + a * NUMLINK + a;
-      ops[index] -= dum;
-    }
+    index = i * len + len - 1;
+    ops[index] /= 5.0;    // Konishi normalization
   }
-  // Done with B[a]
-  for (a = 0; a < NUMLINK; a++)
-    free(B[a]);
 
   // Construct and print correlators
   // Use general gathers, at least for now
@@ -129,18 +110,22 @@ void d_correlator_r() {
           node0_printf("CORR_K %d %d %d %d %.6g\n",
                        x_dist, y_dist, z_dist, t_dist, corr / volume);
 
-          // SUGRA -- average over all 25 components
-          corr = 0.0;
-          FORALLSITES(i, s) {
-            for (a = 0; a < len - 1; a++) {
-              index = i * len + a;
-              corr += ops[index] * ((Real *)gen_pt[0][i])[a];
+          // SUGRA, ignoring symmetric nu < mu
+          a = 0;
+          for (mu = 0; mu < NDIMS ; mu++) {
+            for (nu = mu; nu < NDIMS ; nu++) {
+              corr = 0.0;
+              FORALLSITES(i, s) {
+                index = i * len + a;
+                corr += ops[index] * ((Real *)gen_pt[0][i])[a];
+              }
+              g_doublesum(&corr);
+              node0_printf("CORR_S %d %d %d %d %d %d %.6g\n",
+                           mu, nu, x_dist, y_dist, z_dist, t_dist,
+                           corr / volume);
+              a++;
             }
           }
-          g_doublesum(&corr);
-          node0_printf("CORR_S %d %d %d %d %.6g\n",
-                       x_dist, y_dist, z_dist, t_dist,
-                       corr / (volume * NUMLINK * NUMLINK));
           cleanup_general_gather(mtag);
         } // t_dist
       } // z_dist

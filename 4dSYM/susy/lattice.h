@@ -54,8 +54,11 @@ typedef struct {
   su3_vector site_psol, link_psol[NUMLINK], plaq_psol[NUMLINK][NUMLINK];
 
   su3_matrix_f f_U[NUMLINK];        // "Force"
-  // Used in force, may be wasteful of space
-  su3_matrix_f DmuUmu, Fmunu[NUMLINK][NUMLINK];
+
+  // For convenience in calculating action and force
+  // May be wasteful of space
+  su3_matrix_f DmuUmu, Fmunu[NUMLINK][NUMLINK], B[NUMLINK];
+  Real traceBB[NUMLINK][NUMLINK];
 
   // Boundary conditions -- many unused
   Real bc1[2 * NUMLINK], bc2[2 * NUMLINK][2 * NUMLINK];
@@ -91,8 +94,12 @@ EXTERN Real traj_length;
 EXTERN su3_matrix_f Lambda[NUMGEN], Lambda_prod[NUMGEN][NUMGEN];
 EXTERN Real perm[NUMLINK][NUMLINK][NUMLINK][NUMLINK][NUMLINK];
 
+// Submatrix to convert from 5- to 4-component notation
+// Fifth row is just all 1 / sqrt(5)
+EXTERN Real P[NDIMS][NUMLINK];
+
 EXTERN Real rsqmin, rsqprop;
-EXTERN Real lambda, kappa, bmass, fmass, kappa_u1;
+EXTERN Real lambda, kappa, bmass, fmass, kappa_u1, CK, CS;
 EXTERN double g_ssplaq, g_stplaq;
 EXTERN double_complex linktrsum;
 EXTERN u_int32type nersc_checksum;

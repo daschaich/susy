@@ -13,17 +13,17 @@
 double gauge_force(Real eps) {
   register int i, mu, nu;
   register site *s;
-  register Real eb3, eb3UdU;
+  register Real eb3, eb3UdU, normK, normS, trace_sub;
   double returnit = 0;
   complex trUdU;
   msg_tag *tag[NUMLINK], *tag0, *tag1;
-  su3_matrix_f tmat1, tmat2, tmat3, UdU;
+  su3_matrix_f tmat1, tmat2, tmat3, tmatK, UdU;
 
+  // Contribution from (D_a U_a)^2 / 2 term
   compute_DmuUmu();
-  compute_Fmunu();
   // To reproduce:
   //   f_U.set(x, mu, f_U.get(x, mu) + Udag.get(x, mu) * DmuUmu.get(x));
-  //   f_U.set(x, mu, f_U.get(x, mu) - DmuUmu.get(x + e_mu) * Udag.get(x,mu));
+  //   f_U.set(x, mu, f_U.get(x, mu) - DmuUmu.get(x + e_mu) * Udag.get(x, mu));
   tag[0] = start_gather_site(F_OFFSET(DmuUmu), sizeof(su3_matrix_f),
                              goffset[0], EVENANDODD, gen_pt[0]);
   for (mu = 0; mu < NUMLINK; mu++) {
@@ -42,6 +42,8 @@ double gauge_force(Real eps) {
     cleanup_gather(tag[mu]);
   }
 
+  // Contribution from Fbar_{ab} F_{ab} term
+  compute_Fmunu();
   // To reproduce:
   //   f_U.set(x, mu, f_U.get(x, mu) + 2 * U.get(x + e_mu, nu) * Adj(Fmunu.get(x, mu, nu)));
   //   f_U.set(x, mu, f_U.get(x, mu) - 2 * Adj(Fmunu.get(x - e_nu, mu, nu)) * U.get(x - e_nu, nu));
@@ -63,19 +65,20 @@ double gauge_force(Real eps) {
         mult_su3_na_f((su3_matrix_f *)gen_pt[0][i], &(s->Fmunu[mu][nu]),
                       &tmat1);
         sub_su3_matrix_f(&tmat1, (su3_matrix_f *)gen_pt[1][i], &tmat3);
-        scalar_mult_add_su3_matrix_f(&(s->f_U[mu]), &tmat3, 2, &(s->f_U[mu]));
+        scalar_mult_add_su3_matrix_f(&(s->f_U[mu]), &tmat3, 2.0, &(s->f_U[mu]));
       }
       cleanup_gather(tag0);
       cleanup_gather(tag1);
     }
   }
 
+  // Factor of kapp = Nc / (2lambda) on both (D_a U_a)^2 and F^2 terms
   for (mu = 0; mu < NUMLINK; mu++) {
     FORALLSITES(i, s)
       scalar_mult_su3_matrix_f(&(s->f_U[mu]), kappa, &(s->f_U[mu]));
   }
 
-  // Only compute U(1) mass term if non-zero
+  // Only compute U(1) mass term if non-zero -- note factor of kappa
   eb3 = 2.0 * kappa * bmass * bmass / (Real)(NCOL * NCOL);
   if (eb3 > 1.e-8) {
     for (mu = 0; mu < NUMLINK; mu++) {
@@ -90,9 +93,75 @@ double gauge_force(Real eps) {
       }
     }
   }
+
+  // Only compute Konishi and SUGRA contributions if non-zero
+  // No factor of kappa
+  if (CK > 1.0e-8 || CS > 1.0e-8) {
+    normK = CK;
+    normS = CS / (Real)(NUMLINK * NUMLINK);
+    trace_sub = -1.0 / (Real)NUMLINK;
+    compute_Bmu();
+
+    // The SUGRA trace subtraction makes this a little awkward
+    // Store Konishi and SUGRA contributions in the site
+    // (tempmat1 and Fmunu[mu][nu], respectively)
+    // and only add SUGRA to force in a second loop over mu and nu
+    // As always, average over all 25 SUGRA components
+    FORALLSITES(i, s) {
+      clear_su3mat_f(&(s->tempmat1));   // Konishi contribution
+      for (mu = 0; mu < NUMLINK; mu++) {
+        for (nu = 0; nu < NUMLINK; nu++)
+          clear_su3mat_f(&(s->Fmunu[mu][nu]));   // SUGRA contributions
+      }
+    }
+
+    // Accumulate and store Konishi and SUGRA contributions
+    // We're after f_U[mu], which involves Ubar_mu hit with all B_nu
+    // So we need to gather every B_nu from site x + mu
+    for (mu = 0; mu < NUMLINK; mu++) {
+      for (nu = 0; nu < NUMLINK; nu++) {
+        tag0 = start_gather_site(F_OFFSET(B[nu]), sizeof(su3_matrix_f),
+                                 goffset[mu], EVENANDODD, gen_pt[0]);
+        wait_gather(tag0);
+        FORALLSITES(i, s) {
+          mult_su3_an_f(&(s->linkf[mu]), &(s->B[nu]), &tmat1);
+          mult_su3_na_f((su3_matrix_f *)gen_pt[nu][i], &(s->linkf[mu]),
+                        &tmat2);
+          add_su3_matrix_f(&tmat1, &tmat2, &tmat3);
+
+          // Accumulate Konishi and SUGRA
+          if (mu == nu)
+            add_su3_matrix_f(&(s->tempmat1), &tmat3, &(s->tempmat1));
+//          add_su3_matrix_f(&(s->tempmat2), &tmat3, &(s->tempmat2));
+        }
+      }
+    }
+    // SUGRA trace subtraction (already summed diagonal contributions)
+//    FORALLSITES(i, s)
+//      sub_su3_matrix_f(&(s->tempmat2), &(s->tempmat1), &(s->tempmat2));
+
+    // Now add Konishi and SUGRA contributions to f_U[mu]
+    FORALLSITES(i, s) {
+        
+      //
+      //
+      // How to do trace subtraction ...
+      //
+      //
+      //
+      for (mu = 0; mu < NUMLINK; mu++) {
+        scalar_mult_add_su3_matrix_f(&tmat3, &tmatK, trace_sub, &tmat3);
+        // Update force with averaged SUGRA contribution
+        scalar_mult_add_su3_matrix_f(&(s->f_U[mu]), &tmat3, normS,
+                                     &(s->f_U[mu]));
+      }
+    }
+  }
+
   // Finally take adjoint and update the momentum
   // Subtract to reproduce -Adj(f_U)
   for (mu = 0; mu < NUMLINK; mu++) {
+    cleanup_gather(tag[mu]);
     FORALLSITES(i, s) {
       su3_adjoint_f(&(s->f_U[mu]), &tmat2);
       scalar_mult_sub_su3_matrix_f(&(s->mom[mu]), &tmat2, eps, &(s->mom[mu]));

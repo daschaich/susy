@@ -168,11 +168,13 @@ int readin(int prompt) {
     IF_OK status += get_i(stdin, prompt, "traj_between_meas",
                           &par_buf.propinterval);
 
-    // lambda, kappa_u1, bmass, fmass
+    // lambda, kappa_u1, bmass, fmass, CK and CS
     IF_OK status += get_f(stdin, prompt, "lambda", &par_buf.lambda);
     IF_OK status += get_f(stdin, prompt, "kappa_u1", &par_buf.kappa_u1);
     IF_OK status += get_f(stdin, prompt, "bmass", &par_buf.bmass);
     IF_OK status += get_f(stdin, prompt, "fmass", &par_buf.fmass);
+    IF_OK status += get_f(stdin, prompt, "c_konishi", &par_buf.CK);
+    IF_OK status += get_f(stdin, prompt, "c_sugra", &par_buf.CS);
 
 #ifdef STOUT
     // Stout smearing stuff
@@ -242,6 +244,8 @@ int readin(int prompt) {
   kappa_u1 = par_buf.kappa_u1;
   bmass = par_buf.bmass;
   fmass = par_buf.fmass;
+  CK = par_buf.CK;
+  CS = par_buf.CS;
   kappa = (Real)NCOL * 0.5 / lambda;
   node0_printf("lambda=%.4g --> kappa=Nc/(2lambda)=%.4g\n",
                lambda, kappa);

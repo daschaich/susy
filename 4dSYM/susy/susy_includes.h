@@ -129,6 +129,8 @@ void invert(su3_matrix_f *in, su3_matrix_f *out);
 // More measurements
 #ifdef CORR
 // Konishi and SUGRA correlators
+void setup_P();
+void compute_Bmu();
 void d_correlator();    // Projected to zero spatial momentum
 void d_correlator_r();  // Functions of (x, y, z, t)
 #endif

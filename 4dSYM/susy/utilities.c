@@ -83,6 +83,53 @@ void compute_Fmunu() {
 
 
 // -----------------------------------------------------------------
+// Compute at each site B_mu(x) = U_mu(x) * Udag_mu(x) - volume average
+// as well as traceBB[mu][nu](x) = tr[B_mu(x) B_nu(x)] (should be real)
+void compute_Bmu() {
+  register int i;
+  register site *s;
+  int mu, nu, j;
+  Real dum = 0.0;
+  complex ctmp;
+  su3_matrix_f tmat;
+
+  // Start by computing the volume average
+  FORALLSITES(i, s) {
+    for (mu = 0; mu < NUMLINK; mu++)
+      dum += realtrace_su3_f(&(s->linkf[mu]), &(s->linkf[mu]));
+  }       // realtrace_su3_f(A, B) returns ReTr(Adag B)
+  g_doublesum(&dum);
+  dum /= (Real)(NCOL * NUMLINK * volume);
+
+  // B_mu = U_mu Udag_mu - Sum_{mu, x} ReTr(U_mu Udag_mu) / (5Nc vol)
+  // trace[mu][nu] = tr[B_mu(x) B_nu(x)]
+  FORALLSITES(i, s) {
+    for (mu = 0; mu < NUMLINK; mu++) {
+      mult_su3_na_f(&(s->linkf[mu]), &(s->linkf[mu]), &(s->B[mu]));
+      for (j = 0; j < NCOL; j++)
+        s->B[mu].e[j][j].real -= dum;    // Subtract volume average
+    }
+
+    for (mu = 0; mu < NUMLINK; mu++) {
+      for (nu = 0; nu < NUMLINK; nu++) {
+        mult_su3_nn_f(&(s->B[mu]), &(s->B[nu]), &tmat);
+        ctmp = trace_su3_f(&tmat);
+
+        // Make sure Tr(B_a * B_b) really is real
+        if (fabs(ctmp.imag) > IMAG_TOL) {
+          printf("node%d WARNING: Im(X[%d][%d][%d]) = %.4g > %.4g)\n",
+                 this_node, mu, nu, i, ctmp.imag, IMAG_TOL);
+        }
+        s->traceBB[mu][nu] = ctmp.real;
+      }
+    }
+  }
+}
+// -----------------------------------------------------------------
+
+
+
+// -----------------------------------------------------------------
 // Twist_Fermion matrix--vector operation
 // Applies either the operator (sign = 1) or its adjoint (sign = -1)
 void fermion_op(Twist_Fermion *src, Twist_Fermion *dest, int sign) {
