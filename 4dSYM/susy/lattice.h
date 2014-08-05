@@ -99,7 +99,7 @@ EXTERN Real perm[NUMLINK][NUMLINK][NUMLINK][NUMLINK][NUMLINK];
 EXTERN Real P[NDIMS][NUMLINK];
 
 EXTERN Real rsqmin, rsqprop;
-EXTERN Real lambda, kappa, bmass, fmass, kappa_u1, CK, CS;
+EXTERN Real lambda, kappa, bmass, fmass, kappa_u1, Ckonishi;
 EXTERN double g_ssplaq, g_stplaq;
 EXTERN double_complex linktrsum;
 EXTERN u_int32type nersc_checksum;

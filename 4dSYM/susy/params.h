@@ -21,7 +21,7 @@ typedef struct {
   Real lambda, kappa;       // 't Hooft coupling and Nc/(2lambda)
   Real bmass, fmass;        // Bosonic and fermion masses
   Real kappa_u1;            // Determinant coupling
-  Real CK, CS;              // Konishi and SUGRA couplings
+  Real Ckonishi;            // Konishi coupling
   int fixflag;              // Whether to gauge fix to Coulomb gauge
 
   // Inversion parameters

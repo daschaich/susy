@@ -102,7 +102,6 @@ void compute_Bmu() {
   dum /= (Real)(NCOL * NUMLINK * volume);
 
   // B_mu = U_mu Udag_mu - Sum_{mu, x} ReTr(U_mu Udag_mu) / (5Nc vol)
-  // trace[mu][nu] = tr[B_mu(x) B_nu(x)]
   FORALLSITES(i, s) {
     for (mu = 0; mu < NUMLINK; mu++) {
       mult_su3_na_f(&(s->linkf[mu]), &(s->linkf[mu]), &(s->B[mu]));
@@ -110,6 +109,8 @@ void compute_Bmu() {
         s->B[mu].e[j][j].real -= dum;    // Subtract volume average
     }
 
+    // trace[mu][nu] = tr[B_mu(x) B_nu(x)] is symmetric in mu <--> nu
+    // But store all to simplify SUGRA computation
     for (mu = 0; mu < NUMLINK; mu++) {
       for (nu = 0; nu < NUMLINK; nu++) {
         mult_su3_nn_f(&(s->B[mu]), &(s->B[nu]), &tmat);

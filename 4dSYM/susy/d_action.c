@@ -158,56 +158,30 @@ double d_det_action() {
 
 
 // -----------------------------------------------------------------
-// Both Konishi and SUGRA operators' contributions to the action
-// Note factor of kappa on both
+// Konishi operator contribution to the action
+// No factor of kappa
 // B_a is now included in the site
-void d_ops_action(double *K_act, double *S_act) {
+double d_konishi_action() {
   register int i;
   register site *s;
   int a, b;
-  Real tS[NUMLINK][NUMLINK];
-  complex ctmp;
-  su3_matrix_f tmat;
+  double konishi_act = 0.0;
 
+  // Compute at each site B_a = U_a Udag_a - volume average
+  // Now stored in the site structure
   compute_Bmu();
-  *K_act = 0.0;
-  for (a = 0; a < NUMLINK; a++) {
-    for (b = 0; b < NUMLINK; b++)
-      tS[a][b] = 0.0;
-  }
 
-  // Sum operators over volume, averaging over all 25 SUGRA components
-  // In measurements we check that ctmp is purely real; omit here for speed
+  // Sum the operator over the volume -- use symmetry in a <--> b
   FORALLSITES(i, s) {
     for (a = 0; a < NUMLINK; a++) {
-      for (b = 0; b < NUMLINK; b++) {
-        mult_su3_nn_f(&(s->B[a]), &(s->B[b]), &tmat);
-        ctmp = trace_su3_f(&tmat);
-        tS[a][b] += ctmp.real;
-        if (a == b)
-          *K_act += ctmp.real;          // Sum, not average
-      }
+      konishi_act += s->traceBB[a][a];
+      for (b = a + 1; b < NUMLINK; b++)
+        konishi_act += 2.0 * s->traceBB[a][b];
     }
   }
-  g_doublesum(K_act);
-  for (a = 0; a < NUMLINK; a++) {
-    for (b = 0; b < NUMLINK; b++)
-      g_doublesum(&(tS[a][b]));
-  }
-
-  // SUGRA trace subtraction
-  for (a = 0; a < NUMLINK; a++)
-    tS[a][a] -= *K_act / (Real)NUMLINK;
-
-  // For now just average over all 25 SUGRA components,
-  // hit with couplings and return
-  *S_act = 0.0;
-  for (a = 0; a < NUMLINK; a++) {
-    for (b = 0; b < NUMLINK; b++)
-      *S_act += tS[a][b];
-  }
-  *K_act *= CK;
-  *S_act *= CS / (Real)(NUMLINK * NUMLINK);
+  g_doublesum(&konishi_act);
+  konishi_act *= Ckonishi / 5.0;   // Usual normalization from P_{5a}
+  return konishi_act;
 }
 // -----------------------------------------------------------------
 
@@ -217,15 +191,15 @@ void d_ops_action(double *K_act, double *S_act) {
 // Print out zeros if fermion and determinant actions not included
 double d_action(Twist_Fermion *src, Twist_Fermion **sol) {
   double g_act, bmass_act, h_act, f_act = 0.0, det_act = 0.0;
-  double S_act = 0.0, K_act = 0.0, total;
+  double konishi_act = 0.0, total;
   g_act = d_gauge_action();
   bmass_act = d_bmass_action();
   h_act = d_hmom_action();
   det_act = d_det_action();
 
   // Only compute operator contributions if non-zero
-  if (CK > 1.0e-8 || CS > 1.0e-8)
-    d_ops_action(&K_act, &S_act);
+  if (fabs(Ckonishi) > 1.0e-8)
+    konishi_act = d_konishi_action();
 
 #ifndef PUREGAUGE
   f_act = d_fermion_action(src, sol);
@@ -234,9 +208,8 @@ double d_action(Twist_Fermion *src, Twist_Fermion **sol) {
   node0_printf("gauge %.8g bmass %.8g ", g_act, bmass_act);
   node0_printf("det %.8g ", det_act);
   node0_printf("fermion %.8g hmom %.8g ", f_act, h_act);
-  node0_printf("konishi %.8g ", K_act);
-  node0_printf("sugra %.8g ", S_act);
-  total = g_act + bmass_act + det_act + f_act + h_act + K_act + S_act;
+  node0_printf("konishi %.8g ", konishi_act);
+  total = g_act + bmass_act + det_act + f_act + h_act + konishi_act;
   node0_printf("sum %.8g\n", total);
   return total;
 }

@@ -16,6 +16,7 @@ void d_correlator_r() {
   int y_start, z_start, t_start, len = 11;
   int d[NDIMS] = {0, 0, 0, 0};
   Real tr, corr, sub;
+  Real normK = 1.0 / (Real)volume, normS = 0.1 / (Real)volume;
   Real *ops = malloc(sites_on_node * len * sizeof(Real*));
   msg_tag *mtag;
 
@@ -108,24 +109,23 @@ void d_correlator_r() {
           }
           g_doublesum(&corr);
           node0_printf("CORR_K %d %d %d %d %.6g\n",
-                       x_dist, y_dist, z_dist, t_dist, corr / volume);
+                       x_dist, y_dist, z_dist, t_dist, corr * normK);
 
-          // SUGRA, ignoring symmetric nu < mu
+          // SUGRA, averaging over ten components with mu <= nu
           a = 0;
+          corr = 0.0;
           for (mu = 0; mu < NDIMS ; mu++) {
             for (nu = mu; nu < NDIMS ; nu++) {
-              corr = 0.0;
               FORALLSITES(i, s) {
                 index = i * len + a;
                 corr += ops[index] * ((Real *)gen_pt[0][i])[a];
               }
-              g_doublesum(&corr);
-              node0_printf("CORR_S %d %d %d %d %d %d %.6g\n",
-                           mu, nu, x_dist, y_dist, z_dist, t_dist,
-                           corr / volume);
               a++;
             }
           }
+          g_doublesum(&corr);
+          node0_printf("CORR_S %d %d %d %d %.6g\n",
+                       x_dist, y_dist, z_dist, t_dist, corr * normS);
           cleanup_general_gather(mtag);
         } // t_dist
       } // z_dist

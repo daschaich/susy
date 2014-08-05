@@ -44,6 +44,7 @@ void apply_bc(su3_matrix *sigma, int dir, int t);
 // Lots of things to initialize and set up
 void compute_Fmunu();
 void compute_DmuUmu();
+void compute_Bmu();
 void setup_lambda();
 void setup_PtoP();
 void setup_FQ();
@@ -130,7 +131,6 @@ void invert(su3_matrix_f *in, su3_matrix_f *out);
 #ifdef CORR
 // Konishi and SUGRA correlators
 void setup_P();
-void compute_Bmu();
 void d_correlator();    // Projected to zero spatial momentum
 void d_correlator_r();  // Functions of (x, y, z, t)
 #endif

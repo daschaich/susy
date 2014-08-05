@@ -76,25 +76,24 @@ void d_correlator() {
     corr = OK[0] * OK[t];
     for (tt = 1; tt < nt; tt++)
       corr += OK[tt] * OK[(t + tt) % nt];
-    corr /= norm;
-    node0_printf("KONISHI %d %.8g\n", t, corr);
+    node0_printf("KONISHI %d %.8g\n", t, corr / norm);
   }
 
-  // SUGRA, ignoring symmetric nu < mu
+  // SUGRA, averaging over ten components with mu <= nu
+  norm = (Real)(10.0 * nx * ny * nz * volume);
   for (t = 0; t <= (int)(nt / 2); t++) {
-    corr = 0.0;
     // Debugging check that trace was successfully subtracted
 //    node0_printf("Trace check %d: %.4g + %.4g + %.4g + %.4g = %.4g\n",
 //                 t, OS[0][0][t], OS[1][1][t], OS[2][2][t], OS[3][3][t],
 //                 OS[0][0][t] + OS[1][1][t] + OS[2][2][t] + OS[3][3][t]);
+    corr = 0.0;
     for (mu = 0; mu < NDIMS; mu++) {
       for (nu = mu; nu < NDIMS; nu++) {
         for (tt = 0; tt < nt; tt++)
           corr += OS[mu][nu][tt] * OS[mu][nu][(t + tt) % nt];
-        corr /= norm;
-        node0_printf("SUGRA %d %d %d %.8g\n", mu, nu, t, corr);
       }
     }
+    node0_printf("SUGRA %d %.8g\n", t, corr / norm);
   }
 
   free(OK);
