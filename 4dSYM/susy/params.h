@@ -5,11 +5,11 @@
 #include "../include/macros.h"  // For MAXFILENAME
 
 typedef struct {
-  int stopflag;       // 1 if it is time to stop
+  int stopflag;             // 1 if it is time to stop
 
   // Initialization parameters
-  int nx, ny, nz, nt; // Lattice dimensions
-  int iseed;          // For random numbers
+  int nx, ny, nz, nt;       // Lattice dimensions
+  int iseed;                // For random numbers
 
   int warms;                // The number of warmup trajectories
   int trajecs;              // The number of real trajectories

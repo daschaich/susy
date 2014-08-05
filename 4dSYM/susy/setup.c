@@ -224,7 +224,7 @@ int readin(int prompt) {
   }
 
   // Broadcast parameter buffer from node0 to all other nodes
-  broadcast_bytes((char *)&par_buf,sizeof(par_buf));
+  broadcast_bytes((char *)&par_buf, sizeof(par_buf));
   if (par_buf.stopflag != 0)
     normal_exit(0);
 

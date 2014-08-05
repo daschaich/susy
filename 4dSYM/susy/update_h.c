@@ -106,12 +106,10 @@ double gauge_force(Real eps) {
     // F_a(x) = 2C/5 Udag_a(x) sum_b B_b(x)
     // Accumulate the sum in s->tempmat1
     FORALLSITES(i, s) {
+      su3mat_copy_f(&(s->B[0]), &(s->tempmat1));    // Initialize
+      for (nu = 1; nu < NUMLINK; nu++)
+        add_su3_matrix_f(&(s->tempmat1), &(s->B[nu]), &(s->tempmat1));
       for (mu = 0; mu < NUMLINK; mu++) {
-        su3mat_copy_f(&(s->B[0]), &(s->tempmat1));    // Initialize
-        for (nu = 1; nu < NUMLINK; nu++)
-          add_su3_matrix_f(&(s->tempmat1), &(s->B[nu]), &(s->tempmat1));
-
-        // Update the force F_a(x)
         mult_su3_an_f(&(s->linkf[mu]), &(s->tempmat1), &tmat1);
         scalar_mult_add_su3_matrix_f(&(s->f_U[mu]), &tmat1, normK,
                                      &(s->f_U[mu]));
@@ -122,7 +120,6 @@ double gauge_force(Real eps) {
   // Finally take adjoint and update the momentum
   // Subtract to reproduce -Adj(f_U)
   for (mu = 0; mu < NUMLINK; mu++) {
-    cleanup_gather(tag[mu]);
     FORALLSITES(i, s) {
       su3_adjoint_f(&(s->f_U[mu]), &tmat2);
       scalar_mult_sub_su3_matrix_f(&(s->mom[mu]), &tmat2, eps, &(s->mom[mu]));

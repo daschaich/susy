@@ -112,7 +112,7 @@ void compute_Bmu() {
     // trace[mu][nu] = tr[B_mu(x) B_nu(x)] is symmetric in mu <--> nu
     // But store all to simplify SUGRA computation
     for (mu = 0; mu < NUMLINK; mu++) {
-      for (nu = 0; nu < NUMLINK; nu++) {
+      for (nu = mu; nu < NUMLINK; nu++) {
         mult_su3_nn_f(&(s->B[mu]), &(s->B[nu]), &tmat);
         ctmp = trace_su3_f(&tmat);
 
@@ -122,6 +122,7 @@ void compute_Bmu() {
                  this_node, mu, nu, i, ctmp.imag, IMAG_TOL);
         }
         s->traceBB[mu][nu] = ctmp.real;
+        s->traceBB[nu][mu] = ctmp.real;
       }
     }
   }
