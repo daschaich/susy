@@ -158,48 +158,14 @@ double d_det_action() {
 
 
 // -----------------------------------------------------------------
-// Konishi operator contribution to the action
-// No factor of kappa
-// B_a is now included in the site
-double d_konishi_action() {
-  register int i;
-  register site *s;
-  int a, b;
-  double konishi_act = 0.0;
-
-  // Compute at each site B_a = U_a Udag_a - volume average
-  // Now stored in the site structure
-  compute_Bmu();
-
-  // Sum the operator over the volume -- use symmetry in a <--> b
-  FORALLSITES(i, s) {
-    for (a = 0; a < NUMLINK; a++) {
-      konishi_act += s->traceBB[a][a];
-      for (b = a + 1; b < NUMLINK; b++)
-        konishi_act += 2.0 * s->traceBB[a][b];
-    }
-  }
-  g_doublesum(&konishi_act);
-  konishi_act *= Ckonishi / 5.0;   // Usual normalization from P_{5a}
-  return konishi_act;
-}
-// -----------------------------------------------------------------
-
-
-
-// -----------------------------------------------------------------
 // Print out zeros if fermion and determinant actions not included
 double d_action(Twist_Fermion *src, Twist_Fermion **sol) {
   double g_act, bmass_act, h_act, f_act = 0.0, det_act = 0.0;
-  double konishi_act = 0.0, total;
+  double total;
   g_act = d_gauge_action();
   bmass_act = d_bmass_action();
   h_act = d_hmom_action();
   det_act = d_det_action();
-
-  // Only compute operator contributions if non-zero
-  if (fabs(Ckonishi) > 1.0e-8)
-    konishi_act = d_konishi_action();
 
 #ifndef PUREGAUGE
   f_act = d_fermion_action(src, sol);
@@ -208,8 +174,7 @@ double d_action(Twist_Fermion *src, Twist_Fermion **sol) {
   node0_printf("gauge %.8g bmass %.8g ", g_act, bmass_act);
   node0_printf("det %.8g ", det_act);
   node0_printf("fermion %.8g hmom %.8g ", f_act, h_act);
-  node0_printf("konishi %.8g ", konishi_act);
-  total = g_act + bmass_act + det_act + f_act + h_act + konishi_act;
+  total = g_act + bmass_act + det_act + f_act + h_act;
   node0_printf("sum %.8g\n", total);
   return total;
 }

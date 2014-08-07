@@ -57,8 +57,11 @@ typedef struct {
 
   // For convenience in calculating action and force
   // May be wasteful of space
-  su3_matrix_f DmuUmu, Fmunu[NUMLINK][NUMLINK], B[NUMLINK];
+  su3_matrix_f DmuUmu, Fmunu[NUMLINK][NUMLINK];
+#ifdef CORR
+  su3_matrix_f B[NUMLINK];
   Real traceBB[NUMLINK][NUMLINK];
+#endif
 
   // Boundary conditions -- many unused
   Real bc1[2 * NUMLINK], bc2[2 * NUMLINK][2 * NUMLINK];
@@ -99,7 +102,7 @@ EXTERN Real perm[NUMLINK][NUMLINK][NUMLINK][NUMLINK][NUMLINK];
 EXTERN Real P[NDIMS][NUMLINK];
 
 EXTERN Real rsqmin, rsqprop;
-EXTERN Real lambda, kappa, bmass, fmass, kappa_u1, Ckonishi;
+EXTERN Real lambda, kappa, bmass, fmass, kappa_u1;
 EXTERN double g_ssplaq, g_stplaq;
 EXTERN double_complex linktrsum;
 EXTERN u_int32type nersc_checksum;

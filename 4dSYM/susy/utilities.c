@@ -85,6 +85,7 @@ void compute_Fmunu() {
 // -----------------------------------------------------------------
 // Compute at each site B_mu(x) = U_mu(x) * Udag_mu(x) - volume average
 // as well as traceBB[mu][nu](x) = tr[B_mu(x) B_nu(x)] (should be real)
+#ifdef CORR
 void compute_Bmu() {
   register int i;
   register site *s;
@@ -127,6 +128,7 @@ void compute_Bmu() {
     }
   }
 }
+#endif
 // -----------------------------------------------------------------
 
 

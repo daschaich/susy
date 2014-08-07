@@ -13,7 +13,7 @@
 double gauge_force(Real eps) {
   register int i, mu, nu;
   register site *s;
-  register Real eb3, eb3UdU, normK;
+  register Real eb3, eb3UdU;
   double returnit = 0;
   complex trUdU;
   msg_tag *tag[NUMLINK], *tag0, *tag1;
@@ -89,29 +89,6 @@ double gauge_force(Real eps) {
 
         su3_adjoint_f(&(s->linkf[mu]), &tmat1);
         scalar_mult_add_su3_matrix_f(&(s->f_U[mu]), &tmat1, eb3UdU,
-                                     &(s->f_U[mu]));
-      }
-    }
-  }
-
-  // Only compute Konishi contribution if non-zero
-  // No factor of kappa
-  if (fabs(Ckonishi) > 1.0e-8) {
-    normK = 2.0 * Ckonishi / 5.0;
-
-    // Compute at each site B_a = U_a Udag_a - volume average
-    // Now stored in the site structure
-    compute_Bmu();
-
-    // F_a(x) = 2C/5 Udag_a(x) sum_b B_b(x)
-    // Accumulate the sum in s->tempmat1
-    FORALLSITES(i, s) {
-      su3mat_copy_f(&(s->B[0]), &(s->tempmat1));    // Initialize
-      for (nu = 1; nu < NUMLINK; nu++)
-        add_su3_matrix_f(&(s->tempmat1), &(s->B[nu]), &(s->tempmat1));
-      for (mu = 0; mu < NUMLINK; mu++) {
-        mult_su3_an_f(&(s->linkf[mu]), &(s->tempmat1), &tmat1);
-        scalar_mult_add_su3_matrix_f(&(s->f_U[mu]), &tmat1, normK,
                                      &(s->f_U[mu]));
       }
     }
