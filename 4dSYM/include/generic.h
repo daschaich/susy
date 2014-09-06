@@ -29,13 +29,14 @@ void d_plaquette_frep_lcl(double *ss_plaq_frep, double *st_plaq_frep);
 void gaugefix(int gauge_dir,Real relax_boost,int max_gauge_iter,
               Real gfix_tol, field_offset diffmat, field_offset sumvec);
 
-/* io_helpers.c */
+// io_helpers.c
 gauge_file *save_lattice(int flag, char *filename, char *stringLFN);
 gauge_file *reload_lattice(int flag, char *filename);
 int ask_starting_lattice(FILE *fp, int prompt, int *flag, char *filename);
 int ask_ending_lattice(FILE *fp, int prompt, int *flag, char *filename);
 int ask_gauge_fix(FILE *fp, int prompt, int *flag);
 void coldlat();
+void randomlat();
 void funnylat();
 int get_f(FILE *fp, int prompt, char *variable_name_string, Real *value);
 int get_i(FILE *fp, int prompt, char *variable_name_string, int *value);
@@ -65,9 +66,6 @@ u_int32type nersc_cksum();
 // ploop_dist.c
 complex ploop();
 
-// ranmom.c
-void ranmom();
-
 // remap_stdio_from_args.c
 int remap_stdio_from_args(int argc, char *argv[]);
 
@@ -87,5 +85,9 @@ void restrict_fourier(
           complex numbers.  For example, an su3_vector
           is 3 complex numbers. */
      int isign);   /* 1 for x -> k, -1 for k -> x */
+
+// stout.c
+// Stout smearing
+void block_stout(int Nstout, double rho);
 #endif
 // -----------------------------------------------------------------

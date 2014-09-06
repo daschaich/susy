@@ -28,11 +28,11 @@ void ranmom() {
       clear_su3mat_f(&(s->mom[mu]));
       for (j = 0; j < NUMGEN; j++) {
 #ifdef SITERAND
-        grn.real= gaussian_rand_no(&(s->site_prn));
-        grn.imag= gaussian_rand_no(&(s->site_prn));
+        grn.real = gaussian_rand_no(&(s->site_prn));
+        grn.imag = gaussian_rand_no(&(s->site_prn));
 #else
-        grn.real= gaussian_rand_no(&(s->node_prn));
-        grn.imag= gaussian_rand_no(&(s->node_prn));
+        grn.real = gaussian_rand_no(&(s->node_prn));
+        grn.imag = gaussian_rand_no(&(s->node_prn));
 #endif
         c_scalar_mult_add_su3mat_f(&(s->mom[mu]), &(Lambda[j]), &grn,
                                    &(s->mom[mu]));
@@ -103,7 +103,6 @@ int update() {
   // Refresh the momenta
   // Higher rep code using fermion_rep:
   //   DIMFxDIMF link created from NCOLxNCOL linkf after each update
-  //   Then DIMF gauge field is switched to antiperiodic BC if required
   ranmom();
 
   // Set up the fermion variables, if needed

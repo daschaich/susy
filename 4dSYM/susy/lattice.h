@@ -174,12 +174,13 @@ EXTERN char **gen_pt[N_POINTERS];
 // Stout smearing stuff
 EXTERN int Nstout;
 EXTERN double rho;
+#endif
+// These are needed for smearing a `hot-start' random configuration
 EXTERN su3_matrix_f *thin_link[NUMLINK];
 EXTERN su3_matrix_f *smeared_link[NUMLINK];
 EXTERN su3_matrix_f *stp[NUMLINK];    // Staples
 EXTERN anti_hermitmat *Q[NUMLINK];    // To be exponentiated
 EXTERN su3_matrix_f *tempmat;         // Staple storage
-#endif
 
 #ifdef EIG
 // Eigenvalue stuff

@@ -6,6 +6,7 @@
 // Definitions of restore and save lattice flags used in io_helpers.c
 #define CONTINUE      10
 #define FRESH         11
+#define RANDOM        12
 #define RELOAD_SERIAL 13
 #define FORGET        40
 #define SAVE_SERIAL   42

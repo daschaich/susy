@@ -44,7 +44,7 @@ void d_correlator() {
 
         // Compute mu--nu trace to be subtracted
         sub = P[0][a] * P[0][b] * s->traceBB[a][b];
-        for (mu = 1; mu < NDIMS ; mu++)
+        for (mu = 1; mu < NDIMS; mu++)
           sub += P[mu][a] * P[mu][b] * s->traceBB[a][b];
 
         // Now SUGRA with mu--nu trace subtraction

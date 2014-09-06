@@ -174,11 +174,6 @@ void polar(su3_matrix_f *a, su3_matrix_f *b);
 void rsymm();
 #endif
 
-#ifdef STOUT
-// Stout smearing
-void block_stout(int Nstout, double rho);
-#endif
-
 // Monopole computation uses find_det
 void monopole();
 // -----------------------------------------------------------------

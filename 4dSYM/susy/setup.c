@@ -88,7 +88,7 @@ void make_fields() {
   FIELD_ALLOC_MAT(plaq_dest, su3_vector, NUMLINK, NUMLINK);
   FIELD_ALLOC_MAT(plaq_dest2, su3_vector, NUMLINK, NUMLINK);
 
-#ifdef STOUT
+  // Stout smearing stuff needed for `hot-start' random configurations
   size += (double)(1 + 3 * NUMLINK) * sites_on_node * sizeof(su3_matrix_f);
   size += (double)(NUMLINK) * sites_on_node * sizeof(anti_hermitmat);
   FIELD_ALLOC_VEC(thin_link, su3_matrix_f, NUMLINK);
@@ -96,7 +96,6 @@ void make_fields() {
   FIELD_ALLOC_VEC(stp, su3_matrix_f, NUMLINK);    // Staples
   FIELD_ALLOC_VEC(Q, anti_hermitmat, NUMLINK);    // To be exponentiated
   FIELD_ALLOC(tempmat, su3_matrix_f);             // Staple storage
-#endif
 
   node0_printf("Mallocing %.1f MBytes per core for fields\n", size / 1e6);
 
