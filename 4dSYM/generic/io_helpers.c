@@ -289,7 +289,7 @@ int ask_starting_lattice(FILE *fp, int prompt, int *flag, char *filename) {
       printf("error reading file name\n");
       return 1;
     }
-    printf("%s\n", filename);
+    printf(" %s\n", filename);
   }
   return 0;
 }

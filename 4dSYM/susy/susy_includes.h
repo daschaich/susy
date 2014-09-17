@@ -23,18 +23,9 @@
 int setup();
 int readin(int prompt);
 int update();
-double update_gauge_step(Real eps);
 void update_h(Real eps);
 void update_u(Real eps);
-
 void gauge_action(double *result);
-void udadu_mu_nu(field_offset lsrc, field_offset rsrc, field_offset mat,
-                 int mu, int nu, int parity);
-void udadu_mat_mu_nu(field_offset matsrc, field_offset matdest,
-                     int mu, int nu);
-void chain_rule(su3_matrix_f *sigmaf, su3_matrix *sigma,
-                su3_matrix_f *gaugelinkf);
-void apply_bc(su3_matrix *sigma, int dir, int t);
 // -----------------------------------------------------------------
 
 
