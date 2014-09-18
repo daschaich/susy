@@ -17,9 +17,9 @@
 #define FREP adjoint
 
 // U(2)
-#define NCOL 3
-#define DIMF 9
-#define NUMGEN 9
+#define NCOL 2
+#define DIMF 4
+#define NUMGEN 4
 
 // U(3)
 //#define NCOL 3
