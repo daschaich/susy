@@ -80,7 +80,7 @@ maxIter 5000          # Maximum number of eigenvalue iterations -- only include 
 ckpt_load -1          # If positive, load all subsequent columns of Q from dumped files -- only include with -DPHASE
 ckpt_save -1          # If positive, dump all subsequent columns of Q -- only include with -DPHASE
 
-fresh                 # What to do with lattice at start: only fresh, continue or reload_serial
+fresh                 # What to do with lattice at start: only fresh, random, continue or reload_serial
 coulomb_gauge_fix     # Only coulomb_gauge_fix and no_gauge_fix supported
 forget                # What to do with lattice at end: only forget or save_serial
 # ------------------------------------------------------------------

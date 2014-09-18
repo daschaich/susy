@@ -144,8 +144,8 @@ susy_stout::
 susy_mcrg::
 	${MAKE} -f ${MAKEFILE} target "MYTARGET= $@" \
 	"DEFINES = ${DEFINES} -DPHI_ALGORITHM -DCORR -DMCRG" \
-	"EXTRA_OBJECTS = control_mcrg.o block_mcrg.o rsymm.o \
-	                 d_correlator.o d_correlator_r.o "
+	"EXTRA_OBJECTS = control_mcrg.o block_mcrg.o rsymm.o blocked_ploop.o \
+	                 blocked_rsymm.o d_correlator.o d_correlator_r.o path.o "
 
 susy_bilin::
 	${MAKE} -f ${MAKEFILE} target "MYTARGET= $@" \

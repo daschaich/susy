@@ -1,15 +1,11 @@
 // -----------------------------------------------------------------
 // Walk around specified path of fundamental links
-#include "susy_includes.h"
-// -----------------------------------------------------------------
-
-
-
-// -----------------------------------------------------------------
 // dir is a list of the directions in the path, with the given length
 // sign is the corresponding list of which way to go in the given dir
 // That is, the negative sign means take the adjoint
 // Uses tempmat1 to accumulate linkf product along path
+#include "susy_includes.h"
+
 void path(int *dir, int *sign, int length) {
   register int i;
   register site *s;

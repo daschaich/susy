@@ -113,7 +113,8 @@ void adjugate(su3_matrix_f *in, su3_matrix_f *out);
 // Matrix invert is just adjugate divided by determinant
 void invert(su3_matrix_f *in, su3_matrix_f *out);
 
-// Modified Wilson loops use invert
+// Modified Wilson loops use invert and path
+void path(int *dir, int *sign, int length);
 void rsymm();
 // -----------------------------------------------------------------
 
@@ -146,7 +147,6 @@ void hvy_pot();
 void hvy_pot_polar();
 
 // These construct explicit paths along lattice principal axes, for checking
-void path(int *dir, int *sign, int length);
 void hvy_pot_loop();
 void hvy_pot_polar_loop();
 

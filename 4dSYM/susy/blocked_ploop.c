@@ -1,84 +1,57 @@
 // -----------------------------------------------------------------
-// Evaluate the Polyakov loops using general_gathers
-// Compute the Polyakov loop "at" the even sites in the first two time slices
-// If PLOOPDIST dist defined (currently broken!),
-// report the distribution of ploop values as a function of each x y z
-#include "generic_includes.h"
+// Evaluate the Polyakov loop after block RG blocking steps
+// Use general_gathers; lattice must be divisible by 2^block in all dirs
+#include "susy_includes.h"
 
-complex ploop() {
-  register int i, t;
+void blocked_ploop(int block) {
+  register int i;
   register site *s;
-  int d[4] = {0, 0, 0, 0};    // Path from which to gather
-  complex sum  = cmplx(0.0, 0.0), plp;
+  int j, bl = 2, d[4] = {0, 0, 0, 0};
+  complex sum = cmplx(0.0, 0.0), plp;
   msg_tag *tag;
-#ifdef PLOOPDIST
-  int x, y, z;
-  node0_printf("PLOOPDIST currently broken!");
-  terminate(1);
-#endif
 
-  // First multiply the link on every even site by the link above it
-  tag = start_gather_site(F_OFFSET(linkf[TUP]), sizeof(su3_matrix_f),
-                          TUP, EVEN, gen_pt[0]);
-  wait_gather(tag);
-  FOREVENSITES(i, s) {
-    mult_su3_nn_f(&(s->linkf[TUP]), (su3_matrix_f *)gen_pt[0][i],
-                  &(s->tempmat1));
-  }
-  cleanup_gather(tag);
+  // Allow sanity check of reproducing ploop() with this routine
+  if (block <= 0)
+    bl = 1;
 
-  for (t = 2; t < nt; t += 2) {
-    d[TUP] = t;               // Path from which to gather
+  // Set number of links to stride, bl = 2^block
+  for (j = 1; j < block; j++)
+    bl *= 2;
+
+  // Copy temporal links to tempmat1
+  FORALLSITES(i, s)
+    su3mat_copy_f(&(s->linkf[TUP]), &(s->tempmat1));
+
+  // Compute the bl-strided Polyakov loop "at" ALL the sites
+  // on the first bl = 2^block timeslices
+  for (j = bl; j < nt; j += bl) {
+    d[TUP] = j;               // Path from which to gather
     tag = start_general_gather_site(F_OFFSET(tempmat1), sizeof(su3_matrix_f),
-                                    d, EVEN, gen_pt[0]);
+                                    d, EVENANDODD, gen_pt[0]);
     wait_general_gather(tag);
 
-    // Overwrite tempmat1 on the first two time slices
+    // Overwrite tempmat1 on the first bl time slices
     // Leave the others undisturbed so we can still gather them
-    FOREVENSITES(i, s) {
-      if (s->t > 1)
-        continue;  // Only compute on first two slices
+    FORALLSITES(i, s) {
+      if (s->t >= bl)
+        continue;
       mult_su3_nn_f(&(s->tempmat1), (su3_matrix_f *)gen_pt[0][i],
                     &(s->tempmat2));
       su3mat_copy_f(&(s->tempmat2), &(s->tempmat1));
     }
     cleanup_general_gather(tag);
   }
-  FOREVENSITES(i, s) {
-    if (s->t > 1)
+  FORALLSITES(i, s) {
+    if (s->t >= bl)
       continue;
     plp = trace_su3_f(&(s->tempmat1));
-#ifdef PLOOPDIST
-    // Save result in tempmat1 for t = 0 or 1 slice
-    THIS IS WRONG
-    s->tempmat1.e[0][0] = plp;
-#endif
     CSUM(sum, plp);
   }
 
-#ifdef PLOOPDIST
-  // Report ploop distribution
-  for (x = 0; x < nx; x++) {
-    for (y = 0; y < ny; y++) {
-      for (z = 0; z < nz; z++) {
-        t = (x + y + z) % 2;
-        i = node_index(x, y, z, t);
-        if (node_number(x, y, z, t) != mynode())
-          plp = cmplx(0.0, 0.0);
-        THIS IS WRONG
-        else
-          plp = lattice[i].tempmat1.e[0][0];
-        g_sync();
-        g_complexsum(&plp);
-        node0_printf("PLOOP %d %d %d %.4g %.4g\n", x, y, z, plp.real, plp.imag);
-      }
-    }
-  }
-#endif
-
+  // Average all the loops we just calculated
   g_complexsum(&sum);
-  plp.real = sum.real / ((Real)(nx * ny * nz));
-  plp.imag = sum.imag / ((Real)(nx * ny * nz));
-  return plp;
+  plp.real = sum.real / ((Real)(nx * ny * nz * bl));
+  plp.imag = sum.imag / ((Real)(nx * ny * nz * bl));
+  node0_printf("BPLOOP %d %.8g %.8g\n", block, plp.real, plp.imag);
 }
 // -----------------------------------------------------------------

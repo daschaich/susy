@@ -10,7 +10,7 @@
 
 // -----------------------------------------------------------------
 int main(int argc, char *argv[]) {
-  int prompt, mu, j, bl, blmax;
+  int prompt, j, bl, blmax;
   double dssplaq, dstplaq, dtime;
   complex plp = cmplx(99, 99);
 
@@ -79,7 +79,7 @@ int main(int argc, char *argv[]) {
   for (bl = 1; bl <= blmax; bl++) {
     block_mcrg(bl);
 
-    // Calculate and print blocked Polyakov loop and Wilson loops
+    // Calculate and print blocked Polyakov and Wilson loops
     blocked_ploop(bl);
     blocked_rsymm(bl);
   }
