@@ -8,8 +8,7 @@
 void c_scalar_mult_sub_su3mat(su3_matrix *a, su3_matrix *b,
                               complex *s, su3_matrix *c) {
 
-#ifndef REALREP // Never used for REALREP
-  register int i,j;
+  register int i, j;
   complex t;
   for (i = 0; i < DIMF; i++) {
     for (j = 0; j < DIMF; j++) {
@@ -17,6 +16,5 @@ void c_scalar_mult_sub_su3mat(su3_matrix *a, su3_matrix *b,
       CSUB(a->e[i][j], t, c->e[i][j]);
     }
   }
-#endif
 }
 // -----------------------------------------------------------------

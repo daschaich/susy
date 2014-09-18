@@ -1,19 +1,17 @@
 // -----------------------------------------------------------------
 // Outer product of irrep vectors
-// c_ij <-- A_i Bdag_j
+// c_ij <-- a_i bdag_j
 #include "../include/config.h"
 #include "../include/complex.h"
 #include "../include/su3.h"
 
 #ifndef FAST
 void su3_projector(su3_vector *a, su3_vector *b, su3_matrix *c) {
-#ifndef REALREP   // Never used for REALREP
   register int i, j;
   for (i = 0; i < DIMF; i++) {
     for (j = 0; j < DIMF; j++)
       CMUL_J(a->c[i], b->c[j], c->e[i][j]);
   }
-#endif
 }
 #else   // FAST version for DIMF=3 only
 void su3_projector(su3_vector *a, su3_vector *b, su3_matrix *c) {

@@ -8,7 +8,6 @@
 void c_scalar_mult_add_su3mat(su3_matrix *a, su3_matrix *b,
                               complex *s, su3_matrix *c) {
 
-#ifndef REALREP // Never used for REALREP
   register int i, j;
   complex t;
   for (i = 0; i < DIMF; i++) {
@@ -17,6 +16,5 @@ void c_scalar_mult_add_su3mat(su3_matrix *a, su3_matrix *b,
       CADD(a->e[i][j], t, c->e[i][j]);
     }
   }
-#endif
 }
 // -----------------------------------------------------------------
