@@ -125,7 +125,7 @@ void loadQ(complex **Q, int ckpt_load) {
     if (this_node == 0 && mynode != -1) {
       for (i = ckpt_load; i < volume * Ndat; i++) {
         for (j = 0; j < sites_on_node * Ndat; j++)
-          tbuf[i][j] = cmplx(0.0, 0.0);   // Compiler warning...
+          tbuf[i][j] = cmplx(0.0, 0.0);   // Gives ignorable compiler warning
       }
 
       tbuf[savi][savj] = cmplx(re, im);

@@ -128,7 +128,7 @@ void exp_mult() {
 // -----------------------------------------------------------------
 // Do stout smearing
 // Overwrite s->linkf and save original values in thin_link field
-void block_stout(int Nstout, double rho) {
+void stout_smear(int Nstout, double rho) {
   register int i, n, dir, dir2;
   register site *s;
   su3_matrix_f tmat;
@@ -172,7 +172,7 @@ void block_stout(int Nstout, double rho) {
   }
 
 #ifdef TIMING
-  TOC(0, time_block_stout)
+  TOC(0, time_stout)
 #endif
 }
 // -----------------------------------------------------------------

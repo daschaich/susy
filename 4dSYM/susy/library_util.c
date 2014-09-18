@@ -1,5 +1,7 @@
 // -----------------------------------------------------------------
-// Routines that eventually should be moved into the libraries
+// Mostly routines on individual Twist_Fermions,
+// which could be moved into the libraries
+// The last two are exceptions: they copy or shift for all sites
 #include "susy_includes.h"
 // -----------------------------------------------------------------
 
@@ -39,7 +41,7 @@ void dump_TF(Twist_Fermion *source) {
     dumpvec(&(source->Flink[mu]));
   }
   for (mu = 0; mu < NUMLINK; mu++) {
-    for (nu = 0; nu < NUMLINK; nu++) {    // Check proper structure
+    for (nu = 0; nu < NUMLINK; nu++) {    // Check for anti-symmetry
 //    for (nu = mu + 1; nu < NUMLINK; nu++) {
       node0_printf("Fplaq %d %d: ", mu, nu);
       dumpvec(&(source->Fplaq[mu][nu]));

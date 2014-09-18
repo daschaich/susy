@@ -112,6 +112,9 @@ void adjugate(su3_matrix_f *in, su3_matrix_f *out);
 
 // Matrix invert is just adjugate divided by determinant
 void invert(su3_matrix_f *in, su3_matrix_f *out);
+
+// Modified Wilson loops use invert
+void rsymm();
 // -----------------------------------------------------------------
 
 
@@ -160,13 +163,16 @@ void hvy_pot_polar_loop();
 void zheev_(char *doV, char *uplo, int *N1, double *store, int *N2,
             double *eigs, double *work, int *Nwork, double *Rwork, int *stat);
 void polar(su3_matrix_f *a, su3_matrix_f *b);
-
-// Modified Wilson loops use invert in determinant.c
-void rsymm();
 #endif
 
 // Monopole computation uses find_det
 void monopole();
+
+#ifdef MCRG
+void block_mcrg(int bl);
+void blocked_ploop(int bl);
+void blocked_rsymm(int bl);
+#endif
 // -----------------------------------------------------------------
 
 

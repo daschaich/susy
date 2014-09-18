@@ -145,7 +145,7 @@ void randomlat() {
   d_plaquette(&dssplaq, &dstplaq);
   plaq = (dssplaq + dstplaq) / 2.0;
   while (plaq < 0.999 * NCOL && num_stout < volume) {
-    block_stout(1, 0.1);
+    stout_smear(1, 0.1);
     d_plaquette(&dssplaq, &dstplaq);
     plaq = (dssplaq + dstplaq) / 2.0;
     num_stout++;

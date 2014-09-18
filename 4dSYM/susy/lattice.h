@@ -201,7 +201,7 @@ EXTERN int ckpt_load, ckpt_save;    // For checkpointing
 // Up to 20 concurrent timers for timing, not currently being used
 #ifdef TIMING
 EXTERN double tmptime[20];
-EXTERN double time_block_stout;     // Uses tmptime[0] in block_stout
+EXTERN double time_stout;           // Uses tmptime[0] in stout_smear
 #endif
 
 #endif // _LATTICE_H

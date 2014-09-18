@@ -321,8 +321,8 @@ void gaugefixstep(int gauge_dir, double *av_gauge_fix_action,
       }
       cleanup_gather(mtag[dir]);    // Done with gen_pt[dir]
 
-      /* Synchronize to make sure the previous copy happens before the */
-      /* subsequent gather below  */
+      // Synchronize to make sure the previous copy happens before the
+      // subsequent gather below
       g_sync();
 
       // Gather diffmat onto sites of opposite parity
@@ -332,7 +332,6 @@ void gaugefixstep(int gauge_dir, double *av_gauge_fix_action,
       else
         mtag[dir] = start_gather_field(diffmatp, sizeof(su3_matrix_f),
                                        dir, OPP_PAR(parity), gen_pt[dir]);
-
       wait_gather(mtag[dir]);
 
       // Copy modified matrices into proper location

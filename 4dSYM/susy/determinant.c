@@ -197,7 +197,7 @@ void adjugate(su3_matrix_f *src, su3_matrix_f *dest) {
   }
 #endif
 #if (NCOL > 4)
-  node0_printf("Haven't coded adjugate for more than 3 colors\n");
+  node0_printf("Haven't coded adjugate for more than 4 colors\n");
   exit(1);
 #endif
 }
@@ -226,7 +226,7 @@ void invert(su3_matrix_f *in, su3_matrix_f *out) {
   }
 #endif
 #if (NCOL > 4)
-  node0_printf("Haven't coded invert for more than 3 colors\n");
+  node0_printf("Haven't coded invert for more than 4 colors\n");
   exit(1);
 #endif
 }

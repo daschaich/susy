@@ -88,6 +88,6 @@ void restrict_fourier(
 
 // stout.c
 // Stout smearing
-void block_stout(int Nstout, double rho);
+void stout_smear(int Nstout, double rho);
 #endif
 // -----------------------------------------------------------------

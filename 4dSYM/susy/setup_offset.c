@@ -168,7 +168,7 @@ void setup_offset() {
   // The first eight elements of gather_array are
   //   XUP, YUP, ZUP, TUP, TDOWN, ZDOWN, YDOWN, XDOWN
   // in that order!
-  // In order to use XDOWN ~ XUP + 1, etc., we make the next ten elements
+  // In order to use XDOWN = XUP + 1, etc., we make the next ten elements
   //   XUP, XDOWN, YUP, YDOWN, ZUP, ZDOWN, TUP, TDOWN, DIR_5, -DIR_5
   // Then goffset[0]=8, goffset[1]=10, ..., goffset[4]=16
   // But we can't use these in EVEN or ODD gathers!

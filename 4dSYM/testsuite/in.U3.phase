@@ -22,7 +22,7 @@ error_per_site 1e-5
 nsrc 3
 
 ckpt_load 0
-ckpt_save 0
+ckpt_save 256
 
 reload_serial config.U3.2222
 coulomb_gauge_fix
