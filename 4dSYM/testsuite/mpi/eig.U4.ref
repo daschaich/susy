@@ -2,7 +2,7 @@ N=4 SYM, Nc = 4, DIMF = 16, fermion rep = adjoint
 Microcanonical simulation with refreshing
 Machine = MPI (portable), with 2 nodes
 Phi algorithm
-start: Thu Jul 10 16:50:04 2014
+start: Wed Sep 17 21:28:54 2014
 
 type 0 for no prompts  or 1 for prompts
 nx 4
@@ -14,7 +14,7 @@ LAYOUT = Hypercubes, options = hyper_prime,
 ON EACH NODE 2 x 4 x 4 x 4
 Mallocing 7.2 MBytes per core for lattice
 Antiperiodic temporal boundary conditions
-Mallocing 3.2 MBytes per core for fields
+Mallocing 3.8 MBytes per core for fields
 
 
 warms 0
@@ -41,7 +41,7 @@ C2=1
 Restored binary gauge configuration serially from file config.U4.4444
 Time stamp Mon Mar 10 01:35:06 2014
 Checksums ce4f54ee b21063bd OK
-Time to reload gauge configuration = 1.162052e-03
+Time to reload gauge configuration = 1.492977e-03
 CHECK PLAQ: 3.9690172037663753e+00 4.0465849603109891e+00
 CHECK NERSC LINKTR: -2.4034447801213332e-03 CKSUM: 0
 START 3.9690172 4.046585 8.0156022 70.27647
@@ -87,5 +87,5 @@ BIGEIGVAL  10 22.004518 4.0203646e-14
 BIGEIGVAL  11 22.004518 4.3726938e-14
 RUNNING COMPLETED
 
-Time = 206.4 seconds
+Time = 203.6 seconds
 total_iters = 2884
