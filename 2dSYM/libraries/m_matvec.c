@@ -8,19 +8,13 @@
 #ifndef FAST
 void mult_su3_mat_vec(su3_matrix *a, su3_vector *b, su3_vector *c) {
   register int i, j;
-  register complex x;
+  register complex x, y;
   for (i = 0; i < DIMF; i++) {
     x.real = 0.0;
     x.imag = 0.0;
     for (j = 0; j < DIMF; j++) {
-#ifndef REALREP
-      register complex y;
       CMUL(a->e[i][j] , b->c[j], y);
       CSUM(x, y);
-#else
-      x.real += a->e[i][j] * b->c[j].real;
-      x.imag += a->e[i][j] * b->c[j].imag;
-#endif
     }
     c->c[i] = x;
   }

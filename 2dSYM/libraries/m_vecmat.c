@@ -1,7 +1,6 @@
 // -----------------------------------------------------------------
 // Irrep vector--matrix operation with no adjoints
 // c <-- b * a
-// No FAST or REALREP implementation yet
 #include "../include/config.h"
 #include "../include/complex.h"
 #include "../include/su3.h"

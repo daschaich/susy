@@ -5,11 +5,11 @@
 #include "../include/macros.h"  // For MAXFILENAME
 
 typedef struct {
-  int stopflag;       // 1 if it is time to stop
+  int stopflag;             // 1 if it is time to stop
 
   // Initialization parameters
-  int nx, nt;         // Lattice dimensions
-  int iseed;          // For random numbers
+  int nx, nt;               // Lattice dimensions
+  int iseed;                // For random numbers
 
   int warms;                // The number of warmup trajectories
   int trajecs;              // The number of real trajectories
@@ -30,10 +30,15 @@ typedef struct {
   char startfile[MAXFILENAME], savefile[MAXFILENAME];
   char stringLFN[MAXFILENAME];  // ILDG LFN if applicable
 
-  // Eigenvalue parameters
 #ifdef EIG
+  // Eigenvalue parameters
   int Nvec, maxIter;
   Real eig_tol;
+#endif
+
+#ifdef PHASE
+  // Pfaffian parameters
+  int ckpt_load, ckpt_save;
 #endif
 } params;
 #endif

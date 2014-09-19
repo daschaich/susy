@@ -6,7 +6,6 @@
 #include "../include/su3.h"
 
 void c_scalar_mult_su3mat(su3_matrix *b, complex *s, su3_matrix *c) {
-#ifndef REALREP // Never used for REALREP
   register int i, j;
   register double sr, si, br, bi, cr, ci;
 
@@ -24,6 +23,5 @@ void c_scalar_mult_su3mat(su3_matrix *b, complex *s, su3_matrix *c) {
     c->e[i][j].imag = ci;
     }
   }
-#endif
 }
 // -----------------------------------------------------------------

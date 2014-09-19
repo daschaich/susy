@@ -132,8 +132,7 @@ int update_step(Real *old_cg_time,Real *cg_time,Real *next_cg_time,
 
 // -----------------------------------------------------------------
 int update() {
-  int i;
-  int iters = 0;
+  int i, iters = 0;
   Real final_rsq, cg_time[2], old_cg_time[2], next_cg_time[2];
   double gnorm = 0.0, fnorm[2] = {0.0, 0.0};
   double startaction = 0.0, endaction, change;
@@ -151,19 +150,18 @@ int update() {
 
   // Set up the fermion variables, if needed
 #ifndef PUREGAUGE
-  fermion_rep();
-
-  // Compute g and src = (Mdag M)^(-1 / 8) g, etc.
+  // Compute g and src = (Mdag M)^(1 / 8) g
   iters += grsource(src);
 
-  // Do a CG to get psim, components of (Mdag M)^(-1 / 4) src = (Mdag M)^(-1 / 8) R
+  // Do a CG to get psim,
+  // rational approximation to (Mdag M)^(-1 / 4) src = (Mdag M)^(-1 / 8) g
   for (i = 0; i < Norder; i++)
     shift[i] = shift4[i];
 #ifdef UPDATE_DEBUG
   node0_printf("Calling CG in update_o -- original action\n");
 #endif
   iters += congrad_multi_field(src, psim, niter, rsqmin, &final_rsq);
-#endif
+#endif // ifndef PUREGAUGE
 
   // Find initial action
   startaction = d_action(src, psim);
@@ -217,7 +215,7 @@ int update() {
 #endif // ifdef HMC
 
   if (traj_length > 0) {
-    node0_printf("IT_PER_TRAJ %d\n", iters );
+    node0_printf("IT_PER_TRAJ %d\n", iters);
     node0_printf("MONITOR_FORCE_GAUGE %.4g\n",
                  gnorm / (double)(2 * nsteps[0]));
     node0_printf("MONITOR_FORCE_FERMION0 %.4g\n",

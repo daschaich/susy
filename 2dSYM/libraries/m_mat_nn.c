@@ -8,7 +8,6 @@
 #ifndef FAST
 void mult_su3_nn(su3_matrix *a, su3_matrix *b, su3_matrix *c) {
   register int i, j, k;
-#ifndef REALREP
   register complex x, y;
   for (i = 0; i < DIMF; i++) {
     for (j = 0; j < DIMF; j++) {
@@ -21,18 +20,6 @@ void mult_su3_nn(su3_matrix *a, su3_matrix *b, su3_matrix *c) {
       c->e[i][j] = x;
     }
   }
-#else
-  register Real x;
-  for (i = 0; i < DIMF; i++) {
-    for (j = 0; j < DIMF; j++) {
-      x = 0.0;
-      for (k = 0; k < DIMF; k++)
-        x += a->e[i][k] * b->e[k][j];
-
-      c->e[i][j] = x;
-    }
-  }
-#endif
 }
 #else   // FAST version for NCOL=3 only
 void mult_su3_nn(su3_matrix *a, su3_matrix *b, su3_matrix *c) {

@@ -1,9 +1,9 @@
 // -----------------------------------------------------------------
 // Measure the phase of the pfaffian
 // Based on the algorithm in the appendix of hep-lat/0305002
-// hep-lat/9903014 provides important definitions and caveats (!!!)
+// !!! hep-lat/9903014 provides important definitions and caveats
 #include "susy_includes.h"
-#define PFA_TOL 1e-8
+#define PFA_TOL 1e-12
 // -----------------------------------------------------------------
 
 
@@ -98,6 +98,7 @@ void matvec(complex *in, complex *out) {
 
 
 // -----------------------------------------------------------------
+#ifdef PHASE
 void d_phase() {
   register int i, j, k;
   int Ndat = 4 * DIMF, shift = this_node * sites_on_node * Ndat;
@@ -113,30 +114,46 @@ void d_phase() {
     terminate(1);
   }
 
-  // Allocate and initialize Q to unit matrix
+  // Allocate and initialize Q, checking whether or not to reload
   // Each Twist_Fermion has Ndat = 4DIMF non-trivial complex components
   // We keep part of every column on this node
-  for (i = 0; i < volume * Ndat; i++) {
+  // The diagonal elements are distributed across different nodes
+  // according to shift = this_node * sites_on_node * Ndat defined above
+  // Below we will only set diag[i] on the appropriate node
+  // and then scatter it by summing over nodes
+  if (ckpt_load < 0)
+    ckpt_load = 0;    // Cheap trick to allocate minimum necessary columns
+  for (i = ckpt_load; i < volume * Ndat; i++) {
     Q[i] = malloc(sites_on_node * Ndat * sizeof(complex));
-    for (j = 0; j < sites_on_node * Ndat; j++)
-      Q[i][j] = cmplx(0.0, 0.0);
-
-    // Somewhat hacky: below we will only set diag[i] on the appropriate node
-    // and then scatter it by summing over nodes
-    diag[i] = cmplx(0.0, 0.0);
+    diag[i] = cmplx(0.0, 0.0);    // Initialize to zero
   }
   if (Q[volume * Ndat - 1] == NULL) {
     printf("d_phase: can't malloc Q[i]\n");
     fflush(stdout);
     terminate(1);
   }
-  // The diagonal elements are distributed across different nodes
-  // according to shift = this_node * sites_on_node * Ndat defined above
-  for (i = 0; i < sites_on_node * Ndat; i++)
-    Q[shift + i][i] = cmplx(1.0, 0.0);
 
-  // Cycle over ALL pairs of columns
-  for (i = 0; i < volume * Ndat - 1; i += 2) {
+  if (ckpt_load > 0) {    // Load from files
+    load_diag(diag, ckpt_load);   // Overwrite initial zeroes above
+    loadQ(Q, ckpt_load);
+  }
+  else {                  // Initialize to zero
+    for (i = 0; i < volume * Ndat; i++) {
+      for (j = 0; j < sites_on_node * Ndat; j++)
+        Q[i][j] = cmplx(0.0, 0.0);
+    }
+    for (i = 0; i < sites_on_node * Ndat; i++)
+      Q[shift + i][i] = cmplx(1.0, 0.0);
+  }
+
+  // Cycle over ALL pairs of columns after ckpt_load
+  for (i = ckpt_load; i < volume * Ndat - 1; i += 2) {
+    // Checkpoint if requested -- make sure ckpt_save = 0 doesn't trigger this
+    if (i == ckpt_save || i + 1 == ckpt_save) {
+      if (ckpt_save > 0)
+        break;
+    }
+
     node0_printf("Columns %d--%d of %d: ", i + 1, i + 2, volume * Ndat);
     Nmatvecs = 0;
     dtime = -dclock();
@@ -147,8 +164,8 @@ void d_phase() {
     temp = dot(Q[i + 1], MonC);
     // !!! Must have non-vanishing matrix element!
     if (cabs_sq(&temp) < PFA_TOL) {
-      printf("d_phase: <i+1 | D | i> = (%.4g, %.4g) too small for i = %d\n",
-             temp.real, temp.imag, i);
+      node0_printf("d_phase: <%d | D | %d> = (%.4g, %.4g) too small\n",
+                   i + 2, i + 1, temp.real, temp.imag);
       terminate(1);
     }
 
@@ -210,12 +227,23 @@ void d_phase() {
     if (0 <= i + 1 - shift && i + 1 - shift < sites_on_node * Ndat)
       set_complex_equal(&(Q[i + 1][i + 1 - shift]), &(diag[i + 1]));
     g_complexsum(&(diag[i + 1]));
-    node0_printf("%.8g %.8g\n", diag[i + 1].real, diag[i + 1].imag);
+    node0_printf("%.16g %.16g\n", diag[i + 1].real, diag[i + 1].imag);
     fflush(stdout);
 
     // Done with these
     free(Q[i]);
     free(Q[i + 1]);
+  }
+  if (ckpt_save > 0) {    // Write out from ckpt_save to the end and finish
+    save_diag(diag, ckpt_save);
+    free(diag);
+
+    saveQ(Q, ckpt_save);
+    for (i = ckpt_save; i < volume * Ndat; i++)
+      free(Q[i]);
+    free(Q);
+    free(MonC);
+    return;   // Not ready for pfaffian yet
   }
   free(MonC);
   free(Q);
@@ -245,4 +273,5 @@ void d_phase() {
                fabs(cos(phase)), fabs(sin(phase)));
   free(diag);
 }
+#endif
 // -----------------------------------------------------------------

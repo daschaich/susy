@@ -23,18 +23,9 @@
 int setup();
 int readin(int prompt);
 int update();
-double update_gauge_step(Real eps);
 void update_h(Real eps);
 void update_u(Real eps);
-
 void gauge_action(double *result);
-void udadu_mu_nu(field_offset lsrc, field_offset rsrc, field_offset mat,
-                 int mu, int nu, int parity);
-void udadu_mat_mu_nu(field_offset matsrc, field_offset matdest,
-                     int mu, int nu);
-void chain_rule(su3_matrix_f *sigmaf, su3_matrix *sigma,
-                su3_matrix_f *gaugelinkf);
-void apply_bc(su3_matrix *sigma, int dir, int t);
 // -----------------------------------------------------------------
 
 
@@ -60,9 +51,7 @@ double d_fermion_action();
 
 double gauge_force(Real eps);
 double fermion_force(Real eps, Twist_Fermion *source, Twist_Fermion **psim);
-#ifdef DET
 double det_force(Real eps);
-#endif
 
 // Reproduces void Dplus(Link_Field *src, Plaq_Field *dest);
 void Dplus(su3_vector *src[NUMLINK], su3_vector *dest[NUMLINK][NUMLINK]);
@@ -108,36 +97,59 @@ void scalar_mult_TF(Twist_Fermion *src, Real s, Twist_Fermion *dest);
 void gauge_field_copy_f(field_offset src, field_offset dest);
 void shiftmat(field_offset src, field_offset dest, int dir);
 
-// More determinant routines
-#ifdef DET
+// Determinant-related routines
 void measure_det();
-void adjugate(su3_matrix_f *src, su3_matrix_f *dest);
 complex find_det(su3_matrix_f *Q);
-void ludcmp_cx(su3_matrix_f *a, int *indx, Real *d);
 
-void d_flavor();    // Uses find_det
-#endif
+// Adjugate matrix needed by det_force
+void adjugate(su3_matrix_f *in, su3_matrix_f *out);
+
+// Matrix invert is just adjugate divided by determinant
+void invert(su3_matrix_f *in, su3_matrix_f *out);
+
+// Modified Wilson loops use invert and path
+void path(int *dir, int *sign, int length);
+void rsymm();
 // -----------------------------------------------------------------
 
 
 
 // -----------------------------------------------------------------
-// Correlators and Wilson loops
+// More measurements
 #ifdef CORR
-void d_correlator();    // Konishi and SUGRA correlators
+// Konishi and SUGRA correlators
+void d_correlator();    // Projected to zero spatial momentum
 #endif
-#ifdef BILIN            // vevs to explore susy breaking
+#ifdef BILIN
+// vevs to explore susy breaking
 int d_bilinear();       // Fermion bilinear
 int d_susyTrans();      // Supersymmetry transformation
 #endif
 #ifdef PL_CORR
-void ploop_c();         // Polyakov loop correlator
+// Polyakov loop correlator -- NOT CURRENTLY IN USE
+void ploop_c();
 void print_var3(char *label);
 #endif
 #ifdef WLOOP
+// Wilson loops -- including determinant division and polar projection
+// These look at correlators of products of temporal links,
+// which requires gauge fixing
 void hvy_pot();
-void polar(su3_matrix_f *a, su3_matrix_f *b);
 void hvy_pot_polar();
+
+// Use LAPACK in the polar projection
+// http://www.physics.orst.edu/~rubin/nacphy/lapack/routines/zheev.html
+// First argument turns on eigenvector computations
+// Second argument chooses between storing upper or lower triangle
+// Third and fifth arguments are the dimensions of the matrix
+// Fourth argument is that matrix, overwritten by the eigenvectors
+// Sixth argument holds the computed eigenvalues
+// Seventh argument is real workspace of size given by the eighth argument
+// Ninth argument is real workspace of size 3 * NCOL - 2
+// Final argument reports success or information about failure
+void zheev_(char *doV, char *uplo, int *N1, double *store, int *N2,
+            double *eigs, double *work, int *Nwork, double *Rwork, int *stat);
+void polar(su3_matrix_f *a, su3_matrix_f *b);
 #endif
 // -----------------------------------------------------------------
 
@@ -147,19 +159,21 @@ void hvy_pot_polar();
 // Eigenvalue routines
 #ifdef EIG
 #include "primme.h"
-int make_evs(int Nvec, Twist_Fermion **eigVec, double *eigVal);
+int make_evs(int Nvec, Twist_Fermion **eigVec, double *eigVal, int flag);
 void check_Dmat(int Nvec, Twist_Fermion **eigVec);
 
-// LAPACK is only used to diagonalize <psi_j | D | psi_i>
+// Use LAPACK to diagonalize <psi_j | D | psi_i>
 // on the subspace of Ddag.D eigenvalues psi
 // http://www.physics.orst.edu/~rubin/nacphy/lapack/routines/zgeev.html
 // First two arguments turn off eigenvector computations
 // Third and fifth arguments are the dimensions of the matrix
-// Fourth argument is that matrix, to be overwritten
+// Fourth argument is that matrix, which will be overwritten
 // Sixth argument holds the computed eigenvalues
 // Seventh and ninth arguments are eigenvectors
 // Eighth and tenth arguments are the dimensions of the eigenvectors
-// Eleventh argument is real workspace
+// Eleventh argument is real workspace, of size given by the twelfth argument
+// Thirteenth argument is real workspace, of size given by the third argument
+// Final argument reports success or information about failure
 void zgeev_(char *doL, char *doR, int *N1, double *store, int *N2, double *eigs,
             double *dumL, int *NL, double *dumR, int *NR,
             double *work, int *Nwork, double *Rwork, int *stat);

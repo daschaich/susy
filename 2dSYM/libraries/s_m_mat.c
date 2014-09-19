@@ -10,12 +10,8 @@ void scalar_mult_su3_matrix(su3_matrix *a, Real s, su3_matrix *b) {
   register int i, j;
   for (i = 0; i < DIMF; i++) {
     for (j = 0; j < DIMF; j++) {
-#ifndef REALREP
       b->e[i][j].real = s * a->e[i][j].real;
       b->e[i][j].imag = s * a->e[i][j].imag;
-#else
-      b->e[i][j] = s * a->e[i][j];
-#endif
     }
   }
 #else   // FAST version for DIMF=3 only

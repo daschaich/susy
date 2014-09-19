@@ -1,5 +1,7 @@
 // -----------------------------------------------------------------
-// Main procedure for N=4 SYM correlator and bilinear measurements
+// Main procedure for N=4 SYM measurements on saved configurations,
+// including scalar correlators, Wilson loops, Ward identity violations
+// and discrete R symmetry observables
 #define CONTROL
 #include "susy_includes.h"
 // -----------------------------------------------------------------
@@ -23,10 +25,13 @@ int main(int argc, char *argv[]) {
   prompt = setup();
   setup_lambda();
 
-#ifdef PL_CORR
-  // Set up Fourier transform for Polyakov loop correlator
+#ifdef WLOOP
   register int i;
   register site *s;
+#endif
+
+#ifdef PL_CORR
+  // Set up Fourier transform for Polyakov loop correlator
   int key[4] = {1, 1, 1, 0};
   int restrict[4];
   Real space_vol = (Real)nx;
@@ -64,13 +69,8 @@ int main(int argc, char *argv[]) {
   node0_printf("BACTION %.8g\n", dplaq / (double)volume);
 
   // Main measurements
-#ifdef DET
   // Plaquette determinant
   measure_det();
-
-  // Flavor transformation observables -- uses find_det
-  d_flavor();
-#endif
 
 #ifdef PL_CORR
   // Polyakov loop correlator
@@ -102,9 +102,21 @@ int main(int argc, char *argv[]) {
 #endif
 
 #ifdef BILIN
-  // Fermion bilinear and supersymmetry transformation vevs
-  int avm_iters = d_bilinear();
-  avm_iters += d_susyTrans();
+  // Ward identity violations
+  int avm_iters = d_susyTrans();
+
+  // Don't run d_bilinear() for now
+  // In the future it may be useful
+  // to compare U(1) vs. SU(N) contributions
+//  avm_iters += d_bilinear();
+#endif
+
+#ifdef CORR
+  // R symmetry transformations -- use find_det and adjugate
+  rsymm();
+
+  // Measure density of monopole world lines in non-diagonal cubes
+//  monopole();
 #endif
 
 #ifdef WLOOP
@@ -130,20 +142,12 @@ int main(int argc, char *argv[]) {
     node0_printf("and NO_GAUGE_FIX supported\n");
     terminate(1);
   }
-
-  // We only consider the fundamental links
-  // The irrep links would require separate routines
-  // with the correct data structures (su3_matrix instead of su3_matrix_f)
   hvy_pot();
 
-  // Polar projection overwrites temporal links
-  // Need to save and restore if checking effect of gauge transformation
+  // Save and restore links overwritten by polar projection
   FORALLSITES(i, s)
     su3mat_copy_f(&(s->linkf[TUP]), &(s->mom[TUP]));
-
   hvy_pot_polar();
-
-  // Restore non-unitary temporal links
   FORALLSITES(i, s)
     su3mat_copy_f(&(s->mom[TUP]), &(s->linkf[TUP]));
 #endif

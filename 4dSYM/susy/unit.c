@@ -1,11 +1,7 @@
 // -----------------------------------------------------------------
 // Polar projection now using LAPACK
 #include "susy_includes.h"
-// -----------------------------------------------------------------
 
-
-
-// -----------------------------------------------------------------
 // Given matrix in, calculate the unitary polar decomposition element
 //   in = out.P --> out = in.[1 / P] and P = sqrt[in^dag.in]
 // We diagonalize PSq = in^dag.in using LAPACK,

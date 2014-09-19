@@ -9,6 +9,7 @@
 
 // -----------------------------------------------------------------
 // Update mom[NUMLINK] with the gauge force
+// Include tunable coefficient C2 in the d^2 term of the action
 double gauge_force(Real eps) {
   register int i, mu, nu;
   register site *s;
@@ -18,11 +19,11 @@ double gauge_force(Real eps) {
   msg_tag *tag[NUMLINK], *tag0, *tag1;
   su3_matrix_f tmat1, tmat2, tmat3, UdU;
 
+  // Contribution from (D_a U_a)^2 / 2 term
   compute_DmuUmu();
-  compute_Fmunu();
   // To reproduce:
   //   f_U.set(x, mu, f_U.get(x, mu) + Udag.get(x, mu) * DmuUmu.get(x));
-  //   f_U.set(x, mu, f_U.get(x, mu) - DmuUmu.get(x + e_mu) * Udag.get(x,mu));
+  //   f_U.set(x, mu, f_U.get(x, mu) - DmuUmu.get(x + e_mu) * Udag.get(x, mu));
   tag[0] = start_gather_site(F_OFFSET(DmuUmu), sizeof(su3_matrix_f),
                              goffset[0], EVENANDODD, gen_pt[0]);
   for (mu = 0; mu < NUMLINK; mu++) {
@@ -35,11 +36,14 @@ double gauge_force(Real eps) {
     FORALLSITES(i, s) {
       mult_su3_an_f(&(s->linkf[mu]), &(s->DmuUmu), &tmat1);
       mult_su3_na_f((su3_matrix_f *)gen_pt[mu][i], &(s->linkf[mu]), &tmat2);
-      sub_su3_matrix_f(&tmat1, &tmat2, &(s->f_U[mu]));
+      sub_su3_matrix_f(&tmat1, &tmat2, &tmat3);
+      scalar_mult_su3_matrix_f(&tmat3, C2, &(s->f_U[mu]));    // Initialize
     }
     cleanup_gather(tag[mu]);
   }
 
+  // Contribution from Fbar_{ab} F_{ab} term
+  compute_Fmunu();
   // To reproduce:
   //   f_U.set(x, mu, f_U.get(x, mu) + 2 * U.get(x + e_mu, nu) * Adj(Fmunu.get(x, mu, nu)));
   //   f_U.set(x, mu, f_U.get(x, mu) - 2 * Adj(Fmunu.get(x - e_nu, mu, nu)) * U.get(x - e_nu, nu));
@@ -61,19 +65,20 @@ double gauge_force(Real eps) {
         mult_su3_na_f((su3_matrix_f *)gen_pt[0][i], &(s->Fmunu[mu][nu]),
                       &tmat1);
         sub_su3_matrix_f(&tmat1, (su3_matrix_f *)gen_pt[1][i], &tmat3);
-        scalar_mult_add_su3_matrix_f(&(s->f_U[mu]), &tmat3, 2, &(s->f_U[mu]));
+        scalar_mult_add_su3_matrix_f(&(s->f_U[mu]), &tmat3, 2.0, &(s->f_U[mu]));
       }
       cleanup_gather(tag0);
       cleanup_gather(tag1);
     }
   }
 
+  // Factor of kappa = N Nt^2 / (2lambda) on both (D_a U_a)^2 and F^2 terms
   for (mu = 0; mu < NUMLINK; mu++) {
     FORALLSITES(i, s)
       scalar_mult_su3_matrix_f(&(s->f_U[mu]), kappa, &(s->f_U[mu]));
   }
 
-  // Only compute U(1) mass term if non-zero
+  // Only compute U(1) mass term if non-zero -- note factor of kappa
   eb3 = 2.0 * kappa * bmass * bmass / (Real)(NCOL * NCOL);
   if (eb3 > 1.e-8) {
     for (mu = 0; mu < NUMLINK; mu++) {
@@ -88,6 +93,7 @@ double gauge_force(Real eps) {
       }
     }
   }
+
   // Finally take adjoint and update the momentum
   // Subtract to reproduce -Adj(f_U)
   for (mu = 0; mu < NUMLINK; mu++) {
@@ -105,9 +111,7 @@ double gauge_force(Real eps) {
   g_doublesum(&returnit);
 
   // Add in force from determinant term
-#ifdef DET
   returnit += det_force(eps);
-#endif
   return (eps * sqrt(returnit) / volume);
 }
 // -----------------------------------------------------------------

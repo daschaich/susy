@@ -22,7 +22,7 @@ int initial_set() {
 #define XSTR(s) STR(s)
 #define STR(s) #s
     // end kludge
-    printf("N=4 SYM SU(%d)  DIMF = %d, fermion rep = " XSTR(FREP) "\n",
+    printf("N=(2, 2) SYM, Nc = %d, DIMF = %d, fermion rep = " XSTR(FREP) "\n",
            NCOL, DIMF);
     printf("Microcanonical simulation with refreshing\n");
     printf("Machine = %s, with %d nodes\n", machine_type(), numnodes());
@@ -152,11 +152,9 @@ int readin(int prompt) {
     IF_OK status += get_i(stdin, prompt, "traj_between_meas",
                           &par_buf.propinterval);
 
-    // lambda, kappa_u1, bmass, fmass
+    // lambda, kappa_u1, bmass and fmass
     IF_OK status += get_f(stdin, prompt, "lambda", &par_buf.lambda);
-#ifdef DET
     IF_OK status += get_f(stdin, prompt, "kappa_u1", &par_buf.kappa_u1);
-#endif
     IF_OK status += get_f(stdin, prompt, "bmass", &par_buf.bmass);
     IF_OK status += get_f(stdin, prompt, "fmass", &par_buf.fmass);
 
@@ -172,11 +170,17 @@ int readin(int prompt) {
     // Number of stochastic sources for fermion bilinear and susy trans
     IF_OK status += get_i(stdin, prompt, "nsrc", &par_buf.nsrc);
 
-    // Number of eigenvalues to calculate
 #ifdef EIG
+    // Number of eigenvalues to calculate
     IF_OK status += get_i(stdin, prompt, "Nvec", &par_buf.Nvec);
     IF_OK status += get_f(stdin, prompt, "eig_tol", &par_buf.eig_tol);
     IF_OK status += get_i(stdin, prompt, "maxIter", &par_buf.maxIter);
+#endif
+
+#ifdef PHASE
+    // Optional checkpointing for pfaffian computation
+    IF_OK status += get_i(stdin, prompt, "ckpt_load", &par_buf.ckpt_load);
+    IF_OK status += get_i(stdin, prompt, "ckpt_save", &par_buf.ckpt_save);
 #endif
 
     // Find out what kind of starting lattice to use
@@ -197,7 +201,7 @@ int readin(int prompt) {
   }
 
   // Broadcast parameter buffer from node0 to all other nodes
-  broadcast_bytes((char *)&par_buf,sizeof(par_buf));
+  broadcast_bytes((char *)&par_buf, sizeof(par_buf));
   if (par_buf.stopflag != 0)
     normal_exit(0);
 
@@ -213,9 +217,7 @@ int readin(int prompt) {
   rsqmin = par_buf.rsqmin;
 
   lambda = par_buf.lambda;
-#ifdef DET
   kappa_u1 = par_buf.kappa_u1;
-#endif
   bmass = par_buf.bmass;
   fmass = par_buf.fmass;
   kappa = (Real)(NCOL * nt * nt) * 0.5 / lambda;
@@ -227,6 +229,10 @@ int readin(int prompt) {
   Nvec = par_buf.Nvec;
   eig_tol = par_buf.eig_tol;
   maxIter = par_buf.maxIter;
+#endif
+#ifdef PHASE
+  ckpt_load = par_buf.ckpt_load;
+  ckpt_save = par_buf.ckpt_save;
 #endif
 
   startflag = par_buf.startflag;

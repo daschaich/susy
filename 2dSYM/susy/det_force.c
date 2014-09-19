@@ -6,7 +6,6 @@
 
 
 // -----------------------------------------------------------------
-#ifdef DET
 double det_force(Real eps) {
   register int i, dir1, dir2;
   register site *s;
@@ -96,7 +95,7 @@ double det_force(Real eps) {
     // Now update momenta
     FORALLSITES(i, s) {
       adjugate(&(s->linkf[dir1]), &dlink);
-      c_scalar_mult_su3mat_f(&dlink, &force[i], &(tmat));
+      c_scalar_mult_su3mat_f(&dlink, &(force[i]), &tmat);
       su3_adjoint_f(&tmat, &(s->f_U[dir1]));
       /* and update the momentum from the gauge force --
          sub because I computed dS/dU and the adjoint because of the way it is */
@@ -116,5 +115,4 @@ double det_force(Real eps) {
   // This will be combined with the usual gauge force terms in update_h.c
   return returnit;
 }
-#endif
 // -----------------------------------------------------------------

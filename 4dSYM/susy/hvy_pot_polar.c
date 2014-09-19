@@ -16,7 +16,7 @@ void hvy_pot_polar() {
   int t_dist, x_dist, y_dist, z_dist, y_start, z_start;
   double wloop;
   su3_matrix_f tmat;
-  msg_tag *mtag;
+  msg_tag *tag;
   field_offset oldmat, newmat, tt;
 
   node0_printf("hvy_pot_polar: MAX_T = %d, MAX_X = %d\n", MAX_T, MAX_X);
@@ -36,14 +36,14 @@ void hvy_pot_polar() {
         su3mat_copy_f(&(s->linkf[TUP]), &(s->tempmat1));
     }
     else {
-      mtag = start_gather_site(F_OFFSET(tempmat1), sizeof(su3_matrix_f),
-                               goffset[TUP], EVENANDODD, gen_pt[0]);
-      wait_gather(mtag);
+      tag = start_gather_site(F_OFFSET(tempmat1), sizeof(su3_matrix_f),
+                              goffset[TUP], EVENANDODD, gen_pt[0]);
+      wait_gather(tag);
       FORALLSITES(i, s) {
         mult_su3_nn_f(&(s->linkf[TUP]), (su3_matrix_f *)gen_pt[0][i],
                       &(s->staple));
       }
-      cleanup_gather(mtag);
+      cleanup_gather(tag);
       FORALLSITES(i, s)
         su3mat_copy_f(&(s->staple), &(s->tempmat1));
     }

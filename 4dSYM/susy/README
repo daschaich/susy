@@ -123,8 +123,6 @@ control_corr.c        -- Main program for correlator measurements only
 control_eig.c         -- Main program for eigenvalues measurements only
 d_bilinear.c          -- Fermion bilinear and susy transformation calculation
 d_correlator.c        -- Konishi and SUGRA correlators
-ploop_corr.c          -- Finds Polyakov loop on every site for correlations with FFT done in control.c
-print_var3.c          -- Prints out results on a 3d lattice (used with ploop_corr)
 hvy_pot.c             -- Computes correlators of gauge-fixed timelike links
 hvy_pot_polar.c       -- Computes correlators of polar-projected gauge-fixed timelike links
                          (NB: overwrites links, which have to be saved and restored if they will be used further)
@@ -139,6 +137,8 @@ eig.c                 -- Eigenvalue measurements using PRIMME
 d_phase.c             -- Phase and (log of) magnitude of the pfaffian
 
 # 1d) Files not currently used, retained for potential future testing
+ploop_corr.c      -- Finds Polyakov loop on every site for correlations with FFT done in control.c
+print_var3.c      -- Prints out results on a 3d lattice (used with ploop_corr)
 update_leapfrog.c -- Leapfrog HMC evolution, includes ranmom() routine
 
 # 2) Routines in the ../generic directory:

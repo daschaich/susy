@@ -1,10 +1,7 @@
 // -----------------------------------------------------------------
 // Update lattice
 // Leapfrog integrator
-
 // Begin at "integral" time, with H and U evaluated at the same time
-// For the final accept/reject, we already have a good solution to the CG
-// The last update was of the momenta
 
 // Uncomment to print out debugging messages
 //#define UPDATE_DEBUG
@@ -64,14 +61,10 @@ int update_step(Real *old_cg_time, Real *cg_time, Real *next_cg_time,
                 Twist_Fermion *src, Twist_Fermion **psim) {
 
   int step, iters = 0;
-  Real eps;
-  Real final_rsq;
+  Real final_rsq, eps = traj_length / (Real)nsteps[0];
+  node0_printf("eps %.4g\n", eps);
 
-  eps = traj_length / (Real)nsteps[0];
-
-  node0_printf("eps %e\n",eps);
-
-  for (step = 1; step <= nsteps[0]; step++) {
+  for (step = 0; step < nsteps[0]; step++) {
     // One step u(t/2) p(t) u(t/2)
     update_uu(0.5 * eps);
 #ifndef PUREGAUGE
@@ -95,8 +88,7 @@ int update_step(Real *old_cg_time, Real *cg_time, Real *next_cg_time,
 
 // -----------------------------------------------------------------
 int update() {
-  int i;
-  int iters = 0;
+  int i, iters = 0;
   Real final_rsq, cg_time[2], old_cg_time[2], next_cg_time[2];
   double gnorm = 0.0, fnorm[2] = {0.0, 0.0};
   double startaction = 0.0, endaction, change;
@@ -114,19 +106,18 @@ int update() {
 
   // Set up the fermion variables, if needed
 #ifndef PUREGAUGE
-  fermion_rep();
-
-  // Compute g and src = (Mdag M)^(-1 / 8) g, etc.
+  // Compute g and src = (Mdag M)^(1 / 8) g
   iters += grsource(src);
 
-  // Do a CG to get psim, components of (Mdag M)^(-1 / 4) src = (Mdag M)^(-1 / 8) R
+  // Do a CG to get psim,
+  // rational approximation to (Mdag M)^(-1 / 4) src = (Mdag M)^(-1 / 8) g
   for (i = 0; i < Norder; i++)
     shift[i] = shift4[i];
 #ifdef UPDATE_DEBUG
   node0_printf("Calling CG in update_leapfrog -- original action\n");
 #endif
   iters += congrad_multi_field(src, psim, niter, rsqmin, &final_rsq);
-#endif
+#endif // ifndef PUREGAUGE
 
   // Find initial action
   startaction = d_action(src, psim);
@@ -141,8 +132,10 @@ int update() {
                        fnorm, &gnorm, src, psim);
 
   // Find ending action
-  // Reuse data from update_step, don't need CG to get (Mdag M)^(-1) chi
-  // If the final step were a gauge update, CG would be necessary
+  // Since update_step ended on a gauge update,
+  // need to do conjugate gradient to get (Mdag M)^(-1 / 4) chi
+  fermion_rep();
+  iters += congrad_multi_field(src, psim, niter, rsqmin, &final_rsq);
   endaction = d_action(src, psim);
   change = endaction - startaction;
 #ifdef HMC_ALGORITHM

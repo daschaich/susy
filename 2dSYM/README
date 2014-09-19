@@ -7,3 +7,7 @@ generic   -- Procedures common to most applications: communications, I/O, data l
 include   -- Header files for common procedures
 libraries -- Single processor linear algebra routines
 susy      -- RHMC and measurements
+
+Dependences:
+Measurements involving polar-projected matrices require LAPACK
+Eigenvalue measurements require PRIMME and LAPACK

@@ -15,7 +15,7 @@
 #define ZDOWN 5
 #define YDOWN 6
 #define XDOWN 7
-#define OPP_DIR(dir) (7 - (dir))  // Opposite direction in hypercube
+#define OPP_DIR(dir) (7 - (dir))  // Opposite spacetime direction
 
 #define NUMLINK 5
 #define DIR_5 4

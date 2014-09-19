@@ -38,7 +38,7 @@ void matvec(complex *in, complex *out) {
 
   // Copy complex vector into Twist_Fermion src
   // Each Twist_Fermion has Ndat = 16DIMF non-trivial complex components
-  // !!! Need to gather and over fields to ensure non-zero Q[i + 1] M Q[i]
+  // !!! Need to gather & cycle over fields to ensure non-zero Q[i + 1] M Q[i]
   // Use s->plaq_sol as temporary storage to be gathered
   iter = 0;
   FORALLSITES(i, s) {
@@ -255,7 +255,7 @@ void d_phase() {
     // !!! Must have non-vanishing matrix element!
     if (cabs_sq(&temp) < PFA_TOL) {
       node0_printf("d_phase: <%d | D | %d> = (%.4g, %.4g) too small\n",
-             i + 2, i + 1, temp.real, temp.imag);
+                   i + 2, i + 1, temp.real, temp.imag);
       terminate(1);
     }
 

@@ -13,21 +13,28 @@
 
 
 // -----------------------------------------------------------------
-// Fermions in adjoint rep
+// N=4 SYM fermions always in adjoint rep
 #define FREP adjoint
-// #define REALREP      // Someday use for adjoint
 
 // U(2)
 #define NCOL 2
 #define DIMF 4
+#define NUMGEN 4
 
 // U(3)
 //#define NCOL 3
 //#define DIMF 9
+//#define NUMGEN 9
+
+// U(4)
+//#define NCOL 4
+//#define DIMF 16
+//#define NUMGEN 16
 
 // SU(2)
 //#define NCOL 2
 //#define DIMF 3
+//#define NUMGEN 3
 
 // Restrictions due to anti_hermitian structs
 #if (NCOL > 4)
@@ -41,11 +48,7 @@
 #endif
 
 typedef struct { fcomplex e[NCOL][NCOL]; } fsu3_matrix_f;
-#ifndef REALREP
 typedef struct { fcomplex e[DIMF][DIMF]; } fsu3_matrix;
-#else
-typedef struct { float    e[DIMF][DIMF]; } fsu3_matrix;
-#endif
 typedef struct { fcomplex c[NCOL]; } fsu3_vector_f;
 typedef struct { fcomplex c[DIMF]; } fsu3_vector;
 
@@ -67,11 +70,7 @@ typedef struct {
 } fanti_hermitmat;
 
 typedef struct { dcomplex e[NCOL][NCOL]; } dsu3_matrix_f;
-#ifndef REALREP
 typedef struct { dcomplex e[DIMF][DIMF]; } dsu3_matrix;
-#else
-typedef struct { double e[DIMF][DIMF]; } dsu3_matrix;
-#endif
 typedef struct { dcomplex c[NCOL]; } dsu3_vector_f;
 typedef struct { dcomplex c[DIMF]; } dsu3_vector;
 typedef struct {
@@ -91,23 +90,20 @@ typedef struct {
 } danti_hermitmat;
 
 #if (PRECISION==1)
-#define su3_matrix_f  fsu3_matrix_f
+#define su3_matrix_f    fsu3_matrix_f
 #define su3_matrix      fsu3_matrix
-#define su3_vector_f  fsu3_vector_f
+#define su3_vector_f    fsu3_vector_f
 #define su3_vector      fsu3_vector
 #define anti_hermitmat  fanti_hermitmat
 #else
-#define su3_matrix_f  dsu3_matrix_f
+#define su3_matrix_f    dsu3_matrix_f
 #define su3_matrix      dsu3_matrix
-#define su3_vector_f  dsu3_vector_f
+#define su3_vector_f    dsu3_vector_f
 #define su3_vector      dsu3_vector
 #define anti_hermitmat  danti_hermitmat
 #endif
 
-// Used if REALREP
-typedef struct { complex e[DIMF][DIMF]; } complex_su3_matrix;
-
-// SU(2)
+// Need SU(2) matrices for any U(N), e.g. for gauge hits when gauge-fixing
 typedef struct { complex e[2][2]; } su2_matrix;
 
 #define GAMMAFIVE -1    // Some integer which is not a direction

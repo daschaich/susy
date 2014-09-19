@@ -1,7 +1,6 @@
 // -----------------------------------------------------------------
 // Add result of irrep vector--matrix operation with adjoint matrix
 // c <-- c + b * adag
-// No FAST or REALREP implementation yet
 #include "../include/config.h"
 #include "../include/complex.h"
 #include "../include/su3.h"

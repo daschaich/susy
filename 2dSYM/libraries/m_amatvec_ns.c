@@ -8,20 +8,14 @@
 #ifndef FAST
 void mult_adj_su3_mat_vec_nsum(su3_matrix *a, su3_vector *b, su3_vector *c) {
   register int i, j;
-  register complex x;
+  register complex x, y, z;
   for (i = 0; i < DIMF; i++) {
     x.real = 0.0;
     x.imag = 0.0;
     for (j = 0; j < DIMF; j++) {
-#ifndef REALREP
-      register complex y, z;
       CONJG(a->e[j][i], z);
       CMUL(z, b->c[j], y);
       CSUM(x, y);
-#else
-      x.real += a->e[j][i] * b->c[j].real;
-      x.imag += a->e[j][i] * b->c[j].imag;
-#endif
     }
     c->c[i].real -= x.real;
     c->c[i].imag -= x.imag;

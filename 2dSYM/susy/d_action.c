@@ -20,7 +20,6 @@ double d_hmom_action() {
   }
   g_doublesum(&sum);
 //  node0_printf("gauge momentum %e\n",sum);
-
   return sum;
 }
 // -----------------------------------------------------------------
@@ -28,19 +27,20 @@ double d_hmom_action() {
 
 
 // -----------------------------------------------------------------
+// Include tunable coefficient C2 in the d^2 term
 double d_gauge_action() {
   register int i;
   register site *s;
   int mu, nu;
-  double g_action = 0.0;
+  double g_action = 0.0, norm = 0.5 * C2;
   complex cg_action;
-  su3_matrix_f tmpmat;
+  su3_matrix_f tmat;
 
   compute_DmuUmu();
   FORALLSITES(i, s) {
-    mult_su3_nn_f(&(s->DmuUmu), &(s->DmuUmu), &tmpmat);
-    cg_action = trace_su3_f(&tmpmat);
-    g_action += 0.5 * cg_action.real;
+    mult_su3_nn_f(&(s->DmuUmu), &(s->DmuUmu), &tmat);
+    cg_action = trace_su3_f(&tmat);
+    g_action += norm * cg_action.real;
   }
 
   compute_Fmunu();
@@ -60,7 +60,7 @@ double d_gauge_action() {
 
 
 // -----------------------------------------------------------------
-// Mass term for U(1) mode
+// Mass term for U(1) mode -- note factor of kappa
 double d_bmass_action() {
   register int i;
   register site *s;
@@ -114,7 +114,7 @@ double d_fermion_action(Twist_Fermion *src, Twist_Fermion **sol) {
 
 
 // -----------------------------------------------------------------
-#ifdef DET
+// Plaquette determinant contribution to the action
 double d_det_action() {
   register int i, dir1, dir2;
   register site *s;
@@ -135,7 +135,7 @@ double d_det_action() {
 
       wait_gather(mtag0);
       FORALLSITES(i, s) {
-        mult_su3_nn_f(&(s->tempmat1),(su3_matrix_f *)(gen_pt[0][i]),
+        mult_su3_nn_f(&(s->tempmat1), (su3_matrix_f *)(gen_pt[0][i]),
                       &(s->staple));
       }
       wait_gather(mtag1);
@@ -153,7 +153,6 @@ double d_det_action() {
   g_doublesum(&det_action);
   return det_action;
 }
-#endif
 // -----------------------------------------------------------------
 
 
@@ -162,12 +161,12 @@ double d_det_action() {
 // Print out zeros if fermion and determinant actions not included
 double d_action(Twist_Fermion *src, Twist_Fermion **sol) {
   double g_act, bmass_act, h_act, f_act = 0.0, det_act = 0.0;
+  double total;
   g_act = d_gauge_action();
   bmass_act = d_bmass_action();
   h_act = d_hmom_action();
-#ifdef DET
   det_act = d_det_action();
-#endif
+
 #ifndef PUREGAUGE
   f_act = d_fermion_action(src, sol);
 #endif
@@ -175,7 +174,8 @@ double d_action(Twist_Fermion *src, Twist_Fermion **sol) {
   node0_printf("gauge %.8g bmass %.8g ", g_act, bmass_act);
   node0_printf("det %.8g ", det_act);
   node0_printf("fermion %.8g hmom %.8g ", f_act, h_act);
-  node0_printf("sum %.8g\n", g_act + bmass_act + det_act + f_act + h_act);
-  return (g_act + bmass_act + det_act + h_act + f_act);
+  total = g_act + bmass_act + det_act + f_act + h_act;
+  node0_printf("sum %.8g\n", total);
+  return total;
 }
 // -----------------------------------------------------------------

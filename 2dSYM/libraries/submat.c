@@ -8,13 +8,8 @@
 void sub_su3_matrix(su3_matrix *a, su3_matrix *b, su3_matrix *c) {
   register int i, j;
   for (i = 0; i < DIMF; i++) {
-    for (j = 0; j < DIMF; j++) {
-#ifndef REALREP
+    for (j = 0; j < DIMF; j++)
       CSUB(a->e[i][j], b->e[i][j], c->e[i][j]);
-#else
-      c->e[i][j] = a->e[i][j] - b->e[i][j];
-#endif
-    }
   }
 }
 // -----------------------------------------------------------------

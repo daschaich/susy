@@ -17,16 +17,15 @@
 #define TWO_LAMBDA 0.386
 #define LAMBDA_MID 0.614
 
-// RHMC degree -- set Norder at runtime so it can be reset (e.g., to 1)
+// RHMC degree -- copied to Norder, which can be reset (e.g., to 1)
 #define DEGREE 15
 // -----------------------------------------------------------------
 
 
 
 // -----------------------------------------------------------------
-// Temporal boundary condition stuff
-#define OPP_LDIR(Ldir) (3 - (Ldir))   // Same as OPP_DIR
-#define PBC -1.0    // 1.0 for PBC, -1.0 for APBC
+// Temporal boundary condition: 1.0 for PBC, -1.0 for APBC
+#define PBC -1.0
 // -----------------------------------------------------------------
 
 
@@ -38,8 +37,8 @@
 #define DET                 // Determinant term in the action
 //#define DEBUG_CHECK         // Print lambdas, offsets, etc.
 
-#define NUMLINK 2           // Number of gauge links per site, and offsets
-#define NUMGEN (NCOL*NCOL)  // Number of U(N) generators
+// Tunable parameter in gauge action
+#define C2 1.0
 // -----------------------------------------------------------------
 
 
@@ -48,13 +47,10 @@
 // Measurement stuff
 // Threshold to print warning about non-zero imaginary components
 // of quantities expected to be real
-#define IMAG_TOL 1e-16
+#define IMAG_TOL 1e-12
 
 // Maximum time value and spatial distance for Wilson loops
-#define MAX_T (nt / 2)
+#define MAX_T (nt / 2 - 1)
 #define MAX_X (nx / 2 - 1)
-
-// Calculate eigenvalues of Ddag.D (as opposed to untested D eigenvalues)
-#define DDdag
 #endif
 // -----------------------------------------------------------------

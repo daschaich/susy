@@ -10,7 +10,7 @@
 int main(int argc, char *argv[]) {
   int traj_done, prompt, s_iters, avs_iters = 0, avm_iters = 0, Nmeas = 0;
   Real f_eps, g_eps;
-  double dssplaq, dstplaq, dtime;//, dssplaq_frep, dstplaq_frep;
+  double dssplaq, dstplaq, dtime;
   complex plp = cmplx(99, 99);
 
   // Setup

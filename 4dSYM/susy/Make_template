@@ -114,7 +114,7 @@ ${OBJECTS} : ${HEADERS} ${LASTMAKE} ${ALL_MAKES}
 susy_hmc::
 	${MAKE} -f ${MAKEFILE} target "MYTARGET= $@" \
 	"DEFINES = ${DEFINES} -DPHI_ALGORITHM -DHMC_ALGORITHM " \
-	"EXTRA_OBJECTS = control.o update_o.o update_h.o setup_rhmc.o det_force.o"
+	"EXTRA_OBJECTS = control.o update_o.o update_h.o setup_rhmc.o det_force.o "
 
 susy_hmc_corr::
 	${MAKE} -f ${MAKEFILE} target "MYTARGET= $@" \

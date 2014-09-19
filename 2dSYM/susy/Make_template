@@ -8,7 +8,7 @@
 # Targets:
 #   susy_phi uses phi algorithm
 #   susy_hmc uses hybrid Monte Carlo algorithm, i.e., phi + accept/reject
-#   susy_corr calculates scalar correlators (Konishi, supergravity, Polyakov loops, Wilson loops)
+#   susy_corr calculates scalar correlators (Konishi, SUGRA, Wilson loops)
 #   susy_bilin calculates fermion bilinears
 #   susy_eig calculates eigenvalues using PRIMME
 #   susy_phase calculates the pfaffian phase
@@ -105,6 +105,7 @@ ALL_MAKES =               \
 ${OBJECTS} : ${HEADERS} ${LASTMAKE} ${ALL_MAKES}
 
 ##### Targets:
+# -DEIG and -DWLOOP need lapack and blas
 # Optional DEFINES for timing:
 # -DCGTIME for CG timing and iterations
 susy_hmc::
@@ -112,48 +113,52 @@ susy_hmc::
 	"DEFINES = ${DEFINES} -DPHI_ALGORITHM -DHMC_ALGORITHM " \
 	"EXTRA_OBJECTS = control.o update_o.o update_h.o setup_rhmc.o det_force.o "
 
-susy_corr::
-	${MAKE} -f ${MAKEFILE} target "MYTARGET= $@" \
-	"DEFINES = ${DEFINES} -DPHI_ALGORITHM -DPL_CORR -DCORR -DWLOOP " \
-	"EXTRA_OBJECTS = control_corr.o d_correlator.o d_flavor.o ploop_corr.o \
-	                 print_var3.o hvy_pot.o hvy_pot_polar.o unit.o \
-	                 gaugefix.o restrict_fourier.o "
-
 susy_hmc_corr::
 	${MAKE} -f ${MAKEFILE} target "MYTARGET= $@" \
-	"DEFINES = ${DEFINES} -DPHI_ALGORITHM -DHMC_ALGORITHM \
-	           -DPL_CORR -DCORR -DWLOOP " \
+	"DEFINES = ${DEFINES} -DPHI_ALGORITHM -DHMC_ALGORITHM -DCORR -DWLOOP " \
+	"LAPACK = -llapack -lblas " \
 	"EXTRA_OBJECTS = control.o update_o.o update_h.o setup_rhmc.o det_force.o \
-	                 d_correlator.o d_flavor.o ploop_corr.o print_var3.o \
-	                 hvy_pot.o gaugefix.o restrict_fourier.o "
+	                 d_correlator.o rsymm.o hvy_pot.o \
+	                 hvy_pot_polar.o unit.o gaugefix.o path.o "
+
+susy_corr::
+	${MAKE} -f ${MAKEFILE} target "MYTARGET= $@" \
+	"DEFINES = ${DEFINES} -DPHI_ALGORITHM -DCORR -DWLOOP " \
+	"LAPACK = -llapack -lblas " \
+	"EXTRA_OBJECTS = control_corr.o d_correlator.o rsymm.o \
+	                 hvy_pot.o hvy_pot_polar.o unit.o gaugefix.o \
+	                 path.o "
+
 
 susy_bilin::
 	${MAKE} -f ${MAKEFILE} target "MYTARGET= $@" \
-	"DEFINES = ${DEFINES} -DPHI_ALGORITHM -DPL_CORR -DCORR -DWLOOP -DBILIN" \
+	"DEFINES = ${DEFINES} -DPHI_ALGORITHM -DCORR -DWLOOP -DBILIN" \
+	"LAPACK = -llapack -lblas " \
 	"EXTRA_OBJECTS = control_corr.o setup_rhmc.o d_bilinear.o d_correlator.o \
-	                 d_flavor.o ploop_corr.o print_var3.o hvy_pot.o \
-	                 hvy_pot_polar.o unit.o gaugefix.o restrict_fourier.o "
+	                 hvy_pot.o hvy_pot_polar.o unit.o \
+	                 gaugefix.o rsymm.o \
+	                 path.o "
 
 susy_eig::
 	${MAKE} -f ${MAKEFILE} target "MYTARGET= $@" \
 	"DEFINES = ${DEFINES} -DPHI_ALGORITHM -DEIG " \
 	"LIBRARIES = ${LIBRARIES} ${PLIB} " \
 	"LAPACK = -llapack -lblas " \
-	"EXTRA_OBJECTS = control_eig.o eig.o "
+	"EXTRA_OBJECTS = control_eig.o eig.o gaugefix.o "
 
 susy_phase::
 	${MAKE} -f ${MAKEFILE} target "MYTARGET= $@" \
 	"DEFINES = ${DEFINES} -DPHI_ALGORITHM -DPHASE " \
-	"EXTRA_OBJECTS = control_phase.o d_phase.o "
+	"EXTRA_OBJECTS = control_phase.o d_phase.o gaugefix.o io_phase.o "
 
-# This target may be useful for debugging:
 # Convert configuration into format the serial C++ code can read
+# for testing/debugging
 susy_spill::
 	${MAKE} -f ${MAKEFILE} target "MYTARGET= $@" \
 	"DEFINES = ${DEFINES} -DPHI_ALGORITHM " \
-	"EXTRA_OBJECTS = control_spill.o "
+	"EXTRA_OBJECTS = control_spill.o gaugefix.o "
 
-# The targets below have not been used recently and may no longer function
+# The targets below have not been used/tested recently
 susy_phi::
 	${MAKE} -f ${MAKEFILE} target "MYTARGET= $@" \
 	"DEFINES = ${DEFINES} -DPHI_ALGORITHM " \

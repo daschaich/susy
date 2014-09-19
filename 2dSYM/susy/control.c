@@ -10,7 +10,7 @@
 int main(int argc, char *argv[]) {
   int traj_done, prompt, s_iters, avs_iters = 0, avm_iters = 0, Nmeas = 0;
   Real f_eps, g_eps;
-  double dplaq, dtime;//, dplaq_frep;
+  double dplaq, dtime;
   complex plp = cmplx(99, 99);
 
   // Setup
@@ -25,10 +25,13 @@ int main(int argc, char *argv[]) {
   setup_lambda();
   setup_rhmc();
 
+#ifdef WLOOP
+  register int i, mu;
+  register site *s;
+#endif
+
 #ifdef PL_CORR
   // Set up Fourier transform for Polyakov loop correlator
-  register int i;
-  register site *s;
   int key[4] = {1, 1, 1, 0};
   int restrict[4];
   Real space_vol = (Real)nx;
@@ -83,10 +86,8 @@ int main(int argc, char *argv[]) {
 
     // Less frequent measurements every "propinterval" trajectories
     if ((traj_done % propinterval) == (propinterval - 1)) {
-#ifdef DET
       // Plaquette determinant
       measure_det();
-#endif
 
 #ifdef PL_CORR
       // Polyakov loop correlator
@@ -118,16 +119,34 @@ int main(int argc, char *argv[]) {
 #endif
 
 #ifdef BILIN
-      // Fermion bilinear and superpartner Konishi correlator
+      // Ward identity violations
       Nmeas++;
-      avm_iters += d_bilinear();
       avm_iters += d_susyTrans();
+
+      // Don't run d_bilinear() for now
+      // In the future it may be useful
+      // to compare U(1) vs. SU(N) contributions
+//      avm_iters += d_bilinear();
+#endif
+
+#ifdef CORR
+  // R symmetry transformations -- use find_det and adjugate
+      rsymm();
+
+  // Measure density of monopole world lines in non-diagonal cubes
+//      monopole();
 #endif
 
 #ifdef WLOOP
       // Gauge-fixed Wilson loops
+      // Save un-fixed links to be saved if requested
       if (fixflag == COULOMB_GAUGE_FIX) {
         d_plaquette(&dplaq);    // To be printed below
+        FORALLSITES(i, s) {
+          for (mu = XUP; mu < NUMLINK; mu++)
+            su3mat_copy_f(&(s->linkf[mu]), &(s->mom[mu]));
+        }
+
         node0_printf("Fixing to Coulomb gauge...\n");
         double gtime = -dclock();
 
@@ -147,21 +166,23 @@ int main(int argc, char *argv[]) {
         node0_printf("and NO_GAUGE_FIX supported\n");
         terminate(1);
       }
-
-      // We only consider the fundamental links
-      // The irrep links would require separate routines
-      // with the correct data structures (su3_matrix instead of su3_matrix_f)
       hvy_pot();
 
-      // Polar projection overwrites temporal links -- save them in momenta
+      // Save and restore links overwritten by polar projection
+      // Don't use mom[TUP], which is already storing the un-fixed links
       FORALLSITES(i, s)
-        su3mat_copy_f(&(s->linkf[TUP]), &(s->mom[TUP]));
-
+        su3mat_copy_f(&(s->linkf[TUP]), &(s->f_U[TUP]));
       hvy_pot_polar();
-
-      // Restore non-unitary temporal links
       FORALLSITES(i, s)
-        su3mat_copy_f(&(s->mom[TUP]), &(s->linkf[TUP]));
+        su3mat_copy_f(&(s->f_U[TUP]), &(s->linkf[TUP]));
+
+      // Restore the un-fixed links to be saved if requested
+      if (fixflag == COULOMB_GAUGE_FIX) {
+        FORALLSITES(i, s) {
+          for (mu = XUP; mu < NUMLINK; mu++)
+            su3mat_copy_f(&(s->mom[mu]), &(s->linkf[mu]));
+        }
+      }
 #endif
     }
     fflush(stdout);

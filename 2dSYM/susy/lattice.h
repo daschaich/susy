@@ -54,7 +54,9 @@ typedef struct {
   su3_vector site_psol, link_psol[NUMLINK], plaq_psol[NUMLINK][NUMLINK];
 
   su3_matrix_f f_U[NUMLINK];        // "Force"
-  // Used in force, may be wasteful of space
+
+  // For convenience in calculating action and force
+  // May be wasteful of space
   su3_matrix_f DmuUmu, Fmunu[NUMLINK][NUMLINK];
 
   // Boundary conditions -- many unused
@@ -160,6 +162,7 @@ EXTERN int maxIter;           // Maximum iterations
 // Pfaffian phase stuff
 EXTERN Twist_Fermion *src, *res;    // For fieldwise matvec
 EXTERN int Nmatvecs;                // For timing/counting
+EXTERN int ckpt_load, ckpt_save;    // For checkpointing
 #endif
 
 // Up to 20 concurrent timers for timing, not currently being used
