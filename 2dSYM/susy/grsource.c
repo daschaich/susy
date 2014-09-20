@@ -9,20 +9,18 @@
 // -----------------------------------------------------------------
 // Return the number of iterations from the inversion
 int grsource(Twist_Fermion *src) {
-  register int i, j, mu, nu;
+  register int i, j, mu;
   register site *s;
   int avs_iters;
   Real size_r;
-  Twist_Fermion **psim;
+  Twist_Fermion **psim = malloc(Norder * sizeof(**psim));
 
   // Allocate psim (will be zeroed in congrad_multi_field)
-  psim = malloc(Norder * sizeof(**psim));
   for (i = 0; i < Norder; i++)
     psim[i] = malloc(sites_on_node * sizeof(Twist_Fermion));
 
   // Begin with pure gaussian random numbers
   FORALLSITES(i, s) {
-    clear_TF(&(src[i]));
     for (j = 0; j < DIMF; j++) {                // Site fermions
 #ifdef SITERAND
       src[i].Fsite.c[j].real = gaussian_rand_no(&(s->site_prn));
@@ -40,19 +38,14 @@ int grsource(Twist_Fermion *src) {
         src[i].Flink[mu].c[j].imag = gaussian_rand_no(&node_prn);
 #endif
       }
-      for (mu = 0; mu < NUMLINK; mu++) {         // Plaquette fermions
-        for (nu = mu + 1; nu < NUMLINK; nu++) {
+      // Plaquette fermions
 #ifdef SITERAND
-          src[i].Fplaq[mu][nu].c[j].real = gaussian_rand_no(&(s->site_prn));
-          src[i].Fplaq[mu][nu].c[j].imag = gaussian_rand_no(&(s->site_prn));
+      src[i].Fplaq.c[j].real = gaussian_rand_no(&(s->site_prn));
+      src[i].Fplaq.c[j].imag = gaussian_rand_no(&(s->site_prn));
 #else
-          src[i].Fplaq[mu][nu].c[j].real = gaussian_rand_no(&node_prn);
-          src[i].Fplaq[mu][nu].c[j].imag = gaussian_rand_no(&node_prn);
+      src[i].Fplaq.c[j].real = gaussian_rand_no(&node_prn);
+      src[i].Fplaq.c[j].imag = gaussian_rand_no(&node_prn);
 #endif
-          src[i].Fplaq[nu][mu].c[j].real = -src[i].Fplaq[mu][nu].c[j].real;
-          src[i].Fplaq[nu][mu].c[j].imag = -src[i].Fplaq[mu][nu].c[j].imag;
-        }
-      }
     }
   }
 

@@ -22,7 +22,7 @@ int initial_set() {
 #define XSTR(s) STR(s)
 #define STR(s) #s
     // end kludge
-    printf("N=(2, 2) SYM, Nc = %d, DIMF = %d, fermion rep = " XSTR(FREP) "\n",
+    printf("N=(2, 2) SYM, Nc = %d, DIMF = %d, fermion rep = adjoint\n",
            NCOL, DIMF);
     printf("Microcanonical simulation with refreshing\n");
     printf("Machine = %s, with %d nodes\n", machine_type(), numnodes());
@@ -70,8 +70,7 @@ int initial_set() {
 // -----------------------------------------------------------------
 // Allocate space for fields
 void make_fields() {
-  double size = (double)(2 + 4 * NUMLINK + 2 * NUMLINK * NUMLINK)
-                * sites_on_node * sizeof(su3_vector);
+  double size = 4.0 * (1 + NUMLINK) * sites_on_node * sizeof(su3_vector);
 
   FIELD_ALLOC_VEC(tsite, su3_vector, NUMLINK);
 
@@ -80,8 +79,8 @@ void make_fields() {
   FIELD_ALLOC_VEC(link_src, su3_vector, NUMLINK);
   FIELD_ALLOC_VEC(link_dest, su3_vector, NUMLINK);
   FIELD_ALLOC_VEC(link_dest2, su3_vector, NUMLINK);
-  FIELD_ALLOC_MAT(plaq_src, su3_vector, NUMLINK, NUMLINK);
-  FIELD_ALLOC_MAT(plaq_dest, su3_vector, NUMLINK, NUMLINK);
+  FIELD_ALLOC(plaq_src, su3_vector);
+  FIELD_ALLOC(plaq_dest, su3_vector);
 
   node0_printf("Mallocing %.1f MBytes per core for fields\n", size / 1e6);
 
@@ -158,6 +157,12 @@ int readin(int prompt) {
     IF_OK status += get_f(stdin, prompt, "bmass", &par_buf.bmass);
     IF_OK status += get_f(stdin, prompt, "fmass", &par_buf.fmass);
 
+#ifdef STOUT
+    // Stout smearing stuff
+    IF_OK status += get_i(stdin, prompt, "Nstout", &par_buf.Nstout);
+    IF_OK status += get_f(stdin, prompt, "rho", &par_buf.rho);
+#endif
+
     // Maximum conjugate gradient iterations
     IF_OK status += get_i(stdin, prompt, "max_cg_iterations", &par_buf.niter);
 
@@ -223,12 +228,17 @@ int readin(int prompt) {
   kappa = (Real)(NCOL * nt * nt) * 0.5 / lambda;
   node0_printf("lambda=%.4g --> kappa=(Nc * nt^2)/(2lambda)=%.4g\n",
                lambda, kappa);
+  node0_printf("C2=%.4g\n", C2);
 
   nsrc = par_buf.nsrc;
 #ifdef EIG
   Nvec = par_buf.Nvec;
   eig_tol = par_buf.eig_tol;
   maxIter = par_buf.maxIter;
+#endif
+#ifdef STOUT
+  Nstout = par_buf.Nstout;
+  rho = par_buf.rho;
 #endif
 #ifdef PHASE
   ckpt_load = par_buf.ckpt_load;

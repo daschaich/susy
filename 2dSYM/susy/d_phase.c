@@ -46,12 +46,8 @@ void matvec(complex *in, complex *out) {
       iter++;
       set_complex_equal(&(in[iter]), &(src[i].Flink[1].c[j]));
       iter++;
-      set_complex_equal(&(in[iter]), &(src[i].Fplaq[0][1].c[j]));
-      CNEGATE(src[i].Fplaq[0][1].c[j], src[i].Fplaq[1][0].c[j]);
+      set_complex_equal(&(in[iter]), &(src[i].Fplaq.c[j]));
       iter++;
-      // Clear diagonal Fplaq
-      src[i].Fplaq[0][0].c[j] = cmplx(0.0, 0.0);
-      src[i].Fplaq[1][1].c[j] = cmplx(0.0, 0.0);
     }
   }
 
@@ -79,7 +75,7 @@ void matvec(complex *in, complex *out) {
       iter++;
       set_complex_equal(&(res[i].Flink[1].c[j]), &(out[iter]));
       iter++;
-      set_complex_equal(&(res[i].Fplaq[0][1].c[j]), &(out[iter]));
+      set_complex_equal(&(res[i].Fplaq.c[j]), &(out[iter]));
       iter++;
     }
   }

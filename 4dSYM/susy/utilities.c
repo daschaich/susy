@@ -605,7 +605,7 @@ void DbminusLtoS(su3_vector *src[NUMLINK], su3_vector *dest) {
     if (mu < NUMLINK - 1) {   // Start next gather
       FORALLSITES(i, s)
         mult_adj_su3_mat_vec(&(s->link[mu + 1]), &(src[mu + 1][i]),
-                                  &(tsite[mu + 1][i]));
+                             &(tsite[mu + 1][i]));
 
       tag[mu + 1] = start_gather_field(tsite[mu + 1], sizeof(su3_vector),
                                        goffset[mu + 1] + 1, EVENANDODD,

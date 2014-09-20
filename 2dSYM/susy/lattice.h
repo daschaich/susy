@@ -18,7 +18,7 @@
 typedef struct {
   su3_vector Fsite;
   su3_vector Flink[NUMLINK];
-  su3_vector Fplaq[NUMLINK][NUMLINK];
+  su3_vector Fplaq;
 } Twist_Fermion;
 // -----------------------------------------------------------------
 
@@ -50,8 +50,8 @@ typedef struct {
   su3_matrix_f mom[NUMLINK];
 
   // Used in assemble_fermion_force
-  su3_vector site_sol, link_sol[NUMLINK], plaq_sol[NUMLINK][NUMLINK];
-  su3_vector site_psol, link_psol[NUMLINK], plaq_psol[NUMLINK][NUMLINK];
+  su3_vector site_sol, link_sol[NUMLINK], plaq_sol;
+  su3_vector site_psol, link_psol[NUMLINK], plaq_psol;
 
   su3_matrix_f f_U[NUMLINK];        // "Force"
 
@@ -89,7 +89,7 @@ EXTERN int warms, trajecs, niter, propinterval, nsrc;
 EXTERN Real traj_length;
 
 // U(N) generators
-EXTERN su3_matrix_f Lambda[NUMGEN], Lambda_prod[NUMGEN][NUMGEN];
+EXTERN su3_matrix_f Lambda[DIMF], Lambda_prod[DIMF][DIMF];
 
 EXTERN Real rsqmin, rsqprop;
 EXTERN Real lambda, kappa, bmass, fmass, kappa_u1;
@@ -132,8 +132,8 @@ EXTERN su3_vector *tsite[NUMLINK];    // For DbminusLtoS
 
 // Persistent site, link and plaq fermions for matrix--vector operation
 // Used in fermion_op
-su3_vector *site_src, *link_src[NUMLINK], *plaq_src[NUMLINK][NUMLINK];
-su3_vector *site_dest, *link_dest[NUMLINK], *plaq_dest[NUMLINK][NUMLINK];
+su3_vector *site_src, *link_src[NUMLINK], *plaq_src;
+su3_vector *site_dest, *link_dest[NUMLINK], *plaq_dest;
 su3_vector *link_dest2[NUMLINK];
 
 EXTERN gauge_file *startlat_p;

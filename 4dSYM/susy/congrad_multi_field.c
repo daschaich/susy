@@ -26,43 +26,32 @@ int congrad_multi_field(Twist_Fermion *src, Twist_Fermion **psim,
 
   register int i, j;
   register site *s;
-  int N_iter, iteration = 0, *converged;
+  int N_iter, iteration = 0;
+  int *converged = malloc(Norder * sizeof(*converged));
+  Real floatvar, floatvar2;     // SSE kluge
+  Real *floatvarj = malloc(Norder * sizeof(*floatvarj));
+  Real *floatvark = malloc(Norder * sizeof(*floatvark));
   double rsq = 0, rsqnew, source_norm = 0, errormin, rsqstop, c1, c2, cd;
-  double *zeta_i, *zeta_im1, *zeta_ip1, *beta_i, *beta_im1, *alpha;
+  double *zeta_i   = malloc(Norder * sizeof(*zeta_i));
+  double *zeta_im1 = malloc(Norder * sizeof(*zeta_im1));
+  double *zeta_ip1 = malloc(Norder * sizeof(*zeta_ip1));
+  double *beta_i   = malloc(Norder * sizeof(*beta_i));
+  double *beta_im1 = malloc(Norder * sizeof(*beta_im1));
+  double *alpha    = malloc(Norder * sizeof(*alpha));
   double rsqj;
-  Real floatvar, floatvar2, *floatvarj, *floatvark;     // SSE kluge
   complex ctmp;
-
-  Twist_Fermion *mpm, *pm0;   // Vectors involved in gathers
-  Twist_Fermion **pm, *rm;    // Vectors not involved in gathers
-
-  // Allocate space for zetas, betas and alpha
-  zeta_i   = (double *)malloc(Norder * sizeof(double));
-  zeta_im1 = (double *)malloc(Norder * sizeof(double));
-  zeta_ip1 = (double *)malloc(Norder * sizeof(double));
-  beta_i   = (double *)malloc(Norder * sizeof(double));
-  beta_im1 = (double *)malloc(Norder * sizeof(double));
-  alpha    = (double *)malloc(Norder * sizeof(double));
-
-  floatvarj = (Real *)malloc(Norder * sizeof(Real));
-  floatvark = (Real *)malloc(Norder * sizeof(Real));
-
-  converged = (int *)malloc(Norder * sizeof(int));
-  for (i = 0; i < Norder; i++)
-    converged[i] = 0;
-
-  // Allocate space for vectors
-  mpm = (Twist_Fermion *)malloc(sites_on_node * sizeof(Twist_Fermion));
-  pm0 = (Twist_Fermion *)malloc(sites_on_node * sizeof(Twist_Fermion));
-  rm  = (Twist_Fermion *)malloc(sites_on_node * sizeof(Twist_Fermion));
-  pm  = (Twist_Fermion **)malloc(Norder * sizeof(Twist_Fermion*));
+  Twist_Fermion *mpm = malloc(sites_on_node * sizeof(*mpm));
+  Twist_Fermion *pm0 = malloc(sites_on_node * sizeof(*pm0));
+  Twist_Fermion *rm  = malloc(sites_on_node * sizeof(*rm));
+  Twist_Fermion **pm  = malloc(Norder * sizeof(**pm));
   for (i = 1; i < Norder; i++)    // !!!
-    pm[i] = (Twist_Fermion *)malloc(sites_on_node * sizeof(Twist_Fermion));
-
-  errormin = RsdCG * RsdCG;
+    pm[i] = malloc(sites_on_node * sizeof(Twist_Fermion));
 
   // Initialize zero initial guess, etc.
   // dest = 0, r = source, pm[j] = r
+  errormin = RsdCG * RsdCG;
+  for (i = 0; i < Norder; i++)
+    converged[i] = 0;
   FORALLSITES(i, s) {
     copy_TF(&(src[i]), &(rm[i]));
     copy_TF(&(rm[i]), &(pm0[i]));

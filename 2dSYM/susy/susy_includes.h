@@ -53,24 +53,16 @@ double gauge_force(Real eps);
 double fermion_force(Real eps, Twist_Fermion *source, Twist_Fermion **psim);
 double det_force(Real eps);
 
-// Reproduces void Dplus(Link_Field *src, Plaq_Field *dest);
-void Dplus(su3_vector *src[NUMLINK], su3_vector *dest[NUMLINK][NUMLINK]);
+// Link-to-plaq term in action
+void Dplus(su3_vector *src[NUMLINK], su3_vector *dest);
 
-// Reproduces void Dminus(Plaq_Field *src, Link_Field *dest);
-void Dminus(su3_vector *src[NUMLINK][NUMLINK], su3_vector *dest[NUMLINK]);
+// Plaq-to-link term in action
+void Dminus(su3_vector *src, su3_vector *dest[NUMLINK]);
 
-// Reproduces void DbplusPtoP(Plaq_Field *src, Plaq_Field *dest);
-void DbplusPtoP(su3_vector *src[NUMLINK][NUMLINK],
-                su3_vector *dest[NUMLINK][NUMLINK]);
+// Site-to-link term in action
+void DbplusStoL(su3_vector *src, su3_vector *dest[NUMLINK]);
 
-// Reproduces void DbplusStoL(Site_Field * src, Link_Field *dest);
-void DbplusStoL(su3_vector * src, su3_vector *dest[NUMLINK]);
-
-// Reproduces void DbminusPtoP(Plaq_Field *src, Plaq_Field *dest);
-void DbminusPtoP(su3_vector *src[NUMLINK][NUMLINK],
-                 su3_vector *dest[NUMLINK][NUMLINK]);
-
-// Reproduces void DbminusLtoS(Link_Field *src, Site_Field *dest);
+// Link-to-site term in action
 void DbminusLtoS(su3_vector *src[NUMLINK], su3_vector *dest);
 
 // Fermion matrix--vector operators (D & D^2) and multi-mass CG

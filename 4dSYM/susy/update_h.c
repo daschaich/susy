@@ -21,9 +21,6 @@ double gauge_force(Real eps) {
 
   // Contribution from (D_a U_a)^2 / 2 term
   compute_DmuUmu();
-  // To reproduce:
-  //   f_U.set(x, mu, f_U.get(x, mu) + Udag.get(x, mu) * DmuUmu.get(x));
-  //   f_U.set(x, mu, f_U.get(x, mu) - DmuUmu.get(x + e_mu) * Udag.get(x, mu));
   tag[0] = start_gather_site(F_OFFSET(DmuUmu), sizeof(su3_matrix_f),
                              goffset[0], EVENANDODD, gen_pt[0]);
   for (mu = 0; mu < NUMLINK; mu++) {
@@ -44,9 +41,6 @@ double gauge_force(Real eps) {
 
   // Contribution from Fbar_{ab} F_{ab} term
   compute_Fmunu();
-  // To reproduce:
-  //   f_U.set(x, mu, f_U.get(x, mu) + 2 * U.get(x + e_mu, nu) * Adj(Fmunu.get(x, mu, nu)));
-  //   f_U.set(x, mu, f_U.get(x, mu) - 2 * Adj(Fmunu.get(x - e_nu, mu, nu)) * U.get(x - e_nu, nu));
   for (mu = 0; mu < NUMLINK; mu++) {
     for (nu = 0; nu < NUMLINK; nu++) {
       if (mu == nu)
@@ -165,7 +159,7 @@ void assemble_fermion_force(Twist_Fermion *sol, Twist_Fermion *psol) {
         continue;
 
       mtag0 = start_gather_site(F_OFFSET(link_sol[nu]), sizeof(su3_vector),
-                                 goffset[mu], EVENANDODD, gen_pt[0]);
+                                goffset[mu], EVENANDODD, gen_pt[0]);
       wait_gather(mtag0);
       FORALLSITES(i, s) {
         vec = (su3_vector *)(gen_pt[0][i]);
@@ -238,7 +232,7 @@ void assemble_fermion_force(Twist_Fermion *sol, Twist_Fermion *psol) {
         vec = (su3_vector *)(gen_pt[0][i]);
         for (a = 0; a < DIMF; a++) {
           for (b = 0; b < DIMF; b++) {
-            CMULJ_((vec->c[a]), (s->plaq_sol[mu][nu]).c[b], cterm);
+            CMULJ_(vec->c[a], (s->plaq_sol[mu][nu]).c[b], cterm);
             CMULREAL(cterm, s->bc1[mu], cterm);
             c_scalar_mult_add_su3mat_f(&(s->f_U[mu]), &(Lambda_prod[a][b]),
                                        &cterm, &(s->f_U[mu]));
@@ -412,7 +406,6 @@ void assemble_fermion_force(Twist_Fermion *sol, Twist_Fermion *psol) {
     cleanup_gather(tag3[flip]);
     flip = (flip + 1) % 2;
 
-    // Reproduces f_U.set(x, c, f_U.get(x, c) - 0.5 * Adj(tmp));
     FORALLSITES(i, s) {
       su3_adjoint_f(&(tempmat[i]), &tmpmat);
       scalar_mult_add_su3_matrix_f(&(s->f_U[c]), &tmpmat, -0.5, &(s->f_U[c]));
@@ -503,7 +496,6 @@ void assemble_fermion_force(Twist_Fermion *sol, Twist_Fermion *psol) {
     cleanup_gather(tag3[flip]);
     flip = (flip + 1) % 2;
 
-    // Reproduces f_U.set(x, c, f_U.get(x, c) - 0.5 * Adj(tmp));
     FORALLSITES(i, s) {
       su3_adjoint_f(&(tempmat[i]), &tmpmat);
       scalar_mult_add_su3_matrix_f(&(s->f_U[c]), &tmpmat, -0.5, &(s->f_U[c]));
@@ -607,7 +599,7 @@ double fermion_force(Real eps, Twist_Fermion *src, Twist_Fermion **sol) {
         dumpmat_f(&(s->f_U[mu]));
 
         old_action = d_fermion_action(src, sol);
-        node_printf("Old fermion action %.4g\n",old_action);
+        node_printf("Old fermion action %.4g\n", old_action);
         for (ii = 0; ii < NCOL; ii++) {
           for (jj = 0; jj < NCOL; jj++) {
             for (kick = -1; kick <= 1; kick += 2) {

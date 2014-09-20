@@ -88,17 +88,14 @@ void compute_Fmunu() {
 void fermion_op(Twist_Fermion *src, Twist_Fermion *dest, int sign) {
   register int i, j;
   register site *s;
-  int mu, nu;
+  int mu;
   Twist_Fermion tf;
 
   // Copy src TwistFermion into fieldwise site, link and plaq fermions
   // All of the latter are overwritten -- don't need to clear explicitly
   if (sign == 1) {
     FORALLSITES(i, s) {
-      for (mu = 0; mu < NUMLINK; mu++) {
-        for (nu = 0; nu < NUMLINK; nu++)
-          plaq_src[mu][nu][i] = src[i].Fplaq[mu][nu];
-      }
+      plaq_src[i] = src[i].Fplaq;
       for (mu = 0; mu < NUMLINK; mu++)
         link_src[mu][i] = src[i].Flink[mu];
 
@@ -108,10 +105,7 @@ void fermion_op(Twist_Fermion *src, Twist_Fermion *dest, int sign) {
   else if (sign == -1) {
     FORALLSITES(i, s) {
       conjTF(&(src[i]), &tf);
-      for (mu = 0; mu < NUMLINK; mu++) {
-        for (nu = 0; nu < NUMLINK; nu++)
-          plaq_src[mu][nu][i] = tf.Fplaq[mu][nu];
-      }
+      plaq_src[i] = tf.Fplaq;
       for (mu = 0; mu < NUMLINK; mu++)
         link_src[mu][i] = tf.Flink[mu];
 
@@ -124,19 +118,6 @@ void fermion_op(Twist_Fermion *src, Twist_Fermion *dest, int sign) {
   }
 
   // Now the fun begins
-  FORALLSITES(i, s) {
-    for (mu = 0; mu < NUMLINK; mu++)
-      clearvec(&(plaq_dest[mu][mu][i]));
-  }
-
-  // To reproduce:
-  //   F2.setC(Dplus(V, F.getL()));
-  //   F2.setL(Dminus(V, F.getC()));
-  //   F2.setL(F2.getL() + 0.5 * Dbplus(V, F.getS()));
-  //   F2.setS(0.5 * Dbminus(V, F.getL()));
-  //   F3 = u1mass(V, F);
-  //   F2.setS(F2.getS() + F3.getS());
-  //   F2.setL(F2.getL() + F3.getL());
 #ifdef VP
   Dplus(link_src, plaq_dest);   // Overwrites plaq_dest for mu != nu
   Dminus(plaq_src, link_dest);  // Overwrites link_dest
@@ -158,14 +139,7 @@ void fermion_op(Twist_Fermion *src, Twist_Fermion *dest, int sign) {
   // Copy local plaquette, link and site fermions into dest TwistFermion
   if (sign == 1) {
     FORALLSITES(i, s) {
-      for (mu = 0; mu < NUMLINK; mu++) {
-        clearvec(&(dest[i].Fplaq[mu][mu]));
-        for (nu = mu + 1; nu < NUMLINK; nu++) {
-          dest[i].Fplaq[mu][nu] = plaq_dest[mu][nu][i];
-          for (j = 0; j < DIMF; j++)
-            CNEGATE(dest[i].Fplaq[mu][nu].c[j], dest[i].Fplaq[nu][mu].c[j]);
-        }
-      }
+      dest[i].Fplaq = plaq_dest[i];
       for (mu = 0; mu < NUMLINK; mu++)
         dest[i].Flink[mu] = link_dest[mu][i];
 
@@ -174,21 +148,12 @@ void fermion_op(Twist_Fermion *src, Twist_Fermion *dest, int sign) {
   }
   else if (sign == -1) {
     FORALLSITES(i, s) {
-      for (mu = 0; mu < NUMLINK; mu++) {
-        clearvec(&(tf.Fplaq[mu][mu]));
-        for (nu = mu + 1; nu < NUMLINK; nu++) {
-          for (j = 0; j < DIMF; j++) {
-            CNEGATE(plaq_dest[mu][nu][i].c[j], tf.Fplaq[mu][nu].c[j]);
-            tf.Fplaq[nu][mu].c[j] = plaq_dest[mu][nu][i].c[j];
-          }
-        }
-      }
-      for (mu = 0; mu < NUMLINK; mu++) {
-        for (j = 0; j < DIMF; j++)
+      for (j = 0; j < DIMF; j++) {
+        CNEGATE(plaq_dest[i].c[j], tf.Fplaq.c[j]);
+        for (mu = 0; mu < NUMLINK; mu++)
           CNEGATE(link_dest[mu][i].c[j], tf.Flink[mu].c[j]);
-      }
-      for (j = 0; j < DIMF; j++)
         CNEGATE(site_dest[i].c[j], tf.Fsite.c[j]);
+      }
       conjTF(&tf, &(dest[i]));
     }
   }
@@ -198,18 +163,10 @@ void fermion_op(Twist_Fermion *src, Twist_Fermion *dest, int sign) {
 
 
 // -----------------------------------------------------------------
-// To reproduce:
-//   tmp += V.get(x, mu).get(a, b) * L.get(x + e_mu, nu).get(b) * BC(x, e_mu)
-//        - V.get(x + e_nu, mu).get(b, a) * L.get(x, nu).get(b)
-//        - V.get(x, nu).get(a, b) * L.get(x + e_nu, mu).get(b) * BC(x, e_nu)
-//        + V.get(x + e_mu, nu).get(b, a) * L.get(x, mu).get(b);
-//   atmp.set(a, tmp);
-//   dum.set(x, mu, nu, atmp);
-//   dum.set(x, nu, mu, -1 * atmp);
-void Dplus(su3_vector *src[NUMLINK], su3_vector *dest[NUMLINK][NUMLINK]) {
+void Dplus(su3_vector *src[NUMLINK], su3_vector *dest) {
   register int i;
   register site *s;
-  int mu, nu, j;
+  int mu, nu;
   su3_vector vtmp1, vtmp2, vtmp3, vtmp4;
   msg_tag *mtag0 = NULL, *mtag1 = NULL, *mtag2 = NULL, *mtag3 = NULL;
 
@@ -246,9 +203,7 @@ void Dplus(su3_vector *src[NUMLINK], su3_vector *dest[NUMLINK][NUMLINK]) {
                          &vtmp4);
         sub_su3_vector(&vtmp1, &vtmp2, &vtmp1);
         sub_su3_vector(&vtmp3, &vtmp4, &vtmp3);
-        sub_su3_vector(&vtmp1, &vtmp3, &(dest[mu][nu][i]));   // Overwrite
-        for (j = 0; j < DIMF; j++)
-          CNEGATE(dest[mu][nu][i].c[j], dest[nu][mu][i].c[j]);
+        sub_su3_vector(&vtmp1, &vtmp3, &(dest[i]));   // Overwrite
       }
       cleanup_gather(mtag0);
       cleanup_gather(mtag1);
@@ -262,12 +217,11 @@ void Dplus(su3_vector *src[NUMLINK], su3_vector *dest[NUMLINK][NUMLINK]) {
 
 
 // -----------------------------------------------------------------
-void Dminus(su3_vector *src[NUMLINK][NUMLINK], su3_vector *dest[NUMLINK]) {
+void Dminus(su3_vector *src, su3_vector *dest[NUMLINK]) {
   register int i;
   register site *s;
-  int mu, nu;
-  su3_vector vtmp1, vtmp2, vtmp3;
-  su3_vector *tsite = malloc(sites_on_node * sizeof(*tsite));
+  int mu, nu, j;
+  su3_vector tvec, vtmp1, vtmp2, vtmp3;
   msg_tag *mtag0 = NULL, *mtag1 = NULL;
 
   for (nu = 0; nu < NUMLINK; nu++) {
@@ -278,20 +232,31 @@ void Dminus(su3_vector *src[NUMLINK][NUMLINK], su3_vector *dest[NUMLINK]) {
       if (mu == nu)
         continue;
 
-      FORALLSITES(i, s)
-        mult_su3_vec_mat(&(src[mu][nu][i]), &(s->link[mu]), &(tsite[i]));
-
       mtag0 = start_gather_site(F_OFFSET(link[mu]), sizeof(su3_matrix),
                                 goffset[nu], EVENANDODD, gen_pt[0]);
 
-      mtag1 = start_gather_field(tsite, sizeof(su3_vector),
+      FORALLSITES(i, s) {
+        if (mu > nu) {    // src is anti-symmetric under mu <--> nu
+          for (j = 0; j < DIMF; j++)
+            CNEGATE(src[i].c[j], tvec.c[j]);
+        }
+        else
+          tvec = src[i];
+        mult_su3_vec_mat(&tvec, &(s->link[mu]), &(tsite[0][i]));
+      }
+      mtag1 = start_gather_field(tsite[0], sizeof(su3_vector),
                                  goffset[mu] + 1, EVENANDODD, gen_pt[1]);
 
       wait_gather(mtag0);
       wait_gather(mtag1);
       FORALLSITES(i, s) {
-        mult_su3_mat_vec((su3_matrix *)(gen_pt[0][i]), &(src[mu][nu][i]),
-                         &vtmp1);
+        if (mu > nu) {    // src is anti-symmetric under mu <--> nu
+          for (j = 0; j < DIMF; j++)
+            CNEGATE(src[i].c[j], tvec.c[j]);
+        }
+        else
+          tvec = src[i];
+        mult_su3_mat_vec((su3_matrix *)(gen_pt[0][i]), &tvec, &vtmp1);
         scalar_mult_su3_vector((su3_vector *)(gen_pt[1][i]),
                                s->bc[OPP_LDIR(mu)], &vtmp3);
         sub_su3_vector(&vtmp1, &vtmp3, &vtmp2);
@@ -301,32 +266,8 @@ void Dminus(su3_vector *src[NUMLINK][NUMLINK], su3_vector *dest[NUMLINK]) {
       cleanup_gather(mtag1);
     }
   }
-  free(tsite);
 }
 // -----------------------------------------------------------------
-/*
-  for (nu = 0; nu < NUMLINK; nu++) {
-    e_nu = Lattice_Vector(nu);
-    atmp = Afield();
-
-    for (mu = 0; mu < NUMLINK; mu++) {
-      if (mu==nu)
-        continue;
-
-      e_mu = Lattice_Vector(mu);
-      for (a = 0; a < NUMGEN; a++) {
-        tmp = Complex();
-        for (b = 0; b < NUMGEN; b++) {
-          tmp = tmp +
-            V.get(x + e_nu, mu).get(a, b) * P.get(x, mu, nu).get(b) -
-            V.get(x - e_mu, mu).get(b, a) * P.get(x-e_mu, mu, nu).get(b) * BC(x, -e_mu);
-        }
-        atmp.set(a, atmp.get(a) + tmp);
-      }
-    }
-    dum.set(x, nu, atmp);
-  }
-*/
 
 
 
@@ -337,7 +278,7 @@ void DbminusLtoS(su3_vector *src[NUMLINK], su3_vector *dest) {
   register int i;
   register site *s;
   int mu;
-  su3_vector tsite1, tsite2, tsite3;
+  su3_vector vtmp1, vtmp2, vtmp3;
   msg_tag *tag[NUMLINK];
 
   FORALLSITES(i, s) {         // Set up first gather
@@ -351,7 +292,7 @@ void DbminusLtoS(su3_vector *src[NUMLINK], su3_vector *dest) {
     if (mu < NUMLINK - 1) {   // Start next gather
       FORALLSITES(i, s)
         mult_adj_su3_mat_vec(&(s->link[mu + 1]), &(src[mu + 1][i]),
-                                  &(tsite[mu + 1][i]));
+                             &(tsite[mu + 1][i]));
 
       tag[mu + 1] = start_gather_field(tsite[mu + 1], sizeof(su3_vector),
                                        goffset[mu + 1] + 1, EVENANDODD,
@@ -360,11 +301,11 @@ void DbminusLtoS(su3_vector *src[NUMLINK], su3_vector *dest) {
 
     wait_gather(tag[mu]);
     FORALLSITES(i, s) {
-      mult_su3_vec_adj_mat(&(src[mu][i]), &(s->link[mu]), &(tsite1));
+      mult_su3_vec_adj_mat(&(src[mu][i]), &(s->link[mu]), &vtmp1);
       scalar_mult_su3_vector((su3_vector *)(gen_pt[mu][i]),
-                             s->bc[OPP_LDIR(mu)], &(tsite3));
-      sub_su3_vector(&tsite1, &tsite3, &tsite2);
-      add_su3_vector(&(dest[i]), &tsite2, &(dest[i]));
+                             s->bc[OPP_LDIR(mu)], &vtmp3);
+      sub_su3_vector(&vtmp1, &vtmp3, &vtmp2);
+      add_su3_vector(&(dest[i]), &vtmp2, &(dest[i]));
     }
     cleanup_gather(tag[mu]);
   }
@@ -401,15 +342,3 @@ void DbplusStoL(su3_vector *src, su3_vector *dest[NUMLINK]) {
   }
 }
 // -----------------------------------------------------------------
-/*
-for (mu = 0; mu < NUMLINK; mu++) {
-for (a=0;a<NUMGEN;a++) {
-tmp=Complex();
-for (b=0;b<NUMGEN;b++) {
-tmp=tmp+
-    conjug(V.get(x, mu).get(a, b)) * S.get(x + e_mu).get(b) * BC(x, e_mu) -
-    conjug(V.get(x, mu).get(b, a)) * S.get(x).get(b);
-    }
-atmp.set(a, tmp);
-}
-*/

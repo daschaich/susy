@@ -100,8 +100,7 @@ setup_lambda.c        -- Sets up U(N) generators, epsilon symbols and lookup tab
 setup_offset.c        -- Sets up gathers for terms in the action, including Qclosed terms
 d_action.c            -- Computes action
 congrad_multi_field.c -- Multi-mass CG
-fermion_repS.c        -- Creates links in the fermion's rep, also handling temporal BCs
-fermion_rep_adjS.c    -- Creates links in adjoint rep, checking dimensions
+fermion_rep.c         -- Creates links in adjoint rep, checking dimensions
 grsource.c            -- Gaussian random numbers for gauge momenta
 library_util.c        -- Various routines that might be better suited to ../libraries/
 utilities.c           -- Many basic routines associated with parts of the action
