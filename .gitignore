@@ -12,6 +12,7 @@ susy_bilin*
 susy_corr
 susy_eig*
 susy_hmc*
+susy_mcrg*
 susy_phase*
 susy_rhmc*
 susy_spill

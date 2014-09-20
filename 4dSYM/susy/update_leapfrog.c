@@ -22,7 +22,7 @@ void ranmom() {
   FORALLSITES(i, s) {
     for (mu = 0; mu < NUMLINK; mu++) {
       clear_su3mat_f(&(s->mom[mu]));
-      for (j = 0; j < NUMGEN; j++) {
+      for (j = 0; j < DIMF; j++) {
 #ifdef SITERAND
         grn.real = gaussian_rand_no(&(s->site_prn));
         grn.imag = gaussian_rand_no(&(s->site_prn));

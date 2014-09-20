@@ -119,15 +119,15 @@ void setup_lambda() {
 #endif
 
   my_gen();
-  if (NUMGEN == NCOL * NCOL) {
-    clear_su3mat_f(&(Lambda[NUMGEN - 1]));
+  if (DIMF == NCOL * NCOL) {
+    clear_su3mat_f(&(Lambda[DIMF - 1]));
     for (i = 0; i < NCOL; i++)
-      Lambda[NUMGEN - 1].e[i][i] = cmplx(0, 1.0 / sqrt(NCOL));
+      Lambda[DIMF - 1].e[i][i] = cmplx(0, 1.0 / sqrt(NCOL));
   }
 
 #ifdef DEBUG_CHECK
   // Print Lambdas
-  for (i = 0; i < NUMGEN; i++){
+  for (i = 0; i < DIMF; i++){
     node0_printf("Lambda[%d]\n",i);
     if (this_node == 0)
       dumpmat_f(&(Lambda[i]));
@@ -141,7 +141,7 @@ void setup_lambda() {
       for (k = 0; k < NCOL; k++) {
         for (l = 0; l < NCOL; l++) {
           trace = cmplx(0, 0);
-          for (a = 0; a < NUMGEN; a++) {
+          for (a = 0; a < DIMF; a++) {
             CMUL(Lambda[a].e[k][l], Lambda[a].e[i][j], tt);
             CSUM(trace, tt);
           }
@@ -155,8 +155,8 @@ void setup_lambda() {
 #endif
 
   // Test orthogonality and compute products of Lambdas for fermion forces
-  for (i = 0; i < NUMGEN; i++) {
-    for (j = 0; j < NUMGEN; j++) {
+  for (i = 0; i < DIMF; i++) {
+    for (j = 0; j < DIMF; j++) {
       mult_su3_nn_f(&(Lambda[i]), &(Lambda[j]), &(Lambda_prod[i][j]));
 #ifdef DEBUG_CHECK
       trace = trace_su3_f(&(Lambda_prod[i][j]));

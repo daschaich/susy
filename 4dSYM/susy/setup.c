@@ -22,7 +22,7 @@ int initial_set() {
 #define XSTR(s) STR(s)
 #define STR(s) #s
     // end kludge
-    printf("N=4 SYM, Nc = %d, DIMF = %d, fermion rep = " XSTR(FREP) "\n",
+    printf("N=4 SYM, Nc = %d, DIMF = %d, fermion rep = adjoint\n",
            NCOL, DIMF);
     printf("Microcanonical simulation with refreshing\n");
     printf("Machine = %s, with %d nodes\n", machine_type(), numnodes());

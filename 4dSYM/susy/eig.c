@@ -60,7 +60,7 @@ void av_ov (void *x, void *y, int *Nvec, primme_params *primme) {
     // Copy double precision complex vector x
     // into Real precision Twist_Fermion src
     // Each Twist_Fermion has Ndat=16DIMF non-trivial complex components
-    xx = ((Complex_Z*) x) + Ndat * ivec * sites_on_node;   // This vector in x
+    xx = ((Complex_Z*) x) + Ndat * ivec * sites_on_node;  // This vector in x
     iter = 0;
     for (i = 0; i < sites_on_node; i++) {
       for (j = 0; j < DIMF; j++) {
@@ -111,7 +111,7 @@ void av_ov (void *x, void *y, int *Nvec, primme_params *primme) {
 
     // Copy the resulting Twist_Fermion res back to complex vector y
     // Each Twist_Fermion has Ndat=16DIMF non-trivial complex components
-    xx = ((Complex_Z*) y) + Ndat * ivec * sites_on_node;   // This vector in y
+    xx = ((Complex_Z*) y) + Ndat * ivec * sites_on_node;  // This vector in y
     iter = 0;
     for (i = 0; i < sites_on_node; i++) {
       for (j = 0; j < DIMF; j++) {
@@ -178,7 +178,7 @@ int make_evs(int Nvec, Twist_Fermion **eigVec, double *eigVal, int flag) {
   int i, j, mu, nu, ivec, iter = 0, ret, Ndat = 16 * DIMF;
   int maxn = sites_on_node * Ndat;
   double check, *rnorms = malloc(Nvec * sizeof(*rnorms));
-  Complex_Z *workVecs = malloc(Nvec * maxn * sizeof(*workVecs));;
+  Complex_Z *workVecs = malloc(Nvec * maxn * sizeof(*workVecs));
   static primme_params primme;
   Twist_Fermion tTF, *tmpTF = malloc(sites_on_node * sizeof(*tmpTF));
 

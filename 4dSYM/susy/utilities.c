@@ -182,14 +182,6 @@ void fermion_op(Twist_Fermion *src, Twist_Fermion *dest, int sign) {
     }
   }
 
-  // To reproduce:
-  //   F2.setC(Dplus(V, F.getL()));
-  //   F2.setL(Dminus(V, F.getC()));
-  //   F2.setL(F2.getL() + 0.5 * Dbplus(V, F.getS()));
-  //   F2.setS(0.5 * Dbminus(V, F.getL()));
-  //   F3 = u1mass(V, F);
-  //   F2.setS(F2.getS() + F3.getS());
-  //   F2.setL(F2.getL() + F3.getL());
 #ifdef VP
   Dplus(link_src, plaq_dest);   // Overwrites plaq_dest for mu != nu
   Dminus(plaq_src, link_dest);  // Overwrites link_dest
@@ -210,9 +202,6 @@ void fermion_op(Twist_Fermion *src, Twist_Fermion *dest, int sign) {
 
 #ifdef QCLOSED
   if (NUMLINK == 5) {
-    // To reproduce:
-    //   F2.setC(F2.getC() + 0.5 * Dbminus(V, F.getC())
-    //                     + 0.5 * Dbplus(V, F.getC()));
     DbminusPtoP(plaq_src, plaq_dest2);    // Overwrites plaq_dest2 for nu != mu
     for (mu = 0; mu < NUMLINK; mu++) {
       for (nu = mu + 1; nu < NUMLINK; nu++) {
@@ -281,14 +270,6 @@ void fermion_op(Twist_Fermion *src, Twist_Fermion *dest, int sign) {
 
 
 // -----------------------------------------------------------------
-// To reproduce:
-//   tmp += V.get(x, mu).get(a, b) * L.get(x + e_mu, nu).get(b) * BC(x, e_mu)
-//        - V.get(x + e_nu, mu).get(b, a) * L.get(x, nu).get(b)
-//        - V.get(x, nu).get(a, b) * L.get(x + e_nu, mu).get(b) * BC(x, e_nu)
-//        + V.get(x + e_mu, nu).get(b, a) * L.get(x, mu).get(b);
-//   atmp.set(a, tmp);
-//   dum.set(x, mu, nu, atmp);
-//   dum.set(x, nu, mu, -1 * atmp);
 void Dplus(su3_vector *src[NUMLINK], su3_vector *dest[NUMLINK][NUMLINK]) {
   register int i;
   register site *s;
@@ -345,11 +326,6 @@ void Dplus(su3_vector *src[NUMLINK], su3_vector *dest[NUMLINK][NUMLINK]) {
 
 
 // -----------------------------------------------------------------
-// To reproduce
-// tmp += V.get(x + e_nu, mu).get(a, b) * P.get(x, mu, nu).get(b)
-//      - V.get(x - e_mu, mu).get(b, a) * P.get(x - e_mu, mu, nu).get(b) * BC(x, -e_mu);
-// atmp.set(a, atmp.get(a) + tmp);
-// dum.set(x, nu, atmp);
 void Dminus(su3_vector *src[NUMLINK][NUMLINK], su3_vector *dest[NUMLINK]) {
   register int i;
   register site *s;
@@ -652,10 +628,6 @@ void DbminusLtoS(su3_vector *src[NUMLINK], su3_vector *dest) {
 
 
 // -----------------------------------------------------------------
-// To reproduce:
-// tmp += conjug(V.get(x, mu).get(a, b)) * S.get(x + e_mu).get(b) * BC(x, e_mu)
-//      - conjug(V.get(x, mu).get(b, a)) * S.get(x).get(b);
-// atmp.set(a, tmp);
 void DbplusStoL(su3_vector *src, su3_vector *dest[NUMLINK]) {
   register int i;
   register site *s;

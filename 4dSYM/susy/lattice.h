@@ -94,7 +94,7 @@ EXTERN int warms, trajecs, niter, propinterval, nsrc;
 EXTERN Real traj_length;
 
 // U(N) generators, epsilon tensor
-EXTERN su3_matrix_f Lambda[NUMGEN], Lambda_prod[NUMGEN][NUMGEN];
+EXTERN su3_matrix_f Lambda[DIMF], Lambda_prod[DIMF][DIMF];
 EXTERN Real perm[NUMLINK][NUMLINK][NUMLINK][NUMLINK][NUMLINK];
 
 // Submatrix to convert from 5- to 4-component notation

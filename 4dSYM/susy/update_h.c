@@ -169,8 +169,8 @@ void assemble_fermion_force(Twist_Fermion *sol, Twist_Fermion *psol) {
       wait_gather(mtag0);
       FORALLSITES(i, s) {
         vec = (su3_vector *)(gen_pt[0][i]);
-        for (a = 0; a < NUMGEN; a++) {
-          for (b = 0; b < NUMGEN; b++) {
+        for (a = 0; a < DIMF; a++) {
+          for (b = 0; b < DIMF; b++) {
             CMULJ_((s->plaq_psol[mu][nu]).c[a], vec->c[b], cterm);
             CNEGATE(cterm, cterm);
             CMULREAL(cterm, s->bc1[mu], cterm);
@@ -183,8 +183,8 @@ void assemble_fermion_force(Twist_Fermion *sol, Twist_Fermion *psol) {
 
       FORALLSITES(i, s) {
         clear_su3mat_f(&(tempmat[i]));
-        for (a = 0; a < NUMGEN; a++) {
-          for (b = 0; b < NUMGEN; b++) {
+        for (a = 0; a < DIMF; a++) {
+          for (b = 0; b < DIMF; b++) {
             CMULJ_((s->plaq_psol[mu][nu]).c[a],
                    (s->link_sol[nu]).c[b], cterm);
             c_scalar_mult_add_su3mat_f(&(tempmat[i]), &(Lambda_prod[a][b]),
@@ -214,8 +214,8 @@ void assemble_fermion_force(Twist_Fermion *sol, Twist_Fermion *psol) {
 
       FORALLSITES(i, s) {
         clear_su3mat_f(&(tempmat[i]));
-        for (a = 0; a < NUMGEN; a++) {
-          for (b = 0; b < NUMGEN; b++) {
+        for (a = 0; a < DIMF; a++) {
+          for (b = 0; b < DIMF; b++) {
             CMULJ_((s->link_psol[nu]).c[a],
                    (s->plaq_sol[mu][nu]).c[b], cterm);
             c_scalar_mult_add_su3mat_f(&(tempmat[i]), &(Lambda_prod[b][a]),
@@ -236,8 +236,8 @@ void assemble_fermion_force(Twist_Fermion *sol, Twist_Fermion *psol) {
       wait_gather(mtag0);
       FORALLSITES(i, s) {
         vec = (su3_vector *)(gen_pt[0][i]);
-        for (a = 0; a < NUMGEN; a++) {
-          for (b = 0; b < NUMGEN; b++) {
+        for (a = 0; a < DIMF; a++) {
+          for (b = 0; b < DIMF; b++) {
             CMULJ_((vec->c[a]), (s->plaq_sol[mu][nu]).c[b], cterm);
             CMULREAL(cterm, s->bc1[mu], cterm);
             c_scalar_mult_add_su3mat_f(&(s->f_U[mu]), &(Lambda_prod[a][b]),
@@ -263,8 +263,8 @@ void assemble_fermion_force(Twist_Fermion *sol, Twist_Fermion *psol) {
     FORALLSITES(i, s) {
       clear_su3mat_f(&tmpmat);
       vec = (su3_vector *)(gen_pt[mu][i]);
-      for (a = 0; a < NUMGEN; a++) {
-        for (b = 0; b < NUMGEN; b++) {
+      for (a = 0; a < DIMF; a++) {
+        for (b = 0; b < DIMF; b++) {
           CMULJ_((s->site_psol).c[a],
                  (s->link_sol[mu]).c[b], cterm);
           CNEGATE(cterm, cterm);
@@ -297,8 +297,8 @@ void assemble_fermion_force(Twist_Fermion *sol, Twist_Fermion *psol) {
     FORALLSITES(i, s) {
       clear_su3mat_f(&tmpmat);
       vec = (su3_vector *)(gen_pt[mu][i]);
-      for (a = 0; a < NUMGEN; a++) {
-        for (b = 0; b < NUMGEN; b++) {
+      for (a = 0; a < DIMF; a++) {
+        for (b = 0; b < DIMF; b++) {
           CMULJ_((s->link_psol[mu]).c[a], vec->c[b], cterm);
           CMULREAL(cterm, s->bc1[mu], cterm);
           CNEGATE(cterm, cterm);
@@ -388,8 +388,8 @@ void assemble_fermion_force(Twist_Fermion *sol, Twist_Fermion *psol) {
       vec1 = (su3_vector *)(local_pt[flip][1][i]);
       vec2 = (su3_vector *)(local_pt[flip][2][i]);
       vec3 = (su3_vector *)(local_pt[flip][3][i]);
-      for (l = 0; l < NUMGEN; l++) {
-        for (m = 0; m < NUMGEN; m++) {
+      for (l = 0; l < DIMF; l++) {
+        for (m = 0; m < DIMF; m++) {
           CMULJ_(vec0->c[l], vec1->c[m], cterm);
           CMULREAL(cterm, permm, cterm);
           BC = (s->bc3[a][b][c]) * (s->bc1[c]);
@@ -479,8 +479,8 @@ void assemble_fermion_force(Twist_Fermion *sol, Twist_Fermion *psol) {
       vec1 = (su3_vector *)(local_pt[flip][1][i]);
       vec2 = (su3_vector *)(local_pt[flip][2][i]);
       vec3 = (su3_vector *)(local_pt[flip][3][i]);
-      for (l = 0; l < NUMGEN; l++) {
-        for (m = 0; m < NUMGEN; m++) {
+      for (l = 0; l < DIMF; l++) {
+        for (m = 0; m < DIMF; m++) {
           CMULJ_(vec0->c[l], vec1->c[m], cterm);
           CMULREAL(cterm, permm, cterm);
           BC = (s->bc2[OPP_LDIR(a)][OPP_LDIR(b)]) * (s->bc1[c]);
@@ -514,8 +514,6 @@ void assemble_fermion_force(Twist_Fermion *sol, Twist_Fermion *psol) {
   // Final adjoint and minus sign
   FORALLSITES(i, s) {
     for (mu = 0; mu < NUMLINK; mu++) {
-//      tmpmat = s->f_U[mu];
-//      scalar_mult_su3_matrix_f(&tmpmat, -1.0, &tmpmat);
       scalar_mult_su3_matrix_f(&(s->f_U[mu]), -1.0, &tmpmat);
       su3_adjoint_f(&tmpmat, &(s->f_U[mu]));
     }
@@ -583,7 +581,6 @@ double fermion_force(Real eps, Twist_Fermion *src, Twist_Fermion **sol) {
 #endif
     for (mu = 0; mu < NUMLINK; mu++) {
       FORALLSITES(i, s) {
-//        scalar_mult_add_su3_matrix_f(&(s->mom[mu]), &(s->f_U[mu]), eps, &(s->mom[mu]));
         add_su3_matrix_f(&(fullforce[mu][i]), &(s->f_U[mu]), &(fullforce[mu][i]));
 #ifdef FORCE_DEBUG
       if (s->x == 0 && s->y == 0 && s->z == 0 && s->t == 0 && mu == 3) {
@@ -598,7 +595,8 @@ double fermion_force(Real eps, Twist_Fermion *src, Twist_Fermion **sol) {
     }
 #ifdef FORCE_DEBUG
     g_doublesum(&individ_force);
-    node0_printf("Individ_force %d %e \n",n,eps*sqrt(individ_force)/volume);
+    node0_printf("Individ_force %d %.4g\n",
+                 n, eps * sqrt(individ_force) / volume);
 
     // Do a scan of the fermion action
     for (mu = 0; mu < NUMLINK; mu++) {
@@ -643,10 +641,10 @@ double fermion_force(Real eps, Twist_Fermion *src, Twist_Fermion **sol) {
             }
           }
         }
-        sub_su3_matrix_f(&(tprint), &(s->f_U[mu]), &tprint2);
+        sub_su3_matrix_f(&tprint, &(s->f_U[mu]), &tprint2);
         node0_printf("mu=%d on site (%d, %d, %d, %d): %.4g\n",
                      mu, s->x, s->y, s->z, s->t,
-                     realtrace_su3_f(&(tprint2), &(tprint2)));
+                     realtrace_su3_f(&tprint2, &tprint2));
         dumpmat_f(&(tprint));
         s->linkf[mu] = tmat1;
 

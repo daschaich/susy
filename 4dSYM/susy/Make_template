@@ -46,20 +46,19 @@ HEADERS = ${GLOBAL_HEADERS} ${MY_HEADERS} ${INLINE_HEADERS}
 
 # All required object files
 # Basic set from current directory
-MY_OBJECTS =          \
-  setup.o             \
-  setup_lambda.o      \
-  setup_offset.o      \
-  d_action.o          \
-  gauge_info.o        \
-  library_util.o      \
-  utilities.o         \
-  grsource.o          \
-  fermion_repS.o      \
-  fermion_rep_adjS.o  \
-  d_link.o            \
-  determinant.o       \
-  hdelta0.o           \
+MY_OBJECTS =      \
+  setup.o         \
+  setup_lambda.o  \
+  setup_offset.o  \
+  d_action.o      \
+  gauge_info.o    \
+  library_util.o  \
+  utilities.o     \
+  grsource.o      \
+  fermion_rep.o   \
+  d_link.o        \
+  determinant.o   \
+  hdelta0.o       \
   congrad_multi_field.o
 
 # Basic set from generic directory

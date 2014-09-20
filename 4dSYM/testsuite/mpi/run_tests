@@ -15,7 +15,6 @@ if [ $# -gt 1 ]; then
   NSq=$[$N*$N]
   awk -v"X=#define NCOL $N" '{sub(/^#define NCOL .*/,X);print}' ../include/su3.h > TEMP && mv TEMP ../include/su3.h
   awk -v"X=#define DIMF $NSq" '{sub(/^#define DIMF .*/,X);print}' ../include/su3.h > TEMP && mv TEMP ../include/su3.h
-  awk -v"X=#define NUMGEN $NSq" '{sub(/^#define NUMGEN .*/,X);print}' ../include/su3.h > TEMP && mv TEMP ../include/su3.h
 
   # Compile
   echo "Compiling susy_$target..."
@@ -48,7 +47,6 @@ if [ $# -gt 1 ]; then
   cd ../../include
   awk -v"X=#define NCOL 2" '{sub(/^#define NCOL .*/,X);print}' su3.h > TEMP && mv TEMP su3.h
   awk -v"X=#define DIMF 4" '{sub(/^#define DIMF .*/,X);print}' su3.h > TEMP && mv TEMP su3.h
-  awk -v"X=#define NUMGEN 4" '{sub(/^#define NUMGEN .*/,X);print}' su3.h > TEMP && mv TEMP su3.h
   exit
 fi
 
@@ -63,7 +61,6 @@ for N in 2 3 4 ; do
   NSq=$[$N*$N]
   awk -v"X=#define NCOL $N" '{sub(/^#define NCOL .*/,X);print}' ../include/su3.h > TEMP && mv TEMP ../include/su3.h
   awk -v"X=#define DIMF $NSq" '{sub(/^#define DIMF .*/,X);print}' ../include/su3.h > TEMP && mv TEMP ../include/su3.h
-  awk -v"X=#define NUMGEN $NSq" '{sub(/^#define NUMGEN .*/,X);print}' ../include/su3.h > TEMP && mv TEMP ../include/su3.h
   for target in hmc corr stout hmc_corr bilin eig phase ; do
     echo "Compiling susy_$target..."
     if ! make -f $makefile susy_$target >& /dev/null ; then
@@ -117,4 +114,3 @@ done
 cd ../../include
 awk -v"X=#define NCOL 2" '{sub(/^#define NCOL .*/,X);print}' su3.h > TEMP && mv TEMP su3.h
 awk -v"X=#define DIMF 4" '{sub(/^#define DIMF .*/,X);print}' su3.h > TEMP && mv TEMP su3.h
-awk -v"X=#define NUMGEN 4" '{sub(/^#define NUMGEN .*/,X);print}' su3.h > TEMP && mv TEMP su3.h
