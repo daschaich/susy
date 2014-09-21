@@ -65,13 +65,33 @@ int main(int argc, char *argv[]) {
   for (ivec = 0; ivec < Nvec; ivec++)
     eigVec[ivec] = malloc(sites_on_node * sizeof(Twist_Fermion));
 
-  // Calculate and print eigenvalues, checking |D^dag D phi - lambda phi|^2
-  total_iters = make_evs(Nvec, eigVec, eigVal);
+  // Calculate and print smallest eigenvalues,
+  // checking |D^dag D phi - lambda phi|^2
+  total_iters = make_evs(Nvec, eigVec, eigVal, 1);
 
-#ifdef DDdag
   // Check matrix elements of D with DDdag eigenmodes
+  // The eigenvalues should be paired, with each pair producing
+  // positive/negative matrix elements
+  // In principle, one could tighten eig_tol until all pairs are found
+  // For now we just print them all out to check offline
   check_Dmat(Nvec, eigVec);
-#endif
+
+  // Calculate and print largest eigenvalues, for tuning RHMC
+  // Don't need to compute many here...
+  if (Nvec > 12) {
+    Nvec = 12;
+    free(eigVal);
+    eigVal = malloc(Nvec * sizeof(*eigVal));
+
+    for (ivec = 0; ivec < Nvec; ivec++)
+      free(eigVec[ivec]);
+    free(eigVec);
+
+    eigVec = malloc(Nvec * sizeof(*eigVec));
+    for (ivec = 0; ivec < Nvec; ivec++)
+      eigVec[ivec] = malloc(sites_on_node * sizeof(Twist_Fermion));
+  }
+  total_iters += make_evs(Nvec, eigVec, eigVal, -1);
 
   node0_printf("RUNNING COMPLETED\n");
   dtime += dclock();

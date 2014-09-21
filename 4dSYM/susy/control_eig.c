@@ -90,14 +90,14 @@ int main(int argc, char *argv[]) {
   total_iters = make_evs(Nvec, eigVec, eigVal, 1);
 
   // Check matrix elements of D with DDdag eigenmodes
-  // This can be used to check that all pairs were found:
-  // the matrix elements of such pairs are negatives of each other
+  // The eigenvalues should be paired, with each pair producing
+  // positive/negative matrix elements
   // In principle, one could tighten eig_tol until all pairs are found
   // For now we just print them all out to check offline
   check_Dmat(Nvec, eigVec);
 
   // Calculate and print largest eigenvalues, for tuning RHMC
-  // Don't need to compute so many here...
+  // Don't need to compute many here...
   if (Nvec > 12) {
     Nvec = 12;
     free(eigVal);
