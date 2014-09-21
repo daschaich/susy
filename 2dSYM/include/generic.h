@@ -29,7 +29,7 @@ void d_plaquette_frep_lcl(double *plaq_frep);
 void gaugefix(int gauge_dir,Real relax_boost,int max_gauge_iter,
               Real gfix_tol, field_offset diffmat, field_offset sumvec);
 
-/* io_helpers.c */
+// io_helpers.c
 gauge_file *save_lattice(int flag, char *filename, char *stringLFN);
 gauge_file *reload_lattice(int flag, char *filename);
 int ask_starting_lattice(FILE *fp, int prompt, int *flag, char *filename);
@@ -64,9 +64,6 @@ u_int32type nersc_cksum();
 
 // ploop_dist.c
 complex ploop();
-
-// ranmom.c
-void ranmom();
 
 // remap_stdio_from_args.c
 int remap_stdio_from_args(int argc, char *argv[]);

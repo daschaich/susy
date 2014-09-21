@@ -39,7 +39,6 @@ void setup_lambda();
 void setup_offset();
 void setup_rhmc();
 void fermion_rep();
-void make_fermion_rep_matrix(su3_matrix_f *a, su3_matrix *b);
 
 // Gaussian random source
 int grsource(Twist_Fermion *source);

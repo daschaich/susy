@@ -18,6 +18,7 @@
 #define OPP_DIR(dir) (7 - (dir))  // Opposite spacetime direction
 
 #define NUMLINK 5
+#define NPLAQ 10                  // NUMLINK * (NUMLINK - 1 ) / 2
 #define DIR_5 4
 #define OPP_LDIR(dir) (9 - (dir)) // Opposite link direction
 

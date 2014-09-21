@@ -263,7 +263,7 @@ void setup_PtoP() {
     }
   }
   if (counter > NTERMS) {
-    node0_printf("ERROR: TOO MANY TERMS IN PTOP LOOKUP\n");
+    node0_printf("ERROR: Too many terms in DbplusPtoP_lookup\n");
     terminate(1);
   }
 
@@ -291,7 +291,7 @@ void setup_PtoP() {
     }
   }
   if (counter > NTERMS) {
-    node0_printf("ERROR: TOO MANY TERMS IN PTOP LOOKUP\n");
+    node0_printf("ERROR: Too many terms in DbminusPtoP_lookup\n");
     terminate(1);
   }
 }
@@ -330,7 +330,7 @@ void setup_FQ() {
     }
   }
   if (counter > NTERMS) {
-    node0_printf("ERROR: TOO MANY TERMS IN FQ LOOKUP\n");
+    node0_printf("ERROR: Too many terms in FQ_lookup\n");
     terminate(1);
   }
 }
@@ -372,5 +372,18 @@ void setup_P() {
   P[3][2] = t20;
   P[3][3] = t20;
   P[3][4] = -4.0 * t20;
+}
+// -----------------------------------------------------------------
+
+
+
+// -----------------------------------------------------------------
+// Return index = a * (NUMLINK - 1) - a * (a + 1) / 2 + b - 1;
+// where a (b) is the smaller (larger) of mu and nu
+int plaq_index(int mu, int nu) {
+  if (mu > nu)
+    return (nu * (NUMLINK - 1) - nu * (nu + 1) / 2 + mu - 1);
+  else
+    return (mu * (NUMLINK - 1) - mu * (mu + 1) / 2 + nu - 1);
 }
 // -----------------------------------------------------------------

@@ -8,7 +8,7 @@
 // -----------------------------------------------------------------
 // Gaussian random Twist_Fermion
 void rand_TFsource(Twist_Fermion *src) {
-  register int i, j, mu, nu;
+  register int i, j, mu;
   register site *s;
 
   // Begin with pure gaussian random numbers
@@ -29,18 +29,15 @@ void rand_TFsource(Twist_Fermion *src) {
         src[i].Flink[mu].c[j].real = gaussian_rand_no(&node_prn);
         src[i].Flink[mu].c[j].imag = gaussian_rand_no(&node_prn);
 #endif
-
-        src[i].Fplaq[mu][mu].c[j] = cmplx(0.0, 0.0);
-        for (nu = mu + 1; nu < NUMLINK; nu++) {  // Plaquette fermions
+      }
+      for (mu = 0; mu < NPLAQ; mu++) {        // Plaquettefermions
 #ifdef SITERAND
-          src[i].Fplaq[mu][nu].c[j].real = gaussian_rand_no(&(s->site_prn));
-          src[i].Fplaq[mu][nu].c[j].imag = gaussian_rand_no(&(s->site_prn));
+        src[i].Fplaq[mu].c[j].real = gaussian_rand_no(&(s->site_prn));
+        src[i].Fplaq[mu].c[j].imag = gaussian_rand_no(&(s->site_prn));
 #else
-          src[i].Fplaq[mu][nu].c[j].real = gaussian_rand_no(&node_prn);
-          src[i].Fplaq[mu][nu].c[j].imag = gaussian_rand_no(&node_prn);
+        src[i].Fplaq[mu].c[j].real = gaussian_rand_no(&node_prn);
+        src[i].Fplaq[mu].c[j].imag = gaussian_rand_no(&node_prn);
 #endif
-          CNEGATE(src[i].Fplaq[mu][nu].c[j], src[i].Fplaq[nu][mu].c[j]);
-        }
       }
     }
   }
@@ -71,14 +68,11 @@ void av_ov (void *x, void *y, int *Nvec, primme_params *primme) {
           src[i].Flink[mu].c[j].real = xx[iter].r;
           src[i].Flink[mu].c[j].imag = xx[iter].i;
           iter++;
-
-          src[i].Fplaq[mu][mu].c[j] = cmplx(0.0, 0.0);
-          for (nu = mu + 1; nu < NUMLINK; nu++) {
-            src[i].Fplaq[mu][nu].c[j].real = xx[iter].r;
-            src[i].Fplaq[mu][nu].c[j].imag = xx[iter].i;
-            iter++;
-            CNEGATE(src[i].Fplaq[mu][nu].c[j], src[i].Fplaq[nu][mu].c[j]);
-          }
+        }
+        for (mu = 0; mu < NPLAQ; mu++) {
+          src[i].Fplaq[mu].c[j].real = xx[iter].r;
+          src[i].Fplaq[mu].c[j].imag = xx[iter].i;
+          iter++;
         }
       }
     }
@@ -118,15 +112,15 @@ void av_ov (void *x, void *y, int *Nvec, primme_params *primme) {
         xx[iter].r = (double)res[i].Fsite.c[j].real;
         xx[iter].i = (double)res[i].Fsite.c[j].imag;
         iter++;
-        for (mu = 0; mu < NUMLINK; mu++) {   // Do all links before any plaqs
+        for (mu = 0; mu < NUMLINK; mu++) {
           xx[iter].r = (double)res[i].Flink[mu].c[j].real;
           xx[iter].i = (double)res[i].Flink[mu].c[j].imag;
           iter++;
-          for (nu = mu + 1; nu < NUMLINK; nu++) {
-            xx[iter].r = (double)res[i].Fplaq[mu][nu].c[j].real;
-            xx[iter].i = (double)res[i].Fplaq[mu][nu].c[j].imag;
-            iter++;
-          }
+        }
+        for (mu = 0; mu < NPLAQ; mu++) {
+          xx[iter].r = (double)res[i].Fplaq[mu].c[j].real;
+          xx[iter].i = (double)res[i].Fplaq[mu].c[j].imag;
+          iter++;
         }
       }
     }
@@ -211,11 +205,11 @@ int make_evs(int Nvec, Twist_Fermion **eigVec, double *eigVal, int flag) {
           workVecs[iter].r = eigVec[ivec][i].Flink[mu].c[j].real;
           workVecs[iter].i = eigVec[ivec][i].Flink[mu].c[j].imag;
           iter++;
-          for (nu = mu + 1; nu < NUMLINK; nu++) {
-            workVecs[iter].r = eigVec[ivec][i].Fplaq[mu][nu].c[j].real;
-            workVecs[iter].i = eigVec[ivec][i].Fplaq[mu][nu].c[j].imag;
-            iter++;
-          }
+        }
+        for (mu = 0; mu < NPLAQ; mu++) {
+          workVecs[iter].r = eigVec[ivec][i].Fplaq[mu].c[j].real;
+          workVecs[iter].i = eigVec[ivec][i].Fplaq[mu].c[j].imag;
+          iter++;
         }
       }
     }
@@ -271,15 +265,11 @@ int make_evs(int Nvec, Twist_Fermion **eigVec, double *eigVal, int flag) {
           eigVec[ivec][i].Flink[mu].c[j].real = workVecs[iter].r;
           eigVec[ivec][i].Flink[mu].c[j].imag = workVecs[iter].i;
           iter++;
-
-          eigVec[ivec][i].Fplaq[mu][mu].c[j] = cmplx(0.0, 0.0);
-          for (nu = mu + 1; nu < NUMLINK; nu++) {
-            eigVec[ivec][i].Fplaq[mu][nu].c[j].real = workVecs[iter].r;
-            eigVec[ivec][i].Fplaq[mu][nu].c[j].imag = workVecs[iter].i;
-            iter++;
-            CNEGATE(eigVec[ivec][i].Fplaq[mu][nu].c[j],
-                    eigVec[ivec][i].Fplaq[nu][mu].c[j]);
-          }
+        }
+        for (mu = 0; mu < NPLAQ; mu++) {
+          eigVec[ivec][i].Fplaq[mu].c[j].real = workVecs[iter].r;
+          eigVec[ivec][i].Fplaq[mu].c[j].imag = workVecs[iter].i;
+          iter++;
         }
       }
     }

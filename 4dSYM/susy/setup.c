@@ -74,7 +74,7 @@ int initial_set() {
 // -----------------------------------------------------------------
 // Allocate space for fields
 void make_fields() {
-  double size = (double)(2 + 4 * NUMLINK + 3 * NUMLINK * NUMLINK)
+  double size = (double)(2 + 4 * NUMLINK + 3 * NPLAQ)
                 * sites_on_node * sizeof(su3_vector);
 
   FIELD_ALLOC_VEC(tsite, su3_vector, NUMLINK);
@@ -84,9 +84,9 @@ void make_fields() {
   FIELD_ALLOC_VEC(link_src, su3_vector, NUMLINK);
   FIELD_ALLOC_VEC(link_dest, su3_vector, NUMLINK);
   FIELD_ALLOC_VEC(link_dest2, su3_vector, NUMLINK);
-  FIELD_ALLOC_MAT(plaq_src, su3_vector, NUMLINK, NUMLINK);
-  FIELD_ALLOC_MAT(plaq_dest, su3_vector, NUMLINK, NUMLINK);
-  FIELD_ALLOC_MAT(plaq_dest2, su3_vector, NUMLINK, NUMLINK);
+  FIELD_ALLOC_VEC(plaq_src, su3_vector, NPLAQ);
+  FIELD_ALLOC_VEC(plaq_dest, su3_vector, NPLAQ);
+  FIELD_ALLOC_VEC(plaq_dest2, su3_vector, NPLAQ);
 
   // Stout smearing stuff needed for `hot-start' random configurations
   size += (double)(1 + 3 * NUMLINK) * sites_on_node * sizeof(su3_matrix_f);

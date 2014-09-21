@@ -84,14 +84,14 @@ void av_ov (void *x, void *y, int *Nvec, primme_params *primme) {
 
     // Copy the resulting Twist_Fermion res back to complex vector y
     // Each Twist_Fermion has Ndat=4DIMF non-trivial complex components
-    xx = ((Complex_Z*) y) + Ndat * ivec * sites_on_node;  // 
+    xx = ((Complex_Z*) y) + Ndat * ivec * sites_on_node;  // This vector in y
     iter = 0;
     for (i = 0; i < sites_on_node; i++) {
       for (j = 0; j < DIMF; j++) {
         xx[iter].r = (double)res[i].Fsite.c[j].real;
         xx[iter].i = (double)res[i].Fsite.c[j].imag;
         iter++;
-        for (mu = 0; mu < NUMLINK; mu++) {   // Do all links before any plaqs
+        for (mu = 0; mu < NUMLINK; mu++) {
           xx[iter].r = (double)res[i].Flink[mu].c[j].real;
           xx[iter].i = (double)res[i].Flink[mu].c[j].imag;
           iter++;

@@ -220,7 +220,7 @@ void Dplus(su3_vector *src[NUMLINK], su3_vector *dest) {
 void Dminus(su3_vector *src, su3_vector *dest[NUMLINK]) {
   register int i;
   register site *s;
-  int mu, nu, j;
+  int mu, nu;
   su3_vector tvec, vtmp1, vtmp2, vtmp3;
   msg_tag *mtag0 = NULL, *mtag1 = NULL;
 
@@ -236,12 +236,11 @@ void Dminus(su3_vector *src, su3_vector *dest[NUMLINK]) {
                                 goffset[nu], EVENANDODD, gen_pt[0]);
 
       FORALLSITES(i, s) {
-        if (mu > nu) {    // src is anti-symmetric under mu <--> nu
-          for (j = 0; j < DIMF; j++)
-            CNEGATE(src[i].c[j], tvec.c[j]);
-        }
+        if (mu > nu) {    // plaq_sol is anti-symmetric under mu <--> nu
+          scalar_mult_su3_vector(&(src[i]), -1.0, &tvec);
+        }                 // Suppress compiler error
         else
-          tvec = src[i];
+          su3vec_copy(&(src[i]), &tvec);
         mult_su3_vec_mat(&tvec, &(s->link[mu]), &(tsite[0][i]));
       }
       mtag1 = start_gather_field(tsite[0], sizeof(su3_vector),
@@ -250,12 +249,11 @@ void Dminus(su3_vector *src, su3_vector *dest[NUMLINK]) {
       wait_gather(mtag0);
       wait_gather(mtag1);
       FORALLSITES(i, s) {
-        if (mu > nu) {    // src is anti-symmetric under mu <--> nu
-          for (j = 0; j < DIMF; j++)
-            CNEGATE(src[i].c[j], tvec.c[j]);
-        }
+        if (mu > nu) {    // plaq_sol is anti-symmetric under mu <--> nu
+          scalar_mult_su3_vector(&(src[i]), -1.0, &tvec);
+        }                 // Suppress compiler error
         else
-          tvec = src[i];
+          su3vec_copy(&(src[i]), &tvec);
         mult_su3_mat_vec((su3_matrix *)(gen_pt[0][i]), &tvec, &vtmp1);
         scalar_mult_su3_vector((su3_vector *)(gen_pt[1][i]),
                                s->bc[OPP_LDIR(mu)], &vtmp3);

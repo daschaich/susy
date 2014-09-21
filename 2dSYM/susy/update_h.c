@@ -157,12 +157,12 @@ void assemble_fermion_force(Twist_Fermion *sol, Twist_Fermion *psol) {
       wait_gather(mtag0);
       FORALLSITES(i, s) {
         vec = (su3_vector *)(gen_pt[0][i]);
+        if (mu > nu) {    // plaq_psol is anti-symmetric under mu <--> nu
+          scalar_mult_su3_vector(&(s->plaq_psol), -1.0, &tvec);
+        }                 // Suppress compiler error
+        else
+          su3vec_copy(&(s->plaq_psol), &tvec);
         for (a = 0; a < DIMF; a++) {
-          if (mu > nu) {    // plaq_psol is anti-symmetric under mu <--> nu
-            CNEGATE((s->plaq_psol).c[a], tvec.c[a]);
-          }                 // Suppress compiler error
-          else
-            tvec.c[a] = (s->plaq_psol).c[a];
           for (b = 0; b < DIMF; b++) {
             CMULJ_(tvec.c[a], vec->c[b], cterm);
             CNEGATE(cterm, cterm);
@@ -176,12 +176,12 @@ void assemble_fermion_force(Twist_Fermion *sol, Twist_Fermion *psol) {
 
       FORALLSITES(i, s) {
         clear_su3mat_f(&(tempmat[i]));
+        if (mu > nu) {    // plaq_psol is anti-symmetric under mu <--> nu
+          scalar_mult_su3_vector(&(s->plaq_psol), -1.0, &tvec);
+        }                 // Suppress compiler error
+        else
+          su3vec_copy(&(s->plaq_psol), &tvec);
         for (a = 0; a < DIMF; a++) {
-          if (mu > nu) {    // plaq_psol is anti-symmetric under mu <--> nu
-            CNEGATE((s->plaq_psol).c[a], tvec.c[a]);
-          }                 // Suppress compiler error
-          else
-            tvec.c[a] = (s->plaq_psol).c[a];
           for (b = 0; b < DIMF; b++) {
             CMULJ_(tvec.c[a], (s->link_sol[nu]).c[b], cterm);
             c_scalar_mult_add_su3mat_f(&(tempmat[i]), &(Lambda_prod[a][b]),
@@ -207,17 +207,15 @@ void assemble_fermion_force(Twist_Fermion *sol, Twist_Fermion *psol) {
         continue;
 
       mtag0 = start_gather_site(F_OFFSET(link_psol[nu]), sizeof(su3_vector),
-                                 goffset[mu], EVENANDODD, gen_pt[0]);
+                                goffset[mu], EVENANDODD, gen_pt[0]);
 
       FORALLSITES(i, s) {
         clear_su3mat_f(&(tempmat[i]));
-        for (b = 0; b < DIMF; b++) {
-          if (mu > nu) {    // plaq_sol is anti-symmetric under mu <--> nu
-            CNEGATE((s->plaq_sol).c[b], tvec.c[b]);
-          }                 // Suppress compiler error
-          else
-            tvec.c[b] = (s->plaq_sol).c[b];
-        }
+        if (mu > nu) {    // plaq_sol is anti-symmetric under mu <--> nu
+          scalar_mult_su3_vector(&(s->plaq_sol), -1.0, &tvec);
+        }                 // Suppress compiler error
+        else
+          su3vec_copy(&(s->plaq_sol), &tvec);
         for (a = 0; a < DIMF; a++) {
           for (b = 0; b < DIMF; b++) {
             CMULJ_((s->link_psol[nu]).c[a], tvec.c[b], cterm);
@@ -239,13 +237,11 @@ void assemble_fermion_force(Twist_Fermion *sol, Twist_Fermion *psol) {
       wait_gather(mtag0);
       FORALLSITES(i, s) {
         vec = (su3_vector *)(gen_pt[0][i]);
-        for (b = 0; b < DIMF; b++) {
-          if (mu > nu) {    // plaq_sol is anti-symmetric under mu <--> nu
-            CNEGATE((s->plaq_sol).c[b], tvec.c[b]);
-          }                 // Suppress compiler error
-          else
-            tvec.c[b] = (s->plaq_sol).c[b];
-        }
+        if (mu > nu) {    // plaq_sol is anti-symmetric under mu <--> nu
+          scalar_mult_su3_vector(&(s->plaq_sol), -1.0, &tvec);
+        }                 // Suppress compiler error
+        else
+          su3vec_copy(&(s->plaq_sol), &tvec);
         for (a = 0; a < DIMF; a++) {
           for (b = 0; b < DIMF; b++) {
             CMULJ_(vec->c[a], tvec.c[b], cterm);
@@ -370,7 +366,7 @@ double fermion_force(Real eps, Twist_Fermion *src, Twist_Fermion **sol) {
 #ifdef FORCE_DEBUG
   int kick, ii, jj, iters = 0;
   Real final_rsq;
-  double individ_force, old_action, new_action, diff_action;
+  double individ_force, old_action, new_action = 0.0;
   su3_matrix_f tmat1, tprint, tprint2;
   clear_su3mat_f(&tprint);
   clear_su3mat_f(&tmat1);
@@ -395,7 +391,8 @@ double fermion_force(Real eps, Twist_Fermion *src, Twist_Fermion **sol) {
 #endif
     for (mu = 0; mu < NUMLINK; mu++) {
       FORALLSITES(i, s) {
-        add_su3_matrix_f(&(fullforce[mu][i]), &(s->f_U[mu]), &(fullforce[mu][i]));
+        add_su3_matrix_f(&(fullforce[mu][i]), &(s->f_U[mu]),
+                         &(fullforce[mu][i]));
 #ifdef FORCE_DEBUG
       if (s->x == 0 && s->y == 0 && s->z == 0 && s->t == 0 && mu == 3) {
         printf("Fermion force mu=%d on site (%d, %d, %d, %d)\n",
@@ -429,22 +426,22 @@ double fermion_force(Real eps, Twist_Fermion *src, Twist_Fermion **sol) {
 
               fermion_rep();
               iters += congrad_multi_field(src, sol, niter, rsqmin, &final_rsq);
-              if (kick== -1)
-                new_action = -d_fermion_action(src, sol);
-              if (kick== 1) {
+              if (kick == -1)
+                new_action -= d_fermion_action(src, sol);
+              if (kick == 1) {
                 new_action += d_fermion_action(src, sol);
                 tprint.e[ii][jj].real = -250.0 * new_action;
               }
             }
 
             for (kick = -1; kick <= 1; kick += 2) {
-              s->linkf[mu]=tmat1;
+              s->linkf[mu] = tmat1;
               s->linkf[mu].e[ii][jj].imag += 0.001 * (Real)kick;
 
               fermion_rep();
-              iters += congrad_multi_field(src, sol, niter, rsqmin, &final_rsq, 0);
+              iters += congrad_multi_field(src, sol, niter, rsqmin, &final_rsq);
               if (kick == -1)
-                new_action = -d_fermion_action(src, sol);
+                new_action -= d_fermion_action(src, sol);
               if (kick == 1) {
                 new_action += d_fermion_action(src, sol);
                 node0_printf("XXXG%d%dI %.4g %.4g\n",

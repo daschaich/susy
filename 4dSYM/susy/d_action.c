@@ -31,7 +31,7 @@ double d_hmom_action() {
 double d_gauge_action() {
   register int i;
   register site *s;
-  int mu, nu;
+  int index;
   double g_action = 0.0, norm = 0.5 * C2;
   complex cg_action;
   su3_matrix_f tmat;
@@ -44,11 +44,10 @@ double d_gauge_action() {
   }
 
   compute_Fmunu();
-  for (mu = 0; mu < NUMLINK; mu++) {
-    for (nu = mu + 1; nu < NUMLINK; nu++) {
-      FORALLSITES(i, s)
-        g_action += 2 * realtrace_su3_f(&(s->Fmunu[mu][nu]),
-                                        &(s->Fmunu[mu][nu]));
+  FORALLSITES(i, s) {
+    for (index = 0; index < NPLAQ; index++) {
+        g_action += 2.0 * realtrace_su3_f(&(s->Fmunu[index]),
+                                          &(s->Fmunu[index]));
     }
   }
   g_action *= kappa;

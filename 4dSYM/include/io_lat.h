@@ -41,7 +41,7 @@ typedef struct {
   int32type order;                      /* 0 means no coordinate list is
                 attached and the values are in
                 coordinate serial order.
-                Nonzero means that a
+                Non-zero means that a
                 coordinate list is attached,
                 specifying the order of values */
 } gauge_header;

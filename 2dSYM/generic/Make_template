@@ -17,6 +17,7 @@ G_ALL = \
  io_helpers.o \
  io_lat.o \
  io_lat_utils.o \
+ io_phase.o \
  layout_hyper_prime.o \
  make_lattice.o \
  nersc_cksum.o \
@@ -65,6 +66,8 @@ io_lat.o: ../generic/io_lat.c
 	${CC} -c ${CFLAGS} $<
 io_lat_utils.o: ../include/io_lat.h
 io_lat_utils.o: ../generic/io_lat_utils.c
+	${CC} -c ${CFLAGS} $<
+io_phase.o: ../generic/io_phase.c
 	${CC} -c ${CFLAGS} $<
 layout_hyper_prime.o: ../generic/layout_hyper_prime.c
 	${CC} -c ${CFLAGS} $<
