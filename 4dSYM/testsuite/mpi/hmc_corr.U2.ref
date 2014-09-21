@@ -3,7 +3,7 @@ Microcanonical simulation with refreshing
 Machine = MPI (portable), with 2 nodes
 Hybrid Monte Carlo algorithm
 Phi algorithm
-start: Wed Sep 17 20:56:15 2014
+start: Sat Sep 20 19:56:29 2014
 
 type 0 for no prompts  or 1 for prompts
 nx 4
@@ -13,9 +13,9 @@ nt 4
 iseed 41
 LAYOUT = Hypercubes, options = hyper_prime,
 ON EACH NODE 2 x 4 x 4 x 4
-Mallocing 2.3 MBytes per core for lattice
+Mallocing 1.9 MBytes per core for lattice
 Antiperiodic temporal boundary conditions
-Mallocing 0.9 MBytes per core for fields
+Mallocing 0.6 MBytes per core for fields
 RHMC Norder 15 for spectral range [0.0000001, 1000]
 
 
@@ -40,7 +40,7 @@ C2=1
 Restored binary gauge configuration serially from file config.U2.4444
 Time stamp Sun Feb  9 13:12:59 2014
 Checksums be30095 b19f9ad8 OK
-Time to reload gauge configuration = 1.093864e-03
+Time to reload gauge configuration = 6.968975e-04
 CHECK PLAQ: 1.9081702017469617e+00 1.8927824330549272e+00
 CHECK NERSC LINKTR: -5.5492308298425996e-03 CKSUM: 0
 START 1.9081702 1.8927824 3.8009526 15.784656
@@ -262,7 +262,7 @@ PLOLAR_LOOP 0 1 0 1 1.82631
 PLOLAR_LOOP 0 0 1 1 1.82496
 Fixing to Coulomb gauge...
 GFIX ended at step 71. Ave gf action 0.556172, delta 9.77e-08
-GFIX time = 0.00651 seconds
+GFIX time = 0.006737 seconds
 BEFORE 1.9170908 1.8676649
 AFTER  1.9170908 1.8676649
 hvy_pot: MAX_T = 1, MAX_X = 1
@@ -313,6 +313,6 @@ RUNNING COMPLETED
 STOP 1.9170908 1.8676649 3.7847558 15.693374
 Average CG iters for steps: 789.7
 
-Time = 28.3 seconds
+Time = 23.67 seconds
 total_iters = 2369
 

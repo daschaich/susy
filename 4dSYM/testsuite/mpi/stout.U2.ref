@@ -2,7 +2,7 @@ N=4 SYM, Nc = 2, DIMF = 4, fermion rep = adjoint
 Microcanonical simulation with refreshing
 Machine = MPI (portable), with 2 nodes
 Phi algorithm
-start: Thu Aug  7 13:22:30 2014
+start: Sat Sep 20 19:56:54 2014
 
 type 0 for no prompts  or 1 for prompts
 nx 4
@@ -12,9 +12,9 @@ nt 4
 iseed 41
 LAYOUT = Hypercubes, options = hyper_prime,
 ON EACH NODE 2 x 4 x 4 x 4
-Mallocing 2.2 MBytes per core for lattice
+Mallocing 1.9 MBytes per core for lattice
 Antiperiodic temporal boundary conditions
-Mallocing 0.9 MBytes per core for fields
+Mallocing 0.6 MBytes per core for fields
 
 
 warms 0
@@ -40,7 +40,7 @@ C2=1
 Restored binary gauge configuration serially from file config.U2.4444
 Time stamp Sun Feb  9 13:12:59 2014
 Checksums be30095 b19f9ad8 OK
-Time to reload gauge configuration = 9.930134e-04
+Time to reload gauge configuration = 9.818077e-04
 CHECK PLAQ: 1.9081702017469617e+00 1.8927824330549272e+00
 CHECK NERSC LINKTR: -5.5492308298425996e-03 CKSUM: 0
 START 1.9081702 1.8927824 3.8009526 15.784656
@@ -238,7 +238,7 @@ PLOLAR_LOOP 0 1 0 1 1.9355
 PLOLAR_LOOP 0 0 1 1 1.94839
 Fixing to Coulomb gauge...
 GFIX ended at step 35. Ave gf action 0.559411, delta 8.16e-08
-GFIX time = 0.0033 seconds
+GFIX time = 0.003242 seconds
 BEFORE 2.0400425 2.0221128
 AFTER  2.0400425 2.0221128
 hvy_pot: MAX_T = 1, MAX_X = 1
@@ -287,4 +287,4 @@ POLAR_LOOP 1 1 0 1 0.477492
 POLAR_LOOP 1 1 1 1 0.258899
 RUNNING COMPLETED
 
-Time = 0.0298 seconds
+Time = 0.02237 seconds
