@@ -15,8 +15,8 @@
 // -----------------------------------------------------------------
 // N=4 SYM fermions always in adjoint rep
 // U(2)
-#define NCOL 3
-#define DIMF 9
+#define NCOL 4
+#define DIMF 16
 
 // U(3)
 //#define NCOL 3
