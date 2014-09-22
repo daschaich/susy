@@ -47,6 +47,7 @@ void matvec(complex *in, complex *out) {
       iter++;
       set_complex_equal(&(in[iter]), &(src[i].Flink[4].c[j]));
       iter++;
+
       set_complex_equal(&(in[iter]), &(src[i].Flink[0].c[j]));
       iter++;
       set_complex_equal(&(in[iter]), &(src[i].Fplaq[3].c[j]));  // 0, 4 --> 3
@@ -146,15 +147,20 @@ void matvec(complex *in, complex *out) {
       iter++;
       set_complex_equal(&(res[i].Flink[4].c[j]), &(out[iter]));
       iter++;
-      for (mu = 0; mu < 4; mu++) {
-        set_complex_equal(&(res[i].Flink[mu].c[j]), &(out[iter]));
-        iter++;
-      }
+
+      set_complex_equal(&(res[i].Flink[0].c[j]), &(out[iter]));
+      iter++;
       set_complex_equal(&(res[i].Fplaq[3].c[j]), &(out[iter])); // 0, 4 --> 3
+      iter++;
+      set_complex_equal(&(res[i].Flink[1].c[j]), &(out[iter]));
       iter++;
       set_complex_equal(&(res[i].Fplaq[6].c[j]), &(out[iter])); // 1, 4 --> 6
       iter++;
+      set_complex_equal(&(res[i].Flink[2].c[j]), &(out[iter]));
+      iter++;
       set_complex_equal(&(res[i].Fplaq[8].c[j]), &(out[iter])); // 2, 4 --> 8
+      iter++;
+      set_complex_equal(&(res[i].Flink[3].c[j]), &(out[iter]));
       iter++;
       set_complex_equal(&(res[i].Fplaq[9].c[j]), &(out[iter])); // 3, 4 --> 9
       iter++;
