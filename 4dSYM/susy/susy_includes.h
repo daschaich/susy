@@ -37,7 +37,6 @@ void compute_Fmunu();
 void compute_DmuUmu();
 void setup_lambda();
 void setup_PtoP();
-int plaq_index(int mu, int nu);
 void setup_FQ();
 void setup_offset();
 void setup_qclosed_offset();

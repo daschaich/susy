@@ -101,6 +101,9 @@ EXTERN Real perm[NUMLINK][NUMLINK][NUMLINK][NUMLINK][NUMLINK];
 // Fifth row is just all 1 / sqrt(5)
 EXTERN Real P[NDIMS][NUMLINK];
 
+// Translate (mu, nu) to linear index of anti-symmetric matrix
+EXTERN int plaq_index[NUMLINK][NUMLINK];
+
 EXTERN Real rsqmin, rsqprop;
 EXTERN Real lambda, kappa, bmass, fmass, kappa_u1;
 EXTERN double g_ssplaq, g_stplaq;

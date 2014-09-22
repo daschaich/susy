@@ -56,7 +56,7 @@ void compute_Fmunu() {
 
   for (mu = 0; mu < NUMLINK; mu++) {
     for (nu = mu + 1; nu < NUMLINK; nu++) {
-      index = plaq_index(mu, nu);
+      index = plaq_index[mu][nu];
       mtag0 = start_gather_site(F_OFFSET(linkf[nu]), sizeof(su3_matrix_f),
                                 goffset[mu], EVENANDODD, gen_pt[0]);
       mtag1 = start_gather_site(F_OFFSET(linkf[mu]), sizeof(su3_matrix_f),
@@ -243,7 +243,7 @@ void Dplus(su3_vector *src[NUMLINK], su3_vector *dest[NPLAQ]) {
 
   for (mu = 0; mu < NUMLINK; mu++) {
     for (nu = mu + 1; nu < NUMLINK; nu++) {
-      index = plaq_index(mu, nu);
+      index = plaq_index[mu][nu];
       mtag0 = start_gather_field(src[nu], sizeof(su3_vector),
                                  goffset[mu], EVENANDODD, gen_pt[0]);
 
@@ -305,17 +305,17 @@ void Dminus(su3_vector *src[NPLAQ], su3_vector *dest[NUMLINK]) {
       if (mu == nu)
         continue;
 
-      index = plaq_index(mu, nu);
+      index = plaq_index[mu][nu];
       mtag0 = start_gather_site(F_OFFSET(link[mu]), sizeof(su3_matrix),
                                 goffset[nu], EVENANDODD, gen_pt[0]);
 
       FORALLSITES(i, s) {
         if (mu > nu) {    // src is anti-symmetric under mu <--> nu
           scalar_mult_su3_vector(&(src[index][i]), -1.0, &tvec);
-        }                 // Suppress compiler error
+          mult_su3_vec_mat(&tvec, &(s->link[mu]), &(tsite[0][i]));
+        }
         else
-          su3vec_copy(&(src[index][i]), &tvec);
-        mult_su3_vec_mat(&tvec, &(s->link[mu]), &(tsite[0][i]));
+          mult_su3_vec_mat(&(src[index][i]), &(s->link[mu]), &(tsite[0][i]));
       }
 
       mtag1 = start_gather_field(tsite[0], sizeof(su3_vector),
@@ -328,10 +328,10 @@ void Dminus(su3_vector *src[NPLAQ], su3_vector *dest[NUMLINK]) {
         vec1 = (su3_vector *)(gen_pt[1][i]);
         if (mu > nu) {    // src is anti-symmetric under mu <--> nu
           scalar_mult_su3_vector(&(src[index][i]), -1.0, &tvec);
-        }                 // Suppress compiler error
+          mult_su3_mat_vec(mat0, &tvec, &vtmp1);
+        }
         else
-          su3vec_copy(&(src[index][i]), &tvec);
-        mult_su3_mat_vec(mat0, &tvec, &vtmp1);
+          mult_su3_mat_vec(mat0, &(src[index][i]), &vtmp1);
         scalar_mult_su3_vector(vec1, s->bc1[OPP_LDIR(mu)], &vtmp3);
         sub_su3_vector(&vtmp1, &vtmp3, &vtmp2);
         add_su3_vector(&(dest[nu][i]), &vtmp2, &(dest[nu][i]));
@@ -370,8 +370,8 @@ void DbplusPtoP(su3_vector *src[NPLAQ], su3_vector *dest[NPLAQ]) {
     d = DbplusPtoP_lookup[j][3];
     e = DbplusPtoP_lookup[j][4];
     permm = perm[a][b][c][d][e];
-    i_ab = plaq_index(a, b);
-    i_de = plaq_index(d, e);
+    i_ab = plaq_index[a][b];
+    i_de = plaq_index[d][e];
 
     mtag[0] = start_gather_site(F_OFFSET(link[c]), sizeof(su3_matrix),
                                 DbpP_d1[j], EVENANDODD, gen_pt[0]);
@@ -436,8 +436,8 @@ void DbminusPtoP(su3_vector *src[NPLAQ], su3_vector *dest[NPLAQ]) {
     d = DbminusPtoP_lookup[j][3];
     e = DbminusPtoP_lookup[j][4];
     permm = perm[a][b][c][d][e];
-    i_ab = plaq_index(a, b);
-    i_de = plaq_index(d, e);
+    i_ab = plaq_index[a][b];
+    i_de = plaq_index[d][e];
 
     mtag[0] = start_gather_site(F_OFFSET(link[c]), sizeof(su3_matrix),
                                 DbmP_d1[j], EVENANDODD, gen_pt[0]);

@@ -13,7 +13,6 @@
 // Initialize generator matrices
 void initgen(int posmat[NCOL][NCOL]) {
   int i, j, a = 0;
-
   for (i = 0; i < NCOL; i++) {
     for (j = i + 1; j < NCOL; j++) {
       posmat[i][j] = a;
@@ -191,8 +190,23 @@ Real order(int i, int j, int k, int l, int m) {
   return (Real)permutation;
 }
 
+
+// Set up translation of (mu, nu) to linear index of anti-symmetric matrix
+void setup_plaq_index() {
+  int mu, nu, index;
+  for (mu = 0; mu < NUMLINK; mu++) {
+    plaq_index[mu][mu] = -1;
+    for (nu = mu + 1; nu < NUMLINK; nu++) {
+      index = mu * (NUMLINK - 1) - mu * (mu + 1) / 2 + nu - 1;
+      plaq_index[mu][nu] = index;
+      plaq_index[nu][mu] = index;
+    }
+  }
+}
+
 void epsilon() {
   int i, j, k, l, m;
+  setup_plaq_index();
   for (i = 0; i < NUMLINK; i++) {
     for (j = 0; j < NUMLINK; j++) {
       for (k = 0; k < NUMLINK; k++) {
@@ -372,18 +386,5 @@ void setup_P() {
   P[3][2] = t20;
   P[3][3] = t20;
   P[3][4] = -4.0 * t20;
-}
-// -----------------------------------------------------------------
-
-
-
-// -----------------------------------------------------------------
-// Return index = a * (NUMLINK - 1) - a * (a + 1) / 2 + b - 1;
-// where a (b) is the smaller (larger) of mu and nu
-int plaq_index(int mu, int nu) {
-  if (mu > nu)
-    return (nu * (NUMLINK - 1) - nu * (nu + 1) / 2 + mu - 1);
-  else
-    return (mu * (NUMLINK - 1) - mu * (mu + 1) / 2 + nu - 1);
 }
 // -----------------------------------------------------------------

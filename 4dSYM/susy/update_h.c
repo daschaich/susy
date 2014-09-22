@@ -46,7 +46,7 @@ double gauge_force(Real eps) {
       if (mu == nu)
         continue;
 
-      index = plaq_index(mu, nu);
+      index = plaq_index[mu][nu];
       FORALLSITES(i, s) {
         if (mu > nu)
           scalar_mult_su3_matrix_f(&(s->Fmunu[index]), -1.0, &tmat2);
@@ -165,7 +165,7 @@ void assemble_fermion_force(Twist_Fermion *sol, Twist_Fermion *psol) {
       if (mu == nu)
         continue;
 
-      index = plaq_index(mu, nu);
+      index = plaq_index[mu][nu];
       mtag0 = start_gather_site(F_OFFSET(link_sol[nu]), sizeof(su3_vector),
                                 goffset[mu], EVENANDODD, gen_pt[0]);
       wait_gather(mtag0);
@@ -220,7 +220,7 @@ void assemble_fermion_force(Twist_Fermion *sol, Twist_Fermion *psol) {
       if (mu == nu)
         continue;
 
-      index = plaq_index(mu, nu);
+      index = plaq_index[mu][nu];
       mtag0 = start_gather_site(F_OFFSET(link_psol[nu]), sizeof(su3_vector),
                                 goffset[mu], EVENANDODD, gen_pt[0]);
 
@@ -355,8 +355,8 @@ void assemble_fermion_force(Twist_Fermion *sol, Twist_Fermion *psol) {
     d = FQ_lookup[j][3];
     e = FQ_lookup[j][4];
     permm = perm[d][e][c][a][b];
-    i_ab = plaq_index(a, b);
-    i_de = plaq_index(d, e);
+    i_ab = plaq_index[a][b];
+    i_de = plaq_index[d][e];
 
     mtag[0] = start_gather_site(F_OFFSET(plaq_psol[i_de]), sizeof(su3_vector),
                                 F1Q_d2[j], EVENANDODD, gen_pt[0]);
@@ -416,8 +416,8 @@ void assemble_fermion_force(Twist_Fermion *sol, Twist_Fermion *psol) {
     d = FQ_lookup[j][3];
     e = FQ_lookup[j][4];
     permm = perm[a][b][c][d][e];
-    i_ab = plaq_index(a, b);
-    i_de = plaq_index(d, e);
+    i_ab = plaq_index[a][b];
+    i_de = plaq_index[d][e];
 
     mtag[0] = start_gather_site(F_OFFSET(plaq_psol[i_ab]), sizeof(su3_vector),
                                 F2Q_d1[j], EVENANDODD, gen_pt[0]);
