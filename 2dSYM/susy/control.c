@@ -115,7 +115,7 @@ int main(int argc, char *argv[]) {
 
 #ifdef CORR
       // Konishi and SUGRA correlators
-      d_correlator();
+//      d_correlator();
 #endif
 
 #ifdef BILIN
@@ -137,6 +137,7 @@ int main(int argc, char *argv[]) {
 //      monopole();
 #endif
 
+#if 0
 #ifdef WLOOP
       // Gauge-fixed Wilson loops
       // Save un-fixed links to be saved if requested
@@ -183,6 +184,7 @@ int main(int argc, char *argv[]) {
             su3mat_copy_f(&(s->mom[mu]), &(s->linkf[mu]));
         }
       }
+#endif
 #endif
     }
     fflush(stdout);

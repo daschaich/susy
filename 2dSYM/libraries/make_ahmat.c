@@ -35,7 +35,7 @@ void make_anti_hermitian(su3_matrix_f *src, anti_hermitmat *dest) {
   dest->m12.imag = (src->e[1][2].imag + src->e[2][1].imag) * 0.5;
 #endif
 #if (NCOL>3)
-  dest->src3im = src->e[3][3].imag - temp;
+  dest->m33im = src->e[3][3].imag - temp;
   dest->m03.real = (src->e[0][3].real - src->e[3][0].real) * 0.5;
   dest->m13.real = (src->e[1][3].real - src->e[3][1].real) * 0.5;
   dest->m23.real = (src->e[2][3].real - src->e[3][2].real) * 0.5;
@@ -44,7 +44,7 @@ void make_anti_hermitian(su3_matrix_f *src, anti_hermitmat *dest) {
   dest->m23.imag = (src->e[2][3].imag + src->e[3][2].imag) * 0.5;
 #endif
 #if (NCOL>4)
-  node0_printf("make_anti_hermitian only works for NCOL<=4!");
+  node0_printf("make_anti_hermitian only works for NCOL<=4!\n");
 #endif
 }
 // -----------------------------------------------------------------
@@ -52,9 +52,9 @@ void make_anti_hermitian(su3_matrix_f *src, anti_hermitmat *dest) {
 
 
 // -----------------------------------------------------------------
-// FAST version
+// FAST version -- NCOL=3 only
 #else
-void make_anti_hermitian( su3_matrix *src, anti_hermitmat *dest ) {
+void make_anti_hermitian(su3_matrix *src, anti_hermitmat *dest) {
   Real temp, temp2;
   temp = (src->e[0][0].imag + src->e[1][1].imag);
   temp2 = temp + src->e[2][2].imag;

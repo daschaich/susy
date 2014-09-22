@@ -33,11 +33,11 @@ ${LASTMAKE}: ${ALL_MAKES}
 	touch ${LASTMAKE}
 
 COMPLEXOBJS1 = ce_itheta.1o cexp.1o clog.1o cmplx.1o \
-	fcmplx.1o csqrt.1o dce_itheta.1o \
+	csqrt.1o dce_itheta.1o \
 	dcexp.1o dclog.1o dcmplx.1o dcsqrt.1o
 
 COMPLEXOBJS2 = ce_itheta.2o cexp.2o clog.2o cmplx.2o \
-	fcmplx.2o csqrt.2o dce_itheta.2o \
+	csqrt.2o dce_itheta.2o \
 	dcexp.2o dclog.2o dcmplx.2o dcsqrt.2o
 
 ${COMPLEXOBJS1} : ${HEADERS} ${ALLMAKES} ${LASTMAKE}

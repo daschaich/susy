@@ -98,7 +98,7 @@ int main(int argc, char *argv[]) {
 
 #ifdef CORR
   // Konishi and SUGRA correlators
-  d_correlator();
+//  d_correlator();
 #endif
 
 #ifdef BILIN
@@ -119,6 +119,7 @@ int main(int argc, char *argv[]) {
 //  monopole();
 #endif
 
+#if 0
 #ifdef WLOOP
   // Gauge-fixed Wilson loops
   if (fixflag == COULOMB_GAUGE_FIX) {
@@ -150,6 +151,7 @@ int main(int argc, char *argv[]) {
   hvy_pot_polar();
   FORALLSITES(i, s)
     su3mat_copy_f(&(s->mom[TUP]), &(s->linkf[TUP]));
+#endif
 #endif
 
   node0_printf("RUNNING COMPLETED\n");

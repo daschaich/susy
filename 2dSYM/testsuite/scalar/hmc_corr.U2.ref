@@ -3,7 +3,7 @@ Microcanonical simulation with refreshing
 Machine = Scalar processor, with 1 nodes
 Hybrid Monte Carlo algorithm
 Phi algorithm
-start: Sat Sep 20 14:20:11 2014
+start: Sun Sep 21 19:38:09 2014
 
 type 0 for no prompts  or 1 for prompts
 nx 4
@@ -14,7 +14,7 @@ ON EACH NODE 4 x 4
 Mallocing 0.0 MBytes per node for lattice
 Antiperiodic temporal boundary conditions
 Mallocing 0.0 MBytes per core for fields
-RHMC Norder 15
+RHMC Norder 15 for spectral range [0.0000001, 1000]
 
 
 warms 0
@@ -38,7 +38,7 @@ C2=1
 Restored binary gauge configuration serially from file config.U2.44
 Time stamp Thu Sep 18 12:14:36 2014
 Checksums f9e60ebe bd800057 OK
-Time to reload gauge configuration = 4.220009e-05
+Time to reload gauge configuration = 9.393692e-05
 CHECK PLAQ: 2.1794273481525339e+00
 CHECK NERSC LINKTR: 7.9940621144487523e-02 CKSUM: 0
 START 2.1794273 5.7208028
@@ -136,21 +136,6 @@ FLINK 1.01808 1.04068 1.02938
 GMES 1.4568628 -0.19581932 567 2.0825609 5.7927739
 BACTION 5.7927739
 DET 1.01043 0.0060807 1.03809 0.0488575
-KONISHI 0 0.035709242
-KONISHI 1 0.033494016
-KONISHI 2 0.032647009
-SUGRA 0 0 0 0.00026216845
-SUGRA 0 0 1 3.149953e-05
-SUGRA 0 0 2 -0.0001953576
-SUGRA 0 1 0 0.0014183754
-SUGRA 0 1 1 0.00077827162
-SUGRA 0 1 2 0.000477284
-SUGRA 1 0 0 0.0014183754
-SUGRA 1 0 1 0.00077827162
-SUGRA 1 0 2 0.000477284
-SUGRA 1 1 0 0.00026216845
-SUGRA 1 1 1 3.149953e-05
-SUGRA 1 1 2 -0.0001953576
 rsymm: MAX = 2
 INVLINK 1.03155 1.00048 1.01602
 RSYMM 1 [0] 1 [1] 2.0825609 1.950634
@@ -161,23 +146,10 @@ RSYMM 1 [1] 1 [0] 2.0825609 2.0558816
 RSYMM 1 [1] 2 [0] 2.1346436 2.1043465
 RSYMM 2 [1] 1 [0] 2.147751 2.0737382
 RSYMM 2 [1] 2 [0] 2.1714785 2.0548797
-Fixing to Coulomb gauge...
-GFIX ended at step 10. Ave gf action 0.644311, delta 8.96e-08
-GFIX time = 9.608e-05 seconds
-BEFORE 2.0825609
-AFTER  2.0825609
-hvy_pot: MAX_T = 1, MAX_X = 1
-POT_LOOP 0 1 2.08135
-D_LOOP   0 1 2.03742
-POT_LOOP 1 1 2.08135
-D_LOOP   1 1 2.03742
-hvy_pot_polar: MAX_T = 1, MAX_X = 1
-POLAR_LOOP 0 1 0.715052
-POLAR_LOOP 1 1 0.039052
 RUNNING COMPLETED
 STOP 2.0825609 5.7927739
 Average CG iters for steps: 565.1
 
-Time = 0.7898 seconds
+Time = 0.7922 seconds
 total_iters = 5651
 
