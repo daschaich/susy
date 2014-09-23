@@ -127,10 +127,12 @@ double gauge_force(Real eps) {
 void assemble_fermion_force(Twist_Fermion *sol, Twist_Fermion *psol) {
   register int i;
   register site *s;
-  int mu, nu, a, b, c, d, e, l, m, index, i_ab, i_de, j;
+  char **local_pt[2][4];
+  int mu, nu, a, b, c, d, e, l, m, gather, next, flip = 0;
+  int index, i_ab, i_de, j;
   Real permm, BC;
   complex cterm;
-  msg_tag *mtag[NUMLINK];
+  msg_tag *mtag[NUMLINK], *tag0[2], *tag1[2], *tag2[2], *tag3[2];
   msg_tag *mtag0 = NULL, *mtag1 = NULL;
   su3_vector tvec, *vec, *vec0, *vec1, *vec2, *vec3;
   su3_matrix_f tmpmat, tmpmat2;
@@ -345,38 +347,76 @@ void assemble_fermion_force(Twist_Fermion *sol, Twist_Fermion *psol) {
     terminate(1);
   }
 
+  for (a = 0; a < 4; a++) {
+    local_pt[0][a] = gen_pt[a];
+    local_pt[1][a] = gen_pt[4 + a];
+  }
+
   // First Q-closed piece: chi_ab D_c chi_de epsilon_{abcde}
-  // Loop over lookup table
   // From setup_lamba.c, we see b > a and e > d
+  // Start first set of gathers
+  a = FQ_lookup[0][0];
+  b = FQ_lookup[0][1];
+  c = FQ_lookup[0][2];
+  d = FQ_lookup[0][3];
+  e = FQ_lookup[0][4];
+  i_ab = plaq_index[a][b];
+  i_de = plaq_index[d][e];
+
+  tag0[0] = start_gather_site(F_OFFSET(plaq_psol[i_de]), sizeof(su3_vector),
+                              F1Q_d2[0], EVENANDODD, local_pt[0][0]);
+  tag1[0] = start_gather_site(F_OFFSET(plaq_sol[i_ab]), sizeof(su3_vector),
+                              goffset[c], EVENANDODD, local_pt[0][1]);
+  tag2[0] = start_gather_site(F_OFFSET(plaq_psol[i_de]), sizeof(su3_vector),
+                              goffset[c], EVENANDODD, local_pt[0][2]);
+  tag3[0] = start_gather_site(F_OFFSET(plaq_sol[i_ab]), sizeof(su3_vector),
+                              F1Q_d1[0], EVENANDODD, local_pt[0][3]);
+
+  // Loop over lookup table
   for (j = 0; j < NTERMS; j++) {
+    gather = (flip + 1) % 2;
+    if (j < NTERMS - 1) {         // Start next set of gathers
+      next = j + 1;
+      a = FQ_lookup[next][0];
+      b = FQ_lookup[next][1];
+      c = FQ_lookup[next][2];
+      d = FQ_lookup[next][3];
+      e = FQ_lookup[next][4];
+      i_ab = plaq_index[a][b];
+      i_de = plaq_index[d][e];
+
+      tag0[gather] = start_gather_site(F_OFFSET(plaq_psol[i_de]),
+                                sizeof(su3_vector), F1Q_d2[next], EVENANDODD,
+                                local_pt[gather][0]);
+      tag1[gather] = start_gather_site(F_OFFSET(plaq_sol[i_ab]),
+                                sizeof(su3_vector), goffset[c], EVENANDODD,
+                                local_pt[gather][1]);
+      tag2[gather] = start_gather_site(F_OFFSET(plaq_psol[i_de]),
+                                sizeof(su3_vector), goffset[c], EVENANDODD,
+                                local_pt[gather][2]);
+      tag3[gather] = start_gather_site(F_OFFSET(plaq_sol[i_ab]),
+                                sizeof(su3_vector), F1Q_d1[next], EVENANDODD,
+                                local_pt[gather][3]);
+    }
+
+    // Do this set of computations while next set of gathers runs
     a = FQ_lookup[j][0];
     b = FQ_lookup[j][1];
     c = FQ_lookup[j][2];
     d = FQ_lookup[j][3];
     e = FQ_lookup[j][4];
     permm = perm[d][e][c][a][b];
-    i_ab = plaq_index[a][b];
-    i_de = plaq_index[d][e];
 
-    mtag[0] = start_gather_site(F_OFFSET(plaq_psol[i_de]), sizeof(su3_vector),
-                                F1Q_d2[j], EVENANDODD, gen_pt[0]);
-    mtag[1] = start_gather_site(F_OFFSET(plaq_sol[i_ab]), sizeof(su3_vector),
-                                goffset[c], EVENANDODD, gen_pt[1]);
-    mtag[2] = start_gather_site(F_OFFSET(plaq_psol[i_de]), sizeof(su3_vector),
-                                goffset[c], EVENANDODD, gen_pt[2]);
-    mtag[3] = start_gather_site(F_OFFSET(plaq_sol[i_ab]), sizeof(su3_vector),
-                                F1Q_d1[j], EVENANDODD, gen_pt[3]);
-
-    wait_gather(mtag[0]);
-    wait_gather(mtag[1]);
-    wait_gather(mtag[2]);
-    wait_gather(mtag[3]);
+    wait_gather(tag0[flip]);
+    wait_gather(tag1[flip]);
+    wait_gather(tag2[flip]);
+    wait_gather(tag3[flip]);
     FORALLSITES(i, s) {
       clear_su3mat_f(&(tempmat[i]));
-      vec0 = (su3_vector *)(gen_pt[0][i]);
-      vec1 = (su3_vector *)(gen_pt[1][i]);
-      vec2 = (su3_vector *)(gen_pt[2][i]);
-      vec3 = (su3_vector *)(gen_pt[3][i]);
+      vec0 = (su3_vector *)(local_pt[flip][0][i]);
+      vec1 = (su3_vector *)(local_pt[flip][1][i]);
+      vec2 = (su3_vector *)(local_pt[flip][2][i]);
+      vec3 = (su3_vector *)(local_pt[flip][3][i]);
       for (l = 0; l < DIMF; l++) {
         for (m = 0; m < DIMF; m++) {
           CMULJ_(vec0->c[l], vec1->c[m], cterm);
@@ -395,10 +435,11 @@ void assemble_fermion_force(Twist_Fermion *sol, Twist_Fermion *psol) {
         }
       }
     }
-    cleanup_gather(mtag[0]);
-    cleanup_gather(mtag[1]);
-    cleanup_gather(mtag[2]);
-    cleanup_gather(mtag[3]);
+    cleanup_gather(tag0[flip]);
+    cleanup_gather(tag1[flip]);
+    cleanup_gather(tag2[flip]);
+    cleanup_gather(tag3[flip]);
+    flip = (flip + 1) % 2;
 
     FORALLSITES(i, s) {
       su3_adjoint_f(&(tempmat[i]), &tmpmat);
@@ -407,37 +448,71 @@ void assemble_fermion_force(Twist_Fermion *sol, Twist_Fermion *psol) {
   }
 
   // Second Q-closed piece
-  // Loop over lookup table
   // From setup_lamba.c, we see b > a and e > d
+  // Start first set of gathers
+  flip = 0;                       // Reset
+  a = FQ_lookup[0][0];
+  b = FQ_lookup[0][1];
+  c = FQ_lookup[0][2];
+  d = FQ_lookup[0][3];
+  e = FQ_lookup[0][4];
+  i_ab = plaq_index[a][b];
+  i_de = plaq_index[d][e];
+
+  tag0[0] = start_gather_site(F_OFFSET(plaq_psol[i_ab]), sizeof(su3_vector),
+                              F2Q_d1[0], EVENANDODD, local_pt[0][0]);
+  tag1[0] = start_gather_site(F_OFFSET(plaq_sol[i_de]), sizeof(su3_vector),
+                              goffset[c], EVENANDODD, local_pt[0][1]);
+  tag2[0] = start_gather_site(F_OFFSET(plaq_psol[i_ab]), sizeof(su3_vector),
+                              goffset[c], EVENANDODD, local_pt[0][2]);
+  tag3[0] = start_gather_site(F_OFFSET(plaq_sol[i_de]), sizeof(su3_vector),
+                              F2Q_d2[0], EVENANDODD, local_pt[0][3]);
+
+  // Loop over lookup table
   for (j = 0; j < NTERMS; j++) {
+    gather = (flip + 1) % 2;
+    if (j < NTERMS - 1) {         // Start next set of gathers
+      next = j + 1;
+      a = FQ_lookup[next][0];
+      b = FQ_lookup[next][1];
+      c = FQ_lookup[next][2];
+      d = FQ_lookup[next][3];
+      e = FQ_lookup[next][4];
+      i_ab = plaq_index[a][b];
+      i_de = plaq_index[d][e];
+
+      tag0[gather] = start_gather_site(F_OFFSET(plaq_psol[i_ab]),
+                                sizeof(su3_vector), F2Q_d1[next], EVENANDODD,
+                                local_pt[gather][0]);
+      tag1[gather] = start_gather_site(F_OFFSET(plaq_sol[i_de]),
+                                sizeof(su3_vector), goffset[c], EVENANDODD,
+                                local_pt[gather][1]);
+      tag2[gather] = start_gather_site(F_OFFSET(plaq_psol[i_ab]),
+                                sizeof(su3_vector), goffset[c], EVENANDODD,
+                                local_pt[gather][2]);
+      tag3[gather] = start_gather_site(F_OFFSET(plaq_sol[i_de]),
+                                sizeof(su3_vector), F2Q_d2[next], EVENANDODD,
+                                local_pt[gather][3]);
+    }
+
+    // Do this set of computations while next set of gathers runs
     a = FQ_lookup[j][0];
     b = FQ_lookup[j][1];
     c = FQ_lookup[j][2];
     d = FQ_lookup[j][3];
     e = FQ_lookup[j][4];
     permm = perm[a][b][c][d][e];
-    i_ab = plaq_index[a][b];
-    i_de = plaq_index[d][e];
 
-    mtag[0] = start_gather_site(F_OFFSET(plaq_psol[i_ab]), sizeof(su3_vector),
-                                F2Q_d1[j], EVENANDODD, gen_pt[0]);
-    mtag[1] = start_gather_site(F_OFFSET(plaq_sol[i_de]), sizeof(su3_vector),
-                                goffset[c], EVENANDODD, gen_pt[1]);
-    mtag[2] = start_gather_site(F_OFFSET(plaq_psol[i_ab]), sizeof(su3_vector),
-                                goffset[c], EVENANDODD, gen_pt[2]);
-    mtag[3] = start_gather_site(F_OFFSET(plaq_sol[i_de]), sizeof(su3_vector),
-                                F2Q_d2[j], EVENANDODD, gen_pt[3]);
-
-    wait_gather(mtag[0]);
-    wait_gather(mtag[1]);
-    wait_gather(mtag[2]);
-    wait_gather(mtag[3]);
+    wait_gather(tag0[flip]);
+    wait_gather(tag1[flip]);
+    wait_gather(tag2[flip]);
+    wait_gather(tag3[flip]);
     FORALLSITES(i, s) {
       clear_su3mat_f(&(tempmat[i]));
-      vec0 = (su3_vector *)(gen_pt[0][i]);
-      vec1 = (su3_vector *)(gen_pt[1][i]);
-      vec2 = (su3_vector *)(gen_pt[2][i]);
-      vec3 = (su3_vector *)(gen_pt[3][i]);
+      vec0 = (su3_vector *)(local_pt[flip][0][i]);
+      vec1 = (su3_vector *)(local_pt[flip][1][i]);
+      vec2 = (su3_vector *)(local_pt[flip][2][i]);
+      vec3 = (su3_vector *)(local_pt[flip][3][i]);
       for (l = 0; l < DIMF; l++) {
         for (m = 0; m < DIMF; m++) {
           CMULJ_(vec0->c[l], vec1->c[m], cterm);
@@ -456,10 +531,11 @@ void assemble_fermion_force(Twist_Fermion *sol, Twist_Fermion *psol) {
         }
       }
     }
-    cleanup_gather(mtag[0]);
-    cleanup_gather(mtag[1]);
-    cleanup_gather(mtag[2]);
-    cleanup_gather(mtag[3]);
+    cleanup_gather(tag0[flip]);
+    cleanup_gather(tag1[flip]);
+    cleanup_gather(tag2[flip]);
+    cleanup_gather(tag3[flip]);
+    flip = (flip + 1) % 2;
 
     FORALLSITES(i, s) {
       su3_adjoint_f(&(tempmat[i]), &tmpmat);
