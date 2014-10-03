@@ -108,52 +108,36 @@ ${OBJECTS} : ${HEADERS} ${LASTMAKE} ${ALL_MAKES}
 
 ##### Targets:
 # -DEIG and -DWLOOP need lapack and blas
-# Optional DEFINES for timing:
-# -DCGTIME for CG timing and iterations
+# susy_mode uses nsrc from -DBILIN
 susy_hmc::
 	${MAKE} -f ${MAKEFILE} target "MYTARGET= $@" \
 	"DEFINES = ${DEFINES} -DPHI_ALGORITHM -DHMC_ALGORITHM " \
 	"EXTRA_OBJECTS = control.o update_o.o update_h.o setup_rhmc.o det_force.o "
 
-susy_hmc_corr::
+susy_meas::
 	${MAKE} -f ${MAKEFILE} target "MYTARGET= $@" \
-	"DEFINES = ${DEFINES} -DPHI_ALGORITHM -DHMC_ALGORITHM -DCORR -DWLOOP " \
+	"DEFINES = ${DEFINES} -DPHI_ALGORITHM -DCORR -DWLOOP -DBILIN -DSTOUT" \
+	"LAPACK = -llapack -lblas " \
+	"EXTRA_OBJECTS = control_meas.o d_correlator.o d_correlator_r.o rsymm.o \
+	                 monopole.o hvy_pot.o hvy_pot_polar.o unit.o gaugefix.o \
+	                 hvy_pot_loop.o hvy_pot_polar_loop.o path.o d_bilinear.o \
+	                 d_plaq4_lcl.o "
+
+susy_hmc_meas::
+	${MAKE} -f ${MAKEFILE} target "MYTARGET= $@" \
+	"DEFINES = ${DEFINES} -DPHI_ALGORITHM -DHMC_ALGORITHM -DCORR -DWLOOP \
+	           -DBILIN -DSTOUT " \
 	"LAPACK = -llapack -lblas " \
 	"EXTRA_OBJECTS = control.o update_o.o update_h.o setup_rhmc.o det_force.o \
 	                 d_correlator.o d_correlator_r.o rsymm.o hvy_pot.o \
 	                 hvy_pot_polar.o unit.o gaugefix.o hvy_pot_loop.o path.o \
-	                 hvy_pot_polar_loop.o monopole.o "
-
-susy_corr::
-	${MAKE} -f ${MAKEFILE} target "MYTARGET= $@" \
-	"DEFINES = ${DEFINES} -DPHI_ALGORITHM -DCORR -DWLOOP " \
-	"LAPACK = -llapack -lblas " \
-	"EXTRA_OBJECTS = control_corr.o d_correlator.o d_correlator_r.o rsymm.o \
-	                 monopole.o hvy_pot.o hvy_pot_polar.o unit.o gaugefix.o \
-	                 hvy_pot_loop.o hvy_pot_polar_loop.o path.o "
-
-susy_stout::
-	${MAKE} -f ${MAKEFILE} target "MYTARGET= $@" \
-	"DEFINES = ${DEFINES} -DPHI_ALGORITHM -DCORR -DWLOOP -DSTOUT" \
-	"LAPACK = -llapack -lblas " \
-	"EXTRA_OBJECTS = control_corr.o d_correlator.o d_correlator_r.o rsymm.o \
-	                 monopole.o hvy_pot.o hvy_pot_polar.o unit.o gaugefix.o \
-	                 d_plaq4_lcl.o hvy_pot_loop.o hvy_pot_polar_loop.o path.o "
+	                 hvy_pot_polar_loop.o monopole.o d_bilinear.o d_plaq4_lcl.o "
 
 susy_mcrg::
 	${MAKE} -f ${MAKEFILE} target "MYTARGET= $@" \
 	"DEFINES = ${DEFINES} -DPHI_ALGORITHM -DCORR -DMCRG" \
 	"EXTRA_OBJECTS = control_mcrg.o block_mcrg.o rsymm.o blocked_ploop.o \
 	                 blocked_rsymm.o d_correlator.o d_correlator_r.o path.o "
-
-susy_bilin::
-	${MAKE} -f ${MAKEFILE} target "MYTARGET= $@" \
-	"DEFINES = ${DEFINES} -DPHI_ALGORITHM -DCORR -DWLOOP -DBILIN" \
-	"LAPACK = -llapack -lblas " \
-	"EXTRA_OBJECTS = control_corr.o setup_rhmc.o d_bilinear.o d_correlator.o \
-	                 d_correlator_r.o hvy_pot.o hvy_pot_polar.o unit.o \
-	                 gaugefix.o rsymm.o hvy_pot_loop.o hvy_pot_polar_loop.o \
-	                 path.o monopole.o "
 
 susy_eig::
 	${MAKE} -f ${MAKEFILE} target "MYTARGET= $@" \
@@ -166,6 +150,11 @@ susy_phase::
 	${MAKE} -f ${MAKEFILE} target "MYTARGET= $@" \
 	"DEFINES = ${DEFINES} -DPHI_ALGORITHM -DPHASE " \
 	"EXTRA_OBJECTS = control_phase.o d_phase.o gaugefix.o io_phase.o "
+
+susy_mode::
+	${MAKE} -f ${MAKEFILE} target "MYTARGET= $@" \
+	"DEFINES = ${DEFINES} -DPHI_ALGORITHM -DBILIN -DMODE " \
+	"EXTRA_OBJECTS = control_mode.o coeffs.o step.o d_bilinear.o "
 
 # Convert configuration into format the serial C++ code can read
 # for testing/debugging

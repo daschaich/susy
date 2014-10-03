@@ -91,6 +91,9 @@ void make_fields() {
   // Stout smearing stuff needed for `hot-start' random configurations
   size += (double)(1 + 3 * NUMLINK) * sites_on_node * sizeof(su3_matrix_f);
   size += (double)(NUMLINK) * sites_on_node * sizeof(anti_hermitmat);
+#ifdef PHASE
+  size += 2.0 * (1.0 + NUMLINK + NPLAQ) * sites_on_node * sizeof(su3_vector);
+#endif
   FIELD_ALLOC_VEC(thin_link, su3_matrix_f, NUMLINK);
   FIELD_ALLOC_VEC(smeared_link, su3_matrix_f, NUMLINK);
   FIELD_ALLOC_VEC(stp, su3_matrix_f, NUMLINK);    // Staples
@@ -188,8 +191,11 @@ int readin(int prompt) {
       par_buf.rsqmin = x;
     }
 
+#ifdef BILIN
     // Number of stochastic sources for fermion bilinear and susy trans
+    // Also used for stochastic mode number computation
     IF_OK status += get_i(stdin, prompt, "nsrc", &par_buf.nsrc);
+#endif
 
 #ifdef EIG
     // Number of eigenvalues to calculate
@@ -202,6 +208,16 @@ int readin(int prompt) {
     // Optional checkpointing for pfaffian computation
     IF_OK status += get_i(stdin, prompt, "ckpt_load", &par_buf.ckpt_load);
     IF_OK status += get_i(stdin, prompt, "ckpt_save", &par_buf.ckpt_save);
+#endif
+
+#ifdef MODE
+    // Which order polynomial to use in step function
+    IF_OK status += get_i(stdin, prompt, "order", &par_buf.order);
+
+    // Number of Omegas and the interval between them
+    IF_OK status += get_i(stdin, prompt, "Npts", &par_buf.Npts);
+    IF_OK status += get_f(stdin, prompt, "start_omega", &par_buf.start_omega);
+    IF_OK status += get_f(stdin, prompt, "spacing", &par_buf.spacing);
 #endif
 
     // Find out what kind of starting lattice to use
@@ -246,7 +262,9 @@ int readin(int prompt) {
                lambda, kappa);
   node0_printf("C2=%.4g\n", C2);
 
+#ifdef BILIN
   nsrc = par_buf.nsrc;
+#endif
 #ifdef EIG
   Nvec = par_buf.Nvec;
   eig_tol = par_buf.eig_tol;
@@ -260,16 +278,21 @@ int readin(int prompt) {
   ckpt_load = par_buf.ckpt_load;
   ckpt_save = par_buf.ckpt_save;
 #endif
+#ifdef MODE
+  step_order = par_buf.order;
+  Npts = par_buf.Npts;
+  M = par_buf.start_omega;
+  spacing = par_buf.spacing;
+#endif
 
   startflag = par_buf.startflag;
   saveflag = par_buf.saveflag;
   strcpy(startfile, par_buf.startfile);
   strcpy(savefile, par_buf.savefile);
-  strcpy(stringLFN, par_buf.savefile);
 
   // Do whatever is needed to get lattice
   startlat_p = reload_lattice(startflag, startfile);
-  // Generate the irrep lattice
+  // Generate the adjoint links
   fermion_rep();
   return 0;
 }

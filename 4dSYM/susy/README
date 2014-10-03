@@ -69,7 +69,7 @@ rho 0.1               # Stout smearing parameter -- only include with -DSTOUT
 
 max_cg_iterations 500 # Maximum number of CG iterations
 error_per_site 1e-5   # Stopping condition for CG (will be squared)
-nsrc 5                # Number of stochastic sources for vev calculations
+nsrc 5                # Number of stochastic sources -- only include with -DBILIN
 
 Nvec 100              # Number of eigenvalues to calculate -- only include with -DEIG
 eig_tol 1e-8          # Eigenvalue convergence criterion -- only include with -DEIG

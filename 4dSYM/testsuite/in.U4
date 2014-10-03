@@ -17,9 +17,13 @@ kappa_u1 1.0
 bmass 1.0
 fmass 0.0
 
+Nstout 1
+rho 0.1
+
 max_cg_iterations 5000
 error_per_site 1e-5
 nsrc 3
+
 reload_serial config.U4.4444
 coulomb_gauge_fix
 forget

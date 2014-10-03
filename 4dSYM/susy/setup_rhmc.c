@@ -311,7 +311,9 @@ void setup_rhmc() {
       node0_printf("[0.0000001, 1000]\n");
       setup_rhmc15();
       break;
-    default: node0_printf("setup_rhmc: unrecognized degree\n"); terminate(1);
+    default:
+      node0_printf("setup_rhmc: unrecognized degree\n");
+      terminate(1);
   }
 
   // Test by zeroing out all amp4 and amp8, optionally setting Norder to 1
