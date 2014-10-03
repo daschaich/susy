@@ -9,7 +9,7 @@
 
 
 // -----------------------------------------------------------------
-gauge_file *save_lattice(int flag, char *filename, char *stringLFN) {
+gauge_file *save_lattice(int flag, char *filename) {
   double dtime;
   gauge_file *gf = NULL;
 

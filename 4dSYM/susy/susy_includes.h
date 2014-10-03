@@ -207,3 +207,13 @@ void zgeev_(char *doL, char *doR, int *N1, double *store, int *N2, double *eigs,
 void d_phase();
 #endif
 // -----------------------------------------------------------------
+
+
+
+// -----------------------------------------------------------------
+// Stochastic mode number
+#ifdef MODE
+void coefficients();
+void step(Twist_Fermion *src, Twist_Fermion *res);
+#endif
+// -----------------------------------------------------------------

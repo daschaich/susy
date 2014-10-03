@@ -26,9 +26,11 @@ typedef struct {
   // Inversion parameters
   int niter;                    // Maximum number of CG iterations
   Real rsqmin;                  // For deciding on convergence
-  int nsrc;                     // Number of stochastic sources
   char startfile[MAXFILENAME], savefile[MAXFILENAME];
-  char stringLFN[MAXFILENAME];  // ILDG LFN if applicable
+
+#ifdef BILIN
+  int nsrc;                     // Number of stochastic sources
+#endif
 
 #ifdef EIG
   // Eigenvalue parameters
@@ -45,6 +47,12 @@ typedef struct {
 #ifdef PHASE
   // Pfaffian parameters
   int ckpt_load, ckpt_save;
+#endif
+
+#ifdef MODE
+  // Mode number (and associated step function) parameters
+  int order, Npts;
+  Real start_omega, spacing;
 #endif
 } params;
 #endif

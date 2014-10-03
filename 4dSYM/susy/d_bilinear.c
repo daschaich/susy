@@ -87,7 +87,7 @@ int d_bilinear() {
   Norder = 1;
   psim = malloc(sizeof(**psim));
   psim[0] = malloc(sites_on_node * sizeof(Twist_Fermion));
-  shift[0] = 0;
+  shift[0] = 0;             // Reset in update or grsource
 
   // Normalization: sum over NUMLINK but divide by volume
   // and divide by 2kappa as discussed on 15--17 December 2013

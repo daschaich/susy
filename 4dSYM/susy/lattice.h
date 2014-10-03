@@ -90,7 +90,7 @@ typedef struct {
 EXTERN int nx, ny, nz, nt;  // Lattice dimensions
 EXTERN int volume;          // Volume of lattice
 EXTERN int iseed;           // Random number seed
-EXTERN int warms, trajecs, niter, propinterval, nsrc;
+EXTERN int warms, trajecs, niter, propinterval;
 EXTERN Real traj_length;
 
 // U(N) generators, epsilon tensor
@@ -109,7 +109,6 @@ EXTERN Real lambda, kappa, bmass, fmass, kappa_u1;
 EXTERN double g_ssplaq, g_stplaq;
 EXTERN double_complex linktrsum;
 EXTERN u_int32type nersc_checksum;
-EXTERN char stringLFN[MAXFILENAME];  // ILDG LFN if applicable
 EXTERN char startfile[MAXFILENAME], savefile[MAXFILENAME];
 EXTERN int startflag; // Beginning lattice: CONTINUE, RELOAD, FRESH
 EXTERN int fixflag;   // Gauge fixing: COULOMB_GAUGE_FIX, NO_GAUGE_FIX
@@ -173,6 +172,10 @@ EXTERN site *lattice;
 #define N_POINTERS 10
 EXTERN char **gen_pt[N_POINTERS];
 
+#ifdef BILIN
+EXTERN int nsrc;
+#endif
+
 #ifdef STOUT
 // Stout smearing stuff
 EXTERN int Nstout;
@@ -199,6 +202,19 @@ EXTERN int maxIter;           // Maximum iterations
 EXTERN Twist_Fermion *src, *res;    // For fieldwise matvec
 EXTERN int Nmatvecs;                // For timing/counting
 EXTERN int ckpt_load, ckpt_save;    // For checkpointing
+#endif
+
+#ifdef MODE
+// Mode number (and associated step function) stuff
+EXTERN int Npts;
+EXTERN Real M, spacing;
+EXTERN Twist_Fermion **source;
+
+EXTERN int step_order;  // Selects between options hard-coded in coeffs.c
+EXTERN double eps;
+EXTERN double delta;    // Unused, but may be useful to record in the output
+EXTERN double starSq, star;     // Ratio (Omega / Omega_*)^2 and its sqrt
+EXTERN double *coeffs;
 #endif
 
 // Up to 20 concurrent timers for timing, not currently being used

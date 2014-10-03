@@ -30,7 +30,7 @@ void gaugefix(int gauge_dir,Real relax_boost,int max_gauge_iter,
               Real gfix_tol, field_offset diffmat, field_offset sumvec);
 
 // io_helpers.c
-gauge_file *save_lattice(int flag, char *filename, char *stringLFN);
+gauge_file *save_lattice(int flag, char *filename);
 gauge_file *reload_lattice(int flag, char *filename);
 int ask_starting_lattice(FILE *fp, int prompt, int *flag, char *filename);
 int ask_ending_lattice(FILE *fp, int prompt, int *flag, char *filename);

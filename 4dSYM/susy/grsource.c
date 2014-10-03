@@ -1,12 +1,8 @@
 // -----------------------------------------------------------------
-// Construct a gaussian random vector R, return src = (Mdag M)^{1 / 8}
+// Construct a gaussian random vector R, return src = (Mdag M)^{1 / 8} R
 // Need to invert despite the positive power, since it is fractional
 #include "susy_includes.h"
-// -----------------------------------------------------------------
 
-
-
-// -----------------------------------------------------------------
 // Return the number of iterations from the inversion
 int grsource(Twist_Fermion *src) {
   register int i, j, mu;
