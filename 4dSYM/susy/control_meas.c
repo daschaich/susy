@@ -82,7 +82,7 @@ int main(int argc, char *argv[]) {
   d_plaquette_lcl(&dssplaq, &dstplaq);    // Prints out MIN_PLAQ
   node0_printf(" %.8g %.8g\n", dssplaq, dstplaq);
 
-  // Overwrites s->linkf, saving original values in thin_link field
+  // Overwrites s->linkf, saves original values in thin_link field
   stout_smear(Nstout, rho);
   node0_printf("AFTER  ");
   d_plaquette_lcl(&dssplaq, &dstplaq);    // Prints out MIN_PLAQ

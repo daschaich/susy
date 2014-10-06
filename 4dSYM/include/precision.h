@@ -1,7 +1,7 @@
+// -----------------------------------------------------------------
 #ifndef _PRECISION_H
 #define _PRECISION_H
-
-/* generic floating point type.  Defaults to single precision. */
+// Generic floating point type, which defaults to single precision
 #ifndef PRECISION
 #define PRECISION 1
 #endif
@@ -12,4 +12,5 @@ typedef double Real;
 typedef float Real;
 #endif
 
-#endif /* _PRECISION_H */
+#endif
+// -----------------------------------------------------------------

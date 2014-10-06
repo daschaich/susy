@@ -18,13 +18,13 @@ Eigenvalue measurements (susy_eig) require PRIMME and LAPACK -- PRIMME can be ob
 # Defines for compilation:
 -DPHI_ALGORITHM for the basic phi algorithm (REQUIRED)
 -DHMC_ALGORITHM switches on the accept/reject step
--DPUREGAUGE switches off the fermions for testing
 -DCORR switches on the Konishi and SUGRA correlator calculation
 -DSTOUT switches on stout smearing for correlator measurements
 -DWLOOP switches on the gauge-fixed Wilson loop calculation
 -DBILIN switches on the fermion bilinear calculation
 -DEIG switches on the PRIMME eigenvalue calculation
 -DPL_CORR switches on the Polyakov loop correlator calculation (NOT CURRENTLY IN USE)
+-DPUREGAUGE switches off the fermions (FOR TESTING)
 
 # Gauge group and fermion rep:
 NCOL and DIMF defined in ../include/su3.h

@@ -2,10 +2,8 @@ This directory provides a suite of tests for the SUSY LATTICE code to simulate f
 
 Reference input and output files are provided for the following compilation targets (which are described in ../susy/README):
 susy_hmc
-susy_stout
-susy_corr
-susy_bilin
-susy_hmc_corr
+susy_meas
+susy_hmc_meas
 susy_eig
 susy_phase
 

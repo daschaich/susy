@@ -17,7 +17,7 @@ kappa_u1 1.0
 bmass 1.0
 fmass 0.0
 
-max_cg_iterations 500
+max_cg_iterations 5000
 error_per_site 1e-5
 nsrc 3
 

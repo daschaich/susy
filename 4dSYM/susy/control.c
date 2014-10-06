@@ -89,6 +89,24 @@ int main(int argc, char *argv[]) {
 
     // Less frequent measurements every "propinterval" trajectories
     if ((traj_done % propinterval) == (propinterval - 1)) {
+#ifdef STOUT
+#define MIN_PLAQ
+      // Optionally smear before less frequent measurements
+      node0_printf("Doing %d stout smearing steps with rho=%.4g...\n",
+          Nstout, rho);
+
+      // Check minimum plaquette in addition to averages
+      node0_printf("BEFORE ");
+      d_plaquette_lcl(&dssplaq, &dstplaq);    // Prints out MIN_PLAQ
+      node0_printf(" %.8g %.8g\n", dssplaq, dstplaq);
+
+      // Overwrites s->linkf, saves original values in thin_link field
+      stout_smear(Nstout, rho);
+      node0_printf("AFTER  ");
+      d_plaquette_lcl(&dssplaq, &dstplaq);    // Prints out MIN_PLAQ
+      node0_printf(" %.8g %.8g\n", dssplaq, dstplaq);
+#endif
+
       // Plaquette determinant
       measure_det();
 
@@ -202,6 +220,14 @@ int main(int argc, char *argv[]) {
           for (mu = XUP; mu < NUMLINK; mu++)
             su3mat_copy_f(&(s->mom[mu]), &(s->linkf[mu]));
         }
+      }
+#endif
+
+#ifdef STOUT
+      // Restore unsmeared links from thin_link field
+      for (mu = XUP; mu < NUMLINK; mu++) {
+        FORALLSITES(i, s)
+          su3mat_copy_f(&(thin_link[mu][i]), &(s->linkf[mu]));
       }
 #endif
     }
