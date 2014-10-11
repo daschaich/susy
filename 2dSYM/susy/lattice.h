@@ -34,8 +34,6 @@ typedef struct {
 #ifdef SITERAND
   // The state information for a random number generator
   double_prn site_prn;
-  // Align to double word boundary (kludge for Intel compiler)
-  int space1;
 #endif
 
   su3_matrix link[NUMLINK];       // Gauge field in fermion rep

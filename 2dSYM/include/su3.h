@@ -55,7 +55,6 @@ typedef struct {
 #if (NCOL == 3)
   fcomplex m01, m02, m12;
   float m00im, m11im, m22im;
-  float space;
 #endif
 #if (NCOL == 4)
   fcomplex m01, m02, m03, m12, m13, m23;
@@ -75,7 +74,6 @@ typedef struct {
 #if (NCOL == 3)
   dcomplex m01, m02, m12;
   double m00im, m11im, m22im;
-  double space;
 #endif
 #if (NCOL == 4)
   dcomplex m01, m02, m03, m12, m13, m23;
