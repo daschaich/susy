@@ -36,8 +36,8 @@ typedef struct {
   double_prn site_prn;
 #endif
 
-  su3_matrix link[NUMLINK];       // Gauge field in fermion rep
-  su3_matrix_f linkf[NUMLINK];    // Usual gauge field (fundamental fermions)
+  su3_matrix_f linkf[NUMLINK];    // Gauge links
+  su3_matrix link[NUMLINK];       // Adjoint links
 
 #ifdef HMC_ALGORITHM
   su3_matrix_f old_linkf[NUMLINK];  // For accept/reject

@@ -1,18 +1,20 @@
 # ------------------------------------------------------------------
 Four-dimensional N=4 supersymmetric Yang--Mills theory
 
-# Targets:
-susy_hmc and susy_phi for evolution with and without accept/reject step
-susy_hmc_pg and susy_phi_pg for testing with gauge fields only (no fermions)
-susy_corr for correlator measurements on saved configurations
-susy_stout for stout-smeared correlator measurements on saved configurations
-susy_bilin for fermion bilinear (and correlator) measurements on saved configurations
-susy_hmc_corr for evolution along with correlator measurements
+# Actively maintained targets:
+susy_hmc and susy_phi for evolution with accept/reject step
+susy_meas for correlator measurements on saved configurations
+susy_hmc_meas for evolution along with correlator measurements
 susy_eig for eigenvalue measurements on saved configurations
 susy_phase for pfaffian phase measurements on saved configurations
 
+# Additional targets, not actively maintained or recently tested
+susy_phi for evolution without accept/reject step
+susy_hmc_pg and susy_phi_pg for testing with gauge fields only (no fermions)
+susy_spill for printing out configuration in format expected by serial C++ code
+
 # Dependences:
-Measurements involving polar-projected matrices (susy_corr, susy_stout, susy_bilin and susy_hmc_corr) require LAPACK
+Measurements involving polar-projected matrices (susy_meas and susy_hmc_meas) require LAPACK
 Eigenvalue measurements (susy_eig) require PRIMME and LAPACK -- PRIMME can be obtained from http://www.cs.wm.edu/~andreas/software/
 
 # Defines for compilation:
@@ -118,7 +120,7 @@ update_o.c    -- Omelyan HMC evolution, includes ranmom() routine
 update_h.c    -- Updates gauge momenta
 
 # 1c) Measurement-specific files
-control_corr.c        -- Main program for correlator measurements only
+control_meas.c        -- Main program for correlator measurements only
 control_eig.c         -- Main program for eigenvalues measurements only
 d_bilinear.c          -- Fermion bilinear and susy transformation calculation
 d_correlator.c        -- Konishi and SUGRA correlators

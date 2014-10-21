@@ -11,7 +11,6 @@
 // Original (15, 15) approximation for spectral range [1e-7, 1000]
 // gives errors 1.975834e-05 and 1.066076e-05
 void setup_rhmc15() {
-  Norder = DEGREE;
 #if (DEGREE==15)
   // awk '/res_MD/{print("amp4["$2"] =",$3";")}' < out.00000001-1000
   ampdeg4 = 9.5797060554725838e-02;

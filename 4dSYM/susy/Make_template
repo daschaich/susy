@@ -116,7 +116,7 @@ susy_hmc::
 
 susy_meas::
 	${MAKE} -f ${MAKEFILE} target "MYTARGET= $@" \
-	"DEFINES = ${DEFINES} -DPHI_ALGORITHM -DCORR -DWLOOP -DBILIN -DSTOUT" \
+	"DEFINES = ${DEFINES} -DPHI_ALGORITHM -DCORR -DWLOOP -DBILIN -DSTOUT " \
 	"LAPACK = -llapack -lblas " \
 	"EXTRA_OBJECTS = control_meas.o d_correlator.o d_correlator_r.o rsymm.o \
 	                 monopole.o hvy_pot.o hvy_pot_polar.o unit.o gaugefix.o \
