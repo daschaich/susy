@@ -3,7 +3,7 @@ Microcanonical simulation with refreshing
 Machine = MPI (portable), with 2 nodes
 Hybrid Monte Carlo algorithm
 Phi algorithm
-start: Wed Oct 22 20:01:37 2014
+start: Wed Oct 22 20:56:56 2014
 
 type 0 for no prompts  or 1 for prompts
 nx 4
@@ -27,8 +27,11 @@ lambda 1
 kappa_u1 1
 bmass 1
 fmass 0
+Nstout 1
+rho 0.1
 max_cg_iterations 500
 error_per_site 1e-05
+nsrc 3
 reload_serial config.U2.44
 coulomb_gauge_fix
 forget
@@ -37,7 +40,7 @@ C2=1
 Restored binary gauge configuration serially from file config.U2.44
 Time stamp Thu Sep 18 12:14:36 2014
 Checksums f9e60ebe bd800057 OK
-Time to reload gauge configuration = 9.181499e-04
+Time to reload gauge configuration = 4.899502e-04
 CHECK PLAQ: 2.1794273481525339e+00
 CHECK NERSC LINKTR: 7.9940621144487523e-02 CKSUM: 0
 START 2.1794273 5.7208028
@@ -134,11 +137,67 @@ MONITOR_FORCE_FERMION0 0.07089
 FLINK 1.01808 1.04068 1.02938
 GMES 1.456863 -0.19581916 567 2.0825609 5.7927741
 BACTION 5.7927741
+Doing 1 stout smearing steps with rho=0.1...
+BEFORE MIN_PLAQ 1.8366688 2.0825609
+AFTER  MIN_PLAQ 1.8495603 2.0950695
 DET 1.01043 0.00608069 1.03809 0.0488575
+KONISHI 0 0.035709249
+KONISHI 1 0.033494022
+KONISHI 2 0.032647015
+SUGRA 0 0.00067357183
+SUGRA 1 0.00030060526
+SUGRA 2 2.7548518e-05
+d_correlator_r: MAX_T = 1, MAX_X = 1
+CORR_K 0 0 0.0380153
+CORR_S 0 0 0.00224156
+CORR_K 0 1 0.034427
+CORR_S 0 1 0.000704645
+CORR_K 1 -1 0.0335153
+CORR_S 1 -1 0.000316374
+CORR_K 1 0 0.0349176
+CORR_S 1 0 -6.16248e-05
+CORR_K 1 1 0.0325718
+CORR_S 1 1 -0.000100144
+susy 0.139846 -0.00343879 -0.107355 0.0101336 ( 1 of 3 ) 49
+susy 0.125654 0.00328649 -0.124176 -0.028508 ( 2 of 3 ) 49
+susy 0.111864 -0.0227371 -0.150991 0.0344874 ( 3 of 3 ) 49
+SUSY 0.126648 -0.00650039 0.128648 0.00200087 ( ave over 3 )
+rsymm: MAX = 2
+INVLINK 1.03155 1.00048 1.01602
+RSYMM 1 [0] 1 [1] 2.0950695 1.9617739
+RSYMM 1 [0] 2 [1] 2.1749887 1.9181413
+RSYMM 2 [0] 1 [1] 2.1579149 1.9877884
+RSYMM 2 [0] 2 [1] 2.2121217 1.8890676
+RSYMM 1 [1] 1 [0] 2.0950695 2.0677502
+RSYMM 1 [1] 2 [0] 2.1579149 2.1248488
+RSYMM 2 [1] 1 [0] 2.1749887 2.1012968
+RSYMM 2 [1] 2 [0] 2.2121217 2.0957295
+hvy_pot_loop: MAX_T = 1, MAX_X = 1
+PLOT_LOOP 0 1 2.08135
+DL_LOOP   0 1 2.03742
+PLOT_LOOP 1 1 2.09507
+DL_LOOP   1 1 2.07303
+hvy_pot_polar_loop: MAX_T = 1, MAX_X = 1
+PLOLAR_LOOP 0 1 2
+PLOLAR_LOOP 1 1 1.97711
+Fixing to Coulomb gauge...
+GFIX ended at step 10. Ave gf action 0.642688, delta 8.15e-08
+GFIX time = 0.0001581 seconds
+BEFORE 2.0950695
+AFTER  2.0950695
+hvy_pot: MAX_T = 1, MAX_X = 1
+POT_LOOP 0 1 2.08135
+D_LOOP   0 1 2.03742
+POT_LOOP 1 1 2.08135
+D_LOOP   1 1 2.03742
+hvy_pot_polar: MAX_T = 1, MAX_X = 1
+POLAR_LOOP 0 1 0.719772
+POLAR_LOOP 1 1 0.0621223
 RUNNING COMPLETED
 STOP 2.0825609 5.7927741
 Average CG iters for steps: 565.1
+Average CG iters for measurements: 147
 
-Time = 0.3762 seconds
-total_iters = 5651
+Time = 0.3521 seconds
+total_iters = 5798
 

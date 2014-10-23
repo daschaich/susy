@@ -70,7 +70,7 @@ for N in 2 3 4 ; do
   for target in hmc meas hmc_meas eig phase ; do
     rm -f mpi/$target.U$N.out
     echo "Running susy_$target..."
-    $run ../susy/susy_$target < in.U$N > mpi/$target.U$N.out
+    $run ../susy/susy_$target < in.U$N.$target > mpi/$target.U$N.out
   done
 
   # Checkpointed pfaffian computation

@@ -116,7 +116,6 @@ void do_hit(int gauge_dir, int parity, int p, int q, Real relax_boost) {
   register site *s;
   Real a0, a1, a2, a3, asq, a0sq, x, r, xdr;
   su2_matrix *u = malloc(sites_on_node * sizeof(*u));
-  msg_tag *mtag = NULL;
 
   // Accumulate sums for determining optimum gauge hit
   accum_gauge_hit(gauge_dir, parity);
@@ -194,7 +193,6 @@ void do_hit(int gauge_dir, int parity, int p, int q, Real relax_boost) {
       right_su2_hit_a_f(&(u[i]), p, q, (su3_matrix_f *)gen_pt[dir][i]);
   }
   // Exit with modified downward links left in communications buffer
-  cleanup_gather(mtag);
   free(u);
 }
 // -----------------------------------------------------------------
@@ -248,7 +246,7 @@ void gaugefixstep(int gauge_dir, double *av_gauge_fix_action,
   register int dir, i, c1, c2;
   register site *s;
   int parity;
-  msg_tag *mtag[10];
+  msg_tag *mtag[4];
   Real gauge_fix_action;
 
   // Alternate parity to prevent interactions during gauge transformation
@@ -260,7 +258,7 @@ void gaugefixstep(int gauge_dir, double *av_gauge_fix_action,
     // Gather all downward links at once
     FORALLUPDIR(dir) {
       mtag[dir] = start_gather_site(F_OFFSET(linkf[dir]), sizeof(su3_matrix_f),
-                                    goffset[dir] + 1, parity, gen_pt[dir]);
+                                    OPP_DIR(dir), parity, gen_pt[dir]);
     }
     FORALLUPDIR(dir)
       wait_gather(mtag[dir]);
@@ -293,8 +291,8 @@ void gaugefixstep(int gauge_dir, double *av_gauge_fix_action,
       }
       cleanup_gather(mtag[dir]);    // Done with gen_pt[dir]
 
-      /* Synchronize to make sure the previous copy happens before the */
-      /* subsequent gather below  */
+      // Synchronize to make sure the previous copy happens before the
+      // subsequent gather below
       g_sync();
 
       // Gather diffmat onto sites of opposite parity
@@ -304,7 +302,6 @@ void gaugefixstep(int gauge_dir, double *av_gauge_fix_action,
       else
         mtag[dir] = start_gather_field(diffmatp, sizeof(su3_matrix_f),
                                        dir, OPP_PAR(parity), gen_pt[dir]);
-
       wait_gather(mtag[dir]);
 
       // Copy modified matrices into proper location
