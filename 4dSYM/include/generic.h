@@ -86,8 +86,7 @@ void restrict_fourier(
           is 3 complex numbers. */
      int isign);   /* 1 for x -> k, -1 for k -> x */
 
-// stout.c
-// Stout smearing
+// stout.c for stout smearing
 void stout_smear(int Nstout, double rho);
 #endif
 // -----------------------------------------------------------------

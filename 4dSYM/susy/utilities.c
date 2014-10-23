@@ -221,7 +221,6 @@ void fermion_op(Twist_Fermion *src, Twist_Fermion *dest, int sign) {
           CNEGATE(plaq_dest[mu][i].c[j], tf.Fplaq[mu].c[j]);
         for (mu = 0; mu < NUMLINK; mu++)
           CNEGATE(link_dest[mu][i].c[j], tf.Flink[mu].c[j]);
-
         CNEGATE(site_dest[i].c[j], tf.Fsite.c[j]);
       }
       conjTF(&tf, &(dest[i]));
@@ -317,7 +316,6 @@ void Dminus(su3_vector *src[NPLAQ], su3_vector *dest[NUMLINK]) {
         else
           mult_su3_vec_mat(&(src[index][i]), &(s->link[mu]), &(tsite[0][i]));
       }
-
       mtag1 = start_gather_field(tsite[0], sizeof(su3_vector),
                                  goffset[mu] + 1, EVENANDODD, gen_pt[1]);
 

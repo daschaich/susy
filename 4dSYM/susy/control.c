@@ -93,7 +93,7 @@ int main(int argc, char *argv[]) {
 #define MIN_PLAQ
       // Optionally smear before less frequent measurements
       node0_printf("Doing %d stout smearing steps with rho=%.4g...\n",
-          Nstout, rho);
+                   Nstout, rho);
 
       // Check minimum plaquette in addition to averages
       node0_printf("BEFORE ");

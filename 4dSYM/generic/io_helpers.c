@@ -74,7 +74,6 @@ void coldlat() {
 
 
 
-
 // -----------------------------------------------------------------
 // Set linkf to exponentiated random anti-hermitian matrices
 // Then hit with L*Nt smearing steps to smooth

@@ -29,7 +29,7 @@ void hvy_pot_polar_loop() {
     }
   }
 
-  node0_printf("hvy_pot_polar_loop: MAX_T = %d, MAX_X = %d\n",MAX_T,MAX_X);
+  node0_printf("hvy_pot_polar_loop: MAX_T = %d, MAX_X = %d\n", MAX_T, MAX_X);
 
   // Use tempmat1 to hold loop product at each site
   for (t_dist = 1; t_dist <= MAX_T; t_dist++) {
@@ -57,7 +57,7 @@ void hvy_pot_polar_loop() {
           sign[i] = -1;
         }
 #ifdef DEBUG_CHECK
-        node0_printf("path %d %d length %d: ", x_dist[mu], t_dist[mu], length);
+        node0_printf("path %d %d length %d: ", x_dist[mu], t_dist, length);
         for (i = 0; i < length; i++)
           node0_printf(" %d", dir[i] * sign[i]);
         node0_printf("\n");

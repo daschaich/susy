@@ -2,7 +2,7 @@ N=4 SYM, Nc = 3, DIMF = 9, fermion rep = adjoint
 Microcanonical simulation with refreshing
 Machine = Scalar processor, with 1 nodes
 Phi algorithm
-start: Sat Sep 20 22:10:06 2014
+start: Wed Oct 22 20:01:50 2014
 
 type 0 for no prompts  or 1 for prompts
 nx 4
@@ -29,7 +29,6 @@ bmass 1
 fmass 0
 max_cg_iterations 5000
 error_per_site 1e-05
-nsrc 3
 Nvec 12
 eig_tol 1e-08
 maxIter 5000
@@ -41,7 +40,7 @@ C2=1
 Restored binary gauge configuration serially from file config.U3.4444
 Time stamp Tue Feb 11 07:46:13 2014
 Checksums e3b56d40 95cf7e82 OK
-Time to reload gauge configuration = 8.819103e-04
+Time to reload gauge configuration = 2.410412e-04
 CHECK PLAQ: 2.9556839704854103e+00 2.9582681279807388e+00
 CHECK NERSC LINKTR: -4.4520577753720163e-03 CKSUM: 0
 START 2.955684 2.9582681 5.9139521 38.30443
@@ -87,5 +86,5 @@ BIGEIGVAL  10 21.516162 4.662288e-14
 BIGEIGVAL  11 21.516162 3.5932042e-14
 RUNNING COMPLETED
 
-Time = 172.7 seconds
+Time = 96.46 seconds
 total_iters = 2566

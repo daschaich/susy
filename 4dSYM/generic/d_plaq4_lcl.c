@@ -32,12 +32,12 @@ void d_plaquette_lcl(double *ss_plaq, double *st_plaq) {
   register int i, dir, dir2;
   register site *s;
   register su3_matrix_f *m1, *m4;
-  su3_matrix_f mtmp;
   double ss_sum = 0.0, st_sum = 0.0, cur_plaq;
 #ifdef MIN_PLAQ
   double min_plaq = NCOL;
 #endif
   msg_tag *mtag0, *mtag1;
+  su3_matrix_f mtmp;
   su3_matrix_f *su3mat = malloc(sites_on_node * sizeof(*su3mat));
 
 #ifdef LOCAL_PLAQ
@@ -171,12 +171,12 @@ void d_plaquette_frep_lcl(double *ss_plaq_frep, double *st_plaq_frep) {
   register int i, dir, dir2;
   register site *s;
   register su3_matrix *m1, *m4;
-  su3_matrix mtmp;
   double ss_sum = 0.0, st_sum = 0.0, cur_plaq;
 #ifdef MIN_PLAQ
   double min_plaq = DIMF;
 #endif
-  msg_tag *mtag0,*mtag1;
+  msg_tag *mtag0, *mtag1;
+  su3_matrix mtmp;
   su3_matrix *su3mat = malloc(sites_on_node * sizeof(*su3mat));
 
 #ifdef LOCAL_PLAQ
