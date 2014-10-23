@@ -1,30 +1,32 @@
 # ------------------------------------------------------------------
-Two-dimensional N=2 supersymmetric Yang--Mills theory
+Two-dimensional N=(2,2) supersymmetric Yang--Mills theory
 
-# Targets:
-susy_hmc and susy_phi for evolution with and without accept/reject step
-susy_hmc_pg and susy_phi_pg for testing with gauge fields only (no fermions)
-susy_corr for correlator measurements on saved configurations
-susy_stout for stout-smeared correlator measurements on saved configurations
-susy_bilin for fermion bilinear (and correlator) measurements on saved configurations
-susy_hmc_corr for evolution along with correlator measurements
+# Actively maintained targets:
+susy_hmc for evolution with accept/reject step
+susy_meas for standard measurements on saved configurations
+susy_hmc_meas for evolution along with standard measurements
 susy_eig for eigenvalue measurements on saved configurations
 susy_phase for pfaffian phase measurements on saved configurations
 
+# Additional targets, not actively maintained or regularly tested
+susy_phi for evolution without accept/reject step
+susy_hmc_pg and susy_phi_pg for testing with gauge fields only (no fermions)
+susy_spill for printing out configuration in format expected by serial C++ code
+
 # Dependences:
-Measurements involving polar-projected matrices (susy_corr, susy_stout, susy_bilin and susy_hmc_corr) require LAPACK
+Measurements involving polar-projected matrices (susy_meas and susy_hmc_meas) require LAPACK
 Eigenvalue measurements (susy_eig) require PRIMME and LAPACK -- PRIMME can be obtained from http://www.cs.wm.edu/~andreas/software/
 
 # Defines for compilation:
 -DPHI_ALGORITHM for the basic phi algorithm (REQUIRED)
 -DHMC_ALGORITHM switches on the accept/reject step
--DPUREGAUGE switches off the fermions for testing
 -DCORR switches on the Konishi and SUGRA correlator calculation
--DSTOUT switches on stout smearing for correlator measurements
+-DSTOUT switches on stout smearing for measurements
 -DWLOOP switches on the gauge-fixed Wilson loop calculation
 -DBILIN switches on the fermion bilinear calculation
 -DEIG switches on the PRIMME eigenvalue calculation
 -DPL_CORR switches on the Polyakov loop correlator calculation (NOT CURRENTLY IN USE)
+-DPUREGAUGE switches off the fermions (FOR TESTING)
 
 # Gauge group and fermion rep:
 NCOL and DIMF defined in ../include/su3.h
@@ -58,16 +60,16 @@ nstep_gauge 10        # Gauge steps per fermion step
 traj_between_meas 1   # How many trajectories to skip between less-frequent measurements
 
 lambda 1.5            # 't Hooft coupling
-kappa_u1 0.5          # Plaquette determinant coupling
-bmass 0.5             # Bosonic mass
-fmass 0.0             # Fermion mass
+kappa_u1 0.6          # Plaquette determinant coupling
+bmass 0.2             # Bosonic mass parameter (mu)
+fmass 0.0             # Mass shift in fermion operator
 
 Nstout 1              # Number of stout smearing steps -- only include with -DSTOUT
 rho 0.1               # Stout smearing parameter -- only include with -DSTOUT
 
 max_cg_iterations 500 # Maximum number of CG iterations
 error_per_site 1e-5   # Stopping condition for CG (will be squared)
-nsrc 5                # Number of stochastic sources for vev calculations
+nsrc 5                # Number of stochastic sources -- only include with -DBILIN
 
 Nvec 100              # Number of eigenvalues to calculate -- only include with -DEIG
 eig_tol 1e-8          # Eigenvalue convergence criterion -- only include with -DEIG
@@ -116,17 +118,22 @@ update_o.c    -- Omelyan HMC evolution, includes ranmom() routine
 update_h.c    -- Updates gauge momenta
 
 # 1c) Measurement-specific files
-control_corr.c  -- Main program for correlator measurements only
-control_eig.c   -- Main program for eigenvalues measurements only
-d_bilinear.c    -- Fermion bilinear and susy transformation calculation
-d_correlator.c  -- Konishi and SUGRA correlators
-d_flavor.c      -- Four-link observables related to flavor (R-symmetry) transformations
-hvy_pot.c       -- Computes V(r) from gauge-fixed Wilson loops
-hvy_pot_polar.c -- Computes V(r) from gauge-fixed polar-projected Wilson loops
-                   (NB: overwrites links; only run last on saved configurations)
-eig.c           -- Eigenvalue measurements using PRIMME
-                   Must specify path to libzprimme.a as PLIB in makefile
-                   Also need LAPACK and BLAS in linkable location
+control_meas.c        -- Main program for standard measurements only
+control_eig.c         -- Main program for eigenvalues measurements only
+d_bilinear.c          -- Fermion bilinear and susy transformation calculation
+d_correlator.c        -- Konishi and SUGRA correlators C(t) (zero momentum projected)
+d_correlator_r.c      -- Konishi and SUGRA correlators C(r)
+hvy_pot.c             -- Computes correlators of gauge-fixed timelike links
+hvy_pot_polar.c       -- Computes correlators of polar-projected gauge-fixed timelike links
+                         (NB: overwrites links, which have to be saved and restored if they will be used further)
+hvy_pot_loop.c        -- Computes more standard Wilson loops
+hvy_pot_polar_loop.c  -- Computes more standard Wilson loops of polar-projected links
+                         (NB: overwrites links, as above)
+path.c                -- Used to construct Wilson loops for hvy_pot_loop.c and hvy_pot_polar_loop.c
+rsymm.c               -- Modified Wilson loops related to R symmetry transformations
+eig.c                 -- Eigenvalue measurements using PRIMME
+                         Must specify path to libzprimme.a as PLIB in makefile
+                         Also need LAPACK and BLAS in linkable location
 d_phase.c             -- Phase and (log of) magnitude of the pfaffian
 
 # 1d) Files not currently used, retained for potential future testing
@@ -148,6 +155,7 @@ nersc_cksum.c           -- Compute link trace sum for lattice I/O (cksum itself 
 ranstuff.c              -- Random number stuff, both for serial and parallel running
 remap_stdio_from_args.c -- For reading input parameters
 layout_hyper_prime.c    -- Layout lattice on processors
+stout.c                 -- Stout smearing on A4* lattice
 
 # 2b) Measurement-specific files
 gaugefix.c          -- Fixes to Coulomb gauge (requires even number of sites in all directions)
@@ -161,10 +169,10 @@ io_phase.c          -- Primitive (for now) dump and load routines for checkpoint
 
 # ------------------------------------------------------------------
 # Action:
-According to d_action.c, the bosonic action is g_act + bmass_act + det_act + h_act
+# According to d_action.c, the bosonic action is g_act + bmass_act + det_act + h_act
 
 # h_act:
-This is the gauge momenta contribution to the action, from d_hmom_action(),
+# This is the gauge momenta contribution to the action, from d_hmom_action()
   double sum = 0;
   for (mu = 0; mu < NUMLINK; mu++) {
     FORALLSITES(i, s)
@@ -173,8 +181,8 @@ This is the gauge momenta contribution to the action, from d_hmom_action(),
   g_doublesum(&sum);
 
 # g_act:
-This is the gauge action itself, from d_gauge_action()
-We include a tunable parameter in the DmuUmu^2 term, norm=0.5C_2
+# This is the gauge action itself, from d_gauge_action().  Note the factor of kappa
+# We include a tunable parameter in the DmuUmu^2 term, norm=0.5C_2
   double g_action = 0;
   compute_DmuUmu();
   FORALLSITES(i, s) {
@@ -195,7 +203,7 @@ We include a tunable parameter in the DmuUmu^2 term, norm=0.5C_2
   g_doublesum(&g_action);
 
 # bmass_act:
-This is the mass term for the U(1) mode, with normalization changed from 17 January 2013, from d_bmass_action()
+# This is the mass term for the U(1) mode, from d_bmass_action().  Note the factor of kappa
   double sum = 0;
   for (mu = 0; mu < NUMLINK; mu++) {
     FORALLSITES(i, s) {
@@ -206,7 +214,7 @@ This is the mass term for the U(1) mode, with normalization changed from 17 Janu
   g_doublesum(&sum);
 
 # det_act:
-This is the squared determinant term, from d_det_action()
+# This is the squared determinant term, from d_det_action().  Note no factor of kappa
   double det_action = 0.0;
   for (dir1 =1; dir1 < NUMLINK; dir1++) {
     for (dir2 =0; dir2 < dir1; dir2++) {

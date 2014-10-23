@@ -2,13 +2,13 @@
 Four-dimensional N=4 supersymmetric Yang--Mills theory
 
 # Actively maintained targets:
-susy_hmc and susy_phi for evolution with accept/reject step
-susy_meas for correlator measurements on saved configurations
-susy_hmc_meas for evolution along with correlator measurements
+susy_hmc for evolution with accept/reject step
+susy_meas for standard measurements on saved configurations
+susy_hmc_meas for evolution along with standard measurements
 susy_eig for eigenvalue measurements on saved configurations
 susy_phase for pfaffian phase measurements on saved configurations
 
-# Additional targets, not actively maintained or recently tested
+# Additional targets, not actively maintained or regularly tested
 susy_phi for evolution without accept/reject step
 susy_hmc_pg and susy_phi_pg for testing with gauge fields only (no fermions)
 susy_spill for printing out configuration in format expected by serial C++ code
@@ -21,7 +21,7 @@ Eigenvalue measurements (susy_eig) require PRIMME and LAPACK -- PRIMME can be ob
 -DPHI_ALGORITHM for the basic phi algorithm (REQUIRED)
 -DHMC_ALGORITHM switches on the accept/reject step
 -DCORR switches on the Konishi and SUGRA correlator calculation
--DSTOUT switches on stout smearing for correlator measurements
+-DSTOUT switches on stout smearing for measurements
 -DWLOOP switches on the gauge-fixed Wilson loop calculation
 -DBILIN switches on the fermion bilinear calculation
 -DEIG switches on the PRIMME eigenvalue calculation
@@ -63,8 +63,8 @@ traj_between_meas 1   # How many trajectories to skip between less-frequent meas
 
 lambda 1.5            # 't Hooft coupling
 kappa_u1 0.6          # Plaquette determinant coupling
-bmass 0.2             # Bosonic mass
-fmass 0.0             # Fermion mass
+bmass 0.2             # Bosonic mass parameter (mu)
+fmass 0.0             # Mass shift in fermion operator
 
 Nstout 1              # Number of stout smearing steps -- only include with -DSTOUT
 rho 0.1               # Stout smearing parameter -- only include with -DSTOUT
@@ -120,10 +120,11 @@ update_o.c    -- Omelyan HMC evolution, includes ranmom() routine
 update_h.c    -- Updates gauge momenta
 
 # 1c) Measurement-specific files
-control_meas.c        -- Main program for correlator measurements only
+control_meas.c        -- Main program for standard measurements only
 control_eig.c         -- Main program for eigenvalues measurements only
 d_bilinear.c          -- Fermion bilinear and susy transformation calculation
-d_correlator.c        -- Konishi and SUGRA correlators
+d_correlator.c        -- Konishi and SUGRA correlators C(t) (zero momentum projected)
+d_correlator_r.c      -- Konishi and SUGRA correlators C(r)
 hvy_pot.c             -- Computes correlators of gauge-fixed timelike links
 hvy_pot_polar.c       -- Computes correlators of polar-projected gauge-fixed timelike links
                          (NB: overwrites links, which have to be saved and restored if they will be used further)
@@ -170,10 +171,10 @@ io_phase.c          -- Primitive (for now) dump and load routines for checkpoint
 
 # ------------------------------------------------------------------
 # Action:
-According to d_action.c, the bosonic action is g_act + bmass_act + det_act + h_act
+# According to d_action.c, the bosonic action is g_act + bmass_act + det_act + h_act
 
 # h_act:
-This is the gauge momenta contribution to the action, from d_hmom_action(),
+# This is the gauge momenta contribution to the action, from d_hmom_action()
   double sum = 0;
   for (mu = 0; mu < NUMLINK; mu++) {
     FORALLSITES(i, s)
@@ -182,8 +183,8 @@ This is the gauge momenta contribution to the action, from d_hmom_action(),
   g_doublesum(&sum);
 
 # g_act:
-This is the gauge action itself, from d_gauge_action()
-We include a tunable parameter in the DmuUmu^2 term, norm=0.5C_2
+# This is the gauge action itself, from d_gauge_action().  Note the factor of kappa
+# We include a tunable parameter in the DmuUmu^2 term, norm=0.5C_2
   double g_action = 0;
   compute_DmuUmu();
   FORALLSITES(i, s) {
@@ -204,7 +205,7 @@ We include a tunable parameter in the DmuUmu^2 term, norm=0.5C_2
   g_doublesum(&g_action);
 
 # bmass_act:
-This is the mass term for the U(1) mode, with normalization changed from 17 January 2013, from d_bmass_action()
+# This is the mass term for the U(1) mode, from d_bmass_action().  Note the factor of kappa
   double sum = 0;
   for (mu = 0; mu < NUMLINK; mu++) {
     FORALLSITES(i, s) {
@@ -215,7 +216,7 @@ This is the mass term for the U(1) mode, with normalization changed from 17 Janu
   g_doublesum(&sum);
 
 # det_act:
-This is the squared determinant term, from d_det_action()
+# This is the squared determinant term, from d_det_action().  Note no factor of kappa
   double det_action = 0.0;
   for (dir1 =1; dir1 < NUMLINK; dir1++) {
     for (dir2 =0; dir2 < dir1; dir2++) {
