@@ -27,11 +27,7 @@ if [ $# -gt 1 ]; then
   cd ../testsuite/
   rm -f mpi/$target.U$N.out
   echo "Running susy_$target..."
-  if [ -f in.U$N.$target ]; then
-    $run ../susy/susy_$target < in.U$N.$target > mpi/$target.U$N.out
-  else
-    $run ../susy/susy_$target < in.U$N > mpi/$target.U$N.out
-  fi
+  $run ../susy/susy_$target < in.U$N.$target > mpi/$target.U$N.out
 
   # Check
   cd mpi/
@@ -61,7 +57,7 @@ for N in 2 3 4 ; do
   NSq=$[$N*$N]
   awk -v"X=#define NCOL $N" '{sub(/^#define NCOL .*/,X);print}' ../include/su3.h > TEMP && mv TEMP ../include/su3.h
   awk -v"X=#define DIMF $NSq" '{sub(/^#define DIMF .*/,X);print}' ../include/su3.h > TEMP && mv TEMP ../include/su3.h
-  for target in hmc corr hmc_corr bilin eig phase ; do
+  for target in hmc meas hmc_meas eig phase ; do
     echo "Compiling susy_$target..."
     if ! make -f $makefile susy_$target >& /dev/null ; then
       echo "ERROR: susy_$target compilation failed"
@@ -71,18 +67,14 @@ for N in 2 3 4 ; do
 
   # Run
   cd ../testsuite/
-  rm -f mpi/eig.U$N.out mpi/phase.U$N.out mpi/phase_part1.U$N.out mpi/phase_part2.U$N.out
-  for target in hmc corr hmc_corr bilin ; do
+  for target in hmc meas hmc_meas eig phase ; do
     rm -f mpi/$target.U$N.out
     echo "Running susy_$target..."
     $run ../susy/susy_$target < in.U$N > mpi/$target.U$N.out
   done
-  echo "Running susy_eig..."
-  $run ../susy/susy_eig < in.U$N.eig > mpi/eig.U$N.out
-  echo "Running susy_phase..."
-  $run ../susy/susy_phase < in.U$N.phase > mpi/phase.U$N.out
 
   # Checkpointed pfaffian computation
+  rm -f mpi/phase_part1.U$N.out mpi/phase_part2.U$N.out
   cp in.U$N.phase SAV
   awk -v"X=ckpt_save 100" '{sub(/ckpt_save 0/,X);print}' in.U$N.phase > TEMP && mv TEMP in.U$N.phase
   echo "Running checkpointed susy_phase part 1 of 2..."
@@ -96,7 +88,7 @@ for N in 2 3 4 ; do
 
   # Check
   cd mpi/
-  for target in hmc corr hmc_corr bilin eig phase phase_part1 phase_part2 ; do
+  for target in hmc meas hmc_meas eig phase phase_part1 phase_part2 ; do
     d="`diff -I'Time' -I'time' -I'seconds' -I'^start' $target.U$N.ref $target.U$N.out`"
     if [ -n "$d" ] ; then   # Non-zero string length
       echo "$target.U$N.ref and $target.U$N.out differ:"
