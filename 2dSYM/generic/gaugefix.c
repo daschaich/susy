@@ -275,13 +275,13 @@ void gaugefixstep(int gauge_dir, double *av_gauge_fix_action,
 
     // Scatter downward link matrices by gathering to sites of opposite parity
     FORALLUPDIR(dir) {
-      /* Synchronize before scattering to be sure the new modified link */
-      /* matrices are all ready to be scattered and diffmat is not */
-      /* overwritten before it is used */
+      // Synchronize before scattering to be sure the new modified link
+      // matrices are all ready to be scattered and diffmat is not
+      // overwritten before it is used
       g_sync();
 
-      /* First copy modified link for this dir */
-      /* from comm buffer or node to diffmat */
+      // First copy modified link for this dir
+      // from comm buffer or node to diffmat
       FORSOMEPARITY(i, s, parity) {
         if (diffmat_offset >= 0)
           su3mat_copy_f((su3_matrix_f *)(gen_pt[dir][i]),
