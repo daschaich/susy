@@ -26,14 +26,22 @@ typedef struct {
   // Inversion parameters
   int niter;                    // Maximum number of CG iterations
   Real rsqmin;                  // For deciding on convergence
-  int nsrc;                     // Number of stochastic sources
   char startfile[MAXFILENAME], savefile[MAXFILENAME];
-  char stringLFN[MAXFILENAME];  // ILDG LFN if applicable
+
+#ifdef BILIN
+  int nsrc;                     // Number of stochastic sources
+#endif
 
 #ifdef EIG
   // Eigenvalue parameters
   int Nvec, maxIter;
   Real eig_tol;
+#endif
+
+#ifdef STOUT
+  // Stout-smearing parameters
+  int Nstout;
+  Real rho;
 #endif
 
 #ifdef PHASE

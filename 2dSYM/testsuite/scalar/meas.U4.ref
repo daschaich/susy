@@ -1,0 +1,108 @@
+N=(2, 2) SYM, Nc = 4, DIMF = 16, fermion rep = adjoint
+Microcanonical simulation with refreshing
+Machine = Scalar processor, with 1 nodes
+Phi algorithm
+start: Wed Oct 22 21:25:32 2014
+
+type 0 for no prompts  or 1 for prompts
+nx 4
+nt 4
+iseed 41
+LAYOUT = Hypercubes, options = hyper_prime,
+ON EACH NODE 4 x 4
+Mallocing 0.2 MBytes per node for lattice
+Antiperiodic temporal boundary conditions
+Mallocing 0.1 MBytes per core for fields
+
+
+warms 0
+trajecs 10
+traj_length 1
+nstep 5
+nstep_gauge 10
+traj_between_meas 10
+lambda 1
+kappa_u1 1
+bmass 1
+fmass 0
+Nstout 1
+rho 0.1
+max_cg_iterations 500
+error_per_site 1e-05
+nsrc 3
+reload_serial config.U4.44
+coulomb_gauge_fix
+forget
+lambda=1 --> kappa=(Nc * nt^2)/(2lambda)=32
+C2=1
+Restored binary gauge configuration serially from file config.U4.44
+Time stamp Sun Sep 21 18:56:31 2014
+Checksums 7ba8e28d c0e6e45f OK
+Time to reload gauge configuration = 4.601479e-05
+CHECK PLAQ: 4.2349122522242384e+00
+CHECK NERSC LINKTR: -1.1480042497169052e-02 CKSUM: 0
+START 4.2349123 24.144585
+FLINK 1.00759 1.06396 1.03577
+GMES 1.0633164 -4.018643 0 4.2349123 24.144585
+BACTION 24.144585
+Doing 1 stout smearing steps with rho=0.1...
+BEFORE MIN_PLAQ 3.8567733 4.2349123
+AFTER  MIN_PLAQ 3.9211937 4.2729915
+DET 0.81395 0.00116046 0.690931 0.0217487
+KONISHI 0 0.70977936
+KONISHI 1 0.7070604
+KONISHI 2 0.70661872
+SUGRA 0 0.016403224
+SUGRA 1 0.014884635
+SUGRA 2 0.014548439
+d_correlator_r: MAX_T = 1, MAX_X = 1
+CORR_K 0 0 0.728124
+CORR_S 0 0 0.0202973
+CORR_K 0 1 0.714225
+CORR_S 0 1 0.015842
+CORR_K 1 -1 0.705354
+CORR_S 1 -1 0.0153112
+CORR_K 1 0 0.705686
+CORR_S 1 0 0.0157464
+CORR_K 1 1 0.708929
+CORR_S 1 1 0.0141808
+susy 0.253293 0.00785863 -0.256947 -0.0116399 ( 1 of 3 ) 51
+susy 0.241015 0.0034775 -0.282579 -0.0185664 ( 2 of 3 ) 52
+susy 0.25228 0.0013263 -0.245944 -0.00133908 ( 3 of 3 ) 51
+SUSY 0.255343 0.00736798 0.296358 0.0410149 ( ave over 3 )
+rsymm: MAX = 2
+INVLINK 1.21502 1.00808 1.11155
+RSYMM 1 [0] 1 [1] 4.2729915 3.8805224
+RSYMM 1 [0] 2 [1] 4.6538306 3.8824685
+RSYMM 2 [0] 1 [1] 4.7166521 4.1892022
+RSYMM 2 [0] 2 [1] 5.0798551 4.0457594
+RSYMM 1 [1] 1 [0] 4.2729915 4.8867903
+RSYMM 1 [1] 2 [0] 4.7166521 6.7964023
+RSYMM 2 [1] 1 [0] 4.6538306 5.1255011
+RSYMM 2 [1] 2 [0] 5.0798551 6.6890615
+hvy_pot_loop: MAX_T = 1, MAX_X = 1
+PLOT_LOOP 0 1 4.25584
+DL_LOOP   0 1 4.13349
+PLOT_LOOP 1 1 4.27299
+DL_LOOP   1 1 4.50628
+hvy_pot_polar_loop: MAX_T = 1, MAX_X = 1
+PLOLAR_LOOP 0 1 4
+PLOLAR_LOOP 1 1 3.96428
+Fixing to Coulomb gauge...
+GFIX ended at step 19. Ave gf action 0.752156, delta 5.3e-08
+GFIX time = 0.0008821 seconds
+BEFORE 4.2729915
+AFTER  4.2729915
+hvy_pot: MAX_T = 1, MAX_X = 1
+POT_LOOP 0 1 4.25584
+D_LOOP   0 1 4.13349
+POT_LOOP 1 1 4.25584
+D_LOOP   1 1 4.13349
+hvy_pot_polar: MAX_T = 1, MAX_X = 1
+POLAR_LOOP 0 1 2.81646
+POLAR_LOOP 1 1 2.30723
+RUNNING COMPLETED
+CG iters for measurements: 154
+total_iters = 154
+
+Time = 0.05801 seconds

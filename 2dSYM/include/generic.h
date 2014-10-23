@@ -30,12 +30,13 @@ void gaugefix(int gauge_dir,Real relax_boost,int max_gauge_iter,
               Real gfix_tol, field_offset diffmat, field_offset sumvec);
 
 // io_helpers.c
-gauge_file *save_lattice(int flag, char *filename, char *stringLFN);
+gauge_file *save_lattice(int flag, char *filename);
 gauge_file *reload_lattice(int flag, char *filename);
 int ask_starting_lattice(FILE *fp, int prompt, int *flag, char *filename);
 int ask_ending_lattice(FILE *fp, int prompt, int *flag, char *filename);
 int ask_gauge_fix(FILE *fp, int prompt, int *flag);
 void coldlat();
+void randomlat();
 void funnylat();
 int get_f(FILE *fp, int prompt, char *variable_name_string, Real *value);
 int get_i(FILE *fp, int prompt, char *variable_name_string, int *value);
@@ -84,5 +85,8 @@ void restrict_fourier(
           complex numbers.  For example, an su3_vector
           is 3 complex numbers. */
      int isign);   /* 1 for x -> k, -1 for k -> x */
+
+// stout.c for stout smearing
+void stout_smear(int Nstout, double rho);
 #endif
 // -----------------------------------------------------------------

@@ -3,7 +3,7 @@ Microcanonical simulation with refreshing
 Machine = Scalar processor, with 1 nodes
 Hybrid Monte Carlo algorithm
 Phi algorithm
-start: Sun Sep 21 19:02:19 2014
+start: Wed Oct 22 21:27:39 2014
 
 type 0 for no prompts  or 1 for prompts
 nx 4
@@ -29,7 +29,6 @@ bmass 1
 fmass 0
 max_cg_iterations 500
 error_per_site 1e-05
-nsrc 3
 reload_serial config.U3.44
 coulomb_gauge_fix
 forget
@@ -38,7 +37,7 @@ C2=1
 Restored binary gauge configuration serially from file config.U3.44
 Time stamp Sun Sep 21 18:40:17 2014
 Checksums 17c5380 8e9caeaa OK
-Time to reload gauge configuration = 1.289845e-04
+Time to reload gauge configuration = 3.695488e-05
 CHECK PLAQ: 3.2359167245471765e+00
 CHECK NERSC LINKTR: -7.6341684325598180e-03 CKSUM: 0
 START 3.2359167 12.475982
@@ -140,6 +139,6 @@ RUNNING COMPLETED
 STOP 3.12544 13.212723
 Average CG iters for steps: 783
 
-Time = 2.99 seconds
+Time = 2.322 seconds
 total_iters = 7830
 

@@ -36,8 +36,8 @@ typedef struct {
   double_prn site_prn;
 #endif
 
-  su3_matrix link[NUMLINK];       // Gauge field in fermion rep
-  su3_matrix_f linkf[NUMLINK];    // Usual gauge field (fundamental fermions)
+  su3_matrix_f linkf[NUMLINK];    // Gauge links
+  su3_matrix link[NUMLINK];       // Adjoint links
 
 #ifdef HMC_ALGORITHM
   su3_matrix_f old_linkf[NUMLINK];  // For accept/reject
@@ -55,7 +55,11 @@ typedef struct {
 
   // For convenience in calculating action and force
   // May be wasteful of space
-  su3_matrix_f DmuUmu, Fmunu[NUMLINK][NUMLINK];
+  su3_matrix_f DmuUmu, Fmunu;
+#ifdef CORR
+  su3_matrix_f B[NUMLINK];
+  Real traceBB[NUMLINK][NUMLINK];
+#endif
 
   // Boundary conditions -- many unused
   Real bc[2 * NUMLINK];
@@ -83,7 +87,7 @@ typedef struct {
 EXTERN int nx, nt;          // Lattice dimensions
 EXTERN int volume;          // Volume of lattice
 EXTERN int iseed;           // Random number seed
-EXTERN int warms, trajecs, niter, propinterval, nsrc;
+EXTERN int warms, trajecs, niter, propinterval;
 EXTERN Real traj_length;
 
 // U(N) generators
@@ -94,7 +98,6 @@ EXTERN Real lambda, kappa, bmass, fmass, kappa_u1;
 EXTERN double g_plaq;
 EXTERN double_complex linktrsum;
 EXTERN u_int32type nersc_checksum;
-EXTERN char stringLFN[MAXFILENAME];  // ILDG LFN if applicable
 EXTERN char startfile[MAXFILENAME], savefile[MAXFILENAME];
 EXTERN int startflag; // Beginning lattice: CONTINUE, RELOAD, FRESH
 EXTERN int fixflag;   // Gauge fixing: COULOMB_GAUGE_FIX, NO_GAUGE_FIX
@@ -147,6 +150,22 @@ EXTERN site *lattice;
 #define N_POINTERS 10
 EXTERN char **gen_pt[N_POINTERS];
 
+#ifdef BILIN
+EXTERN int nsrc;
+#endif
+
+#ifdef STOUT
+// Stout smearing stuff
+EXTERN int Nstout;
+EXTERN double rho;
+#endif
+// These are needed for smearing a `hot-start' random configuration
+EXTERN su3_matrix_f *thin_link[NUMLINK];
+EXTERN su3_matrix_f *smeared_link[NUMLINK];
+EXTERN su3_matrix_f *stp[NUMLINK];    // Staples
+EXTERN anti_hermitmat *Q[NUMLINK];    // To be exponentiated
+EXTERN su3_matrix_f *tempmat;         // Staple storage
+
 #ifdef EIG
 // Eigenvalue stuff
 EXTERN int Nvec;
@@ -166,6 +185,7 @@ EXTERN int ckpt_load, ckpt_save;    // For checkpointing
 // Up to 20 concurrent timers for timing, not currently being used
 #ifdef TIMING
 EXTERN double tmptime[20];
+EXTERN double time_stout;           // Uses tmptime[0] in stout_smear
 #endif
 
 #endif // _LATTICE_H

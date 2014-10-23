@@ -1,24 +1,4 @@
 // -----------------------------------------------------------------
-// We are reproducing the C++ constructors:
-// Lattice_Vector::Lattice_Vector(void) {
-//   for (int i = 0; i < D; i++)
-//     coords[i] = 0;
-// }
-// Lattice_Vector::Lattice_Vector(int mu) {
-//   if (mu < D) {
-//     for (int i = 0; i < D; i++)
-//       coords[i] = 0;
-//
-//     coords[mu] = 1;
-//     return;
-//   }
-//
-//   for (int i = 0; i < D; i++)
-//     coords[i] = -1;
-//
-//   return;
-// }
-
 // label[k] labels the offset of the kth connection between psibar and psi
 // by an integer 1 to 2
 // The separation of the paths is in New York metric
@@ -89,7 +69,7 @@ void setup_bc() {
 void setup_offset() {
   int i, k;
 
-  // Construct the link paths: one in each direction plus back-diagonal
+  // Construct the link paths: one in each direction
   for (i = 0; i < NDIMS; i++) {
     for (k = 0; k < NDIMS; k++)
       offset[i][k] = 0;
@@ -100,7 +80,14 @@ void setup_offset() {
 #ifdef DEBUG_CHECK
   node0_printf("There are %d distinct paths:\n", NUMLINK);
 #endif
-  // Now make the gather tables
+  // goffset holds indices of gather_array in ../generic/com_mpi.c
+  // The first four elements of gather_array are
+  //   XUP, TUP, TDOWN, XDOWN
+  // in that order!
+  // In order to use XDOWN = XUP + 1, etc., we make the next eight elements
+  //   XUP, XDOWN, TUP, TDOWN
+  // Then goffset[0]=4 and goffset[1]=6
+  // But we can't use these in EVEN or ODD gathers!
   for (i = 0; i < NUMLINK; i++) {
     goffset[i] = make_gather(cubic_neighbor, offset[i],
                              WANT_INVERSE, NO_EVEN_ODD, SCRAMBLE_PARITY);

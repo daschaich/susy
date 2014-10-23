@@ -13,7 +13,6 @@
 // Initialize generator matrices
 void initgen(int posmat[NCOL][NCOL]) {
   int i, j, a = 0;
-
   for (i = 0; i < NCOL; i++) {
     for (j = i + 1; j < NCOL; j++) {
       posmat[i][j] = a;

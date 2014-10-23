@@ -3,7 +3,7 @@ Microcanonical simulation with refreshing
 Machine = Scalar processor, with 1 nodes
 Hybrid Monte Carlo algorithm
 Phi algorithm
-start: Sun Sep 21 19:38:33 2014
+start: Wed Oct 22 21:28:25 2014
 
 type 0 for no prompts  or 1 for prompts
 nx 4
@@ -13,7 +13,7 @@ LAYOUT = Hypercubes, options = hyper_prime,
 ON EACH NODE 4 x 4
 Mallocing 0.2 MBytes per node for lattice
 Antiperiodic temporal boundary conditions
-Mallocing 0.0 MBytes per core for fields
+Mallocing 0.1 MBytes per core for fields
 RHMC Norder 15 for spectral range [0.0000001, 1000]
 
 
@@ -27,6 +27,8 @@ lambda 1
 kappa_u1 1
 bmass 1
 fmass 0
+Nstout 1
+rho 0.1
 max_cg_iterations 500
 error_per_site 1e-05
 nsrc 3
@@ -38,7 +40,7 @@ C2=1
 Restored binary gauge configuration serially from file config.U4.44
 Time stamp Sun Sep 21 18:56:31 2014
 Checksums 7ba8e28d c0e6e45f OK
-Time to reload gauge configuration = 1.039505e-04
+Time to reload gauge configuration = 4.696846e-05
 CHECK PLAQ: 4.2349122522242384e+00
 CHECK NERSC LINKTR: -1.1480042497169052e-02 CKSUM: 0
 START 4.2349123 24.144585
@@ -135,21 +137,67 @@ MONITOR_FORCE_FERMION0 0.1877
 FLINK 0.985072 1.03842 1.01175
 GMES -2.6633493 -3.6341977 807 4.1053537 22.375114
 BACTION 22.375114
+Doing 1 stout smearing steps with rho=0.1...
+BEFORE MIN_PLAQ 3.9247527 4.1053537
+AFTER  MIN_PLAQ 3.9810672 4.1410879
 DET 0.549981 -0.0013598 0.30577 0.00543448
+KONISHI 0 1.6670196
+KONISHI 1 1.6612297
+KONISHI 2 1.6669757
+SUGRA 0 0.033175332
+SUGRA 1 0.031007692
+SUGRA 2 0.029371679
+d_correlator_r: MAX_T = 1, MAX_X = 1
+CORR_K 0 0 1.6975
+CORR_S 0 0 0.0400729
+CORR_K 0 1 1.66199
+CORR_S 0 1 0.0338423
+CORR_K 1 -1 1.65215
+CORR_S 1 -1 0.0290976
+CORR_K 1 0 1.66581
+CORR_S 1 0 0.0317395
+CORR_K 1 1 1.67012
+CORR_S 1 1 0.0319169
+susy 0.259575 0.00613715 -0.245348 -0.000342603 ( 1 of 3 ) 60
+susy 0.239836 0.00103171 -0.266563 -0.017314 ( 2 of 3 ) 60
+susy 0.274663 0.00400615 -0.238984 0.012207 ( 3 of 3 ) 60
+SUSY 0.254161 0.00277077 0.206331 -0.0478301 ( ave over 3 )
 rsymm: MAX = 2
 INVLINK 1.16805 1.19379 1.18092
-RSYMM 1 [0] 1 [1] 4.1053537 4.4733165
-RSYMM 1 [0] 2 [1] 5.1007549 6.0233347
-RSYMM 2 [0] 1 [1] 4.4622973 4.4733557
-RSYMM 2 [0] 2 [1] 5.7082727 5.731548
-RSYMM 1 [1] 1 [0] 4.1053537 4.6280869
-RSYMM 1 [1] 2 [0] 4.4622973 5.8910572
-RSYMM 2 [1] 1 [0] 5.1007549 5.3045637
-RSYMM 2 [1] 2 [0] 5.7082727 6.4598782
+RSYMM 1 [0] 1 [1] 4.1410879 4.5041371
+RSYMM 1 [0] 2 [1] 5.1725008 6.0914967
+RSYMM 2 [0] 1 [1] 4.5256706 4.5166169
+RSYMM 2 [0] 2 [1] 5.8271757 5.811999
+RSYMM 1 [1] 1 [0] 4.1410879 4.6583054
+RSYMM 1 [1] 2 [0] 4.5256706 5.9458006
+RSYMM 2 [1] 1 [0] 5.1725008 5.3568719
+RSYMM 2 [1] 2 [0] 5.8271757 6.5464447
+hvy_pot_loop: MAX_T = 1, MAX_X = 1
+PLOT_LOOP 0 1 4.15369
+DL_LOOP   0 1 4.44259
+PLOT_LOOP 1 1 4.14109
+DL_LOOP   1 1 4.80267
+hvy_pot_polar_loop: MAX_T = 1, MAX_X = 1
+PLOLAR_LOOP 0 1 4
+PLOLAR_LOOP 1 1 3.96609
+Fixing to Coulomb gauge...
+GFIX ended at step 11. Ave gf action 0.830063, delta 8.16e-08
+GFIX time = 0.000582 seconds
+BEFORE 4.1410879
+AFTER  4.1410879
+hvy_pot: MAX_T = 1, MAX_X = 1
+POT_LOOP 0 1 4.15369
+D_LOOP   0 1 4.44259
+POT_LOOP 1 1 4.15369
+D_LOOP   1 1 4.44259
+hvy_pot_polar: MAX_T = 1, MAX_X = 1
+POLAR_LOOP 0 1 2.84946
+POLAR_LOOP 1 1 2.49902
 RUNNING COMPLETED
 STOP 4.1053537 22.375114
 Average CG iters for steps: 726.2
+Average CG iters for measurements: 180
 
-Time = 11.13 seconds
-total_iters = 7262
+Time = 8.524 seconds
+total_iters = 7442
 

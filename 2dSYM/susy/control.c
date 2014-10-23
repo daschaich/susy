@@ -86,6 +86,24 @@ int main(int argc, char *argv[]) {
 
     // Less frequent measurements every "propinterval" trajectories
     if ((traj_done % propinterval) == (propinterval - 1)) {
+#ifdef STOUT
+#define MIN_PLAQ
+      // Optionally smear before less frequent measurements
+      node0_printf("Doing %d stout smearing steps with rho=%.4g...\n",
+                   Nstout, rho);
+
+      // Check minimum plaquette in addition to averages
+      node0_printf("BEFORE ");
+      d_plaquette_lcl(&dplaq);    // Prints out MIN_PLAQ
+      node0_printf(" %.8g\n", dplaq);
+
+      // Overwrites s->linkf, saves original values in thin_link field
+      stout_smear(Nstout, rho);
+      node0_printf("AFTER  ");
+      d_plaquette_lcl(&dplaq);    // Prints out MIN_PLAQ
+      node0_printf(" %.8g\n", dplaq);
+#endif
+
       // Plaquette determinant
       measure_det();
 
@@ -115,7 +133,8 @@ int main(int argc, char *argv[]) {
 
 #ifdef CORR
       // Konishi and SUGRA correlators
-//      d_correlator();
+      d_correlator();
+      d_correlator_r();
 #endif
 
 #ifdef BILIN
@@ -137,9 +156,21 @@ int main(int argc, char *argv[]) {
 //      monopole();
 #endif
 
-#if 0
 #ifdef WLOOP
-      // Gauge-fixed Wilson loops
+      // First calculate a few Wilson loops more directly, using explicit paths
+      // Save and restore all links overwritten by polar projection
+      hvy_pot_loop();
+      FORALLSITES(i, s) {
+        for (mu = XUP; mu < NUMLINK; mu++)
+          su3mat_copy_f(&(s->linkf[mu]), &(s->mom[mu]));
+      }
+      hvy_pot_polar_loop();
+      FORALLSITES(i, s) {
+        for (mu = XUP; mu < NUMLINK; mu++)
+          su3mat_copy_f(&(s->mom[mu]), &(s->linkf[mu]));
+      }
+
+      // Now gauge fix to easily access arbitrary displacements
       // Save un-fixed links to be saved if requested
       if (fixflag == COULOMB_GAUGE_FIX) {
         d_plaquette(&dplaq);    // To be printed below
@@ -152,6 +183,8 @@ int main(int argc, char *argv[]) {
         double gtime = -dclock();
 
         // Gauge fixing arguments explained in generic/gaugefix.c
+        // With first argument outside XUP or TUP,
+        // both links are included in gauge-fixing condition
         gaugefix(TUP, 1.5, 500, GAUGE_FIX_TOL, -1, -1);
         gtime += dclock();
         node0_printf("GFIX time = %.4g seconds\n", gtime);
@@ -185,6 +218,13 @@ int main(int argc, char *argv[]) {
         }
       }
 #endif
+
+#ifdef STOUT
+      // Restore unsmeared links from thin_link field
+      for (mu = XUP; mu < NUMLINK; mu++) {
+        FORALLSITES(i, s)
+          su3mat_copy_f(&(thin_link[mu][i]), &(s->linkf[mu]));
+      }
 #endif
     }
     fflush(stdout);
@@ -212,7 +252,7 @@ int main(int argc, char *argv[]) {
 
   // Save lattice if requested
   if (saveflag != FORGET)
-    save_lattice(saveflag, savefile, stringLFN);
+    save_lattice(saveflag, savefile);
   return 0;
 }
 // -----------------------------------------------------------------

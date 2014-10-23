@@ -31,7 +31,6 @@ double d_hmom_action() {
 double d_gauge_action() {
   register int i;
   register site *s;
-  int mu, nu;
   double g_action = 0.0, norm = 0.5 * C2;
   complex cg_action;
   su3_matrix_f tmat;
@@ -43,14 +42,9 @@ double d_gauge_action() {
     g_action += norm * cg_action.real;
   }
 
-  compute_Fmunu();
-  for (mu = 0; mu < NUMLINK; mu++) {
-    for (nu = mu + 1; nu < NUMLINK; nu++) {
-      FORALLSITES(i, s)
-        g_action += 2 * realtrace_su3_f(&(s->Fmunu[mu][nu]),
-                                        &(s->Fmunu[mu][nu]));
-    }
-  }
+  compute_Fmunu();    // We only have one oriented plane to consider
+  FORALLSITES(i, s)
+    g_action += 2.0 * realtrace_su3_f(&(s->Fmunu), &(s->Fmunu));
   g_action *= kappa;
   g_doublesum(&g_action);
   return g_action;

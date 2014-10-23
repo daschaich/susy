@@ -193,7 +193,7 @@ void save_diag(complex *diag, int ckpt_save) {
 // -----------------------------------------------------------------
 #ifdef PHASE
 // Only save non-zero elements of remaining columns of Q
-// Write from node0 only --transfer data from all other nodes one by one
+// Write from node0 only -- transfer data from all other nodes one by one
 void saveQ(complex **Q, int ckpt_save) {
   int i, j, Ndat = 4 * DIMF, mynode, Nlines = 0, Qlen;
   char outfile[80];

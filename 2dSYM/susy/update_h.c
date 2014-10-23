@@ -45,8 +45,14 @@ double gauge_force(Real eps) {
     for (nu = 0; nu < NUMLINK; nu++) {
       if (mu == nu)
         continue;
-      FORALLSITES(i, s)
-        mult_su3_an_f(&(s->Fmunu[mu][nu]), &(s->linkf[nu]), &(s->tempmat2));
+
+      FORALLSITES(i, s) {
+        if (mu > nu)
+          scalar_mult_su3_matrix_f(&(s->Fmunu), -1.0, &tmat2);
+        else
+          su3mat_copy_f(&(s->Fmunu), &tmat2);
+        mult_su3_an_f(&tmat2, &(s->linkf[nu]), &(s->tempmat2));
+      }
 
       tag0 = start_gather_site(F_OFFSET(linkf[nu]), sizeof(su3_matrix_f),
                                goffset[mu], EVENANDODD, gen_pt[0]);
@@ -56,8 +62,11 @@ double gauge_force(Real eps) {
       wait_gather(tag1);
 
       FORALLSITES(i, s) {
-        mult_su3_na_f((su3_matrix_f *)gen_pt[0][i], &(s->Fmunu[mu][nu]),
-                      &tmat1);
+        if (mu > nu)
+          scalar_mult_su3_matrix_f(&(s->Fmunu), -1.0, &tmat2);
+        else
+          su3mat_copy_f(&(s->Fmunu), &tmat2);
+        mult_su3_na_f((su3_matrix_f *)gen_pt[0][i], &tmat2, &tmat1);
         sub_su3_matrix_f(&tmat1, (su3_matrix_f *)gen_pt[1][i], &tmat3);
         scalar_mult_add_su3_matrix_f(&(s->f_U[mu]), &tmat3, 2.0, &(s->f_U[mu]));
       }

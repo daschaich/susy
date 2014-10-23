@@ -15,7 +15,7 @@ the script will compile the target susy_$tag for gauge group U($N), run the susy
 
 Currently the MPI tests are customized for the HEP-TH cluster at the University of Colorado.  Adjusting the $makefile and $run variables at the start of mpi/run_tests may suffice to adjust the tests for other systems.
 
-Alternately, if run_tests is run with no arguments it will test every target for every N=2, 3 and 4.  This is pretty quick.  Typical total serial runtimes are about 3 seconds for N=2, about 17 seconds for N=3 and about 2 minutes for N=4, with pfaffian computations dominating costs for N=3 and 4.
+Alternately, if run_tests is run with no arguments it will test every target for every N=2, 3 and 4.  This should be pretty quick, just a few minutes to run and almost as long to compile.
 
 Current limitations:
 Only anti-periodic temporal boundary conditions for the fermions are tested.

@@ -51,7 +51,7 @@ void compute_DmuUmu() {
 void compute_Fmunu() {
   register int i;
   register site *s;
-  int mu, nu, j, k;
+  int mu, nu;
   msg_tag *mtag0 = NULL, *mtag1 = NULL;
 
   for (mu = 0; mu < NUMLINK; mu++) {
@@ -67,17 +67,64 @@ void compute_Fmunu() {
                       &(s->tempmat1));
         mult_su3_nn_f(&(s->linkf[nu]), (su3_matrix_f *)(gen_pt[1][i]),
                       &(s->tempmat2));
-        sub_su3_matrix_f(&(s->tempmat1), &(s->tempmat2), &(s->Fmunu[mu][nu]));
-        for (j = 0; j < NCOL; j++) {
-          for (k = 0; k < NCOL; k++)
-            CNEGATE(s->Fmunu[mu][nu].e[j][k], s->Fmunu[nu][mu].e[j][k]);
-        }
+        sub_su3_matrix_f(&(s->tempmat1), &(s->tempmat2), &(s->Fmunu));
       }
       cleanup_gather(mtag0);
       cleanup_gather(mtag1);
     }
   }
 }
+// -----------------------------------------------------------------
+
+
+
+// -----------------------------------------------------------------
+// Compute at each site B_mu(x) = U_mu(x) * Udag_mu(x) - volume average
+// as well as traceBB[mu][nu](x) = tr[B_mu(x) B_nu(x)] (should be real)
+#ifdef CORR
+void compute_Bmu() {
+  register int i;
+  register site *s;
+  int mu, nu, j;
+  Real dum = 0.0;
+  complex ctmp;
+  su3_matrix_f tmat;
+
+  // Start by computing the volume average
+  FORALLSITES(i, s) {
+    for (mu = 0; mu < NUMLINK; mu++)
+      dum += realtrace_su3_f(&(s->linkf[mu]), &(s->linkf[mu]));
+  }       // realtrace_su3_f(A, B) returns ReTr(Adag B)
+  g_doublesum(&dum);
+  dum /= (Real)(NCOL * NUMLINK * volume);
+
+  // B_mu = U_mu Udag_mu - Sum_{mu, x} ReTr(U_mu Udag_mu) / (5Nc vol)
+  FORALLSITES(i, s) {
+    for (mu = 0; mu < NUMLINK; mu++) {
+      mult_su3_na_f(&(s->linkf[mu]), &(s->linkf[mu]), &(s->B[mu]));
+      for (j = 0; j < NCOL; j++)
+        s->B[mu].e[j][j].real -= dum;    // Subtract volume average
+    }
+
+    // trace[mu][nu] = tr[B_mu(x) B_nu(x)] is symmetric in mu <--> nu
+    // But store all to simplify SUGRA computation
+    for (mu = 0; mu < NUMLINK; mu++) {
+      for (nu = mu; nu < NUMLINK; nu++) {
+        mult_su3_nn_f(&(s->B[mu]), &(s->B[nu]), &tmat);
+        ctmp = trace_su3_f(&tmat);
+
+        // Make sure Tr(B_a * B_b) really is real
+        if (fabs(ctmp.imag) > IMAG_TOL) {
+          printf("node%d WARNING: Im(X[%d][%d][%d]) = %.4g > %.4g)\n",
+                 this_node, mu, nu, i, ctmp.imag, IMAG_TOL);
+        }
+        s->traceBB[mu][nu] = ctmp.real;
+        s->traceBB[nu][mu] = ctmp.real;
+      }
+    }
+  }
+}
+#endif
 // -----------------------------------------------------------------
 
 
@@ -119,19 +166,19 @@ void fermion_op(Twist_Fermion *src, Twist_Fermion *dest, int sign) {
 
   // Now the fun begins
 #ifdef VP
-  Dplus(link_src, plaq_dest);   // Overwrites plaq_dest for mu != nu
-  Dminus(plaq_src, link_dest);  // Overwrites link_dest
+  Dplus(link_src, plaq_dest);             // Overwrites plaq_dest
+  Dminus(plaq_src, link_dest);            // Overwrites link_dest
 #endif
 
 #ifdef SV
-  DbplusStoL(site_src, link_dest2);   // Overwrites link_dest2
+  DbplusStoL(site_src, link_dest2);       // Overwrites link_dest2
   for (mu = 0; mu < NUMLINK; mu++) {
     FORALLSITES(i, s)
       scalar_mult_add_su3_vector(&(link_dest[mu][i]), &(link_dest2[mu][i]),
                                  0.5, &(link_dest[mu][i]));
   }
 
-  DbminusLtoS(link_src, site_dest);   // Overwrites site_dest
+  DbminusLtoS(link_src, site_dest);       // Overwrites site_dest
   FORALLSITES(i, s)
     scalar_mult_su3_vector(&(site_dest[i]), 0.5, &(site_dest[i]));
 #endif
@@ -167,7 +214,8 @@ void Dplus(su3_vector *src[NUMLINK], su3_vector *dest) {
   register int i;
   register site *s;
   int mu, nu;
-  su3_vector vtmp1, vtmp2, vtmp3, vtmp4;
+  su3_vector vtmp1, vtmp2, vtmp3, vtmp4, *vec0, *vec2;
+  su3_matrix *mat1, *mat3;
   msg_tag *mtag0 = NULL, *mtag1 = NULL, *mtag2 = NULL, *mtag3 = NULL;
 
   for (mu = 0; mu < NUMLINK; mu++) {
@@ -189,18 +237,18 @@ void Dplus(su3_vector *src[NUMLINK], su3_vector *dest) {
       wait_gather(mtag2);
       wait_gather(mtag3);
       FORALLSITES(i, s) {
-        mult_su3_mat_vec(&(s->link[mu]), (su3_vector *)(gen_pt[0][i]),
-                         &vtmp1);
+        vec0 = (su3_vector *)(gen_pt[0][i]);
+        mat1 = (su3_matrix *)(gen_pt[1][i]);
+        vec2 = (su3_vector *)(gen_pt[2][i]);
+        mat3 = (su3_matrix *)(gen_pt[3][i]);
+        mult_su3_mat_vec(&(s->link[mu]), vec0, &vtmp1);
         scalar_mult_su3_vector(&vtmp1, s->bc[mu], &vtmp1);
 
-        mult_su3_vec_mat(&(src[nu][i]), (su3_matrix *)(gen_pt[1][i]),
-                         &vtmp2);
-        mult_su3_mat_vec(&(s->link[nu]), (su3_vector *)(gen_pt[2][i]),
-                         &vtmp3);
+        mult_su3_vec_mat(&(src[nu][i]), mat1, &vtmp2);
+        mult_su3_mat_vec(&(s->link[nu]), vec2, &vtmp3);
         scalar_mult_su3_vector(&vtmp3, s->bc[nu], &vtmp3);
 
-        mult_su3_vec_mat(&(src[mu][i]), (su3_matrix *)(gen_pt[3][i]),
-                         &vtmp4);
+        mult_su3_vec_mat(&(src[mu][i]), mat3, &vtmp4);
         sub_su3_vector(&vtmp1, &vtmp2, &vtmp1);
         sub_su3_vector(&vtmp3, &vtmp4, &vtmp3);
         sub_su3_vector(&vtmp1, &vtmp3, &(dest[i]));   // Overwrite
@@ -221,7 +269,8 @@ void Dminus(su3_vector *src, su3_vector *dest[NUMLINK]) {
   register int i;
   register site *s;
   int mu, nu;
-  su3_vector tvec, vtmp1, vtmp2, vtmp3;
+  su3_vector vtmp1, vtmp2, vtmp3, *vec1, tvec;
+  su3_matrix *mat0;
   msg_tag *mtag0 = NULL, *mtag1 = NULL;
 
   for (nu = 0; nu < NUMLINK; nu++) {
@@ -236,12 +285,12 @@ void Dminus(su3_vector *src, su3_vector *dest[NUMLINK]) {
                                 goffset[nu], EVENANDODD, gen_pt[0]);
 
       FORALLSITES(i, s) {
-        if (mu > nu) {    // plaq_sol is anti-symmetric under mu <--> nu
+        if (mu > nu) {    // src is anti-symmetric under mu <--> nu
           scalar_mult_su3_vector(&(src[i]), -1.0, &tvec);
-        }                 // Suppress compiler error
+          mult_su3_vec_mat(&tvec, &(s->link[mu]), &(tsite[0][i]));
+        }
         else
-          su3vec_copy(&(src[i]), &tvec);
-        mult_su3_vec_mat(&tvec, &(s->link[mu]), &(tsite[0][i]));
+          mult_su3_vec_mat(&(src[i]), &(s->link[mu]), &(tsite[0][i]));
       }
       mtag1 = start_gather_field(tsite[0], sizeof(su3_vector),
                                  goffset[mu] + 1, EVENANDODD, gen_pt[1]);
@@ -249,14 +298,15 @@ void Dminus(su3_vector *src, su3_vector *dest[NUMLINK]) {
       wait_gather(mtag0);
       wait_gather(mtag1);
       FORALLSITES(i, s) {
-        if (mu > nu) {    // plaq_sol is anti-symmetric under mu <--> nu
+        mat0 = (su3_matrix *)(gen_pt[0][i]);
+        vec1 = (su3_vector *)(gen_pt[1][i]);
+        if (mu > nu) {    // src is anti-symmetric under mu <--> nu
           scalar_mult_su3_vector(&(src[i]), -1.0, &tvec);
-        }                 // Suppress compiler error
+          mult_su3_mat_vec(mat0, &tvec, &vtmp1);
+        }
         else
-          su3vec_copy(&(src[i]), &tvec);
-        mult_su3_mat_vec((su3_matrix *)(gen_pt[0][i]), &tvec, &vtmp1);
-        scalar_mult_su3_vector((su3_vector *)(gen_pt[1][i]),
-                               s->bc[OPP_LDIR(mu)], &vtmp3);
+          mult_su3_mat_vec(mat0, &(src[i]), &vtmp1);
+        scalar_mult_su3_vector(vec1, s->bc[OPP_LDIR(mu)], &vtmp3);
         sub_su3_vector(&vtmp1, &vtmp3, &vtmp2);
         add_su3_vector(&(dest[nu][i]), &vtmp2, &(dest[nu][i]));
       }
@@ -276,7 +326,7 @@ void DbminusLtoS(su3_vector *src[NUMLINK], su3_vector *dest) {
   register int i;
   register site *s;
   int mu;
-  su3_vector vtmp1, vtmp2, vtmp3;
+  su3_vector vtmp1, vtmp2, vtmp3, *vec;
   msg_tag *tag[NUMLINK];
 
   FORALLSITES(i, s) {         // Set up first gather
@@ -299,9 +349,9 @@ void DbminusLtoS(su3_vector *src[NUMLINK], su3_vector *dest) {
 
     wait_gather(tag[mu]);
     FORALLSITES(i, s) {
+      vec = (su3_vector *)(gen_pt[mu][i]);
       mult_su3_vec_adj_mat(&(src[mu][i]), &(s->link[mu]), &vtmp1);
-      scalar_mult_su3_vector((su3_vector *)(gen_pt[mu][i]),
-                             s->bc[OPP_LDIR(mu)], &vtmp3);
+      scalar_mult_su3_vector(vec, s->bc[OPP_LDIR(mu)], &vtmp3);
       sub_su3_vector(&vtmp1, &vtmp3, &vtmp2);
       add_su3_vector(&(dest[i]), &vtmp2, &(dest[i]));
     }
@@ -317,7 +367,7 @@ void DbplusStoL(su3_vector *src, su3_vector *dest[NUMLINK]) {
   register int i;
   register site *s;
   int mu;
-  su3_vector vtmp1, vtmp2;
+  su3_vector vtmp1, vtmp2, *vec;
   msg_tag *tag[NUMLINK];
 
   tag[0] = start_gather_field(src, sizeof(su3_vector),
@@ -330,8 +380,8 @@ void DbplusStoL(su3_vector *src, su3_vector *dest[NUMLINK]) {
 
     wait_gather(tag[mu]);
     FORALLSITES(i, s) {
-      mult_su3_vec_adj_mat((su3_vector *)(gen_pt[mu][i]), &(s->link[mu]),
-                           &vtmp1);
+      vec = (su3_vector *)(gen_pt[mu][i]);
+      mult_su3_vec_adj_mat(vec, &(s->link[mu]), &vtmp1);
       scalar_mult_su3_vector(&vtmp1, s->bc[mu], &vtmp1);
       mult_adj_su3_mat_vec(&(s->link[mu]), &(src[i]), &vtmp2);
       sub_su3_vector(&vtmp1, &vtmp2, &(dest[mu][i]));   // Overwrite

@@ -81,6 +81,17 @@ void make_fields() {
   FIELD_ALLOC_VEC(link_dest2, su3_vector, NUMLINK);
   FIELD_ALLOC(plaq_src, su3_vector);
   FIELD_ALLOC(plaq_dest, su3_vector);
+  // Stout smearing stuff needed for `hot-start' random configurations
+  size += (double)(1 + 3 * NUMLINK) * sites_on_node * sizeof(su3_matrix_f);
+  size += (double)(NUMLINK) * sites_on_node * sizeof(anti_hermitmat);
+#ifdef PHASE
+  size += 8.0 * sites_on_node * sizeof(su3_vector);
+#endif
+  FIELD_ALLOC_VEC(thin_link, su3_matrix_f, NUMLINK);
+  FIELD_ALLOC_VEC(smeared_link, su3_matrix_f, NUMLINK);
+  FIELD_ALLOC_VEC(stp, su3_matrix_f, NUMLINK);    // Staples
+  FIELD_ALLOC_VEC(Q, anti_hermitmat, NUMLINK);    // To be exponentiated
+  FIELD_ALLOC(tempmat, su3_matrix_f);             // Staple storage
 
   node0_printf("Mallocing %.1f MBytes per core for fields\n", size / 1e6);
 
@@ -172,8 +183,10 @@ int readin(int prompt) {
       par_buf.rsqmin = x;
     }
 
+#ifdef BILIN
     // Number of stochastic sources for fermion bilinear and susy trans
     IF_OK status += get_i(stdin, prompt, "nsrc", &par_buf.nsrc);
+#endif
 
 #ifdef EIG
     // Number of eigenvalues to calculate
@@ -230,7 +243,9 @@ int readin(int prompt) {
                lambda, kappa);
   node0_printf("C2=%.4g\n", C2);
 
+#ifdef BILIN
   nsrc = par_buf.nsrc;
+#endif
 #ifdef EIG
   Nvec = par_buf.Nvec;
   eig_tol = par_buf.eig_tol;
@@ -249,11 +264,10 @@ int readin(int prompt) {
   saveflag = par_buf.saveflag;
   strcpy(startfile, par_buf.startfile);
   strcpy(savefile, par_buf.savefile);
-  strcpy(stringLFN, par_buf.savefile);
 
   // Do whatever is needed to get lattice
   startlat_p = reload_lattice(startflag, startfile);
-  // Generate the irrep lattice
+  // Generate the adjoint links
   fermion_rep();
   return 0;
 }

@@ -109,7 +109,9 @@ void rsymm();
 // More measurements
 #ifdef CORR
 // Konishi and SUGRA correlators
+void compute_Bmu();
 void d_correlator();    // Projected to zero spatial momentum
+void d_correlator_r();  // Functions of (x, t)
 #endif
 #ifdef BILIN
 // vevs to explore susy breaking
@@ -128,6 +130,10 @@ void print_var3(char *label);
 void hvy_pot();
 void hvy_pot_polar();
 
+// These construct explicit paths along lattice principal axes, for checking
+void hvy_pot_loop();
+void hvy_pot_polar_loop();
+
 // Use LAPACK in the polar projection
 // http://www.physics.orst.edu/~rubin/nacphy/lapack/routines/zheev.html
 // First argument turns on eigenvector computations
@@ -142,6 +148,9 @@ void zheev_(char *doV, char *uplo, int *N1, double *store, int *N2,
             double *eigs, double *work, int *Nwork, double *Rwork, int *stat);
 void polar(su3_matrix_f *a, su3_matrix_f *b);
 #endif
+
+// Monopole computation uses find_det
+void monopole();
 // -----------------------------------------------------------------
 
 
