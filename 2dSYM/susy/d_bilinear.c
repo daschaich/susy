@@ -71,6 +71,8 @@ void bilinsrc(Twist_Fermion *g_rand, Twist_Fermion *src, int N) {
 //   sum_a tr(eta Ubar_a psi_a) - tr(eta)/N tr(Ubar_a psi_a)
 // Return total number of iterations
 int d_bilinear() {
+  if (nsrc < 1)   // Only run if there are inversions to do
+    return 0;
   register int i;
   register site *s;
   int mu, isrc, iters, tot_iters = 0;
@@ -87,7 +89,7 @@ int d_bilinear() {
   Norder = 1;
   psim = malloc(sizeof(**psim));
   psim[0] = malloc(sites_on_node * sizeof(Twist_Fermion));
-  shift[0] = 0;
+  shift[0] = 0;             // Reset in update or grsource
 
   // Normalization: sum over NUMLINK but divide by volume
   // and divide by 2kappa as discussed on 15--17 December 2013
@@ -157,6 +159,8 @@ int d_bilinear() {
 //                              - sum_a tr(eta Ubar_a psi_a)
 // Return total number of iterations
 int d_susyTrans() {
+  if (nsrc < 1)   // Only run if there are inversions to do
+    return 0;
   register int i;
   register site *s;
   int mu, isrc, iters, tot_iters = 0;

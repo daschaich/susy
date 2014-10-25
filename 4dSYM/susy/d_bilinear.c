@@ -71,6 +71,8 @@ void bilinsrc(Twist_Fermion *g_rand, Twist_Fermion *src, int N) {
 //   sum_a tr(eta Ubar_a psi_a) - tr(eta)/N tr(Ubar_a psi_a)
 // Return total number of iterations
 int d_bilinear() {
+  if (nsrc < 1)   // Only run if there are inversions to do
+    return 0;
   register int i;
   register site *s;
   int mu, isrc, iters, tot_iters = 0;
@@ -157,6 +159,8 @@ int d_bilinear() {
 //                              - sum_a tr(eta Ubar_a psi_a)
 // Return total number of iterations
 int d_susyTrans() {
+  if (nsrc < 1)   // Only run if there are inversions to do
+    return 0;
   register int i;
   register site *s;
   int mu, isrc, iters, tot_iters = 0;
