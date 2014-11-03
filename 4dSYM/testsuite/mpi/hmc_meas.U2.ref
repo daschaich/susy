@@ -3,7 +3,7 @@ Microcanonical simulation with refreshing
 Machine = MPI (portable), with 2 nodes
 Hybrid Monte Carlo algorithm
 Phi algorithm
-start: Wed Oct 22 21:35:50 2014
+start: Mon Nov  3 15:21:01 2014
 
 type 0 for no prompts  or 1 for prompts
 nx 4
@@ -42,7 +42,7 @@ C2=1
 Restored binary gauge configuration serially from file config.U2.4444
 Time stamp Sun Feb  9 13:12:59 2014
 Checksums be30095 b19f9ad8 OK
-Time to reload gauge configuration = 6.279945e-04
+Time to reload gauge configuration = 5.989075e-04
 CHECK PLAQ: 1.9081702017469617e+00 1.8927824330549272e+00
 CHECK NERSC LINKTR: -5.5492308298425996e-03 CKSUM: 0
 START 1.9081702 1.8927824 3.8009526 15.784656
@@ -255,6 +255,7 @@ RSYMM 1 [4] 1 [3] 2.022291 2.2981894
 RSYMM 1 [4] 2 [3] 1.9791154 2.5699248
 RSYMM 2 [4] 1 [3] 2.1778007 2.5404395
 RSYMM 2 [4] 2 [3] 2.0785541 2.8556144
+MONOPOLE 0 0  0 0  0 0  0 0    0 0
 hvy_pot_loop: MAX_T = 1, MAX_X = 1
 PLOT_LOOP 0 0 0 1 2.07444
 DL_LOOP   0 0 0 1 2.1645
@@ -271,7 +272,7 @@ PLOLAR_LOOP 0 1 0 1 1.94824
 PLOLAR_LOOP 0 0 1 1 1.95041
 Fixing to Coulomb gauge...
 GFIX ended at step 72. Ave gf action 0.560314, delta 9.17e-08
-GFIX time = 0.006683 seconds
+GFIX time = 0.006789 seconds
 BEFORE 2.0517005 1.9934749
 AFTER  2.0517005 1.9934749
 hvy_pot: MAX_T = 1, MAX_X = 1
@@ -323,6 +324,6 @@ STOP 1.9170908 1.8676649 3.7847558 15.693374
 Average CG iters for steps: 789.7
 Average CG iters for measurements: 135
 
-Time = 24.81 seconds
+Time = 25.13 seconds
 total_iters = 2504
 

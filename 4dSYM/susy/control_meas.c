@@ -139,7 +139,7 @@ int main(int argc, char *argv[]) {
   rsymm();
 
   // Measure density of monopole world lines in non-diagonal cubes
-//  monopole();
+  monopole();
 #endif
 
 #ifdef WLOOP

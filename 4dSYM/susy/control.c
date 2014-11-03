@@ -153,11 +153,11 @@ int main(int argc, char *argv[]) {
 #endif
 
 #ifdef CORR
-  // R symmetry transformations -- use find_det and adjugate
+      // R symmetry transformations -- use find_det and adjugate
       rsymm();
 
-  // Measure density of monopole world lines in non-diagonal cubes
-//      monopole();
+      // Measure density of monopole world lines in non-diagonal cubes
+      monopole();
 #endif
 
 #ifdef WLOOP

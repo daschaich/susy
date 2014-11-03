@@ -6,26 +6,29 @@ void monopole() {
   register int i, dir, dir2;
   register site *s;
   int a, b, c, d, ip2;
-  int total_mono_p[4], total_mono_m[4], total, total_abs;
-  int *mono[NUMLINK][NUMLINK], *charge[NUMLINK];
-  Real *phase[NUMLINK], p2, p3, total_phase, permm;
+  int total_mono_p[NDIMS], total_mono_m[NDIMS], total, total_abs;
+  int *mono[NDIMS][NDIMS], *charge[NDIMS];
+  Real *phase[NDIMS], p2, p3, total_phase, permm;
   double threePI = 3.0 * PI;
   double fivePI = 5.0 * PI;
   double sevenPI = 7.0 * PI;
   complex det_link;
   msg_tag *mtag0, *mtag1;
 
-  for (dir = 0; dir < NUMLINK; dir++) {
+  for (dir = XUP; dir <= TUP; dir++) {
     charge[dir] = malloc(sites_on_node * sizeof(int));
     phase[dir] = malloc(sites_on_node * sizeof(Real));
   }
-  for (dir = 0; dir < NUMLINK; dir++) {
-    for (dir2 = 0; dir2 < NUMLINK; dir2++)
+  for (dir = XUP; dir <= TUP; dir++) {
+    for (dir2 = XUP; dir2 <= TUP; dir2++) {
       mono[dir][dir2] = malloc(sites_on_node * sizeof(int));
+      FORALLSITES(i, s)
+        mono[dir][dir2][i] = 0;     // Make sure we're initialized
+    }
   }
 
   // First extract the U(1) part of the link
-  for (dir = 0; dir < NUMLINK; dir++) {
+  for (dir = XUP; dir <= TUP; dir++) {
     FORALLSITES(i, s) {
       det_link = find_det(&(s->linkf[dir]));
       phase[dir][i] = atan2(det_link.imag, det_link.real);
@@ -75,13 +78,12 @@ void monopole() {
         }
         mono[dir2][dir][i] = -mono[dir][dir2][i];
 
-        if (i == 0) {
-          printf("ZZZ (%d, %d, %d, %d)[%d, %d] ",
-                 s->x, s->y, s->z, s->t, dir, dir2);
-          printf("%.6g - %.6g + %.6g - %.6g = %.6g --> %d\n",
-                 phase[dir][i], phase[dir2][i], p2, p3,
-                 total_phase, mono[dir][dir2][i]);
-        }
+//        if (s->x == 0 && s->y == 0 && s->z == 0 && s->t == 0) {
+//          printf("ZZZ[%d, %d] ", dir, dir2);
+//          printf("%.6g - %.6g + %.6g - %.6g = %.6g --> %d\n",
+//                 phase[dir][i], phase[dir2][i], p2, p3,
+//                 total_phase, mono[dir][dir2][i]);
+//        }
       }
       cleanup_gather(mtag0);
       cleanup_gather(mtag1);
@@ -91,16 +93,16 @@ void monopole() {
   // We have the number of strings penetrating every plaquette
   // Now tie these together into cubes,
   // using the first four components of the 5d epsilon
-  for (a = 0; a < NUMLINK - 1; a++) {
+  for (a = XUP; a <= TUP; a++) {
     FORALLSITES(i, s)
       charge[a][i] = 0;
 
-    for (b = 0; b < NUMLINK - 1; b++) {
+    for (b = XUP; b <= TUP; b++) {
       if (b != a) {
-        for (c = 0; c < NUMLINK - 1; c++) {
+        for (c = XUP; c <= TUP; c++) {
           if (c == a || c == b)
             continue;
-          for (d = 0; d < NUMLINK - 1; d++) {
+          for (d = XUP; d <= TUP; d++) {
             if (d == c || d == a || d == b)
               continue;
 
@@ -119,8 +121,9 @@ void monopole() {
               if (permm < 0.0)
                 charge[a][i] -= (mono[c][d][i] - ip2);
 //              if (s->x == 0 && s->y == 0 && s->z == 0 && s->t == 0) {
-//                printf("a %d b %d c %d d %d %d %d\n",
-//                       a, b, c, d, mono[c][d][i], ip2);
+//                printf("charge[%d, %d, %d, %d] + (%d - %d) * (%d) --> %d\n",
+//                       a, b, c, d, mono[c][d][i], ip2,
+//                       (int)permm, charge[a][i]);
 //              }
             }
             cleanup_gather(mtag0);
@@ -143,18 +146,15 @@ void monopole() {
   // Finally accumulate and print global quantities
   total = 0;
   total_abs = 0;
-  for (dir = XUP; dir < NUMLINK - 1; dir++) {
+  for (dir = XUP; dir <= TUP; dir++) {
     total_mono_p[dir] = 0;
     total_mono_m[dir] = 0;
-  }
-  FORALLSITES(i, s) {
-    for (dir = XUP; dir < NUMLINK - 1; dir++) {
+    FORALLSITES(i, s) {
       if (charge[dir][i] > 0)
         total_mono_p[dir] += charge[dir][i];
       if (charge[dir][i] < 0)
         total_mono_m[dir] += charge[dir][i];
     }
-    // This is curious
     g_intsum(&total_mono_p[dir]);
     g_intsum(&total_mono_m[dir]);
   }
@@ -162,17 +162,19 @@ void monopole() {
   total = 0;
   total_abs = 0;
   node0_printf("MONOPOLE ");
-  for (dir = XUP; dir < NUMLINK - 1; dir++) {
+  for (dir = XUP; dir <= TUP ; dir++) {
+    if (total_mono_p[dir] + total_mono_m[dir] != 0)
+      node0_printf("\nWARNING: total_mono mismatch in dir %d\n", dir);
     total += total_mono_p[dir] + total_mono_m[dir];
     total_abs += total_mono_p[dir] - total_mono_m[dir];
     node0_printf("%d %d  ", total_mono_p[dir], total_mono_m[dir]);
   }
   node0_printf("  %d %d\n", total, total_abs);
 
-  for (dir = 0; dir < NUMLINK; dir++) {
+  for (dir = XUP; dir <= TUP; dir++) {
     free(charge[dir]);
     free(phase[dir]);
-    for (dir2 = 0; dir2 < NUMLINK; dir2++)
+    for (dir2 = XUP; dir2 <= TUP; dir2++)
       free(mono[dir][dir2]);
   }
 }
