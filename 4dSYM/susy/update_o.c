@@ -227,9 +227,9 @@ int update() {
 
   if (traj_length > 0) {
     node0_printf("IT_PER_TRAJ %d\n", iters);
-    node0_printf("MONITOR_FORCE_GAUGE %.4g, %.4g\n",
+    node0_printf("MONITOR_FORCE_GAUGE    %.4g %.4g\n",
                  gnorm / (double)(2 * nsteps[0]), max_gf);
-    node0_printf("MONITOR_FORCE_FERMION0 %.4g, %.4g\n",
+    node0_printf("MONITOR_FORCE_FERMION0 %.4g %.4g\n",
                  fnorm[0] / (double)(2 * nsteps[0]), max_ff[0]);
     return iters;
   }

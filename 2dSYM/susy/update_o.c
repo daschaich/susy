@@ -94,7 +94,7 @@ int update_step(Real *old_cg_time,Real *cg_time,Real *next_cg_time,
                 Twist_Fermion *src, Twist_Fermion **psim) {
 
   int iters = 0, i_multi0;
-  Real final_rsq, f_eps, g_eps;
+  Real final_rsq, f_eps, g_eps, tr;
 
   f_eps = traj_length / (Real)nsteps[0];
   g_eps = f_eps / (Real)(2.0 * nsteps[1]);
@@ -104,15 +104,24 @@ int update_step(Real *old_cg_time,Real *cg_time,Real *next_cg_time,
 #endif
 
   for (i_multi0 = 1; i_multi0 <= nsteps[0]; i_multi0++) {
-    *gnorm += update_gauge_step(g_eps);
+    tr = update_gauge_step(g_eps);
+    *gnorm += tr;
+    if (tr > max_gf)
+      max_gf = tr;
 
 #ifndef PUREGAUGE
     // Do conjugate gradient to get (Mdag M)^(-1 / 4) chi
     iters += congrad_multi_field(src, psim, niter, rsqmin, &final_rsq);
 
-    fnorm[0] += fermion_force(f_eps * LAMBDA_MID, src, psim);
+    tr = fermion_force(f_eps * LAMBDA_MID, src, psim);
+    fnorm[0] += tr;
+    if (tr > max_ff[0])
+      max_ff[0] = tr;
 #endif
-    *gnorm += update_gauge_step(g_eps);
+    tr = update_gauge_step(g_eps);
+    *gnorm += tr;
+    if (tr > max_gf)
+      max_gf = tr;
 
 #ifndef PUREGAUGE
     // Do conjugate gradient to get (Mdag M)^(-1 / 4) chi
@@ -165,6 +174,8 @@ int update() {
 
   // Find initial action
   startaction = d_action(src, psim);
+  max_gf = 0.0;
+  max_ff[0] = 0.0;
 
 #ifdef HMC_ALGORITHM
   Real xrandom;   // For accept/reject test
@@ -216,10 +227,10 @@ int update() {
 
   if (traj_length > 0) {
     node0_printf("IT_PER_TRAJ %d\n", iters);
-    node0_printf("MONITOR_FORCE_GAUGE %.4g\n",
-                 gnorm / (double)(2 * nsteps[0]));
-    node0_printf("MONITOR_FORCE_FERMION0 %.4g\n",
-                 fnorm[0] / (double)(2 * nsteps[0]));
+    node0_printf("MONITOR_FORCE_GAUGE    %.4g %.4g\n",
+                 gnorm / (double)(2 * nsteps[0]), max_gf);
+    node0_printf("MONITOR_FORCE_FERMION0 %.4g %.4g\n",
+                 fnorm[0] / (double)(2 * nsteps[0]), max_ff[0]);
     return iters;
   }
   else

@@ -118,6 +118,7 @@ EXTERN Real ampdeg, amp[DEGREE], shift[DEGREE];
 EXTERN Real ampdeg4, amp4[DEGREE], shift4[DEGREE];
 EXTERN Real ampdeg8, amp8[DEGREE], shift8[DEGREE];
 EXTERN int Norder;
+EXTERN Real max_gf, max_ff[2];
 
 // Each node maintains a structure with the pseudorandom number
 // generator state

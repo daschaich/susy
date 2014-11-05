@@ -68,10 +68,9 @@ int main(int argc, char *argv[]) {
   node0_printf("%.8g\n", dplaq / (double)volume);
   node0_printf("BACTION %.8g\n", dplaq / (double)volume);
 
-  // Main measurements
 #ifdef STOUT
 #define MIN_PLAQ
-  // Optionally smear before less frequent measurements
+  // Optionally smear before main measurements
   node0_printf("Doing %d stout smearing steps with rho=%.4g...\n",
                Nstout, rho);
 
@@ -87,6 +86,7 @@ int main(int argc, char *argv[]) {
   node0_printf(" %.8g\n", dplaq);
 #endif
 
+  // Main measurements
   // Plaquette determinant
   measure_det();
 
@@ -135,7 +135,7 @@ int main(int argc, char *argv[]) {
   rsymm();
 
   // Measure density of monopole world lines in non-diagonal cubes
-//  monopole();
+  monopole();
 #endif
 
 #ifdef WLOOP

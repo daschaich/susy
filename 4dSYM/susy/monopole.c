@@ -118,7 +118,7 @@ void monopole() {
               ip2 = *((int *)(gen_pt[0][i]));
               if (permm > 0.0)
                 charge[a][i] += (mono[c][d][i] - ip2);
-              if (permm < 0.0)
+              else if (permm < 0.0)
                 charge[a][i] -= (mono[c][d][i] - ip2);
 //              if (s->x == 0 && s->y == 0 && s->z == 0 && s->t == 0) {
 //                printf("charge[%d, %d, %d, %d] + (%d - %d) * (%d) --> %d\n",
@@ -162,7 +162,7 @@ void monopole() {
   total = 0;
   total_abs = 0;
   node0_printf("MONOPOLE ");
-  for (dir = XUP; dir <= TUP ; dir++) {
+  for (dir = XUP; dir <= TUP; dir++) {
     if (total_mono_p[dir] + total_mono_m[dir] != 0)
       node0_printf("\nWARNING: total_mono mismatch in dir %d\n", dir);
     total += total_mono_p[dir] + total_mono_m[dir];
