@@ -61,7 +61,7 @@ int update_step(Real *old_cg_time, Real *cg_time, Real *next_cg_time,
                 Twist_Fermion *src, Twist_Fermion **psim) {
 
   int step, iters = 0;
-  Real final_rsq, eps = traj_length / (Real)nsteps[0];
+  Real final_rsq, eps = traj_length / (Real)nsteps[0], tr;
   node0_printf("eps %.4g\n", eps);
 
   for (step = 0; step < nsteps[0]; step++) {
@@ -70,12 +70,20 @@ int update_step(Real *old_cg_time, Real *cg_time, Real *next_cg_time,
 #ifndef PUREGAUGE
     fermion_rep();
 #endif
-    *gnorm += gauge_force(eps);
+    tr = update_gauge_step(g_eps);
+    *gnorm += tr;
+    if (tr > max_gf)
+      max_gf = tr;
 
 #ifndef PUREGAUGE
     // Do conjugate gradient to get (Mdag M)^(-1 / 4) chi
     iters += congrad_multi_field(src, psim, niter, rsqmin, &final_rsq);
-    fnorm[0] += fermion_force(eps, src, psim);
+
+    tr = fermion_force(f_eps * LAMBDA_MID, src, psim);
+    fnorm[0] += tr;
+    if (tr > max_ff[0])
+      max_ff[0] = tr;
+
     update_uu(0.5 * eps);
     fermion_rep();
 #endif
@@ -121,6 +129,8 @@ int update() {
 
   // Find initial action
   startaction = d_action(src, psim);
+  max_gf = 0.0;
+  max_ff[0] = 0.0;
 
 #ifdef HMC_ALGORITHM
   Real xrandom;   // For accept/reject test
@@ -134,6 +144,9 @@ int update() {
   // Find ending action
   // Since update_step ended on a gauge update,
   // need to do conjugate gradient to get (Mdag M)^(-1 / 4) chi
+#ifdef UPDATE_DEBUG
+  node0_printf("Calling CG in update_leapfrog -- new action\n");
+#endif
   fermion_rep();
   iters += congrad_multi_field(src, psim, niter, rsqmin, &final_rsq);
   endaction = d_action(src, psim);
@@ -174,10 +187,10 @@ int update() {
 
   if (traj_length > 0) {
     node0_printf("IT_PER_TRAJ %d\n", iters);
-    node0_printf("MONITOR_FORCE_GAUGE %.4g\n",
-                 gnorm / (double)(2 * nsteps[0]));
-    node0_printf("MONITOR_FORCE_FERMION0 %.4g\n",
-                 fnorm[0] / (double)(2 * nsteps[0]));
+    node0_printf("MONITOR_FORCE_GAUGE    %.4g %.4g\n",
+                 gnorm / (double)(2 * nsteps[0]), max_gf);
+    node0_printf("MONITOR_FORCE_FERMION0 %.4g %.4g\n",
+                 fnorm[0] / (double)(2 * nsteps[0]), max_ff[0]);
     return iters;
   }
   else

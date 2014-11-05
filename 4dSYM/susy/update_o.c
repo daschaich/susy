@@ -100,7 +100,10 @@ int update_step(Real *old_cg_time,Real *cg_time,Real *next_cg_time,
   g_eps = f_eps / (Real)(2.0 * nsteps[1]);
 
 #ifndef PUREGAUGE
-  fnorm[0] += fermion_force(f_eps * LAMBDA, src, psim);
+  tr = fermion_force(f_eps * LAMBDA, src, psim);
+  fnorm[0] += tr;
+  if (tr > max_ff[0])
+    max_ff[0] = tr;
 #endif
 
   for (i_multi0 = 1; i_multi0 <= nsteps[0]; i_multi0++) {
@@ -128,9 +131,12 @@ int update_step(Real *old_cg_time,Real *cg_time,Real *next_cg_time,
     iters += congrad_multi_field(src, psim, niter, rsqmin, &final_rsq);
 
     if (i_multi0 < nsteps[0])
-      fnorm[0] += fermion_force(f_eps * TWO_LAMBDA, src, psim);
+      tr = fermion_force(f_eps * TWO_LAMBDA, src, psim);
     else
-      fnorm[0] += fermion_force(f_eps * LAMBDA, src, psim);
+      tr = fermion_force(f_eps * LAMBDA, src, psim);
+    fnorm[0] += tr;
+    if (tr > max_ff[0])
+      max_ff[0] = tr;
 #endif
   }
   return iters;
