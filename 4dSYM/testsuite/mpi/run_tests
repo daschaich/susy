@@ -23,6 +23,11 @@ if [ $# -gt 1 ]; then
     exit
   fi
 
+  # Reset to N=2
+  cd ../include/
+  awk -v"X=#define NCOL 2" '{sub(/^#define NCOL .*/,X);print}' su3.h > TEMP && mv TEMP su3.h
+  awk -v"X=#define DIMF 4" '{sub(/^#define DIMF .*/,X);print}' su3.h > TEMP && mv TEMP su3.h
+
   # Run
   cd ../testsuite/
   rm -f mpi/$target.U$N.out
@@ -38,11 +43,6 @@ if [ $# -gt 1 ]; then
   else
     echo "PASS: susy_$target reproduces reference output"
   fi
-
-  # Reset to N=2
-  cd ../../include
-  awk -v"X=#define NCOL 2" '{sub(/^#define NCOL .*/,X);print}' su3.h > TEMP && mv TEMP su3.h
-  awk -v"X=#define DIMF 4" '{sub(/^#define DIMF .*/,X);print}' su3.h > TEMP && mv TEMP su3.h
   exit
 fi
 
@@ -64,6 +64,10 @@ for N in 2 3 4 ; do
       exit
     fi
   done
+  # Reset to N=2
+  cd ../include/
+  awk -v"X=#define NCOL 2" '{sub(/^#define NCOL .*/,X);print}' su3.h > TEMP && mv TEMP su3.h
+  awk -v"X=#define DIMF 4" '{sub(/^#define DIMF .*/,X);print}' su3.h > TEMP && mv TEMP su3.h
 
   # Run
   cd ../testsuite/
@@ -99,8 +103,3 @@ for N in 2 3 4 ; do
     fi
   done
 done
-
-# Reset to N=2
-cd ../../include
-awk -v"X=#define NCOL 2" '{sub(/^#define NCOL .*/,X);print}' su3.h > TEMP && mv TEMP su3.h
-awk -v"X=#define DIMF 4" '{sub(/^#define DIMF .*/,X);print}' su3.h > TEMP && mv TEMP su3.h
