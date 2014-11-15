@@ -7,16 +7,13 @@ void blocked_ops(int block) {
   register int i;
   register site *s;
   int a, b, mu, nu;
-  Real norm, tr, sub;
-  Real OK, OS[NDIMS][NDIMS];    // Konishi and SUGRA operators
+  Real norm, tr, OK, OS[NDIMS][NDIMS];    // Konishi and SUGRA operators
 
   // Initialize Konishi and SUGRA operators
-  // SUGRA will be symmetric by construction, so ignore nu < mu
-  // For just the operator could also ignore diagonal,
-  // but for now let's check that it vanishes as it should
+  // SUGRA will be symmetric by construction, so ignore nu <= mu
   OK = 0.0;
   for (mu = 0; mu < NDIMS; mu++) {
-    for (nu = mu; nu < NDIMS; nu++)
+    for (nu = mu + 1; nu < NDIMS; nu++)
       OS[mu][nu] = 0.0;
   }
 
@@ -31,16 +28,10 @@ void blocked_ops(int block) {
       for (b = 0; b < NUMLINK; b++) {
         OK += s->traceBB[a][b];    // Konishi is easy
 
-        // Compute mu--nu trace to be subtracted
-        sub = P[0][a] * P[0][b] * s->traceBB[a][b];
-        for (mu = 1; mu < NDIMS; mu++)
-          sub += P[mu][a] * P[mu][b] * s->traceBB[a][b];
-
         // Now SUGRA with mu--nu trace subtraction
-        // Symmetric by construction so ignore nu < mu
+        // Symmetric and traceless by construction so ignore nu <= mu
         for (mu = 0; mu < NDIMS ; mu++) {
-          OS[mu][mu] -= 0.25 * sub;
-          for (nu = mu; nu < NDIMS ; nu++) {
+          for (nu = mu + 1; nu < NDIMS ; nu++) {
             tr = P[mu][a] * P[nu][b] + P[mu][a] * P[nu][b];
             OS[mu][nu] += 0.5 * tr * s->traceBB[a][b];
           }
@@ -51,8 +42,8 @@ void blocked_ops(int block) {
   OK /= 5.0;   // Remove from site loop
   g_doublesum(&OK);
   for (mu = 0; mu < NDIMS; mu++) {
-    for (nu = mu; nu < NDIMS; nu++)
-      g_doublesum(&OS[mu][nu]);
+    for (nu = mu + 1; nu < NDIMS; nu++)
+      g_doublesum(&(OS[mu][nu]));
   }
 
   // Print out averaged operators, averaging over all 6 SUGRA components
@@ -61,12 +52,6 @@ void blocked_ops(int block) {
 
   // SUGRA, averaging over six components with mu < nu
   norm = (Real)(6.0 * nx * ny * nz * volume);
-  // Debugging check that trace was successfully subtracted
-  tr = OS[0][0] + OS[1][1] + OS[2][2] + OS[3][3];
-  if (tr > IMAG_TOL) {
-    node0_printf("WARNING: Non-zero trace %.4g + %.4g + %.4g + %.4g = %.4g\n",
-                 OS[0][0], OS[1][1], OS[2][2], OS[3][3], tr);
-  }
   tr = 0.0;
   for (mu = 0; mu < NDIMS; mu++) {
     for (nu = mu + 1; nu < NDIMS; nu++)
