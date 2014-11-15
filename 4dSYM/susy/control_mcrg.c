@@ -1,7 +1,7 @@
 // -----------------------------------------------------------------
-// Main procedure for N=4 SYM measurements on saved configurations,
-// including scalar correlators, Wilson loops, Ward identity violations
-// and discrete R symmetry observables
+// Main procedure for N=4 SYM RG blocking
+// and measurements of blocked observables including scalar correlators,
+// Wilson loops and discrete R symmetry observables
 #define CONTROL
 #include "susy_includes.h"
 // -----------------------------------------------------------------
@@ -71,6 +71,13 @@ int main(int argc, char *argv[]) {
   node0_printf("%.8g\n", dssplaq / (double)volume);
   node0_printf("BACTION %.8g\n", dssplaq / (double)volume);
 
+#ifdef CORR
+  // Konishi and SUGRA correlators
+  setup_P();
+  d_correlator();
+  d_correlator_r();
+#endif
+
   // Calculate and print unblocked Wilson loops
   rsymm();
 
@@ -78,6 +85,12 @@ int main(int argc, char *argv[]) {
   // Loop over blocking levels (automatically determined)
   for (bl = 1; bl <= blmax; bl++) {
     block_mcrg(bl);
+
+#ifdef CORR
+    // Calculate and print blocked Konishi and SUGRA correlators
+//    blocked_corr(bl);
+//    blocked_corr_r(bl);
+#endif
 
     // Calculate and print blocked Polyakov and Wilson loops
     blocked_ploop(bl);
