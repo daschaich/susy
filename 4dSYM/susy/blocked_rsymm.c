@@ -1,5 +1,5 @@
 // -----------------------------------------------------------------
-// Modified rectangular Wilson loops after block RG blocking steps
+// Modified rectangular Wilson loops after RG blocking
 // Use general_gathers; lattice must be divisible by 2^block in all dirs
 // Evaluate in different spatial dirs to check rotational invariance
 #include "susy_includes.h"

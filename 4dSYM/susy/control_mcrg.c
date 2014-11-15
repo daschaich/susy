@@ -72,10 +72,11 @@ int main(int argc, char *argv[]) {
   node0_printf("BACTION %.8g\n", dssplaq / (double)volume);
 
 #ifdef CORR
-  // Konishi and SUGRA correlators
+  // Konishi and SUGRA operators
   setup_P();
-  d_correlator();
-  d_correlator_r();
+  blocked_ops(0);
+//  d_correlator();
+//  d_correlator_r();
 #endif
 
   // Calculate and print unblocked Wilson loops
@@ -88,8 +89,7 @@ int main(int argc, char *argv[]) {
 
 #ifdef CORR
     // Calculate and print blocked Konishi and SUGRA correlators
-//    blocked_corr(bl);
-//    blocked_corr_r(bl);
+    blocked_ops(bl);
 #endif
 
     // Calculate and print blocked Polyakov and Wilson loops
