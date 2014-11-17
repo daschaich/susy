@@ -32,7 +32,7 @@ void blocked_ops(int block) {
         // Symmetric and traceless by construction so ignore nu <= mu
         for (mu = 0; mu < NDIMS ; mu++) {
           for (nu = mu + 1; nu < NDIMS ; nu++) {
-            tr = P[mu][a] * P[nu][b] + P[mu][a] * P[nu][b];
+            tr = P[mu][a] * P[nu][b] + P[nu][a] * P[mu][b];
             OS[mu][nu] += 0.5 * tr * s->traceBB[a][b];
           }
         }
@@ -51,7 +51,7 @@ void blocked_ops(int block) {
   node0_printf("OK %d %.8g\n", block, OK / norm);
 
   // SUGRA, averaging over six components with mu < nu
-  norm = (Real)(6.0 * nx * ny * nz * volume);
+  norm = (Real)(6.0 * volume);
   tr = 0.0;
   for (mu = 0; mu < NDIMS; mu++) {
     for (nu = mu + 1; nu < NDIMS; nu++)
