@@ -40,10 +40,9 @@ PREC = -DPRECISION=${PRECISION}
 
 # Complete set of compiler flags - do not change
 CFLAGS = ${OPT} ${OCFLAGS} -D${COMMTYPE} ${CODETYPE} ${INLINEOPT} \
-         ${PREC} ${CLFS} -I${MYINCLUDEDIR} ${DEFINES} \
-         ${DARCH} ${IMPI}
+         ${PREC} ${CLFS} -I${MYINCLUDEDIR} ${DEFINES} ${DARCH}
 
-ILIB = ${LMPI} ${LIBADD}
+ILIB = ${LIBADD}
 
 check:
 	make -f Make_test check
