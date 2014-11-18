@@ -84,7 +84,10 @@ int main(int argc, char *argv[]) {
 
 #ifdef MCRG
   // Loop over blocking levels (automatically determined)
+  j = 1;
   for (bl = 1; bl <= blmax; bl++) {
+    j *= 2;
+    node0_printf("Blocking %d gives L = %d\n", bl, nx / j);
     block_mcrg(bl);
 
 #ifdef CORR

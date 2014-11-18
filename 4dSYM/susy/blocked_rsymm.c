@@ -349,8 +349,8 @@ void blocked_rsymm(int block) {
           }
           g_doublesum(&rsymm_loop);
           // Format: normal [dir] inverted [dir] usual transformed
-          node0_printf("BRSYMM %d [%d] %d [%d] %.8g %.8g\n",
-                       dist, dir_normal, dist_inv, dir_inv,
+          node0_printf("BRSYMM %d %d [%d] %d [%d] %.8g %.8g\n",
+                       block, dist, dir_normal, dist_inv, dir_inv,
                        wloop / volume, rsymm_loop / volume);
         } // dist_inv
       } // dist

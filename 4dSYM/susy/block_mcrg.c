@@ -28,7 +28,7 @@ void block_mcrg(int block) {
       mult_su3_nn_f(&(s->linkf[dir]), (su3_matrix_f *)(gen_pt[0][i]),
                     &(s->mom[dir]));
     }
-    cleanup_gather(tag);
+    cleanup_general_gather(tag);
   }
 
   // Overwrite original links
