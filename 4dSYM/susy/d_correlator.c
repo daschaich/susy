@@ -52,7 +52,7 @@ void d_correlator() {
         for (mu = 0; mu < NDIMS ; mu++) {
           OS[mu][mu][t] -= 0.25 * sub;
           for (nu = mu; nu < NDIMS ; nu++) {
-            tr = P[mu][a] * P[nu][b] + P[mu][a] * P[nu][b];
+            tr = P[mu][a] * P[nu][b] + P[nu][a] * P[mu][b];
             OS[mu][nu][t] += 0.5 * tr * s->traceBB[a][b];
           }
         }

@@ -155,7 +155,7 @@ susy_phase::
 susy_mode::
 	${MAKE} -f ${MAKEFILE} target "MYTARGET= $@" \
 	"DEFINES = ${DEFINES} -DPHI_ALGORITHM -DBILIN -DMODE " \
-	"EXTRA_OBJECTS = control_mode.o coeffs.o step.o d_bilinear.o "
+	"EXTRA_OBJECTS = control_mode.o step_coeffs.o step.o d_bilinear.o "
 
 # Convert configuration into format the serial C++ code can read
 # for testing/debugging
