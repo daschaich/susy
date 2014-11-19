@@ -8,16 +8,15 @@
 void block_mcrg(int block) {
   register int dir, i;
   register site *s;
-  int disp[4], j, k;
+  int disp[4], j, bl = 1;
   msg_tag *tag;
 
-  // Multiply pre-set offsets by 2^block
+  // Set number of links to stride, bl = 2^(block - 1)
+  for (j = 1; j < block; j++)
+    bl *= 2;
   for (dir = XUP; dir < NUMLINK; dir++) {
-    for (j = 0; j < NDIMS; j++) {
-      disp[j] = offset[dir][j];
-      for (k = 1; k < block; k++)
-        disp[j] *= 2;
-    }
+    for (j = 0; j < NDIMS; j++)
+      disp[j] = bl * offset[dir][j];
 
     tag = start_general_gather_site(F_OFFSET(linkf[dir]),
                                     sizeof(su3_matrix_f), disp,

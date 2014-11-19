@@ -211,13 +211,12 @@ void blocked_rsymm(int block) {
   complex tc;
   su3_matrix_f tmat;
 
-  // Allow sanity check of reproducing rsymm() with this routine
-  if (block <= 0)
-    bl = 1;
-
   // Set number of links to stride, bl = 2^block
+  // Allow sanity check of reproducing rsymm() with this routine
   for (j = 1; j < block; j++)
     bl *= 2;
+  if (block <= 0)
+    bl = 1;
 
   max = (MAX_X + 1) / bl;
   node0_printf("blocked_rsymm: MAX = %d\n", max);

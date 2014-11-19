@@ -167,6 +167,7 @@ void monopole();
 
 #ifdef MCRG
 void block_mcrg(int bl);
+void blocked_plaq(int bl);
 void blocked_ops(int bl);
 void blocked_ploop(int bl);
 void blocked_rsymm(int bl);
