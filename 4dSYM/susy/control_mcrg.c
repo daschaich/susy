@@ -71,6 +71,9 @@ int main(int argc, char *argv[]) {
   node0_printf("%.8g\n", dssplaq / (double)volume);
   node0_printf("BACTION %.8g\n", dssplaq / (double)volume);
 
+  // Calculate and print unblocked plaquette
+  blocked_plaq(0);
+
 #ifdef CORR
   // Konishi and SUGRA operators
   setup_P();
@@ -80,7 +83,7 @@ int main(int argc, char *argv[]) {
 #endif
 
   // Calculate and print unblocked Wilson loops
-  rsymm();
+  blocked_rsymm(0);
 
 #ifdef MCRG
   // Loop over blocking levels (automatically determined)
@@ -89,6 +92,9 @@ int main(int argc, char *argv[]) {
     j *= 2;
     node0_printf("Blocking %d gives L = %d\n", bl, nx / j);
     block_mcrg(bl);
+
+    // Calculate and print blocked plaquette
+    blocked_plaq(bl);
 
 #ifdef CORR
     // Calculate and print blocked Konishi and SUGRA correlators
