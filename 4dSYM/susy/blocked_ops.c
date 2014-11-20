@@ -6,7 +6,7 @@
 void blocked_ops(int block) {
   register int i;
   register site *s;
-  int a, b, mu, nu;
+  int a, b, mu, nu, bl = 2;
   Real norm, tr, OK, OS[NDIMS][NDIMS];    // Konishi and SUGRA operators
 
   // Initialize Konishi and SUGRA operators
@@ -46,12 +46,17 @@ void blocked_ops(int block) {
       g_doublesum(&(OS[mu][nu]));
   }
 
-  // Print out averaged operators, averaging over all 6 SUGRA components
-  norm = (Real)(volume);
+  // Print out integrated operators
+  // Have to divide by number 2^(4block) = bl^4 of blocked lattices
+  for (a = 1; a < block; a++)
+    bl *= 2;
+  if (block <= 0)
+    bl = 1;
+  norm = (Real)(bl * bl * bl * bl);
   node0_printf("OK %d %.8g\n", block, OK / norm);
 
   // SUGRA, averaging over six components with mu < nu
-  norm = (Real)(6.0 * volume);
+  norm = (Real)(6.0 * bl * bl * bl * bl);
   tr = 0.0;
   for (mu = 0; mu < NDIMS; mu++) {
     for (nu = mu + 1; nu < NDIMS; nu++)
