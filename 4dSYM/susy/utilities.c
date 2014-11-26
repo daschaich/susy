@@ -80,31 +80,24 @@ void compute_Fmunu() {
 
 
 // -----------------------------------------------------------------
-// Compute at each site B_mu(x) = U_mu(x) * Udag_mu(x) - volume average
+// Compute at each site B_mu(x) = U_mu(x) * Udag_mu(x) - trace
 // as well as traceBB[mu][nu](x) = tr[B_mu(x) B_nu(x)] (should be real)
 #ifdef CORR
 void compute_Bmu() {
   register int i;
   register site *s;
   int mu, nu, j;
-  Real dum = 0.0;
   complex ctmp;
   su3_matrix_f tmat;
 
-  // Start by computing the volume average
-  FORALLSITES(i, s) {
-    for (mu = 0; mu < NUMLINK; mu++)
-      dum += realtrace_su3_f(&(s->linkf[mu]), &(s->linkf[mu]));
-  }       // realtrace_su3_f(A, B) returns ReTr(Adag B)
-  g_doublesum(&dum);
-  dum /= (Real)(NCOL * NUMLINK * volume);
-
-  // B_mu = U_mu Udag_mu - Sum_{mu, x} ReTr(U_mu Udag_mu) / (5Nc vol)
+  // B_mu = U_mu Udag_mu - trace
   FORALLSITES(i, s) {
     for (mu = 0; mu < NUMLINK; mu++) {
       mult_su3_na_f(&(s->linkf[mu]), &(s->linkf[mu]), &(s->B[mu]));
+      ctmp = trace_su3_f(&(s->B[mu]));
+      CDIVREAL(ctmp, (Real)NCOL, ctmp);
       for (j = 0; j < NCOL; j++)
-        s->B[mu].e[j][j].real -= dum;    // Subtract volume average
+        CDIF(s->B[mu].e[j][j], ctmp);
     }
 
     // trace[mu][nu] = tr[B_mu(x) B_nu(x)] is symmetric in mu <--> nu
