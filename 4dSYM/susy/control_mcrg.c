@@ -71,6 +71,24 @@ int main(int argc, char *argv[]) {
   node0_printf("%.8g\n", dssplaq / (double)volume);
   node0_printf("BACTION %.8g\n", dssplaq / (double)volume);
 
+#ifdef STOUT
+#define MIN_PLAQ
+  // Optionally smear before main measurements
+  node0_printf("Doing %d stout smearing steps with rho=%.4g...\n",
+               Nstout, rho);
+
+  // Check minimum plaquette in addition to averages
+  node0_printf("BEFORE ");
+  d_plaquette_lcl(&dssplaq, &dstplaq);    // Prints out MIN_PLAQ
+  node0_printf(" %.8g %.8g\n", dssplaq, dstplaq);
+
+  // Overwrites s->linkf, saves original values in thin_link field
+  stout_smear(Nstout, rho);
+  node0_printf("AFTER  ");
+  d_plaquette_lcl(&dssplaq, &dstplaq);    // Prints out MIN_PLAQ
+  node0_printf(" %.8g %.8g\n", dssplaq, dstplaq);
+#endif
+
   // Optionally gauge fix before blocking
   // to help consider non-gauge-invariant operators
   if (fixflag == COULOMB_GAUGE_FIX) {

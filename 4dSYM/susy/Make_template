@@ -135,10 +135,10 @@ susy_hmc_meas::
 
 susy_mcrg::
 	${MAKE} -f ${MAKEFILE} target "MYTARGET= $@" \
-	"DEFINES = ${DEFINES} -DPHI_ALGORITHM -DCORR -DMCRG" \
+	"DEFINES = ${DEFINES} -DPHI_ALGORITHM -DCORR -DSTOUT -DMCRG" \
 	"EXTRA_OBJECTS = control_mcrg.o block_mcrg.o rsymm.o blocked_plaq.o \
 	                 blocked_ops.o blocked_ploop.o blocked_rsymm.o path.o \
-	                 gaugefix.o "
+	                 gaugefix.o d_plaq4_lcl.o "
 
 susy_eig::
 	${MAKE} -f ${MAKEFILE} target "MYTARGET= $@" \
