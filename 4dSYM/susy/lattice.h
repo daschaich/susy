@@ -59,6 +59,8 @@ typedef struct {
 #ifdef CORR
   su3_matrix_f B[NUMLINK];
   Real traceBB[NUMLINK][NUMLINK];
+  Real traceBBB[NUMLINK][NUMLINK][NUMLINK];
+  Real traceBBBB[NUMLINK][NUMLINK][NUMLINK][NUMLINK];
 #endif
 
   // Boundary conditions -- many unused
