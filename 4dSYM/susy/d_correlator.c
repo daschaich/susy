@@ -29,7 +29,7 @@ void d_correlator() {
     }
   }
 
-  // Compute at each site B_a = U_a Udag_a - volume average
+  // Compute at each site B_a = U_a Udag_a - trace
   // as well as traceBB[mu][nu] = tr[B_mu(x) B_nu(x)]
   // Now stored in the site structure
   compute_Bmu();
@@ -67,6 +67,14 @@ void d_correlator() {
         g_doublesum(&OS[mu][nu][t]);
     }
   }
+
+  // Try subtracting volume average from Konishi
+  tr = OK[0];
+  for (t = 1; t <= (int)(nt / 2); t++)
+    tr += OK[t];
+  tr /= nt;
+  for (t = 0; t <= (int)(nt / 2); t++)
+    OK[t] -= tr;
 
   // Form and print out correlators, normalized by Nt / vol^2
   // (Averaging over tt removes one factor of Nt from normalization)

@@ -15,7 +15,7 @@ void d_correlator_r() {
   int a, b, mu, nu, index, x_dist, y_dist, z_dist, t_dist;
   int y_start, z_start, t_start, len = 11;
   int d[NDIMS] = {0, 0, 0, 0};
-  Real tr, corr, sub;
+  Real tr, corr, sub, OK = 0.0;
   Real normK = 1.0 / (Real)volume, normS = 0.1 / (Real)volume;
   Real *ops = malloc(sites_on_node * len * sizeof(Real*));
   msg_tag *mtag;
@@ -45,6 +45,9 @@ void d_correlator_r() {
         index = i * len + len - 1;
         ops[index] += s->traceBB[a][b];
 
+        // Try subtracting volume average from Konishi
+        OK += s->traceBB[a][b];
+
         // Compute mu--nu trace to be subtracted
         sub = P[0][a] * P[0][b] * s->traceBB[a][b];
         for (mu = 1; mu < NDIMS ; mu++)
@@ -64,6 +67,15 @@ void d_correlator_r() {
     }
     index = i * len + len - 1;
     ops[index] /= 5.0;    // Konishi normalization
+  }
+
+  // Try subtracting volume average from Konishi
+  OK /= 5.0;   // Remove from site loop
+  g_doublesum(&OK);
+  OK /= volume;
+  FORALLSITES(i, s) {
+    index = i * len + len - 1;
+    ops[index] -= OK;
   }
 
   // Construct and print correlators

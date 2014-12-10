@@ -112,21 +112,23 @@ void compute_Bmu() {
             mult_su3_nn_f(&tmat3, &(s->B[si]), &tmat4);
             ctmp = trace_su3_f(&tmat4);
             if (fabs(ctmp.imag) > IMAG_TOL) {
-              printf("node%d WARNING: Im(BBBB[%d][%d][%d][%d][%d]) = %.4g)\n",
-                     this_node, mu, nu, rho, si, i, ctmp.imag);
+              printf("node%d WARNING: tr(BBBB[%d][%d][%d][%d][%d]) = ",
+                     this_node, mu, nu, rho, si, i);
+              printf("(%.4g, %.4g)\n", ctmp.real, ctmp.imag);
             }
             s->traceBBBB[mu][nu][rho][si] = ctmp.real;
           }
           ctmp = trace_su3_f(&tmat3);
           if (fabs(ctmp.real) > IMAG_TOL) {
-            printf("node%d WARNING: Re(BBB[%d][%d][%d][%d]) = %.4g)\n",
-                   this_node, mu, nu, rho, i, ctmp.imag);
+              printf("node%d WARNING: tr(BBB[%d][%d][%d][%d]) = ",
+                     this_node, mu, nu, rho, i);
+              printf("(%.4g, %.4g)\n", ctmp.real, ctmp.imag);
           }
           s->traceBBB[mu][nu][rho] = ctmp.imag;
         }
         ctmp = trace_su3_f(&tmat);
         if (fabs(ctmp.imag) > IMAG_TOL) {
-          printf("node%d WARNING: Im(BB[%d][%d][%d]) = %.4g)\n",
+          printf("node%d WARNING: Im(BB[%d][%d][%d]) = %.4g\n",
                  this_node, mu, nu, i, ctmp.imag);
         }
         s->traceBB[mu][nu] = ctmp.real;

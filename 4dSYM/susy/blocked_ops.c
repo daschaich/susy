@@ -45,6 +45,18 @@ void blocked_ops(int block) {
         }
       }
     }
+
+    // Check that OK[1] vanishes site by site while OK[3] = 2OK[2]
+    if (OK[1] > IMAG_TOL) {
+      printf("node%d WARNING: sum(tr(BBB)) = %.4g after i = %d\n",
+             this_node, OK[1], i);
+    }
+    tr = 2.0 * OK[2] - OK[3];
+    if (tr > 1.0e-8) {
+      printf("node%d: 2sum(tr(BBBB)) - sum(tr(BB)*tr(BB)) = %.4g - %.4g ",
+             this_node, 2.0 * OK[2], OK[3]);
+      printf("= %.4g after i = %d\n", tr, i);
+    }
   }
   OK[0] /= 5.0;   // Remove from site loop
   OK[1] /= (5.0 * sqrt(5.0));
