@@ -57,10 +57,8 @@ typedef struct {
   // May be wasteful of space
   su3_matrix_f DmuUmu, Fmunu[NPLAQ];
 #ifdef CORR
-  su3_matrix_f B[NUMLINK];
-  Real traceBB[NUMLINK][NUMLINK];
-  Real traceBBB[NUMLINK][NUMLINK][NUMLINK];
-  Real traceBBBB[NUMLINK][NUMLINK][NUMLINK][NUMLINK];
+  su3_matrix_f B[NUMLINK], C[NUMLINK];
+  Real traceBB[NUMLINK][NUMLINK], traceCC[NUMLINK][NUMLINK];
 #endif
 
   // Boundary conditions -- many unused

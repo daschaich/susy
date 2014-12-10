@@ -86,9 +86,9 @@ void compute_Fmunu() {
 void compute_Bmu() {
   register int i;
   register site *s;
-  int mu, nu, rho, si, j;
+  int mu, nu, j;
   complex ctmp;
-  su3_matrix_f tmat, tmat3, tmat4;
+  su3_matrix_f tmat;
 
   // B_mu = U_mu Udag_mu - trace
   FORALLSITES(i, s) {
@@ -100,38 +100,47 @@ void compute_Bmu() {
         CDIF(s->B[mu].e[j][j], ctmp);
     }
 
-    // trace[mu][nu] = tr[B_mu(x) B_nu(x)] is symmetric in mu <--> nu
+    // traceBB[mu][nu] = tr[B_mu(x) B_nu(x)] is symmetric in mu <--> nu
     // But store all to simplify SUGRA computation
-    // Make sure traces are purely real or imaginary, as appropriate
+    // Make sure Tr(B_a * B_b) is purely real
     for (mu = 0; mu < NUMLINK; mu++) {
-      for (nu = 0; nu < NUMLINK; nu++) {
+      for (nu = mu; nu < NUMLINK; nu++) {
         mult_su3_nn_f(&(s->B[mu]), &(s->B[nu]), &tmat);
-        for (rho = 0; rho < NUMLINK; rho++) {
-          mult_su3_nn_f(&tmat, &(s->B[rho]), &tmat3);
-          for (si = 0; si < NUMLINK; si++) {
-            mult_su3_nn_f(&tmat3, &(s->B[si]), &tmat4);
-            ctmp = trace_su3_f(&tmat4);
-            if (fabs(ctmp.imag) > IMAG_TOL) {
-              printf("node%d WARNING: tr(BBBB[%d][%d][%d][%d][%d]) = ",
-                     this_node, mu, nu, rho, si, i);
-              printf("(%.4g, %.4g)\n", ctmp.real, ctmp.imag);
-            }
-            s->traceBBBB[mu][nu][rho][si] = ctmp.real;
-          }
-          ctmp = trace_su3_f(&tmat3);
-          if (fabs(ctmp.real) > IMAG_TOL) {
-              printf("node%d WARNING: tr(BBB[%d][%d][%d][%d]) = ",
-                     this_node, mu, nu, rho, i);
-              printf("(%.4g, %.4g)\n", ctmp.real, ctmp.imag);
-          }
-          s->traceBBB[mu][nu][rho] = ctmp.imag;
-        }
         ctmp = trace_su3_f(&tmat);
         if (fabs(ctmp.imag) > IMAG_TOL) {
-          printf("node%d WARNING: Im(BB[%d][%d][%d]) = %.4g\n",
-                 this_node, mu, nu, i, ctmp.imag);
+          printf("node%d WARNING: Tr(BB[%d][%d]) = (%.4g, %.4g) at site %d]\n",
+                 this_node, mu, nu, ctmp.real, ctmp.imag, i);
         }
         s->traceBB[mu][nu] = ctmp.real;
+        s->traceBB[nu][mu] = ctmp.real;
+      }
+    }
+  }
+
+  // Alternative C_mu = U_mu + Udag_mu - trace
+  FORALLSITES(i, s) {
+    for (mu = 0; mu < NUMLINK; mu++) {
+      su3_adjoint_f(&(s->linkf[mu]), &tmat);
+      add_su3_matrix_f(&(s->linkf[mu]), &tmat, &(s->C[mu]));
+      ctmp = trace_su3_f(&(s->C[mu]));
+      CDIVREAL(ctmp, (Real)NCOL, ctmp);
+      for (j = 0; j < NCOL; j++)
+        CDIF(s->C[mu].e[j][j], ctmp);
+    }
+
+    // traceCC[mu][nu] = tr[C_mu(x) C_nu(x)] is symmetric in mu <--> nu
+    // But store all to simplify SUGRA computation
+    // Make sure Tr(C_a * C_b) is purely real
+    for (mu = 0; mu < NUMLINK; mu++) {
+      for (nu = 0; nu < NUMLINK; nu++) {
+        mult_su3_nn_f(&(s->C[mu]), &(s->C[nu]), &tmat);
+        ctmp = trace_su3_f(&tmat);
+        if (fabs(ctmp.imag) > IMAG_TOL) {
+          printf("node%d WARNING: Tr(CC[%d][%d]) = (%.4g, %.4g) at site %d]\n",
+                 this_node, mu, nu, ctmp.real, ctmp.imag, i);
+        }
+        s->traceCC[mu][nu] = ctmp.real;
+//        s->traceCC[nu][mu] = ctmp.real;
       }
     }
   }

@@ -3,7 +3,7 @@
 // Blocking actually doesn't affect the computation!
 #include "susy_includes.h"
 
-void blocked_ops(int block) {
+void blocked_ops(int Nstout, int block) {
   register int i;
   register site *s;
   int a, b, c, d, mu, nu, bl = 2;
@@ -26,12 +26,13 @@ void blocked_ops(int block) {
   FORALLSITES(i, s) {
     for (a = 0; a < NUMLINK; a++) {
       for (b = 0; b < NUMLINK; b++) {
-        OK[0] += s->traceBB[a][b];        // Konishi is easy
+        // Four possible Konishi operators, all fairly easy
+        OK[0] += s->traceBB[a][b];
+        OK[1] += s->traceCC[a][b];
         for (c = 0; c < NUMLINK; c++) {
-          OK[1] += s->traceBBB[a][b][c];  // Another Konishi
           for (d = 0; d < NUMLINK; d++) {
-            OK[2] += s->traceBBBB[a][b][c][d];    // A third Konishi
-            OK[3] += s->traceBB[a][b] * s->traceBB[c][d];     // Double trace
+            OK[2] += s->traceBB[a][b] * s->traceBB[c][d];
+            OK[3] += s->traceCC[a][b] * s->traceCC[c][d];
           }
         }
 
@@ -46,20 +47,9 @@ void blocked_ops(int block) {
       }
     }
 
-    // Check that OK[1] vanishes site by site while OK[3] = 2OK[2]
-    if (OK[1] > IMAG_TOL) {
-      printf("node%d WARNING: sum(tr(BBB)) = %.4g after i = %d\n",
-             this_node, OK[1], i);
-    }
-    tr = 2.0 * OK[2] - OK[3];
-    if (tr > 1.0e-8) {
-      printf("node%d: 2sum(tr(BBBB)) - sum(tr(BB)*tr(BB)) = %.4g - %.4g ",
-             this_node, 2.0 * OK[2], OK[3]);
-      printf("= %.4g after i = %d\n", tr, i);
-    }
   }
   OK[0] /= 5.0;   // Remove from site loop
-  OK[1] /= (5.0 * sqrt(5.0));
+  OK[1] /= 5.0;
   OK[2] /= 25.0;
   OK[3] /= 25.0;
   for (mu = 0; mu < NDIMS; mu++) {
@@ -75,7 +65,7 @@ void blocked_ops(int block) {
   if (block <= 0)
     bl = 1;
   norm = (Real)(bl * bl * bl * bl);
-  node0_printf("OK %d", block);
+  node0_printf("OK %d %d", Nstout, block);
   for (mu = 0; mu < NDIMS; mu++)
     node0_printf(" %.8g", OK[mu] / norm);
   node0_printf("\n");
@@ -87,6 +77,6 @@ void blocked_ops(int block) {
     for (nu = mu + 1; nu < NDIMS; nu++)
       tr += OS[mu][nu];
   }
-  node0_printf("OS %d %.8g\n", block, tr / norm);
+  node0_printf("OS %d %d %.8g\n", Nstout, block, tr / norm);
 }
 // -----------------------------------------------------------------

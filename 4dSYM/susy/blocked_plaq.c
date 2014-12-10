@@ -3,7 +3,7 @@
 // Use general_gathers; lattice must be divisible by 2^block in all dirs
 #include "susy_includes.h"
 
-void blocked_plaq(int block) {
+void blocked_plaq(int Nstout, int block) {
   register int i, dir, dir2;
   register site *s;
   register su3_matrix_f *m1, *m4;
@@ -86,7 +86,8 @@ void blocked_plaq(int block) {
   ss_sum /= ((double)(6.0 * volume));
   st_sum /= ((double)(4.0 * volume));
   tr = (ss_sum + st_sum) / 2.0;
-  node0_printf("BPLAQ %d %.8g %.8g %.8g\n", block, ss_sum, st_sum, tr);
+  node0_printf("BPLAQ %d, %d %.8g %.8g %.8g\n",
+               Nstout, block, ss_sum, st_sum, tr);
 
   free(su3mat);
 }
