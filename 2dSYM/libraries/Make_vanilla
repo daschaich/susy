@@ -1,9 +1,14 @@
 # ------------------------------------------------------------------
+# Scalar processor compilation for library routines
+
+# The "fast" variants of the code explicitly unroll loops and inline
+# So far, this is only implemented for NCOL=DIMF=3
+
 MAKEFILE = Make_vanilla
 
-CC       = gcc # ( cc89 gcc xlc gcc pgcc cl g++ )
-OPT      = -O3 -pg # ( -g -O, etc )
-CODETYPE = # -DFAST # usually unchanged
+CC       = gcc
+OPT      = -O3 -Wall -pg
+CODETYPE = # -DFAST # Only works if NCOL=DIMF=3
 AR = ar
 
 # Also check choices in include/config.h.
@@ -11,9 +16,9 @@ AR = ar
 
 
 
-#----------------------------------------------------------------------
+# ------------------------------------------------------------------
 # Complete set of compiler flags - do not change
 CFLAGS = ${OPT} ${OCFLAGS} ${CODETYPE}
 
 include Make_template
-#----------------------------------------------------------------------
+# ------------------------------------------------------------------
