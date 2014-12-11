@@ -140,6 +140,7 @@ void print_var3(char *label);
 // Wilson loops -- including determinant division and polar projection
 // These look at correlators of products of temporal links,
 // which requires gauge fixing
+Real A4map_slice(int x, int y, int z);
 void hvy_pot();
 void hvy_pot_polar();
 

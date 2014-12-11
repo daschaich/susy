@@ -5,6 +5,9 @@
 // Gauge-fixed links unitarized via polar projection -- overwritten!!!
 // This version computes spatial correlators of temporal products
 #include "susy_includes.h"
+
+// Define CHECK_ROT to check rotational invariance
+//#define CHECK_ROT
 // -----------------------------------------------------------------
 
 
@@ -14,12 +17,30 @@ void hvy_pot_polar() {
   register int i;
   register site *s;
   int t_dist, x_dist, y_dist, z_dist, y_start, z_start;
+  int MAX_pts = 8 * MAX_X * MAX_X;            // Should be plenty
+  int count[MAX_pts], this_r, total_r = 0;
+  Real MAX_r = 100.0 * MAX_X, tr, lookup[MAX_pts], W[MAX_pts];
   double wloop;
   su3_matrix_f tmat;
-  msg_tag *tag;
+  msg_tag *mtag = NULL;
   field_offset oldmat, newmat, tt;
 
-  node0_printf("hvy_pot_polar: MAX_T = %d, MAX_X = %d\n", MAX_T, MAX_X);
+  // Initialize Wilson loop accumulators
+  for (i = 0; i < MAX_pts; i++) {
+    count[i] = 0;
+    W[i] = 0.0;
+  }
+
+  // Find smallest scalar distance cut by imposing MAX_X
+  for (y_dist = 0; y_dist <= MAX_X; y_dist++) {
+    for (z_dist = 0; z_dist <= MAX_X; z_dist++) {
+      tr = A4map_slice(MAX_X + 1, y_dist, z_dist);
+      if (tr < MAX_r)
+        MAX_r = tr;
+    }
+  }
+  node0_printf("hvy_pot_polar: MAX_T = %d, MAX_X = %d --> r < %.6g\n",
+               MAX_T, MAX_X, MAX_r);
 
   FORALLSITES(i, s) {
    // Polar projection of gauge-fixed links
@@ -36,14 +57,14 @@ void hvy_pot_polar() {
         su3mat_copy_f(&(s->linkf[TUP]), &(s->tempmat1));
     }
     else {
-      tag = start_gather_site(F_OFFSET(tempmat1), sizeof(su3_matrix_f),
-                              goffset[TUP], EVENANDODD, gen_pt[0]);
-      wait_gather(tag);
+      mtag = start_gather_site(F_OFFSET(tempmat1), sizeof(su3_matrix_f),
+                               goffset[TUP], EVENANDODD, gen_pt[0]);
+      wait_gather(mtag);
       FORALLSITES(i, s) {
         mult_su3_nn_f(&(s->linkf[TUP]), (su3_matrix_f *)gen_pt[0][i],
                       &(s->staple));
       }
-      cleanup_gather(tag);
+      cleanup_gather(mtag);
       FORALLSITES(i, s)
         su3mat_copy_f(&(s->staple), &(s->tempmat1));
     }
@@ -96,6 +117,36 @@ void hvy_pot_polar() {
           newmat = tt;
         }
         for (z_dist = z_start; z_dist <= MAX_X; z_dist++) {
+          // Figure out scalar distance
+          tr = A4map_slice(x_dist, y_dist, z_dist);
+          if (tr > MAX_r - 1.0e-6) {
+            // Need to move on to next t_dist
+            shiftmat(oldmat, newmat, goffset[ZUP]);
+            tt = oldmat;
+            oldmat = newmat;
+            newmat = tt;
+            continue;
+          }
+
+          // Combine three-vectors with same scalar distance
+          this_r = -1;
+          for (i = 0; i < total_r; i++) {
+            if (fabs(tr - lookup[i]) < 1.0e-6) {
+              this_r = i;
+              break;
+            }
+          }
+          if (this_r < 0) {   // Add new scalar distance to lookup table
+            lookup[total_r] = tr;
+            this_r = total_r;
+            total_r++;
+            if (total_r >= MAX_pts) {
+              node0_printf("hvy_pot: MAX_pts %d too small\n", MAX_pts);
+              terminate(1);
+            }
+          }
+          count[this_r]++;
+
           // Evaluate potential at this separation
           wloop = 0.0;
           FORALLSITES(i, s) {
@@ -103,8 +154,12 @@ void hvy_pot_polar() {
                              (su3_matrix_f *)F_PT(s, oldmat));
           }
           g_doublesum(&wloop);
+          W[this_r] += wloop;
+#ifdef CHECK_ROT
+          // Potentially useful to check rotational invariance
           node0_printf("POLAR_LOOP %d %d %d %d %.6g\n",
                        x_dist, y_dist, z_dist, t_dist, wloop / volume);
+#endif
 
           // As we increment z, shift in z direction
           shiftmat(oldmat, newmat, goffset[ZUP]);
@@ -114,6 +169,17 @@ void hvy_pot_polar() {
         } // z_dist
       } // y_dist
     } // x_dist
+
+    // Now cycle through unique scalar distances and print results
+    // Won't be sorted, but this is easy to do offline
+    // Also reset for next t_dist
+    for (i = 0; i < total_r; i++) {
+      tr = 1.0 / (Real)(count[i] * volume);
+      node0_printf("POLAR_LOOP %d %.6g %d %.6g\n",
+                   i, lookup[i], t_dist, W[i] * tr);
+      count[i] = 0;
+      W[i] = 0.0;
+    }
   } // t_dist
 }
 // -----------------------------------------------------------------
