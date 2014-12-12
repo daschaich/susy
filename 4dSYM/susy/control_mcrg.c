@@ -86,7 +86,7 @@ int main(int argc, char *argv[]) {
     terminate(1);
   }
 
-    // Set up P matrix for Konishi and SUGRA operators
+  // Set up P matrix for Konishi and SUGRA operators
 #ifdef CORR
   setup_P();
 #endif

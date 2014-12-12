@@ -10,7 +10,7 @@
 
 // -----------------------------------------------------------------
 int main(int argc, char *argv[]) {
-  int prompt, mu;
+  int prompt;
   double dssplaq, dstplaq, dtime;
   complex plp = cmplx(99, 99);
 
@@ -71,6 +71,12 @@ int main(int argc, char *argv[]) {
   node0_printf("%.8g\n", dssplaq / (double)volume);
   node0_printf("BACTION %.8g\n", dssplaq / (double)volume);
 
+  // Require gauge fixing to consider non-invariant operators
+  if (fixflag != COULOMB_GAUGE_FIX) {
+    printf("ERROR: Konishi correlators require gauge fixing\n");
+    terminate(1);
+  }
+
 #ifdef STOUT
 #define MIN_PLAQ
   // Optionally smear before main measurements
@@ -88,6 +94,18 @@ int main(int argc, char *argv[]) {
   d_plaquette_lcl(&dssplaq, &dstplaq);    // Prints out MIN_PLAQ
   node0_printf(" %.8g %.8g\n", dssplaq, dstplaq);
 #endif
+
+  // Gauge fixing
+  d_plaquette(&dssplaq, &dstplaq);    // To be printed below
+  node0_printf("Fixing to Coulomb gauge...\n");
+  double gtime = -dclock();
+  gaugefix(TUP, 1.5, 5000, GAUGE_FIX_TOL, -1, -1);
+//  gaugefix(-1, 1.5, 5000, GAUGE_FIX_TOL, -1, -1);   // Lorenz gauge
+  gtime += dclock();
+  node0_printf("GFIX time = %.4g seconds\n", gtime);
+  node0_printf("BEFORE %.8g %.8g\n", dssplaq, dstplaq);
+  d_plaquette(&dssplaq, &dstplaq);
+  node0_printf("AFTER  %.8g %.8g\n", dssplaq, dstplaq);
 
   // Main measurements
   // Plaquette determinant
@@ -143,30 +161,8 @@ int main(int argc, char *argv[]) {
 #endif
 
 #ifdef WLOOP
-  // Gauge fix to easily access arbitrary displacements
-  if (fixflag == COULOMB_GAUGE_FIX) {
-    d_plaquette(&dssplaq, &dstplaq);    // To be printed below
-    node0_printf("Fixing to Coulomb gauge...\n");
-    double gtime = -dclock();
-
-    // Gauge fixing arguments explained in generic/gaugefix.c
-    // With first argument outside XUP, ..., TUP,
-    // first four links are included in gauge-fixing condition
-    gaugefix(TUP, 1.5, 5000, GAUGE_FIX_TOL, -1, -1);
-    gtime += dclock();
-    node0_printf("GFIX time = %.4g seconds\n", gtime);
-    node0_printf("BEFORE %.8g %.8g\n", dssplaq, dstplaq);
-    d_plaquette(&dssplaq, &dstplaq);
-    node0_printf("AFTER  %.8g %.8g\n", dssplaq, dstplaq);
-  }
-  else if (fixflag == NO_GAUGE_FIX) { // Braces suppress compiler warning
-    node0_printf("Gauge fixing skipped\n");
-  }
-  else {
-    node0_printf("ERROR: only COULOMB_GAUGE_FIX ");
-    node0_printf("and NO_GAUGE_FIX supported\n");
-    terminate(1);
-  }
+  // We already fixed to Coulomb gauge above
+  // This lets us easily access arbitrary displacements
   hvy_pot();
 
   // Save and restore links overwritten by polar projection

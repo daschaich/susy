@@ -1,6 +1,5 @@
 // -----------------------------------------------------------------
-// Konishi and SUGRA operators averaged over lattice volume
-// Blocking actually doesn't affect the computation!
+// Konishi and SUGRA operators integrated over lattice volume
 #include "susy_includes.h"
 
 void blocked_ops(int Nstout, int block) {
