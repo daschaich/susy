@@ -122,6 +122,7 @@ void compute_Bmu() {
     for (mu = 0; mu < NUMLINK; mu++) {
       su3_adjoint_f(&(s->linkf[mu]), &tmat);
       add_su3_matrix_f(&(s->linkf[mu]), &tmat, &(s->C[mu]));
+      scalar_mult_su3_matrix_f(&(s->C[mu]), 0.5, &(s->C[mu]));
       ctmp = trace_su3_f(&(s->C[mu]));
       CDIVREAL(ctmp, (Real)NCOL, ctmp);
       for (j = 0; j < NCOL; j++)
