@@ -16,6 +16,7 @@ if [ $# -gt 1 ]; then
   echo "Compiling susy_$target..."
   if ! make -f Make_scalar susy_$target >& /dev/null ; then
     echo "ERROR: susy_$target compilation failed"
+    make -f Make_scalar susy_$target
     exit
   fi
 
@@ -57,6 +58,7 @@ for N in 2 3 4 ; do
     echo "Compiling susy_$target..."
     if ! make -f Make_scalar susy_$target >& /dev/null ; then
       echo "ERROR: susy_$target compilation failed"
+      make -f Make_scalar susy_$target
       exit
     fi
   done
