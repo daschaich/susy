@@ -127,6 +127,7 @@ void d_correlator_r() {
           sub += P[mu][a] * P[mu][b] * s->traceBB[a][b];
 
         // Now SUGRA with mu--nu trace subtraction
+        // Symmetric by construction so ignore nu < mu
         index = i * len;
         for (mu = 0; mu < NDIMS ; mu++) {
           ops[index] -= 0.25 * sub;
