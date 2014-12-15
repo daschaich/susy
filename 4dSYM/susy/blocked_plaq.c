@@ -86,7 +86,7 @@ void blocked_plaq(int Nstout, int block) {
   ss_sum /= ((double)(6.0 * volume));
   st_sum /= ((double)(4.0 * volume));
   tr = (ss_sum + st_sum) / 2.0;
-  node0_printf("BPLAQ %d, %d %.8g %.8g %.8g\n",
+  node0_printf("BPLAQ %d %d %.8g %.8g %.8g\n",
                Nstout, block, ss_sum, st_sum, tr);
 
   free(su3mat);
