@@ -2,7 +2,7 @@
 # This script needs to be run from 4dSYM/testsuite/mpi directory
 
 # Customization for the HET cluster at the University of Colorado
-makefile=Make_CU
+makefile=Make_mpi
 run="/usr/local/mpich2-1.4.1p1/bin/mpirun -np 2"
 
 # Allow user to specify particular target
