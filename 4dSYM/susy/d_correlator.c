@@ -10,20 +10,20 @@
 void d_correlator() {
   register int i;
   register site *s;
-  int a, b, mu, nu, t, tt;
-  Real norm, corr, tr, sub;
-  Real *OK, *OS[NDIMS][NDIMS];    // Konishi and SUGRA operators
+  int a, b, c, d, mu, nu, t, tt;
+  Real norm, tr, sub;
+  Real *OK[NDIMS], *OS[NDIMS][NDIMS];       // Konishi and SUGRA operators
 
   // Allocate and initialize Konishi and SUGRA operators
   // SUGRA will be symmetric by construction, so ignore nu < mu
-  OK = malloc(nt * sizeof(*OK));
   for (mu = 0; mu < NDIMS; mu++) {
+    OK[mu] = malloc(nt * sizeof(*OK[mu]));
     for (nu = mu; nu < NDIMS; nu++)
       OS[mu][nu] = malloc(nt * sizeof(*OS[mu][nu]));
   }
   for (t = 0; t < nt; t++) {
-    OK[t] = 0.0;
     for (mu = 0; mu < NDIMS; mu++) {
+      OK[mu][t] = 0.0;
       for (nu = mu; nu < NDIMS; nu++)
         OS[mu][nu][t] = 0.0;
     }
@@ -40,9 +40,18 @@ void d_correlator() {
     t = s->t;
     for (a = 0; a < NUMLINK; a++) {
       for (b = 0; b < NUMLINK; b++) {
-        OK[t] += s->traceBB[a][b];    // Konishi is easy
+        // Four possible Konishi operators
+        // All fairly easy and normalized below
+        OK[0][t] += s->traceBB[a][b];
+        OK[1][t] += s->traceCC[a][b];
+        for (c = 0; c < NUMLINK; c++) {
+          for (d = 0; d < NUMLINK; d++) {
+            OK[2][t] += s->traceBB[a][b] * s->traceBB[c][d];
+            OK[3][t] += s->traceCC[a][b] * s->traceCC[c][d];
+          }
+        }
 
-        // Compute mu--nu trace to be subtracted
+        // Compute mu--nu trace to be subtracted from SUGRA
         sub = P[0][a] * P[0][b] * s->traceBB[a][b];
         for (mu = 1; mu < NDIMS; mu++)
           sub += P[mu][a] * P[mu][b] * s->traceBB[a][b];
@@ -60,31 +69,43 @@ void d_correlator() {
     }
   }
   for (t = 0; t < nt; t++) {
-    OK[t] /= 5.0;   // Remove from site loop
-    g_doublesum(&OK[t]);
+    OK[0][t] /= 5.0;   // Remove from site loop
+    OK[1][t] /= 5.0;
+    OK[2][t] /= 25.0;
+    OK[3][t] /= 25.0;
     for (mu = 0; mu < NDIMS; mu++) {
+      g_doublesum(&(OK[mu][t]));
       for (nu = mu; nu < NDIMS; nu++)
-        g_doublesum(&OS[mu][nu][t]);
+        g_doublesum(&(OS[mu][nu][t]));
     }
   }
 
   // Try subtracting volume average from Konishi
-  tr = OK[0];
-  for (t = 1; t <= (int)(nt / 2); t++)
-    tr += OK[t];
-  tr /= nt;
-  for (t = 0; t <= (int)(nt / 2); t++)
-    OK[t] -= tr;
+  for (mu = 0; mu < NDIMS; mu++) {
+    tr = OK[mu][0];
+    for (t = 1; t < nt; t++)
+      tr += OK[mu][t];
+    tr /= nt;
+    for (t = 0; t < nt; t++)
+      OK[mu][t] -= tr;
+  }
 
   // Form and print out correlators, normalized by Nt / vol^2
   // (Averaging over tt removes one factor of Nt from normalization)
   // Konishi
+  // 16 Konishi correlators
   norm = (Real)(nx * ny * nz * volume);
   for (t = 0; t <= (int)(nt / 2); t++) {
-    corr = OK[0] * OK[t];
-    for (tt = 1; tt < nt; tt++)
-      corr += OK[tt] * OK[(t + tt) % nt];
-    node0_printf("KONISHI %d %.8g\n", t, corr / norm);
+    node0_printf("KONISHI %d", t);
+    for (mu = 0; mu < NDIMS; mu++) {
+      for (nu = 0; nu < NDIMS; nu++) {
+        tr = OK[mu][0] * OK[nu][t];
+        for (tt = 1; tt < nt; tt++)
+          tr += OK[mu][tt] * OK[nu][(t + tt) % nt];
+        node0_printf(" %.8g", tr / norm);
+      }
+    }
+    node0_printf("\n");
   }
 
   // SUGRA, averaging over ten components with mu <= nu
@@ -94,18 +115,18 @@ void d_correlator() {
 //    node0_printf("Trace check %d: %.4g + %.4g + %.4g + %.4g = %.4g\n",
 //                 t, OS[0][0][t], OS[1][1][t], OS[2][2][t], OS[3][3][t],
 //                 OS[0][0][t] + OS[1][1][t] + OS[2][2][t] + OS[3][3][t]);
-    corr = 0.0;
+    tr = 0.0;
     for (mu = 0; mu < NDIMS; mu++) {
       for (nu = mu; nu < NDIMS; nu++) {
         for (tt = 0; tt < nt; tt++)
-          corr += OS[mu][nu][tt] * OS[mu][nu][(t + tt) % nt];
+          tr += OS[mu][nu][tt] * OS[mu][nu][(t + tt) % nt];
       }
     }
-    node0_printf("SUGRA %d %.8g\n", t, corr / norm);
+    node0_printf("SUGRA %d %.8g\n", t, tr / norm);
   }
 
-  free(OK);
   for (mu = 0; mu < NDIMS; mu++) {
+  free(OK[mu]);
     for (nu = mu; nu < NDIMS; nu++)
       free(OS[mu][nu]);
   }

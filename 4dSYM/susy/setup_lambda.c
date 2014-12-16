@@ -1,107 +1,6 @@
 // -----------------------------------------------------------------
 // Set up generator matrices and epsilon^{ijklm}
 #include "susy_includes.h"
-#define POS1 (NCOL * (NCOL - 1) / 2)
-#define POS2 (NCOL * (NCOL - 1))
-#define SUNGEN (NCOL * NCOL - 1)
-#define ROOT2 1.41421356237309504880168872421
-// -----------------------------------------------------------------
-
-
-
-// -----------------------------------------------------------------
-// Initialize generator matrices
-void initgen(int posmat[NCOL][NCOL]) {
-  int i, j, a = 0;
-  for (i = 0; i < NCOL; i++) {
-    for (j = i + 1; j < NCOL; j++) {
-      posmat[i][j] = a;
-      a++;
-    }
-  }
-}
-// -----------------------------------------------------------------
-
-
-
-// -----------------------------------------------------------------
-// Translate adjoint vector to fundamental matrix
-void vectomat(complex vec[SUNGEN], complex mat[NCOL][NCOL],
-              int posmat[NCOL][NCOL]) {
-
-  int k, j;
-  complex mult, a, ci = cmplx(0, 1);
-
-  // Off-diagonal elements: ???
-  // mat_kj = (vec[posmat_kj] - i * vec[POS1 + posmat_kj]) / 2
-  // mat_jk = (vec[posmat_kj] + i * vec[POS1 + posmat_kj]) / 2
-  for (k = 0; k < NCOL; k++) {
-    for (j = k + 1; j < NCOL; j++) {
-      CMUL(ci, vec[POS1 + posmat[k][j]], a);
-      CSUB(vec[posmat[k][j]], a, mat[k][j]);
-      CMULREAL(mat[k][j], 0.5, mat[k][j]);
-      CADD(vec[posmat[k][j]], a, mat[j][k]);
-      CMULREAL(mat[j][k], 0.5, mat[j][k]);
-    }
-  }
-
-  // Diagonal elements: ???
-  // mult = vec[POS2 + i]*(1/sqrt(2+2/(1.+i))/(1.+i)) ;
-  // mat_i = sum{vec[POS2 + k] / ((1 + k)* sqrt(2 + 2 / (1 + k)))};
-  // mat_N = -(1 + N) * mult;
-  mat[0][0] = cmplx(0, 0);
-  for (k = 0; k < NCOL - 1; k++) {
-    CMULREAL(vec[POS2 + k], (1.0 / sqrt(2. + 2. / (1. + k)) / (1. + k)), mult);
-    for (j = 0; j < k + 1; j++)
-      CSUM(mat[j][j], mult);
-
-    a = cmplx(-1 - k, 0);
-    CMUL(a, mult, mat[k + 1][k + 1]);   // Initialize next element
-  }
-}
-// -----------------------------------------------------------------
-
-
-
-// -----------------------------------------------------------------
-// Compute generator matrices
-void computegen(complex genmat[SUNGEN][NCOL][NCOL], int posmat[NCOL][NCOL]) {
-  int a, i, j;
-  complex adj[SUNGEN], fund[NCOL][NCOL];
-
-  for (a = 0; a < SUNGEN; a++) {
-    for (i = 0; i < SUNGEN; i++)
-      adj[i] = cmplx(0, 0);
-
-    adj[a] = cmplx(1, 0);
-    vectomat(adj, fund, posmat);
-    for (i = 0; i < NCOL; i++) {
-      for (j = 0; j < NCOL; j++)
-        genmat[a][i][j] = fund[i][j];
-    }
-  }
-}
-// -----------------------------------------------------------------
-
-
-
-// -----------------------------------------------------------------
-void my_gen() {
-  int a, i, j, posmat[NCOL][NCOL];
-  complex isr2 = cmplx(0, sqrt(2));
-  complex genmat[SUNGEN][NCOL][NCOL];
-
-  initgen(posmat);
-  computegen(genmat, posmat);
-
-  // Map to data structures in code
-  for (a = 0; a < SUNGEN; a++) {
-    for (i = 0; i < NCOL; i++) {
-      for (j = 0; j < NCOL; j++)    // Lambda = i sqrt(2) genmat
-        CMUL(isr2, genmat[a][i][j], Lambda[a].e[i][j]);
-    }
-  }
-}
 // -----------------------------------------------------------------
 
 
@@ -109,19 +8,64 @@ void my_gen() {
 // -----------------------------------------------------------------
 // Normalization: Tr(TaTb) = -delta_ab
 void setup_lambda() {
-  int i, j;
+  int i, j, k, l, count;
+  complex inv_sqrt = cmplx(1.0 / sqrt(2.0), 0.0);
+  complex i_inv_sqrt = cmplx(0.0, 1.0 / sqrt(2.0));
 
 #ifdef DEBUG_CHECK
-  int k, l, a;
+  int a;
   complex trace, tt;
   node0_printf("Computing generators for U(N)\n");
 #endif
 
-  my_gen();
-  if (DIMF == NCOL * NCOL) {
+  // Make sure Lambda matrices are initialized
+  for (i = 0; i < DIMF; i++)
+    clear_su3mat_f(&(Lambda[i]));
+
+  // N * (N - 1) off-diagonal SU(N) generators
+  // (T^{ij, +})_{kl} = i * (de_{ki} de_{lj} + de_{kj} de_{li}) / sqrt(2)
+  // (T^{ij, -})_{kl} = (-de_{ki} de_{lj} + de_{kj} de_{ki}) / sqrt(2)
+  count = 0;
+  for (i = 0; i < NCOL; i++) {
+    for (j = i + 1; j < NCOL; j++) {
+      for (k = 0; k < NCOL; k++) {
+        for (l = 0; l < NCOL; l++) {
+          if (k == i && l == j) {
+            CSUM(Lambda[count].e[k][l], i_inv_sqrt);
+            CDIF(Lambda[count + 1].e[k][l], inv_sqrt);
+          }
+          else if (k == j && l == i) {
+            CSUM(Lambda[count].e[k][l], i_inv_sqrt);
+            CSUM(Lambda[count + 1].e[k][l], inv_sqrt);
+          }
+        }
+      }
+      count += 2;
+    }
+  }
+  if (count != NCOL * (NCOL - 1)) {
+    node0_printf("ERROR: Wrong number of off-diagonal generators, ");
+    node0_printf("%d vs. %d\n", count, NCOL * (NCOL - 1));
+    terminate(1);
+  }
+
+  // N - 1 diagonal SU(N) generators
+  // T^k = i * diag(1, 1, ..., -k, 0, ..., 0) / sqrt(k * (k + 1))
+  for (i = 0; i < NCOL - 1; i++) {
+    j = NCOL * (NCOL - 1) + i;    // Index after +/- above
+    k = i + 1;
+    i_inv_sqrt = cmplx(0.0, 1.0 / sqrt(k * (k + 1.0)));
+    for (l = 0; l <= k; l++)
+      Lambda[j].e[l][l] = i_inv_sqrt;
+    CMULREAL(Lambda[j].e[k][k], -1.0 * k, Lambda[j].e[k][k]);
+  }
+
+  // U(1) generator i * I_N / sqrt(2)
+  if (DIMF == NCOL * NCOL) {    // Allow SU(N) compilation for now
+    i_inv_sqrt = cmplx(0, 1.0 / sqrt(NCOL));
     clear_su3mat_f(&(Lambda[DIMF - 1]));
     for (i = 0; i < NCOL; i++)
-      Lambda[DIMF - 1].e[i][i] = cmplx(0, 1.0 / sqrt(NCOL));
+      Lambda[DIMF - 1].e[i][i] = i_inv_sqrt;
   }
 
 #ifdef DEBUG_CHECK
