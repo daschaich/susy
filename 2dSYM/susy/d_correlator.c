@@ -11,7 +11,7 @@ void d_correlator() {
   register int i;
   register site *s;
   int mu, nu, t, tt;
-  Real norm, corr, sub;
+  Real norm, tr, sub;
   Real *OK, *OS[NDIMS][NDIMS];        // Konishi and SUGRA operators
 
   // Allocate and initialize Konishi and SUGRA operators
@@ -35,7 +35,6 @@ void d_correlator() {
   compute_Bmu();
 
   // Now form the zero momentum projected operators (summing across nodes)
-  // Don't yet normalize by (Nt / vol)
   FORALLSITES(i, s) {
     t = s->t;
     sub = 0.5 * (s->traceBB[0][0] + s->traceBB[1][1]);
@@ -46,48 +45,36 @@ void d_correlator() {
     }
     OS[0][1][t] += s->traceBB[0][1];
   }
+  // Normalization removed from site loop, followed by sum over nodes
+  norm = (Real)(nx);
   for (t = 0; t < nt; t++) {
-    g_doublesum(&OK[t]);
+    OK[t] /= norm;
+    g_doublesum(&(OK[t]));
     for (mu = 0; mu < NDIMS; mu++) {
-      for (nu = mu; nu < NDIMS; nu++)
-        g_doublesum(&OS[mu][nu][t]);
+      for (nu = mu; nu < NDIMS; nu++) {
+        OS[mu][nu][t] /= norm;
+        g_doublesum(&(OS[mu][nu][t]));
+      }
     }
   }
 
-  // Try subtracting volume average from Konishi
-  corr = OK[0];
-  for (t = 1; t < nt; t++)
-    corr += OK[t];
-  corr /= nt;
-  for (t = 0; t < nt; t++)
-    OK[t] -= corr;
-
-  // Form and print out correlators, normalized by Nt / vol^2
-  // (Averaging over tt removes one factor of Nt from normalization)
+  // Just print operators for offline vev subtraction and correlator analysis
   // Konishi
-  norm = (Real)(nx * volume);
-  for (t = 0; t <= (int)(nt / 2); t++) {
-    corr = OK[0] * OK[t];
-    for (tt = 1; tt < nt; tt++)
-      corr += OK[tt] * OK[(t + tt) % nt];
-    node0_printf("KONISHI %d %.8g\n", t, corr / norm);
-  }
+  for (t = 0; t < nt; t++)
+    node0_printf("KONISHI %d %.8g\n", t, OK[t]);
 
   // SUGRA, averaging over three components with mu <= nu
-  norm = (Real)(3.0 * nx * volume);
-  for (t = 0; t <= (int)(nt / 2); t++) {
+  for (t = 0; t < nt; t++) {
     // Debugging check that trace was successfully subtracted
 //    node0_printf("Trace check %d: %.4g + %.4g = %.4g\n",
 //                 t, OS[0][0][t], OS[1][1][t], OS[0][0][t] + OS[1][1][t]);
 
-    corr = 0.0;
+    tr = 0.0;
     for (mu = 0; mu < NDIMS; mu++) {
-      for (nu = mu; nu < NDIMS; nu++) {
-        for (tt = 0; tt < nt; tt++)
-          corr += OS[mu][nu][tt] * OS[mu][nu][(t + tt) % nt];
-      }
+      for (nu = mu; nu < NDIMS; nu++)
+        tr += OS[mu][nu][t];
     }
-    node0_printf("SUGRA %d %.8g\n", t, corr / norm);
+    node0_printf("SUGRA %d %.8g\n", t, tr / 3.0);
   }
 
   free(OK);

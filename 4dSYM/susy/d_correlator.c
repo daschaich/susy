@@ -10,8 +10,8 @@
 void d_correlator() {
   register int i;
   register site *s;
-  int a, b, c, d, mu, nu, t, tt;
-  Real norm, tr, sub;
+  int a, b, c, d, mu, nu, t;
+  Real tr, sub, norm;
   Real *OK[NDIMS], *OS[NDIMS][NDIMS];       // Konishi and SUGRA operators
 
   // Allocate and initialize Konishi and SUGRA operators
@@ -35,7 +35,6 @@ void d_correlator() {
   compute_Bmu();
 
   // Now form the zero momentum projected operators (summing across nodes)
-  // Don't yet normalize by (Nt / vol)
   FORALLSITES(i, s) {
     t = s->t;
     for (a = 0; a < NUMLINK; a++) {
@@ -68,61 +67,43 @@ void d_correlator() {
       }
     }
   }
+  // Normalization removed from site loop, followed by sum over nodes
+  norm = (Real)(nx * ny * nz);
   for (t = 0; t < nt; t++) {
-    OK[0][t] /= 5.0;   // Remove from site loop
-    OK[1][t] /= 5.0;
-    OK[2][t] /= 25.0;
-    OK[3][t] /= 25.0;
+    OK[0][t] /= (5.0 * norm);
+    OK[1][t] /= (5.0 * norm);
+    OK[2][t] /= (25.0 * norm);
+    OK[3][t] /= (25.0 * norm);
     for (mu = 0; mu < NDIMS; mu++) {
       g_doublesum(&(OK[mu][t]));
-      for (nu = mu; nu < NDIMS; nu++)
+      for (nu = mu; nu < NDIMS; nu++) {
+        OS[mu][nu][t] /= norm;
         g_doublesum(&(OS[mu][nu][t]));
-    }
-  }
-
-  // Try subtracting volume average from Konishi
-  for (mu = 0; mu < NDIMS; mu++) {
-    tr = OK[mu][0];
-    for (t = 1; t < nt; t++)
-      tr += OK[mu][t];
-    tr /= nt;
-    for (t = 0; t < nt; t++)
-      OK[mu][t] -= tr;
-  }
-
-  // Form and print out correlators, normalized by Nt / vol^2
-  // (Averaging over tt removes one factor of Nt from normalization)
-  // Konishi
-  // 16 Konishi correlators
-  norm = (Real)(nx * ny * nz * volume);
-  for (t = 0; t <= (int)(nt / 2); t++) {
-    node0_printf("KONISHI %d", t);
-    for (mu = 0; mu < NDIMS; mu++) {
-      for (nu = 0; nu < NDIMS; nu++) {
-        tr = OK[mu][0] * OK[nu][t];
-        for (tt = 1; tt < nt; tt++)
-          tr += OK[mu][tt] * OK[nu][(t + tt) % nt];
-        node0_printf(" %.8g", tr / norm);
       }
     }
+  }
+
+  // Just print operators for offline vev subtraction and correlator analysis
+  // 4 Konishi operators
+  for (t = 0; t < nt; t++) {
+    node0_printf("KONISHI %d", t);
+    for (mu = 0; mu < NDIMS; mu++)
+      node0_printf(" %.8g", OK[mu][t]);
     node0_printf("\n");
   }
 
   // SUGRA, averaging over ten components with mu <= nu
-  norm = (Real)(10.0 * nx * ny * nz * volume);
-  for (t = 0; t <= (int)(nt / 2); t++) {
+  for (t = 0; t < nt; t++) {
     // Debugging check that trace was successfully subtracted
 //    node0_printf("Trace check %d: %.4g + %.4g + %.4g + %.4g = %.4g\n",
 //                 t, OS[0][0][t], OS[1][1][t], OS[2][2][t], OS[3][3][t],
 //                 OS[0][0][t] + OS[1][1][t] + OS[2][2][t] + OS[3][3][t]);
     tr = 0.0;
     for (mu = 0; mu < NDIMS; mu++) {
-      for (nu = mu; nu < NDIMS; nu++) {
-        for (tt = 0; tt < nt; tt++)
-          tr += OS[mu][nu][tt] * OS[mu][nu][(t + tt) % nt];
-      }
+      for (nu = mu; nu < NDIMS; nu++)
+        tr += OS[mu][nu][t];
     }
-    node0_printf("SUGRA %d %.8g\n", t, tr / norm);
+    node0_printf("SUGRA %d %.8g\n", t, tr * 0.1);
   }
 
   for (mu = 0; mu < NDIMS; mu++) {
