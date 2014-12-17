@@ -12,7 +12,7 @@ void d_correlator() {
   register site *s;
   int mu, nu, t, tt;
   Real norm, corr, sub;
-  Real *OK, *OS[NDIMS][NDIMS];    // Konishi and SUGRA operators
+  Real *OK, *OS[NDIMS][NDIMS];        // Konishi and SUGRA operators
 
   // Allocate and initialize Konishi and SUGRA operators
   // SUGRA will be symmetric by construction, so ignore nu < mu
@@ -29,7 +29,7 @@ void d_correlator() {
     }
   }
 
-  // Compute at each site B_a = U_a Udag_a - volume average
+  // Compute at each site B_a = U_a Udag_a - trace
   // as well as traceBB[mu][nu] = tr[B_mu(x) B_nu(x)]
   // Now stored in the site structure
   compute_Bmu();
@@ -40,7 +40,8 @@ void d_correlator() {
     t = s->t;
     sub = 0.5 * (s->traceBB[0][0] + s->traceBB[1][1]);
     for (mu = 0; mu < NUMLINK; mu++) {
-      OK[t] += s->traceBB[mu][mu];
+      for (nu = 0; nu < NUMLINK; nu++)
+        OK[t] += s->traceBB[mu][nu];
       OS[mu][mu][t] += s->traceBB[mu][mu] - sub;
     }
     OS[0][1][t] += s->traceBB[0][1];
@@ -52,6 +53,14 @@ void d_correlator() {
         g_doublesum(&OS[mu][nu][t]);
     }
   }
+
+  // Try subtracting volume average from Konishi
+  corr = OK[0];
+  for (t = 1; t < nt; t++)
+    corr += OK[t];
+  corr /= nt;
+  for (t = 0; t < nt; t++)
+    OK[t] -= corr;
 
   // Form and print out correlators, normalized by Nt / vol^2
   // (Averaging over tt removes one factor of Nt from normalization)

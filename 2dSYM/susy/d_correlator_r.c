@@ -12,8 +12,8 @@
 void d_correlator_r() {
   register int i;
   register site *s;
-  int mu, index, x_dist, t_dist, t_start, len = 4, d[NDIMS] = {0, 0};
-  Real corr, sub, normK = 1.0 / (Real)volume, normS = normK / 3.0;
+  int mu, nu, index, x_dist, t_dist, t_start, len = 4, d[NDIMS] = {0, 0};
+  Real corr, sub, OK = 0.0, normK = 1.0 / (Real)volume, normS = normK / 3.0;
   Real *ops = malloc(sites_on_node * len * sizeof(Real*));
   msg_tag *mtag;
 
@@ -39,7 +39,10 @@ void d_correlator_r() {
     for (mu = 0; mu < NUMLINK; mu++) {
       // Konishi is last entry
       index = i * len + len - 1;
-      ops[index] += s->traceBB[mu][mu];
+      for (nu = 0; nu < NUMLINK; nu++) {
+        ops[index] += s->traceBB[mu][nu];
+        OK += s->traceBB[mu][nu];
+      }
     }
 
     // Subtract trace from first and third SUGRA components
@@ -50,6 +53,14 @@ void d_correlator_r() {
     ops[index] += s->traceBB[1][1] - sub;
     index = i * len + 1;
     ops[index] += s->traceBB[0][1];
+  }
+
+  // Try subtracting volume average from Konishi
+  OK /= (Real)(volume);
+  g_doublesum(&OK);
+  FORALLSITES(i, s) {
+    index = i * len + len - 1;
+    ops[index] -= OK;
   }
 
   // Construct and print correlators
