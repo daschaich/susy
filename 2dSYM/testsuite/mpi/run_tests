@@ -105,3 +105,22 @@ for N in 2 3 4 ; do
     fi
   done
 done
+
+# This can be useful to check whether intermediate steps of the pfaffian computation have changed
+exit 0  # For now it is not included in the standard checks
+for N in 2 3 4 ; do
+  for target in phase phase_part1 phase_part2 ; do
+    grep Column $target.U$N.out | awk '{print $10}' > TEMP.out
+    grep Column $target.U$N.ref | awk '{print $10}' > TEMP.ref
+    paste TEMP.out TEMP.ref > TEMP
+    d="`awk '{if(($1-$2)^2>1e-12)print $1, $2}' TEMP`"
+    if [ -n "$d" ] ; then   # Non-zero string length
+      echo "$target.U$N.ref and $target.U$N.out differ:"
+      echo "$d"
+      echo
+    else
+      echo "PASS: susy_$target reproduces reference output"
+    fi
+    rm -f TEMP TEMP.out TEMP.ref
+  done
+done

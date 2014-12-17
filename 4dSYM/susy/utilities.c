@@ -108,7 +108,7 @@ void compute_Bmu() {
         mult_su3_nn_f(&(s->B[mu]), &(s->B[nu]), &tmat);
         ctmp = trace_su3_f(&tmat);
         if (fabs(ctmp.imag) > IMAG_TOL) {
-          printf("node%d WARNING: Tr(BB[%d][%d]) = (%.4g, %.4g) at site %d]\n",
+          printf("node%d WARNING: Tr(BB[%d][%d]) = (%.4g, %.4g) at site %d\n",
                  this_node, mu, nu, ctmp.real, ctmp.imag, i);
         }
         s->traceBB[mu][nu] = ctmp.real;
