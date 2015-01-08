@@ -9,15 +9,14 @@
 
 
 // -----------------------------------------------------------------
-void hvy_pot_loop() {
+void hvy_pot_loop(int do_det) {
   register int i;
   register site *s;
   int t_dist, x_dist[3] = {0, 0, 0}, mu, length;
   int dir[2 * (MAX_T + MAX_X)], sign[2 * (MAX_T + MAX_X)];
-  Real frac = -1.0 / (Real)NCOL;
-  double wloop, detloop;
-  complex det_wloop, c_loop, c1, c2, mult;
-  su3_matrix_f tmat;
+  double wloop;
+  complex tc;
+  su3_matrix_f tmat, tmat2;
 
   node0_printf("hvy_pot_loop: MAX_T = %d, MAX_X = %d\n", MAX_T, MAX_X);
 
@@ -56,29 +55,25 @@ void hvy_pot_loop() {
         // path accumulates the product in tempmat1
         path(dir, sign, length);
         wloop = 0.0;
-        detloop = 0.0;
         FORALLSITES(i, s) {
           tmat = s->tempmat1;
-          c_loop = trace_su3_f(&tmat);
-          wloop += c_loop.real;
 
-          // Divide out the det raised to fractional power as
-          // x^y = exp[y log x]
-          det_wloop = find_det(&tmat);
-          c1 = clog(&det_wloop);
-          CMULREAL(c1, frac, c2);
-          mult = cexp(&c2);
-          CMUL(c_loop, mult, c1);
-          detloop += c1.real;
+          if (do_det == 1)
+            det_project(&tmat, &tmat2);
+          else
+            su3mat_copy_f(&tmat, &tmat2);
+
+          tc = trace_su3_f(&tmat2);
+          wloop += tc.real;
         }
         g_doublesum(&wloop);
-        g_doublesum(&detloop);
-        node0_printf("PLOT_LOOP %d %d %d %d %.6g\n",
-                     x_dist[0], x_dist[1], x_dist[2], t_dist,
-                     wloop / volume);
-        node0_printf("DL_LOOP   %d %d %d %d %.6g\n",
-                     x_dist[0], x_dist[1], x_dist[2], t_dist,
-                     detloop / volume);
+        if (do_det == 1) {            // Braces suppress compiler complaint
+          node0_printf("DL_LOOP   ");
+        }
+        else
+          node0_printf("PLOT_LOOP ");
+        node0_printf("%d %d %d %d %.6g\n", x_dist[0], x_dist[1], x_dist[2],
+                     t_dist, wloop / volume);
       } // x_dist[mu]
       x_dist[mu] = 0;
     } // mu

@@ -38,17 +38,17 @@ Real A4map_slice(x_in, y_in, z_in) {
 
 
 // -----------------------------------------------------------------
-void hvy_pot() {
+void hvy_pot(int do_det) {
   register int i;
   register site *s;
-  int t_dist, x_dist, y_dist, z_dist, y_start, z_start;
+  int t_dist, x_dist, y_dist, z_dist, y_start, z_start, mu;
   int MAX_pts = 8 * MAX_X * MAX_X;            // Should be plenty
   int count[MAX_pts], this_r, total_r = 0;
-  Real MAX_r = 100.0 * MAX_X, tr, frac = -1.0 / (Real)NCOL;
-  Real lookup[MAX_pts], W[MAX_pts], D[MAX_pts];
-  double wloop, detloop;
-  complex det_wloop, c_loop, c1, c2, mult;
-  su3_matrix_f tmat;
+  Real MAX_r = 100.0 * MAX_X, tr;
+  Real lookup[MAX_pts], W[MAX_pts];
+  double wloop;
+  complex tc;
+  su3_matrix_f tmat, tmat2;
   msg_tag *mtag = NULL;
   field_offset oldmat, newmat, tt;
 
@@ -56,7 +56,6 @@ void hvy_pot() {
   for (i = 0; i < MAX_pts; i++) {
     count[i] = 0;
     W[i] = 0.0;
-    D[i] = 0.0;
   }
 
   // Find smallest scalar distance cut by imposing MAX_X
@@ -169,33 +168,29 @@ void hvy_pot() {
 
           // Evaluate potential at this separation
           wloop = 0.0;
-          detloop = 0.0;
           FORALLSITES(i, s) {
             // Compute the actual Coulomb gauge Wilson loop product
             mult_su3_na_f(&(s->tempmat1),
                           (su3_matrix_f *)F_PT(s, oldmat), &tmat);
-            c_loop = trace_su3_f(&tmat);
-            wloop += c_loop.real;
 
-            // Divide out the det raised to fractional power as
-            // x^y = exp[y log x]
-            det_wloop = find_det(&tmat);
-            c1 = clog(&det_wloop);
-            CMULREAL(c1, frac, c2);
-            mult = cexp(&c2);
-            CMUL(c_loop, mult, c1);
-            detloop += c1.real;
+            if (do_det == 1)
+              det_project(&tmat, &tmat2);
+            else
+              su3mat_copy_f(&tmat, &tmat2);
+
+            tc = trace_su3_f(&tmat2);
+            wloop += tc.real;
           }
           g_doublesum(&wloop);
           W[this_r] += wloop;
-          g_doublesum(&detloop);
-          D[this_r] += detloop;
 #ifdef CHECK_ROT
           // Potentially useful to check rotational invariance
-          node0_printf("POT_LOOP %d %d %d %d %.6g\n",
-                       x_dist, y_dist, z_dist, t_dist, wloop / volume);
-          node0_printf("D_LOOP   %d %d %d %d %.6g\n",
-                       x_dist, y_dist, z_dist, t_dist, detloop / volume);
+          if (do_det == 1)
+            node0_printf("D_LOOP   ");
+          else
+            node0_printf("POT_LOOP ");
+          node0_printf("%d %d %d %d %.6g\n", x_dist, y_dist, z_dist, t_dist,
+                       wloop / volume);
 #endif
 
           // As we increment z, shift in z direction
@@ -212,16 +207,14 @@ void hvy_pot() {
     // Also reset for next t_dist
     for (i = 0; i < total_r; i++) {
       tr = 1.0 / (Real)(count[i] * volume);
-      node0_printf("POT_LOOP %d %.6g %d %.6g\n",
-                   i, lookup[i], t_dist, W[i] * tr);
-      W[i] = 0.0;
-    }
-    for (i = 0; i < total_r; i++) {
-      tr = 1.0 / (Real)(count[i] * volume);
-      node0_printf("D_LOOP   %d %.6g %d %.6g\n",
-                   i, lookup[i], t_dist, D[i] * tr);
+      if (do_det == 1) {            // Braces suppress compiler complaint
+        node0_printf("D_LOOP   ");
+      }
+      else
+        node0_printf("POT_LOOP ");
+      node0_printf("%d %.6g %d %.6g\n", i, lookup[i], t_dist, W[i] * tr);
       count[i] = 0;
-      D[i] = 0.0;
+      W[i] = 0.0;
     }
   } // t_dist
 }

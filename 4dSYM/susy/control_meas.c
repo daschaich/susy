@@ -51,7 +51,7 @@ int main(int argc, char *argv[]) {
   // Check: compute initial plaquette and bosonic action
   d_plaquette(&dssplaq, &dstplaq);
   node0_printf("START %.8g %.8g %.8g ", dssplaq, dstplaq, dssplaq + dstplaq);
-  dssplaq = d_gauge_action();
+  dssplaq = d_gauge_action(NODET);
   node0_printf("%.8g\n", dssplaq / (double)volume);
 
   // Do "local" measurements to check evolution
@@ -67,9 +67,10 @@ int main(int argc, char *argv[]) {
                plp.real, plp.imag, dssplaq, dstplaq);
 
   // Bosonic action (printed twice by request)
-  dssplaq = d_gauge_action();
-  node0_printf("%.8g\n", dssplaq / (double)volume);
-  node0_printf("BACTION %.8g\n", dssplaq / (double)volume);
+  dssplaq = d_gauge_action(NODET) / (double)volume;
+//  dssplaq = d_gauge_action(YESDET) / (double)volume;
+  node0_printf("%.8g\n", dssplaq);
+  node0_printf("BACTION %.8g\n", dssplaq);
 
   // Require gauge fixing to consider non-invariant operators
   if (fixflag != COULOMB_GAUGE_FIX) {
@@ -163,7 +164,8 @@ int main(int argc, char *argv[]) {
 #ifdef WLOOP
   // We already fixed to Coulomb gauge above
   // This lets us easily access arbitrary displacements
-  hvy_pot();
+  hvy_pot(NODET);
+  hvy_pot(YESDET);
 
   // Save and restore links overwritten by polar projection
   FORALLSITES(i, s)

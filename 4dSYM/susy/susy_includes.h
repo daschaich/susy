@@ -25,7 +25,6 @@ int readin(int prompt);
 int update();
 void update_h(Real eps);
 void update_u(Real eps);
-void gauge_action(double *result);
 // -----------------------------------------------------------------
 
 
@@ -48,7 +47,7 @@ int grsource(Twist_Fermion *source);
 
 // Action calculations
 double d_action(Twist_Fermion *source, Twist_Fermion **sol);
-double d_gauge_action();
+double d_gauge_action(int do_det);
 double d_fermion_action();
 
 double gauge_force(Real eps);
@@ -103,6 +102,7 @@ void shiftmat(field_offset src, field_offset dest, int dir);
 // Determinant-related routines
 void measure_det();
 complex find_det(su3_matrix_f *Q);
+void det_project(su3_matrix_f *in, su3_matrix_f *out);
 
 // Adjugate matrix needed by det_force
 void adjugate(su3_matrix_f *in, su3_matrix_f *out);
@@ -141,11 +141,11 @@ void print_var3(char *label);
 // These look at correlators of products of temporal links,
 // which requires gauge fixing
 Real A4map_slice(int x, int y, int z);
-void hvy_pot();
+void hvy_pot(int do_det);
 void hvy_pot_polar();
 
 // These construct explicit paths along lattice principal axes, for checking
-void hvy_pot_loop();
+void hvy_pot_loop(int do_det);
 void hvy_pot_polar_loop();
 
 // Use LAPACK in the polar projection

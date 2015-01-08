@@ -92,7 +92,7 @@ void compute_Bmu() {
 
   // B_mu = U_mu Udag_mu - trace
   FORALLSITES(i, s) {
-    for (mu = 0; mu < NUMLINK; mu++) {
+    for (mu = XUP; mu < NUMLINK; mu++) {
       mult_su3_na_f(&(s->linkf[mu]), &(s->linkf[mu]), &(s->B[mu]));
       ctmp = trace_su3_f(&(s->B[mu]));
       CDIVREAL(ctmp, (Real)NCOL, ctmp);
@@ -103,7 +103,7 @@ void compute_Bmu() {
     // traceBB[mu][nu] = tr[B_mu(x) B_nu(x)] is symmetric in mu <--> nu
     // But store all to simplify SUGRA computation
     // Make sure Tr(B_a * B_b) is purely real
-    for (mu = 0; mu < NUMLINK; mu++) {
+    for (mu = XUP; mu < NUMLINK; mu++) {
       for (nu = mu; nu < NUMLINK; nu++) {
         mult_su3_nn_f(&(s->B[mu]), &(s->B[nu]), &tmat);
         ctmp = trace_su3_f(&tmat);
@@ -119,7 +119,7 @@ void compute_Bmu() {
 
   // Alternative C_mu = U_mu + Udag_mu - trace
   FORALLSITES(i, s) {
-    for (mu = 0; mu < NUMLINK; mu++) {
+    for (mu = XUP; mu < NUMLINK; mu++) {
       su3_adjoint_f(&(s->linkf[mu]), &tmat);
       add_su3_matrix_f(&(s->linkf[mu]), &tmat, &(s->C[mu]));
       scalar_mult_su3_matrix_f(&(s->C[mu]), 0.5, &(s->C[mu]));
@@ -132,12 +132,12 @@ void compute_Bmu() {
     // traceCC[mu][nu] = tr[C_mu(x) C_nu(x)] is symmetric in mu <--> nu
     // But store all to simplify SUGRA computation
     // Make sure Tr(C_a * C_b) is purely real
-    for (mu = 0; mu < NUMLINK; mu++) {
-      for (nu = 0; nu < NUMLINK; nu++) {
+    for (mu = XUP; mu < NUMLINK; mu++) {
+      for (nu = XUP; nu < NUMLINK; nu++) {
         mult_su3_nn_f(&(s->C[mu]), &(s->C[nu]), &tmat);
         ctmp = trace_su3_f(&tmat);
         if (fabs(ctmp.imag) > IMAG_TOL) {
-          printf("node%d WARNING: Tr(CC[%d][%d]) = (%.4g, %.4g) at site %d]\n",
+          printf("node%d WARNING: Tr(CC[%d][%d]) = (%.4g, %.4g) at site %d\n",
                  this_node, mu, nu, ctmp.real, ctmp.imag, i);
         }
         s->traceCC[mu][nu] = ctmp.real;

@@ -1,11 +1,7 @@
 // -----------------------------------------------------------------
 // Update the momenta with the determinant force
 #include "susy_includes.h"
-// -----------------------------------------------------------------
 
-
-
-// -----------------------------------------------------------------
 double det_force(Real eps) {
   register int i, dir1, dir2;
   register site *s;

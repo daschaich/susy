@@ -28,27 +28,34 @@ double d_hmom_action() {
 
 // -----------------------------------------------------------------
 // Include tunable coefficient C2 in the d^2 term
-double d_gauge_action() {
+double d_gauge_action(int do_det) {
   register int i;
   register site *s;
-  int index;
+  int index, mu;
   double g_action = 0.0, norm = 0.5 * C2;
-  complex cg_action;
-  su3_matrix_f tmat;
+  complex tc;
+  su3_matrix_f tmat, tmat2;
 
   compute_DmuUmu();
-  FORALLSITES(i, s) {
-    mult_su3_nn_f(&(s->DmuUmu), &(s->DmuUmu), &tmat);
-    cg_action = trace_su3_f(&tmat);
-    g_action += norm * cg_action.real;
-  }
-
   compute_Fmunu();
   FORALLSITES(i, s) {
+    // d^2 term
+    mult_su3_nn_f(&(s->DmuUmu), &(s->DmuUmu), &tmat);
+    scalar_mult_su3_matrix_f(&tmat, norm, &tmat);
+
+    // F^2 term
     for (index = 0; index < NPLAQ; index++) {
-        g_action += 2.0 * realtrace_su3_f(&(s->Fmunu[index]),
-                                          &(s->Fmunu[index]));
+      mult_su3_an_f(&(s->Fmunu[index]), &(s->Fmunu[index]), &tmat2);
+      scalar_mult_add_su3_matrix_f(&tmat, &tmat2, 2.0, &tmat);
     }
+
+    if (do_det == 1)
+      det_project(&tmat, &tmat2);
+    else
+      su3mat_copy_f(&tmat, &tmat2);
+
+    tc = trace_su3_f(&tmat2);
+    g_action += tc.real;
   }
   g_action *= kappa;
   g_doublesum(&g_action);
@@ -161,7 +168,7 @@ double d_det_action() {
 double d_action(Twist_Fermion *src, Twist_Fermion **sol) {
   double g_act, bmass_act, h_act, f_act = 0.0, det_act = 0.0;
   double total;
-  g_act = d_gauge_action();
+  g_act = d_gauge_action(NODET);
   bmass_act = d_bmass_action();
   h_act = d_hmom_action();
   det_act = d_det_action();

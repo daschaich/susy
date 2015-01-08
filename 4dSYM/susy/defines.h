@@ -42,6 +42,10 @@
 
 // Tunable parameter in gauge action
 #define C2 1.0
+
+// Whether or not to project determinant out of given observable
+#define NODET 0
+#define YESDET 1
 // -----------------------------------------------------------------
 
 
