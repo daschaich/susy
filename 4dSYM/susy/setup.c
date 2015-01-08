@@ -170,11 +170,12 @@ int readin(int prompt) {
     IF_OK status += get_i(stdin, prompt, "traj_between_meas",
                           &par_buf.propinterval);
 
-    // lambda, kappa_u1, bmass and fmass
+    // lambda, kappa_u1, bmass, fmass and G
     IF_OK status += get_f(stdin, prompt, "lambda", &par_buf.lambda);
     IF_OK status += get_f(stdin, prompt, "kappa_u1", &par_buf.kappa_u1);
     IF_OK status += get_f(stdin, prompt, "bmass", &par_buf.bmass);
     IF_OK status += get_f(stdin, prompt, "fmass", &par_buf.fmass);
+    IF_OK status += get_f(stdin, prompt, "G", &par_buf.G);
 
 #ifdef STOUT
     // Stout smearing stuff
@@ -257,10 +258,11 @@ int readin(int prompt) {
   kappa_u1 = par_buf.kappa_u1;
   bmass = par_buf.bmass;
   fmass = par_buf.fmass;
+  G = par_buf.G;
   kappa = (Real)NCOL * 0.5 / lambda;
   node0_printf("lambda=%.4g --> kappa=Nc/(2lambda)=%.4g\n",
                lambda, kappa);
-  node0_printf("C2=%.4g\n", C2);
+  node0_printf("C2=%.4g\n", C2);    // Currently hardwired in defines.h
 
 #ifdef BILIN
   nsrc = par_buf.nsrc;

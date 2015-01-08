@@ -16,6 +16,7 @@ lambda 1.0
 kappa_u1 1.0
 bmass 1.0
 fmass 0.0
+G 0.0
 
 Nstout 10
 rho 0.1

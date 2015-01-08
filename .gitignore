@@ -2,8 +2,7 @@
 *.a
 *.o
 *.out
-*.swo
-*.swp
+*.sw[op]
 .lastmake*
 gmon.out
 localmake

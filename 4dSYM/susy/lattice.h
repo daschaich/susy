@@ -103,7 +103,7 @@ EXTERN Real P[NDIMS][NUMLINK];
 EXTERN int plaq_index[NUMLINK][NUMLINK];
 
 EXTERN Real rsqmin, rsqprop;
-EXTERN Real lambda, kappa, bmass, fmass, kappa_u1;
+EXTERN Real lambda, kappa, bmass, fmass, kappa_u1, G;
 EXTERN double g_ssplaq, g_stplaq;
 EXTERN double_complex linktrsum;
 EXTERN u_int32type nersc_checksum;
