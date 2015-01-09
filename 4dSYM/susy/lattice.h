@@ -55,6 +55,7 @@ typedef struct {
 
   // For convenience in calculating action and force
   // May be wasteful of space
+  complex plaqdet[NUMLINK][NUMLINK], Tr_Uinv_psi[NUMLINK];
   su3_matrix_f DmuUmu, Fmunu[NPLAQ];
 #ifdef CORR
   su3_matrix_f B[NUMLINK], C[NUMLINK];
@@ -150,10 +151,11 @@ EXTERN int DbminusPtoP_lookup[NTERMS][NUMLINK];
 EXTERN int F1Q_d1[NTERMS], F1Q_d2[NTERMS];
 EXTERN int F2Q_d1[NTERMS], F2Q_d2[NTERMS];
 EXTERN int FQ_lookup[NTERMS][NUMLINK];
-EXTERN su3_vector *tsite[NUMLINK];    // For DbminusLtoS
+EXTERN su3_vector *tsite[NUMLINK];        // For fermion action
 
 // Persistent site, link and plaq fermions for matrix--vector operation
 // Used in fermion_op
+complex *tr_dest;     // For fermion action
 su3_vector *site_src, *link_src[NUMLINK], *plaq_src[NPLAQ];
 su3_vector *site_dest, *link_dest[NUMLINK], *plaq_dest[NPLAQ];
 su3_vector *link_dest2[NUMLINK], *plaq_dest2[NPLAQ];

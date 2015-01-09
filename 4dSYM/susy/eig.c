@@ -30,7 +30,7 @@ void rand_TFsource(Twist_Fermion *src) {
         src[i].Flink[mu].c[j].imag = gaussian_rand_no(&node_prn);
 #endif
       }
-      for (mu = 0; mu < NPLAQ; mu++) {        // Plaquettefermions
+      for (mu = 0; mu < NPLAQ; mu++) {        // Plaquette fermions
 #ifdef SITERAND
         src[i].Fplaq[mu].c[j].real = gaussian_rand_no(&(s->site_prn));
         src[i].Fplaq[mu].c[j].imag = gaussian_rand_no(&(s->site_prn));

@@ -31,15 +31,32 @@ double d_hmom_action() {
 double d_gauge_action(int do_det) {
   register int i;
   register site *s;
-  int index, mu;
+  int j, index, mu, nu;
   double g_action = 0.0, norm = 0.5 * C2;
   complex tc;
   su3_matrix_f tmat, tmat2;
 
   compute_DmuUmu();
+  if (G > IMAG_TOL)
+    compute_plaqdet();
   compute_Fmunu();
   FORALLSITES(i, s) {
     // d^2 term
+    // Add plaquette determinant contribution to DmuUmu if G is non-zero
+    if (G > IMAG_TOL) {
+      for (mu = XUP; mu < NUMLINK; mu++) {
+        for (nu = XUP; nu < NUMLINK; nu++) {
+          if (mu == nu)
+            continue;
+
+          for (j = 0; j < NCOL; j++) {
+            s->DmuUmu.e[j][j].real += G * (s->plaqdet[mu][nu].real - 1.0);
+            s->DmuUmu.e[j][j].imag += G * s->plaqdet[mu][nu].imag;
+          }
+        }
+      }
+    }
+    // Now square and normalize by C2 / 2
     mult_su3_nn_f(&(s->DmuUmu), &(s->DmuUmu), &tmat);
     scalar_mult_su3_matrix_f(&tmat, norm, &tmat);
 
@@ -66,14 +83,14 @@ double d_gauge_action(int do_det) {
 
 
 // -----------------------------------------------------------------
-// Mass term for U(1) mode -- note factor of kappa
+// Bosonic mass term to regulate flat directions -- note factor of kappa
 double d_bmass_action() {
   register int i;
   register site *s;
   int mu;
   double sum = 0.0, dum;
 
-  for (mu = 0; mu < NUMLINK; mu++) {
+  for (mu = XUP; mu < NUMLINK; mu++) {
     FORALLSITES(i, s) {
       dum = 1.0 / (double)NCOL;
       dum *= realtrace_su3_f(&(s->linkf[mu]), &(s->linkf[mu]));
@@ -83,6 +100,33 @@ double d_bmass_action() {
   }
   g_doublesum(&sum);
   return sum;
+}
+// -----------------------------------------------------------------
+
+
+
+// -----------------------------------------------------------------
+// Separate plaquette determinant contribution to the action
+double d_det_action() {
+  register int i;
+  register site *s;
+  int dir1, dir2;
+  double re, im, det_action = 0.0;
+
+  compute_plaqdet();
+  FORALLSITES(i, s) {
+    for (dir1 = YUP; dir1 < NUMLINK; dir1++) {
+      for (dir2 = XUP; dir2 < dir1; dir2++) {
+        re = s->plaqdet[dir2][dir1].real;
+        im = s->plaqdet[dir2][dir1].imag;
+        det_action += (re - 1.0) * (re - 1.0);
+        det_action += im * im;
+      }
+    }
+  }
+  det_action *= kappa_u1;
+  g_doublesum(&det_action);
+  return det_action;
 }
 // -----------------------------------------------------------------
 
@@ -120,50 +164,6 @@ double d_fermion_action(Twist_Fermion *src, Twist_Fermion **sol) {
 
 
 // -----------------------------------------------------------------
-// Plaquette determinant contribution to the action
-double d_det_action() {
-  register int i, dir1, dir2;
-  register site *s;
-  double det_action = 0.0;
-  complex det;
-  msg_tag *mtag0 = NULL, *mtag1 = NULL;
-  su3_matrix_f tmat;
-
-  for (dir1 = YUP; dir1 < NUMLINK; dir1++) {
-    for (dir2 = XUP; dir2 < dir1; dir2++) {
-      mtag0 = start_gather_site(F_OFFSET(linkf[dir2]), sizeof(su3_matrix_f),
-                                goffset[dir1], EVENANDODD, gen_pt[0]);
-      mtag1 = start_gather_site(F_OFFSET(linkf[dir1]), sizeof(su3_matrix_f),
-                                goffset[dir2], EVENANDODD, gen_pt[1]);
-
-      FORALLSITES(i, s)
-        mult_su3_an_f(&(s->linkf[dir2]), &(s->linkf[dir1]), &(s->tempmat1));
-
-      wait_gather(mtag0);
-      FORALLSITES(i, s) {
-        mult_su3_nn_f(&(s->tempmat1), (su3_matrix_f *)(gen_pt[0][i]),
-                      &(s->staple));
-      }
-      wait_gather(mtag1);
-      FORALLSITES(i, s) {
-        mult_su3_na_f((su3_matrix_f *)(gen_pt[1][i]), &(s->staple), &tmat);
-        det = find_det(&tmat);
-        det_action += (double)((det.real - 1.0) * (det.real - 1.0));
-        det_action += (double)(det.imag * det.imag);
-      }
-      cleanup_gather(mtag0);
-      cleanup_gather(mtag1);
-    }
-  }
-  det_action *= kappa_u1;
-  g_doublesum(&det_action);
-  return det_action;
-}
-// -----------------------------------------------------------------
-
-
-
-// -----------------------------------------------------------------
 // Print out zeros if fermion and determinant actions not included
 double d_action(Twist_Fermion *src, Twist_Fermion **sol) {
   double g_act, bmass_act, h_act, f_act = 0.0, det_act = 0.0;
@@ -171,7 +171,8 @@ double d_action(Twist_Fermion *src, Twist_Fermion **sol) {
   g_act = d_gauge_action(NODET);
   bmass_act = d_bmass_action();
   h_act = d_hmom_action();
-  det_act = d_det_action();
+  if (kappa_u1 > IMAG_TOL)
+    det_act = d_det_action();
 
 #ifndef PUREGAUGE
   f_act = d_fermion_action(src, sol);

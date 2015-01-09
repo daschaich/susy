@@ -60,7 +60,7 @@ void setup_lambda() {
     CMULREAL(Lambda[j].e[k][k], -1.0 * k, Lambda[j].e[k][k]);
   }
 
-  // U(1) generator i * I_N / sqrt(2)
+  // U(1) generator i * I_N / sqrt(N)
   if (DIMF == NCOL * NCOL) {    // Allow SU(N) compilation for now
     i_inv_sqrt = cmplx(0, 1.0 / sqrt(NCOL));
     clear_su3mat_f(&(Lambda[DIMF - 1]));

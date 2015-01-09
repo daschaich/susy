@@ -19,8 +19,10 @@ double gauge_force(Real eps) {
   msg_tag *tag[NUMLINK], *tag0, *tag1;
   su3_matrix_f tmat1, tmat2, tmat3, UdU;
 
-  // Contribution from (D_a U_a)^2 / 2 term
+  // Contribution from d^2 term
   compute_DmuUmu();
+  // TODO: Add plaquette determinant contribution if G is non-zero
+
   tag[0] = start_gather_site(F_OFFSET(DmuUmu), sizeof(su3_matrix_f),
                              goffset[0], EVENANDODD, gen_pt[0]);
   for (mu = 0; mu < NUMLINK; mu++) {
@@ -84,7 +86,7 @@ double gauge_force(Real eps) {
 
   // Only compute U(1) mass term if non-zero -- note factor of kappa
   eb3 = 2.0 * kappa * bmass * bmass / (Real)(NCOL * NCOL);
-  if (eb3 > 1.e-8) {
+  if (eb3 > IMAG_TOL) {
     for (mu = 0; mu < NUMLINK; mu++) {
       FORALLSITES(i, s) {
         mult_su3_an_f(&(s->linkf[mu]), &(s->linkf[mu]), &UdU);
@@ -114,7 +116,7 @@ double gauge_force(Real eps) {
   }
   g_doublesum(&returnit);
 
-  // Add in force from determinant term
+  // Add in force from separate determinant term
   returnit += det_force(eps);
   return (eps * sqrt(returnit) / volume);
 }
@@ -340,6 +342,8 @@ void assemble_fermion_force(Twist_Fermion *sol, Twist_Fermion *psol) {
     }
     cleanup_gather(mtag[mu]);
   }
+
+  // TODO: Add plaquette determinant contribution if G is non-zero
 #endif
 #ifdef QCLOSED
   if (NUMLINK != 5) {

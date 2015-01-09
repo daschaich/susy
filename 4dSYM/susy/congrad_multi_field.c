@@ -173,7 +173,7 @@ int congrad_multi_field(Twist_Fermion *src, Twist_Fermion **psim,
     // Test for convergence
     rsq = rsqnew;
     for (j = 1; j < Norder; j++) {
-      if (converged[j]==0){
+      if (converged[j] == 0) {
         rsqj = rsq * zeta_ip1[j] * zeta_ip1[j];
         if (rsqj <= rsqstop) {
           converged[j] = 1;
@@ -186,7 +186,7 @@ int congrad_multi_field(Twist_Fermion *src, Twist_Fermion **psim,
     }
 #ifdef CG_DEBUG
     if ((N_iter / 10) * 10 == N_iter) {
-      node0_printf("iter %d residue %e\n", N_iter, (double)(rsq));
+      node0_printf("iter %d residue %.4g\n", N_iter, (double)(rsq));
       fflush(stdout);
     }
 #endif
@@ -207,7 +207,7 @@ int congrad_multi_field(Twist_Fermion *src, Twist_Fermion **psim,
 
   // Test inversion
 #ifdef CG_DEBUG
-  for (j = 0; j < Norder; j++){
+  for (j = 0; j < Norder; j++) {
     source_norm = 0;
     FORALLSITES(i, s)
       source_norm += (double)magsq_TF(&(psim[j][i]));

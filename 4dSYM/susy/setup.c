@@ -81,6 +81,7 @@ void make_fields() {
 
   FIELD_ALLOC(site_src, su3_vector);
   FIELD_ALLOC(site_dest, su3_vector);
+  FIELD_ALLOC(tr_dest, complex);
   FIELD_ALLOC_VEC(link_src, su3_vector, NUMLINK);
   FIELD_ALLOC_VEC(link_dest, su3_vector, NUMLINK);
   FIELD_ALLOC_VEC(link_dest2, su3_vector, NUMLINK);

@@ -41,7 +41,7 @@ Real A4map_slice(x_in, y_in, z_in) {
 void hvy_pot(int do_det) {
   register int i;
   register site *s;
-  int t_dist, x_dist, y_dist, z_dist, y_start, z_start, mu;
+  int t_dist, x_dist, y_dist, z_dist, y_start, z_start;
   int MAX_pts = 8 * MAX_X * MAX_X;            // Should be plenty
   int count[MAX_pts], this_r, total_r = 0;
   Real MAX_r = 100.0 * MAX_X, tr;
