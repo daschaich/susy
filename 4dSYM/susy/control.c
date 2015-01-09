@@ -51,7 +51,7 @@ int main(int argc, char *argv[]) {
   // Check: compute initial plaquette and bosonic action
   d_plaquette(&dssplaq, &dstplaq);
   node0_printf("START %.8g %.8g %.8g ", dssplaq, dstplaq, dssplaq + dstplaq);
-  dssplaq = d_gauge_action();
+  dssplaq = d_gauge_action(NODET);
   node0_printf("%.8g\n", dssplaq / (double)volume);
   d_link();
 
@@ -83,7 +83,7 @@ int main(int argc, char *argv[]) {
                  plp.real, plp.imag, s_iters, dssplaq, dstplaq);
 
     // Bosonic action (printed twice by request)
-    dssplaq = d_gauge_action();
+    dssplaq = d_gauge_action(NODET);
     node0_printf("%.8g\n", dssplaq / (double)volume);
     node0_printf("BACTION %.8g\n", dssplaq / (double)volume);
 
@@ -191,7 +191,8 @@ int main(int argc, char *argv[]) {
         node0_printf("and NO_GAUGE_FIX supported\n");
         terminate(1);
       }
-      hvy_pot();
+      hvy_pot(NODET);
+      hvy_pot(YESDET);
 
       // Save and restore links overwritten by polar projection
       // Don't use mom[TUP], which is already storing the un-fixed links
@@ -226,7 +227,7 @@ int main(int argc, char *argv[]) {
   d_plaquette(&dssplaq, &dstplaq);
   node0_printf("STOP %.8g %.8g %.8g ",
                dssplaq, dstplaq, dssplaq + dstplaq);
-  dssplaq = d_gauge_action();
+  dssplaq = d_gauge_action(NODET);
   node0_printf("%.8g\n", dssplaq / (double)volume);
 
   node0_printf("Average CG iters for steps: %.4g\n",
