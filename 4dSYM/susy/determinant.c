@@ -1,5 +1,5 @@
 // -----------------------------------------------------------------
-// Helper functions for NCOLxNCOL determinants, adjugates and inverses
+// Functions for NCOLxNCOL determinants, adjugates and inverses
 #include "susy_includes.h"
 // -----------------------------------------------------------------
 
@@ -289,5 +289,30 @@ void measure_det() {
   CDIVREAL(tot_det_link_sq, norm, tot_det_link_sq);
   node0_printf("DET %.6g %.6g %.6g %.6g\n", tot_det_link.real,
                tot_det_link.imag, tot_det_link_sq.real, tot_det_link_sq.imag);
+}
+// -----------------------------------------------------------------
+
+
+
+// -----------------------------------------------------------------
+// Divide the determinant out of the matrix in
+void det_project(su3_matrix_f *in, su3_matrix_f *out) {
+  Real frac = -1.0 / (Real)NCOL;
+  complex tc1, tc2;
+
+  tc1 = find_det(in);
+  tc2 = clog(&tc1);
+  CMULREAL(tc2, frac, tc1);
+  tc2 = cexp(&tc1);
+  c_scalar_mult_su3mat_f(in, &tc2, out);
+
+#ifdef DEBUG_CHECK
+  // Sanity check
+  tc1 = find_det(out);
+  if (fabs(tc1.imag) > IMAG_TOL || fabs(1.0 - tc1.real) > IMAG_TOL) {
+    printf("node%d WARNING: det = (%.4g, %.4g) after projection...\n",
+        this_node, tc1.real, tc1.imag);
+  }
+#endif
 }
 // -----------------------------------------------------------------

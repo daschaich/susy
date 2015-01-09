@@ -1,38 +1,7 @@
 // -----------------------------------------------------------------
-// Divide out determinant to project links from gl(N, C) to sl(N, C)
-// Project to polar representation to remove scalar contributions
-// Polar projection now uses LAPACK
+// Polar projection now uses LAPACK to remove scalar contributions
 #include "susy_includes.h"
-// -----------------------------------------------------------------
 
-
-
-// -----------------------------------------------------------------
-// Divide the determinant out of the matrix in
-void det_project(su3_matrix_f *in, su3_matrix_f *out) {
-  Real frac = -1.0 / (Real)NCOL;
-  complex tc1, tc2;
-
-  tc1 = find_det(in);
-  tc2 = clog(&tc1);
-  CMULREAL(tc2, frac, tc1);
-  tc2 = cexp(&tc1);
-  c_scalar_mult_su3mat_f(in, &tc2, out);
-
-#ifdef DEBUG_CHECK
-  // Sanity check
-  tc1 = find_det(out);
-  if (fabs(tc1.imag) > IMAG_TOL || fabs(1.0 - tc1.real) > IMAG_TOL) {
-    printf("node%d WARNING: det = (%.4g, %.4g) after projection...\n",
-        this_node, tc1.real, tc1.imag);
-  }
-#endif
-}
-// -----------------------------------------------------------------
-
-
-
-// -----------------------------------------------------------------
 // Given matrix in, calculate the unitary polar decomposition element
 //   in = out.P --> out = in.[1 / P] and P = sqrt[in^dag.in]
 // We diagonalize PSq = in^dag.in using LAPACK,
