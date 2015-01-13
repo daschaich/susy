@@ -114,8 +114,8 @@ void matvec(complex *in, complex *out) {
   }
 #endif
 
-  fermion_op(src, res, 1);    // D
-//  fermion_op(src, res, -1);    // Ddag
+  fermion_op(src, res, PLUS);    // D
+//  fermion_op(src, res, MINUS);    // Ddag
   Nmatvecs++;
 
   // Copy the resulting Twist_Fermion res back to complex vector y

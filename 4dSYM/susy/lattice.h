@@ -46,11 +46,6 @@ typedef struct {
   // Momentum matrices in each direction are just U(N) matrices
   // as opposed to anti-hermitian matrices
   su3_matrix_f mom[NUMLINK];
-
-  // Used in assemble_fermion_force
-  su3_vector site_sol, link_sol[NUMLINK], plaq_sol[NPLAQ];
-  su3_vector site_psol, link_psol[NUMLINK], plaq_psol[NPLAQ];
-
   su3_matrix_f f_U[NUMLINK];        // Force matrices
 
 #ifdef CORR
@@ -146,20 +141,20 @@ EXTERN int F2Q_d1[NTERMS], F2Q_d2[NTERMS];
 EXTERN int FQ_lookup[NTERMS][NUMLINK];
 
 // Persistent site, link and plaq fermions for matrix--vector operation
-// Used in fermion_op
-complex *tr_dest;     // For fermion action
-su3_vector *site_src, *link_src[NUMLINK], *plaq_src[NPLAQ];
-su3_vector *site_dest, *link_dest[NUMLINK], *plaq_dest[NPLAQ];
-su3_vector *link_dest2[NUMLINK], *plaq_dest2[NPLAQ];
+// Used in fermion_op and assemble_fermion_force
+EXTERN su3_vector *site_src, *link_src[NUMLINK], *plaq_src[NPLAQ];
+EXTERN su3_vector *site_dest, *link_dest[NUMLINK], *plaq_dest[NPLAQ];
+EXTERN su3_vector *link_dest2[NUMLINK], *plaq_dest2[NPLAQ];
 
 // For convenience in calculating action and force
 // May be wasteful of space
-EXTERN complex *plaqdet[NUMLINK][NUMLINK], *Tr_Uinv[NUMLINK];
-EXTERN su3_vector *tsite[NUMLINK];
+EXTERN complex *tr_dest, *Tr_Uinv[NUMLINK], *plaqdet[NUMLINK][NUMLINK];
 EXTERN su3_matrix_f *DmuUmu, *Fmunu[NPLAQ], *Ddet[NUMLINK][NUMLINK];
 
-// Temporary matrices
+// Temporary vectors, matrices and Twist_Fermion
+EXTERN su3_vector *tempvec[NUMLINK];
 EXTERN su3_matrix_f *tempmat1, *tempmat2, *staple;
+EXTERN Twist_Fermion *tempTF;
 
 EXTERN gauge_file *startlat_p;
 EXTERN gauge_file *savelat_p;
@@ -193,6 +188,7 @@ EXTERN anti_hermitmat *Q[NUMLINK];    // To be exponentiated
 // Eigenvalue stuff
 EXTERN int Nvec;
 EXTERN double *eigVal;
+EXTERN Twist_Fermion *src, *res;    // For av_ov matvec
 EXTERN Twist_Fermion **eigVec;
 EXTERN Real eig_tol;          // Tolerance for the eigenvalue computation
 EXTERN int maxIter;           // Maximum iterations

@@ -51,7 +51,6 @@ void rand_TFsource(Twist_Fermion *src) {
 void av_ov (void *x, void *y, int *Nvec, primme_params *primme) {
   int i, j, mu, iter, ivec, Ndat = 16 * DIMF;
   Complex_Z *xx;
-  Twist_Fermion src[sites_on_node], res[sites_on_node];
 
   for (ivec = 0; ivec < *Nvec; ivec++) {
     // Copy double precision complex vector x

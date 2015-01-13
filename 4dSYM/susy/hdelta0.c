@@ -7,18 +7,17 @@
 
 // -----------------------------------------------------------------
 // dest = (D^2 + fmass^2).src
+// Use tempTF for temporary storage
 void hdelta0_field(Twist_Fermion *src, Twist_Fermion *dest) {
   register int i;
   register site *s;
   Real fmass2 = fmass * fmass;
-  Twist_Fermion *tmpTF = malloc(sites_on_node * sizeof(*tmpTF));
 
-  fermion_op(src, tmpTF, PLUS);
-  fermion_op(tmpTF, dest, MINUS);
-  if (fmass2 > 1e-6) {
+  fermion_op(src, tempTF, PLUS);
+  fermion_op(tempTF, dest, MINUS);
+  if (fmass2 > IMAG_TOL) {
     FORALLSITES(i, s)
       scalar_mult_add_TF(&(dest[i]), &(src[i]), fmass2, &(dest[i]));
   }
-  free(tmpTF);
 }
 // -----------------------------------------------------------------

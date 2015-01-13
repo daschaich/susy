@@ -325,7 +325,7 @@ void fermion_op(Twist_Fermion *src, Twist_Fermion *dest, int sign) {
     FORALLSITES(i, s) {
       for (mu = 0; mu < NPLAQ; mu++)
         dest[i].Fplaq[mu] = plaq_dest[mu][i];
-      for (mu = 0; mu < NUMLINK; mu++)
+      for (mu = XUP; mu < NUMLINK; mu++)
         dest[i].Flink[mu] = link_dest[mu][i];
 
       dest[i].Fsite = site_dest[i];
@@ -336,7 +336,7 @@ void fermion_op(Twist_Fermion *src, Twist_Fermion *dest, int sign) {
       for (j = 0; j < DIMF; j++) {
         for (mu = 0; mu < NPLAQ; mu++)
           CNEGATE(plaq_dest[mu][i].c[j], tf.Fplaq[mu].c[j]);
-        for (mu = 0; mu < NUMLINK; mu++)
+        for (mu = XUP; mu < NUMLINK; mu++)
           CNEGATE(link_dest[mu][i].c[j], tf.Flink[mu].c[j]);
         CNEGATE(site_dest[i].c[j], tf.Fsite.c[j]);
       }
@@ -405,7 +405,7 @@ void Dplus(su3_vector *src[NUMLINK], su3_vector *dest[NPLAQ]) {
 
 
 // -----------------------------------------------------------------
-// Use tsite[0] for temporary storage
+// Use tempvec[0] for temporary storage
 void Dminus(su3_vector *src[NPLAQ], su3_vector *dest[NUMLINK]) {
   register int i;
   register site *s;
@@ -429,12 +429,12 @@ void Dminus(su3_vector *src[NPLAQ], su3_vector *dest[NUMLINK]) {
       FORALLSITES(i, s) {
         if (mu > nu) {    // src is anti-symmetric under mu <--> nu
           scalar_mult_su3_vector(&(src[index][i]), -1.0, &tvec);
-          mult_su3_vec_mat(&tvec, &(s->link[mu]), &(tsite[0][i]));
+          mult_su3_vec_mat(&tvec, &(s->link[mu]), &(tempvec[0][i]));
         }
         else
-          mult_su3_vec_mat(&(src[index][i]), &(s->link[mu]), &(tsite[0][i]));
+          mult_su3_vec_mat(&(src[index][i]), &(s->link[mu]), &(tempvec[0][i]));
       }
-      mtag1 = start_gather_field(tsite[0], sizeof(su3_vector),
+      mtag1 = start_gather_field(tempvec[0], sizeof(su3_vector),
                                  goffset[mu] + 1, EVENANDODD, gen_pt[1]);
 
       wait_gather(mtag0);
@@ -700,7 +700,7 @@ void DbplusStoL(su3_vector *src, su3_vector *dest[NUMLINK]) {
 //   -0.5G sum_{a, b} [det P_{ab} * Tr(U_b^{-1} Lambda[j])] Tr[eta]
 // and similarly for dest[a][j] at x + b
 // Negative sign is due to anti-commuting eta past psi
-// Use tsite and Tr_Uinv[0] for temporary storage
+// Use tempvec and Tr_Uinv[0] for temporary storage
 void detStoL(su3_vector *src, su3_vector *dest[NUMLINK]) {
   register int i;
   register site *s;
@@ -709,7 +709,7 @@ void detStoL(su3_vector *src, su3_vector *dest[NUMLINK]) {
   su3_matrix_f tmat1, tmat2;
   msg_tag *mtag;
 
-  // Save Tr[U_a^{-1} Lambda[j]] in tsite[a]
+  // Save Tr[U_a^{-1} Lambda[j]] in tempvec[a]
   for (a = XUP; a < NUMLINK; a++) {
     FORALLSITES(i, s) {
       clearvec(&(dest[a][i]));   // Overwrite
@@ -717,7 +717,7 @@ void detStoL(su3_vector *src, su3_vector *dest[NUMLINK]) {
       invert(&(s->linkf[a]), &tmat1);
       for (j = 0; j < DIMF; j++) {
         mult_su3_nn_f(&tmat1, &(Lambda[j]), &tmat2);
-        tsite[a][i].c[j] = trace_su3_f(&tmat2);
+        tempvec[a][i].c[j] = trace_su3_f(&tmat2);
       }
     }
   }
@@ -736,7 +736,7 @@ void detStoL(su3_vector *src, su3_vector *dest[NUMLINK]) {
       // Compute on-site contribution to dest[b] while gather runs
       FORALLSITES(i, s) {
         CMULREAL(Tr_Uinv[0][i], s->bc1[b], tc1);
-        c_scalar_mult_add_su3vec(&(dest[b][i]), &tc1, &(tsite[b][i]));
+        c_scalar_mult_add_su3vec(&(dest[b][i]), &tc1, &(tempvec[b][i]));
       }
 
       // Now compute contribution to dest[a] at x + b
@@ -744,7 +744,7 @@ void detStoL(su3_vector *src, su3_vector *dest[NUMLINK]) {
       FORALLSITES(i, s) {
         tc1 = *((complex *)(gen_pt[0][i]));
         CMULREAL(tc1, s->bc1[a], tc2);
-        c_scalar_mult_add_su3vec(&(dest[a][i]), &tc2, &(tsite[a][i]));
+        c_scalar_mult_add_su3vec(&(dest[a][i]), &tc2, &(tempvec[a][i]));
       }
       cleanup_gather(mtag);
     }
@@ -757,6 +757,7 @@ void detStoL(su3_vector *src, su3_vector *dest[NUMLINK]) {
 // -----------------------------------------------------------------
 // Term in action connecting the link fermions to a site fermion
 // Given src psi_a, dest is Dbar_a psi_a (Eq. 63 in the arXiv:1108.1503)
+// Use tempvec for temporary storage
 void DbminusLtoS(su3_vector *src[NUMLINK], su3_vector *dest) {
   register int i;
   register site *s;
@@ -766,18 +767,18 @@ void DbminusLtoS(su3_vector *src[NUMLINK], su3_vector *dest) {
 
   FORALLSITES(i, s) {         // Set up first gather
     clearvec(&(dest[i]));     // Overwrite
-    mult_adj_su3_mat_vec(&(s->link[0]), &(src[0][i]), &(tsite[0][i]));
+    mult_adj_su3_mat_vec(&(s->link[0]), &(src[0][i]), &(tempvec[0][i]));
   }
-  tag[0] = start_gather_field(tsite[0], sizeof(su3_vector),
+  tag[0] = start_gather_field(tempvec[0], sizeof(su3_vector),
                               goffset[0] + 1, EVENANDODD, gen_pt[0]);
 
   for (mu = 0; mu < NUMLINK; mu++) {
     if (mu < NUMLINK - 1) {   // Start next gather
       FORALLSITES(i, s)
         mult_adj_su3_mat_vec(&(s->link[mu + 1]), &(src[mu + 1][i]),
-                             &(tsite[mu + 1][i]));
+                             &(tempvec[mu + 1][i]));
 
-      tag[mu + 1] = start_gather_field(tsite[mu + 1], sizeof(su3_vector),
+      tag[mu + 1] = start_gather_field(tempvec[mu + 1], sizeof(su3_vector),
                                        goffset[mu + 1] + 1, EVENANDODD,
                                        gen_pt[mu + 1]);
     }

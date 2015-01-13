@@ -190,6 +190,8 @@ double gauge_force(Real eps) {
 
 // -----------------------------------------------------------------
 // Create the fermion force
+// Use tempmat1 for temporary storage
+// sol and psol are copied into persistent su3_vectors as described below
 void assemble_fermion_force(Twist_Fermion *sol, Twist_Fermion *psol) {
   register int i;
   register site *s;
@@ -197,30 +199,43 @@ void assemble_fermion_force(Twist_Fermion *sol, Twist_Fermion *psol) {
   int mu, nu, a, b, c, d, e, l, m, gather, next, flip = 0;
   int index, i_ab, i_de, j;
   Real permm, BC;
-  complex cterm;
+  complex tc;
   msg_tag *mtag[NUMLINK], *tag0[2], *tag1[2], *tag2[2], *tag3[2];
   msg_tag *mtag0 = NULL, *mtag1 = NULL;
   su3_vector tvec, *vec, *vec0, *vec1, *vec2, *vec3;
-  su3_matrix_f tmpmat, tmpmat2;
-  su3_matrix_f *tempmat = malloc(sites_on_node * sizeof(*tempmat));
+  su3_matrix_f tmat, tmat2, *mat;
 
-  // Copy Twist_Fermions into persistent site, link and plaquette fermions
+  // For gathering it is convenient to copy the input Twist_Fermions
+  // into persistent site, link and plaquette su3_vectors
+  // We can use "src" and "dest" vectors for this storage,
+  // though we want to call them "sol" and "psol" for clarity
+  su3_vector *site_sol = site_src, *site_psol = site_dest;
+  su3_vector *link_sol[NUMLINK], *link_psol[NUMLINK];
+  su3_vector *plaq_sol[NPLAQ], *plaq_psol[NPLAQ];
+  for (mu = XUP; mu < NUMLINK; mu++) {
+    link_sol[mu] = link_src[mu];
+    link_psol[mu] = link_dest[mu];
+  }
+  for (mu = 0; mu < NPLAQ; mu++) {
+    plaq_sol[mu] = plaq_src[mu];
+    plaq_psol[mu] = plaq_dest[mu];
+  }
   FORALLSITES(i, s) {
+    su3vec_copy(&(sol[i].Fsite), &(site_sol[i]));
+    su3vec_copy(&(psol[i].Fsite), &(site_psol[i]));
+    for (mu = XUP; mu < NUMLINK; mu++) {
+      su3vec_copy(&(sol[i].Flink[mu]), &(link_sol[mu][i]));
+      su3vec_copy(&(psol[i].Flink[mu]), &(link_psol[mu][i]));
+    }
     for (mu = 0; mu < NPLAQ; mu++) {
-      su3vec_copy(&(sol[i].Fplaq[mu]), &(s->plaq_sol[mu]));
-      su3vec_copy(&(psol[i].Fplaq[mu]), &(s->plaq_psol[mu]));
+      su3vec_copy(&(sol[i].Fplaq[mu]), &(plaq_sol[mu][i]));
+      su3vec_copy(&(psol[i].Fplaq[mu]), &(plaq_psol[mu][i]));
     }
-    for (mu = 0; mu < NUMLINK; mu++) {
-      su3vec_copy(&(sol[i].Flink[mu]), &(s->link_sol[mu]));
-      su3vec_copy(&(psol[i].Flink[mu]), &(s->link_psol[mu]));
-    }
-    su3vec_copy(&(sol[i].Fsite), &(s->site_sol));
-    su3vec_copy(&(psol[i].Fsite), &(s->site_psol));
   }
 
   // Clear the force collectors
-  for (mu = 0; mu < NUMLINK; mu++) {
-    FORALLSITES(i, s)
+  FORALLSITES(i, s) {
+    for (mu = XUP; mu < NUMLINK; mu++)
       clear_su3mat_f(&(s->f_U[mu]));
   }
 
@@ -234,50 +249,50 @@ void assemble_fermion_force(Twist_Fermion *sol, Twist_Fermion *psol) {
         continue;
 
       index = plaq_index[mu][nu];
-      mtag0 = start_gather_site(F_OFFSET(link_sol[nu]), sizeof(su3_vector),
-                                goffset[mu], EVENANDODD, gen_pt[0]);
+      mtag0 = start_gather_field(link_sol[nu], sizeof(su3_vector),
+                                 goffset[mu], EVENANDODD, gen_pt[0]);
       wait_gather(mtag0);
       FORALLSITES(i, s) {
         vec = (su3_vector *)(gen_pt[0][i]);
         if (mu > nu) {    // plaq_psol is anti-symmetric under mu <--> nu
-          scalar_mult_su3_vector(&(s->plaq_psol[index]), -1.0, &tvec);
+          scalar_mult_su3_vector(&(plaq_psol[index][i]), -1.0, &tvec);
         }                 // Suppress compiler error
         else
-          su3vec_copy(&(s->plaq_psol[index]), &tvec);
+          su3vec_copy(&(plaq_psol[index][i]), &tvec);
         for (a = 0; a < DIMF; a++) {
           for (b = 0; b < DIMF; b++) {
-            CMULJ_(tvec.c[a], vec->c[b], cterm);
-            CNEGATE(cterm, cterm);
-            CMULREAL(cterm, s->bc1[mu], cterm);
+            CMULJ_(tvec.c[a], vec->c[b], tc);
+            CNEGATE(tc, tc);
+            CMULREAL(tc, s->bc1[mu], tc);
             c_scalar_mult_add_su3mat_f(&(s->f_U[mu]), &(Lambda_prod[b][a]),
-                                       &cterm, &(s->f_U[mu]));
+                                       &tc, &(s->f_U[mu]));
           }
         }
       }
       cleanup_gather(mtag0);
 
       FORALLSITES(i, s) {
-        clear_su3mat_f(&(tempmat[i]));
+        clear_su3mat_f(&(tempmat1[i]));
         if (mu > nu) {    // plaq_psol is anti-symmetric under mu <--> nu
-          scalar_mult_su3_vector(&(s->plaq_psol[index]), -1.0, &tvec);
+          scalar_mult_su3_vector(&(plaq_psol[index][i]), -1.0, &tvec);
         }                 // Suppress compiler error
         else
-          su3vec_copy(&(s->plaq_psol[index]), &tvec);
+          su3vec_copy(&(plaq_psol[index][i]), &tvec);
         for (a = 0; a < DIMF; a++) {
           for (b = 0; b < DIMF; b++) {
-            CMULJ_(tvec.c[a], (s->link_sol[nu]).c[b], cterm);
-            c_scalar_mult_add_su3mat_f(&(tempmat[i]), &(Lambda_prod[a][b]),
-                                       &cterm, &(tempmat[i]));
+            CMULJ_(tvec.c[a], (link_sol[nu][i]).c[b], tc);
+            c_scalar_mult_add_su3mat_f(&(tempmat1[i]), &(Lambda_prod[a][b]),
+                                       &tc, &(tempmat1[i]));
           }
         }
       }
-      mtag1 = start_gather_field(tempmat, sizeof(su3_matrix_f),
+      mtag1 = start_gather_field(tempmat1, sizeof(su3_matrix_f),
                                  goffset[nu] + 1, EVENANDODD, gen_pt[1]);
       wait_gather(mtag1);
-      FORALLSITES(i, s)
-        add_su3_matrix_f(&(s->f_U[mu]), (su3_matrix_f *)(gen_pt[1][i]),
-                         &(s->f_U[mu]));
-
+      FORALLSITES(i, s) {
+        mat = (su3_matrix_f *)(gen_pt[1][i]);
+        add_su3_matrix_f(&(s->f_U[mu]), mat, &(s->f_U[mu]));
+      }
       cleanup_gather(mtag1);
     }
   }
@@ -289,48 +304,48 @@ void assemble_fermion_force(Twist_Fermion *sol, Twist_Fermion *psol) {
         continue;
 
       index = plaq_index[mu][nu];
-      mtag0 = start_gather_site(F_OFFSET(link_psol[nu]), sizeof(su3_vector),
-                                goffset[mu], EVENANDODD, gen_pt[0]);
+      mtag0 = start_gather_field(link_psol[nu], sizeof(su3_vector),
+                                 goffset[mu], EVENANDODD, gen_pt[0]);
 
       FORALLSITES(i, s) {
-        clear_su3mat_f(&(tempmat[i]));
+        clear_su3mat_f(&(tempmat1[i]));
         if (mu > nu) {    // plaq_sol is anti-symmetric under mu <--> nu
-          scalar_mult_su3_vector(&(s->plaq_sol[index]), -1.0, &tvec);
+          scalar_mult_su3_vector(&(plaq_sol[index][i]), -1.0, &tvec);
         }                 // Suppress compiler error
         else
-          su3vec_copy(&(s->plaq_sol[index]), &tvec);
+          su3vec_copy(&(plaq_sol[index][i]), &tvec);
         for (a = 0; a < DIMF; a++) {
           for (b = 0; b < DIMF; b++) {
-            CMULJ_((s->link_psol[nu]).c[a], tvec.c[b], cterm);
-            c_scalar_mult_add_su3mat_f(&(tempmat[i]), &(Lambda_prod[b][a]),
-                                       &cterm, &(tempmat[i]));
+            CMULJ_((link_psol[nu][i]).c[a], tvec.c[b], tc);
+            c_scalar_mult_add_su3mat_f(&(tempmat1[i]), &(Lambda_prod[b][a]),
+                                       &tc, &(tempmat1[i]));
           }
         }
       }
-      mtag1 = start_gather_field(tempmat, sizeof(su3_matrix_f),
+      mtag1 = start_gather_field(tempmat1, sizeof(su3_matrix_f),
                                  goffset[nu] + 1, EVENANDODD, gen_pt[1]);
 
       wait_gather(mtag1);
-      FORALLSITES(i, s)
-        sub_su3_matrix_f(&(s->f_U[mu]), (su3_matrix_f *)(gen_pt[1][i]),
-                         &(s->f_U[mu]));
-
+      FORALLSITES(i, s) {
+        mat = (su3_matrix_f *)(gen_pt[1][i]);
+        sub_su3_matrix_f(&(s->f_U[mu]), mat, &(s->f_U[mu]));
+      }
       cleanup_gather(mtag1);
 
       wait_gather(mtag0);
       FORALLSITES(i, s) {
         vec = (su3_vector *)(gen_pt[0][i]);
         if (mu > nu) {    // plaq_sol is anti-symmetric under mu <--> nu
-          scalar_mult_su3_vector(&(s->plaq_sol[index]), -1.0, &tvec);
+          scalar_mult_su3_vector(&(plaq_sol[index][i]), -1.0, &tvec);
         }                 // Suppress compiler error
         else
-          su3vec_copy(&(s->plaq_sol[index]), &tvec);
+          su3vec_copy(&(plaq_sol[index][i]), &tvec);
         for (a = 0; a < DIMF; a++) {
           for (b = 0; b < DIMF; b++) {
-            CMULJ_(vec->c[a], tvec.c[b], cterm);
-            CMULREAL(cterm, s->bc1[mu], cterm);
+            CMULJ_(vec->c[a], tvec.c[b], tc);
+            CMULREAL(tc, s->bc1[mu], tc);
             c_scalar_mult_add_su3mat_f(&(s->f_U[mu]), &(Lambda_prod[a][b]),
-                                       &cterm, &(s->f_U[mu]));
+                                       &tc, &(s->f_U[mu]));
           }
         }
       }
@@ -340,69 +355,59 @@ void assemble_fermion_force(Twist_Fermion *sol, Twist_Fermion *psol) {
 #endif
 #ifdef SV
   // 3rd term, DUb on psi_mu Db_mu(U) eta
-  mtag[0] = start_gather_site(F_OFFSET(site_psol), sizeof(su3_vector),
-                              goffset[0], EVENANDODD, gen_pt[0]);
+  mtag[0] = start_gather_field(site_psol, sizeof(su3_vector),
+                               goffset[0], EVENANDODD, gen_pt[0]);
   for (mu = XUP; mu < NUMLINK; mu++) {
-    if (mu < NUMLINK - 1)
-      mtag[mu + 1] = start_gather_site(F_OFFSET(site_psol),
-                           sizeof(su3_vector), goffset[mu + 1],
-                           EVENANDODD, gen_pt[mu + 1]);
-
+    if (mu < NUMLINK - 1) {
+      mtag[mu + 1] = start_gather_field(site_psol, sizeof(su3_vector),
+                                        goffset[mu + 1], EVENANDODD,
+                                        gen_pt[mu + 1]);
+    }
     wait_gather(mtag[mu]);
     FORALLSITES(i, s) {
-      clear_su3mat_f(&tmpmat);
+      clear_su3mat_f(&tmat);
       vec = (su3_vector *)(gen_pt[mu][i]);
       for (a = 0; a < DIMF; a++) {
         for (b = 0; b < DIMF; b++) {
-          CMULJ_((s->site_psol).c[a],
-                 (s->link_sol[mu]).c[b], cterm);
-          CNEGATE(cterm, cterm);
-          c_scalar_mult_add_su3mat_f(&tmpmat, &(Lambda_prod[a][b]),
-                                     &cterm, &tmpmat);
-
-          CMULJ_((vec->c[a]), (s->link_sol[mu]).c[b], cterm);
-          CMULREAL(cterm, s->bc1[mu], cterm);
-          c_scalar_mult_add_su3mat_f(&tmpmat, &(Lambda_prod[b][a]),
-                                     &cterm, &tmpmat);
+          CMULJ_((site_psol[i]).c[a], (link_sol[mu][i]).c[b], tc);
+          CNEGATE(tc, tc);
+          c_scalar_mult_add_su3mat_f(&tmat, &(Lambda_prod[a][b]), &tc, &tmat);
+          CMULJ_((vec->c[a]), (link_sol[mu][i]).c[b], tc);
+          CMULREAL(tc, s->bc1[mu], tc);
+          c_scalar_mult_add_su3mat_f(&tmat, &(Lambda_prod[b][a]), &tc, &tmat);
         }
       }
-      su3_adjoint_f(&tmpmat, &tmpmat2);
-      scalar_mult_add_su3_matrix_f(&(s->f_U[mu]), &tmpmat2, 0.5,
-                                   &(s->f_U[mu]));
+      su3_adjoint_f(&tmat, &tmat2);
+      scalar_mult_add_su3_matrix_f(&(s->f_U[mu]), &tmat2, 0.5, &(s->f_U[mu]));
     }
     cleanup_gather(mtag[mu]);
   }
 
   // 4th term
-  mtag[0] = start_gather_site(F_OFFSET(site_sol), sizeof(su3_vector),
-                              goffset[0], EVENANDODD, gen_pt[0]);
+  mtag[0] = start_gather_field(site_sol, sizeof(su3_vector),
+                               goffset[0], EVENANDODD, gen_pt[0]);
   for (mu = XUP; mu < NUMLINK; mu++) {
-    if (mu < NUMLINK - 1)
-      mtag[mu + 1] = start_gather_site(F_OFFSET(site_sol),
-                           sizeof(su3_vector), goffset[mu + 1],
-                           EVENANDODD, gen_pt[mu + 1]);
-
+    if (mu < NUMLINK - 1) {
+      mtag[mu + 1] = start_gather_field(site_sol, sizeof(su3_vector),
+                                        goffset[mu + 1], EVENANDODD,
+                                        gen_pt[mu + 1]);
+    }
     wait_gather(mtag[mu]);
     FORALLSITES(i, s) {
-      clear_su3mat_f(&tmpmat);
+      clear_su3mat_f(&tmat);
       vec = (su3_vector *)(gen_pt[mu][i]);
       for (a = 0; a < DIMF; a++) {
         for (b = 0; b < DIMF; b++) {
-          CMULJ_((s->link_psol[mu]).c[a], vec->c[b], cterm);
-          CMULREAL(cterm, s->bc1[mu], cterm);
-          CNEGATE(cterm, cterm);
-          c_scalar_mult_add_su3mat_f(&tmpmat, &(Lambda_prod[a][b]),
-                                     &cterm, &tmpmat);
-
-          CMULJ_((s->link_psol[mu]).c[a],
-                 (s->site_sol).c[b], cterm);
-          c_scalar_mult_add_su3mat_f(&tmpmat, &(Lambda_prod[b][a]),
-                                     &cterm, &tmpmat);
+          CMULJ_((link_psol[mu][i]).c[a], vec->c[b], tc);
+          CMULREAL(tc, s->bc1[mu], tc);
+          CNEGATE(tc, tc);
+          c_scalar_mult_add_su3mat_f(&tmat, &(Lambda_prod[a][b]), &tc, &tmat);
+          CMULJ_((link_psol[mu][i]).c[a], (site_sol[i]).c[b], tc);
+          c_scalar_mult_add_su3mat_f(&tmat, &(Lambda_prod[b][a]), &tc, &tmat);
         }
       }
-      su3_adjoint_f(&tmpmat, &tmpmat2);
-      scalar_mult_add_su3_matrix_f(&(s->f_U[mu]), &tmpmat2, 0.5,
-                                   &(s->f_U[mu]));
+      su3_adjoint_f(&tmat, &tmat2);
+      scalar_mult_add_su3_matrix_f(&(s->f_U[mu]), &tmat2, 0.5, &(s->f_U[mu]));
     }
     cleanup_gather(mtag[mu]);
   }
@@ -431,14 +436,14 @@ void assemble_fermion_force(Twist_Fermion *sol, Twist_Fermion *psol) {
   i_ab = plaq_index[a][b];
   i_de = plaq_index[d][e];
 
-  tag0[0] = start_gather_site(F_OFFSET(plaq_psol[i_de]), sizeof(su3_vector),
-                              F1Q_d2[0], EVENANDODD, local_pt[0][0]);
-  tag1[0] = start_gather_site(F_OFFSET(plaq_sol[i_ab]), sizeof(su3_vector),
-                              goffset[c], EVENANDODD, local_pt[0][1]);
-  tag2[0] = start_gather_site(F_OFFSET(plaq_psol[i_de]), sizeof(su3_vector),
-                              goffset[c], EVENANDODD, local_pt[0][2]);
-  tag3[0] = start_gather_site(F_OFFSET(plaq_sol[i_ab]), sizeof(su3_vector),
-                              F1Q_d1[0], EVENANDODD, local_pt[0][3]);
+  tag0[0] = start_gather_field(plaq_psol[i_de], sizeof(su3_vector),
+                               F1Q_d2[0], EVENANDODD, local_pt[0][0]);
+  tag1[0] = start_gather_field(plaq_sol[i_ab], sizeof(su3_vector),
+                               goffset[c], EVENANDODD, local_pt[0][1]);
+  tag2[0] = start_gather_field(plaq_psol[i_de], sizeof(su3_vector),
+                               goffset[c], EVENANDODD, local_pt[0][2]);
+  tag3[0] = start_gather_field(plaq_sol[i_ab], sizeof(su3_vector),
+                               F1Q_d1[0], EVENANDODD, local_pt[0][3]);
 
   // Loop over lookup table
   for (j = 0; j < NTERMS; j++) {
@@ -453,18 +458,18 @@ void assemble_fermion_force(Twist_Fermion *sol, Twist_Fermion *psol) {
       i_ab = plaq_index[a][b];
       i_de = plaq_index[d][e];
 
-      tag0[gather] = start_gather_site(F_OFFSET(plaq_psol[i_de]),
-                                sizeof(su3_vector), F1Q_d2[next], EVENANDODD,
-                                local_pt[gather][0]);
-      tag1[gather] = start_gather_site(F_OFFSET(plaq_sol[i_ab]),
-                                sizeof(su3_vector), goffset[c], EVENANDODD,
-                                local_pt[gather][1]);
-      tag2[gather] = start_gather_site(F_OFFSET(plaq_psol[i_de]),
-                                sizeof(su3_vector), goffset[c], EVENANDODD,
-                                local_pt[gather][2]);
-      tag3[gather] = start_gather_site(F_OFFSET(plaq_sol[i_ab]),
-                                sizeof(su3_vector), F1Q_d1[next], EVENANDODD,
-                                local_pt[gather][3]);
+      tag0[gather] = start_gather_field(plaq_psol[i_de], sizeof(su3_vector),
+                                        F1Q_d2[next], EVENANDODD,
+                                        local_pt[gather][0]);
+      tag1[gather] = start_gather_field(plaq_sol[i_ab], sizeof(su3_vector),
+                                        goffset[c], EVENANDODD,
+                                        local_pt[gather][1]);
+      tag2[gather] = start_gather_field(plaq_psol[i_de], sizeof(su3_vector),
+                                        goffset[c], EVENANDODD,
+                                        local_pt[gather][2]);
+      tag3[gather] = start_gather_field(plaq_sol[i_ab], sizeof(su3_vector),
+                                        F1Q_d1[next], EVENANDODD,
+                                        local_pt[gather][3]);
     }
 
     // Do this set of computations while next set of gathers runs
@@ -480,26 +485,26 @@ void assemble_fermion_force(Twist_Fermion *sol, Twist_Fermion *psol) {
     wait_gather(tag2[flip]);
     wait_gather(tag3[flip]);
     FORALLSITES(i, s) {
-      clear_su3mat_f(&(tempmat[i]));
+      clear_su3mat_f(&(tempmat1[i]));
       vec0 = (su3_vector *)(local_pt[flip][0][i]);
       vec1 = (su3_vector *)(local_pt[flip][1][i]);
       vec2 = (su3_vector *)(local_pt[flip][2][i]);
       vec3 = (su3_vector *)(local_pt[flip][3][i]);
       for (l = 0; l < DIMF; l++) {
         for (m = 0; m < DIMF; m++) {
-          CMULJ_(vec0->c[l], vec1->c[m], cterm);
-          CMULREAL(cterm, permm, cterm);
+          CMULJ_(vec0->c[l], vec1->c[m], tc);
+          CMULREAL(tc, permm, tc);
           BC = (s->bc3[a][b][c]) * (s->bc1[c]);
-          CMULREAL(cterm, BC, cterm);
-          c_scalar_mult_add_su3mat_f(&(tempmat[i]), &(Lambda_prod[l][m]),
-                                     &cterm, &(tempmat[i]));
+          CMULREAL(tc, BC, tc);
+          c_scalar_mult_add_su3mat_f(&(tempmat1[i]), &(Lambda_prod[l][m]),
+                                     &tc, &(tempmat1[i]));
 
-          CMULJ_(vec2->c[l], vec3->c[m], cterm);
-          CMULREAL(cterm, -permm, cterm);
+          CMULJ_(vec2->c[l], vec3->c[m], tc);
+          CMULREAL(tc, -permm, tc);
           BC = (s->bc2[OPP_LDIR(a)][OPP_LDIR(b)]) * (s->bc1[c]);
-          CMULREAL(cterm, BC, cterm);
-          c_scalar_mult_add_su3mat_f(&(tempmat[i]), &(Lambda_prod[m][l]),
-                                     &cterm, &(tempmat[i]));
+          CMULREAL(tc, BC, tc);
+          c_scalar_mult_add_su3mat_f(&(tempmat1[i]), &(Lambda_prod[m][l]),
+                                     &tc, &(tempmat1[i]));
         }
       }
     }
@@ -510,8 +515,8 @@ void assemble_fermion_force(Twist_Fermion *sol, Twist_Fermion *psol) {
     flip = (flip + 1) % 2;
 
     FORALLSITES(i, s) {
-      su3_adjoint_f(&(tempmat[i]), &tmpmat);
-      scalar_mult_add_su3_matrix_f(&(s->f_U[c]), &tmpmat, -0.5, &(s->f_U[c]));
+      su3_adjoint_f(&(tempmat1[i]), &tmat);
+      scalar_mult_add_su3_matrix_f(&(s->f_U[c]), &tmat, -0.5, &(s->f_U[c]));
     }
   }
 
@@ -527,14 +532,14 @@ void assemble_fermion_force(Twist_Fermion *sol, Twist_Fermion *psol) {
   i_ab = plaq_index[a][b];
   i_de = plaq_index[d][e];
 
-  tag0[0] = start_gather_site(F_OFFSET(plaq_psol[i_ab]), sizeof(su3_vector),
-                              F2Q_d1[0], EVENANDODD, local_pt[0][0]);
-  tag1[0] = start_gather_site(F_OFFSET(plaq_sol[i_de]), sizeof(su3_vector),
-                              goffset[c], EVENANDODD, local_pt[0][1]);
-  tag2[0] = start_gather_site(F_OFFSET(plaq_psol[i_ab]), sizeof(su3_vector),
-                              goffset[c], EVENANDODD, local_pt[0][2]);
-  tag3[0] = start_gather_site(F_OFFSET(plaq_sol[i_de]), sizeof(su3_vector),
-                              F2Q_d2[0], EVENANDODD, local_pt[0][3]);
+  tag0[0] = start_gather_field(plaq_psol[i_ab], sizeof(su3_vector),
+                               F2Q_d1[0], EVENANDODD, local_pt[0][0]);
+  tag1[0] = start_gather_field(plaq_sol[i_de], sizeof(su3_vector),
+                               goffset[c], EVENANDODD, local_pt[0][1]);
+  tag2[0] = start_gather_field(plaq_psol[i_ab], sizeof(su3_vector),
+                               goffset[c], EVENANDODD, local_pt[0][2]);
+  tag3[0] = start_gather_field(plaq_sol[i_de], sizeof(su3_vector),
+                               F2Q_d2[0], EVENANDODD, local_pt[0][3]);
 
   // Loop over lookup table
   for (j = 0; j < NTERMS; j++) {
@@ -549,18 +554,18 @@ void assemble_fermion_force(Twist_Fermion *sol, Twist_Fermion *psol) {
       i_ab = plaq_index[a][b];
       i_de = plaq_index[d][e];
 
-      tag0[gather] = start_gather_site(F_OFFSET(plaq_psol[i_ab]),
-                                sizeof(su3_vector), F2Q_d1[next], EVENANDODD,
-                                local_pt[gather][0]);
-      tag1[gather] = start_gather_site(F_OFFSET(plaq_sol[i_de]),
-                                sizeof(su3_vector), goffset[c], EVENANDODD,
-                                local_pt[gather][1]);
-      tag2[gather] = start_gather_site(F_OFFSET(plaq_psol[i_ab]),
-                                sizeof(su3_vector), goffset[c], EVENANDODD,
-                                local_pt[gather][2]);
-      tag3[gather] = start_gather_site(F_OFFSET(plaq_sol[i_de]),
-                                sizeof(su3_vector), F2Q_d2[next], EVENANDODD,
-                                local_pt[gather][3]);
+      tag0[gather] = start_gather_field(plaq_psol[i_ab], sizeof(su3_vector),
+                                        F2Q_d1[next], EVENANDODD,
+                                        local_pt[gather][0]);
+      tag1[gather] = start_gather_field(plaq_sol[i_de], sizeof(su3_vector),
+                                        goffset[c], EVENANDODD,
+                                        local_pt[gather][1]);
+      tag2[gather] = start_gather_field(plaq_psol[i_ab], sizeof(su3_vector),
+                                        goffset[c], EVENANDODD,
+                                        local_pt[gather][2]);
+      tag3[gather] = start_gather_field(plaq_sol[i_de], sizeof(su3_vector),
+                                        F2Q_d2[next], EVENANDODD,
+                                        local_pt[gather][3]);
     }
 
     // Do this set of computations while next set of gathers runs
@@ -576,26 +581,26 @@ void assemble_fermion_force(Twist_Fermion *sol, Twist_Fermion *psol) {
     wait_gather(tag2[flip]);
     wait_gather(tag3[flip]);
     FORALLSITES(i, s) {
-      clear_su3mat_f(&(tempmat[i]));
+      clear_su3mat_f(&(tempmat1[i]));
       vec0 = (su3_vector *)(local_pt[flip][0][i]);
       vec1 = (su3_vector *)(local_pt[flip][1][i]);
       vec2 = (su3_vector *)(local_pt[flip][2][i]);
       vec3 = (su3_vector *)(local_pt[flip][3][i]);
       for (l = 0; l < DIMF; l++) {
         for (m = 0; m < DIMF; m++) {
-          CMULJ_(vec0->c[l], vec1->c[m], cterm);
-          CMULREAL(cterm, permm, cterm);
+          CMULJ_(vec0->c[l], vec1->c[m], tc);
+          CMULREAL(tc, permm, tc);
           BC = (s->bc2[OPP_LDIR(a)][OPP_LDIR(b)]) * (s->bc1[c]);
-          CMULREAL(cterm, BC, cterm);
-          c_scalar_mult_add_su3mat_f(&(tempmat[i]), &(Lambda_prod[l][m]),
-                                     &cterm, &(tempmat[i]));
+          CMULREAL(tc, BC, tc);
+          c_scalar_mult_add_su3mat_f(&(tempmat1[i]), &(Lambda_prod[l][m]),
+                                     &tc, &(tempmat1[i]));
 
-          CMULJ_(vec2->c[l], vec3->c[m], cterm);
-          CMULREAL(cterm, -permm, cterm);
+          CMULJ_(vec2->c[l], vec3->c[m], tc);
+          CMULREAL(tc, -permm, tc);
           BC = (s->bc3[a][b][c]) * (s->bc1[c]);
-          CMULREAL(cterm, BC, cterm);
-          c_scalar_mult_add_su3mat_f(&(tempmat[i]), &(Lambda_prod[m][l]),
-                                     &cterm, &(tempmat[i]));
+          CMULREAL(tc, BC, tc);
+          c_scalar_mult_add_su3mat_f(&(tempmat1[i]), &(Lambda_prod[m][l]),
+                                     &tc, &(tempmat1[i]));
         }
       }
     }
@@ -606,8 +611,8 @@ void assemble_fermion_force(Twist_Fermion *sol, Twist_Fermion *psol) {
     flip = (flip + 1) % 2;
 
     FORALLSITES(i, s) {
-      su3_adjoint_f(&(tempmat[i]), &tmpmat);
-      scalar_mult_add_su3_matrix_f(&(s->f_U[c]), &tmpmat, -0.5, &(s->f_U[c]));
+      su3_adjoint_f(&(tempmat1[i]), &tmat);
+      scalar_mult_add_su3_matrix_f(&(s->f_U[c]), &tmat, -0.5, &(s->f_U[c]));
     }
   }
 #endif
@@ -615,25 +620,10 @@ void assemble_fermion_force(Twist_Fermion *sol, Twist_Fermion *psol) {
   // Final adjoint and minus sign
   FORALLSITES(i, s) {
     for (mu = 0; mu < NUMLINK; mu++) {
-      scalar_mult_su3_matrix_f(&(s->f_U[mu]), -1.0, &tmpmat);
-      su3_adjoint_f(&tmpmat, &(s->f_U[mu]));
+      scalar_mult_su3_matrix_f(&(s->f_U[mu]), -1.0, &tmat);
+      su3_adjoint_f(&tmat, &(s->f_U[mu]));
     }
   }
-
-  // Copy persistent site, link and plaquette fermions into Twist_Fermions
-  FORALLSITES(i, s) {
-    for (mu = 0; mu < NPLAQ; mu++) {
-      su3vec_copy(&(s->plaq_sol[mu]), &(sol[i].Fplaq[mu]));
-      su3vec_copy(&(s->plaq_psol[mu]), &(psol[i].Fplaq[mu]));
-    }
-    for (mu = 0; mu < NUMLINK; mu++) {
-      su3vec_copy(&(s->link_sol[mu]), &(sol[i].Flink[mu]));
-      su3vec_copy(&(s->link_psol[mu]), &(psol[i].Flink[mu]));
-    }
-    su3vec_copy(&(s->site_sol), &(sol[i].Fsite));
-    su3vec_copy(&(s->site_psol), &(psol[i].Fsite));
-  }
-  free(tempmat);
 }
 // -----------------------------------------------------------------
 
@@ -643,14 +633,14 @@ void assemble_fermion_force(Twist_Fermion *sol, Twist_Fermion *psol) {
 // -----------------------------------------------------------------
 // Update the momenta with the fermion force
 // Assume that the multiCG has been run, with the answers in sol[j]
-// Accumulate force into f_U and temporary fullforce
+// Accumulate force into f_U
+// Use fullforce-->Fmunu and tempTF for temporary storage
 double fermion_force(Real eps, Twist_Fermion *src, Twist_Fermion **sol) {
   register int i;
   register site *s;
   int mu, n;
   double returnit = 0.0;
-  su3_matrix_f **fullforce;
-  Twist_Fermion *psol = malloc(sites_on_node * sizeof(*psol));
+  su3_matrix_f **fullforce = malloc(NUMLINK * sizeof(*fullforce));
 
 #ifdef FORCE_DEBUG
   int kick, ii, jj, iters = 0;
@@ -661,20 +651,19 @@ double fermion_force(Real eps, Twist_Fermion *src, Twist_Fermion **sol) {
   clear_su3mat_f(&tmat1);
 #endif
 
-  fullforce = malloc(NUMLINK * sizeof(*fullforce));
-  for (mu = 0; mu < NUMLINK; mu++) {
-    fullforce[mu] = malloc(sites_on_node * sizeof(su3_matrix_f));
-      FORALLSITES(i, s)
-        clear_su3mat_f(&(fullforce[mu][i]));
+  for (mu = XUP; mu < NUMLINK; mu++) {
+    fullforce[mu] = Fmunu[mu];    // Use Fmunu for temporary storage
+    FORALLSITES(i, s)
+      clear_su3mat_f(&(fullforce[mu][i]));
   }
 
   for (n = 0; n < Norder; n++) {
-    fermion_op(sol[n], psol, PLUS);
+    fermion_op(sol[n], tempTF, PLUS);
     // Makes sense to multiply here by amp4[n]...
     FORALLSITES(i, s)
-      scalar_mult_TF(&(psol[i]), amp4[n], &(psol[i]));
+      scalar_mult_TF(&(tempTF[i]), amp4[n], &(tempTF[i]));
 
-    assemble_fermion_force(sol[n], psol);
+    assemble_fermion_force(sol[n], tempTF);
 #ifdef FORCE_DEBUG
     individ_force = 0.0;
 #endif
@@ -699,7 +688,7 @@ double fermion_force(Real eps, Twist_Fermion *src, Twist_Fermion **sol) {
                  n, eps * sqrt(individ_force) / volume);
 
     // Do a scan of the fermion action
-    for (mu = 0; mu < NUMLINK; mu++) {
+    for (mu = XUP; mu < NUMLINK; mu++) {
       FORALLSITES(i, s) {
         node0_printf("mu=%d on site (%d, %d, %d, %d)\n",
                      mu, s->x, s->y, s->z, s->t);
@@ -761,7 +750,7 @@ double fermion_force(Real eps, Twist_Fermion *src, Twist_Fermion **sol) {
   // Opposite sign as to gauge force,
   // because dS_G / dU = 2F_g while ds_F / dU = -2F_f
   FORALLSITES(i, s) {
-    for (mu = 0; mu < NUMLINK; mu++) {
+    for (mu = XUP; mu < NUMLINK; mu++) {
       scalar_mult_add_su3_matrix_f(&(s->mom[mu]), &(fullforce[mu][i]), eps,
                                    &(s->mom[mu]));
       returnit += realtrace_su3_f(&(fullforce[mu][i]), &(fullforce[mu][i]));
@@ -769,8 +758,6 @@ double fermion_force(Real eps, Twist_Fermion *src, Twist_Fermion **sol) {
   }
   g_doublesum(&returnit);
 
-  for (mu = 0; mu < NUMLINK; mu++)
-    free(fullforce[mu]);
   free(fullforce);
   free(psol);
   return (eps * sqrt(returnit) / volume);

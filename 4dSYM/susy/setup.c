@@ -95,24 +95,32 @@ void make_fields() {
   FIELD_ALLOC_VEC(stp, su3_matrix_f, NUMLINK);    // Staples
 
   // For convenience in calculating action and force
-  size += (double)(NUMLINK * (1.0 + NUMLINK) * sizeof(complex));
-  size += (double)(NUMLINK * sizeof(su3_vector));
   size += (double)(1.0 + NPLAQ + NUMLINK * NUMLINK) * sizeof(su3_matrix_f);
+  size += (double)(NUMLINK * (1.0 + NUMLINK) * sizeof(complex));
   FIELD_ALLOC(DmuUmu, su3_matrix_f);
   FIELD_ALLOC_VEC(Tr_Uinv, complex, NUMLINK);
-  FIELD_ALLOC_VEC(tsite, su3_vector, NUMLINK);
   FIELD_ALLOC_VEC(Fmunu, su3_matrix_f, NPLAQ);
   FIELD_ALLOC_MAT(plaqdet, complex, NUMLINK, NUMLINK);
   FIELD_ALLOC_MAT(Ddet, su3_matrix_f, NUMLINK, NUMLINK);
 
-  // Temporary matrices
+  // Temporary vectors, matrices and Twist_Fermion
   size += (double)(3.0 * sizeof(su3_matrix_f));
+  size += (double)(sizeof(Twist_Fermion));
+  size += (double)(NUMLINK * sizeof(su3_vector));
   FIELD_ALLOC(tempmat1, su3_matrix_f);
   FIELD_ALLOC(tempmat2, su3_matrix_f);
   FIELD_ALLOC(staple, su3_matrix_f);
+  FIELD_ALLOC(tempTF, Twist_Fermion);
+  FIELD_ALLOC_VEC(tempvec, su3_vector, NUMLINK);
+
+#ifdef EIG
+  size += (double)(2.0 * sizeof(Twist_Fermion));
+  FIELD_ALLOC(src, Twist_Fermion);
+  FIELD_ALLOC(res, Twist_Fermion);
+#endif
 
 #ifdef PHASE
-  size += (double)(2.0 * (1.0 + NUMLINK + NPLAQ) * sizeof(su3_vector));
+  size += (double)(2.0 * sizeof(Twist_Fermion));
   FIELD_ALLOC(src, Twist_Fermion);
   FIELD_ALLOC(res, Twist_Fermion);
 #endif
