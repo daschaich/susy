@@ -2,8 +2,6 @@
 // Macros common to all applications
 #ifndef _MACROS_H
 #define _MACROS_H
-
-#include <defines.h>
 // -----------------------------------------------------------------
 
 

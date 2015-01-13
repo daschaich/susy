@@ -115,7 +115,7 @@ int main(int argc, char *argv[]) {
 #ifdef PL_CORR
   // Polyakov loop correlator
   // Compute ploop_corr and take the absolute square of its FFT
-  ploop_c();
+  ploop_c();      // Computes Polyakov loop at each spatial site
   restrict_fourier(F_OFFSET(ploop_corr),
                    F_OFFSET(fft1), F_OFFSET(fft2),
                    sizeof(complex), FORWARDS);

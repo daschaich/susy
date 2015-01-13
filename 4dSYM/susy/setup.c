@@ -74,11 +74,8 @@ int initial_set() {
 // -----------------------------------------------------------------
 // Allocate space for fields
 void make_fields() {
-  double size = (double)(2 + 4 * NUMLINK + 3 * NPLAQ)
-                * sites_on_node * sizeof(su3_vector);
-
-  FIELD_ALLOC_VEC(tsite, su3_vector, NUMLINK);
-
+  double size = (double)(sizeof(complex));
+  size += (double)(2.0 + 3.0 * (NUMLINK + NPLAQ)) * sizeof(su3_vector);
   FIELD_ALLOC(site_src, su3_vector);
   FIELD_ALLOC(site_dest, su3_vector);
   FIELD_ALLOC(tr_dest, complex);
@@ -90,30 +87,47 @@ void make_fields() {
   FIELD_ALLOC_VEC(plaq_dest2, su3_vector, NPLAQ);
 
   // Stout smearing stuff needed for `hot-start' random configurations
-  size += (double)(1 + 3 * NUMLINK) * sites_on_node * sizeof(su3_matrix_f);
-  size += (double)(NUMLINK) * sites_on_node * sizeof(anti_hermitmat);
-#ifdef PHASE
-  size += 2.0 * (1.0 + NUMLINK + NPLAQ) * sites_on_node * sizeof(su3_vector);
-#endif
+  size += (double)(NUMLINK * sizeof(anti_hermitmat));
+  size += (double)(3.0 * NUMLINK * sizeof(su3_matrix_f));
+  FIELD_ALLOC_VEC(Q, anti_hermitmat, NUMLINK);    // To be exponentiated
   FIELD_ALLOC_VEC(thin_link, su3_matrix_f, NUMLINK);
   FIELD_ALLOC_VEC(smeared_link, su3_matrix_f, NUMLINK);
   FIELD_ALLOC_VEC(stp, su3_matrix_f, NUMLINK);    // Staples
-  FIELD_ALLOC_VEC(Q, anti_hermitmat, NUMLINK);    // To be exponentiated
-  FIELD_ALLOC(tempmat, su3_matrix_f);             // Staple storage
 
-  node0_printf("Mallocing %.1f MBytes per core for fields\n", size / 1e6);
+  // For convenience in calculating action and force
+  size += (double)(NUMLINK * (1.0 + NUMLINK) * sizeof(complex));
+  size += (double)(NUMLINK * sizeof(su3_vector));
+  size += (double)(1.0 + NPLAQ + NUMLINK * NUMLINK) * sizeof(su3_matrix_f);
+  FIELD_ALLOC(DmuUmu, su3_matrix_f);
+  FIELD_ALLOC_VEC(Tr_Uinv, complex, NUMLINK);
+  FIELD_ALLOC_VEC(tsite, su3_vector, NUMLINK);
+  FIELD_ALLOC_VEC(Fmunu, su3_matrix_f, NPLAQ);
+  FIELD_ALLOC_MAT(plaqdet, complex, NUMLINK, NUMLINK);
+  FIELD_ALLOC_MAT(Ddet, su3_matrix_f, NUMLINK, NUMLINK);
+
+  // Temporary matrices
+  size += (double)(3.0 * sizeof(su3_matrix_f));
+  FIELD_ALLOC(tempmat1, su3_matrix_f);
+  FIELD_ALLOC(tempmat2, su3_matrix_f);
+  FIELD_ALLOC(staple, su3_matrix_f);
 
 #ifdef PHASE
+  size += (double)(2.0 * (1.0 + NUMLINK + NPLAQ) * sizeof(su3_vector));
   FIELD_ALLOC(src, Twist_Fermion);
   FIELD_ALLOC(res, Twist_Fermion);
+#endif
 
-  int Ndat = 16 * DIMF;
-  double tr = (double)volume * Ndat * sites_on_node * Ndat;
+  size *= sites_on_node;
+  node0_printf("Mallocing %.1f MBytes per core for fields\n", size / 1e6);
+#ifdef PHASE
+  // Total number of matvecs is (volume * 16 * DIMF)^2 / 4
+  Nmatvecs = volume * 16 * DIMF * volume * 4 * DIMF;
 
-  // Total number of matvecs is (volume * Ndat)^2 / 4
-  Nmatvecs = volume * Ndat * volume * 4 * DIMF;
+  // Total size of matrix is (volume * 16 * DIMF) x (sites_on_node * 16 * DIMF)
+  size = (double)(volume * 16.0 * DIMF * 16.0 * DIMF * sizeof(complex));
+  size *= sites_on_node;
   node0_printf("Q has %d columns --> %d matvecs and %.1f MBytes per core...",
-               volume * Ndat, Nmatvecs, tr * sizeof(complex) / 1e6);
+               volume * 16 * DIMF, Nmatvecs, size / 1e6);
 #endif
 }
 // -----------------------------------------------------------------

@@ -15,63 +15,127 @@ double gauge_force(Real eps) {
   register site *s;
   register Real eb3, eb3UdU;
   double returnit = 0.0;
-  complex trUdU;
+  complex tc, tc2;
   msg_tag *tag[NUMLINK], *tag0, *tag1;
-  su3_matrix_f tmat1, tmat2, tmat3, UdU;
+  su3_matrix_f tmat1, tmat2, tmat3, UdU, *mat;
 
-  // Contribution from d^2 term
-  compute_DmuUmu();
-  // TODO: Add plaquette determinant contribution if G is non-zero
+  // Two contributions from d^2 term
+  compute_DmuUmu();   // Computes plaqdet if G is non-zero
+  // If G is non-zero then below we will need G Tr[DmuUmu] plaqdet[mu][nu]
+  // Save this in a modified plaqdet[mu][nu]
+  if (G > IMAG_TOL) {
+    FORALLSITES(i, s) {
+      tc = trace_su3_f(&DmuUmu[i]);
+      for (mu = XUP; mu < NUMLINK; mu++) {
+        for (nu = mu + 1; nu < NUMLINK; nu++) {
+          CMUL(tc, plaqdet[mu][nu][i], tc2);
+          set_complex_equal(&tc2, &(plaqdet[mu][nu][i]));
 
-  tag[0] = start_gather_site(F_OFFSET(DmuUmu), sizeof(su3_matrix_f),
-                             goffset[0], EVENANDODD, gen_pt[0]);
-  for (mu = 0; mu < NUMLINK; mu++) {
+          CMUL(tc, plaqdet[nu][mu][i], tc2);
+          set_complex_equal(&tc2, &(plaqdet[nu][mu][i]));
+        }
+      }
+    }
+  }
+
+  // First we have the finite difference operator derivative times DmuUmu
+  // Ubar_a(x) DmuUmu(x) - DmuUmu(x + a) Ubar_a(x)
+  tag[0] = start_gather_field(DmuUmu, sizeof(su3_matrix_f),
+                              goffset[0], EVENANDODD, gen_pt[0]);
+  for (mu = XUP; mu < NUMLINK; mu++) {
     if (mu < NUMLINK - 1)     // Start next gather
-      tag[mu + 1] = start_gather_site(F_OFFSET(DmuUmu), sizeof(su3_matrix_f),
-                                      goffset[mu + 1], EVENANDODD,
-                                      gen_pt[mu + 1]);
+      tag[mu + 1] = start_gather_field(DmuUmu, sizeof(su3_matrix_f),
+                                       goffset[mu + 1], EVENANDODD,
+                                       gen_pt[mu + 1]);
 
     wait_gather(tag[mu]);
     FORALLSITES(i, s) {
-      mult_su3_an_f(&(s->linkf[mu]), &(s->DmuUmu), &tmat1);
-      mult_su3_na_f((su3_matrix_f *)gen_pt[mu][i], &(s->linkf[mu]), &tmat2);
+      mat = (su3_matrix_f *)gen_pt[mu][i];
+      mult_su3_an_f(&(s->linkf[mu]), &(DmuUmu[i]), &tmat1);
+      mult_su3_na_f(mat, &(s->linkf[mu]), &tmat2);
       sub_su3_matrix_f(&tmat1, &tmat2, &tmat3);
       scalar_mult_su3_matrix_f(&tmat3, C2, &(s->f_U[mu]));    // Initialize
     }
     cleanup_gather(tag[mu]);
   }
 
+  // Second we have DmuUmu times the plaquette determinant derivative
+  // Sum_nu {Tr[DmuUmu(x)] plaqdet[nu][mu](x)
+  //       + Tr[DmuUmu(x-nu)] plaqdet[mu][nu](x-nu)} U_mu^{-1}(x)
+  // Only compute if G is non-zero
+  // Use tr_dest for temporary storage
+  if (G > IMAG_TOL) {
+    for (mu = XUP; mu < NUMLINK; mu++) {
+      // Invert U_a(x) and store in tempmat1
+      // Zero tr_dest to hold sum
+      FORALLSITES(i, s) {
+        invert(&(s->linkf[mu]), &(tempmat1[i]));
+        tr_dest[i] = cmplx(0.0, 0.0);
+      }
+
+      for (nu = XUP; nu < NUMLINK; nu++) {
+        if (mu == nu)
+          continue;
+
+        // Gather Tr[DmuUmu] plaqdet[mu][nu] from x - nu
+        tag0 = start_gather_field(plaqdet[mu][nu], sizeof(complex),
+                                  goffset[nu] + 1, EVENANDODD, gen_pt[0]);
+
+        // Add Tr[DmuUmu(x)] plaqdet[nu][mu](x) to sum while gather runs
+        FORALLSITES(i, s)
+          CSUM(tr_dest[i], plaqdet[nu][mu][i]);
+
+        // Add Tr[DmuUmu(x-nu)] plaqdet[mu][nu](x-nu)} to sum
+        wait_gather(tag0);
+        FORALLSITES(i, s)
+          CSUM(tr_dest[i], *((complex *)(gen_pt[0][i])));
+        cleanup_gather(tag0);
+      }
+
+      // Now add to force
+      FORALLSITES(i, s) {
+        CMULREAL(tr_dest[i], G, tc);
+        c_scalar_mult_add_su3mat_f(&(s->f_U[mu]), &(tempmat1[i]), &tc,
+                                   &(s->f_U[mu]));
+      }
+    }
+  }
+
   // Contribution from Fbar_{ab} F_{ab} term
   compute_Fmunu();
-  for (mu = 0; mu < NUMLINK; mu++) {
-    for (nu = 0; nu < NUMLINK; nu++) {
+  for (mu = XUP; mu < NUMLINK; mu++) {
+    for (nu = XUP; nu < NUMLINK; nu++) {
       if (mu == nu)
         continue;
 
       index = plaq_index[mu][nu];
       FORALLSITES(i, s) {
         if (mu > nu)
-          scalar_mult_su3_matrix_f(&(s->Fmunu[index]), -1.0, &tmat2);
+          scalar_mult_su3_matrix_f(&(Fmunu[index][i]), -1.0, &tmat2);
         else
-          su3mat_copy_f(&(s->Fmunu[index]), &tmat2);
-        mult_su3_an_f(&tmat2, &(s->linkf[nu]), &(s->tempmat2));
+          su3mat_copy_f(&(Fmunu[index][i]), &tmat2);
+        mult_su3_an_f(&tmat2, &(s->linkf[nu]), &(tempmat2[i]));
       }
 
       tag0 = start_gather_site(F_OFFSET(linkf[nu]), sizeof(su3_matrix_f),
                                goffset[mu], EVENANDODD, gen_pt[0]);
-      tag1 = start_gather_site(F_OFFSET(tempmat2), sizeof(su3_matrix_f),
-                               goffset[nu] + 1, EVENANDODD, gen_pt[1]);
-      wait_gather(tag0);
-      wait_gather(tag1);
+      tag1 = start_gather_field(tempmat2, sizeof(su3_matrix_f),
+                                goffset[nu] + 1, EVENANDODD, gen_pt[1]);
 
+      // Set up tempmat1 while gathers run
       FORALLSITES(i, s) {
         if (mu > nu)
-          scalar_mult_su3_matrix_f(&(s->Fmunu[index]), -1.0, &tmat2);
+          scalar_mult_su3_matrix_f(&(Fmunu[index][i]), -1.0, &(tempmat1[i]));
         else
-          su3mat_copy_f(&(s->Fmunu[index]), &tmat2);
-        mult_su3_na_f((su3_matrix_f *)gen_pt[0][i], &tmat2, &tmat1);
-        sub_su3_matrix_f(&tmat1, (su3_matrix_f *)gen_pt[1][i], &tmat3);
-        scalar_mult_add_su3_matrix_f(&(s->f_U[mu]), &tmat3, 2.0, &(s->f_U[mu]));
+          su3mat_copy_f(&(Fmunu[index][i]), &(tempmat1[i]));
+      }
+
+      wait_gather(tag0);
+      wait_gather(tag1);
+      FORALLSITES(i, s) {
+        mult_su3_na_f((su3_matrix_f *)gen_pt[0][i], &(tempmat1[i]), &tmat1);
+        sub_su3_matrix_f(&tmat1, (su3_matrix_f *)gen_pt[1][i], &tmat2);
+        scalar_mult_add_su3_matrix_f(&(s->f_U[mu]), &tmat2, 2.0, &(s->f_U[mu]));
       }
       cleanup_gather(tag0);
       cleanup_gather(tag1);
@@ -79,7 +143,7 @@ double gauge_force(Real eps) {
   }
 
   // Factor of kappa = N / (2lambda) on both (D_a U_a)^2 and F^2 terms
-  for (mu = 0; mu < NUMLINK; mu++) {
+  for (mu = XUP; mu < NUMLINK; mu++) {
     FORALLSITES(i, s)
       scalar_mult_su3_matrix_f(&(s->f_U[mu]), kappa, &(s->f_U[mu]));
   }
@@ -87,11 +151,11 @@ double gauge_force(Real eps) {
   // Only compute U(1) mass term if non-zero -- note factor of kappa
   eb3 = 2.0 * kappa * bmass * bmass / (Real)(NCOL * NCOL);
   if (eb3 > IMAG_TOL) {
-    for (mu = 0; mu < NUMLINK; mu++) {
+    for (mu = XUP; mu < NUMLINK; mu++) {
       FORALLSITES(i, s) {
         mult_su3_an_f(&(s->linkf[mu]), &(s->linkf[mu]), &UdU);
-        trUdU = trace_su3_f(&UdU);
-        eb3UdU = eb3 * (trUdU.real -(Real)NCOL);
+        tc = trace_su3_f(&UdU);
+        eb3UdU = eb3 * (tc.real -(Real)NCOL);
 
         su3_adjoint_f(&(s->linkf[mu]), &tmat1);
         scalar_mult_add_su3_matrix_f(&(s->f_U[mu]), &tmat1, eb3UdU,
@@ -102,7 +166,7 @@ double gauge_force(Real eps) {
 
   // Finally take adjoint and update the momentum
   // Subtract to reproduce -Adj(f_U)
-  for (mu = 0; mu < NUMLINK; mu++) {
+  for (mu = XUP; mu < NUMLINK; mu++) {
     FORALLSITES(i, s) {
       su3_adjoint_f(&(s->f_U[mu]), &tmat2);
       scalar_mult_sub_su3_matrix_f(&(s->mom[mu]), &tmat2, eps, &(s->mom[mu]));
@@ -110,8 +174,8 @@ double gauge_force(Real eps) {
   }
 
   // Compute average gauge force
-  for (mu = 0; mu < NUMLINK; mu++) {
-    FORALLSITES(i, s)
+  FORALLSITES(i, s) {
+    for (mu = XUP; mu < NUMLINK; mu++)
       returnit += realtrace_su3_f(&(s->f_U[mu]), &(s->f_U[mu]));
   }
   g_doublesum(&returnit);
@@ -164,8 +228,8 @@ void assemble_fermion_force(Twist_Fermion *sol, Twist_Fermion *psol) {
   // f_U = Adj(Ms).D_U M(U, Ub) s - Adj[Adj(Ms). D_Ub M(U, Ub) s]
   // First calculate DU on chi_{munu} D_mu(U) psi_nu
 #ifdef VP
-  for (mu = 0; mu < NUMLINK; mu++) {
-    for (nu = 0; nu < NUMLINK; nu++) {
+  for (mu = XUP; mu < NUMLINK; mu++) {
+    for (nu = XUP; nu < NUMLINK; nu++) {
       if (mu == nu)
         continue;
 
@@ -219,8 +283,8 @@ void assemble_fermion_force(Twist_Fermion *sol, Twist_Fermion *psol) {
   }
 
   // 2nd term
-  for (mu = 0; mu < NUMLINK; mu++) {
-    for (nu = 0; nu < NUMLINK; nu++) {
+  for (mu = XUP; mu < NUMLINK; mu++) {
+    for (nu = XUP; nu < NUMLINK; nu++) {
       if (mu == nu)
         continue;
 
@@ -278,7 +342,7 @@ void assemble_fermion_force(Twist_Fermion *sol, Twist_Fermion *psol) {
   // 3rd term, DUb on psi_mu Db_mu(U) eta
   mtag[0] = start_gather_site(F_OFFSET(site_psol), sizeof(su3_vector),
                               goffset[0], EVENANDODD, gen_pt[0]);
-  for (mu = 0; mu < NUMLINK; mu++) {
+  for (mu = XUP; mu < NUMLINK; mu++) {
     if (mu < NUMLINK - 1)
       mtag[mu + 1] = start_gather_site(F_OFFSET(site_psol),
                            sizeof(su3_vector), goffset[mu + 1],
@@ -312,7 +376,7 @@ void assemble_fermion_force(Twist_Fermion *sol, Twist_Fermion *psol) {
   // 4th term
   mtag[0] = start_gather_site(F_OFFSET(site_sol), sizeof(su3_vector),
                               goffset[0], EVENANDODD, gen_pt[0]);
-  for (mu = 0; mu < NUMLINK; mu++) {
+  for (mu = XUP; mu < NUMLINK; mu++) {
     if (mu < NUMLINK - 1)
       mtag[mu + 1] = start_gather_site(F_OFFSET(site_sol),
                            sizeof(su3_vector), goffset[mu + 1],

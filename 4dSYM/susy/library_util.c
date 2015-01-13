@@ -153,24 +153,3 @@ void gauge_field_copy_f(field_offset src, field_offset dest) {
   }
 }
 // -----------------------------------------------------------------
-
-
-
-// -----------------------------------------------------------------
-// Shift a matrix without parallel transport
-// The tag is the desired content of goffset
-void shiftmat(field_offset src, field_offset dest, int tag) {
-  register int i;
-  register site *s;
-  msg_tag *mtag;
-
-  mtag = start_gather_site(src, sizeof(su3_matrix_f),
-                           tag, EVENANDODD, gen_pt[0]);
-  wait_gather(mtag);
-  FORALLSITES(i, s) {
-    su3mat_copy_f((su3_matrix_f *)gen_pt[0][i],
-                  (su3_matrix_f *)F_PT(s, dest));
-  }
-  cleanup_gather(mtag);
-}
-// -----------------------------------------------------------------

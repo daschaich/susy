@@ -6,45 +6,6 @@
 
 
 // -----------------------------------------------------------------
-// Compute at each site
-//   sum_mu [U_mu(x) * Udag_mu(x) - Udag_mu(x - mu) * U_mu(x - mu)]
-// Use s->tempmat1, s->tempmat2 and s->staple as temporary storage
-void compute_DmuUmu() {
-  register int i;
-  register site *s;
-  int mu;
-  msg_tag *mtag0 = NULL;
-
-  for (mu = 0; mu < NUMLINK; mu++) {
-    FORALLSITES(i, s) {
-      mult_su3_na_f(&(s->linkf[mu]), &(s->linkf[mu]), &(s->tempmat1));
-      mult_su3_an_f(&(s->linkf[mu]), &(s->linkf[mu]), &(s->tempmat2));
-    }
-
-    // Gather tempmat2 from below
-    mtag0 = start_gather_site(F_OFFSET(tempmat2), sizeof(su3_matrix_f),
-                              goffset[mu] + 1, EVENANDODD, gen_pt[0]);
-    wait_gather(mtag0);
-    if (mu == 0) {
-      FORALLSITES(i, s)
-        sub_su3_matrix_f(&(s->tempmat1), (su3_matrix_f *)(gen_pt[0][i]),
-                         &(s->DmuUmu));
-    }
-    else {
-      FORALLSITES(i, s) {
-        sub_su3_matrix_f(&(s->tempmat1), (su3_matrix_f *)(gen_pt[0][i]),
-                         &(s->staple));
-        add_su3_matrix_f(&(s->DmuUmu), &(s->staple), &(s->DmuUmu));
-      }
-    }
-    cleanup_gather(mtag0);
-  }
-}
-// -----------------------------------------------------------------
-
-
-
-// -----------------------------------------------------------------
 // Compute at each site all NUMLINK * (NUMLINK - 1) plaquette determinants
 // counting both orientations
 // Use tempmat1 and staple as temporary storage
@@ -71,7 +32,7 @@ void compute_plaqdet() {
       FORALLSITES(i, s) {
         mat = (su3_matrix_f *)(gen_pt[0][i]);
         mult_su3_nn_f(&(s->linkf[a]), mat, &tmat);
-        su3_adjoint_f(&tmat, &(s->tempmat1));
+        su3_adjoint_f(&tmat, &(tempmat1[i]));
       }
       cleanup_gather(mtag0);
 
@@ -80,11 +41,75 @@ void compute_plaqdet() {
       wait_gather(mtag1);
       FORALLSITES(i, s) {
         mat = (su3_matrix_f *)(gen_pt[1][i]);
-        mult_su3_nn_f(mat, &(s->tempmat1), &(s->staple));
-        mult_su3_nn_f(&(s->linkf[b]), &(s->staple), &tmat);
-        s->plaqdet[a][b] = find_det(&tmat);
+        mult_su3_nn_f(mat, &(tempmat1[i]), &(staple[i]));
+        mult_su3_nn_f(&(s->linkf[b]), &(staple[i]), &tmat);
+        plaqdet[a][b][i] = find_det(&tmat);
       }
       cleanup_gather(mtag1);
+    }
+  }
+}
+// -----------------------------------------------------------------
+
+
+
+
+// -----------------------------------------------------------------
+// Compute at each site
+//   sum_mu [U_mu(x) * Udag_mu(x) - Udag_mu(x - mu) * U_mu(x - mu)]
+// Add plaquette determinant contribution if G is non-zero
+// Use tempmat1, tempmat2 and staple as temporary storage
+void compute_DmuUmu() {
+  register int i;
+  register site *s;
+  int mu;
+  msg_tag *mtag0 = NULL;
+  su3_matrix_f *mat;
+
+  if (G > IMAG_TOL)
+    compute_plaqdet();      // Compute plaqdet if G is non-zero
+
+  for (mu = XUP; mu < NUMLINK; mu++) {
+    FORALLSITES(i, s) {
+      mult_su3_na_f(&(s->linkf[mu]), &(s->linkf[mu]), &(tempmat1[i]));
+      mult_su3_an_f(&(s->linkf[mu]), &(s->linkf[mu]), &(tempmat2[i]));
+    }
+
+    // Gather tempmat2 from below
+    mtag0 = start_gather_field(tempmat2, sizeof(su3_matrix_f),
+                               goffset[mu] + 1, EVENANDODD, gen_pt[0]);
+    wait_gather(mtag0);
+    if (mu == 0) {
+      FORALLSITES(i, s) {
+        mat = (su3_matrix_f *)(gen_pt[0][i]);
+        sub_su3_matrix_f(&(tempmat1[i]), mat, &(DmuUmu[i]));
+      }
+    }
+    else {
+      FORALLSITES(i, s) {
+        mat = (su3_matrix_f *)(gen_pt[0][i]);
+        sub_su3_matrix_f(&(tempmat1[i]), mat, &(staple[i]));
+        add_su3_matrix_f(&(DmuUmu[i]), &(staple[i]), &(DmuUmu[i]));
+      }
+    }
+    cleanup_gather(mtag0);
+  }
+
+  // Add plaquette determinant contribution if G is non-zero
+  if (G > IMAG_TOL) {
+    int nu, j;
+    Real re, im;
+    FORALLSITES(i, s) {
+      for (mu = XUP; mu < NUMLINK; mu++) {
+        for (nu = mu + 1; nu < NUMLINK; nu++) {
+          re = plaqdet[mu][nu][i].real + plaqdet[nu][mu][i].real - 2.0;
+          im = plaqdet[mu][nu][i].imag + plaqdet[nu][mu][i].imag;
+          for (j = 0; j < NCOL; j++) {
+            DmuUmu[i].e[j][j].real += G * re;
+            DmuUmu[i].e[j][j].imag += G * im;
+          }
+        }
+      }
     }
   }
 }
@@ -95,7 +120,7 @@ void compute_plaqdet() {
 // -----------------------------------------------------------------
 // Compute at each site
 //   U_mu(x) * U_mu(x + mu) - Udag_nu(x) * U_mu(x + nu)
-// Use s->tempmat1 and s->tempmat2 as temporary storage
+// Use tempmat1 and tempmat2 as temporary storage
 void compute_Fmunu() {
   register int i;
   register site *s;
@@ -113,10 +138,10 @@ void compute_Fmunu() {
       wait_gather(mtag1);
       FORALLSITES(i, s) {
         mult_su3_nn_f(&(s->linkf[mu]), (su3_matrix_f *)(gen_pt[0][i]),
-                      &(s->tempmat1));
+                      &(tempmat1[i]));
         mult_su3_nn_f(&(s->linkf[nu]), (su3_matrix_f *)(gen_pt[1][i]),
-                      &(s->tempmat2));
-        sub_su3_matrix_f(&(s->tempmat1), &(s->tempmat2), &(s->Fmunu[index]));
+                      &(tempmat2[i]));
+        sub_su3_matrix_f(&(tempmat1[i]), &(tempmat2[i]), &(Fmunu[index][i]));
       }
       cleanup_gather(mtag0);
       cleanup_gather(mtag1);
@@ -181,7 +206,7 @@ void compute_Bmu() {
     // But store all to simplify SUGRA computation
     // Make sure Tr(C_a * C_b) is purely real
     for (mu = XUP; mu < NUMLINK; mu++) {
-      for (nu = XUP; nu < NUMLINK; nu++) {
+      for (nu = mu; nu < NUMLINK; nu++) {
         mult_su3_nn_f(&(s->C[mu]), &(s->C[nu]), &tmat);
         ctmp = trace_su3_f(&tmat);
         if (fabs(ctmp.imag) > IMAG_TOL) {
@@ -189,7 +214,7 @@ void compute_Bmu() {
                  this_node, mu, nu, ctmp.real, ctmp.imag, i);
         }
         s->traceCC[mu][nu] = ctmp.real;
-//        s->traceCC[nu][mu] = ctmp.real;
+        s->traceCC[nu][mu] = ctmp.real;
       }
     }
   }
@@ -253,9 +278,9 @@ void fermion_op(Twist_Fermion *src, Twist_Fermion *dest, int sign) {
 
   // Site-to-link plaquette determinant contribution if G is non-zero
   // Negative sign is due to anti-commuting eta past psi
+  // compute_plaqdet() has already been run for the gauge action...
   if (G > IMAG_TOL) {
     detG = cmplx(0.0, 0.5 * G * sqrt((Real)NCOL));
-    compute_plaqdet();
     detStoL(site_src, link_dest2);        // Overwrites link_dest2
     FORALLSITES(i, s) {
       for (mu = 0; mu < NUMLINK; mu++)
@@ -675,7 +700,7 @@ void DbplusStoL(su3_vector *src, su3_vector *dest[NUMLINK]) {
 //   -0.5G sum_{a, b} [det P_{ab} * Tr(U_b^{-1} Lambda[j])] Tr[eta]
 // and similarly for dest[a][j] at x + b
 // Negative sign is due to anti-commuting eta past psi
-// Use tsite and Tr_Uinv_psi[0] for temporary storage
+// Use tsite and Tr_Uinv[0] for temporary storage
 void detStoL(su3_vector *src, su3_vector *dest[NUMLINK]) {
   register int i;
   register site *s;
@@ -704,13 +729,13 @@ void detStoL(su3_vector *src, su3_vector *dest[NUMLINK]) {
 
       // Gather Tr[eta] det P_{ab} from x - b
       FORALLSITES(i, s)
-        CMUL(src[i].c[DIMF - 1], s->plaqdet[a][b], s->Tr_Uinv_psi[0]);
-      mtag = start_gather_site(F_OFFSET(Tr_Uinv_psi[0]), sizeof(complex),
-                               goffset[b] + 1, EVENANDODD, gen_pt[0]);
+        CMUL(src[i].c[DIMF - 1], plaqdet[a][b][i], Tr_Uinv[0][i]);
+      mtag = start_gather_field(Tr_Uinv[0], sizeof(complex),
+                                goffset[b] + 1, EVENANDODD, gen_pt[0]);
 
       // Compute on-site contribution to dest[b] while gather runs
       FORALLSITES(i, s) {
-        CMULREAL(s->Tr_Uinv_psi[0], s->bc1[b], tc1);
+        CMULREAL(Tr_Uinv[0][i], s->bc1[b], tc1);
         c_scalar_mult_add_su3vec(&(dest[b][i]), &tc1, &(tsite[b][i]));
       }
 
@@ -790,7 +815,7 @@ void detLtoS(su3_vector *src[NUMLINK], complex *dest) {
     dest[i] = cmplx(0.0, 0.0);              // Overwrite
 
   // Prepare Tr[U_a^{-1} psi_a] = sum_j Tr[U_a^{-1} Lambda^j] psi_a^j
-  // and save in Tr_Uinv_psi[a]
+  // and save in Tr_Uinv[a]
   for (a = XUP; a < NUMLINK; a++) {
     FORALLSITES(i, s) {
       invert(&(s->linkf[a]), &tmat1);
@@ -801,7 +826,7 @@ void detLtoS(su3_vector *src[NUMLINK], complex *dest) {
         CMUL(tc1, src[a][i].c[j], tc2);
         CSUM(trace, tc2);                   // Accumulate
       }
-      CMULREAL(trace, s->bc1[a], s->Tr_Uinv_psi[a]);
+      CMULREAL(trace, s->bc1[a], Tr_Uinv[a][i]);
     }
   }
 
@@ -811,15 +836,15 @@ void detLtoS(su3_vector *src[NUMLINK], complex *dest) {
         continue;
 
       // Gather Tr[U_a^{-1} psi_a] from x + b
-      mtag = start_gather_site(F_OFFSET(Tr_Uinv_psi[a]), sizeof(complex),
-                               goffset[b], EVENANDODD, gen_pt[0]);
+      mtag = start_gather_field(Tr_Uinv[a], sizeof(complex),
+                                goffset[b], EVENANDODD, gen_pt[0]);
       wait_gather(mtag);
 
       // Now put it all together into dest
       FORALLSITES(i, s) {
         tc1 = *((complex *)(gen_pt[0][i]));
-        CADD(s->Tr_Uinv_psi[b], tc1, tc2);
-        CMUL(s->plaqdet[a][b], tc2, tc1);
+        CADD(Tr_Uinv[b][i], tc1, tc2);
+        CMUL(plaqdet[a][b][i], tc2, tc1);
         CSUM(dest[i], tc1);
       }
       cleanup_gather(mtag);

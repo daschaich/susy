@@ -41,8 +41,8 @@ void setup_rhmc();
 void fermion_rep();
 
 // Helper routines for action and force computations
-void compute_DmuUmu();
 void compute_plaqdet();
+void compute_DmuUmu();    // Computes plaqdet if G is non-zero
 void compute_Fmunu();
 
 // Gaussian random source
@@ -103,7 +103,6 @@ void scalar_mult_add_TF(Twist_Fermion *src1, Twist_Fermion *src2, Real s,
                         Twist_Fermion *dest);
 void scalar_mult_TF(Twist_Fermion *src, Real s, Twist_Fermion *dest);
 void gauge_field_copy_f(field_offset src, field_offset dest);
-void shiftmat(field_offset src, field_offset dest, int dir);
 
 // Determinant-related routines
 void measure_det();
@@ -139,7 +138,7 @@ int d_susyTrans();      // Supersymmetry transformation
 #endif
 #ifdef PL_CORR
 // Polyakov loop correlator -- NOT CURRENTLY IN USE
-void ploop_c();
+void ploop_c();         // Computes Polyakov loop at each spatial site
 void print_var3(char *label);
 #endif
 #ifdef WLOOP

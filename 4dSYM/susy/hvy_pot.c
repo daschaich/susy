@@ -38,6 +38,7 @@ Real A4map_slice(x_in, y_in, z_in) {
 
 
 // -----------------------------------------------------------------
+// Use tempmat1, tempmat2 and staple for temporary storage
 void hvy_pot(int do_det) {
   register int i;
   register site *s;
@@ -48,9 +49,8 @@ void hvy_pot(int do_det) {
   Real lookup[MAX_pts], W[MAX_pts];
   double wloop;
   complex tc;
-  su3_matrix_f tmat, tmat2;
+  su3_matrix_f tmat, tmat2, *mat;
   msg_tag *mtag = NULL;
-  field_offset oldmat, newmat, tt;
 
   // Initialize Wilson loop accumulators
   for (i = 0; i < MAX_pts; i++) {
@@ -69,27 +69,24 @@ void hvy_pot(int do_det) {
   node0_printf("hvy_pot: MAX_T = %d, MAX_X = %d --> r < %.6g\n",
                MAX_T, MAX_X, MAX_r);
 
-  // Use tempmat1 to construct linear product from each point
+  // Use staple to hold product of t_dist links at each (x, y, z)
   for (t_dist = 1; t_dist <= MAX_T; t_dist++) {
     if (t_dist == 1) {
       FORALLSITES(i, s)
-        su3mat_copy_f(&(s->linkf[TUP]), &(s->tempmat1));
+        su3mat_copy_f(&(s->linkf[TUP]), &(staple[i]));
     }
     else {
-      mtag = start_gather_site(F_OFFSET(tempmat1), sizeof(su3_matrix_f),
-                               goffset[TUP], EVENANDODD, gen_pt[0]);
+      mtag = start_gather_field(staple, sizeof(su3_matrix_f),
+                                goffset[TUP], EVENANDODD, gen_pt[0]);
       wait_gather(mtag);
       FORALLSITES(i, s) {
-        mult_su3_nn_f(&(s->linkf[TUP]), (su3_matrix_f *)gen_pt[0][i],
-                      &(s->staple));
+        mat = (su3_matrix_f *)gen_pt[0][i];
+        mult_su3_nn_f(&(s->linkf[TUP]), mat, &(tempmat2[i]));
       }
       cleanup_gather(mtag);
       FORALLSITES(i, s)
-        su3mat_copy_f(&(s->staple), &(s->tempmat1));
+        su3mat_copy_f(&(tempmat2[i]), &(staple[i]));
     }
-    // Now tempmat1 is product of t_dist links at each (x, y, z)
-    oldmat = F_OFFSET(tempmat2);
-    newmat = F_OFFSET(staple);    // Will switch these two
 
     for (x_dist = 0; x_dist <= MAX_X; x_dist++) {
       if (x_dist > 0)
@@ -97,29 +94,26 @@ void hvy_pot(int do_det) {
       else
         y_start = 0;    // Don't need negative y_dist when x_dist = 0
       for (y_dist = y_start; y_dist <= MAX_X; y_dist++) {
-        // Gather from spatial dirs, compute products of paths
+        // Gather staple to tempmat1 along spatial offset, using tempmat2
         FORALLSITES(i, s)
-          su3mat_copy_f(&(s->tempmat1), (su3_matrix_f *)F_PT(s, oldmat));
+          su3mat_copy_f(&(staple[i]), &(tempmat1[i]));
         for (i = 0; i < x_dist; i++) {
-          shiftmat(oldmat, newmat, goffset[XUP]);
-          tt = oldmat;
-          oldmat = newmat;
-          newmat = tt;
+          shiftmat(tempmat1, tempmat2, goffset[XUP]);
+          FORALLSITES(i, s)
+            su3mat_copy_f(&(tempmat2[i]), &(tempmat1[i]));
         }
         if (y_dist > 0) {
           for (i = 0; i < y_dist; i++) {
-            shiftmat(oldmat, newmat, goffset[YUP]);
-            tt = oldmat;
-            oldmat = newmat;
-            newmat = tt;
+            shiftmat(tempmat1, tempmat2, goffset[YUP]);
+            FORALLSITES(i, s)
+              su3mat_copy_f(&(tempmat2[i]), &(tempmat1[i]));
           }
         }
         else if (y_dist < 0) {
           for (i = y_dist; i < 0; i++) {
-            shiftmat(oldmat, newmat, goffset[YUP] + 1);
-            tt = oldmat;
-            oldmat = newmat;
-            newmat = tt;
+            shiftmat(tempmat1, tempmat2, goffset[YUP] + 1);
+            FORALLSITES(i, s)
+              su3mat_copy_f(&(tempmat2[i]), &(tempmat1[i]));
           }
         }
 
@@ -130,20 +124,18 @@ void hvy_pot(int do_det) {
         else
           z_start = 0;
         for (i = z_start; i < 0; i++) {
-          shiftmat(oldmat, newmat, goffset[ZUP] + 1);
-          tt = oldmat;
-          oldmat = newmat;
-          newmat = tt;
+          shiftmat(tempmat1, tempmat2, goffset[ZUP] + 1);
+          FORALLSITES(i, s)
+            su3mat_copy_f(&(tempmat2[i]), &(tempmat1[i]));
         }
         for (z_dist = z_start; z_dist <= MAX_X; z_dist++) {
           // Figure out scalar distance
           tr = A4map_slice(x_dist, y_dist, z_dist);
           if (tr > MAX_r - 1.0e-6) {
             // Need to move on to next t_dist
-            shiftmat(oldmat, newmat, goffset[ZUP]);
-            tt = oldmat;
-            oldmat = newmat;
-            newmat = tt;
+            shiftmat(tempmat1, tempmat2, goffset[ZUP]);
+            FORALLSITES(i, s)
+              su3mat_copy_f(&(tempmat2[i]), &(tempmat1[i]));
             continue;
           }
 
@@ -170,8 +162,7 @@ void hvy_pot(int do_det) {
           wloop = 0.0;
           FORALLSITES(i, s) {
             // Compute the actual Coulomb gauge Wilson loop product
-            mult_su3_na_f(&(s->tempmat1),
-                          (su3_matrix_f *)F_PT(s, oldmat), &tmat);
+            mult_su3_na_f(&(staple[i]), &(tempmat1[i]), &tmat);
 
             if (do_det == 1)
               det_project(&tmat, &tmat2);
@@ -194,10 +185,9 @@ void hvy_pot(int do_det) {
 #endif
 
           // As we increment z, shift in z direction
-          shiftmat(oldmat, newmat, goffset[ZUP]);
-          tt = oldmat;
-          oldmat = newmat;
-          newmat = tt;
+          shiftmat(tempmat1, tempmat2, goffset[ZUP]);
+          FORALLSITES(i, s)
+            su3mat_copy_f(&(tempmat2[i]), &(tempmat1[i]));
         } // z_dist
       } // y_dist
     } // x_dist

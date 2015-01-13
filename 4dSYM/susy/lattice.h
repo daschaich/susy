@@ -51,12 +51,8 @@ typedef struct {
   su3_vector site_sol, link_sol[NUMLINK], plaq_sol[NPLAQ];
   su3_vector site_psol, link_psol[NUMLINK], plaq_psol[NPLAQ];
 
-  su3_matrix_f f_U[NUMLINK];        // "Force"
+  su3_matrix_f f_U[NUMLINK];        // Force matrices
 
-  // For convenience in calculating action and force
-  // May be wasteful of space
-  complex plaqdet[NUMLINK][NUMLINK], Tr_Uinv_psi[NUMLINK];
-  su3_matrix_f DmuUmu, Fmunu[NPLAQ];
 #ifdef CORR
   su3_matrix_f B[NUMLINK], C[NUMLINK];
   Real traceBB[NUMLINK][NUMLINK], traceCC[NUMLINK][NUMLINK];
@@ -65,9 +61,6 @@ typedef struct {
   // Boundary conditions -- many unused
   Real bc1[2 * NUMLINK], bc2[2 * NUMLINK][2 * NUMLINK];
   Real bc3[2 * NUMLINK][2 * NUMLINK][2 * NUMLINK];
-
-  // Temporary matrices
-  su3_matrix_f tempmat1, tempmat2, staple;
 
 #ifdef PL_CORR
   complex print_var, ploop_corr, fft1, fft2;
@@ -151,7 +144,6 @@ EXTERN int DbminusPtoP_lookup[NTERMS][NUMLINK];
 EXTERN int F1Q_d1[NTERMS], F1Q_d2[NTERMS];
 EXTERN int F2Q_d1[NTERMS], F2Q_d2[NTERMS];
 EXTERN int FQ_lookup[NTERMS][NUMLINK];
-EXTERN su3_vector *tsite[NUMLINK];        // For fermion action
 
 // Persistent site, link and plaq fermions for matrix--vector operation
 // Used in fermion_op
@@ -159,6 +151,15 @@ complex *tr_dest;     // For fermion action
 su3_vector *site_src, *link_src[NUMLINK], *plaq_src[NPLAQ];
 su3_vector *site_dest, *link_dest[NUMLINK], *plaq_dest[NPLAQ];
 su3_vector *link_dest2[NUMLINK], *plaq_dest2[NPLAQ];
+
+// For convenience in calculating action and force
+// May be wasteful of space
+EXTERN complex *plaqdet[NUMLINK][NUMLINK], *Tr_Uinv[NUMLINK];
+EXTERN su3_vector *tsite[NUMLINK];
+EXTERN su3_matrix_f *DmuUmu, *Fmunu[NPLAQ], *Ddet[NUMLINK][NUMLINK];
+
+// Temporary matrices
+EXTERN su3_matrix_f *tempmat1, *tempmat2, *staple;
 
 EXTERN gauge_file *startlat_p;
 EXTERN gauge_file *savelat_p;
@@ -187,7 +188,6 @@ EXTERN su3_matrix_f *thin_link[NUMLINK];
 EXTERN su3_matrix_f *smeared_link[NUMLINK];
 EXTERN su3_matrix_f *stp[NUMLINK];    // Staples
 EXTERN anti_hermitmat *Q[NUMLINK];    // To be exponentiated
-EXTERN su3_matrix_f *tempmat;         // Staple storage
 
 #ifdef EIG
 // Eigenvalue stuff

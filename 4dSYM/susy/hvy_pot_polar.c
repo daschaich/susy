@@ -21,9 +21,8 @@ void hvy_pot_polar() {
   int count[MAX_pts], this_r, total_r = 0;
   Real MAX_r = 100.0 * MAX_X, tr, lookup[MAX_pts], W[MAX_pts];
   double wloop;
-  su3_matrix_f tmat;
+  su3_matrix_f tmat, *mat;
   msg_tag *mtag = NULL;
-  field_offset oldmat, newmat, tt;
 
   // Initialize Wilson loop accumulators
   for (i = 0; i < MAX_pts; i++) {
@@ -50,27 +49,24 @@ void hvy_pot_polar() {
    su3mat_copy_f(&tmat, &(s->linkf[TUP]));
   }
 
-  // Use tempmat1 to construct linear product from each point
+  // Use staple to hold product of t_dist links at each (x, y, z)
   for (t_dist = 1; t_dist <= MAX_T; t_dist++) {
     if (t_dist == 1) {
       FORALLSITES(i, s)
-        su3mat_copy_f(&(s->linkf[TUP]), &(s->tempmat1));
+        su3mat_copy_f(&(s->linkf[TUP]), &(staple[i]));
     }
     else {
-      mtag = start_gather_site(F_OFFSET(tempmat1), sizeof(su3_matrix_f),
-                               goffset[TUP], EVENANDODD, gen_pt[0]);
+      mtag = start_gather_field(staple, sizeof(su3_matrix_f),
+                                goffset[TUP], EVENANDODD, gen_pt[0]);
       wait_gather(mtag);
       FORALLSITES(i, s) {
-        mult_su3_nn_f(&(s->linkf[TUP]), (su3_matrix_f *)gen_pt[0][i],
-                      &(s->staple));
+        mat = (su3_matrix_f *)gen_pt[0][i];
+        mult_su3_nn_f(&(s->linkf[TUP]), mat, &(tempmat2[i]));
       }
       cleanup_gather(mtag);
       FORALLSITES(i, s)
-        su3mat_copy_f(&(s->staple), &(s->tempmat1));
+        su3mat_copy_f(&(tempmat2[i]), &(staple[i]));
     }
-    // Now tempmat1 is product of t_dist links at each (x, y, z)
-    oldmat = F_OFFSET(tempmat2);
-    newmat = F_OFFSET(staple);    // Will switch these two
 
     for (x_dist = 0; x_dist <= MAX_X; x_dist++) {
       if (x_dist > 0)
@@ -78,29 +74,26 @@ void hvy_pot_polar() {
       else
         y_start = 0;    // Don't need negative y_dist when x_dist = 0
       for (y_dist = y_start; y_dist <= MAX_X; y_dist++) {
-        // Gather from spatial dirs, compute products of paths
+        // Gather staple to tempmat1 along spatial offset, using tempmat2
         FORALLSITES(i, s)
-          su3mat_copy_f(&(s->tempmat1), (su3_matrix_f *)F_PT(s, oldmat));
+          su3mat_copy_f(&(staple[i]), &(tempmat1[i]));
         for (i = 0; i < x_dist; i++) {
-          shiftmat(oldmat, newmat, goffset[XUP]);
-          tt = oldmat;
-          oldmat = newmat;
-          newmat = tt;
+          shiftmat(tempmat1, tempmat2, goffset[XUP]);
+          FORALLSITES(i, s)
+            su3mat_copy_f(&(tempmat2[i]), &(tempmat1[i]));
         }
         if (y_dist > 0) {
           for (i = 0; i < y_dist; i++) {
-            shiftmat(oldmat, newmat, goffset[YUP]);
-            tt = oldmat;
-            oldmat = newmat;
-            newmat = tt;
+            shiftmat(tempmat1, tempmat2, goffset[YUP]);
+            FORALLSITES(i, s)
+              su3mat_copy_f(&(tempmat2[i]), &(tempmat1[i]));
           }
         }
         else if (y_dist < 0) {
           for (i = y_dist; i < 0; i++) {
-            shiftmat(oldmat, newmat, goffset[YUP] + 1);
-            tt = oldmat;
-            oldmat = newmat;
-            newmat = tt;
+            shiftmat(tempmat1, tempmat2, goffset[YUP] + 1);
+            FORALLSITES(i, s)
+              su3mat_copy_f(&(tempmat2[i]), &(tempmat1[i]));
           }
         }
 
@@ -111,20 +104,18 @@ void hvy_pot_polar() {
         else
           z_start = 0;
         for (i = z_start; i < 0; i++) {
-          shiftmat(oldmat, newmat, goffset[ZUP] + 1);
-          tt = oldmat;
-          oldmat = newmat;
-          newmat = tt;
+          shiftmat(tempmat1, tempmat2, goffset[ZUP] + 1);
+          FORALLSITES(i, s)
+            su3mat_copy_f(&(tempmat2[i]), &(tempmat1[i]));
         }
         for (z_dist = z_start; z_dist <= MAX_X; z_dist++) {
           // Figure out scalar distance
           tr = A4map_slice(x_dist, y_dist, z_dist);
           if (tr > MAX_r - 1.0e-6) {
             // Need to move on to next t_dist
-            shiftmat(oldmat, newmat, goffset[ZUP]);
-            tt = oldmat;
-            oldmat = newmat;
-            newmat = tt;
+            shiftmat(tempmat1, tempmat2, goffset[ZUP]);
+            FORALLSITES(i, s)
+              su3mat_copy_f(&(tempmat2[i]), &(tempmat1[i]));
             continue;
           }
 
@@ -149,10 +140,8 @@ void hvy_pot_polar() {
 
           // Evaluate potential at this separation
           wloop = 0.0;
-          FORALLSITES(i, s) {
-            wloop += (double)realtrace_su3_f(&(s->tempmat1),
-                             (su3_matrix_f *)F_PT(s, oldmat));
-          }
+          FORALLSITES(i, s)
+            wloop += (double)realtrace_su3_f(&(staple[i]), &(tempmat1[i]));
           g_doublesum(&wloop);
           W[this_r] += wloop;
 #ifdef CHECK_ROT
@@ -162,10 +151,9 @@ void hvy_pot_polar() {
 #endif
 
           // As we increment z, shift in z direction
-          shiftmat(oldmat, newmat, goffset[ZUP]);
-          tt = oldmat;
-          oldmat = newmat;
-          newmat = tt;
+          shiftmat(tempmat1, tempmat2, goffset[ZUP]);
+          FORALLSITES(i, s)
+            su3mat_copy_f(&(tempmat2[i]), &(tempmat1[i]));
         } // z_dist
       } // y_dist
     } // x_dist

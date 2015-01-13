@@ -31,38 +31,21 @@ double d_hmom_action() {
 double d_gauge_action(int do_det) {
   register int i;
   register site *s;
-  int j, index, mu, nu;
+  int index;
   double g_action = 0.0, norm = 0.5 * C2;
   complex tc;
   su3_matrix_f tmat, tmat2;
 
-  compute_DmuUmu();
-  if (G > IMAG_TOL)
-    compute_plaqdet();
+  compute_DmuUmu();   // Includes plaqdet if G is non-zero
   compute_Fmunu();
   FORALLSITES(i, s) {
-    // d^2 term
-    // Add plaquette determinant contribution to DmuUmu if G is non-zero
-    if (G > IMAG_TOL) {
-      for (mu = XUP; mu < NUMLINK; mu++) {
-        for (nu = XUP; nu < NUMLINK; nu++) {
-          if (mu == nu)
-            continue;
-
-          for (j = 0; j < NCOL; j++) {
-            s->DmuUmu.e[j][j].real += G * (s->plaqdet[mu][nu].real - 1.0);
-            s->DmuUmu.e[j][j].imag += G * s->plaqdet[mu][nu].imag;
-          }
-        }
-      }
-    }
-    // Now square and normalize by C2 / 2
-    mult_su3_nn_f(&(s->DmuUmu), &(s->DmuUmu), &tmat);
+    // d^2 term normalized by C2 / 2
+    mult_su3_nn_f(&(DmuUmu[i]), &(DmuUmu[i]), &tmat);
     scalar_mult_su3_matrix_f(&tmat, norm, &tmat);
 
     // F^2 term
     for (index = 0; index < NPLAQ; index++) {
-      mult_su3_an_f(&(s->Fmunu[index]), &(s->Fmunu[index]), &tmat2);
+      mult_su3_an_f(&(Fmunu[index][i]), &(Fmunu[index][i]), &tmat2);
       scalar_mult_add_su3_matrix_f(&tmat, &tmat2, 2.0, &tmat);
     }
 
@@ -110,15 +93,15 @@ double d_bmass_action() {
 double d_det_action() {
   register int i;
   register site *s;
-  int dir1, dir2;
+  int a, b;
   double re, im, det_action = 0.0;
 
   compute_plaqdet();
   FORALLSITES(i, s) {
-    for (dir1 = YUP; dir1 < NUMLINK; dir1++) {
-      for (dir2 = XUP; dir2 < dir1; dir2++) {
-        re = s->plaqdet[dir2][dir1].real;
-        im = s->plaqdet[dir2][dir1].imag;
+    for (a = XUP; a < NUMLINK; a++) {
+      for (b = a + 1; b < NUMLINK; b++) {
+        re = plaqdet[a][b][i].real;
+        im = plaqdet[a][b][i].imag;
         det_action += (re - 1.0) * (re - 1.0);
         det_action += im * im;
       }

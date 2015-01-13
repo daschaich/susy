@@ -235,60 +235,29 @@ void invert(su3_matrix_f *in, su3_matrix_f *out) {
 
 
 // -----------------------------------------------------------------
-// Average determinant over lattice volume
+// Average plaquette determinant over lattice volume
 void measure_det() {
-  register int i, dir, dir2;
+  register int i, a, b;
   register site *s;
-//  Real redet, imdet, replaq, implaq;
   Real norm = (Real)(NUMLINK * (NUMLINK - 1) / 2 * volume);
-  complex det_link, tot_det_link, tot_det_link_sq;//, plaquette;
-  su3_matrix_f tmat;
-  msg_tag *mtag0, *mtag1;
+  complex tot = cmplx(0.0, 0.0), tot_sq = cmplx(0.0, 0.0);
 
-  tot_det_link = cmplx(0.0, 0.0);
-  tot_det_link_sq = cmplx(0.0, 0.0);
-  for (dir = YUP; dir < NUMLINK; dir++) {
-    for (dir2 = XUP; dir2 < dir; dir2++) {
-      mtag0 = start_gather_site(F_OFFSET(linkf[dir2]), sizeof(su3_matrix_f),
-                                goffset[dir], EVENANDODD, gen_pt[0]);
-      mtag1 = start_gather_site(F_OFFSET(linkf[dir]), sizeof(su3_matrix_f),
-                                goffset[dir2], EVENANDODD, gen_pt[1]);
-
-      FORALLSITES(i, s)
-        mult_su3_an_f(&(s->linkf[dir2]), &(s->linkf[dir]), &(s->tempmat1));
-
-      wait_gather(mtag0);
-      FORALLSITES(i, s) {
-        mult_su3_nn_f(&(s->tempmat1), (su3_matrix_f *)(gen_pt[0][i]),
-                      &(s->staple));
+  compute_plaqdet();
+  FORALLSITES(i, s) {
+    for (a = YUP; a < NUMLINK; a++) {
+      for (b = XUP; b < a; b++) {
+        CSUM(tot, plaqdet[a][b][i]);
+        tot_sq.real += plaqdet[a][b][i].real * plaqdet[a][b][i].real;
+        tot_sq.imag += plaqdet[a][b][i].imag * plaqdet[a][b][i].imag;
       }
-      wait_gather(mtag1);
-      FORALLSITES(i, s) {
-        mult_su3_na_f((su3_matrix_f *)(gen_pt[1][i]), &(s->staple), &tmat);
-        det_link = find_det(&tmat);
-//        plaquette = trace_su3_f(&tmat);
-        CSUM(tot_det_link, det_link);
-        tot_det_link_sq.real += det_link.real * det_link.real;
-        tot_det_link_sq.imag += det_link.imag * det_link.imag;
-
-//        redet = det_link.real - 1.0;
-//        imdet = det_link.imag;
-//        replaq = plaquette.real;
-//        implaq = plaquette.imag;
-//        node0_printf("DELIN %.4g %.4g\n", redet * redet + imdet * imdet,
-//                                          replaq * replaq + implaq * implaq);
-      }
-      cleanup_gather(mtag0);
-      cleanup_gather(mtag1);
     }
   }
-
-  g_complexsum(&(tot_det_link));
-  g_complexsum(&(tot_det_link_sq));
-  CDIVREAL(tot_det_link, norm, tot_det_link);
-  CDIVREAL(tot_det_link_sq, norm, tot_det_link_sq);
-  node0_printf("DET %.6g %.6g %.6g %.6g\n", tot_det_link.real,
-               tot_det_link.imag, tot_det_link_sq.real, tot_det_link_sq.imag);
+  g_complexsum(&tot);
+  g_complexsum(&tot_sq);
+  CDIVREAL(tot, norm, tot);
+  CDIVREAL(tot_sq, norm, tot_sq);
+  node0_printf("DET %.6g %.6g %.6g %.6g\n",
+               tot.real, tot.imag, tot_sq.real, tot_sq.imag);
 }
 // -----------------------------------------------------------------
 

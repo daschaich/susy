@@ -164,7 +164,7 @@ int d_susyTrans() {
   register int i;
   register site *s;
   int mu, isrc, iters, tot_iters = 0;
-  Real size_r, norm;
+  Real size_r, norm, tr;
   double sum = 0.0;
   double_complex tc, StoL, LtoS, ave = cmplx(0.0, 0.0);
   su3_vector tvec;
@@ -226,17 +226,20 @@ int d_susyTrans() {
   // Normalize by number of sources (already averaged over volume)
   CDIVREAL(ave, 2.0 * (Real)nsrc, ave);
 
-  // Now add gauge piece
+  // Now add gauge piece -- hack by setting G=0 in compute_DmuUmu()
   // Accumulate sum_a U_a Udag_a in tmat1
   // Multiply by DmuUmu into tmat2 and trace
+  tr = G;
+  G = 0;
   compute_DmuUmu();     // Compute sum_b [U_b Udag_b - Udag_b U_b]
+  G = tr;
   FORALLSITES(i, s) {
     mult_su3_na_f(&(s->linkf[0]), &(s->linkf[0]), &tmat1);
     for (mu = 1; mu < NUMLINK; mu++) {
       mult_su3_na_f(&(s->linkf[mu]), &(s->linkf[mu]), &tmat2);
       add_su3_matrix_f(&tmat1, &tmat2, &tmat1);
     }
-    mult_su3_nn_f(&(s->DmuUmu), &tmat1, &tmat2);
+    mult_su3_nn_f(&(DmuUmu[i]), &tmat1, &tmat2);
     tc = trace_su3_f(&tmat2);
     // Make sure trace really is real
     if (abs(tc.imag) > IMAG_TOL) {

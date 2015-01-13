@@ -13,47 +13,50 @@
 // dir1 is the direction of the original link
 // dir2 is the other direction that defines the staple
 // Use gather offsets to handle all five links!
+// Use tempmat1 for temporary storage
 void directional_staple(int dir1, int dir2, field_offset lnk1,
                         field_offset lnk2, su3_matrix_f *stp) {
 
   register int i;
   register site *s;
   msg_tag *tag0, *tag1, *tag2;
-  su3_matrix_f tmat1, tmat2;
+  su3_matrix_f tmat1, tmat2, *mat0, *mat1;
 
   // Get blocked_link[dir2] from direction dir1
   tag0 = start_gather_site(lnk2, sizeof(su3_matrix_f), goffset[dir1],
-                            EVENANDODD, gen_pt[0]);
+                           EVENANDODD, gen_pt[0]);
 
   // Get blocked_link[dir1] from direction dir2
   tag1 = start_gather_site(lnk1, sizeof(su3_matrix_f), goffset[dir2],
-                            EVENANDODD, gen_pt[1]);
+                           EVENANDODD, gen_pt[1]);
 
   // Start working on the lower staple while we wait for the gathers
-  // The lower staple is prepared at x-dir2 and stored in tempmat,
+  // The lower staple is prepared at x-dir2 and stored in tempmat1,
   // then gathered to x
   FORALLSITES(i, s)
     mult_su3_an_f((su3_matrix_f *)F_PT(s, lnk2), (su3_matrix_f *)F_PT(s, lnk1),
-                  &(tempmat[i]));
+                  &(tempmat1[i]));
 
   wait_gather(tag0);
   wait_gather(tag1);
 
   // Finish lower staple
   FORALLSITES(i, s) {
-    mult_su3_nn_f(&(tempmat[i]), (su3_matrix_f *)gen_pt[0][i], &tmat1);
-    su3mat_copy_f(&tmat1, &(tempmat[i]));
+    mat0 = (su3_matrix_f *)gen_pt[0][i];
+    mult_su3_nn_f(&(tempmat1[i]), mat0, &tmat1);
+    su3mat_copy_f(&tmat1, &(tempmat1[i]));
   }
 
   // Gather staple from direction -dir2 to "home" site
-  tag2 = start_gather_field(tempmat, sizeof(su3_matrix_f),
+  tag2 = start_gather_field(tempmat1, sizeof(su3_matrix_f),
                             goffset[dir2] + 1, EVENANDODD, gen_pt[2]);
 
   // Calculate upper staple, add it
   FORALLSITES(i, s) {
-    mult_su3_nn_f((su3_matrix_f *)F_PT(s, lnk2),
-                  (su3_matrix_f *)gen_pt[1][i], &tmat1);
-    mult_su3_na_f(&tmat1, (su3_matrix_f *)gen_pt[0][i], &tmat2);
+    mat0 = (su3_matrix_f *)gen_pt[0][i];
+    mat1 = (su3_matrix_f *)gen_pt[1][i];
+    mult_su3_nn_f((su3_matrix_f *)F_PT(s, lnk2), mat1, &tmat1);
+    mult_su3_na_f(&tmat1, mat0, &tmat2);
     add_su3_matrix_f(stp + i, &tmat2, stp + i);
   }
 

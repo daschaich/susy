@@ -1,49 +1,40 @@
 // -----------------------------------------------------------------
-// Based on ploop2.c
+// Compute Polyakov loop at each spatial site, for correlator
+// Use tempmat1, tempmat2 and staple for temporary storage
 #include "susy_includes.h"
-// -----------------------------------------------------------------
 
-
-
-// -----------------------------------------------------------------
 void ploop_c() {
 #ifdef PL_CORR
-  register int i, t;
+  register int i;
   register site *s;
-  msg_tag *tag = NULL;
+  int t;
+  su3_matrix_f *mat;
 
   FORALLSITES(i, s)
-    lattice[i].tempmat2 = lattice[i].linkf[TUP];
+    su3mat_copy_f(&(s->linkf[TUP]), &(tempmat1[i]));
 
   for (t = 1; t < nt; t++) {
-    tag = start_gather_site(F_OFFSET(tempmat2), sizeof(su3_matrix_f),
-                            TUP, EVENANDODD, gen_pt[0] );
-    wait_gather(tag);
+    shiftmat(tempmat1, tempmat2, goffset[TUP]);
     FORALLSITES(i, s) {
+      su3mat_copy_f(&(tempmat2[i]), &(tempmat1[i]));
       if (s->t != 0)
         continue;
-      if (t == 1)
-          mult_su3_nn_f(&(s->linkf[TUP]), (su3_matrix_f *)gen_pt[0][i],
-                        &(s->staple));
+      if (t == 1) {
+        mat = (su3_matrix_f *)gen_pt[0][i];
+        mult_su3_nn_f(&(s->linkf[TUP]), mat, &(staple[i]));
+      }
       else {
-        mult_su3_nn_f(&(s->staple), (su3_matrix_f *)gen_pt[0][i],
-                      &(s->tempmat2));
-        lattice[i].staple = lattice[i].tempmat2;
+        mat = (su3_matrix_f *)gen_pt[0][i];
+        mult_su3_nn_f(&(staple[i]), mat, &(tempmat1[i]));
+        su3mat_copy_f(&(tempmat1[i]), &(staple[i]));
       }
     }
-
-    // Need both of these here -- very strange
-    FORALLSITES(i, s)
-      s->tempmat1 = *(su3_matrix_f *)(gen_pt[0][i]);
-    FORALLSITES(i, s)
-      s->tempmat2 = s->tempmat1;
-    cleanup_gather(tag);
   }
   FORALLSITES(i, s) {
     if (s->t != 0)
       continue;
 
-    s->ploop_corr = trace_su3_f(&(s->staple));
+    s->ploop_corr = trace_su3_f(&(staple[i]));
     CDIVREAL((s->ploop_corr), NCOL, (s->ploop_corr));
   }
 #endif
