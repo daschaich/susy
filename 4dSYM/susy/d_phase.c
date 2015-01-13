@@ -30,16 +30,16 @@ double_complex dot(complex *a, complex *b) {
 // -----------------------------------------------------------------
 // Wrapper for the fermion_op matvec
 // Convert between complex vectors and Twist_Fermions
+// Use plaq_src as temporary storage to be gathered
 void matvec(complex *in, complex *out) {
   register site *s;
-  int i, j, mu, iter;
+  int i, j, iter;
   msg_tag *mtag0 = NULL, *mtag1 = NULL, *mtag2;
   su3_vector *plaq23, *plaq13, *plaq12;
 
   // Copy complex vector into Twist_Fermion src
   // Each Twist_Fermion has Ndat = 16DIMF non-trivial complex components
   // !!! Need to gather & cycle over fields to ensure non-zero Q[i + 1] M Q[i]
-  // Use s->plaq_sol as temporary storage to be gathered
   iter = 0;
   FORALLSITES(i, s) {
     for (j = 0; j < DIMF; j++) {
@@ -67,30 +67,30 @@ void matvec(complex *in, complex *out) {
 
       set_complex_equal(&(in[iter]), &(src[i].Fplaq[0].c[j]));  // 0, 1 --> 0
       iter++;
-      set_complex_equal(&(in[iter]), &(s->plaq_sol[7].c[j]));   // 2, 3 --> 7
+      set_complex_equal(&(in[iter]), &(plaq_src[7][i].c[j]));   // 2, 3 --> 7
       iter++;
 
       set_complex_equal(&(in[iter]), &(src[i].Fplaq[1].c[j]));  // 0, 2 --> 1
       iter++;
-      set_complex_equal(&(in[iter]), &(s->plaq_sol[5].c[j]));   // 1, 3 --> 5
+      set_complex_equal(&(in[iter]), &(plaq_src[5][i].c[j]));   // 1, 3 --> 5
       iter++;
 
       set_complex_equal(&(in[iter]), &(src[i].Fplaq[2].c[j]));  // 0, 3 --> 2
       iter++;
-      set_complex_equal(&(in[iter]), &(s->plaq_sol[4].c[j]));   // 1, 2 --> 4
+      set_complex_equal(&(in[iter]), &(plaq_src[4][i].c[j]));   // 1, 2 --> 4
       iter++;
     }
   }
 
-  // Gather plaq_sol[7] (2, 3) from x - 0 - 1 (gather path 23),
-  // plaq_sol[5] (1, 3) from x - 0 - 2 (gather path 31)
-  // and plaq_sol[4] (1, 2) from x - 0 - 3 (gather path 35)
-  mtag0 = start_gather_site(F_OFFSET(plaq_sol[7]), sizeof(su3_vector),
-                            23, EVENANDODD, gen_pt[0]);
-  mtag1 = start_gather_site(F_OFFSET(plaq_sol[5]), sizeof(su3_vector),
-                            31, EVENANDODD, gen_pt[1]);
-  mtag2 = start_gather_site(F_OFFSET(plaq_sol[4]), sizeof(su3_vector),
-                            35, EVENANDODD, gen_pt[2]);
+  // Gather plaq_src[7] (2, 3) from x - 0 - 1 (gather path 23),
+  // plaq_src[5] (1, 3) from x - 0 - 2 (gather path 31)
+  // and plaq_src[4] (1, 2) from x - 0 - 3 (gather path 35)
+  mtag0 = start_gather_field(plaq_src[7], sizeof(su3_vector),
+                             23, EVENANDODD, gen_pt[0]);
+  mtag1 = start_gather_field(plaq_src[5], sizeof(su3_vector),
+                             31, EVENANDODD, gen_pt[1]);
+  mtag2 = start_gather_field(plaq_src[4], sizeof(su3_vector),
+                             35, EVENANDODD, gen_pt[2]);
 
   wait_gather(mtag0);
   wait_gather(mtag1);
@@ -119,20 +119,20 @@ void matvec(complex *in, complex *out) {
   Nmatvecs++;
 
   // Copy the resulting Twist_Fermion res back to complex vector y
-  // Gather plaq_sol[7] (2, 3) from x + 0 + 1 (gather path 22),
-  // plaq_sol[5] (1, 3) from x + 0 + 2 (gather path 30)
-  // and plaq_sol[4] (1, 2) from x + 0 + 3 (gather path 34)
+  // Gather plaq_src[7] (2, 3) from x + 0 + 1 (gather path 22),
+  // plaq_src[5] (1, 3) from x + 0 + 2 (gather path 30)
+  // and plaq_src[4] (1, 2) from x + 0 + 3 (gather path 34)
   FORALLSITES(i, s) {
-    su3vec_copy(&(res[i].Fplaq[7]), &(s->plaq_sol[7]));
-    su3vec_copy(&(res[i].Fplaq[5]), &(s->plaq_sol[5]));
-    su3vec_copy(&(res[i].Fplaq[4]), &(s->plaq_sol[4]));
+    su3vec_copy(&(res[i].Fplaq[7]), &(plaq_src[7][i]));
+    su3vec_copy(&(res[i].Fplaq[5]), &(plaq_src[5][i]));
+    su3vec_copy(&(res[i].Fplaq[4]), &(plaq_src[4][i]));
   }
-  mtag0 = start_gather_site(F_OFFSET(plaq_sol[7]), sizeof(su3_vector),
-                            22, EVENANDODD, gen_pt[0]);
-  mtag1 = start_gather_site(F_OFFSET(plaq_sol[5]), sizeof(su3_vector),
-                            30, EVENANDODD, gen_pt[1]);
-  mtag2 = start_gather_site(F_OFFSET(plaq_sol[4]), sizeof(su3_vector),
-                            34, EVENANDODD, gen_pt[2]);
+  mtag0 = start_gather_field(plaq_src[7], sizeof(su3_vector),
+                             22, EVENANDODD, gen_pt[0]);
+  mtag1 = start_gather_field(plaq_src[5], sizeof(su3_vector),
+                             30, EVENANDODD, gen_pt[1]);
+  mtag2 = start_gather_field(plaq_src[4], sizeof(su3_vector),
+                             34, EVENANDODD, gen_pt[2]);
 
   wait_gather(mtag0);
   wait_gather(mtag1);
