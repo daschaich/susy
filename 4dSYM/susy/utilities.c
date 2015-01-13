@@ -271,7 +271,7 @@ void fermion_op(Twist_Fermion *src, Twist_Fermion *dest, int sign) {
 #ifdef SV
   DbplusStoL(site_src, link_dest2);       // Overwrites link_dest2
   FORALLSITES(i, s) {
-    for (mu = 0; mu < NUMLINK; mu++)
+    for (mu = XUP; mu < NUMLINK; mu++)
       scalar_mult_add_su3_vector(&(link_dest[mu][i]), &(link_dest2[mu][i]),
                                  0.5, &(link_dest[mu][i]));
   }
@@ -283,7 +283,7 @@ void fermion_op(Twist_Fermion *src, Twist_Fermion *dest, int sign) {
     detG = cmplx(0.0, 0.5 * G * sqrt((Real)NCOL));
     detStoL(site_src, link_dest2);        // Overwrites link_dest2
     FORALLSITES(i, s) {
-      for (mu = 0; mu < NUMLINK; mu++)
+      for (mu = XUP; mu < NUMLINK; mu++)
         c_scalar_mult_sub_su3vec(&(link_dest[mu][i]), &detG,
                                  &(link_dest2[mu][i]));
     }

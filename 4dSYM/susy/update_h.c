@@ -10,6 +10,7 @@
 // -----------------------------------------------------------------
 // Update mom[NUMLINK] with the gauge force
 // Include tunable coefficient C2 in the d^2 term of the action
+// Use tr_dest and tempmat1 for temporary storage
 double gauge_force(Real eps) {
   register int i, mu, nu, index;
   register site *s;
@@ -63,7 +64,7 @@ double gauge_force(Real eps) {
   // Sum_nu {Tr[DmuUmu(x)] plaqdet[nu][mu](x)
   //       + Tr[DmuUmu(x-nu)] plaqdet[mu][nu](x-nu)} U_mu^{-1}(x)
   // Only compute if G is non-zero
-  // Use tr_dest for temporary storage
+  // Use tr_dest and tempmat1 for temporary storage
   if (G > IMAG_TOL) {
     for (mu = XUP; mu < NUMLINK; mu++) {
       // Invert U_a(x) and store in tempmat1
@@ -199,7 +200,7 @@ void assemble_fermion_force(Twist_Fermion *sol, Twist_Fermion *psol) {
   int mu, nu, a, b, c, d, e, l, m, gather, next, flip = 0;
   int index, i_ab, i_de, j;
   Real permm, BC;
-  complex tc;
+  complex detG, tc, tc2, trace;
   msg_tag *mtag[NUMLINK], *tag0[2], *tag1[2], *tag2[2], *tag3[2];
   msg_tag *mtag0 = NULL, *mtag1 = NULL;
   su3_vector tvec, *vec, *vec0, *vec1, *vec2, *vec3;
@@ -412,7 +413,101 @@ void assemble_fermion_force(Twist_Fermion *sol, Twist_Fermion *psol) {
     cleanup_gather(mtag[mu]);
   }
 
-  // TODO: Add plaquette determinant contribution if G is non-zero
+  // Plaquette determinant contributions if G is non-zero
+  // Use tempmat1, Tr_Uinv and tr_dest for temporary storage
+  if (G > IMAG_TOL) {
+    detG = cmplx(0.0, 0.5 * G * sqrt((Real)NCOL));
+    compute_plaqdet();
+
+    // First term connects link_sol with site_psol[DIMF - 1]^dag
+    for (mu = XUP; mu < NUMLINK; mu++) {
+      // Save inverse of U_mu(x) in tempmat1
+      // Save sum_a Tr[U_mu(x)^{-1} Lambda^a] psi_mu^a(x) in Tr_Uinv
+      // Zero tr_dest to hold sum
+      FORALLSITES(i, s) {
+        tr_dest[i] = cmplx(0.0, 0.0);
+        invert(&(s->linkf[mu]), &(tempmat1[i]));
+        trace = cmplx(0.0, 0.0);              // Initialize
+        for (a = 0; a < DIMF; a++) {
+          mult_su3_nn_f(&(tempmat1[i]), &(Lambda[a]), &tmat);
+          tc = trace_su3_f(&tmat);
+          CMUL(tc, link_sol[mu][i].c[a], tc2);
+          CSUM(trace, tc2);                   // Accumulate
+        }
+        CMULREAL(trace, s->bc1[mu], Tr_Uinv[mu][i]);
+
+        // Save detG eta^B(x) plaqdet[mu][nu] in modified plaqdet[mu][nu]
+        CONJG(site_psol[i].c[DIMF - 1], tc);
+        for (nu = mu + 1; nu < NUMLINK; nu++) {
+          CMUL(tc, plaqdet[mu][nu][i], tc2);
+          set_complex_equal(&tc2, &(plaqdet[mu][nu][i]));
+
+          CMUL(tc, plaqdet[nu][mu][i], tc2);
+          set_complex_equal(&tc2, &(plaqdet[nu][mu][i]));
+        }
+      }
+
+      // Now gather modified plaqdet[mu][nu] from x - nu
+      // and Tr_Uinv[nu] from x + mu and from x - nu
+      // and put everything together in tr_dest
+      for (nu = XUP; nu < NUMLINK; nu++) {
+        if (mu == nu)
+          continue;
+
+        mtag[0] = start_gather_field(plaqdet[mu][nu], sizeof(complex),
+                                     goffset[nu] + 1, EVENANDODD, gen_pt[0]);
+        mtag0 = start_gather_field(Tr_Uinv[nu], sizeof(complex),
+                                   goffset[mu], EVENANDODD, gen_pt[1]);
+        mtag1 = start_gather_field(Tr_Uinv[nu], sizeof(complex),
+                                   goffset[nu] + 1, EVENANDODD, gen_pt[2]);
+
+        // Add on-site contribution while gathers run
+        FORALLSITES(i, s) {
+          CMUL(plaqdet[nu][mu][i], Tr_Uinv[mu][i], tc);
+          CSUM(tr_dest[i], tc);
+        }
+
+        // Next add on-site Tr_Uinv times plaqdet[mu][nu] gathered from x - nu
+        wait_gather(mtag[0]);
+        FORALLSITES(i, s) {
+          tc = *((complex *)(gen_pt[0][i]));
+          CMUL(tc, Tr_Uinv[mu][i], tc2);
+          CSUM(tr_dest[i], tc2);
+        }
+
+        // Next add on-site plaqdet[nu][mu] times Tr_Uinv gathered from x + mu
+        wait_gather(mtag0);
+        FORALLSITES(i, s) {
+          tc = *((complex *)(gen_pt[1][i]));
+          CMUL(plaqdet[nu][mu][i], tc, tc2);
+          CSUM(tr_dest[i], tc2);
+        }
+        cleanup_gather(mtag0);
+
+        // Finally add plaqdet[mu][nu] gathered from x - nu
+        // times Tr_Uinv gathered from x - nu
+        wait_gather(mtag1);
+        FORALLSITES(i, s) {
+          tc = *((complex *)(gen_pt[0][i]));
+          tc2 = *((complex *)(gen_pt[2][i]));
+          CMUL(tc, tc2, trace);
+          CSUM(tr_dest[i], trace);
+        }
+        cleanup_gather(mtag[0]);
+        cleanup_gather(mtag1);
+      }
+
+      // Now add to force
+      FORALLSITES(i, s) {
+        CMUL(tr_dest[i], detG, tc);
+        c_scalar_mult_add_su3mat_f(&(s->f_U[mu]), &(tempmat1[i]), &tc,
+                                   &(s->f_U[mu]));
+      }
+    }
+
+      // TODO
+      // Second term connects site_sol[DIMF - 1] with link_psol^dag
+  }
 #endif
 #ifdef QCLOSED
   if (NUMLINK != 5) {
@@ -759,7 +854,6 @@ double fermion_force(Real eps, Twist_Fermion *src, Twist_Fermion **sol) {
   g_doublesum(&returnit);
 
   free(fullforce);
-  free(psol);
   return (eps * sqrt(returnit) / volume);
 }
 // -----------------------------------------------------------------
