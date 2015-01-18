@@ -594,7 +594,7 @@ void assemble_fermion_force(Twist_Fermion *sol, Twist_Fermion *psol) {
     compute_plaqdet();      // Reset plaqdet
     CNEGATE(detG, detG);    // As in action, anti-commute site and link
     for (a = XUP; a < NUMLINK; a++) {
-      // Save sum_j U_a(x)^{-1} Lambda^j psi_a^j(x) in Ddet[2][a]
+      // Save sum_j U_a(x)^{-1} Lambda^j psi_a^j(x) U_a(x)^{-1} in Ddet[2][a]
       // Save sum_j Tr[U_a(x)^{-1} Lambda^j] psi_a^j(x) in Tr_Uinv[a]
       FORALLSITES(i, s) {
         // Initialize accumulators for sum over j
@@ -608,7 +608,7 @@ void assemble_fermion_force(Twist_Fermion *sol, Twist_Fermion *psol) {
 
           mult_su3_nn_f(&tmat, &(Uinv[a][i]), &tmat2);
           CONJG((link_psol[a][i]).c[j], tc);      // Accumulate product
-          c_scalar_mult_add_su3mat_f(&(Ddet[2][a][i]), &tmat, &tc,
+          c_scalar_mult_add_su3mat_f(&(Ddet[2][a][i]), &tmat2, &tc,
                                      &(Ddet[2][a][i]));
         }
 
