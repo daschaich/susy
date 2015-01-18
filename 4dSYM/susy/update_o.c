@@ -24,7 +24,7 @@ void ranmom() {
   complex grn;
 
   FORALLSITES(i, s) {
-    for (mu = 0; mu < NUMLINK; mu++) {
+    for (mu = XUP; mu < NUMLINK; mu++) {
       clear_su3mat_f(&(s->mom[mu]));
       for (j = 0; j < DIMF; j++) {
 #ifdef SITERAND
@@ -49,7 +49,7 @@ void update_uu(Real eps) {
   register int i, mu;
   register site *s;
 
-  for (mu = 0; mu < NUMLINK; mu++) {
+  for (mu = XUP; mu < NUMLINK; mu++) {
     FORALLSITES(i, s)
       scalar_mult_add_su3_matrix_f(&(s->linkf[mu]), &(s->mom[mu]), eps,
                                    &(s->linkf[mu]));

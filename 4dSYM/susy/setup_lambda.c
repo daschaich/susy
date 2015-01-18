@@ -24,7 +24,8 @@ void setup_lambda() {
 
   // N * (N - 1) off-diagonal SU(N) generators
   // (T^{ij, +})_{kl} = i * (de_{ki} de_{lj} + de_{kj} de_{li}) / sqrt(2)
-  // (T^{ij, -})_{kl} = (-de_{ki} de_{lj} + de_{kj} de_{ki}) / sqrt(2)
+  // (T^{ij, -})_{kl} = (de_{ki} de_{lj} - de_{kj} de_{ki}) / sqrt(2)
+  // Sign in second chosen to match previous values
   count = 0;
   for (i = 0; i < NCOL; i++) {
     for (j = i + 1; j < NCOL; j++) {
@@ -32,11 +33,11 @@ void setup_lambda() {
         for (l = 0; l < NCOL; l++) {
           if (k == i && l == j) {
             CSUM(Lambda[count].e[k][l], i_inv_sqrt);
-            CDIF(Lambda[count + 1].e[k][l], inv_sqrt);
+            CSUM(Lambda[count + 1].e[k][l], inv_sqrt);
           }
           else if (k == j && l == i) {
             CSUM(Lambda[count].e[k][l], i_inv_sqrt);
-            CSUM(Lambda[count + 1].e[k][l], inv_sqrt);
+            CDIF(Lambda[count + 1].e[k][l], inv_sqrt);
           }
         }
       }

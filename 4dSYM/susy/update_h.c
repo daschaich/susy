@@ -24,16 +24,16 @@ double gauge_force(Real eps) {
   compute_DmuUmu();   // Computes plaqdet if G is non-zero
   // If G is non-zero then below we will need G Tr[DmuUmu] plaqdet[mu][nu]
   // Save this in a modified plaqdet[mu][nu]
-  if (G > IMAG_TOL) {
+  if (G > IMAG_TOL && DIMF == NCOL * NCOL) {
     FORALLSITES(i, s) {
       tc = trace_su3_f(&DmuUmu[i]);
       for (mu = XUP; mu < NUMLINK; mu++) {
         for (nu = mu + 1; nu < NUMLINK; nu++) {
           CMUL(tc, plaqdet[mu][nu][i], tc2);
-          set_complex_equal(&tc2, &(plaqdet[mu][nu][i]));
+          plaqdet[mu][nu][i] = tc2;
 
           CMUL(tc, plaqdet[nu][mu][i], tc2);
-          set_complex_equal(&tc2, &(plaqdet[nu][mu][i]));
+          plaqdet[nu][mu][i] = tc2;
         }
       }
     }
@@ -65,7 +65,7 @@ double gauge_force(Real eps) {
   //       + Tr[DmuUmu(x-nu)] plaqdet[mu][nu](x-nu)} U_mu^{-1}(x)
   // Only compute if G is non-zero
   // Use tr_dest and tempmat1 for temporary storage
-  if (G > IMAG_TOL) {
+  if (G > IMAG_TOL && DIMF == NCOL * NCOL) {
     for (mu = XUP; mu < NUMLINK; mu++) {
       // Invert U_a(x) and store in tempmat1
       // Zero tr_dest to hold sum
@@ -190,9 +190,11 @@ double gauge_force(Real eps) {
 
 
 // -----------------------------------------------------------------
-// Create the fermion force
-// Use tempmat1 for temporary storage
-// sol and psol are copied into persistent su3_vectors as described below
+// Fermion contribution to gauge link force,
+//   f_U = Adj(Ms).D_U M(U, Ub).s - Adj[Adj(Ms).D_Ub M(U, Ub).s]
+// "s" is sol while "Ms" is psol
+// Copy these into persistent su3_vectors for easier gathering
+// Use tempmat1, Tr_Uinv, tr_dest and Ddet[012] for temporary storage
 void assemble_fermion_force(Twist_Fermion *sol, Twist_Fermion *psol) {
   register int i;
   register site *s;
@@ -200,9 +202,9 @@ void assemble_fermion_force(Twist_Fermion *sol, Twist_Fermion *psol) {
   int mu, nu, a, b, c, d, e, l, m, gather, next, flip = 0;
   int index, i_ab, i_de, j;
   Real permm, BC;
-  complex detG, tc, tc2, trace;
+  complex tc, tc2, trace;
   msg_tag *mtag[NUMLINK], *tag0[2], *tag1[2], *tag2[2], *tag3[2];
-  msg_tag *mtag0 = NULL, *mtag1 = NULL;
+  msg_tag *mtag0 = NULL, *mtag1 = NULL, *Trtag = NULL;
   su3_vector tvec, *vec, *vec0, *vec1, *vec2, *vec3;
   su3_matrix_f tmat, tmat2, *mat;
 
@@ -240,8 +242,6 @@ void assemble_fermion_force(Twist_Fermion *sol, Twist_Fermion *psol) {
       clear_su3mat_f(&(s->f_U[mu]));
   }
 
-  // Compute fermion contribution to gauge link force,
-  // f_U = Adj(Ms).D_U M(U, Ub) s - Adj[Adj(Ms). D_Ub M(U, Ub) s]
   // First calculate DU on chi_{munu} D_mu(U) psi_nu
 #ifdef VP
   for (mu = XUP; mu < NUMLINK; mu++) {
@@ -355,7 +355,7 @@ void assemble_fermion_force(Twist_Fermion *sol, Twist_Fermion *psol) {
   }
 #endif
 #ifdef SV
-  // 3rd term, DUb on psi_mu Db_mu(U) eta
+  // 3rd term, DUbar on eta Dbar_mu psi_mu (LtoS)
   mtag[0] = start_gather_field(site_psol, sizeof(su3_vector),
                                goffset[0], EVENANDODD, gen_pt[0]);
   for (mu = XUP; mu < NUMLINK; mu++) {
@@ -367,7 +367,7 @@ void assemble_fermion_force(Twist_Fermion *sol, Twist_Fermion *psol) {
     wait_gather(mtag[mu]);
     FORALLSITES(i, s) {
       clear_su3mat_f(&tmat);
-      vec = (su3_vector *)(gen_pt[mu][i]);
+      vec = (su3_vector *)(gen_pt[mu][i]);    // site_psol(x + mu)
       for (a = 0; a < DIMF; a++) {
         for (b = 0; b < DIMF; b++) {
           CMULJ_((site_psol[i]).c[a], (link_sol[mu][i]).c[b], tc);
@@ -384,7 +384,7 @@ void assemble_fermion_force(Twist_Fermion *sol, Twist_Fermion *psol) {
     cleanup_gather(mtag[mu]);
   }
 
-  // 4th term
+  // 4th term, DUbar on psi_mu Dbar_mu eta
   mtag[0] = start_gather_field(site_sol, sizeof(su3_vector),
                                goffset[0], EVENANDODD, gen_pt[0]);
   for (mu = XUP; mu < NUMLINK; mu++) {
@@ -414,99 +414,341 @@ void assemble_fermion_force(Twist_Fermion *sol, Twist_Fermion *psol) {
   }
 
   // Plaquette determinant contributions if G is non-zero
-  // Use tempmat1, Tr_Uinv and tr_dest for temporary storage
-  if (G > IMAG_TOL) {
-    detG = cmplx(0.0, 0.5 * G * sqrt((Real)NCOL));
+  // Use tempmat1, Tr_Uinv, tr_dest and Ddet[012] for temporary storage
+  if (G > IMAG_TOL && DIMF == NCOL * NCOL) {
+    complex *tempc = malloc(sites_on_node * sizeof(*tempc));
+    complex *inv_term = malloc(sites_on_node * sizeof(*inv_term));
+    complex *adj_term = malloc(sites_on_node * sizeof(*adj_term));
+    complex detG = cmplx(0.0, -0.5 * G * sqrt((Real)NCOL));
     compute_plaqdet();
 
-    // First term connects link_sol with site_psol[DIMF - 1]^dag
-    for (mu = XUP; mu < NUMLINK; mu++) {
-      // Save inverse of U_mu(x) in tempmat1
-      // Save sum_a Tr[U_mu(x)^{-1} Lambda^a] psi_mu^a(x) in Tr_Uinv
-      // Zero tr_dest to hold sum
+    // Save U_a(x)^{-1} and Udag_a(x)^{-1}
+    // Use Ddet[0][a] and Ddet[1][a] for temporary storage, respectively
+    su3_matrix_f *Uinv[NUMLINK], *Udag_inv[NUMLINK];
+    for (a = XUP; a < NUMLINK; a++) {
+      Uinv[a] = Ddet[0][a];
+      Udag_inv[a] = Ddet[1][a];
       FORALLSITES(i, s) {
-        tr_dest[i] = cmplx(0.0, 0.0);
-        invert(&(s->linkf[mu]), &(tempmat1[i]));
-        trace = cmplx(0.0, 0.0);              // Initialize
-        for (a = 0; a < DIMF; a++) {
-          mult_su3_nn_f(&(tempmat1[i]), &(Lambda[a]), &tmat);
-          tc = trace_su3_f(&tmat);
-          CMUL(tc, link_sol[mu][i].c[a], tc2);
-          CSUM(trace, tc2);                   // Accumulate
-        }
-        CMULREAL(trace, s->bc1[mu], Tr_Uinv[mu][i]);
-
-        // Save detG eta^B(x) plaqdet[mu][nu] in modified plaqdet[mu][nu]
-        CONJG(site_psol[i].c[DIMF - 1], tc);
-        for (nu = mu + 1; nu < NUMLINK; nu++) {
-          CMUL(tc, plaqdet[mu][nu][i], tc2);
-          set_complex_equal(&tc2, &(plaqdet[mu][nu][i]));
-
-          CMUL(tc, plaqdet[nu][mu][i], tc2);
-          set_complex_equal(&tc2, &(plaqdet[nu][mu][i]));
-        }
-      }
-
-      // Now gather modified plaqdet[mu][nu] from x - nu
-      // and Tr_Uinv[nu] from x + mu and from x - nu
-      // and put everything together in tr_dest
-      for (nu = XUP; nu < NUMLINK; nu++) {
-        if (mu == nu)
-          continue;
-
-        mtag[0] = start_gather_field(plaqdet[mu][nu], sizeof(complex),
-                                     goffset[nu] + 1, EVENANDODD, gen_pt[0]);
-        mtag0 = start_gather_field(Tr_Uinv[nu], sizeof(complex),
-                                   goffset[mu], EVENANDODD, gen_pt[1]);
-        mtag1 = start_gather_field(Tr_Uinv[nu], sizeof(complex),
-                                   goffset[nu] + 1, EVENANDODD, gen_pt[2]);
-
-        // Add on-site contribution while gathers run
-        FORALLSITES(i, s) {
-          CMUL(plaqdet[nu][mu][i], Tr_Uinv[mu][i], tc);
-          CSUM(tr_dest[i], tc);
-        }
-
-        // Next add on-site Tr_Uinv times plaqdet[mu][nu] gathered from x - nu
-        wait_gather(mtag[0]);
-        FORALLSITES(i, s) {
-          tc = *((complex *)(gen_pt[0][i]));
-          CMUL(tc, Tr_Uinv[mu][i], tc2);
-          CSUM(tr_dest[i], tc2);
-        }
-
-        // Next add on-site plaqdet[nu][mu] times Tr_Uinv gathered from x + mu
-        wait_gather(mtag0);
-        FORALLSITES(i, s) {
-          tc = *((complex *)(gen_pt[1][i]));
-          CMUL(plaqdet[nu][mu][i], tc, tc2);
-          CSUM(tr_dest[i], tc2);
-        }
-        cleanup_gather(mtag0);
-
-        // Finally add plaqdet[mu][nu] gathered from x - nu
-        // times Tr_Uinv gathered from x - nu
-        wait_gather(mtag1);
-        FORALLSITES(i, s) {
-          tc = *((complex *)(gen_pt[0][i]));
-          tc2 = *((complex *)(gen_pt[2][i]));
-          CMUL(tc, tc2, trace);
-          CSUM(tr_dest[i], trace);
-        }
-        cleanup_gather(mtag[0]);
-        cleanup_gather(mtag1);
-      }
-
-      // Now add to force
-      FORALLSITES(i, s) {
-        CMUL(tr_dest[i], detG, tc);
-        c_scalar_mult_add_su3mat_f(&(s->f_U[mu]), &(tempmat1[i]), &tc,
-                                   &(s->f_U[mu]));
+        invert(&(s->linkf[a]), &(Uinv[a][i]));
+        su3_adjoint_f(&(s->linkf[a]), &tmat);
+        invert(&tmat, &(Udag_inv[a][i]));
       }
     }
 
-      // TODO
-      // Second term connects site_sol[DIMF - 1] with link_psol^dag
+    // First connect link_sol with site_psol[DIMF - 1]^dag (LtoS)
+    for (a = XUP; a < NUMLINK; a++) {
+      // Save sum_j U_a(x)^{-1} Lambda^j psi_a^j(x) U_a(x)^{-1} in Ddet[2][a]
+      // Save sum_j Tr[U_a(x)^{-1} Lambda^j] psi_a^j(x) in Tr_Uinv[a]
+      FORALLSITES(i, s) {
+        // Initialize accumulators for sum over j
+        Tr_Uinv[a][i] = cmplx(0.0, 0.0);
+        clear_su3mat_f(&(Ddet[2][a][i]));
+        for (j = 0; j < DIMF; j++) {
+          mult_su3_nn_f(&(Uinv[a][i]), &(Lambda[j]), &tmat);
+          tc = trace_su3_f(&tmat);                // Accumulate trace
+          CMUL(tc, (link_sol[a][i]).c[j], tc2);
+          CSUM(Tr_Uinv[a][i], tc2);
+
+          mult_su3_nn_f(&tmat, &(Uinv[a][i]), &tmat2);
+          tc = (link_sol[a][i]).c[j];             // Accumulate product
+          c_scalar_mult_add_su3mat_f(&(Ddet[2][a][i]), &tmat2, &tc,
+                                     &(Ddet[2][a][i]));
+        }
+
+        // Save eta^D(x) plaqdet[a][b](x) in modified plaqdet[a][b]
+        CONJG((site_psol[i]).c[DIMF - 1], tc);
+        for (b = a + 1; b < NUMLINK; b++) {
+          CMUL(tc, plaqdet[a][b][i], tc2);
+          plaqdet[a][b][i] = tc2;
+
+          CMUL(tc, plaqdet[b][a][i], tc2);
+          plaqdet[b][a][i] = tc2;
+        }
+      }
+    }
+    for (a = XUP; a < NUMLINK; a++) {
+      // Initialize accumulators for sums over b
+      FORALLSITES(i, s) {
+        tr_dest[i] = cmplx(0.0, 0.0);
+        inv_term[i] = cmplx(0.0, 0.0);
+        adj_term[i] = cmplx(0.0, 0.0);
+      }
+      for (b = XUP; b < NUMLINK; b++) {
+        if (a == b)
+          continue;
+
+        // Gathers galore!    TODO: Can this be simplified?
+        // 0) Tr_Uinv[b](x + a - b) in two steps  (Trtag)
+        // 1) plaqdet[a][b](x - b)                (mtag0)
+        // 2) plaqdet[b][a](x - b)                (mtag1)
+        // 3) Tr_Uinv[b](x + a)                   (mtag[0])
+        // 4) Tr_Uinv[b](x - b)                   (mtag[1])
+        // 5) Tr_Uinv[a](x + b)                   (mtag[2])
+        // 6) Tr_Uinv[a](x - b)                   (mtag[3])
+        Trtag = start_gather_field(Tr_Uinv[b], sizeof(complex),
+                                   goffset[a], EVENANDODD, gen_pt[0]);
+        mtag0 = start_gather_field(plaqdet[a][b], sizeof(complex),
+                                   goffset[b] + 1, EVENANDODD, gen_pt[1]);
+        mtag1 = start_gather_field(plaqdet[b][a], sizeof(complex),
+                                   goffset[b] + 1, EVENANDODD, gen_pt[2]);
+        mtag[0] = start_gather_field(Tr_Uinv[b], sizeof(complex),
+                                     goffset[a], EVENANDODD, gen_pt[3]);
+        mtag[1] = start_gather_field(Tr_Uinv[b], sizeof(complex),
+                                     goffset[b] + 1, EVENANDODD, gen_pt[4]);
+        mtag[2] = start_gather_field(Tr_Uinv[a], sizeof(complex),
+                                     goffset[b], EVENANDODD, gen_pt[5]);
+        mtag[3] = start_gather_field(Tr_Uinv[a], sizeof(complex),
+                                     goffset[b] + 1, EVENANDODD, gen_pt[6]);
+
+        // Stage two of Tr_Uinv[b](x + a - b) gather
+        // Use tempc for temporary storage
+        wait_gather(Trtag);
+        FORALLSITES(i, s) {
+          tc = *((complex *)(gen_pt[0][i]));
+          CMULREAL(tc, s->bc1[a], tempc[i]);
+        }
+        cleanup_gather(Trtag);
+        Trtag = start_gather_field(tempc, sizeof(complex),
+                                   goffset[b] + 1, EVENANDODD, gen_pt[0]);
+
+        // Shorthand: D[a][b](x) is eta^D(x) plaqdet[a][b](x)
+        //            T[a](x) is Tr[U_a(x)^{-1} psi_a(x)]
+        wait_gather(mtag0);         // 1) D[a][b](x - b)
+        wait_gather(mtag1);         // 2) D[b][a](x - b)
+        wait_gather(mtag[0]);       // 3) T[b](x + a)
+        wait_gather(mtag[1]);       // 4) T[b](x - b)
+        wait_gather(mtag[2]);       // 5) T[a](x + b)
+        wait_gather(mtag[3]);       // 6) T[a](x - b)
+        wait_gather(Trtag);         // 0) T[b](x + a - b)
+        FORALLSITES(i, s) {
+          // Accumulate tr_dest
+          // D[b][a](x) {T[a](x) + T[b](x + a)}
+          tc = *((complex *)(gen_pt[3][i]));    // T[b](x + a)
+          CMULREAL(tc, s->bc1[a], tc);
+          CADD(Tr_Uinv[a][i], tc, tc2);
+          CMUL(plaqdet[b][a][i], tc2, tc);
+          CSUM(tr_dest[i], tc);
+
+          // D[a][b](x - b) {T[a](x) + T[b](x - b)}
+          CMULREAL(Tr_Uinv[a][i], s->bc1[OPP_LDIR(b)], trace);
+          tc = *((complex *)(gen_pt[4][i]));    // T[b](x - b)
+          CADD(trace, tc, tc2);
+          tc = *((complex *)(gen_pt[1][i]));    // D[a][b](x - b)
+          CMUL(tc, tc2, trace);
+          CSUM(tr_dest[i], trace);
+
+          // Accumulate adj_term
+          // D[a][b](x) {T[b](x) + T[a](x + b)}
+          tc = *((complex *)(gen_pt[5][i]));    // T[a](x + b)
+          CMULREAL(tc, s->bc1[b], tc);
+          CADD(Tr_Uinv[b][i], tc, tc2);
+          CMUL(plaqdet[a][b][i], tc2, tc);
+          CSUM(adj_term[i], tc);
+
+          // D[b][a](x - b) {T[a](x - b) + T[b](x + a - b) bc1[a](x - b)}
+          tc = *((complex *)(gen_pt[0][i]));    // T[b](x + a - b)
+          tc2 = *((complex *)(gen_pt[6][i]));   // T[a](x - b)
+          CADD(tc, tc2, trace);
+          tc = *((complex *)(gen_pt[2][i]));    // D[b][a](x - b)
+          CMUL(tc, trace, tc2);
+          CSUM(adj_term[i], tc2);
+
+          // Accumulate inv_term = sum_b D[b][a](x) + D[a][b](x - b)
+          tc = *((complex *)(gen_pt[1][i]));    // D[a][b](x - b)
+          CMULREAL(tc, s->bc1[OPP_LDIR(b)], tc);
+          CADD(plaqdet[b][a][i], tc, tc2);
+          CSUM(inv_term[i], tc2);
+        }
+        cleanup_gather(Trtag);
+        cleanup_gather(mtag0);
+        cleanup_gather(mtag1);
+        cleanup_gather(mtag[0]);
+        cleanup_gather(mtag[1]);
+        cleanup_gather(mtag[2]);
+        cleanup_gather(mtag[3]);
+      }
+
+      // Now add to force
+      // Be sure detG coupling is included in the adjoint
+      FORALLSITES(i, s) {
+        // Initialize with tr_dest hitting U_a(x)^{-1}
+        CMUL(tr_dest[i], detG, tc);
+        c_scalar_mult_add_su3mat_f(&(s->f_U[a]), &(Uinv[a][i]), &tc,
+                                   &(s->f_U[a]));
+
+        // Subtract inv_term hitting U_a(x)^{-1} psi_a(x) U_a(x)^{-1}
+        CMUL(inv_term[i], detG, tc);
+        CNEGATE(tc, tc);
+        c_scalar_mult_add_su3mat_f(&(s->f_U[a]), &(Ddet[2][a][i]), &tc,
+                                   &(s->f_U[a]));
+
+        // Finally add adj_term hitting Udag_a(x)^{-1} followed by adjoint
+        CMUL(adj_term[i], detG, tc);
+        c_scalar_mult_su3mat_f(&(Udag_inv[a][i]), &tc, &tmat);
+        su3_adjoint_f(&tmat, &tmat2);
+        add_su3_matrix_f(&(s->f_U[a]), &tmat2, &(s->f_U[a]));
+      }
+    }
+
+    // Second connect site_sol[DIMF - 1] with link_psol^dag (StoL)
+    compute_plaqdet();      // Reset plaqdet
+    CNEGATE(detG, detG);    // As in action, anti-commute site and link
+    for (a = XUP; a < NUMLINK; a++) {
+      // Save sum_j U_a(x)^{-1} Lambda^j psi_a^j(x) in Ddet[2][a]
+      // Save sum_j Tr[U_a(x)^{-1} Lambda^j] psi_a^j(x) in Tr_Uinv[a]
+      FORALLSITES(i, s) {
+        // Initialize accumulators for sum over j
+        Tr_Uinv[a][i] = cmplx(0.0, 0.0);
+        clear_su3mat_f(&(Ddet[2][a][i]));
+        for (j = 0; j < DIMF; j++) {
+          mult_su3_nn_f(&(Uinv[a][i]), &(Lambda[j]), &tmat);
+          tc = trace_su3_f(&tmat);                // Accumulate trace
+          CMUL_J(tc, (link_psol[a][i]).c[j], tc2);
+          CSUM(Tr_Uinv[a][i], tc2);
+
+          mult_su3_nn_f(&tmat, &(Uinv[a][i]), &tmat2);
+          CONJG((link_psol[a][i]).c[j], tc);      // Accumulate product
+          c_scalar_mult_add_su3mat_f(&(Ddet[2][a][i]), &tmat, &tc,
+                                     &(Ddet[2][a][i]));
+        }
+
+        // Save eta^D(x) plaqdet[a][b](x) in modified plaqdet[a][b]
+        tc = (site_sol[i]).c[DIMF - 1];
+        for (b = a + 1; b < NUMLINK; b++) {
+          CMUL(tc, plaqdet[a][b][i], tc2);
+          plaqdet[a][b][i] = tc2;
+
+          CMUL(tc, plaqdet[b][a][i], tc2);
+          plaqdet[b][a][i] = tc2;
+        }
+      }
+    }
+    for (a = XUP; a < NUMLINK; a++) {
+      // Initialize accumulators for sums over b
+      FORALLSITES(i, s) {
+        tr_dest[i] = cmplx(0.0, 0.0);
+        inv_term[i] = cmplx(0.0, 0.0);
+        adj_term[i] = cmplx(0.0, 0.0);
+      }
+      for (b = XUP; b < NUMLINK; b++) {
+        if (a == b)
+          continue;
+
+        // Gathers again!  Structure unchanged, all data new
+        // 0) Tr_Uinv[b](x + a - b) in two steps  (Trtag)
+        // 1) plaqdet[a][b](x - b)                (mtag0)
+        // 2) plaqdet[b][a](x - b)                (mtag1)
+        // 3) Tr_Uinv[b](x + a)                   (mtag[0])
+        // 4) Tr_Uinv[b](x - b)                   (mtag[1])
+        // 5) Tr_Uinv[a](x + b)                   (mtag[2])
+        // 6) Tr_Uinv[a](x - b)                   (mtag[3])
+        Trtag = start_gather_field(Tr_Uinv[b], sizeof(complex),
+                                   goffset[a], EVENANDODD, gen_pt[0]);
+        mtag0 = start_gather_field(plaqdet[a][b], sizeof(complex),
+                                   goffset[b] + 1, EVENANDODD, gen_pt[1]);
+        mtag1 = start_gather_field(plaqdet[b][a], sizeof(complex),
+                                   goffset[b] + 1, EVENANDODD, gen_pt[2]);
+        mtag[0] = start_gather_field(Tr_Uinv[b], sizeof(complex),
+                                     goffset[a], EVENANDODD, gen_pt[3]);
+        mtag[1] = start_gather_field(Tr_Uinv[b], sizeof(complex),
+                                     goffset[b] + 1, EVENANDODD, gen_pt[4]);
+        mtag[2] = start_gather_field(Tr_Uinv[a], sizeof(complex),
+                                     goffset[b], EVENANDODD, gen_pt[5]);
+        mtag[3] = start_gather_field(Tr_Uinv[a], sizeof(complex),
+                                     goffset[b] + 1, EVENANDODD, gen_pt[6]);
+
+        // Stage two of Tr_Uinv[b](x + a - b) gather
+        // Use tempc for temporary storage
+        wait_gather(Trtag);
+        FORALLSITES(i, s) {
+          tc = *((complex *)(gen_pt[0][i]));
+          CMULREAL(tc, s->bc1[a], tempc[i]);
+        }
+        cleanup_gather(Trtag);
+        Trtag = start_gather_field(tempc, sizeof(complex),
+                                   goffset[b] + 1, EVENANDODD, gen_pt[0]);
+
+        // Shorthand: D[a][b](x) is eta^D(x) plaqdet[a][b](x)
+        //            T[a](x) is Tr[U_a(x)^{-1} psi_a(x)]
+        wait_gather(mtag0);         // 1) D[a][b](x - b)
+        wait_gather(mtag1);         // 2) D[b][a](x - b)
+        wait_gather(mtag[0]);       // 3) T[b](x + a)
+        wait_gather(mtag[1]);       // 4) T[b](x - b)
+        wait_gather(mtag[2]);       // 5) T[a](x + b)
+        wait_gather(mtag[3]);       // 6) T[a](x - b)
+        wait_gather(Trtag);         // 0) T[b](x + a - b)
+        FORALLSITES(i, s) {
+          // Accumulate tr_dest
+          // D[b][a](x) {T[a](x) + T[b](x + a)}
+          tc = *((complex *)(gen_pt[3][i]));    // T[b](x + a)
+          CMULREAL(tc, s->bc1[a], tc);
+          CADD(Tr_Uinv[a][i], tc, tc2);
+          CMUL(plaqdet[b][a][i], tc2, tc);
+          CSUM(tr_dest[i], tc);
+
+          // D[a][b](x - b) {T[a](x) + T[b](x - b)}
+          CMULREAL(Tr_Uinv[a][i], s->bc1[OPP_LDIR(b)], trace);
+          tc = *((complex *)(gen_pt[4][i]));    // T[b](x - b)
+          CADD(trace, tc, tc2);
+          tc = *((complex *)(gen_pt[1][i]));    // D[a][b](x - b)
+          CMUL(tc, tc2, trace);
+          CSUM(tr_dest[i], trace);
+
+          // Accumulate adj_term
+          // D[a][b](x) {T[b](x) + T[a](x + b)}
+          tc = *((complex *)(gen_pt[5][i]));    // T[a](x + b)
+          CMULREAL(tc, s->bc1[b], tc);
+          CADD(Tr_Uinv[b][i], tc, tc2);
+          CMUL(plaqdet[a][b][i], tc2, tc);
+          CSUM(adj_term[i], tc);
+
+          // D[b][a](x - b) {T[a](x - b) + T[b](x + a - b) bc1[a](x - b)}
+          tc = *((complex *)(gen_pt[0][i]));    // T[b](x + a - b)
+          tc2 = *((complex *)(gen_pt[6][i]));   // T[a](x - b)
+          CADD(tc, tc2, trace);
+          tc = *((complex *)(gen_pt[2][i]));    // D[b][a](x - b)
+          CMUL(tc, trace, tc2);
+          CSUM(adj_term[i], tc2);
+
+          // Accumulate inv_term = sum_b D[b][a](x) + D[a][b](x - b)
+          tc = *((complex *)(gen_pt[1][i]));    // D[a][b](x - b)
+          CMULREAL(tc, s->bc1[OPP_LDIR(b)], tc);
+          CADD(plaqdet[b][a][i], tc, tc2);
+          CSUM(inv_term[i], tc2);
+        }
+        cleanup_gather(Trtag);
+        cleanup_gather(mtag0);
+        cleanup_gather(mtag1);
+        cleanup_gather(mtag[0]);
+        cleanup_gather(mtag[1]);
+        cleanup_gather(mtag[2]);
+        cleanup_gather(mtag[3]);
+      }
+
+      // Now add to force
+      // Be sure detG coupling is included in the adjoint
+      FORALLSITES(i, s) {
+        // Initialize with tr_dest hitting U_a(x)^{-1}
+        CMUL(tr_dest[i], detG, tc);
+        c_scalar_mult_add_su3mat_f(&(s->f_U[a]), &(Uinv[a][i]), &tc,
+                                   &(s->f_U[a]));
+
+        // Subtract inv_term hitting U_a(x)^{-1} psi_a(x) U_a(x)^{-1}
+        CMUL(inv_term[i], detG, tc);
+        CNEGATE(tc, tc);
+        c_scalar_mult_add_su3mat_f(&(s->f_U[a]), &(Ddet[2][a][i]), &tc,
+                                   &(s->f_U[a]));
+
+        // Finally add adj_term hitting Udag_a(x)^{-1} followed by adjoint
+        CMUL(adj_term[i], detG, tc);
+        c_scalar_mult_su3mat_f(&(Udag_inv[a][i]), &tc, &tmat);
+        su3_adjoint_f(&tmat, &tmat2);
+        add_su3_matrix_f(&(s->f_U[a]), &tmat2, &(s->f_U[a]));
+      }
+    }
+    free(tempc);
+    free(inv_term);
+    free(adj_term);
   }
 #endif
 #ifdef QCLOSED
@@ -728,7 +970,7 @@ void assemble_fermion_force(Twist_Fermion *sol, Twist_Fermion *psol) {
 // -----------------------------------------------------------------
 // Update the momenta with the fermion force
 // Assume that the multiCG has been run, with the answers in sol[j]
-// Accumulate force into f_U
+// Accumulate f_U for each pole into fullforce, add to momenta
 // Use fullforce-->Fmunu and tempTF for temporary storage
 double fermion_force(Real eps, Twist_Fermion *src, Twist_Fermion **sol) {
   register int i;
@@ -762,16 +1004,16 @@ double fermion_force(Real eps, Twist_Fermion *src, Twist_Fermion **sol) {
 #ifdef FORCE_DEBUG
     individ_force = 0.0;
 #endif
-    for (mu = 0; mu < NUMLINK; mu++) {
+    for (mu = XUP; mu < NUMLINK; mu++) {
       FORALLSITES(i, s) {
         add_su3_matrix_f(&(fullforce[mu][i]), &(s->f_U[mu]),
                          &(fullforce[mu][i]));
 #ifdef FORCE_DEBUG
-      if (s->x == 0 && s->y == 0 && s->z == 0 && s->t == 0 && mu == 3) {
-        printf("Fermion force mu=%d on site (%d, %d, %d, %d)\n",
-               mu, s->x, s->y, s->z ,s->t);
-        dumpmat_f(&(s->f_U[mu]));
-      }
+//      if (s->x == 0 && s->y == 0 && s->z == 0 && s->t == 0 && mu == 3) {
+//        printf("Fermion force mu=%d on site (%d, %d, %d, %d)\n",
+//               mu, s->x, s->y, s->z ,s->t);
+//        dumpmat_f(&(s->f_U[mu]));
+//      }
       // Compute average gauge force
       individ_force += realtrace_su3_f(&(s->f_U[mu]), &(s->f_U[mu]));
 #endif
@@ -782,6 +1024,16 @@ double fermion_force(Real eps, Twist_Fermion *src, Twist_Fermion **sol) {
     node0_printf("Individ_force %d %.4g\n",
                  n, eps * sqrt(individ_force) / volume);
 
+    // Check that force syncs with fermion action
+    old_action = d_fermion_action(src, sol);
+    fermion_rep();
+    iters += congrad_multi_field(src, sol, niter, rsqmin, &final_rsq);
+    new_action = d_fermion_action(src, sol);
+    node0_printf("EXITING  %.4g\n", new_action - old_action);
+    if (fabs(new_action - old_action) > 1e-3)
+      terminate(1);                             // Don't go further for now
+
+#if 0
     // Do a scan of the fermion action
     for (mu = XUP; mu < NUMLINK; mu++) {
       FORALLSITES(i, s) {
@@ -790,8 +1042,6 @@ double fermion_force(Real eps, Twist_Fermion *src, Twist_Fermion **sol) {
         tmat1 = s->linkf[mu];
         dumpmat_f(&(s->f_U[mu]));
 
-        old_action = d_fermion_action(src, sol);
-        node0_printf("Old fermion action %.4g\n", old_action);
         for (ii = 0; ii < NCOL; ii++) {
           for (jj = 0; jj < NCOL; jj++) {
             for (kick = -1; kick <= 1; kick += 2) {
@@ -829,16 +1079,15 @@ double fermion_force(Real eps, Twist_Fermion *src, Twist_Fermion **sol) {
         node0_printf("mu=%d on site (%d, %d, %d, %d): %.4g\n",
                      mu, s->x, s->y, s->z, s->t,
                      realtrace_su3_f(&tprint2, &tprint2));
-        dumpmat_f(&(tprint));
+        dumpmat_f(&tprint);
         s->linkf[mu] = tmat1;
 
         fermion_rep();
         iters += congrad_multi_field(src, sol, niter, rsqmin, &final_rsq);
-        new_action = d_fermion_action(src, sol);
-        node0_printf("EXITING  %.4g\n", new_action - old_action);
       }
-    }
-#endif  // End of scan of the fermion action
+    }   // End scan of the fermion action
+#endif
+#endif
   }
 
   // Update the momentum from the fermion force -- sum or eps

@@ -66,7 +66,7 @@ void compute_DmuUmu() {
   msg_tag *mtag0 = NULL;
   su3_matrix_f *mat;
 
-  if (G > IMAG_TOL)
+  if (G > IMAG_TOL && DIMF == NCOL * NCOL)
     compute_plaqdet();      // Compute plaqdet if G is non-zero
 
   for (mu = XUP; mu < NUMLINK; mu++) {
@@ -96,7 +96,7 @@ void compute_DmuUmu() {
   }
 
   // Add plaquette determinant contribution if G is non-zero
-  if (G > IMAG_TOL) {
+  if (G > IMAG_TOL && DIMF == NCOL * NCOL) {
     int nu, j;
     Real re, im;
     FORALLSITES(i, s) {
@@ -270,22 +270,22 @@ void fermion_op(Twist_Fermion *src, Twist_Fermion *dest, int sign) {
 
 #ifdef SV
   DbplusStoL(site_src, link_dest2);       // Overwrites link_dest2
-  FORALLSITES(i, s) {
-    for (mu = XUP; mu < NUMLINK; mu++)
+  for (mu = XUP; mu < NUMLINK; mu++)
+    FORALLSITES(i, s) {
       scalar_mult_add_su3_vector(&(link_dest[mu][i]), &(link_dest2[mu][i]),
                                  0.5, &(link_dest[mu][i]));
   }
 
   // Site-to-link plaquette determinant contribution if G is non-zero
-  // Negative sign is due to anti-commuting eta past psi
-  // compute_plaqdet() has already been run for the gauge action...
-  if (G > IMAG_TOL) {
+  // Negative sign (subtraction) is due to anti-commuting eta past psi
+  if (G > IMAG_TOL && DIMF == NCOL * NCOL) {
     detG = cmplx(0.0, 0.5 * G * sqrt((Real)NCOL));
     detStoL(site_src, link_dest2);        // Overwrites link_dest2
-    FORALLSITES(i, s) {
-      for (mu = XUP; mu < NUMLINK; mu++)
+    for (mu = XUP; mu < NUMLINK; mu++) {
+      FORALLSITES(i, s) {
         c_scalar_mult_sub_su3vec(&(link_dest[mu][i]), &detG,
                                  &(link_dest2[mu][i]));
+      }
     }
   }
 
@@ -294,7 +294,7 @@ void fermion_op(Twist_Fermion *src, Twist_Fermion *dest, int sign) {
     scalar_mult_su3_vector(&(site_dest[i]), 0.5, &(site_dest[i]));
 
   // Link-to-site plaquette determinant contribution if G is non-zero
-  if (G > IMAG_TOL) {
+  if (G > IMAG_TOL && DIMF == NCOL * NCOL) {
     detLtoS(link_src, tr_dest);         // Overwrites tr_dest
     FORALLSITES(i, s) {
       CMUL(tr_dest[i], detG, tc);
@@ -663,6 +663,8 @@ void DbminusPtoP(su3_vector *src[NPLAQ], su3_vector *dest[NPLAQ]) {
 
 
 // -----------------------------------------------------------------
+// Term in action connecting site fermion to the link fermions
+// bc1[mu](x) on psi_mu(x) eta(x + mu)
 void DbplusStoL(su3_vector *src, su3_vector *dest[NUMLINK]) {
   register int i;
   register site *s;
@@ -694,13 +696,11 @@ void DbplusStoL(su3_vector *src, su3_vector *dest[NUMLINK]) {
 
 
 // -----------------------------------------------------------------
-// If G is non-zero, the plaquette determinant couples the site
-// Tr[eta] = i * sqrt(N) src[DIMF - 1] to the link dest
-// The specific coupling for dest[b][j] is
-//   -0.5G sum_{a, b} [det P_{ab} * Tr(U_b^{-1} Lambda[j])] Tr[eta]
-// and similarly for dest[a][j] at x + b
-// Negative sign is due to anti-commuting eta past psi
-// Use tempvec and Tr_Uinv[0] for temporary storage
+// Plaquette determinant coupling from site source to link destination
+//   T[a](x) * sum_b {D[b][a](x) + D[a][b](x - b)}
+// 'D' means eta^D * plaqdet and 'T' means Tr[U^{-1} Lambda]
+// Use tr_dest and Tr_Uinv[0] for temporary storage
+// bc1[b](x - b) on eta(x - b) psi_a(x)
 void detStoL(su3_vector *src, su3_vector *dest[NUMLINK]) {
   register int i;
   register site *s;
@@ -709,44 +709,52 @@ void detStoL(su3_vector *src, su3_vector *dest[NUMLINK]) {
   su3_matrix_f tmat1, tmat2;
   msg_tag *mtag;
 
-  // Save Tr[U_a^{-1} Lambda[j]] in tempvec[a]
+  // Save eta^D(x) plaqdet[a][b](x) in modified plaqdet[a][b]
+  compute_plaqdet();
   for (a = XUP; a < NUMLINK; a++) {
-    FORALLSITES(i, s) {
-      clearvec(&(dest[a][i]));   // Overwrite
+    for (b = a + 1; b < NUMLINK; b++) {
+      FORALLSITES(i, s) {
+        CMUL(src[i].c[DIMF - 1], plaqdet[a][b][i], tc1);
+        plaqdet[a][b][i] = tc1;
 
-      invert(&(s->linkf[a]), &tmat1);
-      for (j = 0; j < DIMF; j++) {
-        mult_su3_nn_f(&tmat1, &(Lambda[j]), &tmat2);
-        tempvec[a][i].c[j] = trace_su3_f(&tmat2);
+        CMUL(src[i].c[DIMF - 1], plaqdet[b][a][i], tc1);
+        plaqdet[b][a][i] = tc1;
       }
     }
   }
 
   for (a = XUP; a < NUMLINK; a++) {
+    // Initialize accumulator for sum over b
+    FORALLSITES(i, s)
+      tr_dest[i] = cmplx(0.0, 0.0);
+
     for (b = XUP; b < NUMLINK; b++) {
       if (a == b)
         continue;
 
-      // Gather Tr[eta] det P_{ab} from x - b
+      // Accumulate modified plaqdet[b][a](x) + plaqdet[a][b](x - b)
+      // Account for boundary condition, store in tempc
       FORALLSITES(i, s)
-        CMUL(src[i].c[DIMF - 1], plaqdet[a][b][i], Tr_Uinv[0][i]);
+        CMULREAL(plaqdet[a][b][i], s->bc1[b], Tr_Uinv[0][i]);
       mtag = start_gather_field(Tr_Uinv[0], sizeof(complex),
                                 goffset[b] + 1, EVENANDODD, gen_pt[0]);
-
-      // Compute on-site contribution to dest[b] while gather runs
-      FORALLSITES(i, s) {
-        CMULREAL(Tr_Uinv[0][i], s->bc1[b], tc1);
-        c_scalar_mult_add_su3vec(&(dest[b][i]), &tc1, &(tempvec[b][i]));
-      }
-
-      // Now compute contribution to dest[a] at x + b
       wait_gather(mtag);
       FORALLSITES(i, s) {
         tc1 = *((complex *)(gen_pt[0][i]));
-        CMULREAL(tc1, s->bc1[a], tc2);
-        c_scalar_mult_add_su3vec(&(dest[a][i]), &tc2, &(tempvec[a][i]));
+        CADD(plaqdet[b][a][i], tc1, tc2);
+        CSUM(tr_dest[i], tc2);
       }
       cleanup_gather(mtag);
+    }
+
+    // Compute Tr[U_a^{-1} Lambda^j] times sum
+    FORALLSITES(i, s) {
+      invert(&(s->linkf[a]), &tmat1);
+      for (j = 0; j < DIMF; j++) {
+        mult_su3_nn_f(&tmat1, &(Lambda[j]), &tmat2);
+        tc1 = trace_su3_f(&tmat2);
+        CMUL(tc1, tr_dest[i], dest[a][i].c[j]);        // Overwrite
+      }
     }
   }
 }
@@ -755,9 +763,10 @@ void detStoL(su3_vector *src, su3_vector *dest[NUMLINK]) {
 
 
 // -----------------------------------------------------------------
-// Term in action connecting the link fermions to a site fermion
+// Term in action connecting the link fermions to the site fermion
 // Given src psi_a, dest is Dbar_a psi_a (Eq. 63 in the arXiv:1108.1503)
 // Use tempvec for temporary storage
+// bc1[OPP_LDIR(mu)](x) on eta(x - mu) psi_mu(x - mu)
 void DbminusLtoS(su3_vector *src[NUMLINK], su3_vector *dest) {
   register int i;
   register site *s;
@@ -799,19 +808,20 @@ void DbminusLtoS(su3_vector *src[NUMLINK], su3_vector *dest) {
 
 
 // -----------------------------------------------------------------
-// If G is non-zero, the plaquette determinant couples the link src
-// to the site Tr[eta] = i * sqrt(N) dest[DIMF - 1]
-// The specific coupling is
-//   0.5G sum_{a, b} [det P_{ab} * Tr(U_b^{-1} psi_b + U_a^{-1} psi_a)]
-// with the same sign as DbminusLtoS
+// Plaquette determinant coupling from link source to site destination
+//   sum_{a, b} D[a][b](x) * {T[b](x) +  T[a](x + b)}
+// 'D' means plaqdet and 'T' means Tr[U^{-1} psi]
+// bc1[b](x) on eta(x) psi_a(x + b)
+// Use Tr_Uinv for temporary storage
 void detLtoS(su3_vector *src[NUMLINK], complex *dest) {
   register int i;
   register site *s;
   int a, b, j;
-  complex tc1, tc2, trace;
+  complex tc1, tc2;
   su3_matrix_f tmat1, tmat2;
   msg_tag *mtag;
 
+  compute_plaqdet();
   FORALLSITES(i, s)
     dest[i] = cmplx(0.0, 0.0);              // Overwrite
 
@@ -820,14 +830,13 @@ void detLtoS(su3_vector *src[NUMLINK], complex *dest) {
   for (a = XUP; a < NUMLINK; a++) {
     FORALLSITES(i, s) {
       invert(&(s->linkf[a]), &tmat1);
-      trace = cmplx(0.0, 0.0);              // Initialize
+      Tr_Uinv[a][i] = cmplx(0.0, 0.0);              // Initialize
       for (j = 0; j < DIMF; j++) {
         mult_su3_nn_f(&tmat1, &(Lambda[j]), &tmat2);
         tc1 = trace_su3_f(&tmat2);
         CMUL(tc1, src[a][i].c[j], tc2);
-        CSUM(trace, tc2);                   // Accumulate
+        CSUM(Tr_Uinv[a][i], tc2);                   // Accumulate
       }
-      CMULREAL(trace, s->bc1[a], Tr_Uinv[a][i]);
     }
   }
 
@@ -836,14 +845,13 @@ void detLtoS(su3_vector *src[NUMLINK], complex *dest) {
       if (a == b)
         continue;
 
-      // Gather Tr[U_a^{-1} psi_a] from x + b
+      // Gather Tr[U_a^{-1} psi_a] from x + b and compute
       mtag = start_gather_field(Tr_Uinv[a], sizeof(complex),
                                 goffset[b], EVENANDODD, gen_pt[0]);
       wait_gather(mtag);
-
-      // Now put it all together into dest
       FORALLSITES(i, s) {
         tc1 = *((complex *)(gen_pt[0][i]));
+        CMULREAL(tc1, s->bc1[b], tc1);
         CADD(Tr_Uinv[b][i], tc1, tc2);
         CMUL(plaqdet[a][b][i], tc2, tc1);
         CSUM(dest[i], tc1);
