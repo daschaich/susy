@@ -412,7 +412,7 @@ void setup_rhmc() {
       break;
     case 7:
       node0_printf("[0.01, 100]\n");
-      setup_rhmc6();
+      setup_rhmc7();
       break;
     case 8:
       node0_printf("[0.001, 50]\n");
