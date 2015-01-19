@@ -704,10 +704,10 @@ void DbplusStoL(su3_vector *src, su3_vector *dest[NUMLINK]) {
 void detStoL(su3_vector *src, su3_vector *dest[NUMLINK]) {
   register int i;
   register site *s;
-  int a, b, j;
+  int a, b, j, next;
   complex tc1, tc2;
   su3_matrix_f tmat1, tmat2;
-  msg_tag *mtag;
+  msg_tag *tag[NUMLINK];
 
   // Save eta^D(x) plaqdet[a][b](x) in modified plaqdet[a][b]
   compute_plaqdet();
@@ -723,6 +723,13 @@ void detStoL(su3_vector *src, su3_vector *dest[NUMLINK]) {
     }
   }
 
+  // Account for boundary condition before gathering, store in Tr_Uinv[b]
+  // Start first gather for (a, b) = (0, 1)
+  FORALLSITES(i, s)
+    CMULREAL(plaqdet[0][1][i], s->bc1[0], Tr_Uinv[1][i]);
+  tag[1] = start_gather_field(Tr_Uinv[1], sizeof(complex),
+                              goffset[1] + 1, EVENANDODD, gen_pt[1]);
+
   for (a = XUP; a < NUMLINK; a++) {
     // Initialize accumulator for sum over b
     FORALLSITES(i, s)
@@ -732,19 +739,33 @@ void detStoL(su3_vector *src, su3_vector *dest[NUMLINK]) {
       if (a == b)
         continue;
 
+      // Start next gather unless we're doing the last (a=4, b=3)
+      next = b + 1;
+      if (next < NUMLINK && a + b < 2 * NUMLINK - 3) {
+        if (next == a)              // Next gather is actually (a, b + 2)
+          next++;
+
+        FORALLSITES(i, s)
+          CMULREAL(plaqdet[a][next][i], s->bc1[next], Tr_Uinv[next][i]);
+        tag[next] = start_gather_field(Tr_Uinv[next], sizeof(complex),
+                                       goffset[next] + 1, EVENANDODD,
+                                       gen_pt[next]);
+      }
+      else if (next == NUMLINK) {   // Start next gather (a + 1, 0)
+        FORALLSITES(i, s)
+          CMULREAL(plaqdet[a + 1][0][i], s->bc1[0], Tr_Uinv[0][i]);
+        tag[0] = start_gather_field(Tr_Uinv[0], sizeof(complex),
+                                    goffset[0] + 1, EVENANDODD, gen_pt[0]);
+      }
+
       // Accumulate modified plaqdet[b][a](x) + plaqdet[a][b](x - b)
-      // Account for boundary condition, store in tempc
-      FORALLSITES(i, s)
-        CMULREAL(plaqdet[a][b][i], s->bc1[b], Tr_Uinv[0][i]);
-      mtag = start_gather_field(Tr_Uinv[0], sizeof(complex),
-                                goffset[b] + 1, EVENANDODD, gen_pt[0]);
-      wait_gather(mtag);
+      wait_gather(tag[b]);
       FORALLSITES(i, s) {
-        tc1 = *((complex *)(gen_pt[0][i]));
+        tc1 = *((complex *)(gen_pt[b][i]));
         CADD(plaqdet[b][a][i], tc1, tc2);
         CSUM(tr_dest[i], tc2);
       }
-      cleanup_gather(mtag);
+      cleanup_gather(tag[b]);
     }
 
     // Compute Tr[U_a^{-1} Lambda^j] times sum
@@ -816,10 +837,10 @@ void DbminusLtoS(su3_vector *src[NUMLINK], su3_vector *dest) {
 void detLtoS(su3_vector *src[NUMLINK], complex *dest) {
   register int i;
   register site *s;
-  int a, b, j;
+  int a, b, j, next;
   complex tc1, tc2;
   su3_matrix_f tmat1, tmat2;
-  msg_tag *mtag;
+  msg_tag *tag[NUMLINK];
 
   compute_plaqdet();
   FORALLSITES(i, s)
@@ -840,23 +861,39 @@ void detLtoS(su3_vector *src[NUMLINK], complex *dest) {
     }
   }
 
+  // Start first gather of Tr[U_a^{-1} psi_a] from x + b for (0, 1)
+  tag[1] = start_gather_field(Tr_Uinv[0], sizeof(complex),
+                              goffset[1], EVENANDODD, gen_pt[1]);
+
   for (a = XUP; a < NUMLINK; a++) {
     for (b = XUP; b < NUMLINK; b++) {
       if (a == b)
         continue;
 
-      // Gather Tr[U_a^{-1} psi_a] from x + b and compute
-      mtag = start_gather_field(Tr_Uinv[a], sizeof(complex),
-                                goffset[b], EVENANDODD, gen_pt[0]);
-      wait_gather(mtag);
+      // Start next gather unless we're doing the last (a=4, b=3)
+      next = b + 1;
+      if (next < NUMLINK && a + b < 2 * NUMLINK - 3) {
+        if (next == a)              // Next gather is actually (a, b + 2)
+          next++;
+        tag[next] = start_gather_field(Tr_Uinv[a], sizeof(complex),
+                                       goffset[next], EVENANDODD,
+                                       gen_pt[next]);
+      }
+      else if (next == NUMLINK) {   // Start next gather (a + 1, 0)
+        tag[0] = start_gather_field(Tr_Uinv[a + 1], sizeof(complex),
+                                    goffset[0], EVENANDODD, gen_pt[0]);
+      }
+
+      // Accumulate modified plaqdet[a][b](x) {T[b](x) + T[a](x + b)}
+      wait_gather(tag[b]);
       FORALLSITES(i, s) {
-        tc1 = *((complex *)(gen_pt[0][i]));
+        tc1 = *((complex *)(gen_pt[b][i]));
         CMULREAL(tc1, s->bc1[b], tc1);
         CADD(Tr_Uinv[b][i], tc1, tc2);
         CMUL(plaqdet[a][b][i], tc2, tc1);
         CSUM(dest[i], tc1);
       }
-      cleanup_gather(mtag);
+      cleanup_gather(tag[b]);
     }
   }
 }
