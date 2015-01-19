@@ -74,8 +74,7 @@ int main(int argc, char *argv[]) {
 
   // Require gauge fixing to consider non-invariant operators
   if (fixflag != COULOMB_GAUGE_FIX) {
-    printf("ERROR: Konishi correlators require gauge fixing\n");
-    terminate(1);
+    printf("Konishi correlators require gauge fixing... skipping\n");
   }
 
 #ifdef STOUT
@@ -97,16 +96,18 @@ int main(int argc, char *argv[]) {
 #endif
 
   // Gauge fixing
-  d_plaquette(&dssplaq, &dstplaq);    // To be printed below
-  node0_printf("Fixing to Coulomb gauge...\n");
-  double gtime = -dclock();
-  gaugefix(TUP, 1.5, 5000, GAUGE_FIX_TOL, -1, -1);
-//  gaugefix(-1, 1.5, 5000, GAUGE_FIX_TOL, -1, -1);   // Lorenz gauge
-  gtime += dclock();
-  node0_printf("GFIX time = %.4g seconds\n", gtime);
-  node0_printf("BEFORE %.8g %.8g\n", dssplaq, dstplaq);
-  d_plaquette(&dssplaq, &dstplaq);
-  node0_printf("AFTER  %.8g %.8g\n", dssplaq, dstplaq);
+  if (fixflag == COULOMB_GAUGE_FIX) {
+    d_plaquette(&dssplaq, &dstplaq);    // To be printed below
+    node0_printf("Fixing to Coulomb gauge...\n");
+    double gtime = -dclock();
+    gaugefix(TUP, 1.5, 5000, GAUGE_FIX_TOL, -1, -1);
+//    gaugefix(-1, 1.5, 5000, GAUGE_FIX_TOL, -1, -1);   // Lorenz gauge
+    gtime += dclock();
+    node0_printf("GFIX time = %.4g seconds\n", gtime);
+    node0_printf("BEFORE %.8g %.8g\n", dssplaq, dstplaq);
+    d_plaquette(&dssplaq, &dstplaq);
+    node0_printf("AFTER  %.8g %.8g\n", dssplaq, dstplaq);
+  }
 
   // Main measurements
   // Plaquette determinant
@@ -138,9 +139,11 @@ int main(int argc, char *argv[]) {
 
 #ifdef CORR
   // Konishi and SUGRA correlators
-  setup_P();
-  d_correlator();
-  d_correlator_r();
+  if (fixflag == COULOMB_GAUGE_FIX) {
+    setup_P();
+    d_correlator();
+    d_correlator_r();
+  }
 #endif
 
 #ifdef BILIN
