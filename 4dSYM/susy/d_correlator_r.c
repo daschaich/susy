@@ -233,15 +233,15 @@ void d_correlator_r() {
           // Potentially useful to check rotational invariance
           node0_printf("CORR_K %d %d %d %d", x_dist, y_dist, z_dist, t_dist);
 #endif
-          for (a = 0; a < NDIMS; a++) {
-            for (b = 0; b < NDIMS; b++) {
+          for (a = 0; a < NK; a++) {
+            for (b = 0; b < NK; b++) {
               tr = 0.0;
               FORALLSITES(i, s) {
-                index = i * len + len - 4 + a;
-                tr += ops[index] * ((Real *)gen_pt[0][i])[len - 4 + b];
+                index = i * len + len - NK + a;
+                tr += ops[index] * ((Real *)gen_pt[0][i])[len - NK + b];
               }
               g_doublesum(&tr);
-              index = a * NDIMS + b;
+              index = a * NK + b;
               CK[this_r][index] += tr;
 #ifdef CHECK_ROT
               // Potentially useful to check rotational invariance
@@ -283,9 +283,9 @@ void d_correlator_r() {
   for (i = 0; i < total_r; i++) {
     tr = 1.0 / (Real)(count[i] * volume);
     node0_printf("CORR_K %d %.6g", i, lookup[i]);
-    for (a = 0; a < NDIMS; a++) {
-      for (b = 0; b < NDIMS; b++)
-        node0_printf(" %.6g", CK[i][a * NDIMS + b] * tr);
+    for (a = 0; a < NK; a++) {
+      for (b = 0; b < NK; b++)
+        node0_printf(" %.6g", CK[i][a * NK + b] * tr);
     }
     node0_printf("\n");
   }
