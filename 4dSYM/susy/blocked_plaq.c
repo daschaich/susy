@@ -1,6 +1,7 @@
 // -----------------------------------------------------------------
 // Evaluate the plaquette after block RG blocking steps
 // Use general_gathers; lattice must be divisible by 2^block in all dirs
+// Use tempmat1 and tempmat2 for temporary storage
 #include "susy_includes.h"
 
 void blocked_plaq(int Nstout, int block) {
@@ -10,14 +11,7 @@ void blocked_plaq(int Nstout, int block) {
   int j, bl = 2, d1[4] = {0, 0, 0, 0}, d2[4] = {0, 0, 0, 0};
   double ss_sum = 0.0, st_sum = 0.0, tr;
   msg_tag *mtag;
-  su3_matrix_f tmat;
-  su3_matrix_f *su3mat = malloc(sites_on_node * sizeof(*su3mat));
-
-  if (su3mat == NULL) {
-    printf("blocked_plaq: can't malloc su3mat\n");
-    fflush(stdout);
-    terminate(1);
-  }
+  su3_matrix_f tmat, *mat;
 
   // Set number of links to stride, bl = 2^block
   // Allow sanity check of reproducing ploop() with this routine
@@ -28,7 +22,7 @@ void blocked_plaq(int Nstout, int block) {
 
   // Copy temporal links to tempmat1
   FORALLSITES(i, s)
-    su3mat_copy_f(&(s->linkf[TUP]), &(s->tempmat1));
+    su3mat_copy_f(&(s->linkf[TUP]), &(tempmat1[i]));
 
   // Compute the bl-strided plaquette, exploiting a symmetry under dir<-->dir2
   for (dir = YUP; dir < NUMLINK; dir++) {
@@ -42,17 +36,17 @@ void blocked_plaq(int Nstout, int block) {
                                         sizeof(su3_matrix_f), d1,
                                         EVENANDODD, gen_pt[0]);
 
-      // su3mat = Udag_b(x) U_a(x)
+      // tempmat2 = Udag_b(x) U_a(x)
       FORALLSITES(i, s) {
         m1 = &(s->linkf[dir]);
         m4 = &(s->linkf[dir2]);
-        mult_su3_an_f(m4, m1, &su3mat[i]);
+        mult_su3_an_f(m4, m1, &(tempmat2[i]));
       }
 
       // Copy first gather to tempmat1
       wait_general_gather(mtag);
       FORALLSITES(i, s)
-        su3mat_copy_f((su3_matrix_f *)(gen_pt[0][i]), &(s->tempmat1));
+        su3mat_copy_f((su3_matrix_f *)(gen_pt[0][i]), &(tempmat1[i]));
       cleanup_general_gather(mtag);
 
       mtag = start_general_gather_site(F_OFFSET(linkf[dir]),
@@ -63,16 +57,16 @@ void blocked_plaq(int Nstout, int block) {
       // Compute tr[Udag_a(x+d2) Udag_b(x) U_a(x) U_b(x+d1)]
       if (dir == TUP || dir2 == TUP) {
         FORALLSITES(i, s) {
-          mult_su3_nn_f(&(su3mat[i]), &(s->tempmat1), &tmat);
-          st_sum += (double)realtrace_su3_f((su3_matrix_f *)(gen_pt[0][i]),
-                                            &tmat);
+          mat = (su3_matrix_f *)(gen_pt[0][i]);
+          mult_su3_nn_f(&(tempmat2[i]), &(tempmat1[i]), &tmat);
+          st_sum += (double)realtrace_su3_f(mat, &tmat);
         }
       }
       else {
         FORALLSITES(i, s) {
-          mult_su3_nn_f(&(su3mat[i]), &(s->tempmat1), &tmat);
-          ss_sum += (double)realtrace_su3_f((su3_matrix_f *)(gen_pt[0][i]),
-                                            &tmat);
+          mat = (su3_matrix_f *)(gen_pt[0][i]);
+          mult_su3_nn_f(&(tempmat2[i]), &(tempmat1[i]), &tmat);
+          ss_sum += (double)realtrace_su3_f(mat, &tmat);
         }
       }
       cleanup_general_gather(mtag);
@@ -88,7 +82,5 @@ void blocked_plaq(int Nstout, int block) {
   tr = (ss_sum + st_sum) / 2.0;
   node0_printf("BPLAQ %d %d %.8g %.8g %.8g\n",
                Nstout, block, ss_sum, st_sum, tr);
-
-  free(su3mat);
 }
 // -----------------------------------------------------------------

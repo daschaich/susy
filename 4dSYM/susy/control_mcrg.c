@@ -13,7 +13,7 @@ int main(int argc, char *argv[]) {
   register int i;
   register site *s;
   int prompt, dir, istout, j, bl, blmax;
-  int stout_step = 5;    // This might be worth reading in at some point
+  int stout_step = 1;    // This might be worth reading in at some point
   double dssplaq, dstplaq, dtime;
   complex plp = cmplx(99, 99);
 
