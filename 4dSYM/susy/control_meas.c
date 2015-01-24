@@ -78,7 +78,6 @@ int main(int argc, char *argv[]) {
   }
 
 #ifdef STOUT
-#define MIN_PLAQ
   // Optionally smear before main measurements
   node0_printf("Doing %d stout smearing steps with rho=%.4g...\n",
                Nstout, rho);

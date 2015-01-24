@@ -10,9 +10,8 @@
 // #define MIN_PLAQ turns on measurement of minimum plaquette per config
 // for tuning nHYP as in Hasenfratz & Knechtli, hep-lat/0103029
 
-// #define ALL_PLAQ prints out all irrep plaquettes
-// for plotting distribution
-// CAUTION: Do not run ALL_PLAQ with MPI!!
+// #define PLAQ_DIST prints out all plaquettes for plotting distribution
+// CAUTION: Do not run PLAQ_DIST with MPI!
 
 #define MIN_PLAQ
 #ifdef LOCAL_PLAQ
@@ -34,7 +33,7 @@ void d_plaquette_lcl(double *ss_plaq, double *st_plaq) {
   register su3_matrix_f *m1, *m4;
   double ss_sum = 0.0, st_sum = 0.0, cur_plaq;
 #ifdef MIN_PLAQ
-  double min_plaq = NCOL;
+  double min_plaq = 2.0 * NCOL;
 #endif
   msg_tag *mtag0, *mtag1;
   su3_matrix_f mtmp;
@@ -48,6 +47,14 @@ void d_plaquette_lcl(double *ss_plaq, double *st_plaq) {
   for (xx = 0; xx < MY_N; xx++) {
     plaq_perp[xx] = 0.0;
     plaq_prll[xx] = 0.0;
+  }
+#endif
+
+#ifdef PLAQ_DIST
+  if (this_node != 0) {
+    printf("plaquette: don't run PLAQ_DIST in parallel\n");
+    fflush(stdout);
+    terminate(1);
   }
 #endif
 
@@ -75,12 +82,17 @@ void d_plaquette_lcl(double *ss_plaq, double *st_plaq) {
 
       if (dir == TUP || dir2 == TUP) {
         FORALLSITES(i, s) {
-          mult_su3_nn_f(&(su3mat[i]), (su3_matrix_f *)(gen_pt[0][i]), &mtmp);
-          cur_plaq = (double)realtrace_su3_f((su3_matrix_f *)(gen_pt[1][i]),
-                                             &mtmp);
+          m1 = (su3_matrix_f *)(gen_pt[0][i]);
+          m4 = (su3_matrix_f *)(gen_pt[1][i]);
+          mult_su3_nn_f(&(su3mat[i]), m1, &mtmp);
+          cur_plaq = (double)realtrace_su3_f(m4, &mtmp);
 #ifdef MIN_PLAQ
           if (cur_plaq < min_plaq)
             min_plaq = cur_plaq;
+#endif
+#ifdef PLAQ_DIST
+          printf("PLAQ_DIST %d %d %d %d %d %d %.4g\n",
+                 s->x, s->y, s->z, s->t, dir, dir2, cur_plaq);
 #endif
           st_sum += cur_plaq;
 #ifdef LOCAL_PLAQ
@@ -93,12 +105,17 @@ void d_plaquette_lcl(double *ss_plaq, double *st_plaq) {
       }
       else {
         FORALLSITES(i, s) {
-          mult_su3_nn_f(&(su3mat[i]), (su3_matrix_f *)(gen_pt[0][i]), &mtmp);
-          cur_plaq = (double)realtrace_su3_f((su3_matrix_f *)(gen_pt[1][i]),
-                                             &mtmp);
+          m1 = (su3_matrix_f *)(gen_pt[0][i]);
+          m4 = (su3_matrix_f *)(gen_pt[1][i]);
+          mult_su3_nn_f(&(su3mat[i]), m1, &mtmp);
+          cur_plaq = (double)realtrace_su3_f(m4, &mtmp);
 #ifdef MIN_PLAQ
           if (cur_plaq < min_plaq)
             min_plaq = cur_plaq;
+#endif
+#ifdef PLAQ_DIST
+          printf("PLAQ_DIST %d %d %d %d %d %d %.4g\n",
+                 s->x, s->y, s->z, s->t, dir, dir2, cur_plaq);
 #endif
           ss_sum += cur_plaq;
 #ifdef LOCAL_PLAQ
@@ -173,7 +190,7 @@ void d_plaquette_frep_lcl(double *ss_plaq_frep, double *st_plaq_frep) {
   register su3_matrix *m1, *m4;
   double ss_sum = 0.0, st_sum = 0.0, cur_plaq;
 #ifdef MIN_PLAQ
-  double min_plaq = DIMF;
+  double min_plaq = 2.0 * DIMF;
 #endif
   msg_tag *mtag0, *mtag1;
   su3_matrix mtmp;
@@ -187,6 +204,14 @@ void d_plaquette_frep_lcl(double *ss_plaq_frep, double *st_plaq_frep) {
   for (xx = 0; xx < MY_N; xx++) {
     plaq_perp[xx] = 0.0;
     plaq_prll[xx] = 0.0;
+  }
+#endif
+
+#ifdef PLAQ_DIST
+  if (this_node != 0) {
+    printf("plaquette_frep: don't run PLAQ_DIST in parallel\n");
+    fflush(stdout);
+    terminate(1);
   }
 #endif
 
@@ -213,15 +238,16 @@ void d_plaquette_frep_lcl(double *ss_plaq_frep, double *st_plaq_frep) {
       wait_gather(mtag1);
       if (dir == TUP || dir2 == TUP) {
         FORALLSITES(i, s) {
-          mult_su3_nn(&(su3mat[i]), (su3_matrix *)(gen_pt[0][i]), &mtmp);
-          cur_plaq = (double)realtrace_su3((su3_matrix *)(gen_pt[1][i]),
-                                           &mtmp);
+          m1 = (su3_matrix *)(gen_pt[0][i]);
+          m4 = (su3_matrix *)(gen_pt[1][i]);
+          mult_su3_nn(&(su3mat[i]), m1, &mtmp);
+          cur_plaq = (double)realtrace_su3(m4, &mtmp);
 #ifdef MIN_PLAQ
           if (cur_plaq < min_plaq)
             min_plaq = cur_plaq;
 #endif
-#ifdef ALL_PLAQ
-          printf("ALL_PLAQ %d %d %d %d %d %d %e\n",
+#ifdef PLAQ_DIST
+          printf("PLAQ_DIST_FERM %d %d %d %d %d %d %.4g\n",
                  s->x, s->y, s->z, s->t, dir, dir2, cur_plaq);
 #endif
           st_sum += cur_plaq;
@@ -235,15 +261,16 @@ void d_plaquette_frep_lcl(double *ss_plaq_frep, double *st_plaq_frep) {
       }
       else {
         FORALLSITES(i, s) {
-          mult_su3_nn(&(su3mat[i]), (su3_matrix *)(gen_pt[0][i]), &mtmp);
-          cur_plaq = (double)realtrace_su3((su3_matrix *)(gen_pt[1][i]),
-                                           &mtmp);
+          m1 = (su3_matrix *)(gen_pt[0][i]);
+          m4 = (su3_matrix *)(gen_pt[1][i]);
+          mult_su3_nn(&(su3mat[i]), m1, &mtmp);
+          cur_plaq = (double)realtrace_su3(m4, &mtmp);
 #ifdef MIN_PLAQ
           if (cur_plaq < min_plaq)
             min_plaq = cur_plaq;
 #endif
-#ifdef ALL_PLAQ
-          printf("ALL_PLAQ %d %d %d %d %d %d %e\n",
+#ifdef PLAQ_DIST
+          printf("PLAQ_DIST_FERM %d %d %d %d %d %d %.4g\n",
                  s->x, s->y, s->z, s->t, dir, dir2, cur_plaq);
 #endif
           ss_sum += cur_plaq;
@@ -300,7 +327,7 @@ void d_plaquette_frep_lcl(double *ss_plaq_frep, double *st_plaq_frep) {
   min_plaq = -min_plaq;
   g_doublemax(&min_plaq);
   min_plaq = -min_plaq;
-  node0_printf("MIN_PLAQ_FERM %e\n",min_plaq);
+  node0_printf("MIN_PLAQ_FERM %.8g\n",min_plaq);
 #endif
 }
 #endif // Not PURE_GAUGE
