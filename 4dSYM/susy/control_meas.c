@@ -74,7 +74,7 @@ int main(int argc, char *argv[]) {
 
   // Require gauge fixing to consider non-invariant operators
   if (fixflag != COULOMB_GAUGE_FIX) {
-    printf("Konishi correlators require gauge fixing... skipping\n");
+    node0_printf("Konishi correlators require gauge fixing... skipping\n");
   }
 
 #ifdef STOUT

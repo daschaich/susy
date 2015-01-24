@@ -21,7 +21,7 @@ void bilinsrc(Twist_Fermion *g_rand, Twist_Fermion *src, int N) {
     // Source either all or traceless site fermions, depending on N
     // The last Lambda[DIMF - 1] (N = DIMF) is proportional to the identity
     // The others (N = DIMF - 1) are traceless
-    for (j = 0; j < N; j++) {                 // Site fermions
+    for (j = 0; j < N; j++) {                   // Site fermions
 #ifdef SITERAND
       g_rand[i].Fsite.c[j].real = gaussian_rand_no(&(s->site_prn));
       g_rand[i].Fsite.c[j].imag = gaussian_rand_no(&(s->site_prn));
@@ -33,7 +33,7 @@ void bilinsrc(Twist_Fermion *g_rand, Twist_Fermion *src, int N) {
 
     // Source all link fermions
     for (j = 0; j < DIMF; j++) {
-      for (mu = 0; mu < NUMLINK; mu++) {        // Link fermions
+      for (mu = XUP; mu < NUMLINK; mu++) {      // Link fermions
 #ifdef SITERAND
         g_rand[i].Flink[mu].c[j].real = gaussian_rand_no(&(s->site_prn));
         g_rand[i].Flink[mu].c[j].imag = gaussian_rand_no(&(s->site_prn));
@@ -109,7 +109,7 @@ int d_bilinear() {
     LtoS = cmplx(0.0, 0.0);
     FORALLSITES(i, s) {
       // First site-to-link, g^dag . sum_a psi_a Vdag_a
-      for (mu = 0; mu < NUMLINK; mu++) {
+      for (mu = XUP; mu < NUMLINK; mu++) {
         mult_su3_vec_adj_mat(&(psim[0][i].Flink[mu]), &(s->link[mu]), &tvec);
         tc = su3_dot(&(g_rand[i].Fsite), &tvec);
         CSUM(StoL, tc);
@@ -118,7 +118,7 @@ int d_bilinear() {
       // Now link-to-site, sum_a g_a^dag . eta Vdag_a
       // Omit last component of site propagator to avoid trace piece
       psim[0][i].Fsite.c[DIMF - 1] = cmplx(0.0, 0.0);
-      for (mu = 0; mu < NUMLINK; mu++) {
+      for (mu = XUP; mu < NUMLINK; mu++) {
         mult_adj_su3_mat_vec(&(s->link[mu]), &(psim[0][i].Fsite), &tvec);
         tc = su3_dot(&(g_rand[i].Flink[mu]), &tvec);
         CSUM(LtoS, tc);
@@ -199,14 +199,14 @@ int d_susyTrans() {
     LtoS = cmplx(0.0, 0.0);
     FORALLSITES(i, s) {
       // First site-to-link, g^dag . sum_a psi_a Vdag_a
-      for (mu = 0; mu < NUMLINK; mu++) {
+      for (mu = XUP; mu < NUMLINK; mu++) {
         mult_su3_vec_adj_mat(&(psim[0][i].Flink[mu]), &(s->link[mu]), &tvec);
         tc = su3_dot(&(g_rand[i].Fsite), &tvec);
         CSUM(StoL, tc);
       }
 
       // Now link-to-site, sum_a g_a^dag . eta Vdag_a
-      for (mu = 0; mu < NUMLINK; mu++) {
+      for (mu = XUP; mu < NUMLINK; mu++) {
         mult_adj_su3_mat_vec(&(s->link[mu]), &(psim[0][i].Fsite), &tvec);
         tc = su3_dot(&(g_rand[i].Flink[mu]), &tvec);
         CSUM(LtoS, tc);
