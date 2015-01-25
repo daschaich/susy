@@ -158,6 +158,10 @@ int main(int argc, char *argv[]) {
 
       // Measure density of monopole world lines in non-diagonal cubes
       monopole();
+
+      // If monopole world line density being measured
+      // Also monitor sqrt(variance) of plaquette and plaquette determinant
+      plaq_var();
 #endif
 
 #ifdef WLOOP

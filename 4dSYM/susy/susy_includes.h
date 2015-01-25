@@ -170,6 +170,7 @@ void polar(su3_matrix_f *a, su3_matrix_f *b);
 
 // Monopole computation uses find_det
 void monopole();
+void plaq_var();    // Plaquette and plaquette determinant sqrt(variance)
 
 #ifdef MCRG
 void block_mcrg(int bl);

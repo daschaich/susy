@@ -43,16 +43,18 @@ void d_plaquette(double *ss_plaq, double *st_plaq) {
       // Compute tr[Udag_a(x+b) Udag_b(x) U_a(x) U_b(x+a)]
       if (dir == TUP || dir2 == TUP) {
         FORALLSITES(i, s) {
-          mult_su3_nn_f(&(su3mat[i]), (su3_matrix_f *)(gen_pt[0][i]), &tmat);
-          st_sum += (double)realtrace_su3_f((su3_matrix_f *)(gen_pt[1][i]),
-                                            &tmat);
+          m1 = (su3_matrix_f *)(gen_pt[0][i]);
+          m4 = (su3_matrix_f *)(gen_pt[1][i]);
+          mult_su3_nn_f(&(su3mat[i]), m1, &tmat);
+          st_sum += (double)realtrace_su3_f(m4, &tmat);
         }
       }
       else {
         FORALLSITES(i, s) {
-          mult_su3_nn_f(&(su3mat[i]), (su3_matrix_f *)(gen_pt[0][i]), &tmat);
-          ss_sum += (double)realtrace_su3_f((su3_matrix_f *)(gen_pt[1][i]),
-                                            &tmat);
+          m1 = (su3_matrix_f *)(gen_pt[0][i]);
+          m4 = (su3_matrix_f *)(gen_pt[1][i]);
+          mult_su3_nn_f(&(su3mat[i]), m1, &tmat);
+          ss_sum += (double)realtrace_su3_f(m4, &tmat);
         }
       }
       cleanup_gather(mtag0);
@@ -108,16 +110,18 @@ void d_plaquette_frep(double *ss_plaq_frep, double *st_plaq_frep) {
       wait_gather(mtag1);
       if (dir == TUP || dir2 == TUP) {
         FORALLSITES(i, s) {
-          mult_su3_nn(&(su3mat[i]), (su3_matrix *)(gen_pt[0][i]), &tmat);
-          st_sum += (double)realtrace_su3((su3_matrix *)(gen_pt[1][i]),
-                                          &tmat);
+          m1 = (su3_matrix *)(gen_pt[0][i]);
+          m4 = (su3_matrix *)(gen_pt[1][i]);
+          mult_su3_nn(&(su3mat[i]), m1, &tmat);
+          st_sum += (double)realtrace_su3(m4, &tmat);
         }
       }
       else {
         FORALLSITES(i, s) {
-          mult_su3_nn(&(su3mat[i]), (su3_matrix *)(gen_pt[0][i]), &tmat);
-          ss_sum += (double)realtrace_su3((su3_matrix *)(gen_pt[1][i]),
-                                          &tmat);
+          m1 = (su3_matrix *)(gen_pt[0][i]);
+          m4 = (su3_matrix *)(gen_pt[1][i]);
+          mult_su3_nn(&(su3mat[i]), m1, &tmat);
+          ss_sum += (double)realtrace_su3(m4, &tmat);
         }
       }
       cleanup_gather(mtag0);
