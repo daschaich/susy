@@ -56,6 +56,12 @@ void plaq_var() {
       cleanup_gather(mtag1);
     }
   }
+  g_doublesum(&plaq);
+  g_doublesum(&plaqSq);
+  g_doublesum(&re);
+  g_doublesum(&reSq);
+  g_doublesum(&im);
+  g_doublesum(&imSq);
 
   // Now compute and print square root of variances
   norm = (double)(volume * NUMLINK * (NUMLINK - 1));

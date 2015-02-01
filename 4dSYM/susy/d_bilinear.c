@@ -164,14 +164,14 @@ int d_susyTrans() {
   register int i;
   register site *s;
   int mu, isrc, iters, tot_iters = 0;
-  Real size_r, norm, tr;
+  Real size_r, norm;
   double sum = 0.0;
   double_complex tc, StoL, LtoS, ave = cmplx(0.0, 0.0);
   su3_vector tvec;
   su3_matrix_f tmat1, tmat2;
   Twist_Fermion *g_rand, *src, **psim;
 
-  fermion_rep();    // Make sure site->link are up to date
+  fermion_rep();    // Make sure s->link are up to date
   g_rand = malloc(sites_on_node * sizeof(*g_rand));
   src = malloc(sites_on_node * sizeof(*src));
 
@@ -226,13 +226,10 @@ int d_susyTrans() {
   // Normalize by number of sources (already averaged over volume)
   CDIVREAL(ave, 2.0 * (Real)nsrc, ave);
 
-  // Now add gauge piece -- hack by setting G=0 in compute_DmuUmu()
+  // Now add gauge piece, including plaquette determinant term
   // Accumulate sum_a U_a Udag_a in tmat1
   // Multiply by DmuUmu into tmat2 and trace
-  tr = G;
-  G = 0;
   compute_DmuUmu();     // Compute sum_b [U_b Udag_b - Udag_b U_b]
-  G = tr;
   FORALLSITES(i, s) {
     mult_su3_na_f(&(s->linkf[0]), &(s->linkf[0]), &tmat1);
     for (mu = 1; mu < NUMLINK; mu++) {

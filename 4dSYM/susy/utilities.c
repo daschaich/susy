@@ -8,13 +8,13 @@
 // -----------------------------------------------------------------
 // Compute at each site all NUMLINK * (NUMLINK - 1) plaquette determinants
 // counting both orientations
-// Use tempmat1 and staple as temporary storage
+// Use tempmat1 as temporary storage
 void compute_plaqdet() {
   register int i;
   register site *s;
   int a, b;
   msg_tag *mtag0 = NULL, *mtag1 = NULL;
-  su3_matrix_f tmat, *mat;
+  su3_matrix_f tmat, tmat2, *mat;
 
   for (a = XUP; a < NUMLINK; a++) {
     for (b = XUP; b < NUMLINK; b++) {
@@ -36,14 +36,14 @@ void compute_plaqdet() {
       }
       cleanup_gather(mtag0);
 
-      // staple = U_a(x+b) Udag_b(x+a) Udag_a(x)
-      // tmat = U_b(x) U_a(x+b) Udag_b(x+a) Udag_a(x) = P_ab
+      // tmat = U_a(x+b) Udag_b(x+a) Udag_a(x)
+      // tmat2 = U_b(x) U_a(x+b) Udag_b(x+a) Udag_a(x) = P_ab
       wait_gather(mtag1);
       FORALLSITES(i, s) {
         mat = (su3_matrix_f *)(gen_pt[1][i]);
-        mult_su3_nn_f(mat, &(tempmat1[i]), &(staple[i]));
-        mult_su3_nn_f(&(s->linkf[b]), &(staple[i]), &tmat);
-        plaqdet[a][b][i] = find_det(&tmat);
+        mult_su3_nn_f(mat, &(tempmat1[i]), &tmat);
+        mult_su3_nn_f(&(s->linkf[b]), &tmat, &tmat2);
+        plaqdet[a][b][i] = find_det(&tmat2);
       }
       cleanup_gather(mtag1);
     }
@@ -58,16 +58,13 @@ void compute_plaqdet() {
 // Compute at each site
 //   sum_mu [U_mu(x) * Udag_mu(x) - Udag_mu(x - mu) * U_mu(x - mu)]
 // Add plaquette determinant contribution if G is non-zero
-// Use tempmat1, tempmat2 and staple as temporary storage
+// Use tempmat1 and tempmat2 as temporary storage
 void compute_DmuUmu() {
   register int i;
   register site *s;
   int mu;
   msg_tag *mtag0 = NULL;
-  su3_matrix_f *mat;
-
-  if (G > IMAG_TOL && DIMF == NCOL * NCOL)
-    compute_plaqdet();      // Compute plaqdet if G is non-zero
+  su3_matrix_f tmat, *mat;
 
   for (mu = XUP; mu < NUMLINK; mu++) {
     FORALLSITES(i, s) {
@@ -88,26 +85,34 @@ void compute_DmuUmu() {
     else {
       FORALLSITES(i, s) {
         mat = (su3_matrix_f *)(gen_pt[0][i]);
-        sub_su3_matrix_f(&(tempmat1[i]), mat, &(staple[i]));
-        add_su3_matrix_f(&(DmuUmu[i]), &(staple[i]), &(DmuUmu[i]));
+        sub_su3_matrix_f(&(tempmat1[i]), mat, &tmat);
+        add_su3_matrix_f(&(DmuUmu[i]), &tmat, &(DmuUmu[i]));
       }
     }
     cleanup_gather(mtag0);
   }
 
   // Add plaquette determinant contribution if G is non-zero
+  // Check that this contribution is real (sum of complex-conjugate pairs)
   if (G > IMAG_TOL && DIMF == NCOL * NCOL) {
     int nu, j;
     Real re, im;
+
+    compute_plaqdet();
     FORALLSITES(i, s) {
       for (mu = XUP; mu < NUMLINK; mu++) {
         for (nu = mu + 1; nu < NUMLINK; nu++) {
           re = plaqdet[mu][nu][i].real + plaqdet[nu][mu][i].real - 2.0;
           im = plaqdet[mu][nu][i].imag + plaqdet[nu][mu][i].imag;
-          for (j = 0; j < NCOL; j++) {
-            DmuUmu[i].e[j][j].real += G * re;
-            DmuUmu[i].e[j][j].imag += G * im;
+          if (fabs(im) > IMAG_TOL) {
+            printf("node%d WARNING: plaqdet[%d][%d] != plaqdet[%d][%d]^* ",
+                   this_node, mu, nu, nu, mu);
+            printf("at site %d: (%.4g, %.4g) vs. (%.4g, %.4g)\n",
+                   i, plaqdet[mu][nu][i].real, plaqdet[mu][nu][i].imag,
+                   plaqdet[nu][mu][i].real, plaqdet[nu][mu][i].imag);
           }
+          for (j = 0; j < NCOL; j++)
+            DmuUmu[i].e[j][j].real += G * re;
         }
       }
     }
@@ -125,6 +130,7 @@ void compute_Fmunu() {
   register int i;
   register site *s;
   int mu, nu, index;
+  su3_matrix_f *mat0, *mat1;
   msg_tag *mtag0 = NULL, *mtag1 = NULL;
 
   for (mu = 0; mu < NUMLINK; mu++) {
@@ -137,10 +143,10 @@ void compute_Fmunu() {
       wait_gather(mtag0);
       wait_gather(mtag1);
       FORALLSITES(i, s) {
-        mult_su3_nn_f(&(s->linkf[mu]), (su3_matrix_f *)(gen_pt[0][i]),
-                      &(tempmat1[i]));
-        mult_su3_nn_f(&(s->linkf[nu]), (su3_matrix_f *)(gen_pt[1][i]),
-                      &(tempmat2[i]));
+        mat0 = (su3_matrix_f *)(gen_pt[0][i]);
+        mat1 = (su3_matrix_f *)(gen_pt[1][i]);
+        mult_su3_nn_f(&(s->linkf[mu]), mat0, &(tempmat1[i]));
+        mult_su3_nn_f(&(s->linkf[nu]), mat1, &(tempmat2[i]));
         sub_su3_matrix_f(&(tempmat1[i]), &(tempmat2[i]), &(Fmunu[index][i]));
       }
       cleanup_gather(mtag0);
