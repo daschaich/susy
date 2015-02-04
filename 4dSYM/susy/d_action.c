@@ -12,14 +12,13 @@
 double d_hmom_action() {
   register int i, mu;
   register site *s;
-  double sum = 0;
+  double sum = 0.0;
 
-  for (mu = 0; mu < NUMLINK; mu++) {
+  for (mu = XUP; mu < NUMLINK; mu++) {
     FORALLSITES(i, s)
       sum += (double)realtrace_su3_f(&(s->mom[mu]), &(s->mom[mu]));
   }
   g_doublesum(&sum);
-//  node0_printf("gauge momentum %e\n",sum);
   return sum;
 }
 // -----------------------------------------------------------------
@@ -36,7 +35,7 @@ double d_gauge_action(int do_det) {
   complex tc;
   su3_matrix_f tmat, tmat2;
 
-  compute_DmuUmu();   // Includes plaqdet if G is non-zero
+  compute_DmuUmu();   // Includes ave_plaqdet if G is non-zero
   compute_Fmunu();
   FORALLSITES(i, s) {
     // d^2 term normalized by C2 / 2
@@ -123,7 +122,7 @@ double d_det_action() {
 double d_fermion_action(Twist_Fermion *src, Twist_Fermion **sol) {
   register int i, j;
   register site *s;
-  double sum = 0;
+  double sum = 0.0;
   complex ctmp;
 
 #ifdef DEBUG_CHECK  // Check ampdeg4 term

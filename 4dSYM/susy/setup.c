@@ -96,11 +96,13 @@ void make_fields() {
 
   // For convenience in calculating action and force
   size += (double)(1.0 + NPLAQ + NUMLINK * NUMLINK) * sizeof(su3_matrix_f);
-  size += (double)(NUMLINK * (1.0 + NUMLINK) * sizeof(complex));
+  size += (double)(sizeof(Real));
+  size += (double)(NUMLINK + 2.0 * NPLAQ) * sizeof(complex);
   FIELD_ALLOC(DmuUmu, su3_matrix_f);
+  FIELD_ALLOC(ave_plaqdet, Real);
   FIELD_ALLOC_VEC(Tr_Uinv, complex, NUMLINK);
   FIELD_ALLOC_VEC(Fmunu, su3_matrix_f, NPLAQ);
-  FIELD_ALLOC_MAT(plaqdet, complex, NUMLINK, NUMLINK);
+  FIELD_ALLOC_MAT_OFFDIAG(plaqdet, complex, NUMLINK);
   FIELD_ALLOC_MAT(Ddet, su3_matrix_f, NUMLINK, NUMLINK);
 
   // Temporary vectors, matrices and Twist_Fermion

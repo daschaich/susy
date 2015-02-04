@@ -54,5 +54,15 @@
   }                                                                       \
 }
 
+#define FIELD_FREE_MAT_OFFDIAG(name, typ, size) {                         \
+  int ifield, jfield;                                                     \
+  for (ifield = 0; ifield < size; ifield++) {                             \
+    for (jfield = 0; jfield < size; jfield++) {                           \
+      if (ifield != jfield)                                               \
+        free(name[ifield][jfield]);                                       \
+    }                                                                     \
+  }                                                                       \
+}
+
 #endif
 // -----------------------------------------------------------------

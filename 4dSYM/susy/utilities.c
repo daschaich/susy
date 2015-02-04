@@ -7,7 +7,7 @@
 
 // -----------------------------------------------------------------
 // Compute at each site all NUMLINK * (NUMLINK - 1) plaquette determinants
-// counting both orientations
+// counting both orientations, and accumulating the average
 // Use tempmat1 as temporary storage
 void compute_plaqdet() {
   register int i;
@@ -15,6 +15,9 @@ void compute_plaqdet() {
   int a, b;
   msg_tag *mtag0 = NULL, *mtag1 = NULL;
   su3_matrix_f tmat, tmat2, *mat;
+
+  FORALLSITES(i, s)
+    ave_plaqdet[i] = -1.0;
 
   for (a = XUP; a < NUMLINK; a++) {
     for (b = XUP; b < NUMLINK; b++) {
@@ -44,6 +47,7 @@ void compute_plaqdet() {
         mult_su3_nn_f(mat, &(tempmat1[i]), &tmat);
         mult_su3_nn_f(&(s->linkf[b]), &tmat, &tmat2);
         plaqdet[a][b][i] = find_det(&tmat2);
+        ave_plaqdet[i] += 0.05 * plaqdet[a][b][i].real;
       }
       cleanup_gather(mtag1);
     }
@@ -93,28 +97,15 @@ void compute_DmuUmu() {
   }
 
   // Add plaquette determinant contribution if G is non-zero
-  // Check that this contribution is real (sum of complex-conjugate pairs)
+  // Have checked that ave_plaqdet is real (sum of complex-conjugate pairs)
   if (G > IMAG_TOL && DIMF == NCOL * NCOL) {
-    int nu, j;
-    Real re, im;
-
+    int j;
+    Real tr;
     compute_plaqdet();
     FORALLSITES(i, s) {
-      for (mu = XUP; mu < NUMLINK; mu++) {
-        for (nu = mu + 1; nu < NUMLINK; nu++) {
-          re = plaqdet[mu][nu][i].real + plaqdet[nu][mu][i].real - 2.0;
-          im = plaqdet[mu][nu][i].imag + plaqdet[nu][mu][i].imag;
-          if (fabs(im) > IMAG_TOL) {
-            printf("node%d WARNING: plaqdet[%d][%d] != plaqdet[%d][%d]^* ",
-                   this_node, mu, nu, nu, mu);
-            printf("at site %d: (%.4g, %.4g) vs. (%.4g, %.4g)\n",
-                   i, plaqdet[mu][nu][i].real, plaqdet[mu][nu][i].imag,
-                   plaqdet[nu][mu][i].real, plaqdet[nu][mu][i].imag);
-          }
-          for (j = 0; j < NCOL; j++)
-            DmuUmu[i].e[j][j].real += G * re;
-        }
-      }
+      tr = G * ave_plaqdet[i] * ave_plaqdet[i];
+      for (j = 0; j < NCOL; j++)
+        DmuUmu[i].e[j][j].real += tr;
     }
   }
 }
@@ -285,7 +276,7 @@ void fermion_op(Twist_Fermion *src, Twist_Fermion *dest, int sign) {
   // Site-to-link plaquette determinant contribution if G is non-zero
   // Negative sign (subtraction) is due to anti-commuting eta past psi
   if (G > IMAG_TOL && DIMF == NCOL * NCOL) {
-    detG = cmplx(0.0, 0.5 * G * sqrt((Real)NCOL));
+    detG = cmplx(0.0, 0.05 * G * sqrt((Real)NCOL));
     detStoL(site_src, link_dest2);        // Overwrites link_dest2
     for (mu = XUP; mu < NUMLINK; mu++) {
       FORALLSITES(i, s) {
@@ -704,7 +695,7 @@ void DbplusStoL(su3_vector *src, su3_vector *dest[NUMLINK]) {
 // -----------------------------------------------------------------
 // Plaquette determinant coupling from site source to link destination
 //   T[a](x) * sum_b {D[b][a](x) + D[a][b](x - b)}
-// 'D' means eta^D * plaqdet and 'T' means Tr[U^{-1} Lambda]
+// 'D' means eta^D * ave_plaqdet * plaqdet and 'T' means Tr[U^{-1} Lambda]
 // Use tr_dest and Tr_Uinv[0] for temporary storage
 // bc1[b](x - b) on eta(x - b) psi_a(x)
 void detStoL(su3_vector *src, su3_vector *dest[NUMLINK]) {
@@ -715,16 +706,16 @@ void detStoL(su3_vector *src, su3_vector *dest[NUMLINK]) {
   su3_matrix_f tmat1, tmat2;
   msg_tag *tag[NUMLINK];
 
-  // Save eta^D(x) plaqdet[a][b](x) in modified plaqdet[a][b]
+  // Save eta^D(x) ave_plaqdet(x) plaqdet[a][b](x) in modified plaqdet[a][b]
   compute_plaqdet();
   for (a = XUP; a < NUMLINK; a++) {
     for (b = a + 1; b < NUMLINK; b++) {
       FORALLSITES(i, s) {
         CMUL(src[i].c[DIMF - 1], plaqdet[a][b][i], tc1);
-        plaqdet[a][b][i] = tc1;
+        CMULREAL(tc1, ave_plaqdet[i], plaqdet[a][b][i]);
 
         CMUL(src[i].c[DIMF - 1], plaqdet[b][a][i], tc1);
-        plaqdet[b][a][i] = tc1;
+        CMULREAL(tc1, ave_plaqdet[i], plaqdet[b][a][i]);
       }
     }
   }
@@ -837,7 +828,7 @@ void DbminusLtoS(su3_vector *src[NUMLINK], su3_vector *dest) {
 // -----------------------------------------------------------------
 // Plaquette determinant coupling from link source to site destination
 //   sum_{a, b} D[a][b](x) * {T[b](x) +  T[a](x + b)}
-// 'D' means plaqdet and 'T' means Tr[U^{-1} psi]
+// 'D' means ave_plaqdet * plaqdet and 'T' means Tr[U^{-1} psi]
 // bc1[b](x) on eta(x) psi_a(x + b)
 // Use Tr_Uinv for temporary storage
 void detLtoS(su3_vector *src[NUMLINK], complex *dest) {
@@ -854,6 +845,7 @@ void detLtoS(su3_vector *src[NUMLINK], complex *dest) {
 
   // Prepare Tr[U_a^{-1} psi_a] = sum_j Tr[U_a^{-1} Lambda^j] psi_a^j
   // and save in Tr_Uinv[a]
+  // Modify plaqdet --> ave_plaqdet * plaqdet
   for (a = XUP; a < NUMLINK; a++) {
     FORALLSITES(i, s) {
       invert(&(s->linkf[a]), &tmat1);
@@ -863,6 +855,11 @@ void detLtoS(su3_vector *src[NUMLINK], complex *dest) {
         tc1 = trace_su3_f(&tmat2);
         CMUL(tc1, src[a][i].c[j], tc2);
         CSUM(Tr_Uinv[a][i], tc2);                   // Accumulate
+      }
+
+      for (b = a + 1; b < NUMLINK; b++) {
+        CMULREAL(plaqdet[a][b][i], ave_plaqdet[i], plaqdet[a][b][i]);
+        CMULREAL(plaqdet[b][a][i], ave_plaqdet[i], plaqdet[b][a][i]);
       }
     }
   }

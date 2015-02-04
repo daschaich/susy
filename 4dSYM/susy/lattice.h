@@ -149,6 +149,7 @@ EXTERN su3_vector *link_dest2[NUMLINK], *plaq_dest2[NPLAQ];
 // For convenience in calculating action and force
 // May be wasteful of space
 EXTERN complex *tr_dest, *Tr_Uinv[NUMLINK], *plaqdet[NUMLINK][NUMLINK];
+EXTERN Real *ave_plaqdet;
 EXTERN su3_matrix_f *DmuUmu, *Fmunu[NPLAQ], *Ddet[NUMLINK][NUMLINK];
 
 // Temporary vectors, matrices and Twist_Fermion
@@ -165,7 +166,7 @@ EXTERN site *lattice;
 
 // Vectors for addressing
 // Generic pointers, for gather routines
-// Need 10 for gauge-fixing
+// Need 10 for gauge-fixing, 9 for Q-invariant determinant force
 #define N_POINTERS 10
 EXTERN char **gen_pt[N_POINTERS];
 
