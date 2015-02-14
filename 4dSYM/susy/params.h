@@ -5,24 +5,24 @@
 #include "../include/macros.h"  // For MAXFILENAME
 
 typedef struct {
-  int stopflag;             // 1 if it is time to stop
+  int stopflag;           // 1 if it is time to stop
 
   // Initialization parameters
-  int nx, ny, nz, nt;       // Lattice dimensions
-  int iseed;                // For random numbers
+  int nx, ny, nz, nt;     // Lattice dimensions
+  int iseed;              // For random numbers
 
-  int warms;                // The number of warmup trajectories
-  int trajecs;              // The number of real trajectories
-  Real traj_length;         // The length of each trajectory
-  int nsteps[2];            // Fermion and gauge steps
-  int propinterval;         // Number of trajectories between measurements
-  int startflag;            // What to do for beginning lattice
-  int saveflag;             // What to do with lattice at end
-  Real lambda, kappa;       // 't Hooft coupling and Nc/(2lambda)
-  Real bmass, fmass;        // Bosonic and fermion masses
-  Real kappa_u1;            // Determinant coupling
-  Real G;                   // Q-invariant determinant coupling
-  int fixflag;              // Whether to gauge fix to Coulomb gauge
+  int warms;              // The number of warmup trajectories
+  int trajecs;            // The number of real trajectories
+  Real traj_length;       // The length of each trajectory
+  int nsteps[2];          // Fermion and gauge steps
+  int propinterval;       // Number of trajectories between measurements
+  int startflag;          // What to do for beginning lattice
+  int saveflag;           // What to do with lattice at end
+  Real lambda, kappa;     // 't Hooft coupling and Nc/(2lambda)
+  Real bmass, fmass;      // Bosonic and fermion masses
+  Real kappa_u1;          // Plaquette determinant coupling
+  Real G, B;              // Q-invariant plaq. det. coupling and bosonic mass
+  int fixflag;            // Whether to gauge fix to Coulomb gauge
 
   // Inversion parameters
   int niter;                    // Maximum number of CG iterations

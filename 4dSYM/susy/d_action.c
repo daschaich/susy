@@ -35,10 +35,12 @@ double d_gauge_action(int do_det) {
   complex tc;
   su3_matrix_f tmat, tmat2;
 
-  compute_DmuUmu();   // Includes ave_plaqdet if G is non-zero
+  compute_DmuUmu();
   compute_Fmunu();
   FORALLSITES(i, s) {
     // d^2 term normalized by C2 / 2
+    // DmuUmu includes the plaquette determinant contribution if G is non-zero
+    // and the scalar potential contribution if B is non-zero
     mult_su3_nn_f(&(DmuUmu[i]), &(DmuUmu[i]), &tmat);
     scalar_mult_su3_matrix_f(&tmat, norm, &tmat);
 
@@ -65,19 +67,20 @@ double d_gauge_action(int do_det) {
 
 
 // -----------------------------------------------------------------
-// Bosonic mass term to regulate flat directions -- note factor of kappa
+// Separate scalar potential contribution to the action
+// Note factor of kappa
 double d_bmass_action() {
   register int i;
   register site *s;
   int mu;
-  double sum = 0.0, dum;
+  double sum = 0.0, tr;
 
-  for (mu = XUP; mu < NUMLINK; mu++) {
-    FORALLSITES(i, s) {
-      dum = 1.0 / (double)NCOL;
-      dum *= realtrace_su3_f(&(s->linkf[mu]), &(s->linkf[mu]));
-      dum -= 1.0;
-      sum += kappa * bmass * bmass * dum * dum;
+  FORALLSITES(i, s) {
+    for (mu = XUP; mu < NUMLINK; mu++) {
+      tr = 1.0 / (double)NCOL;
+      tr *= realtrace_su3_f(&(s->linkf[mu]), &(s->linkf[mu]));
+      tr -= 1.0;
+      sum += kappa * bmass * bmass * tr * tr;
     }
   }
   g_doublesum(&sum);
@@ -146,19 +149,20 @@ double d_fermion_action(Twist_Fermion *src, Twist_Fermion **sol) {
 
 
 // -----------------------------------------------------------------
-// Print out zeros if fermion and determinant actions not included
+// Print out zeros for pieces of the action that aren't included
 double d_action(Twist_Fermion *src, Twist_Fermion **sol) {
-  double g_act, bmass_act, h_act, f_act = 0.0, det_act = 0.0;
+  double g_act, bmass_act = 0.0, h_act, f_act = 0.0, det_act = 0.0;
   double total;
   g_act = d_gauge_action(NODET);
-  bmass_act = d_bmass_action();
-  h_act = d_hmom_action();
+  if (bmass > IMAG_TOL)
+    bmass_act = d_bmass_action();
   if (kappa_u1 > IMAG_TOL)
     det_act = d_det_action();
 
 #ifndef PUREGAUGE
   f_act = d_fermion_action(src, sol);
 #endif
+  h_act = d_hmom_action();
   node0_printf("action: ");
   node0_printf("gauge %.8g bmass %.8g ", g_act, bmass_act);
   node0_printf("det %.8g ", det_act);

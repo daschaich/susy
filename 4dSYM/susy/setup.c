@@ -65,6 +65,7 @@ int initial_set() {
   number_of_nodes = numnodes();
   volume = nx * ny * nz * nt;
   total_iters = 0;
+  one = cmplx(1.0, 0.0);
   return prompt;
 }
 // -----------------------------------------------------------------
@@ -95,15 +96,16 @@ void make_fields() {
   FIELD_ALLOC_VEC(stp, su3_matrix_f, NUMLINK);    // Staples
 
   // For convenience in calculating action and force
-  size += (double)(1.0 + NPLAQ + NUMLINK * NUMLINK) * sizeof(su3_matrix_f);
-  size += (double)(sizeof(Real));
-  size += (double)(NUMLINK + 2.0 * NPLAQ) * sizeof(complex);
+  size += (double)(1.0 + NPLAQ + 3.0 * NUMLINK) * sizeof(su3_matrix_f);
+  size += (double)(NUMLINK + 4.0 * NPLAQ) * sizeof(complex);
   FIELD_ALLOC(DmuUmu, su3_matrix_f);
-  FIELD_ALLOC(ave_plaqdet, Real);
   FIELD_ALLOC_VEC(Tr_Uinv, complex, NUMLINK);
   FIELD_ALLOC_VEC(Fmunu, su3_matrix_f, NPLAQ);
+  FIELD_ALLOC_VEC(Uinv, su3_matrix_f, NUMLINK);
+  FIELD_ALLOC_VEC(Udag_inv, su3_matrix_f, NUMLINK);
+  FIELD_ALLOC_VEC(UpsiU, su3_matrix_f, NUMLINK);
   FIELD_ALLOC_MAT_OFFDIAG(plaqdet, complex, NUMLINK);
-  FIELD_ALLOC_MAT(Ddet, su3_matrix_f, NUMLINK, NUMLINK);
+  FIELD_ALLOC_MAT_OFFDIAG(ZWstar, complex, NUMLINK);
 
   // Temporary vectors, matrices and Twist_Fermion
   size += (double)(3.0 * sizeof(su3_matrix_f));
@@ -195,12 +197,13 @@ int readin(int prompt) {
     IF_OK status += get_i(stdin, prompt, "traj_between_meas",
                           &par_buf.propinterval);
 
-    // lambda, kappa_u1, bmass, fmass and G
+    // lambda, kappa_u1, bmass, fmass, G and B
     IF_OK status += get_f(stdin, prompt, "lambda", &par_buf.lambda);
     IF_OK status += get_f(stdin, prompt, "kappa_u1", &par_buf.kappa_u1);
     IF_OK status += get_f(stdin, prompt, "bmass", &par_buf.bmass);
     IF_OK status += get_f(stdin, prompt, "fmass", &par_buf.fmass);
     IF_OK status += get_f(stdin, prompt, "G", &par_buf.G);
+    IF_OK status += get_f(stdin, prompt, "B", &par_buf.B);
 
 #ifdef STOUT
     // Stout smearing stuff
@@ -284,6 +287,7 @@ int readin(int prompt) {
   bmass = par_buf.bmass;
   fmass = par_buf.fmass;
   G = par_buf.G;
+  B = par_buf.B;
   kappa = (Real)NCOL * 0.5 / lambda;
   node0_printf("lambda=%.4g --> kappa=Nc/(2lambda)=%.4g\n",
                lambda, kappa);

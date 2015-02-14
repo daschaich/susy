@@ -92,7 +92,7 @@ EXTERN Real P[NDIMS][NUMLINK];
 EXTERN int plaq_index[NUMLINK][NUMLINK];
 
 EXTERN Real rsqmin, rsqprop;
-EXTERN Real lambda, kappa, bmass, fmass, kappa_u1, G;
+EXTERN Real lambda, kappa, bmass, fmass, kappa_u1, G, B;
 EXTERN double g_ssplaq, g_stplaq;
 EXTERN double_complex linktrsum;
 EXTERN u_int32type nersc_checksum;
@@ -148,9 +148,11 @@ EXTERN su3_vector *link_dest2[NUMLINK], *plaq_dest2[NPLAQ];
 
 // For convenience in calculating action and force
 // May be wasteful of space
+EXTERN complex one;
 EXTERN complex *tr_dest, *Tr_Uinv[NUMLINK], *plaqdet[NUMLINK][NUMLINK];
-EXTERN Real *ave_plaqdet;
-EXTERN su3_matrix_f *DmuUmu, *Fmunu[NPLAQ], *Ddet[NUMLINK][NUMLINK];
+EXTERN complex *ZWstar[NUMLINK][NUMLINK];
+EXTERN su3_matrix_f *DmuUmu, *Fmunu[NPLAQ];
+EXTERN su3_matrix_f *Uinv[NUMLINK], *Udag_inv[NUMLINK], *UpsiU[NUMLINK];
 
 // Temporary vectors, matrices and Twist_Fermion
 EXTERN su3_vector *tempvec[NUMLINK];

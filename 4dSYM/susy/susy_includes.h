@@ -70,6 +70,7 @@ void DbplusPtoP(su3_vector *src[NPLAQ], su3_vector *dest[NPLAQ]);
 // Site-to-link terms in actiion
 void DbplusStoL(su3_vector *src, su3_vector *dest[NUMLINK]);
 void detStoL(su3_vector *src, su3_vector *dest[NUMLINK]);
+void potStoL(su3_vector *src, su3_vector *dest[NUMLINK]);
 
 // Second plaq-to-plaq term in action
 void DbminusPtoP(su3_vector *src[NPLAQ], su3_vector *dest[NPLAQ]);
@@ -77,6 +78,7 @@ void DbminusPtoP(su3_vector *src[NPLAQ], su3_vector *dest[NPLAQ]);
 // Link-to-site terms in action
 void DbminusLtoS(su3_vector *src[NUMLINK], su3_vector *dest);
 void detLtoS(su3_vector *src[NUMLINK], complex *dest);
+void potLtoS(su3_vector *src[NUMLINK], complex *dest);
 
 // Fermion matrix--vector operators (D & D^2) and multi-mass CG
 void fermion_op(Twist_Fermion *src, Twist_Fermion *dest, int sign);
