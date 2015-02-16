@@ -2,9 +2,11 @@
 // Dirac operator and other helper functions for the action and force
 
 // #define DET_DIST prints out all determinants for plotting distribution
-// CAUTION: Do not run DET_DIST with MPI!
+// #define TR_DIST prints out all (Tr[U.Udag]/N-1)^2 for plotting distribution
+// CAUTION: Do not run DET_DIST or TR_DIST with MPI!
 
 //#define DET_DIST
+//#define TR_DIST
 #include "susy_includes.h"
 // -----------------------------------------------------------------
 
@@ -96,6 +98,14 @@ void compute_DmuUmu() {
   msg_tag *mtag0 = NULL;
   su3_matrix_f tmat, *mat;
 
+#ifdef TR_DIST
+  if (this_node != 0) {
+    printf("compute_DmuUmu: don't run TR_DIST in parallel\n");
+    fflush(stdout);
+    terminate(1);
+  }
+#endif
+
   for (mu = XUP; mu < NUMLINK; mu++) {
     FORALLSITES(i, s) {
       mult_su3_na_f(&(s->linkf[mu]), &(s->linkf[mu]), &(tempmat1[i]));
@@ -149,6 +159,10 @@ void compute_DmuUmu() {
         tr -= 1.0;
         for (j = 0; j < NCOL; j++)
           DmuUmu[i].e[j][j].real += B * B * tr * tr;
+#ifdef TR_DIST
+          printf("TR_DIST %d %d %d %d %d %.4g\n",
+                 s->x, s->y, s->z, s->t, mu, tr * tr);
+#endif
       }
     }
   }
