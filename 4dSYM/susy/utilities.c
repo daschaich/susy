@@ -1,5 +1,10 @@
 // -----------------------------------------------------------------
 // Dirac operator and other helper functions for the action and force
+
+// #define DET_DIST prints out all determinants for plotting distribution
+// CAUTION: Do not run DET_DIST with MPI!
+
+//#define DET_DIST
 #include "susy_includes.h"
 // -----------------------------------------------------------------
 
@@ -16,6 +21,14 @@ void compute_plaqdet() {
   complex tc, tc2;
   msg_tag *mtag0 = NULL, *mtag1 = NULL;
   su3_matrix_f tmat, tmat2, *mat;
+
+#ifdef DET_DIST
+  if (this_node != 0) {
+    printf("compute_plaqdet: don't run DET_DIST in parallel\n");
+    fflush(stdout);
+    terminate(1);
+  }
+#endif
 
   for (a = XUP; a < NUMLINK; a++) {
     for (b = XUP; b < NUMLINK; b++) {
@@ -50,6 +63,14 @@ void compute_plaqdet() {
         CSUB(plaqdet[a][b][i], one, tc);
         CONJG(tc, tc2);
         CMUL(plaqdet[a][b][i], tc2, ZWstar[a][b][i]);
+
+#ifdef DET_DIST
+        if (a < b) {
+          printf("DET_DIST %d %d %d %d %d %d %.4g %.4g %.4g\n",
+                 s->x, s->y, s->z, s->t, a, b,
+                 plaqdet[a][b][i].real, plaqdet[a][b][i].imag, cabs_sq(&tc));
+        }
+#endif
       }
       cleanup_gather(mtag1);
     }
@@ -873,14 +894,14 @@ void DbminusLtoS(su3_vector *src[NUMLINK], su3_vector *dest) {
     mult_adj_su3_mat_vec(&(s->link[0]), &(src[0][i]), &(tempvec[0][i]));
   }
   tag[0] = start_gather_field(tempvec[0], sizeof(su3_vector),
-                              goffset[0] + 1, EVENANDODD, gen_pt[0]);
+      goffset[0] + 1, EVENANDODD, gen_pt[0]);
 
   for (mu = 0; mu < NUMLINK; mu++) {
     if (mu < NUMLINK - 1) {   // Start next gather
-      FORALLSITES(i, s)
+      FORALLSITES(i, s) {
         mult_adj_su3_mat_vec(&(s->link[mu + 1]), &(src[mu + 1][i]),
                              &(tempvec[mu + 1][i]));
-
+      }
       tag[mu + 1] = start_gather_field(tempvec[mu + 1], sizeof(su3_vector),
                                        goffset[mu + 1] + 1, EVENANDODD,
                                        gen_pt[mu + 1]);

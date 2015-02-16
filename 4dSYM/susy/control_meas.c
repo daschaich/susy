@@ -48,6 +48,16 @@ int main(int argc, char *argv[]) {
   }
   dtime = -dclock();
 
+  // Uncomment this block to print plaquette and determinant distributions
+  // Be sure to uncomment PLAQ_DIST and DET_DIST, and run in serial
+//  d_plaquette_lcl(&dssplaq, &dstplaq);
+//  node0_printf("\n");
+//  compute_plaqdet();
+//  dtime += dclock();
+//  node0_printf("\nTime = %.4g seconds\n", dtime);
+//  fflush(stdout);
+//  return 0;
+
   // Check: compute initial plaquette and bosonic action
   d_plaquette(&dssplaq, &dstplaq);
   node0_printf("START %.8g %.8g %.8g ", dssplaq, dstplaq, dssplaq + dstplaq);

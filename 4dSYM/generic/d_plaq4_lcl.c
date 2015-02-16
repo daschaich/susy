@@ -21,6 +21,7 @@
 static int print_dir = 0;   // Controls printing out MY_DIR
 #endif
 
+//#define PLAQ_DIST
 #include "generic_includes.h"
 // -----------------------------------------------------------------
 

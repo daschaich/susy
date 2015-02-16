@@ -129,6 +129,7 @@ double d_fermion_action(Twist_Fermion *src, Twist_Fermion **sol) {
   complex ctmp;
 
 #ifdef DEBUG_CHECK  // Check ampdeg4 term
+  double im = 0.0;
   FORALLSITES(i, s)
     sum += ampdeg4 * (double)magsq_TF(&(src[i]));
   g_doublesum(&sum);
@@ -139,9 +140,16 @@ double d_fermion_action(Twist_Fermion *src, Twist_Fermion **sol) {
     for (j = 0; j < Norder; j++) {
       ctmp = TF_dot(&(src[i]), &(sol[j][i]));   // src^dag.sol[j]
       sum += (double)(amp4[j] * ctmp.real);
+#ifdef DEBUG_CHECK  // Make sure imaginary part vanishes
+      im += (double)(amp4[j] * ctmp.imag);
+#endif
     }
   }
   g_doublesum(&sum);
+#ifdef DEBUG_CHECK  // Make sure imaginary part vanishes
+  g_doublesum(&im);
+  node0_printf("S_f = (%.4g, %.4g)\n", sum, im);
+#endif
   return sum;
 }
 // -----------------------------------------------------------------

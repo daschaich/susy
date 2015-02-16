@@ -145,16 +145,20 @@ void add_su3_matrix_f(su3_matrix_f *a, su3_matrix_f *b, su3_matrix_f *c);
 // In file submat_f.c
 void sub_su3_matrix_f(su3_matrix_f *a, su3_matrix_f *b, su3_matrix_f *c);
 
+// In file s_a_d_mat_f.c
+void scalar_add_diag_su3_f(su3_matrix_f *a, Real s);
+
 // In file s_m_mat_f.c
 void scalar_mult_su3_matrix_f(su3_matrix_f *src, Real scalar,
                               su3_matrix_f *dest);
 
+// In file s_m_a_mat_f.c
+void scalar_mult_add_su3_matrix_f(su3_matrix_f *src1, su3_matrix_f *src2,
+                                  Real scalar, su3_matrix_f *dest);
+
 // In file s_m_s_mat_f.c
 void scalar_mult_sub_su3_matrix_f(su3_matrix_f *src1, su3_matrix_f *src2,
                                   Real scalar, su3_matrix_f *dest);
-
-// In file s_a_d_mat_f.c
-void scalar_add_diag_su3_f(su3_matrix_f *a, Real s);
 
 // In file cs_a_d_mat_f.c
 void c_scalar_add_diag_su3_f(su3_matrix_f *a, complex *f);
@@ -177,10 +181,6 @@ void mult_su3_na_f(su3_matrix_f *a, su3_matrix_f *b, su3_matrix_f *c);
 
 // In file m_mat_an_f.c
 void mult_su3_an_f(su3_matrix_f *a, su3_matrix_f *b, su3_matrix_f *c);
-
-// In file s_m_a_mat_f.c
-void scalar_mult_add_su3_matrix_f(su3_matrix_f *src1, su3_matrix_f *src2,
-                                  Real scalar, su3_matrix_f *dest);
 
 // Relate fundamental matrices and anti-hermitian matrices
 // In file make_ahmat.c

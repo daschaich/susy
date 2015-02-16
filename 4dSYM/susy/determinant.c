@@ -240,24 +240,29 @@ void measure_det() {
   register int i, a, b;
   register site *s;
   Real norm = (Real)(NUMLINK * (NUMLINK - 1) / 2 * volume);
-  complex tot = cmplx(0.0, 0.0), tot_sq = cmplx(0.0, 0.0);
+  double WSq = 0.0;
+  complex tot = cmplx(0.0, 0.0), tot_sq = cmplx(0.0, 0.0), tc;
 
   compute_plaqdet();
-  FORALLSITES(i, s) {
-    for (a = YUP; a < NUMLINK; a++) {
-      for (b = XUP; b < a; b++) {
+  for (a = YUP; a < NUMLINK; a++) {
+    for (b = XUP; b < a; b++) {
+      FORALLSITES(i, s) {
         CSUM(tot, plaqdet[a][b][i]);
         tot_sq.real += plaqdet[a][b][i].real * plaqdet[a][b][i].real;
         tot_sq.imag += plaqdet[a][b][i].imag * plaqdet[a][b][i].imag;
+
+        CSUB(plaqdet[a][b][i], one, tc);
+        WSq += cabs_sq(&tc);
       }
     }
   }
   g_complexsum(&tot);
   g_complexsum(&tot_sq);
+  g_doublesum(&WSq);
   CDIVREAL(tot, norm, tot);
   CDIVREAL(tot_sq, norm, tot_sq);
-  node0_printf("DET %.6g %.6g %.6g %.6g\n",
-               tot.real, tot.imag, tot_sq.real, tot_sq.imag);
+  node0_printf("DET %.6g %.6g %.6g %.6g %.6g\n",
+               tot.real, tot.imag, tot_sq.real, tot_sq.imag, WSq / norm);
 }
 // -----------------------------------------------------------------
 
