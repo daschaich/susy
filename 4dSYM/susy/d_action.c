@@ -57,6 +57,10 @@ double d_gauge_action(int do_det) {
 
     tc = trace_su3_f(&tmat2);
     g_action += tc.real;
+#ifdef DEBUG_CHECK
+    if (fabs(tc.imag) > IMAG_TOL)
+      printf("node%d WARNING: Im[s_B[%d]] = %.4g\n", this_node, i, tc.imag);
+#endif
   }
   g_action *= kappa;
   g_doublesum(&g_action);

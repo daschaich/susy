@@ -53,6 +53,8 @@ int main(int argc, char *argv[]) {
 //  d_plaquette_lcl(&dssplaq, &dstplaq);
 //  node0_printf("\n");
 //  compute_DmuUmu();
+//  if (G < IMAG_TOL)
+//    compute_plaqdet();
 //  dtime += dclock();
 //  node0_printf("\nTime = %.4g seconds\n", dtime);
 //  fflush(stdout);
