@@ -38,7 +38,7 @@ double gauge_force(Real eps) {
 
     wait_gather(tag[mu]);
     FORALLSITES(i, s) {
-      mat = (su3_matrix_f *)gen_pt[mu][i];
+      mat = (su3_matrix_f *)(gen_pt[mu][i]);
       mult_su3_an_f(&(s->linkf[mu]), &(DmuUmu[i]), &tmat1);
       mult_su3_na_f(mat, &(s->linkf[mu]), &tmat2);
       sub_su3_matrix_f(&tmat1, &tmat2, &tmat3);
@@ -201,8 +201,10 @@ double gauge_force(Real eps) {
   }
   g_doublesum(&returnit);
 
-  // Add in force from separate determinant term
-  returnit += det_force(eps);
+  // Add in force from separate determinant term if kappa_u1 non-zero
+  if (kappa_u1 > IMAG_TOL)
+    returnit += det_force(eps);
+
   return (eps * sqrt(returnit) / volume);
 }
 // -----------------------------------------------------------------

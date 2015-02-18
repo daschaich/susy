@@ -15,14 +15,14 @@
 // -----------------------------------------------------------------
 // Compute at each site all NUMLINK * (NUMLINK - 1) plaquette determinants
 // counting both orientations, and saving ZW* = plaqdet (plaqdet - 1)^*
-// Use tempmat1 as temporary storage
+// Use Tr_Uinv as temporary storage
 void compute_plaqdet() {
   register int i;
   register site *s;
   int a, b;
-  complex tc, tc2;
+  complex tc1, tc2;
   msg_tag *mtag0 = NULL, *mtag1 = NULL;
-  su3_matrix_f tmat, tmat2, *mat;
+  su3_matrix_f tmat;
 
 #ifdef DET_DIST
   if (this_node != 0) {
@@ -37,43 +37,49 @@ void compute_plaqdet() {
       if (a == b)
         continue;
 
-      // gen_pt[0] is U_b(x+a), gen_pt[1] is U_a(x+b)
-      mtag0 = start_gather_site(F_OFFSET(linkf[b]), sizeof(su3_matrix_f),
-                                goffset[a], EVENANDODD, gen_pt[0]);
-      mtag1 = start_gather_site(F_OFFSET(linkf[a]), sizeof(su3_matrix_f),
-                                goffset[b], EVENANDODD, gen_pt[1]);
-
-      // tempmat1 = Udag_b(x+a) Udag_a(x) = [U_a(x) U_b(x+a)]^dag
-      wait_gather(mtag0);
+      // Gather determinants of U_a(x+b) and Udag_b(x+a)
+      // as opposed to the full matrices
+      // gen_pt[0] is det[Udag_b(x+a)], gen_pt[1] is det[U_a(x+b)]
       FORALLSITES(i, s) {
-        mat = (su3_matrix_f *)(gen_pt[0][i]);
-        mult_su3_nn_f(&(s->linkf[a]), mat, &tmat);
-        su3_adjoint_f(&tmat, &(tempmat1[i]));
+        Tr_Uinv[a][i] = find_det(&(s->linkf[a]));
+        su3_adjoint_f(&(s->linkf[b]), &tmat);
+        Tr_Uinv[b][i] = find_det(&tmat);
       }
-      cleanup_gather(mtag0);
+      mtag0 = start_gather_field(Tr_Uinv[b], sizeof(complex),
+                                 goffset[a], EVENANDODD, gen_pt[0]);
+      mtag1 = start_gather_field(Tr_Uinv[a], sizeof(complex),
+                                 goffset[b], EVENANDODD, gen_pt[1]);
 
-      // tmat = U_a(x+b) Udag_b(x+a) Udag_a(x)
-      // tmat2 = U_b(x) U_a(x+b) Udag_b(x+a) Udag_a(x) = P_ab
+      // Compute det[U_b(x)] det[Udag_a(x)] while gathers run
+      FORALLSITES(i, s) {
+        su3_adjoint_f(&(s->linkf[a]), &tmat);
+        tc1 = find_det(&tmat);
+        tc2 = find_det(&(s->linkf[b]));
+        CMUL(tc1, tc2, plaqdet[a][b][i]);       // Initialize
+      }
+
+      // Now put it all together
+      wait_gather(mtag0);
       wait_gather(mtag1);
       FORALLSITES(i, s) {
-        mat = (su3_matrix_f *)(gen_pt[1][i]);
-        mult_su3_nn_f(mat, &(tempmat1[i]), &tmat);
-        mult_su3_nn_f(&(s->linkf[b]), &tmat, &tmat2);
-        plaqdet[a][b][i] = find_det(&tmat2);
+        tc1 = *((complex *)(gen_pt[0][i]));     // det[Udag_b(x+a)]
+        CMUL(plaqdet[a][b][i], tc1, tc2);
+        tc1 = *((complex *)(gen_pt[1][i]));     // det[U_a(x+b)]
+        CMUL(tc1, tc2, plaqdet[a][b][i]);
 
         // ZWstar = plaqdet (plaqdet - 1)^*
-        CSUB(plaqdet[a][b][i], one, tc);
-        CONJG(tc, tc2);
+        CSUB(plaqdet[a][b][i], one, tc1);
+        CONJG(tc1, tc2);
         CMUL(plaqdet[a][b][i], tc2, ZWstar[a][b][i]);
-
 #ifdef DET_DIST
         if (a < b) {
           printf("DET_DIST %d %d %d %d %d %d %.4g %.4g %.4g\n",
                  s->x, s->y, s->z, s->t, a, b,
-                 plaqdet[a][b][i].real, plaqdet[a][b][i].imag, cabs_sq(&tc));
+                 plaqdet[a][b][i].real, plaqdet[a][b][i].imag, cabs_sq(&tc1));
         }
 #endif
       }
+      cleanup_gather(mtag0);
       cleanup_gather(mtag1);
     }
   }
@@ -161,7 +167,7 @@ void compute_DmuUmu() {
           DmuUmu[i].e[j][j].real += B * B * tr * tr;
 #ifdef TR_DIST
           printf("TR_DIST %d %d %d %d %d %.4g\n",
-                 s->x, s->y, s->z, s->t, mu, tr * tr);
+                 s->x, s->y, s->z, s->t, mu, tr);
 #endif
       }
     }
