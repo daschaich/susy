@@ -68,7 +68,7 @@ void bilinsrc(Twist_Fermion *g_rand, Twist_Fermion *src, int N) {
 
 // -----------------------------------------------------------------
 // Measure the fermion bilinear
-//   sum_a tr(eta Ubar_a psi_a) - tr(eta)/N tr(Ubar_a psi_a)
+//   sum_a tr(eta psi_a Ubar_a) - tr(eta)/N tr(psi_a Ubar_a)
 // Return total number of iterations
 int d_bilinear() {
   if (nsrc < 1)   // Only run if there are inversions to do
@@ -102,7 +102,9 @@ int d_bilinear() {
     bilinsrc(g_rand, src, DIMF - 1);
     iters = congrad_multi_field(src, psim, niter, rsqmin, &size_r);
     tot_iters += iters;
-//    dump_TF(&(psim[0][10]));    // Check what components are non-zero
+#ifdef DEBUG_CHECK
+    dump_TF(&(psim[0][10]));    // Check what components are non-zero
+#endif
 
     // Now construct bilinear -- all on same site, no gathers
     StoL = cmplx(0.0, 0.0);
@@ -112,6 +114,10 @@ int d_bilinear() {
       for (mu = XUP; mu < NUMLINK; mu++) {
         mult_su3_vec_adj_mat(&(psim[0][i].Flink[mu]), &(s->link[mu]), &tvec);
         tc = su3_dot(&(g_rand[i].Fsite), &tvec);
+#ifdef DEBUG_CHECK
+        printf("StoL[%d](%d) %d (%.4g, %.4g)\n",
+               i, mu, isrc, tc.real, tc.imag);
+#endif
         CSUM(StoL, tc);
       }
 
@@ -121,6 +127,10 @@ int d_bilinear() {
       for (mu = XUP; mu < NUMLINK; mu++) {
         mult_adj_su3_mat_vec(&(s->link[mu]), &(psim[0][i].Fsite), &tvec);
         tc = su3_dot(&(g_rand[i].Flink[mu]), &tvec);
+#ifdef DEBUG_CHECK
+        printf("LtoS[%d](%d) %d (%.4g, %.4g)\n",
+               i, mu, isrc, tc.real, tc.imag);
+#endif
         CSUM(LtoS, tc);
       }
     }
@@ -155,8 +165,8 @@ int d_bilinear() {
 
 // -----------------------------------------------------------------
 // Measure the supersymmetry transformation
-//   Q sum_a tr(eta Ubar_a U_a) = sum_{a, b} tr(DbUb Ubar_a U_a)
-//                              - sum_a tr(eta Ubar_a psi_a)
+//   Q sum_a tr(eta U_a Ubar_a) = tr(sum_b Dbar_b U_b sum_a U_a Ubar_a)
+//                                 - sum_a tr(eta psi_a Ubar_a)
 // Return total number of iterations
 int d_susyTrans() {
   if (nsrc < 1)   // Only run if there are inversions to do
@@ -168,7 +178,7 @@ int d_susyTrans() {
   double sum = 0.0;
   double_complex tc, StoL, LtoS, ave = cmplx(0.0, 0.0);
   su3_vector tvec;
-  su3_matrix_f tmat1, tmat2;
+  su3_matrix_f tmat, tmat2;
   Twist_Fermion *g_rand, *src, **psim;
 
   fermion_rep();    // Make sure s->link are up to date
@@ -192,24 +202,66 @@ int d_susyTrans() {
     bilinsrc(g_rand, src, DIMF);
     iters = congrad_multi_field(src, psim, niter, rsqmin, &size_r);
     tot_iters += iters;
-//    dump_TF(&(psim[0][10]));    // Check what components are non-zero
+#ifdef DEBUG_CHECK
+    dump_TF(&(psim[0][10]));    // Check what components are non-zero
+#endif
 
-    // Now construct bilinear -- all on same site, no gathers
+    // Now construct bilinear sum_a psi_a Udag_a eta
+    // All fields are on the same site, no gathers
     StoL = cmplx(0.0, 0.0);
     LtoS = cmplx(0.0, 0.0);
     FORALLSITES(i, s) {
-      // First site-to-link, g^dag . sum_a psi_a Vdag_a
       for (mu = XUP; mu < NUMLINK; mu++) {
         mult_su3_vec_adj_mat(&(psim[0][i].Flink[mu]), &(s->link[mu]), &tvec);
         tc = su3_dot(&(g_rand[i].Fsite), &tvec);
+#ifdef DEBUG_CHECK
+        printf("StoL[%d](%d) %d (%.4g, %.4g)\n",
+               i, mu, isrc, tc.real, tc.imag);
+#endif
         CSUM(StoL, tc);
-      }
 
-      // Now link-to-site, sum_a g_a^dag . eta Vdag_a
-      for (mu = XUP; mu < NUMLINK; mu++) {
         mult_adj_su3_mat_vec(&(s->link[mu]), &(psim[0][i].Fsite), &tvec);
         tc = su3_dot(&(g_rand[i].Flink[mu]), &tvec);
+#ifdef DEBUG_CHECK
+        printf("LtoS[%d](%d) %d (%.4g, %.4g)\n",
+               i, mu, isrc, tc.real, tc.imag);
+#endif
         CSUM(LtoS, tc);
+
+#if 0
+        // Explicitly write out matrix multiplications including adjoints
+        int a, b;
+        double_complex tc2;
+        for (a = 0; a < DIMF; a++) {
+          for (b = 0; b < DIMF; b++) {
+            // First site-to-link
+            // tr[gdag^B (M_mu^{-1})^A La^A Udag_mu La^B]
+            mult_su3_an_f(&(s->linkf[mu]), &(Lambda[b]), &tmat);
+            mult_su3_nn_f(&(Lambda[a]), &tmat, &tmat2);
+            tc = trace_su3_f(&tmat2);
+            CMUL(psim[0][i].Flink[mu].c[a], tc, tc2);
+            CMULJ_(g_rand[i].Fsite.c[b], tc2, tc);
+#ifdef DEBUG_CHECK
+            printf("StoL[%d](%d) %d (%.4g, %.4g)\n",
+                   i, mu, isrc, tc.real, tc.imag);
+#endif
+            CSUM(StoL, tc);
+
+            // Now link-to-site
+            // tr[gdag_mu^B (M^{-1})^A La^A La^B Udag_mu]
+            mult_su3_na_f(&(Lambda[b]), &(s->linkf[mu]), &tmat);
+            mult_su3_nn_f(&(Lambda[a]), &tmat, &tmat2);
+            tc = trace_su3_f(&tmat2);
+            CMUL(psim[0][i].Fsite.c[a], tc, tc2);
+            CMULJ_(g_rand[i].Flink[mu].c[b], tc2, tc);
+#ifdef DEBUG_CHECK
+            printf("LtoS[%d](%d) %d (%.4g, %.4g)\n",
+                   i, mu, isrc, tc.real, tc.imag);
+#endif
+            CSUM(LtoS, tc);
+          }
+        }
+#endif
       }
     }
     g_dcomplexsum(&StoL);
@@ -227,16 +279,16 @@ int d_susyTrans() {
   CDIVREAL(ave, 2.0 * (Real)nsrc, ave);
 
   // Now add gauge piece, including plaquette determinant term
-  // Accumulate sum_a U_a Udag_a in tmat1
+  // Accumulate sum_a U_a Udag_a in tmat
   // Multiply by DmuUmu into tmat2 and trace
   compute_DmuUmu();     // Compute sum_b [U_b Udag_b - Udag_b U_b]
   FORALLSITES(i, s) {
-    mult_su3_na_f(&(s->linkf[0]), &(s->linkf[0]), &tmat1);
+    mult_su3_na_f(&(s->linkf[0]), &(s->linkf[0]), &tmat);
     for (mu = 1; mu < NUMLINK; mu++) {
       mult_su3_na_f(&(s->linkf[mu]), &(s->linkf[mu]), &tmat2);
-      add_su3_matrix_f(&tmat1, &tmat2, &tmat1);
+      add_su3_matrix_f(&tmat, &tmat2, &tmat);
     }
-    mult_su3_nn_f(&(DmuUmu[i]), &tmat1, &tmat2);
+    mult_su3_nn_f(&(DmuUmu[i]), &tmat, &tmat2);
     tc = trace_su3_f(&tmat2);
     // Make sure trace really is real
     if (abs(tc.imag) > IMAG_TOL) {
