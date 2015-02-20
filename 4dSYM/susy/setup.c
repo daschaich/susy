@@ -76,16 +76,14 @@ int initial_set() {
 // Allocate space for fields
 void make_fields() {
   double size = (double)(sizeof(complex));
-  size += (double)(2.0 + 3.0 * (NUMLINK + NPLAQ)) * sizeof(su3_vector);
+  size += (double)(2.0 * (1 + NUMLINK + NPLAQ)) * sizeof(su3_vector);
   FIELD_ALLOC(site_src, su3_vector);
   FIELD_ALLOC(site_dest, su3_vector);
   FIELD_ALLOC(tr_dest, complex);
   FIELD_ALLOC_VEC(link_src, su3_vector, NUMLINK);
   FIELD_ALLOC_VEC(link_dest, su3_vector, NUMLINK);
-  FIELD_ALLOC_VEC(link_dest2, su3_vector, NUMLINK);
   FIELD_ALLOC_VEC(plaq_src, su3_vector, NPLAQ);
   FIELD_ALLOC_VEC(plaq_dest, su3_vector, NPLAQ);
-  FIELD_ALLOC_VEC(plaq_dest2, su3_vector, NPLAQ);
 
   // Stout smearing stuff needed for `hot-start' random configurations
   size += (double)(NUMLINK * sizeof(anti_hermitmat));

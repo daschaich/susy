@@ -58,28 +58,6 @@ double gauge_force(Real eps);
 double fermion_force(Real eps, Twist_Fermion *source, Twist_Fermion **psim);
 double det_force(Real eps);
 
-// Link-to-plaq term in action
-void Dplus(su3_vector *src[NUMLINK], su3_vector *dest[NPLAQ]);
-
-// Plaq-to-link term in action
-void Dminus(su3_vector *src[NPLAQ], su3_vector *dest[NUMLINK]);
-
-// First plaq-to-plaq term in action
-void DbplusPtoP(su3_vector *src[NPLAQ], su3_vector *dest[NPLAQ]);
-
-// Site-to-link terms in actiion
-void DbplusStoL(su3_vector *src, su3_vector *dest[NUMLINK]);
-void detStoL(su3_vector *src, su3_vector *dest[NUMLINK]);
-void potStoL(su3_vector *src, su3_vector *dest[NUMLINK]);
-
-// Second plaq-to-plaq term in action
-void DbminusPtoP(su3_vector *src[NPLAQ], su3_vector *dest[NPLAQ]);
-
-// Link-to-site terms in action
-void DbminusLtoS(su3_vector *src[NUMLINK], su3_vector *dest);
-void detLtoS(su3_vector *src[NUMLINK], complex *dest);
-void potLtoS(su3_vector *src[NUMLINK], complex *dest);
-
 // Fermion matrix--vector operators (D & D^2) and multi-mass CG
 void fermion_op(Twist_Fermion *src, Twist_Fermion *dest, int sign);
 void hdelta0_field(Twist_Fermion *src, Twist_Fermion *dest);
@@ -114,7 +92,7 @@ void det_project(su3_matrix_f *in, su3_matrix_f *out);
 // Adjugate matrix needed by det_force
 void adjugate(su3_matrix_f *in, su3_matrix_f *out);
 
-// Matrix invert is just adjugate divided by determinant
+// Matrix inverse is just adjugate divided by determinant
 void invert(su3_matrix_f *in, su3_matrix_f *out);
 
 // Modified Wilson loops use invert and path

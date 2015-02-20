@@ -46,6 +46,7 @@ void bilinsrc(Twist_Fermion *g_rand, Twist_Fermion *src, int N) {
   }
 
   // Set up src = Mdag g_rand
+  fermion_rep();          // Make sure adjoint links are up to date
   fermion_op(g_rand, src, MINUS);
   FORALLSITES(i, s)
     scalar_mult_add_TF(&(src[i]), &(g_rand[i]), fmass, &(src[i]));
@@ -81,7 +82,6 @@ int d_bilinear() {
   su3_vector tvec;
   Twist_Fermion *g_rand, *src, **psim;
 
-  fermion_rep();    // Make sure site->link are up to date
   g_rand = malloc(sites_on_node * sizeof(*g_rand));
   src = malloc(sites_on_node * sizeof(*src));
 
@@ -98,7 +98,7 @@ int d_bilinear() {
   for (isrc = 0; isrc < nsrc; isrc++) {
     // Make random source g_rand without trace piece
     // Hit it with Mdag to get src, invert to get M^{-1} g_rand
-    // (The psim are zeroed in congrad_multi_field)
+    // congrad_multi_field initializes psim and calls fermion_rep()
     bilinsrc(g_rand, src, DIMF - 1);
     iters = congrad_multi_field(src, psim, niter, rsqmin, &size_r);
     tot_iters += iters;
@@ -181,7 +181,6 @@ int d_susyTrans() {
   su3_matrix_f tmat, tmat2;
   Twist_Fermion *g_rand, *src, **psim;
 
-  fermion_rep();    // Make sure s->link are up to date
   g_rand = malloc(sites_on_node * sizeof(*g_rand));
   src = malloc(sites_on_node * sizeof(*src));
 
@@ -198,7 +197,7 @@ int d_susyTrans() {
   for (isrc = 0; isrc < nsrc; isrc++) {
     // Make random source g_rand, now including trace piece
     // Hit it with Mdag to get src, invert to get M^{-1} g_rand
-    // (The psim are zeroed in congrad_multi_field)
+    // congrad_multi_field initializes psim and calls fermion_rep()
     bilinsrc(g_rand, src, DIMF);
     iters = congrad_multi_field(src, psim, niter, rsqmin, &size_r);
     tot_iters += iters;

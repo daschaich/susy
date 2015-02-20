@@ -144,7 +144,6 @@ EXTERN int FQ_lookup[NTERMS][NUMLINK];
 // Used in fermion_op and assemble_fermion_force
 EXTERN su3_vector *site_src, *link_src[NUMLINK], *plaq_src[NPLAQ];
 EXTERN su3_vector *site_dest, *link_dest[NUMLINK], *plaq_dest[NPLAQ];
-EXTERN su3_vector *link_dest2[NUMLINK], *plaq_dest2[NPLAQ];
 
 // For convenience in calculating action and force
 // May be wasteful of space

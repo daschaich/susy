@@ -67,9 +67,6 @@ int update_step(Real *old_cg_time, Real *cg_time, Real *next_cg_time,
   for (step = 0; step < nsteps[0]; step++) {
     // One step u(t/2) p(t) u(t/2)
     update_uu(0.5 * eps);
-#ifndef PUREGAUGE
-    fermion_rep();
-#endif
     tr = update_gauge_step(g_eps);
     *gnorm += tr;
     if (tr > max_gf)
@@ -77,6 +74,7 @@ int update_step(Real *old_cg_time, Real *cg_time, Real *next_cg_time,
 
 #ifndef PUREGAUGE
     // Do conjugate gradient to get (Mdag M)^(-1 / 4) chi
+    // congrad_multi_field calls fermion_rep()
     iters += congrad_multi_field(src, psim, niter, rsqmin, &final_rsq);
 
     tr = fermion_force(f_eps * LAMBDA_MID, src, psim);
@@ -124,6 +122,7 @@ int update() {
 #ifdef UPDATE_DEBUG
   node0_printf("Calling CG in update_leapfrog -- original action\n");
 #endif
+  // congrad_multi_field initializes psim and calls fermion_rep()
   iters += congrad_multi_field(src, psim, niter, rsqmin, &final_rsq);
 #endif // ifndef PUREGAUGE
 
@@ -147,7 +146,6 @@ int update() {
 #ifdef UPDATE_DEBUG
   node0_printf("Calling CG in update_leapfrog -- new action\n");
 #endif
-  fermion_rep();
   iters += congrad_multi_field(src, psim, niter, rsqmin, &final_rsq);
   endaction = d_action(src, psim);
   change = endaction - startaction;

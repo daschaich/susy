@@ -47,6 +47,9 @@ int congrad_multi_field(Twist_Fermion *src, Twist_Fermion **psim,
   for (i = 1; i < Norder; i++)    // !!!
     pm[i] = malloc(sites_on_node * sizeof(Twist_Fermion));
 
+  // Make sure irrep links used by the fermion operator are up to date
+  fermion_rep();
+
   // Initialize zero initial guess, etc.
   // dest = 0, r = source, pm[j] = r
   errormin = RsdCG * RsdCG;

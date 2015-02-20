@@ -56,6 +56,7 @@ double det_force(Real eps) {
           // Now we have the upper staple -- compute its force
           // S = (det[staple U^dag] - 1) * (det[staple^dag U] - 1)
           // --> F = (det[staple U^dag] - 1) * det[staple]^* * d(det U)/dU
+          //       = prod_det * staple_det^* * dlink
           staple_det = find_det(&(staple[i]));
           linkf_det = find_det(&(s->linkf[dir1]));
 

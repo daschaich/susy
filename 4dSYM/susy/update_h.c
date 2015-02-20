@@ -14,11 +14,10 @@
 double gauge_force(Real eps) {
   register int i, mu, nu, index;
   register site *s;
-  register Real eb3, eb3UdU;
   double returnit = 0.0;
   complex tc, tc2;
   msg_tag *tag[NUMLINK], *tag0, *tag1;
-  su3_matrix_f tmat1, tmat2, tmat3, UdU, *mat;
+  su3_matrix_f tmat1, tmat2, tmat3, *mat;
 
   // Three contributions from d^2 term
   // Start by computing DmuUmu,
@@ -170,16 +169,13 @@ double gauge_force(Real eps) {
   }
 
   // Only compute U(1) mass term if non-zero -- note factor of kappa
-  eb3 = 2.0 * kappa * bmass * bmass / (Real)(NCOL * NCOL);
-  if (eb3 > IMAG_TOL) {
-    for (mu = XUP; mu < NUMLINK; mu++) {
-      FORALLSITES(i, s) {
-        mult_su3_an_f(&(s->linkf[mu]), &(s->linkf[mu]), &UdU);
-        tc = trace_su3_f(&UdU);
-        eb3UdU = eb3 * (tc.real -(Real)NCOL);
-
+  if (bmass > IMAG_TOL) {
+    Real tr, dmu = 2.0 * kappa * bmass * bmass / (Real)(NCOL * NCOL);
+    FORALLSITES(i, s) {
+      for (mu = XUP; mu < NUMLINK; mu++) {
+        tr = realtrace_su3_f(&(s->linkf[mu]), &(s->linkf[mu])) - (Real)NCOL;
         su3_adjoint_f(&(s->linkf[mu]), &tmat1);
-        scalar_mult_add_su3_matrix_f(&(s->f_U[mu]), &tmat1, eb3UdU,
+        scalar_mult_add_su3_matrix_f(&(s->f_U[mu]), &tmat1, dmu * tr,
                                      &(s->f_U[mu]));
       }
     }
@@ -207,6 +203,17 @@ double gauge_force(Real eps) {
 
   return (eps * sqrt(returnit) / volume);
 }
+// -----------------------------------------------------------------
+
+
+
+// -----------------------------------------------------------------
+// Separate routines for each term in the fermion forces
+// All called by assemble_fermion_force below
+// Start with plaquette determinant contributions
+// Use Uinv, Udag_inv, UpsiU, Tr_Uinv and tr_dest for temporary storage
+// The accumulator names refer to the corresponding derivatives
+void det
 // -----------------------------------------------------------------
 
 
@@ -436,8 +443,6 @@ void assemble_fermion_force(Twist_Fermion *sol, Twist_Fermion *psol) {
   }
 
   // Plaquette determinant contributions if G is non-zero
-  // Use Uinv, Udag_inv, UpsiU, Tr_Uinv and tr_dest for temporary storage
-  // The accumulator names refer to the corresponding derivatives
   if (G > IMAG_TOL) {
     complex Gc = cmplx(0.0, -1.0 * G * sqrt((Real)NCOL));
     complex *dZdU = malloc(sites_on_node * sizeof(*dZdU));
@@ -1154,7 +1159,8 @@ void assemble_fermion_force(Twist_Fermion *sol, Twist_Fermion *psol) {
 
 // -----------------------------------------------------------------
 // Update the momenta with the fermion force
-// Assume that the multiCG has been run, with the answers in sol[j]
+// Assume that the multiCG has been run (updating the adjoint links),
+// with the solution vectors in sol[j]
 // Accumulate f_U for each pole into fullforce, add to momenta
 // Use fullforce-->Fmunu and tempTF for temporary storage
 double fermion_force(Real eps, Twist_Fermion *src, Twist_Fermion **sol) {
@@ -1210,8 +1216,8 @@ double fermion_force(Real eps, Twist_Fermion *src, Twist_Fermion **sol) {
                  n, eps * sqrt(individ_force) / volume);
 
     // Check that force syncs with fermion action
+    // congrad_multi_field calls fermion_rep()
     old_action = d_fermion_action(src, sol);
-    fermion_rep();
     iters += congrad_multi_field(src, sol, niter, rsqmin, &final_rsq);
     new_action = d_fermion_action(src, sol);
     node0_printf("EXITING  %.4g\n", new_action - old_action);
@@ -1233,7 +1239,6 @@ double fermion_force(Real eps, Twist_Fermion *src, Twist_Fermion **sol) {
               s->linkf[mu] = tmat1;
               s->linkf[mu].e[ii][jj].real += 0.001 * (Real)kick;
 
-              fermion_rep();
               iters += congrad_multi_field(src, sol, niter, rsqmin, &final_rsq);
               if (kick == -1)
                 new_action -= d_fermion_action(src, sol);
@@ -1247,7 +1252,6 @@ double fermion_force(Real eps, Twist_Fermion *src, Twist_Fermion **sol) {
               s->linkf[mu] = tmat1;
               s->linkf[mu].e[ii][jj].imag += 0.001 * (Real)kick;
 
-              fermion_rep();
               iters += congrad_multi_field(src, sol, niter, rsqmin, &final_rsq);
               if (kick == -1)
                 new_action -= d_fermion_action(src, sol);
@@ -1267,7 +1271,6 @@ double fermion_force(Real eps, Twist_Fermion *src, Twist_Fermion **sol) {
         dumpmat_f(&tprint);
         s->linkf[mu] = tmat1;
 
-        fermion_rep();
         iters += congrad_multi_field(src, sol, niter, rsqmin, &final_rsq);
       }
     }   // End scan of the fermion action
