@@ -52,9 +52,11 @@ int main(int argc, char *argv[]) {
   // Be sure to uncomment PLAQ_DIST and DET_DIST, and run in serial
 //  d_plaquette_lcl(&dssplaq, &dstplaq);
 //  node0_printf("\n");
-//  compute_DmuUmu();
 //  if (G < IMAG_TOL)
-//    compute_plaqdet();
+//    G = 999;
+//  if (B < IMAG_TOL)
+//    B = 999;
+//  compute_DmuUmu();
 //  dtime += dclock();
 //  node0_printf("\nTime = %.4g seconds\n", dtime);
 //  fflush(stdout);

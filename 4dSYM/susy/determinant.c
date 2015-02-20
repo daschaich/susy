@@ -251,7 +251,7 @@ void measure_det() {
         tot_sq.real += plaqdet[a][b][i].real * plaqdet[a][b][i].real;
         tot_sq.imag += plaqdet[a][b][i].imag * plaqdet[a][b][i].imag;
 
-        CSUB(plaqdet[a][b][i], one, tc);
+        CADD(plaqdet[a][b][i], minus1, tc);
         WSq += cabs_sq(&tc);
       }
     }

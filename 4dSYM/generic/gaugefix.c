@@ -23,9 +23,7 @@
 // EXAMPLE: Fixing only the fundamental link matrices to Coulomb gauge,
 //          using scratch space in the site structure
 //          (su3_matrix_f mp and su3_vector_f chi)
-//
-// gaugefix(TUP, 1.5, 500, 1.0e-7, F_OFFSET(mp), F_OFFSET(chi),
-//          0, NULL, NULL);
+// gaugefix(TUP, 1.5, 500, 1.0e-7, F_OFFSET(mp), F_OFFSET(chi));
 //
 // gauge_dir is the "time" direction used to define Coulomb or Lorentz gauge:
 //   TUP for evaluating propagators in the time-like direction

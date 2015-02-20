@@ -65,7 +65,7 @@ int initial_set() {
   number_of_nodes = numnodes();
   volume = nx * ny * nz * nt;
   total_iters = 0;
-  one = cmplx(1.0, 0.0);
+  minus1 = cmplx(-1.0, 0.0);
   return prompt;
 }
 // -----------------------------------------------------------------

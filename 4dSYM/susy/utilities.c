@@ -68,7 +68,7 @@ void compute_plaqdet() {
         CMUL(tc1, tc2, plaqdet[a][b][i]);
 
         // ZWstar = plaqdet (plaqdet - 1)^*
-        CSUB(plaqdet[a][b][i], one, tc1);
+        CADD(plaqdet[a][b][i], minus1, tc1);
         CONJG(tc1, tc2);
         CMUL(plaqdet[a][b][i], tc2, ZWstar[a][b][i]);
 #ifdef DET_DIST
@@ -147,7 +147,7 @@ void compute_DmuUmu() {
           if (mu == nu)
             continue;
 
-          CSUB(plaqdet[mu][nu][i], one, tc);
+          CADD(plaqdet[mu][nu][i], minus1, tc);
           tr = G * cabs_sq(&tc);
           for (j = 0; j < NCOL; j++)
             DmuUmu[i].e[j][j].real += tr;
@@ -651,7 +651,7 @@ void detStoL(su3_vector *src, su3_vector *dest[NUMLINK]) {
   register site *s;
   int a, b, j, next;
   complex tc, tc2, tc3;
-  complex Gc = cmplx(0.0, -1.0 * G * sqrt((Real)NCOL));
+  complex Gc = cmplx(0.0, -1.0 * C2 * G * sqrt((Real)NCOL));
   su3_matrix_f tmat1, tmat2;
   msg_tag *tag[NUMLINK];
 
@@ -737,7 +737,7 @@ void potStoL(su3_vector *src, su3_vector *dest[NUMLINK]) {
   register site *s;
   Real tr;
   complex tc, tc2, tc3;
-  complex Bc = cmplx(0.0, -1.0 * B * B / sqrt((Real)NCOL));
+  complex Bc = cmplx(0.0, -1.0 * C2 * B * B / sqrt((Real)NCOL));
   su3_matrix_f tmat;
 
   FORALLSITES(i, s) {
@@ -819,7 +819,7 @@ void detLtoS(su3_vector *src[NUMLINK], su3_vector *dest) {
   register site *s;
   int a, b, j, next;
   complex tc, tc2;
-  complex Gc = cmplx(0.0, G * sqrt((Real)NCOL));
+  complex Gc = cmplx(0.0, C2 * G * sqrt((Real)NCOL));
   su3_matrix_f tmat1, tmat2;
   msg_tag *tag[NUMLINK];
 
@@ -890,7 +890,7 @@ void potLtoS(su3_vector *src[NUMLINK], su3_vector *dest) {
   register site *s;
   Real tr;
   complex tc, tc2, tc3;
-  complex Bc = cmplx(0.0, B * B / sqrt((Real)NCOL));
+  complex Bc = cmplx(0.0, C2 * B * B / sqrt((Real)NCOL));
   su3_matrix_f tmat;
 
   FORALLSITES(i, s) {
@@ -946,8 +946,8 @@ void fermion_op(Twist_Fermion *src, Twist_Fermion *dest, int sign) {
     }
   }
   else {
-    node0_printf("Error: incorrect sign in fermion_op\n");
-    exit(1);
+    node0_printf("Error: incorrect sign in fermion_op: %d\n", sign);
+    terminate(1);
   }
 
   // Assemble separate routines for each term in the fermion operator

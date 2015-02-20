@@ -7,12 +7,10 @@ double det_force(Real eps) {
   register int i, dir1, dir2;
   register site *s;
   double returnit = 0;
-  complex staple_det, linkf_det, prod_det, minus1, tforce, *force;
+  complex staple_det, linkf_det, prod_det, tforce;
+  complex *force = malloc(sites_on_node * sizeof(*force));
   su3_matrix_f tmat, dlink, *mat0, *mat2;
   msg_tag *tag0 = NULL, *tag1 = NULL, *tag2 = NULL;
-
-  force = malloc(sites_on_node * sizeof(*force));
-  minus1 = cmplx(-1.0, 0.0);
 
   // Loop over directions, update mom[dir1]
   for (dir1 = XUP; dir1 < NUMLINK; dir1++) {

@@ -14,6 +14,26 @@ void bilinsrc(Twist_Fermion *g_rand, Twist_Fermion *src, int N) {
   register int i, j, mu;
   register site *s;
 
+#if 0
+  // Testing...
+  FORALLSITES(i, s) {
+    clear_TF(&(g_rand[i]));       // Zero plaquette fermions
+    clear_TF(&(src[i]));          // To be safe/explicit
+  }
+  int index = node_index(1, 1, 1, 1);
+  g_rand[index].Flink[0].c[0].real = 1;
+  fermion_rep();          // Make sure adjoint links are up to date
+  fermion_op(g_rand, src, PLUS);
+  FORALLSITES(i, s) {
+    if (magsq_TF(&(src[i])) > IMAG_TOL) {
+      printf("(%d %d %d %d)\n", s->x, s->y, s->z, s->t);
+      dump_TF(&(src[i]));
+    }
+  }
+  terminate(1);
+  // Testing...
+#endif
+
   FORALLSITES(i, s) {
     clear_TF(&(g_rand[i]));       // Zero plaquette fermions
     clear_TF(&(src[i]));          // To be safe/explicit

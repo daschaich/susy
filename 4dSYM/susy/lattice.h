@@ -147,7 +147,7 @@ EXTERN su3_vector *site_dest, *link_dest[NUMLINK], *plaq_dest[NPLAQ];
 
 // For convenience in calculating action and force
 // May be wasteful of space
-EXTERN complex one;
+EXTERN complex minus1;
 EXTERN complex *tr_dest, *Tr_Uinv[NUMLINK], *plaqdet[NUMLINK][NUMLINK];
 EXTERN complex *ZWstar[NUMLINK][NUMLINK];
 EXTERN su3_matrix_f *DmuUmu, *Fmunu[NPLAQ];
