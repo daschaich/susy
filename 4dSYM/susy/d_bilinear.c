@@ -13,10 +13,8 @@
 void bilinsrc(Twist_Fermion *g_rand, Twist_Fermion *src, int N) {
   register int i, j, mu;
   register site *s;
-  Real tr;
 
-#if 0
-  // Testing...
+#ifdef DEBUG_CHECK  // Test that fermion_op connects proper components
   FORALLSITES(i, s) {
     clear_TF(&(g_rand[i]));       // Zero plaquette fermions
     clear_TF(&(src[i]));          // To be safe/explicit
@@ -32,7 +30,6 @@ void bilinsrc(Twist_Fermion *g_rand, Twist_Fermion *src, int N) {
     }
   }
   terminate(1);
-  // Testing...
 #endif
 
   FORALLSITES(i, s) {
@@ -43,19 +40,34 @@ void bilinsrc(Twist_Fermion *g_rand, Twist_Fermion *src, int N) {
     // The last Lambda[DIMF - 1] (N = DIMF) is proportional to the identity
     // The others (N = DIMF - 1) are traceless
     for (j = 0; j < N; j++) {                   // Site fermions
-      tr = myrand(&node_prn) * TWOPI;
-      g_rand[i].Fsite.c[j] = cmplx(cos(tr), sin(tr));
+#ifdef SITERAND
+      g_rand[i].Fsite.c[j].real = gaussian_rand_no(&(s->site_prn));
+      g_rand[i].Fsite.c[j].imag = gaussian_rand_no(&(s->site_prn));
+#else
+      g_rand[i].Fsite.c[j].real = gaussian_rand_no(&node_prn);
+      g_rand[i].Fsite.c[j].imag = gaussian_rand_no(&node_prn);
+#endif
     }
 
     // Source all link and plaquette fermions
     for (j = 0; j < DIMF; j++) {
-      for (mu = XUP; mu < NUMLINK; mu++) {      // Link fermions
-        tr = myrand(&node_prn) * TWOPI;
-        g_rand[i].Flink[mu].c[j] = cmplx(cos(tr), sin(tr));
+      for (mu = 0; mu < NUMLINK; mu++) {        // Link fermions
+#ifdef SITERAND
+        g_rand[i].Flink[mu].c[j].real = gaussian_rand_no(&(s->site_prn));
+        g_rand[i].Flink[mu].c[j].imag = gaussian_rand_no(&(s->site_prn));
+#else
+        g_rand[i].Flink[mu].c[j].real = gaussian_rand_no(&node_prn);
+        g_rand[i].Flink[mu].c[j].imag = gaussian_rand_no(&node_prn);
+#endif
       }
-      for (mu = XUP; mu < NPLAQ; mu++) {        // Plaquette fermions
-        tr = myrand(&node_prn) * TWOPI;
-        g_rand[i].Fplaq[mu].c[j] = cmplx(cos(tr), sin(tr));
+      for (mu = 0; mu < NPLAQ; mu++) {         // Plaquette fermions
+#ifdef SITERAND
+        g_rand[i].Fplaq[mu].c[j].real = gaussian_rand_no(&(s->site_prn));
+        g_rand[i].Fplaq[mu].c[j].imag = gaussian_rand_no(&(s->site_prn));
+#else
+        g_rand[i].Fplaq[mu].c[j].real = gaussian_rand_no(&node_prn);
+        g_rand[i].Fplaq[mu].c[j].imag = gaussian_rand_no(&node_prn);
+#endif
       }
     }
   }

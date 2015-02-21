@@ -84,6 +84,9 @@ void scalar_mult_add_TF(Twist_Fermion *src1, Twist_Fermion *src2, Real s,
 void scalar_mult_TF(Twist_Fermion *src, Real s, Twist_Fermion *dest);
 void gauge_field_copy_f(field_offset src, field_offset dest);
 
+// Random gauge transformation for testing gauge invariance
+void random_gauge_trans(Twist_Fermion *TF);
+
 // Determinant-related routines
 void measure_det();
 complex find_det(su3_matrix_f *Q);
