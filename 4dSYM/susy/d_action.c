@@ -123,24 +123,22 @@ double d_det_action() {
 
 // -----------------------------------------------------------------
 // Fermion contribution to the action
-// Ignore the ampdeg term -- since the pseudofermion src is fixed
-// throughout the trajectory, it has no effect on Delta S (checked)
+// Include the ampdeg term to allow sanity check that the fermion action
+// is 16 DIMF volume on average
+// Since the pseudofermion src is fixed throughout the trajectory,
+// ampdeg actually has no effect on Delta S (checked)
 // sol, however, depends on the gauge fields through the CG
 double d_fermion_action(Twist_Fermion *src, Twist_Fermion **sol) {
   register int i, j;
   register site *s;
   double sum = 0.0;
   complex ctmp;
-
-#ifdef DEBUG_CHECK  // Check ampdeg4 term
+#ifdef DEBUG_CHECK
   double im = 0.0;
-  FORALLSITES(i, s)
-    sum += ampdeg4 * (double)magsq_TF(&(src[i]));
-  g_doublesum(&sum);
-  node0_printf("ampdeg|chi|^2 = %.4g\n", sum);
 #endif
 
   FORALLSITES(i, s) {
+    sum += ampdeg4 * (double)magsq_TF(&(src[i]));
     for (j = 0; j < Norder; j++) {
       ctmp = TF_dot(&(src[i]), &(sol[j][i]));   // src^dag.sol[j]
       sum += (double)(amp4[j] * ctmp.real);
