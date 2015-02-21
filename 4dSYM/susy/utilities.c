@@ -652,7 +652,7 @@ void detStoL(su3_vector *src, su3_vector *dest[NUMLINK]) {
   int a, b, j, next;
   complex tc, tc2, tc3;
   complex Gc = cmplx(0.0, -1.0 * C2 * G * sqrt((Real)NCOL));
-  su3_matrix_f tmat1, tmat2;
+  su3_matrix_f tmat, tmat2;
   msg_tag *tag[NUMLINK];
 
   // Save Tr[eta(x)] ZWstar[a][b](x) in modified ZWstar[a][b]
@@ -712,10 +712,10 @@ void detStoL(su3_vector *src, su3_vector *dest[NUMLINK]) {
 
     // Compute Tr[U_a^{-1} Lambda^j] times sum
     FORALLSITES(i, s) {
-      invert(&(s->linkf[a]), &tmat1);
+      invert(&(s->linkf[a]), &tmat);
       CMUL(tr_dest[i], Gc, tc);
       for (j = 0; j < DIMF; j++) {
-        mult_su3_nn_f(&tmat1, &(Lambda[j]), &tmat2);
+        mult_su3_nn_f(&tmat, &(Lambda[j]), &tmat2);
         tc2 = trace_su3_f(&tmat2);
         CMUL(tc, tc2, tc3);
         CSUM(dest[a][i].c[j], tc3);
@@ -820,7 +820,7 @@ void detLtoS(su3_vector *src[NUMLINK], su3_vector *dest) {
   int a, b, j, next;
   complex tc, tc2;
   complex Gc = cmplx(0.0, C2 * G * sqrt((Real)NCOL));
-  su3_matrix_f tmat1, tmat2;
+  su3_matrix_f tmat, tmat2;
   msg_tag *tag[NUMLINK];
 
   compute_plaqdet();
@@ -829,10 +829,10 @@ void detLtoS(su3_vector *src[NUMLINK], su3_vector *dest) {
   // and save in Tr_Uinv[a]
   for (a = XUP; a < NUMLINK; a++) {
     FORALLSITES(i, s) {
-      invert(&(s->linkf[a]), &tmat1);
+      invert(&(s->linkf[a]), &tmat);
       Tr_Uinv[a][i] = cmplx(0.0, 0.0);              // Initialize
       for (j = 0; j < DIMF; j++) {
-        mult_su3_nn_f(&tmat1, &(Lambda[j]), &tmat2);
+        mult_su3_nn_f(&tmat, &(Lambda[j]), &tmat2);
         tc = trace_su3_f(&tmat2);
         CMUL(tc, src[a][i].c[j], tc2);
         CSUM(Tr_Uinv[a][i], tc2);                   // Accumulate

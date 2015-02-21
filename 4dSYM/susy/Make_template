@@ -121,7 +121,7 @@ susy_meas::
 	"EXTRA_OBJECTS = control_meas.o d_correlator.o d_correlator_r.o rsymm.o \
 	                 monopole.o hvy_pot.o hvy_pot_polar.o unit.o gaugefix.o \
 	                 hvy_pot_loop.o hvy_pot_polar_loop.o path.o d_bilinear.o \
-	                 d_plaq4_lcl.o plaq_var.o "
+	                 d_plaq4_lcl.o plaq_var.o setup_rhmc.o "
 
 susy_hmc_meas::
 	${MAKE} -f ${MAKEFILE} target "MYTARGET= $@" \

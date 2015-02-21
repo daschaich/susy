@@ -193,7 +193,7 @@ int d_susyTrans() {
     return 0;
   register int i;
   register site *s;
-  int mu, isrc, iters, tot_iters = 0;
+  int mu, j, isrc, iters, tot_iters = 0;
   Real size_r, norm;
   double sum = 0.0;
   double_complex tc, StoL, LtoS, ave = cmplx(0.0, 0.0);
@@ -205,10 +205,12 @@ int d_susyTrans() {
   src = malloc(sites_on_node * sizeof(*src));
 
   // Hack a basic CG out of the multi-mass CG
-  Norder = 1;
+  setup_rhmc();
   psim = malloc(sizeof(**psim));
-  psim[0] = malloc(sites_on_node * sizeof(Twist_Fermion));
-  shift[0] = 0;
+  for (i = 0; i < Norder; i++) {
+    psim[i] = malloc(sites_on_node * sizeof(Twist_Fermion));
+    shift[i] = shift4[i];
+  }
 
   // Normalization: sum over NUMLINK but divide by volume
   // and divide by 2kappa as discussed on 15--17 December 2013
@@ -219,7 +221,15 @@ int d_susyTrans() {
     // Hit it with Mdag to get src, invert to get M^{-1} g_rand
     // congrad_multi_field initializes psim and calls fermion_rep()
     bilinsrc(g_rand, src, DIMF);
-    iters = congrad_multi_field(src, psim, niter, rsqmin, &size_r);
+    iters = 0;
+    for (mu = 0; mu < 4; mu++) {
+      iters += congrad_multi_field(src, psim, niter, rsqmin, &size_r);
+      FORALLSITES(i, s) {
+        scalar_mult_TF(&(src[i]), ampdeg4, &(src[i]));
+        for (j = 0; j < Norder; j++)
+          scalar_mult_add_TF(&(src[i]), &(psim[j][i]), amp4[j], &(src[i]));
+      } // We end with the full solution in src!
+    }
     tot_iters += iters;
 #ifdef DEBUG_CHECK
     dump_TF(&(psim[0][10]));    // Check what components are non-zero
@@ -231,7 +241,7 @@ int d_susyTrans() {
     LtoS = cmplx(0.0, 0.0);
     FORALLSITES(i, s) {
       for (mu = XUP; mu < NUMLINK; mu++) {
-        mult_su3_vec_adj_mat(&(psim[0][i].Flink[mu]), &(s->link[mu]), &tvec);
+        mult_su3_vec_adj_mat(&(src[i].Flink[mu]), &(s->link[mu]), &tvec);
         tc = su3_dot(&(g_rand[i].Fsite), &tvec);
 #ifdef DEBUG_CHECK
         printf("StoL[%d](%d) %d (%.4g, %.4g)\n",
@@ -239,7 +249,7 @@ int d_susyTrans() {
 #endif
         CSUM(StoL, tc);
 
-        mult_adj_su3_mat_vec(&(s->link[mu]), &(psim[0][i].Fsite), &tvec);
+        mult_adj_su3_mat_vec(&(s->link[mu]), &(src[i].Fsite), &tvec);
         tc = su3_dot(&(g_rand[i].Flink[mu]), &tvec);
 #ifdef DEBUG_CHECK
         printf("LtoS[%d](%d) %d (%.4g, %.4g)\n",
@@ -318,7 +328,7 @@ int d_susyTrans() {
   }
   g_doublesum(&sum);
 
-  // Average second term over volume, print along with difference
+  // Average gauge term over volume, print along with difference
   sum /= (Real)volume;
   node0_printf("SUSY %.6g %.6g %.6g %.6g ( ave over %d )\n",
                ave.real, ave.imag, sum, sum - ave.real, nsrc);

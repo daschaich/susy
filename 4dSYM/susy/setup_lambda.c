@@ -63,7 +63,7 @@ void setup_lambda() {
 
   // U(1) generator i * I_N / sqrt(N)
   if (DIMF == NCOL * NCOL) {    // Allow SU(N) compilation for now
-    i_inv_sqrt = cmplx(0, 1.0 / sqrt(NCOL));
+    i_inv_sqrt = cmplx(0.0, 1.0 / sqrt((Real)NCOL));
     clear_su3mat_f(&(Lambda[DIMF - 1]));
     for (i = 0; i < NCOL; i++)
       Lambda[DIMF - 1].e[i][i] = i_inv_sqrt;
