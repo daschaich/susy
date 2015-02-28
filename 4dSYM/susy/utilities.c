@@ -646,6 +646,7 @@ void DbplusStoL(su3_vector *src, su3_vector *dest[NUMLINK]) {
 // bc1[b](x - b) on eta(x - b) psi_a(x)
 // Add negative to dest instead of overwriting
 // Negative sign is due to anti-commuting eta past psi
+#ifdef SV
 void detStoL(su3_vector *src, su3_vector *dest[NUMLINK]) {
   register int i;
   register site *s;
@@ -723,6 +724,7 @@ void detStoL(su3_vector *src, su3_vector *dest[NUMLINK]) {
     }
   }
 }
+#endif
 // -----------------------------------------------------------------
 
 
@@ -732,6 +734,7 @@ void detStoL(su3_vector *src, su3_vector *dest[NUMLINK]) {
 //   Udag[a](x) eta(x) (Tr[U_a(x) Udag_a(x)] / N - 1)
 // Add negative to dest instead of overwriting
 // Negative sign is due to anti-commuting eta past psi
+#ifdef SV
 void potStoL(su3_vector *src, su3_vector *dest[NUMLINK]) {
   register int i, a, j;
   register site *s;
@@ -756,6 +759,7 @@ void potStoL(su3_vector *src, su3_vector *dest[NUMLINK]) {
     }
   }
 }
+#endif
 // -----------------------------------------------------------------
 
 
@@ -814,6 +818,9 @@ void DbminusLtoS(su3_vector *src[NUMLINK], su3_vector *dest) {
 // ZW* is plaqdet (plaqdet - 1)^* and 'T' means Tr[U^{-1} psi]
 // bc1[b](x) on eta(x) psi_a(x + b)
 // Use Tr_Uinv for temporary storage
+// Add to dest instead of overwriting
+// Has same sign as DbminusLtoS
+#ifdef SV
 void detLtoS(su3_vector *src[NUMLINK], su3_vector *dest) {
   register int i;
   register site *s;
@@ -877,6 +884,7 @@ void detLtoS(su3_vector *src[NUMLINK], su3_vector *dest) {
     }
   }
 }
+#endif
 // -----------------------------------------------------------------
 
 
@@ -885,6 +893,8 @@ void detLtoS(su3_vector *src[NUMLINK], su3_vector *dest) {
 // Scalar potential coupling from link source to site destination
 //   sum_a (Tr[U_a(x) Udag_a(x)] / N - 1)^2 psi(x) Udag[a](x)
 // Add to dest instead of overwriting
+// Has same sign as DbminusLtoS
+#ifdef SV
 void potLtoS(su3_vector *src[NUMLINK], su3_vector *dest) {
   register int i, a, j;
   register site *s;
@@ -909,6 +919,7 @@ void potLtoS(su3_vector *src[NUMLINK], su3_vector *dest) {
     }
   }
 }
+#endif
 // -----------------------------------------------------------------
 
 

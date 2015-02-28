@@ -454,7 +454,7 @@ void detF(su3_vector *eta, su3_vector *psi[NUMLINK], int sign) {
   register site *s;
   int a, b, j;
   Real tr;
-  complex tc, tc2, tc3, Gc = cmplx(0.0, G * sqrt((Real)NCOL));
+  complex tc, tc2, tc3, Gc = cmplx(0.0, C2 * G * sqrt((Real)NCOL));
   complex *dZdU = malloc(sites_on_node * sizeof(*dZdU));
   complex *dWdU = malloc(sites_on_node * sizeof(*dWdU));
   complex *dZdUdag = malloc(sites_on_node * sizeof(*dZdUdag));
@@ -694,7 +694,7 @@ void pot_force(su3_vector *eta, su3_vector *psi[NUMLINK], int sign) {
   register site *s;
   int a, j;
   Real tr;
-  complex tc, tc2, tc3, Bc = cmplx(0.0, B * B / sqrt((Real)NCOL));
+  complex tc, tc2, tc3, Bc = cmplx(0.0, C2 * B * B / sqrt((Real)NCOL));
   su3_matrix_f tmat, tmat2;
 
   // Check sign while giving Bc proper sign
