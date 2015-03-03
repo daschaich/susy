@@ -63,8 +63,10 @@ traj_between_meas 1   # How many trajectories to skip between less-frequent meas
 
 lambda 1.5            # 't Hooft coupling
 kappa_u1 0.6          # Plaquette determinant coupling
-bmass 0.2             # Bosonic mass parameter (mu)
+bmass 0.2             # Scalar potential coupling (bosonic mass mu)
 fmass 0.0             # Mass shift in fermion operator
+G 0.1                 # Q-invariant plaquette determinant coupling
+B 1.0                 # Q-invariant scalar potential coupling
 
 Nstout 1              # Number of stout smearing steps -- only include with -DSTOUT
 rho 0.1               # Stout smearing parameter -- only include with -DSTOUT
