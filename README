@@ -12,15 +12,17 @@ features, or (especially) bug reports:
 http://dschaich.expressions.syr.edu
 
 Authors:
-Thomas DeGrand (University of Colorado Boulder)
 David Schaich (Syracuse University)
+Thomas DeGrand (University of Colorado Boulder)
 
 Reference:
 A summary of useful information appears in the following paper, which we ask
 that you cite if you find SUSY LATTICE useful in your work:
 
 David Schaich and Thomas DeGrand, "Parallel software for lattice N=4
-supersymmetric Yang--Mills theory", http://arxiv.org/abs/1410.6971 (2014).
+supersymmetric Yang--Mills theory", Comput. Phys. Commun. 190:200--212 (2015)
+[arXiv:1410.6971].
+http://dx.doi.org/10.1016/j.cpc.2014.12.025
 
 Development was supported in part by the U.S. Department of Energy under grants
 DE-FG02-04ER41290, DE-SC0010005, DE-SC0008669 and DE-SC0009998.
