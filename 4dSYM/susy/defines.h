@@ -32,6 +32,7 @@
 
 // -----------------------------------------------------------------
 // Susy stuff
+//#define GLOBAL_DET          // det-1 rather than |det-1|^2
 #define SV                  // Site/vector terms in action
 #define VP                  // Vector/plaquette terms in action
 #define QCLOSED             // Q-closed terms in action

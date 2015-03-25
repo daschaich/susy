@@ -75,6 +75,11 @@ int initial_set() {
 // -----------------------------------------------------------------
 // Allocate space for fields
 void make_fields() {
+#ifdef GLOBAL_DET
+  node0_printf("Global constraint on plaquette determinant\n");
+#else
+  node0_printf("Local constraint on plaquette determinant\n");
+#endif
   double size = (double)(sizeof(complex));
   size += (double)(2.0 * (1 + NUMLINK + NPLAQ)) * sizeof(su3_vector);
   FIELD_ALLOC(site_src, su3_vector);

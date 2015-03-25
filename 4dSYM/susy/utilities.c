@@ -148,9 +148,15 @@ void compute_DmuUmu() {
             continue;
 
           CADD(plaqdet[mu][nu][i], minus1, tc);
+#ifdef GLOBAL_DET
+          CMULREAL(tc, G, tc);
+          for (j = 0; j < NCOL; j++)
+            CADD(DmuUmu[i].e[j][j], tc, DmuUmu[i].e[j][j]);
+#else
           tr = G * cabs_sq(&tc);
           for (j = 0; j < NCOL; j++)
             DmuUmu[i].e[j][j].real += tr;
+#endif
         }
       }
     }
@@ -641,9 +647,11 @@ void DbplusStoL(su3_vector *src, su3_vector *dest[NUMLINK]) {
 // -----------------------------------------------------------------
 // Plaquette determinant coupling from site source to link destination
 //   T[a](x) * sum_b {D[b][a](x) + D[a][b](x - b)}
-// 'D' means eta^D plaqdet (plaqdet - 1)^* and 'T' means Tr[U^{-1} Lambda]
+// In the global case D is Tr[eta] * plaqdet,
+// In the local case D is Tr[eta] plaqdet (plaqdet - 1)^*
+// In both cases T is Tr[U^{-1} Lambda] and Tr[eta] = i sqrt(N) eta^D
 // Use tr_dest and Tr_Uinv[0] for temporary storage
-// bc1[b](x - b) on eta(x - b) psi_a(x)
+// bc1[b](x - b) = bc1[-b](x) on eta(x - b) psi_a(x)
 // Add negative to dest instead of overwriting
 // Negative sign is due to anti-commuting eta past psi
 #ifdef SV
@@ -653,28 +661,40 @@ void detStoL(su3_vector *src, su3_vector *dest[NUMLINK]) {
   int a, b, j, next;
   complex tc, tc2, tc3;
   complex Gc = cmplx(0.0, -1.0 * C2 * G * sqrt((Real)NCOL));
+#ifdef GLOBAL_DET
+  CMULREAL(Gc, 0.5, Gc);                  // Since not squared
+#endif
   su3_matrix_f tmat, tmat2;
   msg_tag *tag[NUMLINK];
 
-  // Save Tr[eta(x)] ZWstar[a][b](x) in modified ZWstar[a][b]
   // compute_plaqdet saves plaqdet (plaqdet - 1)^* in ZWstar
-  // Recall Tr[eta(x)] = i sqrt(N) eta^D(x)
   compute_plaqdet();
+
+  // Save Tr[eta(x)] plaqdet[a][b](x) in modified plaqdet[a][b]
+  // Save Tr[eta(x)] ZWstar[a][b](x) in modified plaqdet[a][b]
   for (a = XUP; a < NUMLINK; a++) {
     for (b = a + 1; b < NUMLINK; b++) {
       FORALLSITES(i, s) {
+#ifdef GLOBAL_DET
+        CMUL(src[i].c[DIMF - 1], plaqdet[a][b][i], tc);
+#else
         CMUL(src[i].c[DIMF - 1], ZWstar[a][b][i], tc);
-        ZWstar[a][b][i] = tc;
+#endif
+        plaqdet[a][b][i] = tc;
 
+#ifdef GLOBAL_DET
+        CMUL(src[i].c[DIMF - 1], plaqdet[b][a][i], tc);
+#else
         CMUL(src[i].c[DIMF - 1], ZWstar[b][a][i], tc);
-        ZWstar[b][a][i] = tc;
+#endif
+        plaqdet[b][a][i] = tc;
       }
     }
   }
 
-  // Account for boundary condition before gathering, store in Tr_Uinv[b]
+  // Now we gather modified plaqdet in both cases
   // Start first gather for (a, b) = (0, 1)
-  tag[1] = start_gather_field(ZWstar[0][1], sizeof(complex),
+  tag[1] = start_gather_field(plaqdet[0][1], sizeof(complex),
                               goffset[1] + 1, EVENANDODD, gen_pt[1]);
 
   for (a = XUP; a < NUMLINK; a++) {
@@ -691,21 +711,22 @@ void detStoL(su3_vector *src, su3_vector *dest[NUMLINK]) {
       if (next < NUMLINK && a + b < 2 * NUMLINK - 3) {
         if (next == a)              // Next gather is actually (a, b + 2)
           next++;
-        tag[next] = start_gather_field(ZWstar[a][next], sizeof(complex),
+
+        tag[next] = start_gather_field(plaqdet[a][next], sizeof(complex),
                                        goffset[next] + 1, EVENANDODD,
                                        gen_pt[next]);
       }
       else if (next == NUMLINK) {   // Start next gather (a + 1, 0)
-        tag[0] = start_gather_field(ZWstar[a + 1][0], sizeof(complex),
+        tag[0] = start_gather_field(plaqdet[a + 1][0], sizeof(complex),
                                     goffset[0] + 1, EVENANDODD, gen_pt[0]);
       }
 
-      // Accumulate modified ZWstar[b][a](x) + ZWstar[a][b](x - b)
+      // Accumulate modified plaqdet[b][a](x) + plaqdet[a][b](x - b)
       wait_gather(tag[b]);
       FORALLSITES(i, s) {
         tc = *((complex *)(gen_pt[b][i]));
         CMULREAL(tc, s->bc1[OPP_LDIR(b)], tc);
-        CADD(ZWstar[b][a][i], tc, tc2);
+        CADD(plaqdet[b][a][i], tc, tc2);
         CSUM(tr_dest[i], tc2);
       }
       cleanup_gather(tag[b]);
@@ -814,8 +835,10 @@ void DbminusLtoS(su3_vector *src[NUMLINK], su3_vector *dest) {
 
 // -----------------------------------------------------------------
 // Plaquette determinant coupling from link source to site destination
-//   sum_{a, b} ZWstar[a][b](x) * {T[b](x) +  T[a](x + b)}
-// ZW* is plaqdet (plaqdet - 1)^* and 'T' means Tr[U^{-1} psi]
+//   sum_{a, b} D[a][b](x) * {T[b](x) +  T[a](x + b)}
+// In the global case D is plaqdet
+// In the local case D is plaqdet (plaqdet - 1)^*
+// In both cases T is Tr[U^{-1} psi]
 // bc1[b](x) on eta(x) psi_a(x + b)
 // Use Tr_Uinv for temporary storage
 // Add to dest instead of overwriting
@@ -827,6 +850,9 @@ void detLtoS(su3_vector *src[NUMLINK], su3_vector *dest) {
   int a, b, j, next;
   complex tc, tc2;
   complex Gc = cmplx(0.0, C2 * G * sqrt((Real)NCOL));
+#ifdef GLOBAL_DET
+  CMULREAL(Gc, 0.5, Gc);                  // Since not squared
+#endif
   su3_matrix_f tmat, tmat2;
   msg_tag *tag[NUMLINK];
 
@@ -870,13 +896,17 @@ void detLtoS(su3_vector *src[NUMLINK], su3_vector *dest) {
                                     goffset[0], EVENANDODD, gen_pt[0]);
       }
 
-      // Accumulate ZWstar[a][b](x) {T[b](x) + T[a](x + b)}
+      // Accumulate D[a][b](x) {T[b](x) + T[a](x + b)}
       wait_gather(tag[b]);
       FORALLSITES(i, s) {
         tc = *((complex *)(gen_pt[b][i]));
         CMULREAL(tc, s->bc1[b], tc);
         CADD(Tr_Uinv[b][i], tc, tc2);
+#ifdef GLOBAL_DET
+        CMUL(plaqdet[a][b][i], tc2, tc);
+#else
         CMUL(ZWstar[a][b][i], tc2, tc);
+#endif
         CMUL(tc, Gc, tc2);
         CSUM(dest[i].c[DIMF - 1], tc2);
       }
