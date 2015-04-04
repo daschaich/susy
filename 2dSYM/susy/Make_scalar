@@ -28,11 +28,11 @@ MAKELIBRARIES  = Make_vanilla
 # ------------------------------------------------------------------
 # Stuff below shouldn't change
 ifeq ($(strip ${MPP}),true)
-   COMMTYPE = MPI
-   COMMPKG = com_mpi.o
+  COMMTYPE = MPI
+  COMMPKG = com_mpi.o
 else
-   COMMTYPE = SINGLE
-   COMMPKG = com_vanilla.o
+  COMMTYPE = SINGLE
+  COMMPKG = com_vanilla.o
 endif
 
 PREC = -DPRECISION=${PRECISION}

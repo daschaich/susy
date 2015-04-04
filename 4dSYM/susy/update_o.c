@@ -240,6 +240,11 @@ int update() {
   node0_printf("CHECK: delta S = %.4g\n", (double)(change));
 #endif // ifdef HMC
 
+  free(src);
+  for (i = 0; i < Norder; i++)
+    free(psim[i]);
+  free(psim);
+
   if (traj_length > 0) {
     node0_printf("IT_PER_TRAJ %d\n", iters);
     node0_printf("MONITOR_FORCE_GAUGE    %.4g %.4g\n",
@@ -250,10 +255,5 @@ int update() {
   }
   else
     return -99;
-
-  free(src);
-  for (i = 0; i < Norder; i++)
-    free(psim[i]);
-  free(psim);
 }
 // -----------------------------------------------------------------
