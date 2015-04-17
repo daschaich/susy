@@ -75,10 +75,10 @@ int initial_set() {
 // -----------------------------------------------------------------
 // Allocate space for fields
 void make_fields() {
-#ifdef GLOBAL_DET
-  node0_printf("Global constraint on plaquette determinant\n");
+#ifdef LINEAR_DET
+  node0_printf("Supersymmetric constraint on (det[plaq] - 1)\n");
 #else
-  node0_printf("Local constraint on plaquette determinant\n");
+  node0_printf("Supersymmetric constraint on |det[plaq] - 1|^2\n");
 #endif
   double size = (double)(sizeof(complex));
   size += (double)(2.0 * (1 + NUMLINK + NPLAQ)) * sizeof(su3_vector);
