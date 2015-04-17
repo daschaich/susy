@@ -58,14 +58,14 @@ double gauge_force(Real eps) {
       tc = trace_su3_f(&DmuUmu[i]);
       for (mu = XUP; mu < NUMLINK; mu++) {
         for (nu = mu + 1; nu < NUMLINK; nu++) {
-#ifdef GLOBAL_DET
+#ifdef LINEAR_DET
           CMUL(tc, plaqdet[mu][nu][i], tc2);
 #else
           CMUL(tc, ZWstar[mu][nu][i], tc2);
 #endif
           plaqdet[mu][nu][i] = tc2;
 
-#ifdef GLOBAL_DET
+#ifdef LINEAR_DET
           CMUL(tc, plaqdet[nu][mu][i], tc2);
 #else
           CMUL(tc, ZWstar[nu][mu][i], tc2);
@@ -102,7 +102,7 @@ double gauge_force(Real eps) {
       // Now add to force
       FORALLSITES(i, s) {
         invert(&(s->linkf[mu]), &tmat);
-#ifdef GLOBAL_DET
+#ifdef LINEAR_DET
         CMULREAL(tr_dest[i], G, tc);
 #else
         CMULREAL(tr_dest[i], 2.0 * G, tc);
@@ -468,7 +468,7 @@ void detF(su3_vector *eta, su3_vector *psi[NUMLINK], int sign) {
   register site *s;
   int a, b, j;
   complex tc, tc2, tc3, Gc = cmplx(0.0, C2 * G * sqrt((Real)NCOL));
-#ifdef GLOBAL_DET
+#ifdef LINEAR_DET
   CMULREAL(Gc, 0.5, Gc);                  // Since not squared
 #else
   Real tr;
@@ -528,7 +528,7 @@ void detF(su3_vector *eta, su3_vector *psi[NUMLINK], int sign) {
         tc = eta[i].c[DIMF - 1];
 
       for (b = a + 1; b < NUMLINK; b++) {
-#ifdef GLOBAL_DET
+#ifdef LINEAR_DET
         CMUL(tc, plaqdet[a][b][i], tc2);
         CMUL(tc, plaqdet[b][a][i], tc3);
 #else
@@ -544,7 +544,7 @@ void detF(su3_vector *eta, su3_vector *psi[NUMLINK], int sign) {
 
   // Now we are ready to gather, accumulate and add to force
   // This is specialized in two big chunks, first global then local
-#ifdef GLOBAL_DET
+#ifdef LINEAR_DET
   complex *plaq_term = malloc(sites_on_node * sizeof(*plaq_term));
   complex *inv_term = malloc(sites_on_node * sizeof(*inv_term));
   complex *adj_term = malloc(sites_on_node * sizeof(*adj_term));

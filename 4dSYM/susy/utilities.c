@@ -148,7 +148,7 @@ void compute_DmuUmu() {
             continue;
 
           CADD(plaqdet[mu][nu][i], minus1, tc);
-#ifdef GLOBAL_DET
+#ifdef LINEAR_DET
           CMULREAL(tc, G, tc);
           for (j = 0; j < NCOL; j++)
             CADD(DmuUmu[i].e[j][j], tc, DmuUmu[i].e[j][j]);
@@ -661,7 +661,7 @@ void detStoL(su3_vector *src, su3_vector *dest[NUMLINK]) {
   int a, b, j, next;
   complex tc, tc2, tc3;
   complex Gc = cmplx(0.0, -1.0 * C2 * G * sqrt((Real)NCOL));
-#ifdef GLOBAL_DET
+#ifdef LINEAR_DET
   CMULREAL(Gc, 0.5, Gc);                  // Since not squared
 #endif
   su3_matrix_f tmat, tmat2;
@@ -675,14 +675,14 @@ void detStoL(su3_vector *src, su3_vector *dest[NUMLINK]) {
   for (a = XUP; a < NUMLINK; a++) {
     for (b = a + 1; b < NUMLINK; b++) {
       FORALLSITES(i, s) {
-#ifdef GLOBAL_DET
+#ifdef LINEAR_DET
         CMUL(src[i].c[DIMF - 1], plaqdet[a][b][i], tc);
 #else
         CMUL(src[i].c[DIMF - 1], ZWstar[a][b][i], tc);
 #endif
         plaqdet[a][b][i] = tc;
 
-#ifdef GLOBAL_DET
+#ifdef LINEAR_DET
         CMUL(src[i].c[DIMF - 1], plaqdet[b][a][i], tc);
 #else
         CMUL(src[i].c[DIMF - 1], ZWstar[b][a][i], tc);
@@ -850,7 +850,7 @@ void detLtoS(su3_vector *src[NUMLINK], su3_vector *dest) {
   int a, b, j, next;
   complex tc, tc2;
   complex Gc = cmplx(0.0, C2 * G * sqrt((Real)NCOL));
-#ifdef GLOBAL_DET
+#ifdef LINEAR_DET
   CMULREAL(Gc, 0.5, Gc);                  // Since not squared
 #endif
   su3_matrix_f tmat, tmat2;
@@ -902,7 +902,7 @@ void detLtoS(su3_vector *src[NUMLINK], su3_vector *dest) {
         tc = *((complex *)(gen_pt[b][i]));
         CMULREAL(tc, s->bc1[b], tc);
         CADD(Tr_Uinv[b][i], tc, tc2);
-#ifdef GLOBAL_DET
+#ifdef LINEAR_DET
         CMUL(plaqdet[a][b][i], tc2, tc);
 #else
         CMUL(ZWstar[a][b][i], tc2, tc);
