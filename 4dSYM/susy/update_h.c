@@ -17,12 +17,13 @@ double gauge_force(Real eps) {
   double returnit = 0.0;
   complex tc, tc2;
   msg_tag *tag[NUMLINK], *tag0, *tag1;
-  su3_matrix_f tmat, tmat2, tmat3, *mat;
+  su3_matrix_f tmat, tmat2, *mat;
 
   // Three contributions from d^2 term
   // Start by computing DmuUmu,
   // which includes the plaquette determinant contribution if G is non-zero
   // and the scalar potential contribution if B is non-zero
+  // All three terms need a factor of C2
   compute_DmuUmu();
 
   // First we have the finite difference operator derivative times DmuUmu
@@ -40,8 +41,7 @@ double gauge_force(Real eps) {
       mat = (su3_matrix_f *)(gen_pt[mu][i]);
       mult_su3_an_f(&(s->linkf[mu]), &(DmuUmu[i]), &tmat);
       mult_su3_na_f(mat, &(s->linkf[mu]), &tmat2);
-      sub_su3_matrix_f(&tmat, &tmat2, &tmat3);
-      scalar_mult_su3_matrix_f(&tmat3, C2, &(s->f_U[mu]));    // Initialize
+      sub_su3_matrix_f(&tmat, &tmat2, &(s->f_U[mu]));   // Initialize
     }
     cleanup_gather(tag[mu]);
   }
@@ -132,6 +132,12 @@ double gauge_force(Real eps) {
                                    &(s->f_U[mu]));
       }
     }
+  }
+
+  // Overall factor of C2 on all three potential d^2 contributions
+  for (mu = XUP; mu < NUMLINK; mu++) {
+    FORALLSITES(i, s)
+      scalar_mult_su3_matrix_f(&(s->f_U[mu]), C2, &(s->f_U[mu]));
   }
 
   // Contribution from Fbar_{ab} F_{ab} term
