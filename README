@@ -1,4 +1,4 @@
-SUSY LATTICE is parallel code for RHMC simulations of extended-supersymmetric
+SUSY SUSY LATTICE is parallel code for RHMC simulations of extended-supersymmetric
 Yang--Mills theories in two and four dimensions, including related measurements.
 This package evolved from the MILC code, and supersedes the serial C++ code
 presented in arXiv:1108.1503.
