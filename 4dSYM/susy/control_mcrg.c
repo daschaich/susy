@@ -80,12 +80,6 @@ int main(int argc, char *argv[]) {
   terminate(1);
 #endif
 
-  // Require gauge fixing to consider non-invariant operators
-  if (fixflag != COULOMB_GAUGE_FIX) {
-    printf("ERROR: MCRG requires gauge fixing\n");
-    terminate(1);
-  }
-
   // Set up P matrix for Konishi and SUGRA operators
 #ifdef CORR
   setup_P();
@@ -100,18 +94,6 @@ int main(int argc, char *argv[]) {
       for (dir = XUP; dir < NUMLINK; dir++)
         su3mat_copy_f(&(s->linkf[dir]), &(s->f_U[dir]));
     }
-
-    // Gauge fixing
-    d_plaquette(&dssplaq, &dstplaq);    // To be printed below
-    node0_printf("Fixing to Coulomb gauge...\n");
-    double gtime = -dclock();
-    gaugefix(TUP, 1.5, 5000, GAUGE_FIX_TOL, -1, -1);
-//    gaugefix(-1, 1.5, 5000, GAUGE_FIX_TOL, -1, -1);   // Lorenz gauge
-    gtime += dclock();
-    node0_printf("GFIX time = %.4g seconds\n", gtime);
-    node0_printf("BEFORE %.8g %.8g\n", dssplaq, dstplaq);
-    d_plaquette(&dssplaq, &dstplaq);
-    node0_printf("AFTER  %.8g %.8g\n", dssplaq, dstplaq);
 
     // Calculate and print unblocked plaquette
     blocked_plaq(istout, 0);

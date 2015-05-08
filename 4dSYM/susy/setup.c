@@ -120,6 +120,13 @@ void make_fields() {
   FIELD_ALLOC(tempTF, Twist_Fermion);
   FIELD_ALLOC_VEC(tempvec, su3_vector, NUMLINK);
 
+#ifdef CORR
+  size += (double)(NUMLINK * sizeof(su3_matrix_f));
+  size += (double)(NUMLINK * NUMLINK * sizeof(Real));
+  FIELD_ALLOC_VEC(Ba, su3_matrix_f, NUMLINK);
+  FIELD_ALLOC_MAT(traceBB, Real, NUMLINK, NUMLINK);
+#endif
+
 #ifdef EIG
   size += (double)(2.0 * sizeof(Twist_Fermion));
   FIELD_ALLOC(src, Twist_Fermion);

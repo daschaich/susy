@@ -92,9 +92,9 @@ void d_correlator_r() {
     vev[i] = 0.0;
 
   // Compute at each site B_a = U_a Udag_a - volume average
-  // as well as traceBB[mu][nu] = tr[B_mu(x) B_nu(x)]
+  // as well as traceBB[a][b] = tr[B_a(x) B_b(x)]
   // Now stored in the site structure
-  compute_Bmu();
+  compute_Ba();
 
   // Construct the operators
   FORALLSITES(i, s) {

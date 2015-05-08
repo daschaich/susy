@@ -110,7 +110,7 @@ void rsymm();
 #ifdef CORR
 // Konishi and SUGRA correlators
 void setup_P();
-void compute_Bmu();
+void compute_Ba();
 void d_correlator();    // Projected to zero spatial momentum
 void d_correlator_r();  // Functions of (x, y, z, t)
 #endif

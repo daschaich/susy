@@ -48,11 +48,6 @@ typedef struct {
   su3_matrix_f mom[NUMLINK];
   su3_matrix_f f_U[NUMLINK];        // Force matrices
 
-#ifdef CORR
-  su3_matrix_f B[NUMLINK], C[NUMLINK];
-  Real traceBB[NUMLINK][NUMLINK], traceCC[NUMLINK][NUMLINK];
-#endif
-
   // Boundary conditions -- many unused
   Real bc1[2 * NUMLINK], bc2[2 * NUMLINK][2 * NUMLINK];
   Real bc3[2 * NUMLINK][2 * NUMLINK][2 * NUMLINK];
@@ -171,6 +166,11 @@ EXTERN site *lattice;
 #define N_POINTERS 10
 EXTERN char **gen_pt[N_POINTERS];
 
+#ifdef CORR
+  su3_matrix_f *Ba[NUMLINK];
+  Real *traceBB[NUMLINK][NUMLINK];
+#endif
+
 #ifdef BILIN
 EXTERN int nsrc;
 #endif
@@ -190,7 +190,7 @@ EXTERN anti_hermitmat *Q[NUMLINK];    // To be exponentiated
 // Eigenvalue stuff
 EXTERN int Nvec;
 EXTERN double *eigVal;
-EXTERN Twist_Fermion *src, *res;    // For av_ov matvec
+EXTERN Twist_Fermion *src, *res;      // For av_ov matvec
 EXTERN Twist_Fermion **eigVec;
 EXTERN Real eig_tol;          // Tolerance for the eigenvalue computation
 EXTERN int maxIter;           // Maximum iterations

@@ -29,10 +29,10 @@ void d_correlator() {
     }
   }
 
-  // Compute at each site B_a = U_a Udag_a - trace
-  // as well as traceBB[mu][nu] = tr[B_mu(x) B_nu(x)]
+  // Compute at each site B_a = U_a Udag_a - volume average
+  // as well as traceBB[a][b] = tr[B_a(x) B_b(x)]
   // Now stored in the site structure
-  compute_Bmu();
+  compute_Ba();
 
   // Now form the zero momentum projected operators (summing across nodes)
   FORALLSITES(i, s) {
