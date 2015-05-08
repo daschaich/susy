@@ -44,16 +44,16 @@ Real A4map(x_in, y_in, z_in, t_in) {
 
 // -----------------------------------------------------------------
 // Both Konishi and SUGRA correlators as functions of (x, y, z, t)
+// For gathering, all operators live in array of len = 10 + numK
 void d_correlator_r() {
   register int i;
   register site *s;
-  int a, b, c, d, mu, nu, index, x_dist, y_dist, z_dist, t_dist;
-  int y_start, z_start, t_start, iter, len = 14;
+  int a, b, mu, nu, index, x_dist, y_dist, z_dist, t_dist;
+  int y_start, z_start, t_start, iter, numK = 2, len = 10 + numK;
   int disp[NDIMS] = {0, 0, 0, 0}, this_r, total_r = 0;
-  int MAX_pts = 8 * MAX_X * MAX_X * MAX_X;  // Should be plenty
-  int count[MAX_pts], NK = 4;               // Number of Konishi operators
+  int MAX_pts = 8 * MAX_X * MAX_X * MAX_X, count[MAX_pts];
   Real MAX_r = 100.0 * MAX_X, tr, sub, vev[len];
-  Real lookup[MAX_pts], CK[MAX_pts][NK * NK], CS[MAX_pts];
+  Real lookup[MAX_pts], CK[MAX_pts][numK * numK], CS[MAX_pts];
   Real *ops = malloc(sites_on_node * len * sizeof(*ops));
   msg_tag *mtag;
 
@@ -83,9 +83,9 @@ void d_correlator_r() {
   for (i = 0; i < MAX_pts; i++) {
     count[i] = 0;
     CS[i] = 0.0;
-    for (a = 0; a < NK; a++) {
-      for (b = 0; b < NK; b++)
-        CK[i][a * NK + b] = 0.0;
+    for (a = 0; a < numK; a++) {
+      for (b = 0; b < numK; b++)
+        CK[i][a * numK + b] = 0.0;
     }
   }
   for (i = 0; i < len; i++)
@@ -96,35 +96,22 @@ void d_correlator_r() {
   // Now stored in the site structure
   compute_Ba();
 
-  // Construct the operators
-  FORALLSITES(i, s) {
-    for (a = 0; a < NUMLINK; a++) {
+  // Construct the operators, first Konishi then SUGRA
+  for (a = 0; a < NUMLINK; a++) {
+    FORALLSITES(i, s) {
+      index = i * len + len - numK;
+      tr = traceBB[a][a][i];
+      ops[index] += tr;
+      vev[len - numK] += tr;
       for (b = 0; b < NUMLINK; b++) {
-        // Four possible Konishi operators
-        // All fairly easy and normalized below
-        // Also accumulate volume averages to be subtracted
-        index = i * len + len - NK;
-        tr = s->traceBB[a][b];
-        ops[index] += tr;
-        vev[len - NK] += tr;
-        tr = s->traceCC[a][b];
+        tr = traceBB[a][a][i] * traceBB[b][b][i];
         ops[index + 1] += tr;
-        vev[len - NK + 1] += tr;
-        for (c = 0; c < NUMLINK; c++) {
-          for (d = 0; d < NUMLINK; d++) {
-            tr = s->traceBB[a][b] * s->traceBB[c][d];
-            ops[index + 2] += tr;
-            vev[len - NK + 2] += tr;
-            tr = s->traceCC[a][b] * s->traceCC[c][d];
-            ops[index + 3] += tr;
-            vev[len - NK + 3] += tr;
-          }
-        }
+        vev[len - numK + 1] += tr;
 
         // Compute mu--nu trace to be subtracted from SUGRA
-        sub = P[0][a] * P[0][b] * s->traceBB[a][b];
-        for (mu = 1; mu < NDIMS ; mu++)
-          sub += P[mu][a] * P[mu][b] * s->traceBB[a][b];
+        sub = P[0][a] * P[0][b] * traceBB[a][b][i];
+        for (mu = 1; mu < NDIMS; mu++)
+          sub += P[mu][a] * P[mu][b] * traceBB[a][b][i];
 
         // Now SUGRA with mu--nu trace subtraction
         // Symmetric by construction so ignore nu < mu
@@ -135,27 +122,17 @@ void d_correlator_r() {
           vev[iter] -= 0.25 * sub;
           for (nu = mu; nu < NDIMS ; nu++) {
             tr = P[mu][a] * P[nu][b] + P[nu][a] * P[mu][b];
-            ops[index] += 0.5 * tr * s->traceBB[a][b];
-            vev[iter] += 0.5 * tr * s->traceBB[a][b];
+            ops[index] += 0.5 * tr * traceBB[a][b][i];
+            vev[iter] += 0.5 * tr * traceBB[a][b][i];
             index++;
             iter++;
           }
         }
       }
     }
-    // Konishi normalization
-    index = i * len + len - NK;
-    ops[index] /= 5.0;
-    ops[index + 1] /= 5.0;
-    ops[index + 2] /= 25.0;
-    ops[index + 3] /= 25.0;
   }
 
   // Try subtracting volume averages
-  vev[len - NK] /= 5.0;     // Remove from site loop
-  vev[len - NK + 1] /= 5.0;
-  vev[len - NK + 2] /= 25.0;
-  vev[len - NK + 3] /= 25.0;
   for (a = 0; a < len; a++) {
     vev[a] /= (Real)volume;
     g_doublesum(&vev[a]);
@@ -233,15 +210,15 @@ void d_correlator_r() {
           // Potentially useful to check rotational invariance
           node0_printf("CORR_K %d %d %d %d", x_dist, y_dist, z_dist, t_dist);
 #endif
-          for (a = 0; a < NK; a++) {
-            for (b = 0; b < NK; b++) {
+          for (a = 0; a < numK; a++) {
+            for (b = 0; b < numK; b++) {
               tr = 0.0;
               FORALLSITES(i, s) {
-                index = i * len + len - NK + a;
-                tr += ops[index] * ((Real *)gen_pt[0][i])[len - NK + b];
+                index = i * len + len - numK + a;
+                tr += ops[index] * ((Real *)gen_pt[0][i])[len - numK + b];
               }
               g_doublesum(&tr);
-              index = a * NK + b;
+              index = a * numK + b;
               CK[this_r][index] += tr;
 #ifdef CHECK_ROT
               // Potentially useful to check rotational invariance
@@ -283,9 +260,9 @@ void d_correlator_r() {
   for (i = 0; i < total_r; i++) {
     tr = 1.0 / (Real)(count[i] * volume);
     node0_printf("CORR_K %d %.6g", i, lookup[i]);
-    for (a = 0; a < NK; a++) {
-      for (b = 0; b < NK; b++)
-        node0_printf(" %.6g", CK[i][a * NK + b] * tr);
+    for (a = 0; a < numK; a++) {
+      for (b = 0; b < numK; b++)
+        node0_printf(" %.6g", CK[i][a * numK + b] * tr);
     }
     node0_printf("\n");
   }
@@ -294,9 +271,9 @@ void d_correlator_r() {
     node0_printf("CORR_S %d %.6g %.6g\n", i, lookup[i], CS[i] * tr);
   }
   // Monitor vacuum subtractions
-  for (i = len - NK; i < len; i++)
-    node0_printf("VACSUB_K %d %.6g\n", i - len + NK, vev[i]);
-  for (i = 0; i < len - NK; i++)
+  for (i = len - numK; i < len; i++)
+    node0_printf("VACSUB_K %d %.6g\n", i - len + numK, vev[i]);
+  for (i = 0; i < len - numK; i++)
     node0_printf("VACSUB_S %d %.6g\n", i, vev[i]);
 
   free(ops);

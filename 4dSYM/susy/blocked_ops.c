@@ -5,13 +5,14 @@
 void blocked_ops(int Nstout, int block) {
   register int i;
   register site *s;
-  int a, b, c, d, mu, nu, bl = 2;
-  Real norm, tr, OK[2], OS[NDIMS][NDIMS]; // Konishi and SUGRA operators
+  int a, b, mu, nu, bl = 2, numK = 2;
+  Real norm, tr, OK[numK], OS[NDIMS][NDIMS]; // Konishi and SUGRA operators
 
   // Initialize Konishi and SUGRA operators
   // SUGRA will be symmetric by construction, so ignore nu <= mu
-  for (mu = 0; mu < NDIMS; mu++) {
+  for (mu = 0; mu < numK; mu++)
     OK[mu] = 0.0;
+  for (mu = 0; mu < NDIMS; mu++) {
     for (nu = mu + 1; nu < NDIMS; nu++)
       OS[mu][nu] = 0.0;
   }
@@ -26,7 +27,6 @@ void blocked_ops(int Nstout, int block) {
     FORALLSITES(i, s) {
       OK[0] += traceBB[a][a][i];
       for (b = 0; b < NUMLINK; b++) {
-        // Four possible Konishi operators, all fairly easy
         OK[1] += traceBB[a][a][i] * traceBB[b][b][i];
 
         // Now SUGRA with mu--nu trace subtraction
@@ -40,8 +40,9 @@ void blocked_ops(int Nstout, int block) {
       }
     }
   }
-  for (mu = 0; mu < NDIMS; mu++) {
+  for (mu = 0; mu < numK; mu++)
     g_doublesum(&(OK[mu]));
+  for (mu = 0; mu < NDIMS; mu++) {
     for (nu = mu + 1; nu < NDIMS; nu++)
       g_doublesum(&(OS[mu][nu]));
   }
@@ -53,7 +54,10 @@ void blocked_ops(int Nstout, int block) {
   if (block <= 0)
     bl = 1;
   norm = (Real)(bl * bl * bl * bl);
-  node0_printf("OK %d %d %.8g %.8g\n", Nstout, block, OK[0] / norm, OK[1] / norm);
+  node0_printf("OK %d %d", Nstout, block);
+  for (mu = 0; mu < numK; mu++)
+    node0_printf(" %.8g", OK[mu] / norm);
+  node0_printf("\n");
 
   // SUGRA, averaging over six components with mu < nu
   norm = (Real)(6.0 * bl * bl * bl * bl);
