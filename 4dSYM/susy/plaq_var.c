@@ -1,5 +1,6 @@
 // -----------------------------------------------------------------
-// Print standard deviation of plaquette and plaquette determinant
+// Print width sqrt(<P^2> - <P>^2) of distributions for the
+// plaquette and plaquette determinant
 // Separately consider real and imaginary parts of latter
 #include "susy_includes.h"
 // -----------------------------------------------------------------

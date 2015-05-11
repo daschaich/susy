@@ -62,7 +62,7 @@ int main(int argc, char *argv[]) {
   plp = ploop();
 
   // Tr[Udag.U] / N and plaquette measurements
-  d_link();
+  d_link(0);
   d_plaquette(&dssplaq, &dstplaq);
 
   // Re(Polyakov) Im(Poyakov) cg_iters ss_plaq st_plaq
@@ -95,7 +95,8 @@ int main(int argc, char *argv[]) {
         su3mat_copy_f(&(s->linkf[dir]), &(s->f_U[dir]));
     }
 
-    // Calculate and print unblocked plaquette
+    // Calculate and print unblocked Tr[Udag.U] / N and plaquette
+    d_link(0);
     blocked_plaq(istout, 0);
 
 #ifdef CORR
@@ -114,7 +115,8 @@ int main(int argc, char *argv[]) {
       node0_printf("Blocking %d gives L = %d\n", bl, nx / j);
       block_mcrg(bl);
 
-      // Calculate and print blocked plaquette
+      // Calculate and print blocked Tr[Udag.U] / N and plaquette
+      d_link(bl);
       blocked_plaq(istout, bl);
 
 #ifdef CORR

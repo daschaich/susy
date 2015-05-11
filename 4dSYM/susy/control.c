@@ -53,7 +53,7 @@ int main(int argc, char *argv[]) {
   node0_printf("START %.8g %.8g %.8g ", dssplaq, dstplaq, dssplaq + dstplaq);
   dssplaq = d_gauge_action(NODET);
   node0_printf("%.8g\n", dssplaq / (double)volume);
-  d_link();
+  d_link(0);
 
   // Perform warmup trajectories
   f_eps = traj_length / (Real)nsteps[0];
@@ -74,7 +74,7 @@ int main(int argc, char *argv[]) {
     plp = ploop();
 
     // Tr[Udag.U] / N and plaquette measurements
-    d_link();
+    d_link(0);
     d_plaquette(&dssplaq, &dstplaq);
 //    d_plaquette_frep(&dssplaq_frep, &dstplaq_frep);
 

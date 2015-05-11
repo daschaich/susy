@@ -48,7 +48,7 @@ int main(int argc, char *argv[]) {
   plp = ploop();
 
   // Tr[Udag.U] / N and plaquette measurements
-  d_link();
+  d_link(0);
   d_plaquette(&dssplaq, &dstplaq);
 
   // Re(Polyakov) Im(Poyakov) cg_iters ss_plaq st_plaq

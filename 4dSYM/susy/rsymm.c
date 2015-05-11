@@ -120,7 +120,8 @@ void rsymm() {
   register site *s;
   int dir_normal, dir_inv, dist, dist_inv, mu, length, max = MAX_X + 1;
   int dir[4 * max], sign[4 * max], kind[4 * max];
-  double rsymm_loop, wloop, invlink[NUMLINK], invlink_sum = 0.0;
+  double rsymm_loop, wloop, invlink[NUMLINK], invlink_sum = 0.0, td;
+  double invlinkSq;
   complex tc;
   su3_matrix_f tmat;
 
@@ -175,24 +176,29 @@ void rsymm() {
   }
 
   // First check average value of the inverted link
-  // Tr[U^{-1} (U^{-1})^dag] / N
+  // Tr[U^{-1} (U^{-1})^dag] / N and corresponding width
   // Just like d_link() but use s->mom instead of s->linkf
   for (dir_inv = XUP; dir_inv < NUMLINK; dir_inv++) {
     invlink[dir_inv] = 0;
-    FORALLSITES(i, s)
-      invlink[dir_inv] += realtrace_su3_f(&(s->mom[dir_inv]),
-                                          &(s->mom[dir_inv]))
-                          / ((double)(NCOL));
+    FORALLSITES(i, s) {
+      td = realtrace_su3_f(&(s->mom[dir_inv]), &(s->mom[dir_inv]));
+      invlink[dir_inv] += td;
+      invlinkSq += td * td;
+    }
     g_doublesum(&(invlink[dir_inv]));
   }
+  g_doublesum(&(invlinkSq));
 
   node0_printf("INVLINK");
   for (dir_inv = XUP; dir_inv < NUMLINK; dir_inv++) {
-    invlink[dir_inv] /= ((double)volume);
+    invlink[dir_inv] /= ((double)volume * NCOL);
     invlink_sum += invlink[dir_inv];
     node0_printf(" %.6g", invlink[dir_inv]);
   }
-  node0_printf(" %.6g\n", invlink_sum / ((double)(NUMLINK)));
+  invlink_sum /= ((double)NUMLINK);
+  invlinkSq /= ((double)volume * NCOL * NCOL * NUMLINK);
+  td = sqrt(invlinkSq - invlink_sum * invlink_sum);
+  node0_printf(" %.6g %.6g\n", invlink_sum, td);
 
   // Construct and print all loops up to max x max
   // in all NUMLINK * (NUMLINK - 1) directions
