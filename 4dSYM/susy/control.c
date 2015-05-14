@@ -110,6 +110,9 @@ int main(int argc, char *argv[]) {
       // Plaquette determinant
       measure_det();
 
+      // Monitor widths of plaquette and plaquette determinant distributions
+      widths();
+
 #ifdef PL_CORR
       // Polyakov loop correlator
       // Compute ploop_corr and take the absolute square of its FFT
@@ -158,10 +161,6 @@ int main(int argc, char *argv[]) {
 
       // Measure density of monopole world lines in non-diagonal cubes
       monopole();
-
-      // If monopole world line density being measured
-      // Also monitor sqrt(variance) of plaquette and plaquette determinant
-      plaq_var();
 #endif
 
 #ifdef WLOOP

@@ -108,23 +108,12 @@ int main(int argc, char *argv[]) {
   node0_printf(" %.8g %.8g\n", dssplaq, dstplaq);
 #endif
 
-  // Gauge fixing
-  if (fixflag == COULOMB_GAUGE_FIX) {
-    d_plaquette(&dssplaq, &dstplaq);    // To be printed below
-    node0_printf("Fixing to Coulomb gauge...\n");
-    double gtime = -dclock();
-    gaugefix(TUP, 1.5, 5000, GAUGE_FIX_TOL, -1, -1);
-//    gaugefix(-1, 1.5, 5000, GAUGE_FIX_TOL, -1, -1);   // Lorenz gauge
-    gtime += dclock();
-    node0_printf("GFIX time = %.4g seconds\n", gtime);
-    node0_printf("BEFORE %.8g %.8g\n", dssplaq, dstplaq);
-    d_plaquette(&dssplaq, &dstplaq);
-    node0_printf("AFTER  %.8g %.8g\n", dssplaq, dstplaq);
-  }
-
   // Main measurements
   // Plaquette determinant
   measure_det();
+
+  // Monitor widths of plaquette and plaquette determinant distributions
+  widths();
 
 #ifdef PL_CORR
   // Polyakov loop correlator
@@ -152,11 +141,9 @@ int main(int argc, char *argv[]) {
 
 #ifdef CORR
   // Konishi and SUGRA correlators
-  if (fixflag == COULOMB_GAUGE_FIX) {
-    setup_P();
-    d_correlator();
-    d_correlator_r();
-  }
+  setup_P();
+  d_correlator();
+  d_correlator_r();
 #endif
 
 #ifdef BILIN
@@ -175,15 +162,23 @@ int main(int argc, char *argv[]) {
 
   // Measure density of monopole world lines in non-diagonal cubes
   monopole();
-
-  // If monopole world line density being measured
-  // Also monitor sqrt(variance) of plaquette and plaquette determinant
-  plaq_var();
 #endif
 
 #ifdef WLOOP
-  // We already fixed to Coulomb gauge above
+  // Gauge fix to Coulomb gauge
   // This lets us easily access arbitrary displacements
+  if (fixflag == COULOMB_GAUGE_FIX) {
+    d_plaquette(&dssplaq, &dstplaq);    // To be printed below
+    node0_printf("Fixing to Coulomb gauge...\n");
+    double gtime = -dclock();
+    gaugefix(TUP, 1.5, 5000, GAUGE_FIX_TOL, -1, -1);
+//    gaugefix(-1, 1.5, 5000, GAUGE_FIX_TOL, -1, -1);   // Lorenz gauge
+    gtime += dclock();
+    node0_printf("GFIX time = %.4g seconds\n", gtime);
+    node0_printf("BEFORE %.8g %.8g\n", dssplaq, dstplaq);
+    d_plaquette(&dssplaq, &dstplaq);
+    node0_printf("AFTER  %.8g %.8g\n", dssplaq, dstplaq);
+  }
   hvy_pot(NODET);
   hvy_pot(YESDET);
 

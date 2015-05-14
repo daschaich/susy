@@ -74,9 +74,15 @@ int main(int argc, char *argv[]) {
   node0_printf("%.8g\n", dssplaq / (double)volume);
   node0_printf("BACTION %.8g\n", dssplaq / (double)volume);
 
+  // Plaquette determinant
+  measure_det();
+
+  // Monitor widths of plaquette and plaquette determinant distributions
+  widths();
+
   // Require compilation with stout smearing enabled
 #ifndef STOUT
-  printf("ERROR: MCRG requires stout smearing, at least for now\n");
+  printf("ERROR: MCRG uses stout smearing, at least for now\n");
   terminate(1);
 #endif
 
@@ -96,6 +102,8 @@ int main(int argc, char *argv[]) {
     }
 
     // Calculate and print unblocked Tr[Udag.U] / N and plaquette
+    // Latter also prints unblocked plaquette determinant
+    // and monitors widths of distributions
     d_link(0);
     blocked_plaq(istout, 0);
 

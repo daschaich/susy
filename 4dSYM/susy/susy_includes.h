@@ -90,6 +90,7 @@ void random_gauge_trans(Twist_Fermion *TF);
 
 // Determinant-related routines
 void measure_det();
+void widths();        // Widths of plaquette and det distributions
 complex find_det(su3_matrix_f *Q);
 void det_project(su3_matrix_f *in, su3_matrix_f *out);
 
@@ -154,11 +155,10 @@ void polar(su3_matrix_f *a, su3_matrix_f *b);
 
 // Monopole computation uses find_det
 void monopole();
-void plaq_var();    // Plaquette and plaquette determinant sqrt(variance)
 
 #ifdef MCRG
 void block_mcrg(int bl);
-void blocked_plaq(int Nstout, int bl);
+void blocked_plaq(int Nstout, int bl);    // Also monitors det and widths
 void blocked_ops(int Nstout, int bl);
 void blocked_ploop(int Nstout, int bl);
 void blocked_rsymm(int Nstout, int bl);

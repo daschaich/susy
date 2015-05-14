@@ -1,5 +1,5 @@
 // -----------------------------------------------------------------
-// Print width sqrt(<P^2> - <P>^2) of distributions for the
+// Print widths sqrt(<P^2> - <P>^2) of distributions for the
 // plaquette and plaquette determinant
 // Separately consider real and imaginary parts of latter
 #include "susy_includes.h"
@@ -9,11 +9,11 @@
 
 // -----------------------------------------------------------------
 // Use tempmat1 and staple as temporary storage
-void plaq_var() {
+void widths() {
   register int i;
   register site *s;
   int a, b;
-  double plaq = 0.0, plaqSq = 0.0, norm;
+  double plaq = 0.0, plaqSq = 0.0, norm = 10.0 * volume;
   double re = 0.0, reSq = 0.0, im = 0.0, imSq = 0.0;
   complex tc;
   msg_tag *mtag0 = NULL, *mtag1 = NULL;
@@ -65,14 +65,13 @@ void plaq_var() {
   g_doublesum(&imSq);
 
   // Now compute and print square root of variances
-  norm = (double)(volume * NUMLINK * (NUMLINK - 1));
   plaq /= norm;
   plaqSq /= norm;
   re /= norm;
   reSq /= norm;
   im /= norm;
   imSq /= norm;
-  node0_printf("PLAQ_VAR %.6g %.6g %.6g\n", sqrt(plaqSq - plaq * plaq),
+  node0_printf("WIDTHS %.6g %.6g %.6g\n", sqrt(plaqSq - plaq * plaq),
                sqrt(reSq - re * re), sqrt(imSq - im * im));
 }
 // -----------------------------------------------------------------

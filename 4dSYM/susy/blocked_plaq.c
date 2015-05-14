@@ -1,5 +1,6 @@
 // -----------------------------------------------------------------
 // Evaluate the plaquette after block RG blocking steps
+// Also print blocked det and widths sqrt(<P^2> - <P>^2) of distributions
 // Use general_gathers; lattice must be divisible by 2^block in all dirs
 // Use tempmat1 and tempmat2 for temporary storage
 #include "susy_includes.h"
@@ -9,9 +10,11 @@ void blocked_plaq(int Nstout, int block) {
   register site *s;
   register su3_matrix_f *m1, *m4;
   int j, bl = 2, d1[4] = {0, 0, 0, 0}, d2[4] = {0, 0, 0, 0};
-  double ss_sum = 0.0, st_sum = 0.0, tr;
+  double plaq = 0.0, plaqSq = 0.0, re = 0.0, reSq = 0.0, im = 0.0, imSq = 0.0;
+  double ss_sum = 0.0, st_sum = 0.0, norm = 10.0 * volume, tr;
+  complex det = cmplx(0.0, 0.0), tc;
   msg_tag *mtag;
-  su3_matrix_f tmat, *mat;
+  su3_matrix_f *mat, tmat, tmat2;
 
   // Set number of links to stride, bl = 2^block
   // Allow sanity check of reproducing ploop() with this routine
@@ -55,25 +58,39 @@ void blocked_plaq(int Nstout, int block) {
       wait_general_gather(mtag);
 
       // Compute tr[Udag_a(x+d2) Udag_b(x) U_a(x) U_b(x+d1)]
-      if (dir == TUP || dir2 == TUP) {
-        FORALLSITES(i, s) {
-          mat = (su3_matrix_f *)(gen_pt[0][i]);
-          mult_su3_nn_f(&(tempmat2[i]), &(tempmat1[i]), &tmat);
-          st_sum += (double)realtrace_su3_f(mat, &tmat);
-        }
-      }
-      else {
-        FORALLSITES(i, s) {
-          mat = (su3_matrix_f *)(gen_pt[0][i]);
-          mult_su3_nn_f(&(tempmat2[i]), &(tempmat1[i]), &tmat);
-          ss_sum += (double)realtrace_su3_f(mat, &tmat);
-        }
+      // Also monitor determinant
+      FORALLSITES(i, s) {
+        mat = (su3_matrix_f *)(gen_pt[0][i]);
+        mult_su3_nn_f(&(tempmat2[i]), &(tempmat1[i]), &tmat);
+        mult_su3_an_f(mat, &tmat, &tmat2);
+        tc = trace_su3_f(&tmat2);
+        tr = (double)tc.real;
+        plaq += tr;
+        plaqSq += tr * tr;
+        if (dir == TUP || dir2 == TUP)
+          st_sum += tr;
+        else
+          ss_sum += tr;
+
+        tc = find_det(&tmat2);
+        CSUM(det, tc);
+        re += tc.real;
+        reSq += tc.real * tc.real;
+        im += tc.imag;
+        imSq += tc.imag * tc.imag;
       }
       cleanup_general_gather(mtag);
     }
   }
+  g_doublesum(&plaq);
+  g_doublesum(&plaqSq);
   g_doublesum(&ss_sum);
   g_doublesum(&st_sum);
+  g_complexsum(&det);
+  g_doublesum(&re);
+  g_doublesum(&reSq);
+  g_doublesum(&im);
+  g_doublesum(&imSq);
 
   // Average over four plaquettes that involve the temporal link
   // and six that do not
@@ -82,5 +99,18 @@ void blocked_plaq(int Nstout, int block) {
   tr = (ss_sum + st_sum) / 2.0;
   node0_printf("BPLAQ %d %d %.8g %.8g %.8g\n",
                Nstout, block, ss_sum, st_sum, tr);
+
+  CDIVREAL(det, norm, det);
+  node0_printf("BDET %d %d %.6g %.6g\n", Nstout, block, det.real, det.imag);
+
+  plaq /= norm;
+  plaqSq /= norm;
+  re /= norm;
+  reSq /= norm;
+  im /= norm;
+  imSq /= norm;
+  node0_printf("BWIDTHS %d %d %.6g %.6g %.6g\n", Nstout, block,
+               sqrt(plaqSq - plaq * plaq),
+               sqrt(reSq - re * re), sqrt(imSq - im * im));
 }
 // -----------------------------------------------------------------
