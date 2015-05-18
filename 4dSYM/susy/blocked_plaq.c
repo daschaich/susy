@@ -36,8 +36,8 @@ void blocked_plaq(int Nstout, int block) {
       }
       // Can only have one general gather at once...
       mtag = start_general_gather_site(F_OFFSET(linkf[dir2]),
-                                        sizeof(su3_matrix_f), d1,
-                                        EVENANDODD, gen_pt[0]);
+                                       sizeof(su3_matrix_f), d1,
+                                       EVENANDODD, gen_pt[0]);
 
       // tempmat2 = Udag_b(x) U_a(x)
       FORALLSITES(i, s) {
@@ -53,8 +53,8 @@ void blocked_plaq(int Nstout, int block) {
       cleanup_general_gather(mtag);
 
       mtag = start_general_gather_site(F_OFFSET(linkf[dir]),
-                                        sizeof(su3_matrix_f), d2,
-                                        EVENANDODD, gen_pt[0]);
+                                       sizeof(su3_matrix_f), d2,
+                                       EVENANDODD, gen_pt[0]);
       wait_general_gather(mtag);
 
       // Compute tr[Udag_a(x+d2) Udag_b(x) U_a(x) U_b(x+d1)]
@@ -72,7 +72,8 @@ void blocked_plaq(int Nstout, int block) {
         else
           ss_sum += tr;
 
-        tc = find_det(&tmat2);
+        su3_adjoint_f(&tmat2, &tmat);   // Match sign conventions
+        tc = find_det(&tmat);
         CSUM(det, tc);
         re += tc.real;
         reSq += tc.real * tc.real;

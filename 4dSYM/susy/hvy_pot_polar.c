@@ -16,7 +16,7 @@
 void hvy_pot_polar() {
   register int i;
   register site *s;
-  int t_dist, x_dist, y_dist, z_dist, y_start, z_start;
+  int j, t_dist, x_dist, y_dist, z_dist, y_start, z_start;
   int MAX_pts = 8 * MAX_X * MAX_X;            // Should be plenty
   int count[MAX_pts], this_r, total_r = 0;
   Real MAX_r = 100.0 * MAX_X, tr, lookup[MAX_pts], W[MAX_pts];
@@ -25,9 +25,9 @@ void hvy_pot_polar() {
   msg_tag *mtag = NULL;
 
   // Initialize Wilson loop accumulators
-  for (i = 0; i < MAX_pts; i++) {
-    count[i] = 0;
-    W[i] = 0.0;
+  for (j = 0; j < MAX_pts; j++) {
+    count[j] = 0;
+    W[j] = 0.0;
   }
 
   // Find smallest scalar distance cut by imposing MAX_X
@@ -77,25 +77,12 @@ void hvy_pot_polar() {
         // Gather staple to tempmat1 along spatial offset, using tempmat2
         FORALLSITES(i, s)
           su3mat_copy_f(&(staple[i]), &(tempmat1[i]));
-        for (i = 0; i < x_dist; i++) {
+        for (j = 0; j < x_dist; j++)
           shiftmat(tempmat1, tempmat2, goffset[XUP]);
-          FORALLSITES(i, s)
-            su3mat_copy_f(&(tempmat2[i]), &(tempmat1[i]));
-        }
-        if (y_dist > 0) {
-          for (i = 0; i < y_dist; i++) {
-            shiftmat(tempmat1, tempmat2, goffset[YUP]);
-            FORALLSITES(i, s)
-              su3mat_copy_f(&(tempmat2[i]), &(tempmat1[i]));
-          }
-        }
-        else if (y_dist < 0) {
-          for (i = y_dist; i < 0; i++) {
-            shiftmat(tempmat1, tempmat2, goffset[YUP] + 1);
-            FORALLSITES(i, s)
-              su3mat_copy_f(&(tempmat2[i]), &(tempmat1[i]));
-          }
-        }
+        for (j = 0; j < y_dist; j++)
+          shiftmat(tempmat1, tempmat2, goffset[YUP]);
+        for (j = y_dist; j < 0; j++)
+          shiftmat(tempmat1, tempmat2, goffset[YUP] + 1);
 
         // If either x_dist or y_dist are positive,
         // we need to start with MAX_X shifts in the -z direction
@@ -103,27 +90,33 @@ void hvy_pot_polar() {
           z_start = -MAX_X;
         else
           z_start = 0;
-        for (i = z_start; i < 0; i++) {
+        for (j = z_start; j < 0; j++)
           shiftmat(tempmat1, tempmat2, goffset[ZUP] + 1);
-          FORALLSITES(i, s)
-            su3mat_copy_f(&(tempmat2[i]), &(tempmat1[i]));
-        }
         for (z_dist = z_start; z_dist <= MAX_X; z_dist++) {
           // Figure out scalar distance
           tr = A4map_slice(x_dist, y_dist, z_dist);
           if (tr > MAX_r - 1.0e-6) {
-            // Need to move on to next t_dist
+#ifdef CHECK_ROT
+#ifdef DEBUG_CHECK
+            // Potentially useful to check against old output
+            if (do_det == 1) {  // Braces fix compiler error
+              node0_printf("D_LOOP   ");
+            }
+            else
+              node0_printf("POT_LOOP ");
+            node0_printf("%d %d %d %d SKIP\n", x_dist, y_dist, z_dist, t_dist);
+#endif
+#endif
+            // Need to increment z and shift in z direction
             shiftmat(tempmat1, tempmat2, goffset[ZUP]);
-            FORALLSITES(i, s)
-              su3mat_copy_f(&(tempmat2[i]), &(tempmat1[i]));
             continue;
           }
 
           // Combine three-vectors with same scalar distance
           this_r = -1;
-          for (i = 0; i < total_r; i++) {
-            if (fabs(tr - lookup[i]) < 1.0e-6) {
-              this_r = i;
+          for (j = 0; j < total_r; j++) {
+            if (fabs(tr - lookup[j]) < 1.0e-6) {
+              this_r = j;
               break;
             }
           }
@@ -152,8 +145,6 @@ void hvy_pot_polar() {
 
           // As we increment z, shift in z direction
           shiftmat(tempmat1, tempmat2, goffset[ZUP]);
-          FORALLSITES(i, s)
-            su3mat_copy_f(&(tempmat2[i]), &(tempmat1[i]));
         } // z_dist
       } // y_dist
     } // x_dist
@@ -161,12 +152,12 @@ void hvy_pot_polar() {
     // Now cycle through unique scalar distances and print results
     // Won't be sorted, but this is easy to do offline
     // Also reset for next t_dist
-    for (i = 0; i < total_r; i++) {
-      tr = 1.0 / (Real)(count[i] * volume);
+    for (j = 0; j < total_r; j++) {
+      tr = 1.0 / (Real)(count[j] * volume);
       node0_printf("POLAR_LOOP %d %.6g %d %.6g\n",
-                   i, lookup[i], t_dist, W[i] * tr);
-      count[i] = 0;
-      W[i] = 0.0;
+                   j, lookup[j], t_dist, W[j] * tr);
+      count[j] = 0;
+      W[j] = 0.0;
     }
   } // t_dist
 }

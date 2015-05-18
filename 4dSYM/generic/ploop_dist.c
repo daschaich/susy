@@ -10,17 +10,19 @@
 // -----------------------------------------------------------------
 // Shift a matrix without parallel transport
 // The dir should come from goffset
-void shiftmat(su3_matrix_f *src, su3_matrix_f *dest, int dir) {
+void shiftmat(su3_matrix_f *dat, su3_matrix_f *temp, int dir) {
   register int i;
   register site *s;
   msg_tag *mtag;
 
-  mtag = start_gather_field(src, sizeof(su3_matrix_f),
+  mtag = start_gather_field(dat, sizeof(su3_matrix_f),
                             dir, EVENANDODD, gen_pt[0]);
   wait_gather(mtag);
   FORALLSITES(i, s)
-    su3mat_copy_f((su3_matrix_f *)gen_pt[0][i], &(dest[i]));
+    su3mat_copy_f((su3_matrix_f *)gen_pt[0][i], &(temp[i]));
   cleanup_gather(mtag);
+  FORALLSITES(i, s)
+    su3mat_copy_f(&(temp[i]), &(dat[i]));
 }
 // -----------------------------------------------------------------
 
@@ -40,7 +42,6 @@ complex ploop() {
   for (t = 1; t < nt; t++) {
     shiftmat(tempmat1, tempmat2, goffset[TUP]);
     FORALLSITES(i, s) {
-      su3mat_copy_f(&(tempmat2[i]), &(tempmat1[i]));
       if (s->t != 0)
         continue;
 

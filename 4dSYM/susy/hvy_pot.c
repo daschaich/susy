@@ -13,10 +13,14 @@
 
 // -----------------------------------------------------------------
 // Map (x, y, z) to r on Nx x Ny x Nz A4* time slice
-// Check all possible periodic shifts to find true r
+// Check all possible periodic shifts to find true (smallest) r
 Real A4map_slice(x_in, y_in, z_in) {
   int x, y, z, xSq, ySq, xy, xpy;
   Real r = 100.0 * MAX_X, tr;
+#ifdef DEBUG_CHECK
+  Real invSq2 = 1.0 / sqrt(2.0), invSq6  = 1.0 / sqrt(6.0);
+  Real invSq12 = 1.0 / sqrt(12.0), x_a4, y_a4, z_a4, check;
+#endif
 
   for (x = x_in - nx; x <= x_in + nx; x += nx) {
     xSq = x * x;
@@ -28,6 +32,18 @@ Real A4map_slice(x_in, y_in, z_in) {
         tr = sqrt((xSq + ySq + z * z) * 0.75 - (xy + xpy * z) * 0.5);
         if (tr < r)
           r = tr;
+
+#ifdef DEBUG_CHECK
+        x_a4 = (x - y) * invSq2;
+        y_a4 = (x + y - 2.0 * z) * invSq6;
+        z_a4 = (x + y + z) * invSq12;
+        check = sqrt(x_a4 * x_a4 + y_a4 * y_a4 + z_a4 * z_a4);
+        if (fabs(tr - check) > IMAG_TOL) {
+          node0_printf("ERROR: %4g isn't %.4g for (%d, %d, %d)\n",
+                       tr, check, x, y, z);
+          terminate(1);
+        }
+#endif
       }
     }
   }
@@ -42,20 +58,19 @@ Real A4map_slice(x_in, y_in, z_in) {
 void hvy_pot(int do_det) {
   register int i;
   register site *s;
-  int t_dist, x_dist, y_dist, z_dist, y_start, z_start;
+  int j, t_dist, x_dist, y_dist, z_dist, y_start, z_start;
   int MAX_pts = 8 * MAX_X * MAX_X;            // Should be plenty
   int count[MAX_pts], this_r, total_r = 0;
-  Real MAX_r = 100.0 * MAX_X, tr;
-  Real lookup[MAX_pts], W[MAX_pts];
+  Real MAX_r = 100.0 * MAX_X, tr, lookup[MAX_pts], W[MAX_pts];
   double wloop;
   complex tc;
   su3_matrix_f tmat, tmat2, *mat;
   msg_tag *mtag = NULL;
 
   // Initialize Wilson loop accumulators
-  for (i = 0; i < MAX_pts; i++) {
-    count[i] = 0;
-    W[i] = 0.0;
+  for (j = 0; j < MAX_pts; j++) {
+    count[j] = 0;
+    W[j] = 0.0;
   }
 
   // Find smallest scalar distance cut by imposing MAX_X
@@ -97,25 +112,12 @@ void hvy_pot(int do_det) {
         // Gather staple to tempmat1 along spatial offset, using tempmat2
         FORALLSITES(i, s)
           su3mat_copy_f(&(staple[i]), &(tempmat1[i]));
-        for (i = 0; i < x_dist; i++) {
+        for (j = 0; j < x_dist; j++)
           shiftmat(tempmat1, tempmat2, goffset[XUP]);
-          FORALLSITES(i, s)
-            su3mat_copy_f(&(tempmat2[i]), &(tempmat1[i]));
-        }
-        if (y_dist > 0) {
-          for (i = 0; i < y_dist; i++) {
-            shiftmat(tempmat1, tempmat2, goffset[YUP]);
-            FORALLSITES(i, s)
-              su3mat_copy_f(&(tempmat2[i]), &(tempmat1[i]));
-          }
-        }
-        else if (y_dist < 0) {
-          for (i = y_dist; i < 0; i++) {
-            shiftmat(tempmat1, tempmat2, goffset[YUP] + 1);
-            FORALLSITES(i, s)
-              su3mat_copy_f(&(tempmat2[i]), &(tempmat1[i]));
-          }
-        }
+        for (j = 0; j < y_dist; j++)
+          shiftmat(tempmat1, tempmat2, goffset[YUP]);
+        for (j = y_dist; j < 0; j++)
+          shiftmat(tempmat1, tempmat2, goffset[YUP] + 1);
 
         // If either x_dist or y_dist are positive,
         // we need to start with MAX_X shifts in the -z direction
@@ -123,27 +125,33 @@ void hvy_pot(int do_det) {
           z_start = -MAX_X;
         else
           z_start = 0;
-        for (i = z_start; i < 0; i++) {
+        for (j = z_start; j < 0; j++)
           shiftmat(tempmat1, tempmat2, goffset[ZUP] + 1);
-          FORALLSITES(i, s)
-            su3mat_copy_f(&(tempmat2[i]), &(tempmat1[i]));
-        }
         for (z_dist = z_start; z_dist <= MAX_X; z_dist++) {
           // Figure out scalar distance
           tr = A4map_slice(x_dist, y_dist, z_dist);
           if (tr > MAX_r - 1.0e-6) {
-            // Need to move on to next t_dist
+#ifdef CHECK_ROT
+#ifdef DEBUG_CHECK
+            // Potentially useful to check against old output
+            if (do_det == 1) {  // Braces fix compiler error
+              node0_printf("D_LOOP   ");
+            }
+            else
+              node0_printf("POT_LOOP ");
+            node0_printf("%d %d %d %d SKIP\n", x_dist, y_dist, z_dist, t_dist);
+#endif
+#endif
+            // Need to increment z and shift in z direction
             shiftmat(tempmat1, tempmat2, goffset[ZUP]);
-            FORALLSITES(i, s)
-              su3mat_copy_f(&(tempmat2[i]), &(tempmat1[i]));
             continue;
           }
 
           // Combine three-vectors with same scalar distance
           this_r = -1;
-          for (i = 0; i < total_r; i++) {
-            if (fabs(tr - lookup[i]) < 1.0e-6) {
-              this_r = i;
+          for (j = 0; j < total_r; j++) {
+            if (fabs(tr - lookup[j]) < 1.0e-6) {
+              this_r = j;
               break;
             }
           }
@@ -176,8 +184,9 @@ void hvy_pot(int do_det) {
           W[this_r] += wloop;
 #ifdef CHECK_ROT
           // Potentially useful to check rotational invariance
-          if (do_det == 1)
+          if (do_det == 1) {  // Braces fix compiler error
             node0_printf("D_LOOP   ");
+          }
           else
             node0_printf("POT_LOOP ");
           node0_printf("%d %d %d %d %.6g\n", x_dist, y_dist, z_dist, t_dist,
@@ -186,8 +195,6 @@ void hvy_pot(int do_det) {
 
           // As we increment z, shift in z direction
           shiftmat(tempmat1, tempmat2, goffset[ZUP]);
-          FORALLSITES(i, s)
-            su3mat_copy_f(&(tempmat2[i]), &(tempmat1[i]));
         } // z_dist
       } // y_dist
     } // x_dist
@@ -195,16 +202,16 @@ void hvy_pot(int do_det) {
     // Now cycle through unique scalar distances and print results
     // Won't be sorted, but this is easy to do offline
     // Also reset for next t_dist
-    for (i = 0; i < total_r; i++) {
-      tr = 1.0 / (Real)(count[i] * volume);
+    for (j = 0; j < total_r; j++) {
+      tr = 1.0 / (Real)(count[j] * volume);
       if (do_det == 1) {            // Braces suppress compiler complaint
         node0_printf("D_LOOP   ");
       }
       else
         node0_printf("POT_LOOP ");
-      node0_printf("%d %.6g %d %.6g\n", i, lookup[i], t_dist, W[i] * tr);
-      count[i] = 0;
-      W[i] = 0.0;
+      node0_printf("%d %.6g %d %.6g\n", j, lookup[j], t_dist, W[j] * tr);
+      count[j] = 0;
+      W[j] = 0.0;
     }
   } // t_dist
 }

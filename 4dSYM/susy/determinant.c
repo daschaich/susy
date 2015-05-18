@@ -239,7 +239,7 @@ void invert(su3_matrix_f *in, su3_matrix_f *out) {
 void measure_det() {
   register int i, a, b;
   register site *s;
-  Real norm = (Real)(NUMLINK * (NUMLINK - 1) / 2 * volume);
+  Real norm = (Real)(volume * NUMLINK * (NUMLINK - 1) / 2);
   double WSq = 0.0;
   complex tot = cmplx(0.0, 0.0), tot_sq = cmplx(0.0, 0.0), tc;
 

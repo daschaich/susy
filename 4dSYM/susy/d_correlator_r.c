@@ -48,7 +48,7 @@ Real A4map(x_in, y_in, z_in, t_in) {
 void d_correlator_r() {
   register int i;
   register site *s;
-  int a, b, mu, nu, index, x_dist, y_dist, z_dist, t_dist;
+  int a, b, j, mu, nu, index, x_dist, y_dist, z_dist, t_dist;
   int y_start, z_start, t_start, iter, numK = 2, len = 10 + numK;
   int disp[NDIMS] = {0, 0, 0, 0}, this_r, total_r = 0;
   int MAX_pts = 8 * MAX_X * MAX_X * MAX_X, count[MAX_pts];
@@ -80,16 +80,16 @@ void d_correlator_r() {
       index++;
     }
   }
-  for (i = 0; i < MAX_pts; i++) {
-    count[i] = 0;
-    CS[i] = 0.0;
+  for (j = 0; j < MAX_pts; j++) {
+    count[j] = 0;
+    CS[j] = 0.0;
     for (a = 0; a < numK; a++) {
       for (b = 0; b < numK; b++)
-        CK[i][a * numK + b] = 0.0;
+        CK[j][a * numK + b] = 0.0;
     }
   }
-  for (i = 0; i < len; i++)
-    vev[i] = 0.0;
+  for (j = 0; j < len; j++)
+    vev[j] = 0.0;
 
   // Compute at each site B_a = U_a Udag_a - volume average
   // as well as traceBB[a][b] = tr[B_a(x) B_b(x)]
@@ -188,9 +188,9 @@ void d_correlator_r() {
 
           // Combine four-vectors with same scalar distance
           this_r = -1;
-          for (i = 0; i < total_r; i++) {
-            if (fabs(tr - lookup[i]) < 1.0e-6) {
-              this_r = i;
+          for (j = 0; j < total_r; j++) {
+            if (fabs(tr - lookup[j]) < 1.0e-6) {
+              this_r = j;
               break;
             }
           }
@@ -257,24 +257,24 @@ void d_correlator_r() {
 
   // Now cycle through unique scalar distances and print results
   // Won't be sorted, but this is easy to do offline
-  for (i = 0; i < total_r; i++) {
-    tr = 1.0 / (Real)(count[i] * volume);
-    node0_printf("CORR_K %d %.6g", i, lookup[i]);
+  for (j = 0; j < total_r; j++) {
+    tr = 1.0 / (Real)(count[j] * volume);
+    node0_printf("CORR_K %d %.6g", j, lookup[j]);
     for (a = 0; a < numK; a++) {
       for (b = 0; b < numK; b++)
-        node0_printf(" %.6g", CK[i][a * numK + b] * tr);
+        node0_printf(" %.6g", CK[j][a * numK + b] * tr);
     }
     node0_printf("\n");
   }
-  for (i = 0; i < total_r; i++) {
-    tr = 0.1 / (Real)(count[i] * volume);
-    node0_printf("CORR_S %d %.6g %.6g\n", i, lookup[i], CS[i] * tr);
+  for (j = 0; j < total_r; j++) {
+    tr = 0.1 / (Real)(count[j] * volume);
+    node0_printf("CORR_S %d %.6g %.6g\n", j, lookup[j], CS[j] * tr);
   }
   // Monitor vacuum subtractions
-  for (i = len - numK; i < len; i++)
-    node0_printf("VACSUB_K %d %.6g\n", i - len + numK, vev[i]);
-  for (i = 0; i < len - numK; i++)
-    node0_printf("VACSUB_S %d %.6g\n", i, vev[i]);
+  for (j = len - numK; j < len; j++)
+    node0_printf("VACSUB_K %d %.6g\n", j - len + numK, vev[j]);
+  for (j = 0; j < len - numK; j++)
+    node0_printf("VACSUB_S %d %.6g\n", j, vev[j]);
 
   free(ops);
 }
