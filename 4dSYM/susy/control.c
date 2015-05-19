@@ -10,8 +10,8 @@
 int main(int argc, char *argv[]) {
   int traj_done, prompt, s_iters, avs_iters = 0, avm_iters = 0, Nmeas = 0;
   Real f_eps, g_eps;
-  double dssplaq, dstplaq, dtime;
-  complex plp = cmplx(99, 99);
+  double dssplaq, dstplaq, dtime, plpMod = 0.0;
+  complex plp = cmplx(99.0, 99.0);
 
   // Setup
   setlinebuf(stdout); // DEBUG
@@ -71,7 +71,7 @@ int main(int argc, char *argv[]) {
 
     // Do "local" measurements every trajectory!
     // Polyakov loop measurement
-    plp = ploop();
+    plp = ploop(&plpMod);
 
     // Tr[Udag.U] / N and plaquette measurements
     d_link(0);
@@ -83,8 +83,10 @@ int main(int argc, char *argv[]) {
                  plp.real, plp.imag, s_iters, dssplaq, dstplaq);
 
     // Bosonic action (printed twice by request)
+    // Might as well spit out volume average of Polyakov loop modulus
     dssplaq = d_gauge_action(NODET);
-    node0_printf("%.8g\n", dssplaq / (double)volume);
+    node0_printf("%.8g ", dssplaq / (double)volume);
+    node0_printf("%.8g\n", plpMod);
     node0_printf("BACTION %.8g\n", dssplaq / (double)volume);
 
     // Less frequent measurements every "propinterval" trajectories

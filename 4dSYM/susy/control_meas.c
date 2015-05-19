@@ -11,8 +11,8 @@
 // -----------------------------------------------------------------
 int main(int argc, char *argv[]) {
   int prompt;
-  double dssplaq, dstplaq, dtime;
-  complex plp = cmplx(99, 99);
+  double dssplaq, dstplaq, dtime, plpMod = 0.0;
+  complex plp = cmplx(99.0, 99.0);
 
   // Setup
   setlinebuf(stdout); // DEBUG
@@ -68,9 +68,9 @@ int main(int argc, char *argv[]) {
   dssplaq = d_gauge_action(NODET);
   node0_printf("%.8g\n", dssplaq / (double)volume);
 
-  // Do "local" measurements to check evolution
+  // Do "local" measurements to check configuration
   // Polyakov loop measurement
-  plp = ploop();
+  plp = ploop(&plpMod);
 
   // Tr[Udag.U] / N and plaquette measurements
   d_link(0);
@@ -81,9 +81,11 @@ int main(int argc, char *argv[]) {
                plp.real, plp.imag, dssplaq, dstplaq);
 
   // Bosonic action (printed twice by request)
+  // Might as well spit out volume average of Polyakov loop modulus
   dssplaq = d_gauge_action(NODET) / (double)volume;
 //  dssplaq = d_gauge_action(YESDET) / (double)volume;
-  node0_printf("%.8g\n", dssplaq);
+  node0_printf("%.8g ", dssplaq);
+  node0_printf("%.8g\n", plpMod);
   node0_printf("BACTION %.8g\n", dssplaq);
 
   // Require gauge fixing to consider non-invariant operators

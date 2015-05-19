@@ -65,7 +65,7 @@ u_int32type nersc_cksum();
 
 // ploop_dist.c
 void shiftmat(su3_matrix_f *dat, su3_matrix_f *temp, int dir);
-complex ploop();
+complex ploop(double *plpMod);
 
 // remap_stdio_from_args.c
 int remap_stdio_from_args(int argc, char *argv[]);

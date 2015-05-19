@@ -30,10 +30,11 @@ void shiftmat(su3_matrix_f *dat, su3_matrix_f *temp, int dir) {
 
 // -----------------------------------------------------------------
 // Use tempmat1, tempmat2 and staple for temporary storage
-complex ploop() {
+complex ploop(double *plpMod) {
   register int i;
   register site *s;
   int t;
+  double norm = (double)(nx * ny * nz);
   complex sum  = cmplx(0.0, 0.0), plp;
 
   FORALLSITES(i, s)
@@ -54,15 +55,19 @@ complex ploop() {
     }
   }
 
+  *plpMod = 0.0;
   FORALLSITES(i, s) {
     if (s->t != 0)
       continue;
 
     plp = trace_su3_f(&(staple[i]));
     CSUM(sum, plp);
+    *plpMod += cabs(&plp);
   }
   g_complexsum(&sum);
-  CDIVREAL(sum, (Real)(nx * ny * nz), sum);
+  g_doublesum(&plpMod);
+  CDIVREAL(sum, norm, sum);
+  *plpMod /= norm;
   return sum;
 }
 // -----------------------------------------------------------------

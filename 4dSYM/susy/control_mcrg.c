@@ -14,8 +14,8 @@ int main(int argc, char *argv[]) {
   register site *s;
   int prompt, dir, istout, j, bl, blmax;
   int stout_step = 1;    // This might be worth reading in at some point
-  double dssplaq, dstplaq, dtime;
-  complex plp = cmplx(99, 99);
+  double dssplaq, dstplaq, dtime, plpMod = 0.0;
+  complex plp = cmplx(99.0, 99.0);
 
   // Setup
   setlinebuf(stdout); // DEBUG
@@ -59,7 +59,7 @@ int main(int argc, char *argv[]) {
 
   // Do "local" measurements to check configuration
   // Polyakov loop measurement
-  plp = ploop();
+  plp = ploop(&plpMod);
 
   // Tr[Udag.U] / N and plaquette measurements
   d_link(0);
@@ -70,9 +70,11 @@ int main(int argc, char *argv[]) {
                plp.real, plp.imag, dssplaq, dstplaq);
 
   // Bosonic action (printed twice by request)
-  dssplaq = d_gauge_action(NODET);
-  node0_printf("%.8g\n", dssplaq / (double)volume);
-  node0_printf("BACTION %.8g\n", dssplaq / (double)volume);
+  // Might as well spit out volume average of Polyakov loop modulus
+  dssplaq = d_gauge_action(NODET) / (double)volume;
+  node0_printf("%.8g ", dssplaq);
+  node0_printf("%.8g\n", plpMod);
+  node0_printf("BACTION %.8g\n", dssplaq);
 
   // Plaquette determinant
   measure_det();

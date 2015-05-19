@@ -9,8 +9,8 @@
 // -----------------------------------------------------------------
 int main(int argc, char *argv[]) {
   int prompt;
-  double dssplaq, dstplaq, dtime;
-  complex plp = cmplx(99, 99);
+  double dssplaq, dstplaq, dtime, plpMod = 0.0;
+  complex plp = cmplx(99.0, 99.0);
   int ivec, total_iters = 0;
 #ifndef EIG
   node0_printf("Don't use control_eig unless compiling with -DEIG!\n");
@@ -44,9 +44,9 @@ int main(int argc, char *argv[]) {
   dssplaq = d_gauge_action(NODET);
   node0_printf("%.8g\n", dssplaq / (double)volume);
 
-  // Do "local" measurements to check evolution
+  // Do "local" measurements to check configuration
   // Polyakov loop measurement
-  plp = ploop();
+  plp = ploop(&plpMod);
 
   // Tr[Udag.U] / N and plaquette measurements
   d_link(0);
@@ -57,9 +57,11 @@ int main(int argc, char *argv[]) {
                plp.real, plp.imag, dssplaq, dstplaq);
 
   // Bosonic action (printed twice by request)
-  dssplaq = d_gauge_action(NODET);
-  node0_printf("%.8g\n", dssplaq / (double)volume);
-  node0_printf("BACTION %.8g\n", dssplaq / (double)volume);
+  // Might as well spit out volume average of Polyakov loop modulus
+  dssplaq = d_gauge_action(NODET) / (double)volume;
+  node0_printf("%.8g ", dssplaq);
+  node0_printf("%.8g\n", plpMod);
+  node0_printf("BACTION %.8g\n", dssplaq);
 
 #if 0
   // Optionally fix to Coulomb gauge to check gauge invariance
