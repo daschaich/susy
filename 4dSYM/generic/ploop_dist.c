@@ -65,7 +65,7 @@ complex ploop(double *plpMod) {
     *plpMod += cabs(&plp);
   }
   g_complexsum(&sum);
-  g_doublesum(&plpMod);
+  g_doublesum(plpMod);
   CDIVREAL(sum, norm, sum);
   *plpMod /= norm;
   return sum;
