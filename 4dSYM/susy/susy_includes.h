@@ -49,7 +49,7 @@ void compute_Fmunu();
 int grsource(Twist_Fermion *source);
 
 // Action routines
-double d_action(Twist_Fermion *source, Twist_Fermion **sol);
+double d_action(Twist_Fermion **source, Twist_Fermion ***sol);
 double d_gauge_action(int do_det);
 double d_fermion_action();
 
@@ -114,7 +114,10 @@ void rsymm();
 void setup_P();
 void compute_Ba();
 void d_correlator();    // Projected to zero spatial momentum
-void d_correlator_r();  // Functions of (x, y, z, t)
+
+// Map (x, y, z, t) to scalar displacements r
+Real A4map(int x_in, int y_in, int z_in, int t_in);
+void d_correlator_r();  // Functions of r
 #endif
 #ifdef BILIN
 // vevs to explore susy breaking

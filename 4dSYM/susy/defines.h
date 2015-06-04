@@ -17,6 +17,9 @@
 #define TWO_LAMBDA 0.386
 #define LAMBDA_MID 0.614
 
+// Number of Nth roots to take (in addition to 1/4 power)
+#define NROOT 1
+
 // RHMC degree -- copied to Norder, which can be reset (e.g., to 1)
 #define DEGREE 15
 // -----------------------------------------------------------------

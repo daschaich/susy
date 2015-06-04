@@ -160,24 +160,32 @@ double d_fermion_action(Twist_Fermion *src, Twist_Fermion **sol) {
 
 // -----------------------------------------------------------------
 // Print out zeros for pieces of the action that aren't included
-double d_action(Twist_Fermion *src, Twist_Fermion **sol) {
-  double g_act, bmass_act = 0.0, h_act, f_act = 0.0, det_act = 0.0;
+double d_action(Twist_Fermion **src, Twist_Fermion ***sol) {
+  double g_act, bmass_act = 0.0, h_act, f_act, det_act = 0.0;
   double total;
+
   g_act = d_gauge_action(NODET);
   if (bmass > IMAG_TOL)
     bmass_act = d_bmass_action();
   if (kappa_u1 > IMAG_TOL)
     det_act = d_det_action();
 
-#ifndef PUREGAUGE
-  f_act = d_fermion_action(src, sol);
-#endif
-  h_act = d_hmom_action();
   node0_printf("action: ");
   node0_printf("gauge %.8g bmass %.8g ", g_act, bmass_act);
   node0_printf("det %.8g ", det_act);
-  node0_printf("fermion %.8g hmom %.8g ", f_act, h_act);
-  total = g_act + bmass_act + det_act + f_act + h_act;
+
+  total = g_act + bmass_act + det_act;
+#ifndef PUREGAUGE
+  int n;
+  for (n = 0; n < NROOT; n++) {
+    f_act = d_fermion_action(src[n], sol[n]);
+    node0_printf("fermion%d %.8g ", n, f_act);
+    total += f_act;
+  }
+#endif
+  h_act = d_hmom_action();
+  node0_printf("hmom %.8g ", h_act);
+  total += h_act;
   node0_printf("sum %.8g\n", total);
   return total;
 }
