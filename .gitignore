@@ -6,13 +6,13 @@
 .lastmake*
 gmon.out
 localmake
-remez-milc
 susy_eig*
 susy_hmc*
 susy_mcrg*
 susy_meas*
 susy_mode*
 susy_phase*
-susy_rhmc*
 susy_spill
+poly
+error.dat
 tests

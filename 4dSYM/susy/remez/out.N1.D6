@@ -1,0 +1,96 @@
+n_pseudo 1
+
+naik_term_epsilon 0
+
+
+
+# New rational function
+# Approximation bounds are [2.000000e-02,5.000000e+01]
+# Precision of arithmetic is 65
+# Degree of the approximation is (6,6)
+# Approximating the function (x+4*0.000000^2)^(1/4) (x+4*1.000000^2)^(0/4) (x+4*1.000000^2)^(0/4) (x+4*1.000000^2)^(0/4)
+# Converged at 313 iterations, error = 1.515132e-05
+
+
+# Rational function for MD
+y_MD -1 0 0 0
+z_MD 4 4 4 4
+m_MD 0.000000 1.000000 1.000000 1.000000
+order_MD 6
+
+res_MD NORM  2.0035838418319055e-01 
+res_MD 0  1.6089619700034339e-02
+res_MD 1  5.2075939216247140e-02
+res_MD 2  1.7299810700423821e-01
+res_MD 3  5.9783724002907257e-01
+res_MD 4  2.3063654482894740e+00
+res_MD 5  1.5868596323671357e+01
+
+pole_MD 99.9
+pole_MD 0 5.9246187607994976e-03
+pole_MD 1 6.1679058754489605e-02
+pole_MD 2 3.5332103905499312e-01
+pole_MD 3 1.8640825764563929e+00
+pole_MD 4 1.0275478485280116e+01
+pole_MD 5 8.1016349994659194e+01
+
+# CHECK: f(2.000000e-02) = 2.659108e+00 = 2.659148e+00?
+
+
+
+# New rational function
+# Approximation bounds are [2.000000e-02,5.000000e+01]
+# Precision of arithmetic is 65
+# Degree of the approximation is (6,6)
+# Approximating the function (x+4*0.000000^2)^(1/8) (x+4*1.000000^2)^(0/8) (x+4*1.000000^2)^(0/8) (x+4*1.000000^2)^(0/8)
+# Converged at 314 iterations, error = 8.140949e-06
+
+
+# Rational function for GR
+y_GR 1 0 0 0
+z_GR 8 8 8 8
+m_GR 0.000000 1.000000 1.000000 1.000000
+order_GR 6
+
+res_GR NORM  2.2231956780463324e+00 
+res_GR 0  -1.9829856353425174e-03
+res_GR 1  -1.4094809881415832e-02
+res_GR 2  -8.9639421822227741e-02
+res_GR 3  -5.8322796414232880e-01
+res_GR 4  -4.5123946696300674e+00
+res_GR 5  -9.5059971756102911e+01
+
+pole_GR 99.9
+pole_GR 0 1.0516496796568211e-02
+pole_GR 1 8.7160697505863152e-02
+pole_GR 2 4.8363725652222034e-01
+pole_GR 3 2.5473481002404794e+00
+pole_GR 4 1.4405517772037626e+01
+pole_GR 5 1.3666238033906589e+02
+
+# CHECK: f(2.000000e-02) = 6.132426e-01 = 6.132376e-01?
+
+
+# Rational function for FA
+y_FA -1 0 0 0
+z_FA 8 8 8 8
+m_FA 0.000000 1.000000 1.000000 1.000000
+order_FA 6
+
+res_FA NORM  4.4980296150933752e-01 
+res_FA 0  5.0897883022618402e-03
+res_FA 1  2.1744495323371360e-02
+res_FA 2  8.9879727402609813e-02
+res_FA 3  3.8323004382469139e-01
+res_FA 4  1.8553157364071644e+00
+res_FA 5  1.7929879898002845e+01
+
+pole_FA 99.9
+pole_FA 0 7.3173026660222993e-03
+pole_FA 1 6.9417845010825499e-02
+pole_FA 2 3.9256511503300096e-01
+pole_FA 3 2.0676653556239333e+00
+pole_FA 4 1.1473061008176671e+01
+pole_FA 5 9.5088699149922675e+01
+
+# CHECK: f(2.000000e-02) = 1.630676e+00 = 1.630689e+00?
