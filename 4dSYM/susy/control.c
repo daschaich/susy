@@ -41,7 +41,7 @@ int main(int argc, char *argv[]) {
   setup_restrict_fourier(key, restrict);
 #endif
 
-  // Load input and run (loop removed)
+  // Load input and run
   if (readin(prompt) != 0) {
     node0_printf("ERROR in readin, aborting\n");
     terminate(1);
