@@ -42,7 +42,14 @@ int initial_set() {
     IF_OK status += get_i(stdin, prompt, "ny", &par_buf.ny);
     IF_OK status += get_i(stdin, prompt, "nz", &par_buf.nz);
     IF_OK status += get_i(stdin, prompt, "nt", &par_buf.nt);
+    IF_OK status += get_i(stdin, prompt, "PBC", &par_buf.PBC);
     IF_OK status += get_i(stdin, prompt, "iseed", &par_buf.iseed);
+
+    // Number of Nth roots to take (in addition to 1/4 power)
+    IF_OK status += get_i(stdin, prompt, "Nroot", &par_buf.Nroot);
+
+    // RHMC degree
+    IF_OK status += get_i(stdin, prompt, "Norder", &par_buf.Norder);
 
     if (status > 0)
       par_buf.stopflag = 1;
@@ -59,7 +66,21 @@ int initial_set() {
   ny = par_buf.ny;
   nz = par_buf.nz;
   nt = par_buf.nt;
+  PBC = par_buf.PBC;
   iseed = par_buf.iseed;
+
+  // Set up stuff for RHMC and multi-mass CG
+  Nroot = par_buf.Nroot;
+  fnorm = malloc(Nroot * sizeof(fnorm));
+  max_ff = malloc(Nroot * sizeof(max_ff));
+
+  Norder = par_buf.Norder;
+  amp = malloc(Norder * sizeof(amp));
+  amp4 = malloc(Norder * sizeof(amp4));
+  amp8 = malloc(Norder * sizeof(amp8));
+  shift = malloc(Norder * sizeof(shift));
+  shift4 = malloc(Norder * sizeof(shift4));
+  shift8 = malloc(Norder * sizeof(shift8));
 
   this_node = mynode();
   number_of_nodes = numnodes();

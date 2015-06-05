@@ -141,7 +141,7 @@ int congrad_multi_field(Twist_Fermion *src, Twist_Fermion **psim,
     // alpha_ip1[j]
     rsqnew = 0;
     FORALLSITES(i, s)
-      rsqnew += (double)magsq_TF( &(rm[i]));
+      rsqnew += (double)magsq_TF(&(rm[i]));
 
     g_doublesum(&rsqnew);
     alpha[0] = rsqnew / rsq;

@@ -100,7 +100,7 @@ int update_step(double *fnorm, double *gnorm,
 
 #ifndef PUREGAUGE
   // Do conjugate gradient to get (Mdag M)^(-1 / 4) chi
-  for (n = 0; n < NROOT; n++) {
+  for (n = 0; n < Nroot; n++) {
     tr = fermion_force(f_eps * LAMBDA, src[n], psim[n]);
     fnorm[n] += tr;
     if (tr > max_ff[n])
@@ -116,7 +116,7 @@ int update_step(double *fnorm, double *gnorm,
 
 #ifndef PUREGAUGE
     // Do conjugate gradient to get (Mdag M)^(-1 / 4) chi
-    for (n = 0; n < NROOT; n++) {
+    for (n = 0; n < Nroot; n++) {
       iters += congrad_multi_field(src[n], psim[n], niter, rsqmin, &final_rsq);
       tr = fermion_force(f_eps * LAMBDA_MID, src[n], psim[n]);
       fnorm[n] += tr;
@@ -131,7 +131,7 @@ int update_step(double *fnorm, double *gnorm,
 
 #ifndef PUREGAUGE
     // Do conjugate gradient to get (Mdag M)^(-1 / 4) chi
-    for (n = 0; n < NROOT; n++) {
+    for (n = 0; n < Nroot; n++) {
       iters += congrad_multi_field(src[n], psim[n], niter, rsqmin, &final_rsq);
 
       if (i_multi0 < nsteps[0])
@@ -155,10 +155,10 @@ int update() {
   int i, n, iters = 0;
   Real final_rsq;
   double startaction, endaction, change;
-  Twist_Fermion **src = malloc(NROOT * sizeof(**src));
-  Twist_Fermion ***psim = malloc(NROOT * sizeof(***psim));
+  Twist_Fermion **src = malloc(Nroot * sizeof(**src));
+  Twist_Fermion ***psim = malloc(Nroot * sizeof(***psim));
 
-  for (n = 0; n < NROOT; n++) {
+  for (n = 0; n < Nroot; n++) {
     src[n] = malloc(sites_on_node * sizeof(Twist_Fermion));
     psim[n] = malloc(Norder * sizeof(Twist_Fermion*));
     for (i = 0; i < Norder; i++)
@@ -173,7 +173,7 @@ int update() {
   // Set up the fermion variables, if needed
 #ifndef PUREGAUGE
   // Compute g and src = (Mdag M)^(1 / 8) g
-  for (n = 0; n < NROOT; n++)
+  for (n = 0; n < Nroot; n++)
     iters += grsource(src[n]);
 
   // Do a CG to get psim,
@@ -184,7 +184,7 @@ int update() {
   node0_printf("Calling CG in update_o -- original action\n");
 #endif
   // congrad_multi_field initializes psim and calls fermion_rep()
-  for (n = 0; n < NROOT; n++)
+  for (n = 0; n < Nroot; n++)
     iters += congrad_multi_field(src[n], psim[n], niter, rsqmin, &final_rsq);
 #endif // ifndef PUREGAUGE
 
@@ -192,7 +192,7 @@ int update() {
   startaction = d_action(src, psim);
   gnorm = 0.0;
   max_gf = 0.0;
-  for (n = 0; n < NROOT; n++) {
+  for (n = 0; n < Nroot; n++) {
     fnorm[n] = 0.0;
     max_ff[n] = 0.0;
   }
@@ -201,7 +201,7 @@ int update() {
   // by re-measuring after applying a random gauge transformation
   // at a single site in a lattice with at least L=4 in all directions
 //  node0_printf("BEFORE GTRANS %.8g\n", startaction);
-//  for (n = 0; n < NROOT; n++) {
+//  for (n = 0; n < Nroot; n++) {
 //    random_gauge_trans(src[n]);
 //    congrad_multi_field(src[n], psim[n], niter, rsqmin, &final_rsq);
 //  }
@@ -256,7 +256,7 @@ int update() {
   node0_printf("CHECK: delta S = %.4g\n", (double)(change));
 #endif // ifdef HMC
 
-  for (n = 0; n < NROOT; n++) {
+  for (n = 0; n < Nroot; n++) {
     free(src[n]);
     for (i = 0; i < Norder; i++)
       free(psim[n][i]);
@@ -269,7 +269,7 @@ int update() {
     node0_printf("IT_PER_TRAJ %d\n", iters);
     node0_printf("MONITOR_FORCE_GAUGE    %.4g %.4g\n",
                  gnorm / (double)(2 * nsteps[0]), max_gf);
-    for (n = 0; n < NROOT; n++) {
+    for (n = 0; n < Nroot; n++) {
       node0_printf("MONITOR_FORCE_FERMION%d %.4g %.4g\n",
                    n, fnorm[n] / (double)(2 * nsteps[0]), max_ff[n]);
     }

@@ -103,7 +103,7 @@ int d_bilinear() {
     return 0;
   register int i;
   register site *s;
-  int mu, isrc, iters, tot_iters = 0;
+  int mu, isrc, iters, tot_iters = 0, sav = Norder;
   Real size_r, norm;
   double_complex tc, StoL, LtoS, ave = cmplx(0.0, 0.0);
   su3_vector tvec;
@@ -179,7 +179,7 @@ int d_bilinear() {
   node0_printf("BILIN %.6g %.6g ( ave over %d )\n", ave.real, ave.imag, nsrc);
 
   // Reset multi-mass CG and clean up
-  Norder = DEGREE;
+  Norder = sav;
   free(g_rand);
   free(src);
   free(psim[0]);
@@ -200,7 +200,7 @@ int d_susyTrans() {
     return 0;
   register int i;
   register site *s;
-  int mu, isrc, iters, tot_iters = 0;
+  int mu, isrc, iters, tot_iters = 0, sav = Norder;
   Real size_r, norm;
   double sum = 0.0;
   double_complex tc, StoL, LtoS, ave = cmplx(0.0, 0.0);
@@ -331,7 +331,7 @@ int d_susyTrans() {
                ave.real, ave.imag, sum, sum - ave.real, nsrc);
 
   // Reset multi-mass CG and clean up
-  Norder = DEGREE;
+  Norder = sav;
   free(g_rand);
   free(src);
   free(psim[0]);

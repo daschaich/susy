@@ -9,7 +9,12 @@ typedef struct {
 
   // Initialization parameters
   int nx, ny, nz, nt;     // Lattice dimensions
+  int PBC;                // Temporal fermion boundary condition
   int iseed;              // For random numbers
+
+  // RHMC and multi-mass CG parameters
+  // Number of Nth roots and polynomial order
+  int Nroot, Norder;
 
   int warms;              // The number of warmup trajectories
   int trajecs;            // The number of real trajectories

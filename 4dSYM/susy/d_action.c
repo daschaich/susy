@@ -177,7 +177,7 @@ double d_action(Twist_Fermion **src, Twist_Fermion ***sol) {
   total = g_act + bmass_act + det_act;
 #ifndef PUREGAUGE
   int n;
-  for (n = 0; n < NROOT; n++) {
+  for (n = 0; n < Nroot; n++) {
     f_act = d_fermion_action(src[n], sol[n]);
     node0_printf("fermion%d %.8g ", n, f_act);
     total += f_act;

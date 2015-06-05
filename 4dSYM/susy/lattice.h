@@ -70,6 +70,7 @@ typedef struct {
 
 // Global variables
 EXTERN int nx, ny, nz, nt;  // Lattice dimensions
+EXTERN int PBC;             // Temporal fermion boundary condition
 EXTERN int volume;          // Volume of lattice
 EXTERN int iseed;           // Random number seed
 EXTERN int warms, trajecs, niter, propinterval;
@@ -107,11 +108,11 @@ EXTERN int this_node;           // Node number of this node
 
 // Stuff for multi-mass CG and RHMC
 EXTERN int nsteps[2];           // Fermion and gauge steps
-EXTERN Real ampdeg, amp[DEGREE], shift[DEGREE];
-EXTERN Real ampdeg4, amp4[DEGREE], shift4[DEGREE];
-EXTERN Real ampdeg8, amp8[DEGREE], shift8[DEGREE];
-EXTERN int Norder;
-EXTERN Real max_gf, max_ff[NROOT], gnorm, fnorm[NROOT];
+EXTERN Real ampdeg, *amp, *shift;
+EXTERN Real ampdeg4, *amp4, *shift4;
+EXTERN Real ampdeg8, *amp8, *shift8;
+EXTERN int Nroot, Norder;
+EXTERN Real gnorm, *fnorm, max_gf, *max_ff;
 
 // Each node maintains a structure with the pseudorandom number
 // generator state
