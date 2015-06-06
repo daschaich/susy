@@ -113,9 +113,9 @@ void d_correlator_r() {
         // Symmetric by construction so ignore nu < mu
         index = i * len;
         iter = 0;
-        for (mu = 0; mu < NDIMS ; mu++) {
+        for (mu = 0; mu < NDIMS; mu++) {
           ops[index] -= 0.25 * sub;
-          for (nu = mu; nu < NDIMS ; nu++) {
+          for (nu = mu; nu < NDIMS; nu++) {
             tr = P[mu][a] * P[nu][b] + P[nu][a] * P[mu][b];
             ops[index] += 0.5 * tr * traceBB[a][b][i];
             index++;
@@ -216,8 +216,8 @@ void d_correlator_r() {
           // SUGRA, averaging over ten components with mu <= nu
           a = 0;
           tr = 0.0;
-          for (mu = 0; mu < NDIMS ; mu++) {
-            for (nu = mu; nu < NDIMS ; nu++) {
+          for (mu = 0; mu < NDIMS; mu++) {
+            for (nu = mu; nu < NDIMS; nu++) {
               FORALLSITES(i, s) {
                 index = i * len + a;
                 tr += ops[index] * ((Real *)gen_pt[0][i])[a];

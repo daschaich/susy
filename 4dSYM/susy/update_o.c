@@ -99,8 +99,8 @@ int update_step(double *fnorm, double *gnorm,
   g_eps = f_eps / (Real)(2.0 * nsteps[1]);
 
 #ifndef PUREGAUGE
-  // Do conjugate gradient to get (Mdag M)^(-1 / 4) chi
   for (n = 0; n < Nroot; n++) {
+    // CG called before update_step
     tr = fermion_force(f_eps * LAMBDA, src[n], psim[n]);
     fnorm[n] += tr;
     if (tr > max_ff[n])
@@ -115,8 +115,8 @@ int update_step(double *fnorm, double *gnorm,
       max_gf = tr;
 
 #ifndef PUREGAUGE
-    // Do conjugate gradient to get (Mdag M)^(-1 / 4) chi
     for (n = 0; n < Nroot; n++) {
+      // Do conjugate gradient to get (Mdag M)^(-1 / 4) chi
       iters += congrad_multi_field(src[n], psim[n], niter, rsqmin, &final_rsq);
       tr = fermion_force(f_eps * LAMBDA_MID, src[n], psim[n]);
       fnorm[n] += tr;
@@ -130,8 +130,8 @@ int update_step(double *fnorm, double *gnorm,
       max_gf = tr;
 
 #ifndef PUREGAUGE
-    // Do conjugate gradient to get (Mdag M)^(-1 / 4) chi
     for (n = 0; n < Nroot; n++) {
+      // Do conjugate gradient to get (Mdag M)^(-1 / 4) chi
       iters += congrad_multi_field(src[n], psim[n], niter, rsqmin, &final_rsq);
 
       if (i_multi0 < nsteps[0])
