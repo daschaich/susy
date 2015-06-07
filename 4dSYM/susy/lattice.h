@@ -168,8 +168,9 @@ EXTERN site *lattice;
 EXTERN char **gen_pt[N_POINTERS];
 
 #ifdef CORR
-  su3_matrix_f *Ba[NUMLINK];
-  Real *traceBB[NUMLINK][NUMLINK];
+EXTERN su3_matrix_f *Ba[NUMLINK];         // Scalar field interpolating op
+EXTERN Real *traceBB[NUMLINK][NUMLINK];   // Tr[B_a B_b]
+EXTERN double vevK;                       // Konishi vacuum subtraction
 #endif
 
 #ifdef BILIN

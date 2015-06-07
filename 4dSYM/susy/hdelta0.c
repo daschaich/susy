@@ -1,13 +1,8 @@
 // -----------------------------------------------------------------
-// Twist_Fermion matrix--vector operation, D^2 + fmass^2
-#include "susy_includes.h"
-// -----------------------------------------------------------------
-
-
-
-// -----------------------------------------------------------------
-// dest = (D^2 + fmass^2).src
+// Twist_Fermion matrix--vector operation, dest = (D^2 + fmass^2).src
 // Use tempTF for temporary storage
+#include "susy_includes.h"
+
 void hdelta0_field(Twist_Fermion *src, Twist_Fermion *dest) {
   register int i;
   register site *s;

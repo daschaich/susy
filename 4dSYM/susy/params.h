@@ -34,6 +34,10 @@ typedef struct {
   Real rsqmin;                  // For deciding on convergence
   char startfile[MAXFILENAME], savefile[MAXFILENAME];
 
+#ifdef CORR
+  double vevK;                  // Konishi vacuum subtraction
+#endif
+
 #ifdef BILIN
   int nsrc;                     // Number of stochastic sources
 #endif

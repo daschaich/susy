@@ -1,5 +1,6 @@
 // -----------------------------------------------------------------
-// Measure density of monopole world lines in non-diagonal cubes
+// Measure density of U(1) monopole world lines in doubled 4-cells
+// omitting the fifth link
 #include "susy_includes.h"
 
 void monopole() {

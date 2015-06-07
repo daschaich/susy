@@ -242,6 +242,11 @@ int readin(int prompt) {
     IF_OK status += get_f(stdin, prompt, "rho", &par_buf.rho);
 #endif
 
+#ifdef CORR
+    // Konishi vacuum subtraction
+    IF_OK status += get_f(stdin, prompt, "vevK", &par_buf.vevK);
+#endif
+
     // Maximum conjugate gradient iterations
     IF_OK status += get_i(stdin, prompt, "max_cg_iterations", &par_buf.niter);
 
@@ -335,6 +340,9 @@ int readin(int prompt) {
 #ifdef STOUT
   Nstout = par_buf.Nstout;
   rho = par_buf.rho;
+#endif
+#ifdef CORR
+  vevK = par_buf.vevK;
 #endif
 #ifdef PHASE
   ckpt_load = par_buf.ckpt_load;

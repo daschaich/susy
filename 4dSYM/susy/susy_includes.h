@@ -113,11 +113,11 @@ void rsymm();
 // Konishi and SUGRA correlators
 void setup_P();
 void compute_Ba();
-void d_correlator();    // Projected to zero spatial momentum
+void d_konishi();       // Operators averaged over each timeslice
 
 // Map (x, y, z, t) to scalar displacements r
 Real A4map(int x_in, int y_in, int z_in, int t_in);
-void d_correlator_r();  // Functions of r
+void d_correlator_r();            // Functions of r
 #endif
 #ifdef BILIN
 // vevs to explore susy breaking

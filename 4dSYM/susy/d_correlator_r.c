@@ -1,5 +1,5 @@
 // -----------------------------------------------------------------
-// Measure the Konishi and SUGRA scalar correlation functions
+// Measure the Konishi and SUGRA correlation functions
 // Use general gathers, but combine Konishi and SUGRA into single vector
 // Then only need one general gather per displacement
 #include "susy_includes.h"
@@ -45,11 +45,12 @@ Real A4map(x_in, y_in, z_in, t_in) {
 // -----------------------------------------------------------------
 // Both Konishi and SUGRA correlators as functions of r
 // For gathering, all operators live in array of len = 10 + numK
+// vevK is Konishi vacuum subtraction; assume this vanishes for SUGRA
 void d_correlator_r() {
   register int i;
   register site *s;
   int a, b, j, mu, nu, index, x_dist, y_dist, z_dist, t_dist;
-  int y_start, z_start, t_start, iter, numK = 2, len = 10 + numK;
+  int y_start, z_start, t_start, iter, numK = 1, len = 10 + numK;
   int disp[NDIMS] = {0, 0, 0, 0}, this_r, total_r = 0;
   int MAX_pts = 8 * MAX_X * MAX_X * MAX_X, count[MAX_pts];
   Real MAX_r = 100.0 * MAX_X, tr, sub;
@@ -71,14 +72,15 @@ void d_correlator_r() {
   // Assume MAX_T >= MAX_X
   node0_printf("d_correlator_r: MAX = %d --> r < %.6g\n", MAX_X, MAX_r);
 
-  // Initialize Konishi and SUGRA operators
+  // Do vacuum subtraction while initializing Konishi and SUGRA operators
   // Components [0, 9] of ops are the SUGRA, [10--(len-1)] are Konishi
   FORALLSITES(i, s) {
     index = i * len;
-    for (a = 0; a < len; a++) {
+    for (a = 0; a < len - numK; a++) {
       ops[index] = 0.0;
       index++;
     }
+    ops[index] = -1.0 * vevK;
   }
   for (j = 0; j < MAX_pts; j++) {
     count[j] = 0;
@@ -101,9 +103,6 @@ void d_correlator_r() {
       tr = traceBB[a][a][i];
       ops[index] += tr;
       for (b = 0; b < NUMLINK; b++) {
-        tr = traceBB[a][a][i] * traceBB[b][b][i];
-        ops[index + 1] += tr;
-
         // Compute mu--nu trace to be subtracted from SUGRA
         sub = P[0][a] * P[0][b] * traceBB[a][b][i];
         for (mu = 1; mu < NDIMS; mu++)
@@ -246,13 +245,13 @@ void d_correlator_r() {
     node0_printf("CORR_K %d %.6g", j, lookup[j]);
     for (a = 0; a < numK; a++) {
       for (b = 0; b < numK; b++)
-        node0_printf(" %.16g", CK[j][a * numK + b] * tr);
+        node0_printf(" %.8g", CK[j][a * numK + b] * tr);
     }
     node0_printf("\n");
   }
   for (j = 0; j < total_r; j++) {
     tr = 0.1 / (Real)(count[j] * volume);
-    node0_printf("CORR_S %d %.6g %.16g\n", j, lookup[j], CS[j] * tr);
+    node0_printf("CORR_S %d %.6g %.8g\n", j, lookup[j], CS[j] * tr);
   }
   free(ops);
 }
