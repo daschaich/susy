@@ -1,7 +1,7 @@
 // -----------------------------------------------------------------
 // Multi-mass conjugate gradient algorithm a la B. Jegerlehner
-// The number of masses is Norder; it is defined in defines.h
-// shift[Norder] is the array of mass values, also set in setup_rhmc.c
+// The number of masses is runtime input Norder
+// shift[Norder] is the array of mass values, set up in setup_rhmc.c
 // BEWARE: The temporary vector pm[0] is never malloced or used
 
 // At least for now we hard-code a zero initial guess
