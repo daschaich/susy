@@ -26,10 +26,6 @@
 //#define NCOL 4
 //#define DIMF 16
 
-// SU(2)
-//#define NCOL 2
-//#define DIMF 3
-
 // Restrictions due to anti_hermitian structs
 #if (NCOL > 4)
   #error "NCOL must be <5!"

@@ -210,7 +210,7 @@ void blocked_rsymm(int Nstout, int block) {
   register site *s;
   int j, bl = 2, max, dir_normal, dir_inv, dist, dist_inv, mu, length;
   double rsymm_loop, wloop, invlink[NUMLINK], invlink_sum = 0.0, td;
-  double invlinkSq;
+  double invlinkSq = 0.0;
   complex tc;
   su3_matrix_f tmat;
 
@@ -277,24 +277,23 @@ void blocked_rsymm(int Nstout, int block) {
   // Tr[U^{-1} (U^{-1})^dag] / N and corresponding width
   // Just like d_link() but use s->mom instead of s->linkf
   for (dir_inv = XUP; dir_inv < NUMLINK; dir_inv++) {
-    invlink[dir_inv] = 0;
+    invlink[dir_inv] = 0.0;
     FORALLSITES(i, s) {
       td = realtrace_su3_f(&(s->mom[dir_inv]), &(s->mom[dir_inv]));
       invlink[dir_inv] += td;
       invlinkSq += td * td;
     }
-    g_doublesum(&(invlink[dir_inv]));
-  }
-  g_doublesum(&(invlinkSq));
-
-  node0_printf("BINVLINK %d %d", Nstout, block);
-  for (dir_inv = XUP; dir_inv < NUMLINK; dir_inv++) {
     invlink[dir_inv] /= ((double)volume * NCOL);
+    g_doublesum(&(invlink[dir_inv]));
     invlink_sum += invlink[dir_inv];
-    node0_printf(" %.6g", invlink[dir_inv]);
   }
   invlink_sum /= ((double)NUMLINK);
   invlinkSq /= ((double)volume * NCOL * NCOL * NUMLINK);
+  g_doublesum(&(invlinkSq));
+
+  node0_printf("BINVLINK %d %d", Nstout, block);
+  for (dir_inv = XUP; dir_inv < NUMLINK; dir_inv++)
+    node0_printf(" %.6g", invlink[dir_inv]);
   td = sqrt(invlinkSq - invlink_sum * invlink_sum);
   node0_printf(" %.6g %.6g\n", invlink_sum, td);
 

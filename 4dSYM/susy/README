@@ -33,8 +33,8 @@ NCOL and DIMF defined in ../include/su3.h
 For now we fix U(NCOL) gauge group with DIMF=NCOL*NCOL for adjoint rep
 
 # Boundary conditions for fermions:
-Only supports periodic spatial boundary conditions for now
-PBC = +/-1 chooses periodic or anti-periodic temporal boundary conditions, defined in defines.h
+Only supports periodic spatial boundary conditions (BCs) for now
+Input parameter PBC = +/-1 chooses periodic or anti-periodic temporal BCs
 # ------------------------------------------------------------------
 
 
@@ -52,7 +52,11 @@ nx 6                  # Lattice volume
 ny 6
 nz 6
 nt 6
+PBC -1                # Anti-periodic temporal boundary conditions for the fermions
 iseed 41              # Random number generator seed
+
+Nroot 1               # Number of quarter-roots to accelerate MD evolution
+Norder 15             # Order of rational approximation for each quarter-root
 
 warms 0               # Number of trajectories without measurements
 trajecs 10            # Number of trajectories with measurements
