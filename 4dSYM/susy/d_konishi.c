@@ -76,7 +76,7 @@ void d_konishi() {
   for (t = 0; t < nt; t++) {
     node0_printf("KONISHI %d", t);
     for (mu = 0; mu < numK; mu++)
-      node0_printf(" %.16g", OK[mu][t]);
+      node0_printf(" %.16g", OK[mu][t] - vevK);
     node0_printf("\n");
   }
 
