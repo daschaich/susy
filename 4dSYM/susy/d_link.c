@@ -8,10 +8,10 @@
 
 // -----------------------------------------------------------------
 // Tr[Udag U] / N
-void d_link(int bl) {
+double d_link(double *linktr, double *width) {
   register int i, dir;
   register site *s;
-  double linktr[NUMLINK], sum = 0.0, linktrSq = 0.0, td;
+  double ave = 0.0, linktrSq = 0.0, td;
 
   for (dir = XUP; dir < NUMLINK; dir++) {
     linktr[dir] = 0.0;
@@ -20,23 +20,16 @@ void d_link(int bl) {
       linktr[dir] += td;
       linktrSq += td * td;
     }
-    g_doublesum(&(linktr[dir]));
-  }
-  g_doublesum(&(linktrSq));
-
-  if (bl == 0) {            // Braces suppress compiler complaint
-    node0_printf("FLINK");
-  }
-  else
-    node0_printf("BFLINK %d", bl);
-  for (dir = XUP; dir < NUMLINK; dir++) {
     linktr[dir] /= ((double)volume * NCOL);
-    sum += linktr[dir];
-    node0_printf(" %.6g", linktr[dir]);
+    g_doublesum(&(linktr[dir]));
+    ave += linktr[dir];
   }
-  sum /= ((double)NUMLINK);
+  ave /= ((double)NUMLINK);
   linktrSq /= ((double)volume * NCOL * NCOL * NUMLINK);
-  node0_printf(" %.6g %.6g\n", sum, sqrt(linktrSq - sum * sum));
+  g_doublesum(&linktrSq);
+  *width = sqrt(linktrSq - ave * ave);
+
+  return ave;
 }
 // -----------------------------------------------------------------
 
@@ -44,10 +37,10 @@ void d_link(int bl) {
 
 // -----------------------------------------------------------------
 // Tr[Udag U] / N for links in the fermion irrep
-void d_link_frep(int bl) {
+double d_link_frep(double *linktr, double *width) {
   register int i, dir;
   register site *s;
-  double linktr[NUMLINK], sum = 0.0, linktrSq = 0.0, td;
+  double ave = 0.0, linktrSq = 0.0, td;
 
   for (dir = XUP; dir < NUMLINK; dir++) {
     linktr[dir] = 0.0;
@@ -56,21 +49,15 @@ void d_link_frep(int bl) {
       linktr[dir] += td;
       linktrSq += td * td;
     }
-    g_doublesum(&(linktr[dir]));
-  }
-
-  if (bl == 0) {            // Braces suppress compiler complaint
-    node0_printf("ALINK");
-  }
-  else
-    node0_printf("BALINK %d", bl);
-  for (dir = XUP; dir < NUMLINK; dir++) {
     linktr[dir] /= ((double)volume * NCOL);
-    sum += linktr[dir];
-    node0_printf(" %.6g", linktr[dir]);
+    g_doublesum(&(linktr[dir]));
+    ave += linktr[dir];
   }
-  sum /= ((double)NUMLINK);
+  ave /= ((double)NUMLINK);
   linktrSq /= ((double)volume * NCOL * NCOL * NUMLINK);
-  node0_printf(" %.6g %.6g\n", sum, sqrt(linktrSq - sum * sum));
+  g_doublesum(&linktrSq);
+  *width = sqrt(linktrSq - ave * ave);
+
+  return ave;
 }
 // -----------------------------------------------------------------
