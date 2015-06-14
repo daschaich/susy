@@ -177,10 +177,16 @@ EXTERN double vevK;                       // Konishi vacuum subtraction
 EXTERN int nsrc;
 #endif
 
-#ifdef STOUT
+#ifdef APE
+// APE smearing stuff
+EXTERN int Nsmear;
+EXTERN double alpha;
+#endif
+
+#ifdef SMEAR
 // Stout smearing stuff
-EXTERN int Nstout;
-EXTERN double rho;
+EXTERN int Nsmear;
+EXTERN double alpha;
 #endif
 // These are needed for smearing a `hot-start' random configuration
 EXTERN su3_matrix_f *thin_link[NUMLINK];
@@ -216,12 +222,6 @@ EXTERN double eps;
 EXTERN double delta;    // Unused, but may be useful to record in the output
 EXTERN double starSq, star;     // Ratio (Omega / Omega_*)^2 and its sqrt
 EXTERN double *coeffs;
-#endif
-
-// Up to 20 concurrent timers for timing, not currently being used
-#ifdef TIMING
-EXTERN double tmptime[20];
-EXTERN double time_stout;           // Uses tmptime[0] in stout_smear
 #endif
 
 #endif // _LATTICE_H

@@ -2,7 +2,7 @@
 // Konishi and SUGRA operators integrated over lattice volume
 #include "susy_includes.h"
 
-void blocked_ops(int Nstout, int block) {
+void blocked_ops(int Nsmear, int block) {
   register int i;
   register site *s;
   int a, b, mu, nu, bl = 2, numK = 2;
@@ -54,7 +54,7 @@ void blocked_ops(int Nstout, int block) {
   if (block <= 0)
     bl = 1;
   norm = (Real)(bl * bl * bl * bl);
-  node0_printf("OK %d %d", Nstout, block);
+  node0_printf("OK %d %d", Nsmear, block);
   for (mu = 0; mu < numK; mu++)
     node0_printf(" %.8g", OK[mu] / norm);
   node0_printf("\n");
@@ -66,6 +66,6 @@ void blocked_ops(int Nstout, int block) {
     for (nu = mu + 1; nu < NDIMS; nu++)
       tr += OS[mu][nu];
   }
-  node0_printf("OS %d %d %.8g\n", Nstout, block, tr / norm);
+  node0_printf("OS %d %d %.8g\n", Nsmear, block, tr / norm);
 }
 // -----------------------------------------------------------------

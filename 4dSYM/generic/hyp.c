@@ -201,10 +201,6 @@ void block_hyp() {
   register int i, dir;
   register site *s;
 
-#ifdef TIMING
-  TIC(0)
-#endif
-
   for (dir = XUP; dir < NUMLINK; dir++) {
     FORALLSITES(i, s)
       su3mat_copy_f(&(s->linkf[dir]), &(thin_link[dir][i]));
@@ -218,9 +214,5 @@ void block_hyp() {
     FORALLSITES(i, s)
       su3mat_copy_f(&(smeared_link[dir][i]), &(s->linkf[dir]));
   }
-
-#ifdef TIMING
-  TOC(0, time_block_hyp)
-#endif
 }
 // -----------------------------------------------------------------

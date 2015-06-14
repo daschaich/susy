@@ -236,10 +236,10 @@ int readin(int prompt) {
     IF_OK status += get_f(stdin, prompt, "G", &par_buf.G);
     IF_OK status += get_f(stdin, prompt, "B", &par_buf.B);
 
-#ifdef STOUT
-    // Stout smearing stuff
-    IF_OK status += get_i(stdin, prompt, "Nstout", &par_buf.Nstout);
-    IF_OK status += get_f(stdin, prompt, "rho", &par_buf.rho);
+#ifdef SMEAR
+    // Smearing stuff -- passed to either APE or stout routines by application
+    IF_OK status += get_i(stdin, prompt, "Nsmear", &par_buf.Nsmear);
+    IF_OK status += get_f(stdin, prompt, "alpha", &par_buf.alpha);
 #endif
 
 #ifdef CORR
@@ -337,9 +337,9 @@ int readin(int prompt) {
   eig_tol = par_buf.eig_tol;
   maxIter = par_buf.maxIter;
 #endif
-#ifdef STOUT
-  Nstout = par_buf.Nstout;
-  rho = par_buf.rho;
+#ifdef SMEAR
+  Nsmear = par_buf.Nsmear;
+  alpha = par_buf.alpha;
 #endif
 #ifdef CORR
   vevK = par_buf.vevK;

@@ -5,7 +5,7 @@
 // Use tempmat1 and tempmat2 for temporary storage
 #include "susy_includes.h"
 
-void blocked_plaq(int Nstout, int block) {
+void blocked_plaq(int Nsmear, int block) {
   register int i, dir, dir2;
   register site *s;
   register su3_matrix_f *m1, *m4;
@@ -99,10 +99,10 @@ void blocked_plaq(int Nstout, int block) {
   st_sum /= ((double)(4.0 * volume));
   tr = (ss_sum + st_sum) / 2.0;
   node0_printf("BPLAQ %d %d %.8g %.8g %.8g\n",
-               Nstout, block, ss_sum, st_sum, tr);
+               Nsmear, block, ss_sum, st_sum, tr);
 
   CDIVREAL(det, norm, det);
-  node0_printf("BDET %d %d %.6g %.6g\n", Nstout, block, det.real, det.imag);
+  node0_printf("BDET %d %d %.6g %.6g\n", Nsmear, block, det.real, det.imag);
 
   plaq /= norm;
   plaqSq /= norm;
@@ -110,7 +110,7 @@ void blocked_plaq(int Nstout, int block) {
   reSq /= norm;
   im /= norm;
   imSq /= norm;
-  node0_printf("BWIDTHS %d %d %.6g %.6g %.6g\n", Nstout, block,
+  node0_printf("BWIDTHS %d %d %.6g %.6g %.6g\n", Nsmear, block,
                sqrt(plaqSq - plaq * plaq),
                sqrt(reSq - re * re), sqrt(imSq - im * im));
 }

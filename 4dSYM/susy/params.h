@@ -48,10 +48,10 @@ typedef struct {
   Real eig_tol;
 #endif
 
-#ifdef STOUT
-  // Stout-smearing parameters
-  int Nstout;
-  Real rho;
+#ifdef SMEAR
+  // Parameters for either APE or stout smearing
+  int Nsmear;
+  Real alpha;
 #endif
 
 #ifdef PHASE

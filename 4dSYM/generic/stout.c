@@ -131,14 +131,10 @@ void exp_mult() {
 // -----------------------------------------------------------------
 // Do stout smearing
 // Overwrite s->linkf and save original values in thin_link field
-void stout_smear(int Nstout, double rho) {
+void stout_smear(int Nstout, double alpha) {
   register int i, n, dir, dir2;
   register site *s;
   su3_matrix_f tmat;
-
-#ifdef TIMING
-  TIC(0)
-#endif
 
   for (dir = XUP; dir < NUMLINK; dir++) {
     FORALLSITES(i, s)
@@ -157,10 +153,10 @@ void stout_smear(int Nstout, double rho) {
                              F_OFFSET(linkf[dir2]), stp[dir]);
       }
 
-      // Multiply by rho Udag, take traceless anti-hermitian part
+      // Multiply by alpha Udag, take traceless anti-hermitian part
       FORALLSITES(i, s) {
         mult_su3_na_f(&(stp[dir][i]), &(s->linkf[dir]), &tmat);  // C.Udag
-        scalar_mult_su3_matrix_f(&tmat, rho, &(stp[dir][i]));
+        scalar_mult_su3_matrix_f(&tmat, alpha, &(stp[dir][i]));
         make_anti_hermitian(&(stp[dir][i]), &(Q[dir][i]));
       }
     }
@@ -173,9 +169,5 @@ void stout_smear(int Nstout, double rho) {
         su3mat_copy_f(&(smeared_link[dir][i]), &(s->linkf[dir]));
     }
   }
-
-#ifdef TIMING
-  TOC(0, time_stout)
-#endif
 }
 // -----------------------------------------------------------------

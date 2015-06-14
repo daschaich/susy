@@ -205,7 +205,7 @@ void blocked_rsymm_path(int *dir, int *sign, int *kind, int length, int bl) {
 
 // -----------------------------------------------------------------
 // Print both usual and transformed Wilson loops
-void blocked_rsymm(int Nstout, int block) {
+void blocked_rsymm(int Nsmear, int block) {
   register int i;
   register site *s;
   int j, bl = 2, max, dir_normal, dir_inv, dist, dist_inv, mu, length;
@@ -291,7 +291,7 @@ void blocked_rsymm(int Nstout, int block) {
   invlinkSq /= ((double)volume * NCOL * NCOL * NUMLINK);
   g_doublesum(&(invlinkSq));
 
-  node0_printf("BINVLINK %d %d", Nstout, block);
+  node0_printf("BINVLINK %d %d", Nsmear, block);
   for (dir_inv = XUP; dir_inv < NUMLINK; dir_inv++)
     node0_printf(" %.6g", invlink[dir_inv]);
   td = sqrt(invlinkSq - invlink_sum * invlink_sum);
@@ -356,7 +356,7 @@ void blocked_rsymm(int Nstout, int block) {
           g_doublesum(&rsymm_loop);
           // Format: normal [dir] inverted [dir] usual transformed
           node0_printf("BRSYMM %d %d %d [%d] %d [%d] %.8g %.8g\n",
-                       Nstout, block, dist, dir_normal, dist_inv, dir_inv,
+                       Nsmear, block, dist, dir_normal, dist_inv, dir_inv,
                        wloop / volume, rsymm_loop / volume);
         } // dist_inv
       } // dist

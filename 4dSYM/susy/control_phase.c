@@ -8,8 +8,9 @@
 
 // -----------------------------------------------------------------
 int main(int argc, char *argv[]) {
-  int prompt;
+  int prompt, dir;
   double dssplaq, dstplaq, dtime, plpMod = 0.0;
+  double linktr[NUMLINK], linktr_ave, linktr_width;
   complex plp = cmplx(99.0, 99.0);
 #ifndef PHASE
   node0_printf("Don't use control_phase unless compiling with -DPHASE!\n");
@@ -30,7 +31,7 @@ int main(int argc, char *argv[]) {
   setup_PtoP();
   setup_FQ();
 
-  // Load input and run (loop removed)
+  // Load input and run
   if (readin(prompt) != 0) {
     node0_printf("ERROR in readin, aborting\n");
     terminate(1);
@@ -47,11 +48,17 @@ int main(int argc, char *argv[]) {
   // Polyakov loop measurement
   plp = ploop(&plpMod);
 
-  // Tr[Udag.U] / N and plaquette measurements
-  d_link(0);
-  d_plaquette(&dssplaq, &dstplaq);
+  // Tr[Udag.U] / N
+  linktr_ave = d_link(linktr, &linktr_width);
+  node0_printf("FLINK");
+  for (dir = XUP; dir < NUMLINK; dir++)
+    node0_printf(" %.6g", linktr[dir]);
+  node0_printf(" %.6g %.6g\n", linktr_ave, linktr_width);
 
-  // Re(Polyakov) Im(Poyakov) cg_iters ss_plaq st_plaq
+  // Polyakov loop and plaquette measurements
+  // Format: GMES Re(Polyakov) Im(Poyakov) cg_iters ss_plaq st_plaq
+  plp = ploop(&plpMod);
+  d_plaquette(&dssplaq, &dstplaq);
   node0_printf("GMES %.8g %.8g 0 %.8g %.8g ",
                plp.real, plp.imag, dssplaq, dstplaq);
 

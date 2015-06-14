@@ -4,7 +4,7 @@
 // Use tempmat1 and tempmat2 for temporary storage
 #include "susy_includes.h"
 
-void blocked_ploop(int Nstout, int block) {
+void blocked_ploop(int Nsmear, int block) {
   register int i;
   register site *s;
   int j, bl = 2, d[4] = {0, 0, 0, 0};
@@ -54,6 +54,6 @@ void blocked_ploop(int Nstout, int block) {
   g_complexsum(&sum);
   plp.real = sum.real / ((Real)(nx * ny * nz * bl));
   plp.imag = sum.imag / ((Real)(nx * ny * nz * bl));
-  node0_printf("BPLOOP %d %d %.8g %.8g\n", Nstout, block, plp.real, plp.imag);
+  node0_printf("BPLOOP %d %d %.8g %.8g\n", Nsmear, block, plp.real, plp.imag);
 }
 // -----------------------------------------------------------------

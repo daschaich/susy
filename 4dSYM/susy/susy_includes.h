@@ -161,10 +161,10 @@ void monopole();
 
 #ifdef MCRG
 void block_mcrg(int bl);
-void blocked_plaq(int Nstout, int bl);    // Also monitors det and widths
-void blocked_ops(int Nstout, int bl);
-void blocked_ploop(int Nstout, int bl);
-void blocked_rsymm(int Nstout, int bl);
+void blocked_plaq(int Nsmear, int bl);    // Also monitors det and widths
+void blocked_ops(int Nsmear, int bl);
+void blocked_ploop(int Nsmear, int bl);
+void blocked_rsymm(int Nsmear, int bl);
 #endif
 // -----------------------------------------------------------------
 

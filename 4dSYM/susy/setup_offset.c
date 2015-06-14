@@ -2,7 +2,7 @@
 // label[k] labels the offset of the kth connection between psibar and psi
 // by an integer 1 to 4
 // The separation of the paths is in New York metric
-// It corresponds to our labeling of rho and lambda, lambda_1 = lambda(1,0,0,0)
+// It corresponds to our labeling lambda_1 = lambda(1,0,0,0)
 // offset[k] is the actual offset of the kth connection
 // This program only generates the positive offsets, 40 of the 80 total
 // The others can be found by using adjoints of these paths

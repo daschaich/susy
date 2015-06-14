@@ -8,9 +8,11 @@
 
 // -----------------------------------------------------------------
 int main(int argc, char *argv[]) {
-  int traj_done, prompt, s_iters, avs_iters = 0, avm_iters = 0, Nmeas = 0;
+  int prompt, dir;
+  int traj_done, s_iters, avs_iters = 0, avm_iters = 0, Nmeas = 0;
   Real f_eps, g_eps;
   double dssplaq, dstplaq, dtime, plpMod = 0.0;
+  double linktr[NUMLINK], linktr_ave, linktr_width;
   complex plp = cmplx(99.0, 99.0);
 
   // Setup
@@ -53,7 +55,11 @@ int main(int argc, char *argv[]) {
   node0_printf("START %.8g %.8g %.8g ", dssplaq, dstplaq, dssplaq + dstplaq);
   dssplaq = d_gauge_action(NODET);
   node0_printf("%.8g\n", dssplaq / (double)volume);
-  d_link(0);
+  linktr_ave = d_link(linktr, &linktr_width);
+  node0_printf("FLINK");
+  for (dir = XUP; dir < NUMLINK; dir++)
+    node0_printf(" %.6g", linktr[dir]);
+  node0_printf(" %.6g %.6g\n", linktr_ave, linktr_width);
 
   // Perform warmup trajectories
   f_eps = traj_length / (Real)nsteps[0];
@@ -70,15 +76,17 @@ int main(int argc, char *argv[]) {
     avs_iters += s_iters;
 
     // Do "local" measurements every trajectory!
-    // Polyakov loop measurement
+    // Tr[Udag.U] / N
+    linktr_ave = d_link(linktr, &linktr_width);
+    node0_printf("FLINK");
+    for (dir = XUP; dir < NUMLINK; dir++)
+      node0_printf(" %.6g", linktr[dir]);
+    node0_printf(" %.6g %.6g\n", linktr_ave, linktr_width);
+
+    // Polyakov loop and plaquette measurements
+    // Format: GMES Re(Polyakov) Im(Poyakov) cg_iters ss_plaq st_plaq
     plp = ploop(&plpMod);
-
-    // Tr[Udag.U] / N and plaquette measurements
-    d_link(0);
     d_plaquette(&dssplaq, &dstplaq);
-//    d_plaquette_frep(&dssplaq_frep, &dstplaq_frep);
-
-    // Re(Polyakov) Im(Poyakov) cg_iters ss_plaq st_plaq
     node0_printf("GMES %.8g %.8g %d %.8g %.8g ",
                  plp.real, plp.imag, s_iters, dssplaq, dstplaq);
 
@@ -91,11 +99,11 @@ int main(int argc, char *argv[]) {
 
     // Less frequent measurements every "propinterval" trajectories
     if ((traj_done % propinterval) == (propinterval - 1)) {
-#ifdef STOUT
+#ifdef SMEAR
 #define MIN_PLAQ
       // Optionally smear before less frequent measurements
-      node0_printf("Doing %d stout smearing steps with rho=%.4g...\n",
-                   Nstout, rho);
+      node0_printf("Doing %d APE smearing steps with alpha=%.4g...\n",
+                   Nsmear, alpha);
 
       // Check minimum plaquette in addition to averages
       node0_printf("BEFORE ");
@@ -103,7 +111,7 @@ int main(int argc, char *argv[]) {
       node0_printf(" %.8g %.8g\n", dssplaq, dstplaq);
 
       // Overwrites s->linkf, saves original values in thin_link field
-      stout_smear(Nstout, rho);
+      APE_smear(Nsmear, alpha);
       node0_printf("AFTER  ");
       d_plaquette_lcl(&dssplaq, &dstplaq);    // Prints out MIN_PLAQ
       node0_printf(" %.8g %.8g\n", dssplaq, dstplaq);
@@ -216,7 +224,7 @@ int main(int argc, char *argv[]) {
       }
 #endif
 
-#ifdef STOUT
+#ifdef SMEAR
       // Restore unsmeared links from thin_link field
       for (mu = XUP; mu < NUMLINK; mu++) {
         FORALLSITES(i, s)

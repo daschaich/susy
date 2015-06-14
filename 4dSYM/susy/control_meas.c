@@ -10,8 +10,9 @@
 
 // -----------------------------------------------------------------
 int main(int argc, char *argv[]) {
-  int prompt;
+  int prompt, dir;
   double dssplaq, dstplaq, dtime, plpMod = 0.0;
+  double linktr[NUMLINK], linktr_ave, linktr_width;
   complex plp = cmplx(99.0, 99.0);
 
   // Setup
@@ -41,7 +42,7 @@ int main(int argc, char *argv[]) {
   setup_restrict_fourier(key, restrict);
 #endif
 
-  // Load input and run (loop removed)
+  // Load input and run
   if (readin(prompt) != 0) {
     node0_printf("ERROR in readin, aborting\n");
     terminate(1);
@@ -69,14 +70,17 @@ int main(int argc, char *argv[]) {
   node0_printf("%.8g\n", dssplaq / (double)volume);
 
   // Do "local" measurements to check configuration
-  // Polyakov loop measurement
+  // Tr[Udag.U] / N
+  linktr_ave = d_link(linktr, &linktr_width);
+  node0_printf("FLINK");
+  for (dir = XUP; dir < NUMLINK; dir++)
+    node0_printf(" %.6g", linktr[dir]);
+  node0_printf(" %.6g %.6g\n", linktr_ave, linktr_width);
+
+  // Polyakov loop and plaquette measurements
+  // Format: GMES Re(Polyakov) Im(Poyakov) cg_iters ss_plaq st_plaq
   plp = ploop(&plpMod);
-
-  // Tr[Udag.U] / N and plaquette measurements
-  d_link(0);
   d_plaquette(&dssplaq, &dstplaq);
-
-  // Re(Polyakov) Im(Poyakov) cg_iters ss_plaq st_plaq
   node0_printf("GMES %.8g %.8g 0 %.8g %.8g ",
                plp.real, plp.imag, dssplaq, dstplaq);
 
@@ -88,15 +92,10 @@ int main(int argc, char *argv[]) {
   node0_printf("%.8g\n", plpMod);
   node0_printf("BACTION %.8g\n", dssplaq);
 
-  // Require gauge fixing to consider non-invariant operators
-  if (fixflag != COULOMB_GAUGE_FIX) {
-    node0_printf("Konishi correlators require gauge fixing... skipping\n");
-  }
-
-#ifdef STOUT
+#ifdef SMEAR
   // Optionally smear before main measurements
-  node0_printf("Doing %d stout smearing steps with rho=%.4g...\n",
-               Nstout, rho);
+  node0_printf("Doing %d APE smearing steps with alpha=%.4g...\n",
+               Nsmear, alpha);
 
   // Check minimum plaquette in addition to averages
   node0_printf("BEFORE ");
@@ -104,7 +103,7 @@ int main(int argc, char *argv[]) {
   node0_printf(" %.8g %.8g\n", dssplaq, dstplaq);
 
   // Overwrites s->linkf, saves original values in thin_link field
-  stout_smear(Nstout, rho);
+  APE_smear(Nsmear, alpha);
   node0_printf("AFTER  ");
   d_plaquette_lcl(&dssplaq, &dstplaq);    // Prints out MIN_PLAQ
   node0_printf(" %.8g %.8g\n", dssplaq, dstplaq);

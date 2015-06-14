@@ -13,7 +13,7 @@ int main(int argc, char *argv[]) {
   register int i;
   register site *s;
   int prompt, dir, ismear, j, bl, blmax;
-  int stout_step = 1;    // This might be worth reading in at some point
+  int smear_step = 1;    // This might be worth reading in at some point
   double dssplaq, dstplaq, dtime, plpMod = 0.0;
   double linktr[NUMLINK], linktr_ave, linktr_width;
   complex plp = cmplx(99.0, 99.0);
@@ -66,8 +66,8 @@ int main(int argc, char *argv[]) {
     node0_printf(" %.6g", linktr[dir]);
   node0_printf(" %.6g %.6g\n", linktr_ave, linktr_width);
 
-  // Polyakov loop measurement and plaquette measurements
-  // Re(Polyakov) Im(Poyakov) cg_iters ss_plaq st_plaq
+  // Polyakov loop and plaquette measurements
+  // Format: GMES Re(Polyakov) Im(Poyakov) cg_iters ss_plaq st_plaq
   plp = ploop(&plpMod);
   d_plaquette(&dssplaq, &dstplaq);
   node0_printf("GMES %.8g %.8g 0 %.8g %.8g ",
@@ -86,9 +86,9 @@ int main(int argc, char *argv[]) {
   // Monitor widths of plaquette and plaquette determinant distributions
   widths();
 
-  // Require compilation with stout smearing enabled
-#ifndef STOUT
-  printf("ERROR: MCRG uses stout smearing, at least for now\n");
+  // Require compilation with smearing enabled
+#ifndef SMEAR
+  printf("ERROR: MCRG uses APE smearing, at least for now\n");
   terminate(1);
 #endif
 
@@ -98,8 +98,8 @@ int main(int argc, char *argv[]) {
 #endif
 
 #define MIN_PLAQ
-  // Smear (after measurements) in increments of five steps up to Nstout
-  for (ismear = 0; ismear <= Nstout; ismear += stout_step) {
+  // Smear (after measurements) in increments of five steps up to Nsmear
+  for (ismear = 0; ismear <= Nsmear; ismear += smear_step) {
     // For consistency, smear on unfixed links, saved here
     // Use f_U -- mom are used to store blocked links...
     FORALLSITES(i, s) {
@@ -160,9 +160,9 @@ int main(int argc, char *argv[]) {
       for (dir = XUP; dir < NUMLINK; dir++)
         su3mat_copy_f(&(s->f_U[dir]), &(s->linkf[dir]));
     }
-    if (ismear < Nstout) {
-      node0_printf("Doing stout smearing steps %d to %d with rho=%.4g...\n",
-                   ismear, ismear + stout_step, rho);
+    if (ismear < Nsmear) {
+      node0_printf("Doing APE smearing steps %d to %d with alpha=%.4g...\n",
+                   ismear, ismear + smear_step, alpha);
 
       // Check minimum plaquette in addition to averages
       node0_printf("BEFORE ");
@@ -170,7 +170,7 @@ int main(int argc, char *argv[]) {
       node0_printf(" %.8g %.8g\n", dssplaq, dstplaq);
 
       // Overwrites s->linkf, saves original values in thin_link field
-      stout_smear(stout_step, rho);
+      APE_smear(smear_step, alpha);
       node0_printf("AFTER  ");
       d_plaquette_lcl(&dssplaq, &dstplaq);    // Prints out MIN_PLAQ
       node0_printf(" %.8g %.8g\n", dssplaq, dstplaq);
