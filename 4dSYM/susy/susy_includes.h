@@ -66,8 +66,8 @@ int congrad_multi_field(Twist_Fermion *src, Twist_Fermion **psim,
 
 // Compute average link Tr[Udag U] / N_c
 // Number of blocking steps only affects output formatting
-double d_link(double *linktr, double *linktr_width);
-double d_link_frep(double *linktr, double *linktr_width);
+double d_link(double *linktr, double *linktr_width,
+              double *dets, double *det_ave, double *det_width);
 
 Real order(int i, int j, int k, int l, int m);
 void epsilon();

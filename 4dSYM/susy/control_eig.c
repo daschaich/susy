@@ -11,6 +11,7 @@ int main(int argc, char *argv[]) {
   int prompt, dir;
   double dssplaq, dstplaq, dtime, plpMod = 0.0;
   double linktr[NUMLINK], linktr_ave, linktr_width;
+  double link_det[NUMLINK], det_ave, det_width;
   complex plp = cmplx(99.0, 99.0);
   int ivec, total_iters = 0;
 #ifndef EIG
@@ -50,11 +51,15 @@ int main(int argc, char *argv[]) {
   plp = ploop(&plpMod);
 
   // Tr[Udag.U] / N
-  linktr_ave = d_link(linktr, &linktr_width);
+  linktr_ave = d_link(linktr, &linktr_width, link_det, &det_ave, &det_width);
   node0_printf("FLINK");
   for (dir = XUP; dir < NUMLINK; dir++)
     node0_printf(" %.6g", linktr[dir]);
   node0_printf(" %.6g %.6g\n", linktr_ave, linktr_width);
+  node0_printf("FLINK_DET");
+  for (dir = XUP; dir < NUMLINK; dir++)
+    node0_printf(" %.6g", link_det[dir]);
+  node0_printf(" %.6g %.6g\n", det_ave, det_width);
 
   // Polyakov loop and plaquette measurements
   // Format: GMES Re(Polyakov) Im(Poyakov) cg_iters ss_plaq st_plaq
