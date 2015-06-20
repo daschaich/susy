@@ -372,7 +372,9 @@ void d_phase() {
   }
   node0_printf("PFAFF %.8g %.8g %.8g %.8g\n", -1.0 * log_mag, phase,
                fabs(cos(phase)), fabs(sin(phase)));
+  fflush(stdout);
   free(diag);
+  g_sync();         // Needed by at least some clusters
 }
 #endif
 // -----------------------------------------------------------------

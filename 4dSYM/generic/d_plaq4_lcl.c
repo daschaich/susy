@@ -34,7 +34,7 @@ void d_plaquette_lcl(double *ss_plaq, double *st_plaq) {
   register su3_matrix_f *m1, *m4;
   double ss_sum = 0.0, st_sum = 0.0, cur_plaq;
 #ifdef MIN_PLAQ
-  double min_plaq = 2.0 * NCOL;
+  double min_plaq = 200.0 * NCOL;
 #endif
   msg_tag *mtag0, *mtag1;
   su3_matrix_f mtmp;
