@@ -137,6 +137,7 @@ int main(int argc, char *argv[]) {
   for (ivec = 0; ivec < Nvec; ivec++)
     free(eigVec[ivec]);
   free(eigVec);
+  g_sync();         // Needed by at least some clusters
   return 0;
 }
 // -----------------------------------------------------------------

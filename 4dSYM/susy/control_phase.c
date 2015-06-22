@@ -98,6 +98,7 @@ int main(int argc, char *argv[]) {
   dtime += dclock();
   node0_printf("\nTime = %.4g seconds\n", dtime);
   fflush(stdout);
+  g_sync();         // Needed by at least some clusters
   return 0;
 }
 // -----------------------------------------------------------------

@@ -374,7 +374,6 @@ void d_phase() {
                fabs(cos(phase)), fabs(sin(phase)));
   fflush(stdout);
   free(diag);
-  g_sync();         // Needed by at least some clusters
 }
 #endif
 // -----------------------------------------------------------------

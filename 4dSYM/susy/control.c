@@ -264,6 +264,7 @@ int main(int argc, char *argv[]) {
   // Save lattice if requested
   if (saveflag != FORGET)
     save_lattice(saveflag, savefile);
+  g_sync();         // Needed by at least some clusters
   return 0;
 }
 // -----------------------------------------------------------------
