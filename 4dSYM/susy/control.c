@@ -107,8 +107,8 @@ int main(int argc, char *argv[]) {
 #ifdef SMEAR
 #define MIN_PLAQ
       // Optionally smear before less frequent measurements
-      node0_printf("Doing %d APE smearing steps with alpha=%.4g...\n",
-                   Nsmear, alpha);
+      node0_printf("Doing %d det-divided APE smearing steps ", smear_step);
+      node0_printf("(total %d) with alpha=%.4g\n", ismear, alpha);
 
       // Check minimum plaquette in addition to averages
       node0_printf("BEFORE ");
@@ -116,7 +116,7 @@ int main(int argc, char *argv[]) {
       node0_printf(" %.8g %.8g\n", dssplaq, dstplaq);
 
       // Overwrites s->linkf, saves original values in thin_link field
-      APE_smear(Nsmear, alpha);
+      APE_smear(Nsmear, alpha, YESDET);
       node0_printf("AFTER  ");
       d_plaquette_lcl(&dssplaq, &dstplaq);    // Prints out MIN_PLAQ
       node0_printf(" %.8g %.8g\n", dssplaq, dstplaq);

@@ -147,15 +147,15 @@ int main(int argc, char *argv[]) {
 
   // Smear (after blocking) in increments of smear_step up to Nsmear
   for (ismear = 1; ismear <= Nsmear; ismear += smear_step) {
-    node0_printf("Doing %d APE smearing steps (total %d) with alpha=%.4g\n",
-                 smear_step, ismear, alpha);
+    node0_printf("Doing %d det-divided APE smearing steps ", smear_step);
+    node0_printf("(total %d) with alpha=%.4g\n", ismear, alpha);
 
     // Check minimum plaquette in addition to averages
     node0_printf("BEFORE ");
     blocked_plaq_lcl(ismear, 0);    // Prints out MIN_PLAQ
 
     // Overwrites s->linkf, saves original values in thin_link field
-    blocked_APE(smear_step, alpha, 0);
+    blocked_APE(smear_step, alpha, YESDET, 0);
     node0_printf("AFTER  ");
     blocked_plaq_lcl(ismear, 0);    // Prints out MIN_PLAQ
 
@@ -232,15 +232,15 @@ int main(int argc, char *argv[]) {
 
     // Smear (after blocking) in increments of smear_step up to Nsmear
     for (ismear = 1; ismear <= Nsmear; ismear += smear_step) {
-      node0_printf("Doing %d APE smearing steps (total %d) with alpha=%.4g\n",
-                   smear_step, ismear, alpha);
+      node0_printf("Doing %d det-divided APE smearing steps ", smear_step);
+      node0_printf("(total %d) with alpha=%.4g\n", ismear, alpha);
 
       // Check minimum plaquette in addition to averages
       node0_printf("BEFORE ");
       blocked_plaq_lcl(ismear, bl);    // Prints out MIN_PLAQ
 
       // Overwrites s->linkf, saves original values in thin_link field
-      blocked_APE(smear_step, alpha, bl);
+      blocked_APE(smear_step, alpha, YESDET, bl);
       node0_printf("AFTER  ");
       blocked_plaq_lcl(ismear, bl);    // Prints out MIN_PLAQ
 

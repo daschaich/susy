@@ -94,9 +94,9 @@ void directional_staple(int dir1, int dir2, field_offset lnk1,
 
 // APE.c for APE smearing
 // Uses directional_staple from stout.c
-void APE_smear(int Nsmear, double alpha);
+void APE_smear(int Nsmear, double alpha, int do_det);
 
 // blocked_APE.c for APE smearing after RG blocking
-void blocked_APE(int Nsmear, double alpha, int block);
+void blocked_APE(int Nsmear, double alpha, int do_det, int block);
 #endif
 // -----------------------------------------------------------------

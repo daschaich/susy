@@ -4,11 +4,11 @@
 // The application program must define and allocate staples stp
 #include "generic_includes.h"
 
-void APE_smear(int Nsmear, double alpha) {
+void APE_smear(int Nsmear, double alpha, int do_det) {
   register int i, n, dir, dir2;
   register site *s;
   Real tr, tr2;
-  su3_matrix_f tmat;
+  su3_matrix_f tmat, tmat2;
 
   tr = alpha / (6.0 * (1.0 - alpha));
   tr2 = 1.0 - alpha;
@@ -32,9 +32,13 @@ void APE_smear(int Nsmear, double alpha) {
 
       // Combine (1 - alpha).link + (alpha / 6).staple
       FORALLSITES(i, s) {
-        scalar_mult_add_su3_matrix_f(&(s->linkf[dir]), &(stp[dir][i]),
-                                     tr, &tmat);
-        scalar_mult_su3_matrix_f(&tmat, tr2, &(smeared_link[dir][i]));
+        if (do_det == 1)
+          det_project(&(stp[dir][i]), &tmat);
+        else
+          su3mat_copy_f(&(stp[dir][i]), &tmat);
+
+        scalar_mult_add_su3_matrix_f(&(s->linkf[dir]), &tmat, tr, &tmat);
+        scalar_mult_su3_matrix_f(&tmat2, tr2, &(smeared_link[dir][i]));
       }
     }
 
