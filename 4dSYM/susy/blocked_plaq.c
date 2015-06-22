@@ -17,15 +17,11 @@ void blocked_plaq(int Nsmear, int block) {
   su3_matrix_f *mat, tmat, tmat2;
 
   // Set number of links to stride, bl = 2^block
-  // Allow sanity check of reproducing ploop() with this routine
+  // Allow sanity check of reproducing d_plaquette() with this routine
   for (j = 1; j < block; j++)
     bl *= 2;
   if (block <= 0)
     bl = 1;
-
-  // Copy temporal links to tempmat1
-  FORALLSITES(i, s)
-    su3mat_copy_f(&(s->linkf[TUP]), &(tempmat1[i]));
 
   // Compute the bl-strided plaquette, exploiting a symmetry under dir<-->dir2
   for (dir = YUP; dir < NUMLINK; dir++) {

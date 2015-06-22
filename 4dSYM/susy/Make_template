@@ -135,7 +135,7 @@ susy_mcrg::
 	"DEFINES = ${DEFINES} -DPHI_ALGORITHM -DCORR -DSMEAR -DMCRG" \
 	"EXTRA_OBJECTS = control_mcrg.o block_mcrg.o rsymm.o blocked_plaq.o \
 	                 blocked_ops.o blocked_ploop.o blocked_rsymm.o path.o \
-	                 d_plaq4_lcl.o APE.o "
+	                 d_plaq4_lcl.o APE.o blocked_APE.o blocked_plaq_lcl.o "
 
 susy_eig::
 	${MAKE} -f ${MAKEFILE} target "MYTARGET= $@" \

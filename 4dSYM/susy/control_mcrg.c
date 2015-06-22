@@ -19,6 +19,18 @@ int main(int argc, char *argv[]) {
   double link_det[NUMLINK], det_ave, det_width;
   complex plp = cmplx(99.0, 99.0);
 
+#ifndef MCRG
+  node0_printf("Don't use control_mcrg unless compiling with -DMCRG!\n");
+  terminate(1);
+#endif
+
+  // Require compilation with smearing enabled
+#define MIN_PLAQ
+#ifndef SMEAR
+  printf("ERROR: MCRG uses APE smearing, at least for now\n");
+  terminate(1);
+#endif
+
   // Setup
   setlinebuf(stdout); // DEBUG
   initialize_machine(&argc, &argv);
@@ -33,7 +45,7 @@ int main(int argc, char *argv[]) {
   setup_PtoP();
   setup_FQ();
 
-  // Load input and run (loop removed)
+  // Load input and run
   if (readin(prompt) != 0) {
     node0_printf("ERROR in readin, aborting\n");
     terminate(1);
@@ -91,28 +103,63 @@ int main(int argc, char *argv[]) {
   // Monitor widths of plaquette and plaquette determinant distributions
   widths();
 
-  // Require compilation with smearing enabled
-#ifndef SMEAR
-  printf("ERROR: MCRG uses APE smearing, at least for now\n");
-  terminate(1);
-#endif
-
   // Set up P matrix for Konishi and SUGRA operators
 #ifdef CORR
   setup_P();
 #endif
 
-#define MIN_PLAQ
-  // Smear (after measurements) in increments of five steps up to Nsmear
-  for (ismear = 0; ismear <= Nsmear; ismear += smear_step) {
-    // For consistency, smear on unfixed links, saved here
-    // Use f_U -- mom are used to store blocked links...
-    FORALLSITES(i, s) {
-      for (dir = XUP; dir < NUMLINK; dir++)
-        su3mat_copy_f(&(s->linkf[dir]), &(s->f_U[dir]));
-    }
+  // ---------------------------------------------------------------
+  // First print unsmeared unblocked observables
+  // Unsmeared unblocked Tr[Udag.U] / N and its width
+  linktr_ave = d_link(linktr, &linktr_width, link_det, &det_ave, &det_width);
+  node0_printf("BFLINK 0 0");
+  for (dir = XUP; dir < NUMLINK; dir++)
+    node0_printf(" %.6g", linktr[dir]);
+  node0_printf(" %.6g %.6g\n", linktr_ave, linktr_width);
+  node0_printf("BFLINK_DET 0 0");
+  for (dir = XUP; dir < NUMLINK; dir++)
+    node0_printf(" %.6g", link_det[dir]);
+  node0_printf(" %.6g %.6g\n", det_ave, det_width);
 
-    // Calculate and print unblocked Tr[Udag.U] / N and its width
+  // Unsmeared unblocked plaquette determinant and widths
+  blocked_plaq(0, 0);
+
+#ifdef CORR
+  // Unsmeared unblocked Konishi and SUGRA operators
+  blocked_ops(0, 0);
+#endif
+
+  // Unsmeared unblocked Wilson loops and R symmetry transformations
+  blocked_rsymm(0, 0);
+  // ---------------------------------------------------------------
+
+
+
+  // ---------------------------------------------------------------
+  // Now print unblocked (but smeared) observables
+  // Can probably merge in the unsmeared checks above with a little work
+  // Save unsmeared unblocked links for next blocking step
+  // Use f_U -- mom is used for temporary storage by the blocking routine
+  FORALLSITES(i, s) {
+    for (dir = XUP; dir < NUMLINK; dir++)
+      su3mat_copy_f(&(s->linkf[dir]), &(s->f_U[dir]));
+  }
+
+  // Smear (after blocking) in increments of smear_step up to Nsmear
+  for (ismear = 1; ismear <= Nsmear; ismear += smear_step) {
+    node0_printf("Doing %d APE smearing steps (total %d) with alpha=%.4g\n",
+                 smear_step, ismear, alpha);
+
+    // Check minimum plaquette in addition to averages
+    node0_printf("BEFORE ");
+    blocked_plaq_lcl(ismear, bl);    // Prints out MIN_PLAQ
+
+    // Overwrites s->linkf, saves original values in thin_link field
+    blocked_APE(smear_step, alpha, 0);
+    node0_printf("AFTER  ");
+    blocked_plaq_lcl(ismear, bl);    // Prints out MIN_PLAQ
+
+    // Smeared unblocked Tr[Udag.U] / N and its width
     linktr_ave = d_link(linktr, &linktr_width, link_det, &det_ave, &det_width);
     node0_printf("BFLINK %d 0", ismear);
     for (dir = XUP; dir < NUMLINK; dir++)
@@ -123,72 +170,110 @@ int main(int argc, char *argv[]) {
       node0_printf(" %.6g", link_det[dir]);
     node0_printf(" %.6g %.6g\n", det_ave, det_width);
 
-    // Calculate and print unblocked, plaquette determinant and widths
+    // Smeared unblocked plaquette determinant and widths
     blocked_plaq(ismear, 0);
 
 #ifdef CORR
-    // Konishi and SUGRA operators
+    // Smeared unblocked Konishi and SUGRA operators
     blocked_ops(ismear, 0);
 #endif
 
-    // Calculate and print unblocked Wilson loops
+    // Smeared unblocked Wilson loops and R symmetry transformations
     blocked_rsymm(ismear, 0);
+  }
 
-#ifdef MCRG
-    // Loop over blocking levels (automatically determined)
-    j = 1;
-    for (bl = 1; bl <= blmax; bl++) {
-      j *= 2;
-      node0_printf("Blocking %d gives L = %d\n", bl, nx / j);
-      block_mcrg(bl);
+  // Restore unsmeared unblocked links
+  FORALLSITES(i, s) {
+    for (dir = XUP; dir < NUMLINK; dir++)
+      su3mat_copy_f(&(s->f_U[dir]), &(s->linkf[dir]));
+  }
+  // ---------------------------------------------------------------
 
-      // Calculate and print unblocked Tr[Udag.U] / N and its width
+
+
+  // ---------------------------------------------------------------
+  // Loop over blocking levels (automatically determined)
+  // Can probably merge in the unblocked checks above with a little work
+  j = 1;
+  for (bl = 1; bl <= blmax; bl++) {
+    j *= 2;
+    node0_printf("Blocking %d gives L = %d\n", bl, nx / j);
+    block_mcrg(bl);
+
+    // Unsmeared blocked Tr[Udag.U] / N and its width
+    linktr_ave = d_link(linktr, &linktr_width, link_det, &det_ave, &det_width);
+    node0_printf("BFLINK 0 %d", bl);
+    for (dir = XUP; dir < NUMLINK; dir++)
+      node0_printf(" %.6g", linktr[dir]);
+    node0_printf(" %.6g %.6g\n", linktr_ave, linktr_width);
+    node0_printf("BFLINK_DET 0 %d", bl);
+    for (dir = XUP; dir < NUMLINK; dir++)
+      node0_printf(" %.6g", link_det[dir]);
+    node0_printf(" %.6g %.6g\n", det_ave, det_width);
+
+    // Unsmeared blocked plaquette
+    blocked_plaq(0, bl);
+
+#ifdef CORR
+    // Unsmeared blocked Konishi and SUGRA correlators
+    blocked_ops(0, bl);
+#endif
+
+    // Unsmeared blocked Polyakov and Wilson loops
+    blocked_ploop(0, bl);
+    blocked_rsymm(0, bl);
+
+    // Save unsmeared blocked links for next blocking step
+    // Use f_U -- mom is used for temporary storage by the blocking routine
+    FORALLSITES(i, s) {
+      for (dir = XUP; dir < NUMLINK; dir++)
+        su3mat_copy_f(&(s->linkf[dir]), &(s->f_U[dir]));
+    }
+
+    // Smear (after blocking) in increments of smear_step up to Nsmear
+    for (ismear = 1; ismear <= Nsmear; ismear += smear_step) {
+      node0_printf("Doing %d APE smearing steps (total %d) with alpha=%.4g\n",
+                   smear_step, ismear, alpha);
+
+      // Check minimum plaquette in addition to averages
+      node0_printf("BEFORE ");
+      blocked_plaq_lcl(ismear, bl);    // Prints out MIN_PLAQ
+
+      // Overwrites s->linkf, saves original values in thin_link field
+      blocked_APE(smear_step, alpha, bl);
+      node0_printf("AFTER  ");
+      blocked_plaq_lcl(ismear, bl);    // Prints out MIN_PLAQ
+
+      // Smeared blocked Tr[Udag.U] / N and its width
       linktr_ave = d_link(linktr, &linktr_width, link_det, &det_ave, &det_width);
       node0_printf("BFLINK %d %d", ismear, bl);
       for (dir = XUP; dir < NUMLINK; dir++)
         node0_printf(" %.6g", linktr[dir]);
       node0_printf(" %.6g %.6g\n", linktr_ave, linktr_width);
       node0_printf("BFLINK_DET %d %d", ismear, bl);
-    for (dir = XUP; dir < NUMLINK; dir++)
-      node0_printf(" %.6g", link_det[dir]);
-    node0_printf(" %.6g %.6g\n", det_ave, det_width);
+      for (dir = XUP; dir < NUMLINK; dir++)
+        node0_printf(" %.6g", link_det[dir]);
+      node0_printf(" %.6g %.6g\n", det_ave, det_width);
 
-      // Calculate and print blocked plaquette
+      // Smeared blocked plaquette determinant and widths
       blocked_plaq(ismear, bl);
 
 #ifdef CORR
-      // Calculate and print blocked Konishi and SUGRA correlators
+      // Smeared blocked Konishi and SUGRA operators
       blocked_ops(ismear, bl);
 #endif
 
-      // Calculate and print blocked Polyakov and Wilson loops
-      blocked_ploop(ismear, bl);
+      // Smeared blocked Wilson loops and R symmetry transformations
       blocked_rsymm(ismear, bl);
     }
-#endif
 
-    // Here is the smearing for the next round:
-    // Restore unfixed links for smearing
+    // Restore unsmeared blocked links
     FORALLSITES(i, s) {
       for (dir = XUP; dir < NUMLINK; dir++)
         su3mat_copy_f(&(s->f_U[dir]), &(s->linkf[dir]));
     }
-    if (ismear < Nsmear) {
-      node0_printf("Doing APE smearing steps %d to %d with alpha=%.4g...\n",
-                   ismear, ismear + smear_step, alpha);
-
-      // Check minimum plaquette in addition to averages
-      node0_printf("BEFORE ");
-      d_plaquette_lcl(&dssplaq, &dstplaq);    // Prints out MIN_PLAQ
-      node0_printf(" %.8g %.8g\n", dssplaq, dstplaq);
-
-      // Overwrites s->linkf, saves original values in thin_link field
-      APE_smear(smear_step, alpha);
-      node0_printf("AFTER  ");
-      d_plaquette_lcl(&dssplaq, &dstplaq);    // Prints out MIN_PLAQ
-      node0_printf(" %.8g %.8g\n", dssplaq, dstplaq);
-    }
   }
+  // ---------------------------------------------------------------
 
   node0_printf("RUNNING COMPLETED\n");
   dtime += dclock();

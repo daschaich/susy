@@ -10,11 +10,11 @@
 
 // -----------------------------------------------------------------
 // Accumulate staple sum in stp
-// dir1 is the direction of the original link
+// dir is the direction of the original link
 // dir2 is the other direction that defines the staple
 // Use gather offsets to handle all five links!
 // Use tempmat1 for temporary storage
-void directional_staple(int dir1, int dir2, field_offset lnk1,
+void directional_staple(int dir, int dir2, field_offset lnk1,
                         field_offset lnk2, su3_matrix_f *stp) {
 
   register int i;
@@ -22,11 +22,11 @@ void directional_staple(int dir1, int dir2, field_offset lnk1,
   msg_tag *tag0, *tag1, *tag2;
   su3_matrix_f tmat1, tmat2, *mat0, *mat1;
 
-  // Get blocked_link[dir2] from direction dir1
-  tag0 = start_gather_site(lnk2, sizeof(su3_matrix_f), goffset[dir1],
+  // Get blocked_link[dir2] from direction dir
+  tag0 = start_gather_site(lnk2, sizeof(su3_matrix_f), goffset[dir],
                            EVENANDODD, gen_pt[0]);
 
-  // Get blocked_link[dir1] from direction dir2
+  // Get blocked_link[dir] from direction dir2
   tag1 = start_gather_site(lnk1, sizeof(su3_matrix_f), goffset[dir2],
                            EVENANDODD, gen_pt[1]);
 

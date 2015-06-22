@@ -21,9 +21,9 @@
 // -----------------------------------------------------------------
 // d_plaq4.c
 void d_plaquette(double *ss_plaq, double *st_plaq);
-void d_plaquette_frep(double *ss_plaq_frep, double *st_plaq_frep);
+
+// d_plaq4_lcl.c
 void d_plaquette_lcl(double *ss_plaq, double *st_plaq);
-void d_plaquette_frep_lcl(double *ss_plaq_frep, double *st_plaq_frep);
 
 // gaugefix.c
 void gaugefix(int gauge_dir,Real relax_boost,int max_gauge_iter,
@@ -95,5 +95,8 @@ void directional_staple(int dir1, int dir2, field_offset lnk1,
 // APE.c for APE smearing
 // Uses directional_staple from stout.c
 void APE_smear(int Nsmear, double alpha);
+
+// blocked_APE.c for APE smearing after RG blocking
+void blocked_APE(int Nsmear, double alpha, int block);
 #endif
 // -----------------------------------------------------------------
