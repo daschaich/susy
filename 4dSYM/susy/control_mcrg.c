@@ -152,12 +152,12 @@ int main(int argc, char *argv[]) {
 
     // Check minimum plaquette in addition to averages
     node0_printf("BEFORE ");
-    blocked_plaq_lcl(ismear, bl);    // Prints out MIN_PLAQ
+    blocked_plaq_lcl(ismear, 0);    // Prints out MIN_PLAQ
 
     // Overwrites s->linkf, saves original values in thin_link field
     blocked_APE(smear_step, alpha, 0);
     node0_printf("AFTER  ");
-    blocked_plaq_lcl(ismear, bl);    // Prints out MIN_PLAQ
+    blocked_plaq_lcl(ismear, 0);    // Prints out MIN_PLAQ
 
     // Smeared unblocked Tr[Udag.U] / N and its width
     linktr_ave = d_link(linktr, &linktr_width, link_det, &det_ave, &det_width);
