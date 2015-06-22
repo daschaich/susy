@@ -107,8 +107,8 @@ int main(int argc, char *argv[]) {
 #ifdef SMEAR
 #define MIN_PLAQ
       // Optionally smear before less frequent measurements
-      node0_printf("Doing %d det-divided APE smearing steps ", smear_step);
-      node0_printf("(total %d) with alpha=%.4g\n", ismear, alpha);
+      node0_printf("Doing %d det-divided APE smearing steps ", Nsmear);
+      node0_printf("with alpha=%.4g\n", alpha);
 
       // Check minimum plaquette in addition to averages
       node0_printf("BEFORE ");

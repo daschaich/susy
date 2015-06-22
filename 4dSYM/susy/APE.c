@@ -37,7 +37,7 @@ void APE_smear(int Nsmear, double alpha, int do_det) {
         else
           su3mat_copy_f(&(stp[dir][i]), &tmat);
 
-        scalar_mult_add_su3_matrix_f(&(s->linkf[dir]), &tmat, tr, &tmat);
+        scalar_mult_add_su3_matrix_f(&(s->linkf[dir]), &tmat, tr, &tmat2);
         scalar_mult_su3_matrix_f(&tmat2, tr2, &(smeared_link[dir][i]));
       }
     }
