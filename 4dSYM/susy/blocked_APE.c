@@ -2,7 +2,7 @@
 // Construct APE-smeared links without unitarization
 // Overwrite s->linkf and save original values in thin_link field
 // The application program must define and allocate staples stp
-#include "generic_includes.h"
+#include "susy_includes.h"
 // -----------------------------------------------------------------
 
 

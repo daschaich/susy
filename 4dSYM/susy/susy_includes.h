@@ -159,6 +159,16 @@ void polar(su3_matrix_f *a, su3_matrix_f *b);
 // Monopole computation uses find_det
 void monopole();
 
+#ifdef SMEAR
+// APE and stout smearing, the former using det_project
+// stout.c contains directional_staple used by APE.c
+void directional_staple(int dir1, int dir2, field_offset lnk1,
+                        field_offset lnk2, su3_matrix_f *stp);
+void stout_smear(int Nsmear, double alpha);
+void APE_smear(int Nsmear, double alpha, int do_det);
+void blocked_APE(int Nsmear, double alpha, int do_det, int block);
+#endif
+
 #ifdef MCRG
 void block_mcrg(int bl);
 void blocked_plaq(int Nsmear, int bl);    // Also monitors det and widths

@@ -3,7 +3,7 @@
 // Morningstar and Peardon, hep-lat/0311018
 // The application program must define and allocate staples stp,
 // and anti-hermitian matrices Q
-#include "generic_includes.h"
+#include "susy_includes.h"
 // -----------------------------------------------------------------
 
 

@@ -86,17 +86,5 @@ void restrict_fourier(
           complex numbers.  For example, an su3_vector
           is 3 complex numbers. */
      int isign);   /* 1 for x -> k, -1 for k -> x */
-
-// stout.c for stout smearing
-void stout_smear(int Nsmear, double alpha);
-void directional_staple(int dir1, int dir2, field_offset lnk1,
-                        field_offset lnk2, su3_matrix_f *stp);
-
-// APE.c for APE smearing
-// Uses directional_staple from stout.c
-void APE_smear(int Nsmear, double alpha, int do_det);
-
-// blocked_APE.c for APE smearing after RG blocking
-void blocked_APE(int Nsmear, double alpha, int do_det, int block);
 #endif
 // -----------------------------------------------------------------

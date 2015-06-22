@@ -57,12 +57,12 @@ MY_OBJECTS = setup.o        \
              determinant.o  \
              widths.o       \
              hdelta0.o      \
+             stout.o        \
              congrad_multi_field.o
 
 # Basic set from generic directory
 G_OBJECTS = d_plaq4.o      \
             ploop_dist.o   \
-            stout.o        \
             io_helpers.o   \
             io_lat.o       \
             io_lat_utils.o \
