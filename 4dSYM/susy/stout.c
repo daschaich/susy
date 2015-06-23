@@ -1,50 +1,44 @@
 // -----------------------------------------------------------------
 // Construct stout-smeared links, following the standard procedure,
 // Morningstar and Peardon, hep-lat/0311018
-// The application program must define and allocate staples stp,
-// and anti-hermitian matrices Q
 #include "susy_includes.h"
 // -----------------------------------------------------------------
 
 
 
 // -----------------------------------------------------------------
-// Accumulate staple sum in stp
+// Accumulate staple sum in staple (add instead of overwrite)
+// Must copy or project desired links to s->mom before calling
 // dir is the direction of the original link
 // dir2 is the other direction that defines the staple
 // Use gather offsets to handle all five links!
 // Use tempmat1 for temporary storage
-void directional_staple(int dir, int dir2, field_offset lnk1,
-                        field_offset lnk2, su3_matrix_f *stp) {
-
+void directional_staple(int dir, int dir2) {
   register int i;
   register site *s;
   msg_tag *tag0, *tag1, *tag2;
-  su3_matrix_f tmat1, tmat2, *mat0, *mat1;
+  su3_matrix_f tmat, tmat2, *mat0, *mat1;
 
-  // Get blocked_link[dir2] from direction dir
-  tag0 = start_gather_site(lnk2, sizeof(su3_matrix_f), goffset[dir],
-                           EVENANDODD, gen_pt[0]);
+  // Get mom[dir2] from direction dir
+  tag0 = start_gather_site(F_OFFSET(mom[dir2]), sizeof(su3_matrix_f),
+                           goffset[dir], EVENANDODD, gen_pt[0]);
 
-  // Get blocked_link[dir] from direction dir2
-  tag1 = start_gather_site(lnk1, sizeof(su3_matrix_f), goffset[dir2],
-                           EVENANDODD, gen_pt[1]);
+  // Get mom[dir] from direction dir2
+  tag1 = start_gather_site(F_OFFSET(mom[dir]), sizeof(su3_matrix_f),
+                           goffset[dir2], EVENANDODD, gen_pt[1]);
 
   // Start working on the lower staple while we wait for the gathers
   // The lower staple is prepared at x-dir2 and stored in tempmat1,
   // then gathered to x
   FORALLSITES(i, s)
-    mult_su3_an_f((su3_matrix_f *)F_PT(s, lnk2), (su3_matrix_f *)F_PT(s, lnk1),
-                  &(tempmat1[i]));
+    mult_su3_an_f(&(s->mom[dir2]), &(s->mom[dir]), &(tempmat1[i]));
 
+  // Finish lower staple after gather is done
   wait_gather(tag0);
-  wait_gather(tag1);
-
-  // Finish lower staple
   FORALLSITES(i, s) {
     mat0 = (su3_matrix_f *)gen_pt[0][i];
-    mult_su3_nn_f(&(tempmat1[i]), mat0, &tmat1);
-    su3mat_copy_f(&tmat1, &(tempmat1[i]));
+    mult_su3_nn_f(&(tempmat1[i]), mat0, &tmat);
+    su3mat_copy_f(&tmat, &(tempmat1[i]));
   }
 
   // Gather staple from direction -dir2 to "home" site
@@ -52,18 +46,19 @@ void directional_staple(int dir, int dir2, field_offset lnk1,
                             goffset[dir2] + 1, EVENANDODD, gen_pt[2]);
 
   // Calculate upper staple, add it
+  wait_gather(tag1);
   FORALLSITES(i, s) {
     mat0 = (su3_matrix_f *)gen_pt[0][i];
     mat1 = (su3_matrix_f *)gen_pt[1][i];
-    mult_su3_nn_f((su3_matrix_f *)F_PT(s, lnk2), mat1, &tmat1);
-    mult_su3_na_f(&tmat1, mat0, &tmat2);
-    add_su3_matrix_f(stp + i, &tmat2, stp + i);
+    mult_su3_nn_f(&(s->mom[dir2]), mat1, &tmat);
+    mult_su3_na_f(&tmat, mat0, &tmat2);
+    add_su3_matrix_f(&(staple[i]), &tmat2, &(staple[i]));
   }
 
   // Finally add the lower staple
   wait_gather(tag2);
   FORALLSITES(i, s)
-    add_su3_matrix_f(stp + i, (su3_matrix_f *)gen_pt[2][i], stp + i);
+    add_su3_matrix_f(&(staple[i]), (su3_matrix_f *)gen_pt[2][i], &(staple[i]));
 
   cleanup_gather(tag0);
   cleanup_gather(tag1);
@@ -74,7 +69,7 @@ void directional_staple(int dir, int dir2, field_offset lnk1,
 
 
 // -----------------------------------------------------------------
-// Calculate smearedU = exp(A).U
+// Calculate newU = exp(A).U, overwriting s->linkf
 // Goes to eighth order in the exponential:
 //   exp(A) * U = ( 1 + A + A^2/2 + A^3/6 ...) * U
 //              = U + A*(U + (A/2)*(U + (A/3)*( ... )))
@@ -120,7 +115,7 @@ void exp_mult() {
       scalar_mult_add_su3_matrix_f(link, &temp1, t2, &temp2);
 
       mult_su3_nn_f(&htemp, &temp2, &temp1);
-      add_su3_matrix_f(link, &temp1, &(smeared_link[dir][i]));
+      add_su3_matrix_f(link, &temp1, &(s->linkf[dir]));
     }
   }
 }
@@ -130,44 +125,41 @@ void exp_mult() {
 
 // -----------------------------------------------------------------
 // Do stout smearing
-// Overwrite s->linkf and save original values in thin_link field
-void stout_smear(int Nstout, double alpha) {
+// Overwrite s->linkf
+// Use staple, s->mom and Q for temporary storage
+void stout_smear(int Nsmear, double alpha) {
   register int i, n, dir, dir2;
   register site *s;
   su3_matrix_f tmat;
 
-  for (dir = XUP; dir < NUMLINK; dir++) {
-    FORALLSITES(i, s)
-      su3mat_copy_f(&(s->linkf[dir]), &(thin_link[dir][i]));
-  }
+  for (n = 0; n < Nsmear; n++) {
+    FORALLSITES(i, s) {
+      // Unmodified links -- no projection or determinant division
+      for (dir = XUP; dir < NUMLINK; dir++)
+        su3mat_copy_f(&(s->linkf[dir]), &(s->mom[dir]));
+    }
 
-  for (n = 0; n < Nstout; n++) {
     for (dir = XUP; dir < NUMLINK; dir++) {
       FORALLSITES(i, s)
-        clear_su3mat_f(&(stp[dir][i]));    // Initialize staple sum
+        clear_su3mat_f(&(staple[i]));     // Initialize staple sum
 
-      // Compute staple sums
+      // Accumulate staple sum in staple
       for (dir2 = XUP; dir2 < NUMLINK; dir2++) {
-        if (dir != dir2)                 // Accumulate staples
-          directional_staple(dir, dir2, F_OFFSET(linkf[dir]),
-                             F_OFFSET(linkf[dir2]), stp[dir]);
+        if (dir != dir2)
+          directional_staple(dir, dir2);
       }
 
       // Multiply by alpha Udag, take traceless anti-hermitian part
       FORALLSITES(i, s) {
-        mult_su3_na_f(&(stp[dir][i]), &(s->linkf[dir]), &tmat);  // C.Udag
-        scalar_mult_su3_matrix_f(&tmat, alpha, &(stp[dir][i]));
-        make_anti_hermitian(&(stp[dir][i]), &(Q[dir][i]));
+        mult_su3_na_f(&(staple[i]), &(s->linkf[dir]), &tmat);  // C.Udag
+        scalar_mult_su3_matrix_f(&tmat, alpha, &(staple[i]));
+        make_anti_hermitian(&(staple[i]), &(Q[dir][i]));
       }
     }
 
     // Do all exponentiations at once to reuse divisions
+    // Overwrites s->linkf
     exp_mult();
-
-    for (dir = XUP; dir < NUMLINK; dir++) {
-      FORALLSITES(i, s)
-        su3mat_copy_f(&(smeared_link[dir][i]), &(s->linkf[dir]));
-    }
   }
 }
 // -----------------------------------------------------------------

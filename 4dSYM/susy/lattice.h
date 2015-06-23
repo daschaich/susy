@@ -177,21 +177,12 @@ EXTERN double vevK;                       // Konishi vacuum subtraction
 EXTERN int nsrc;
 #endif
 
-#ifdef APE
-// APE smearing stuff
-EXTERN int Nsmear;
-EXTERN double alpha;
-#endif
-
 #ifdef SMEAR
-// Stout smearing stuff
+// APE or stout smearing stuff
 EXTERN int Nsmear;
 EXTERN double alpha;
 #endif
-// These are needed for smearing a `hot-start' random configuration
-EXTERN su3_matrix_f *thin_link[NUMLINK];
-EXTERN su3_matrix_f *smeared_link[NUMLINK];
-EXTERN su3_matrix_f *stp[NUMLINK];    // Staples
+// This is needed for smearing a `hot-start' random configuration
 EXTERN anti_hermitmat *Q[NUMLINK];    // To be exponentiated
 
 #ifdef EIG

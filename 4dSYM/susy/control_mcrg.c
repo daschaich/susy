@@ -139,7 +139,7 @@ int main(int argc, char *argv[]) {
   // Now print unblocked (but smeared) observables
   // Can probably merge in the unsmeared checks above with a little work
   // Save unsmeared unblocked links for next blocking step
-  // Use f_U -- mom is used for temporary storage by the blocking routine
+  // Use f_U -- mom is used for temporary storage by the smearing routine
   FORALLSITES(i, s) {
     for (dir = XUP; dir < NUMLINK; dir++)
       su3mat_copy_f(&(s->linkf[dir]), &(s->f_U[dir]));
@@ -154,7 +154,7 @@ int main(int argc, char *argv[]) {
     node0_printf("BEFORE ");
     blocked_plaq_lcl(ismear, 0);    // Prints out MIN_PLAQ
 
-    // Overwrites s->linkf, saves original values in thin_link field
+    // Overwrite s->linkf
     blocked_APE(smear_step, alpha, YESDET, 0);
     node0_printf("AFTER  ");
     blocked_plaq_lcl(ismear, 0);    // Prints out MIN_PLAQ
@@ -182,7 +182,7 @@ int main(int argc, char *argv[]) {
     blocked_rsymm(ismear, 0);
   }
 
-  // Restore unsmeared unblocked links
+  // Restore unsmeared unblocked links from f_U
   FORALLSITES(i, s) {
     for (dir = XUP; dir < NUMLINK; dir++)
       su3mat_copy_f(&(s->f_U[dir]), &(s->linkf[dir]));
@@ -239,7 +239,7 @@ int main(int argc, char *argv[]) {
       node0_printf("BEFORE ");
       blocked_plaq_lcl(ismear, bl);    // Prints out MIN_PLAQ
 
-      // Overwrites s->linkf, saves original values in thin_link field
+      // Overwrites s->linkf
       blocked_APE(smear_step, alpha, YESDET, bl);
       node0_printf("AFTER  ");
       blocked_plaq_lcl(ismear, bl);    // Prints out MIN_PLAQ
@@ -267,7 +267,7 @@ int main(int argc, char *argv[]) {
       blocked_rsymm(ismear, bl);
     }
 
-    // Restore unsmeared blocked links
+    // Restore unsmeared blocked links from f_U
     FORALLSITES(i, s) {
       for (dir = XUP; dir < NUMLINK; dir++)
         su3mat_copy_f(&(s->f_U[dir]), &(s->linkf[dir]));

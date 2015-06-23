@@ -115,7 +115,12 @@ int main(int argc, char *argv[]) {
       d_plaquette_lcl(&dssplaq, &dstplaq);    // Prints out MIN_PLAQ
       node0_printf(" %.8g %.8g\n", dssplaq, dstplaq);
 
-      // Overwrites s->linkf, saves original values in thin_link field
+      // Overwrite s->linkf
+      // Save unsmeared links in Tr_Uinv (mom and f_U both already used)
+      for (mu = XUP; mu < NUMLINK; mu++) {
+        FORALLSITES(i, s)
+          su3mat_copy_f(&(s->linkf[mu]), &(Tr_Uinv[mu][i]));
+      }
       APE_smear(Nsmear, alpha, YESDET);
       node0_printf("AFTER  ");
       d_plaquette_lcl(&dssplaq, &dstplaq);    // Prints out MIN_PLAQ
@@ -230,10 +235,10 @@ int main(int argc, char *argv[]) {
 #endif
 
 #ifdef SMEAR
-      // Restore unsmeared links from thin_link field
+      // Restore unsmeared links from Tr_Uinv
       for (mu = XUP; mu < NUMLINK; mu++) {
         FORALLSITES(i, s)
-          su3mat_copy_f(&(thin_link[mu][i]), &(s->linkf[mu]));
+          su3mat_copy_f(&(Tr_Uinv[mu][i]), &(s->linkf[mu]));
       }
 #endif
     }

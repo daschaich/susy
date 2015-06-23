@@ -113,11 +113,7 @@ void make_fields() {
 
   // Stout smearing stuff needed for `hot-start' random configurations
   size += (double)(NUMLINK * sizeof(anti_hermitmat));
-  size += (double)(3.0 * NUMLINK * sizeof(su3_matrix_f));
   FIELD_ALLOC_VEC(Q, anti_hermitmat, NUMLINK);    // To be exponentiated
-  FIELD_ALLOC_VEC(thin_link, su3_matrix_f, NUMLINK);
-  FIELD_ALLOC_VEC(smeared_link, su3_matrix_f, NUMLINK);
-  FIELD_ALLOC_VEC(stp, su3_matrix_f, NUMLINK);    // Staples
 
   // For convenience in calculating action and force
   size += (double)(1.0 + NPLAQ + 3.0 * NUMLINK) * sizeof(su3_matrix_f);

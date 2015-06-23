@@ -104,7 +104,7 @@ ALL_MAKES =               \
 ${OBJECTS} : ${HEADERS} ${LASTMAKE} ${ALL_MAKES}
 
 ##### Targets:
-# -DEIG and -DWLOOP need lapack and blas
+# -DEIG and -DWLOOP need lapack and blas, as does unit.o
 # susy_mode uses nsrc from -DBILIN
 susy_hmc::
 	${MAKE} -f ${MAKEFILE} target "MYTARGET= $@" \
@@ -133,9 +133,11 @@ susy_hmc_meas::
 susy_mcrg::
 	${MAKE} -f ${MAKEFILE} target "MYTARGET= $@" \
 	"DEFINES = ${DEFINES} -DPHI_ALGORITHM -DCORR -DSMEAR -DMCRG" \
+	"LAPACK = -llapack -lblas " \
 	"EXTRA_OBJECTS = control_mcrg.o block_mcrg.o rsymm.o blocked_plaq.o \
 	                 blocked_ops.o blocked_ploop.o blocked_rsymm.o path.o \
-	                 d_plaq4_lcl.o APE.o blocked_APE.o blocked_plaq_lcl.o "
+	                 d_plaq4_lcl.o APE.o blocked_APE.o blocked_plaq_lcl.o \
+	                 unit.o "
 
 susy_eig::
 	${MAKE} -f ${MAKEFILE} target "MYTARGET= $@" \

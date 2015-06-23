@@ -160,13 +160,11 @@ void polar(su3_matrix_f *a, su3_matrix_f *b);
 void monopole();
 
 #ifdef SMEAR
-// APE and stout smearing, the former using det_project
+// APE and stout smearing, the former with optional projections
 // stout.c contains directional_staple used by APE.c
-void directional_staple(int dir1, int dir2, field_offset lnk1,
-                        field_offset lnk2, su3_matrix_f *stp);
+void directional_staple(int dir1, int dir2);
 void stout_smear(int Nsmear, double alpha);
-void APE_smear(int Nsmear, double alpha, int do_det);
-void blocked_APE(int Nsmear, double alpha, int do_det, int block);
+void APE_smear(int Nsmear, double alpha, int project);
 #endif
 
 #ifdef MCRG
@@ -176,6 +174,12 @@ void blocked_plaq_lcl(int Nsmear, int bl);
 void blocked_ops(int Nsmear, int bl);
 void blocked_ploop(int Nsmear, int bl);
 void blocked_rsymm(int Nsmear, int bl);
+
+#ifdef SMEAR
+// Blocked APE smearing with optional projections
+void blocked_APE(int Nsmear, double alpha, int project, int block);
+void polar(su3_matrix_f *a, su3_matrix_f *b);
+#endif
 #endif
 // -----------------------------------------------------------------
 
