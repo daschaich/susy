@@ -220,49 +220,68 @@ void compute_Fmunu() {
 
 
 // -----------------------------------------------------------------
-// Compute at each site traceBB[a][b](x) = tr[B_a(x) B_b(x)] (should be real)
-// Where the scalar field B_a is the traceless part of the hermitian matrix
-// returned by the polar projection
+// Compute traces of bilinears of scalar field interpolating ops:
+//   traceless part of the hermitian matrix returned by the polar projection
+//   traceless part of U_a Udag_a
 #ifdef CORR
-void compute_Ba(int project) {
+void compute_Ba() {
   register int i;
   register site *s;
   int a, b, j;
-  complex ctmp;
+  complex tc;
   Real tr;
-  su3_matrix_f tmat, tmat2;
+  su3_matrix_f tmat;
 
-  // B_a = U_a Udag_a - trace
+  // B_a is traceless part of the hermitian matrix from the polar projection
+  // C_a is traceless part of U_a Udag_a
   FORALLSITES(i, s) {
     for (a = XUP; a < NUMLINK; a++) {
-//      mult_su3_na_f(&(s->linkf[a]), &(s->linkf[a]), &(Ba[a][i]));
       polar(&(s->linkf[a]), &tmat, &(Ba[a][i]));
-      ctmp = trace_su3_f(&(Ba[a][i]));
-      tr = ctmp.real / (Real)NCOL;
+      tc = trace_su3_f(&(Ba[a][i]));
+      tr = tc.real / (Real)NCOL;
       for (j = 0; j < NCOL; j++)
         Ba[a][i].e[j][j].real -= tr;
+
+      mult_su3_na_f(&(s->linkf[a]), &(s->linkf[a]), &(Ca[a][i]));
+      tc = trace_su3_f(&(Ca[a][i]));
+      tr = tc.real / (Real)NCOL;
+      for (j = 0; j < NCOL; j++)
+        Ca[a][i].e[j][j].real -= tr;
     }
 
-    // traceBB[a][b] = tr[B_a(x) B_b(x)] is symmetric in a <--> b
+    // Bilinear traces are symmetric in a <--> b
+    // traceBB[0][a][b] = tr[B_a(x) B_b(x)], etc.
     // But store all to simplify SUGRA computation
-    // Make sure Tr(B_a * B_b) is purely real
+    // Make sure all are purely real
     for (a = XUP; a < NUMLINK; a++) {
       for (b = a; b < NUMLINK; b++) {
         mult_su3_nn_f(&(Ba[a][i]), &(Ba[b][i]), &tmat);
-//        node0_printf("%d %d %d\n", i, a, b);
-//        dumpmat_f(&tmat);
-//        if (project == 1)
-//          det_project(&tmat, &tmat2);
-//        else
-          su3mat_copy_f(&tmat, &tmat2);
-//        dumpmat_f(&tmat2);
-        ctmp = trace_su3_f(&tmat2);
-        if (fabs(ctmp.imag) > IMAG_TOL) {
-          printf("node%d WARNING: Tr(BB[%d][%d]) = (%.4g, %.4g) at site %d\n",
-                 this_node, a, b, ctmp.real, ctmp.imag, i);
+        tc = trace_su3_f(&tmat);
+        traceBB[0][a][b][i] = tc.real;
+        traceBB[0][a][b][i] = traceBB[0][b][a][i];
+        if (fabs(tc.imag) > IMAG_TOL) {
+          printf("WARNING: Tr(BB[0][%d][%d]) = (%.4g, %.4g) at site %d\n",
+                 a, b, tc.real, tc.imag, i);
         }
-        traceBB[a][b][i] = ctmp.real;
-        traceBB[b][a][i] = ctmp.real;
+
+        mult_su3_nn_f(&(Ca[a][i]), &(Ca[b][i]), &tmat);
+        tc = trace_su3_f(&tmat);
+        traceBB[1][a][b][i] = tc.real;
+        traceBB[1][a][b][i] = traceBB[1][b][a][i];
+        if (fabs(tc.imag) > IMAG_TOL) {
+          printf("WARNING: Tr(BB[2][%d][%d]) = (%.4g, %.4g) at site %d\n",
+                 a, b, tc.real, tc.imag, i);
+        }
+
+        // Cross term may not be so useful
+        mult_su3_nn_f(&(Ba[a][i]), &(Ca[b][i]), &tmat);
+        tc = trace_su3_f(&tmat);
+        traceBB[2][a][b][i] = tc.real;
+        traceBB[2][a][b][i] = traceBB[2][b][a][i];
+        if (fabs(tc.imag) > IMAG_TOL) {
+          printf("WARNING: Tr(BB[1][%d][%d]) = (%.4g, %.4g) at site %d\n",
+                 a, b, tc.real, tc.imag, i);
+        }
       }
     }
   }

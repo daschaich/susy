@@ -112,7 +112,7 @@ void rsymm();
 #ifdef CORR
 // Konishi and SUGRA correlators
 void setup_P();
-void compute_Ba(int project);
+void compute_Ba();
 void d_konishi();       // Operators averaged over each timeslice
 
 // Map (x, y, z, t) to scalar displacements r
