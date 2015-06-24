@@ -94,7 +94,7 @@ void d_correlator_r() {
   // Compute at each site B_a = U_a Udag_a - volume average
   // as well as traceBB[a][b] = tr[B_a(x) B_b(x)]
   // Now stored in the site structure
-  compute_Ba();
+  compute_Ba(NODET);
 
   // Construct the operators, first Konishi then SUGRA
   for (a = 0; a < NUMLINK; a++) {

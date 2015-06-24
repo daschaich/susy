@@ -29,7 +29,7 @@ void d_konishi() {
   // Compute at each site B_a = U_a Udag_a - trace
   // as well as traceBB[a][b] = tr[B_a(x) B_b(x)]
   // Both stored globally
-  compute_Ba();
+  compute_Ba(NODET);
 
   // Now form the zero momentum projected operators (summing across nodes)
   for (a = 0; a < NUMLINK; a++) {

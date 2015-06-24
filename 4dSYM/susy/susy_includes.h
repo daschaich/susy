@@ -112,7 +112,7 @@ void rsymm();
 #ifdef CORR
 // Konishi and SUGRA correlators
 void setup_P();
-void compute_Ba();
+void compute_Ba(int project);
 void d_konishi();       // Operators averaged over each timeslice
 
 // Map (x, y, z, t) to scalar displacements r
@@ -179,6 +179,8 @@ void blocked_rsymm(int Nsmear, int bl);
 // Blocked APE smearing with optional projections
 void blocked_APE(int Nsmear, double alpha, int project, int block);
 void polar(su3_matrix_f *a, su3_matrix_f *b);
+void zheev_(char *doV, char *uplo, int *N1, double *store, int *N2,
+            double *eigs, double *work, int *Nwork, double *Rwork, int *stat);
 #endif
 #endif
 // -----------------------------------------------------------------
