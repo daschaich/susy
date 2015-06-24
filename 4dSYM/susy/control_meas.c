@@ -99,7 +99,7 @@ int main(int argc, char *argv[]) {
 
 #ifdef SMEAR
   // Optionally smear before main measurements
-  node0_printf("Doing %d det-divided APE smearing steps ", Nsmear);
+  node0_printf("Doing %d APE smearing steps ", Nsmear);
   node0_printf("with alpha=%.4g\n", alpha);
 
   // Check minimum plaquette in addition to averages

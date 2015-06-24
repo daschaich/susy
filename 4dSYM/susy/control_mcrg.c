@@ -147,7 +147,7 @@ int main(int argc, char *argv[]) {
 
   // Smear (after blocking) in increments of smear_step up to Nsmear
   for (ismear = 1; ismear <= Nsmear; ismear += smear_step) {
-    node0_printf("Doing %d det-divided APE smearing steps ", smear_step);
+    node0_printf("Doing %d APE smearing steps ", smear_step);
     node0_printf("(total %d) with alpha=%.4g\n", ismear, alpha);
 
     // Check minimum plaquette in addition to averages
@@ -232,7 +232,7 @@ int main(int argc, char *argv[]) {
 
     // Smear (after blocking) in increments of smear_step up to Nsmear
     for (ismear = 1; ismear <= Nsmear; ismear += smear_step) {
-      node0_printf("Doing %d det-divided APE smearing steps ", smear_step);
+      node0_printf("Doing %d APE smearing steps ", smear_step);
       node0_printf("(total %d) with alpha=%.4g\n", ismear, alpha);
 
       // Check minimum plaquette in addition to averages

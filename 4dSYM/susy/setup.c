@@ -96,6 +96,7 @@ int initial_set() {
 // -----------------------------------------------------------------
 // Allocate space for fields
 void make_fields() {
+  int j;
 #ifdef LINEAR_DET
   node0_printf("Supersymmetric constraint on (det[plaq] - 1)\n");
 #else
@@ -138,10 +139,12 @@ void make_fields() {
   FIELD_ALLOC_VEC(tempvec, su3_vector, NUMLINK);
 
 #ifdef CORR
-  size += (double)(NUMLINK * sizeof(su3_matrix_f));
-  size += (double)(NUMLINK * NUMLINK * sizeof(Real));
+  size += (double)(2.0 * NUMLINK * sizeof(su3_matrix_f));
+  size += (double)(numK * NUMLINK * NUMLINK * sizeof(Real));
   FIELD_ALLOC_VEC(Ba, su3_matrix_f, NUMLINK);
-  FIELD_ALLOC_MAT(traceBB, Real, NUMLINK, NUMLINK);
+  FIELD_ALLOC_VEC(Ca, su3_matrix_f, NUMLINK);
+  for (j = 0; j < numK; j++)
+    FIELD_ALLOC_MAT(traceBB[j], Real, NUMLINK, NUMLINK);
 #endif
 
 #ifdef EIG
@@ -203,7 +206,7 @@ int setup() {
 // Read in parameters for Monte Carlo
 int readin(int prompt) {
   // prompt=1 indicates prompts are to be given for input
-  int status;
+  int status, j;
   Real x;
 
   // On node zero, read parameters and send to all other nodes
@@ -239,8 +242,9 @@ int readin(int prompt) {
 #endif
 
 #ifdef CORR
-    // Konishi vacuum subtraction
-    IF_OK status += get_f(stdin, prompt, "vevK", &par_buf.vevK);
+    // Konishi vacuum subtractions
+    for (j = 0; j < numK; j++)
+      IF_OK status += get_f(stdin, prompt, "vevK", &par_buf.vevK[j]);
 #endif
 
     // Maximum conjugate gradient iterations
@@ -338,7 +342,8 @@ int readin(int prompt) {
   alpha = par_buf.alpha;
 #endif
 #ifdef CORR
-  vevK = par_buf.vevK;
+  for (j = 0; j < numK; j++)
+    vevK[j] = par_buf.vevK[j];
 #endif
 #ifdef PHASE
   ckpt_load = par_buf.ckpt_load;
