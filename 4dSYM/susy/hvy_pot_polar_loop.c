@@ -17,14 +17,14 @@ void hvy_pot_polar_loop() {
   int dir[2 * (MAX_T + MAX_X)], sign[2 * (MAX_T + MAX_X)];
   double polarloop;
   complex c_loop;
-  su3_matrix_f tmat;
+  su3_matrix_f tmat, tmat2;
 
   FORALLSITES(i, s) {
     for (mu = 0; mu < NUMLINK; mu++) {
       // Polar projection of all links (even the unused diagonal link)
       // To be multiplied together after projecting
       // !!! Overwrites links
-      polar(&(s->linkf[mu]), &tmat);
+      polar(&(s->linkf[mu]), &tmat, &tmat2);
       su3mat_copy_f(&tmat, &(s->linkf[mu]));
     }
   }

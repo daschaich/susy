@@ -153,7 +153,7 @@ void hvy_pot_polar_loop();
 // Final argument reports success or information about failure
 void zheev_(char *doV, char *uplo, int *N1, double *store, int *N2,
             double *eigs, double *work, int *Nwork, double *Rwork, int *stat);
-void polar(su3_matrix_f *a, su3_matrix_f *b);
+void polar(su3_matrix_f *in, su3_matrix_f *out, su3_matrix_f *rho);
 #endif
 
 // Monopole computation uses find_det
@@ -178,7 +178,7 @@ void blocked_rsymm(int Nsmear, int bl);
 #ifdef SMEAR
 // Blocked APE smearing with optional projections
 void blocked_APE(int Nsmear, double alpha, int project, int block);
-void polar(su3_matrix_f *a, su3_matrix_f *b);
+void polar(su3_matrix_f *in, su3_matrix_f *out, su3_matrix_f *rho);
 void zheev_(char *doV, char *uplo, int *N1, double *store, int *N2,
             double *eigs, double *work, int *Nwork, double *Rwork, int *stat);
 #endif
