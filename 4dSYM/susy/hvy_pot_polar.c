@@ -21,7 +21,7 @@ void hvy_pot_polar() {
   int count[MAX_pts], this_r, total_r = 0;
   Real MAX_r = 100.0 * MAX_X, tr, lookup[MAX_pts], W[MAX_pts];
   double wloop;
-  su3_matrix_f tmat, *mat;
+  su3_matrix_f tmat, tmat2, *mat;
   msg_tag *mtag = NULL;
 
   // Initialize Wilson loop accumulators
@@ -45,7 +45,7 @@ void hvy_pot_polar() {
    // Polar projection of gauge-fixed links
    // To be multiplied together after projecting
    // !!! Overwrites links
-   polar(&(s->linkf[TUP]), &tmat);
+   polar(&(s->linkf[TUP]), &tmat, &tmat2);
    su3mat_copy_f(&tmat, &(s->linkf[TUP]));
   }
 

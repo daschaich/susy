@@ -220,24 +220,27 @@ void compute_Fmunu() {
 
 
 // -----------------------------------------------------------------
-// Compute at each site B_mu(x) = U_mu(x) * Udag_mu(x) - trace
-// as well as traceBB[mu][nu](x) = tr[B_mu(x) B_nu(x)] (should be real)
+// Compute at each site traceBB[a][b](x) = tr[B_a(x) B_b(x)] (should be real)
+// Where the scalar field B_a is the traceless part of the hermitian matrix
+// returned by the polar projection
 #ifdef CORR
 void compute_Ba(int project) {
   register int i;
   register site *s;
   int a, b, j;
   complex ctmp;
+  Real tr;
   su3_matrix_f tmat, tmat2;
 
   // B_a = U_a Udag_a - trace
   FORALLSITES(i, s) {
     for (a = XUP; a < NUMLINK; a++) {
-      mult_su3_na_f(&(s->linkf[a]), &(s->linkf[a]), &(Ba[a][i]));
+//      mult_su3_na_f(&(s->linkf[a]), &(s->linkf[a]), &(Ba[a][i]));
+      polar(&(s->linkf[a]), &tmat, &(Ba[a][i]));
       ctmp = trace_su3_f(&(Ba[a][i]));
-      CDIVREAL(ctmp, (Real)NCOL, ctmp);
+      tr = ctmp.real / (Real)NCOL;
       for (j = 0; j < NCOL; j++)
-        CDIF(Ba[a][i].e[j][j], ctmp);
+        Ba[a][i].e[j][j].real -= tr;
     }
 
     // traceBB[a][b] = tr[B_a(x) B_b(x)] is symmetric in a <--> b
