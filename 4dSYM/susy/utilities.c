@@ -223,12 +223,12 @@ void compute_Fmunu() {
 // Compute at each site B_mu(x) = U_mu(x) * Udag_mu(x) - trace
 // as well as traceBB[mu][nu](x) = tr[B_mu(x) B_nu(x)] (should be real)
 #ifdef CORR
-void compute_Ba() {
+void compute_Ba(int project) {
   register int i;
   register site *s;
   int a, b, j;
   complex ctmp;
-  su3_matrix_f tmat;
+  su3_matrix_f tmat, tmat2;
 
   // B_a = U_a Udag_a - trace
   FORALLSITES(i, s) {
@@ -246,7 +246,14 @@ void compute_Ba() {
     for (a = XUP; a < NUMLINK; a++) {
       for (b = a; b < NUMLINK; b++) {
         mult_su3_nn_f(&(Ba[a][i]), &(Ba[b][i]), &tmat);
-        ctmp = trace_su3_f(&tmat);
+//        node0_printf("%d %d %d\n", i, a, b);
+//        dumpmat_f(&tmat);
+//        if (project == 1)
+//          det_project(&tmat, &tmat2);
+//        else
+          su3mat_copy_f(&tmat, &tmat2);
+//        dumpmat_f(&tmat2);
+        ctmp = trace_su3_f(&tmat2);
         if (fabs(ctmp.imag) > IMAG_TOL) {
           printf("node%d WARNING: Tr(BB[%d][%d]) = (%.4g, %.4g) at site %d\n",
                  this_node, a, b, ctmp.real, ctmp.imag, i);
