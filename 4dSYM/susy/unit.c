@@ -73,7 +73,7 @@ void polar(su3_matrix_f *in, su3_matrix_f *out, su3_matrix_f *P) {
   for (row = 0; row < NCOL; row++) {
     for (col = 0; col < NCOL; col++) {
       if (cabs_sq(&(PSq.e[row][col])) > SQ_TOL) {
-        printf("Error getting unitary piece: \n");
+        printf("Error getting unitary piece: ");
         printf("%.4g > %.4g for [%d, %d]\n",
                cabs(&(PSq.e[row][col])), IMAG_TOL, row, col);
 
@@ -91,7 +91,7 @@ void polar(su3_matrix_f *in, su3_matrix_f *out, su3_matrix_f *P) {
   for (row = 0; row < NCOL; row++) {
     for (col = 0; col < NCOL; col++) {
       if (cabs_sq(&(PSq.e[row][col])) > SQ_TOL) {
-        printf("Error getting hermitian piece:\n");
+        printf("Error getting hermitian piece: ");
         printf("%.4g > %.4g for [%d, %d]\n",
                cabs(&(PSq.e[row][col])), IMAG_TOL, row, col);
 

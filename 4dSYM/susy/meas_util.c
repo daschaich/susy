@@ -79,16 +79,25 @@ void compute_Ba() {
   FORALLSITES(i, s) {
     for (a = XUP; a < NUMLINK; a++) {
       polar(&(s->linkf[a]), &tmat, &(Ba[a][i]));
+      // Hermitian so trace is real
       tc = trace_su3_f(&(Ba[a][i]));
-      CDIVREAL(tc, (Real)NCOL, tc);
+      tr = tc.real / (Real)NCOL;
       for (j = 0; j < NCOL; j++)
-        CDIF(Ba[a][i].e[j][j], tc);
+        Ba[a][i].e[j][j].real -= tr;
+      if (fabs(tc.imag) > IMAG_TOL) {
+        printf("WARNING: Im(Tr[Ba[%d][%d]]) = %.4g > %.4g\n",
+               a, i, fabs(tc.imag), IMAG_TOL);
+      }
 
       mult_su3_na_f(&(s->linkf[a]), &(s->linkf[a]), &(Ca[a][i]));
       tc = trace_su3_f(&(Ca[a][i]));
-      CDIVREAL(tc, (Real)NCOL, tc);
+      tr = tc.real / (Real)NCOL;
       for (j = 0; j < NCOL; j++)
-        CDIF(Ca[a][i].e[j][j], tc);
+        Ca[a][i].e[j][j].real -= tr;
+      if (fabs(tc.imag) > IMAG_TOL) {
+        printf("WARNING: Im(Tr[Ca[%d][%d]]) = %.4g > %.4g\n",
+               a, i, fabs(tc.imag), IMAG_TOL);
+      }
     }
 
     // Bilinear traces are symmetric in a <--> b,
@@ -115,7 +124,6 @@ void compute_Ba() {
                  a, b, tc.real, tc.imag, i);
         }
 
-        // Will probably be unchanged by stout smearing
         mult_su3_nn_f(&(Ca[a][i]), &(Ca[b][i]), &tmat);
         tc = trace_su3_f(&tmat);
         traceBB[2][a][b][i] = tc.real;
