@@ -119,7 +119,7 @@ void APE_smear(int Nsmear, double alpha, int project) {
   Real tr, tr2;
   su3_matrix_f tmat, tmat2;
 
-  tr = alpha / (10.0 * (1.0 - alpha));
+  tr = alpha / (8.0 * (1.0 - alpha));
   tr2 = 1.0 - alpha;
 
   for (n = 0; n < Nsmear; n++) {
