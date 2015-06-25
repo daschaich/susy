@@ -10,7 +10,7 @@
 void polar(su3_matrix_f *in, su3_matrix_f *out, su3_matrix_f *P) {
   char V = 'V', U = 'U';
   int row, col, Npt = NCOL, stat = 0, Nwork = 2 * NCOL;
-  double *store, *work, *Rwork, *eigs, testtrace;
+  double *store, *work, *Rwork, *eigs;
   complex minus1 = cmplx(-1.0, 0.0);
   su3_matrix_f PSq, Pinv, tmat;
 
@@ -68,33 +68,55 @@ void polar(su3_matrix_f *in, su3_matrix_f *out, su3_matrix_f *P) {
   mult_su3_nn_f(in, &Pinv, out);
 
   // Check unitarity of out
-  testtrace = realtrace_su3_f(out, out);
-  if (fabs(testtrace / (Real)NCOL - 1.0) > IMAG_TOL)
-    printf("Error getting unitary piece: trace = %.4g\n", testtrace);
+  mult_su3_na_f(out, out, &PSq);
+  c_scalar_add_diag_su3_f(&PSq, &minus1);
+  for (row = 0; row < NCOL; row++) {
+    for (col = 0; col < NCOL; col++) {
+      if (cabs_sq(&(PSq.e[row][col])) > SQ_TOL) {
+        printf("Error getting unitary piece: \n");
+        printf("%.4g > %.4g for [%d, %d]\n",
+               cabs(&(PSq.e[row][col])), IMAG_TOL, row, col);
+
+        dumpmat_f(in);
+        dumpmat_f(out);
+        dumpmat_f(P);
+        return;
+      }
+    }
+  }
 
   // Check hermiticity of P
   su3_adjoint_f(P, &tmat);
   c_scalar_mult_add_su3mat_f(P, &tmat, &minus1, &PSq);
   for (row = 0; row < NCOL; row++) {
     for (col = 0; col < NCOL; col++) {
-      if (cabs(&(PSq.e[row][col])) > IMAG_TOL) {
-        printf("Error reconstructing initial matrix:\n");
+      if (cabs_sq(&(PSq.e[row][col])) > SQ_TOL) {
+        printf("Error getting hermitian piece:\n");
+        printf("%.4g > %.4g for [%d, %d]\n",
+               cabs(&(PSq.e[row][col])), IMAG_TOL, row, col);
+
         dumpmat_f(in);
         dumpmat_f(out);
         dumpmat_f(P);
+        return;
       }
     }
   }
+
   // Check in = out.P
   mult_su3_nn_f(out, P, &tmat);
   c_scalar_mult_add_su3mat_f(in, &tmat, &minus1, &PSq);
   for (row = 0; row < NCOL; row++) {
     for (col = 0; col < NCOL; col++) {
-      if (cabs(&(PSq.e[row][col])) > IMAG_TOL) {
-        printf("Error reconstructing initial matrix:\n");
+      if (cabs_sq(&(PSq.e[row][col])) > SQ_TOL) {
+        printf("Error reconstructing initial matrix: ");
+        printf("%.4g > %.4g for [%d, %d]\n",
+               cabs(&(PSq.e[row][col])), IMAG_TOL, row, col);
+
         dumpmat_f(in);
         dumpmat_f(out);
         dumpmat_f(P);
+        return;
       }
     }
   }

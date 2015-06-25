@@ -1,6 +1,6 @@
 // -----------------------------------------------------------------
-// Construct stout-smeared links, following the standard procedure,
-// Morningstar and Peardon, hep-lat/0311018
+// Either stout smearing or APE smearing without SU(3) projection
+// For stout smearing see Morningstar and Peardon, hep-lat/0311018
 #include "susy_includes.h"
 // -----------------------------------------------------------------
 
@@ -69,63 +69,7 @@ void directional_staple(int dir, int dir2) {
 
 
 // -----------------------------------------------------------------
-// Calculate newU = exp(A).U, overwriting s->linkf
-// Goes to eighth order in the exponential:
-//   exp(A) * U = ( 1 + A + A^2/2 + A^3/6 ...) * U
-//              = U + A*(U + (A/2)*(U + (A/3)*( ... )))
-void exp_mult() {
-  register int i, dir;
-  register site *s;
-  register Real t2, t3, t4, t5, t6, t7, t8;
-  su3_matrix_f *link, temp1, temp2, htemp;
-
-  // Take divisions out of site loop (can't be done by compiler)
-  t2 = 1.0 / 2.0;
-  t3 = 1.0 / 3.0;
-  t4 = 1.0 / 4.0;
-  t5 = 1.0 / 5.0;
-  t6 = 1.0 / 6.0;
-  t7 = 1.0 / 7.0;
-  t8 = 1.0 / 8.0;
-
-  for (dir = XUP; dir < NUMLINK; dir++) {
-    FORALLSITES(i, s) {
-      uncompress_anti_hermitian(&(Q[dir][i]), &htemp);
-      link = &(s->linkf[dir]);
-
-      mult_su3_nn_f(&htemp, link, &temp1);
-      scalar_mult_add_su3_matrix_f(link, &temp1, t8, &temp2);
-
-      mult_su3_nn_f(&htemp, &temp2, &temp1);
-      scalar_mult_add_su3_matrix_f(link, &temp1, t7, &temp2);
-
-      mult_su3_nn_f(&htemp, &temp2, &temp1);
-      scalar_mult_add_su3_matrix_f(link, &temp1, t6, &temp2);
-
-      mult_su3_nn_f(&htemp, &temp2, &temp1);
-      scalar_mult_add_su3_matrix_f(link, &temp1, t5, &temp2);
-
-      mult_su3_nn_f(&htemp, &temp2, &temp1);
-      scalar_mult_add_su3_matrix_f(link, &temp1, t4, &temp2);
-
-      mult_su3_nn_f(&htemp, &temp2, &temp1);
-      scalar_mult_add_su3_matrix_f(link, &temp1, t3, &temp2);
-
-      mult_su3_nn_f(&htemp, &temp2, &temp1);
-      scalar_mult_add_su3_matrix_f(link, &temp1, t2, &temp2);
-
-      mult_su3_nn_f(&htemp, &temp2, &temp1);
-      add_su3_matrix_f(link, &temp1, &(s->linkf[dir]));
-    }
-  }
-}
-// -----------------------------------------------------------------
-
-
-
-// -----------------------------------------------------------------
-// Do stout smearing
-// Overwrite s->linkf
+// Nsmear steps of stout smearing, overwriting s->linkf
 // Use staple, s->mom and Q for temporary storage
 void stout_smear(int Nsmear, double alpha) {
   register int i, n, dir, dir2;
@@ -160,6 +104,60 @@ void stout_smear(int Nsmear, double alpha) {
     // Do all exponentiations at once to reuse divisions
     // Overwrites s->linkf
     exp_mult();
+  }
+}
+// -----------------------------------------------------------------
+
+
+
+// -----------------------------------------------------------------
+// Nsmear steps of APE smearing without unitarization, overwriting s->linkf
+// Optionally project unsmeared links and / or staple sums
+void APE_smear(int Nsmear, double alpha, int project) {
+  register int i, n, dir, dir2;
+  register site *s;
+  Real tr, tr2;
+  su3_matrix_f tmat, tmat2;
+
+  tr = alpha / (10.0 * (1.0 - alpha));
+  tr2 = 1.0 - alpha;
+
+  for (n = 0; n < Nsmear; n++) {
+    FORALLSITES(i, s) {
+      for (dir = XUP; dir < NUMLINK; dir++) {
+        // Decide what to do with links before smearing
+        // Polar project, divide out determinant, or nothing
+        if (project == 1) {
+//          det_project(&(s->linkf[dir]), &tmat);
+          polar(&(s->linkf[dir]), &tmat, &tmat2);
+        }
+        else
+          su3mat_copy_f(&(s->linkf[dir]), &(s->mom[dir]));
+      }
+    }
+
+    for (dir = XUP; dir < NUMLINK; dir++) {
+      FORALLSITES(i, s)
+        clear_su3mat_f(&(staple[i]));     // Initialize staple sum
+
+      // Accumulate staple sum in staple
+      for (dir2 = XUP; dir2 < NUMLINK; dir2++) {
+        if (dir != dir2)
+          directional_staple(dir, dir2);
+      }
+
+      // Combine (1 - alpha).link + (alpha / 6).staple
+      // Don't do anything to this link!
+      FORALLSITES(i, s) {
+//        if (project == 1)
+//          det_project(&(staple[i]), &tmat2);
+//        else
+          su3mat_copy_f(&(staple[i]), &tmat2);
+
+        scalar_mult_add_su3_matrix_f(&(s->linkf[dir]), &tmat2, tr, &tmat);
+        scalar_mult_su3_matrix_f(&tmat, tr2, &(s->linkf[dir]));
+      }
+    }
   }
 }
 // -----------------------------------------------------------------

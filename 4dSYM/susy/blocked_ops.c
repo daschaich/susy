@@ -57,9 +57,9 @@ void blocked_ops(int Nsmear, int block) {
 
   // SUGRA, averaging over six components with mu < nu
   norm = (Real)(6.0 * bl * bl * bl * bl);
-  node0_printf("OK %d %d", Nsmear, block);
+  node0_printf("OS %d %d", Nsmear, block);
   for (j = 0; j < numK; j++)
-    node0_printf(" %.8g", OK[j] / norm);
+    node0_printf(" %.8g", OS[j] / norm);
   node0_printf("\n");
 }
 // -----------------------------------------------------------------
