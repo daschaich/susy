@@ -77,7 +77,7 @@ void coldlat() {
 
 // -----------------------------------------------------------------
 // Set linkf to exponentiated random anti-hermitian matrices
-// Then hit with L*Nt smearing steps to smooth
+// Then hit with stout smearing to smooth
 // Exponentiation helper function overlaps with exp_mult() in stout.c
 void exponentiate_ahm(anti_hermitmat *in, su3_matrix_f *link) {
   Real t2, t3, t4, t5, t6, t7, t8;

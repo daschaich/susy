@@ -161,10 +161,12 @@ void monopole();
 
 #ifdef SMEAR
 // APE and stout smearing, the former with optional projections
-// stout.c contains directional_staple used by APE.c
-void directional_staple(int dir1, int dir2);
+void exp_mult();
 void stout_smear(int Nsmear, double alpha);
 void APE_smear(int Nsmear, double alpha, int project);
+void polar(su3_matrix_f *in, su3_matrix_f *out, su3_matrix_f *rho);
+void zheev_(char *doV, char *uplo, int *N1, double *store, int *N2,
+            double *eigs, double *work, int *Nwork, double *Rwork, int *stat);
 #endif
 
 #ifdef MCRG
@@ -176,11 +178,9 @@ void blocked_ploop(int Nsmear, int bl);
 void blocked_rsymm(int Nsmear, int bl);
 
 #ifdef SMEAR
-// Blocked APE smearing with optional projections
+// Blocked APE and stout smearing, the former with optional projections
+void blocked_stout(int Nsmear, double alpha, int block);
 void blocked_APE(int Nsmear, double alpha, int project, int block);
-void polar(su3_matrix_f *in, su3_matrix_f *out, su3_matrix_f *rho);
-void zheev_(char *doV, char *uplo, int *N1, double *store, int *N2,
-            double *eigs, double *work, int *Nwork, double *Rwork, int *stat);
 #endif
 #endif
 // -----------------------------------------------------------------

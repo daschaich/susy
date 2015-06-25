@@ -1,4 +1,5 @@
 // -----------------------------------------------------------------
+// Either stout smearing or unprojected APE smearing after RG blocking
 // Construct APE-smeared links without unitarization
 #include "susy_includes.h"
 // -----------------------------------------------------------------
@@ -74,7 +75,58 @@ void blocked_staple(int bl, int dir, int dir2) {
 
 
 // -----------------------------------------------------------------
-// Overwrite s->linkf
+// Nsmear steps of stout smearing, overwriting s->linkf
+// Use staple, s->mom and Q for temporary storage
+void blocked_stout(int Nsmear, double alpha, int block) {
+  register int i, n, dir, dir2;
+  register site *s;
+  int j, bl = 2;
+  su3_matrix_f tmat;
+
+  // Set number of links to stride, bl = 2^block
+  // Allow sanity check of reproducing stout_smear() with this routine
+  for (j = 1; j < block; j++)
+    bl *= 2;
+  if (block <= 0)
+    bl = 1;
+
+  for (n = 0; n < Nsmear; n++) {
+    FORALLSITES(i, s) {
+      // Unmodified links -- no projection or determinant division
+      for (dir = XUP; dir < NUMLINK; dir++)
+        su3mat_copy_f(&(s->linkf[dir]), &(s->mom[dir]));
+    }
+
+    for (dir = XUP; dir < NUMLINK; dir++) {
+      FORALLSITES(i, s)
+        clear_su3mat_f(&(staple[i]));     // Initialize staple sum
+
+      // Accumulate staple sum in staple
+      for (dir2 = XUP; dir2 < NUMLINK; dir2++) {
+        if (dir != dir2)
+          blocked_staple(bl, dir, dir2);
+      }
+
+      // Multiply by alpha Udag, take traceless anti-hermitian part
+      FORALLSITES(i, s) {
+        mult_su3_na_f(&(staple[i]), &(s->linkf[dir]), &tmat);  // C.Udag
+        scalar_mult_su3_matrix_f(&tmat, alpha, &(staple[i]));
+        make_anti_hermitian(&(staple[i]), &(Q[dir][i]));
+      }
+    }
+
+    // Do all exponentiations at once to reuse divisions
+    // Overwrites s->linkf
+    exp_mult();
+  }
+}
+// -----------------------------------------------------------------
+
+
+
+// -----------------------------------------------------------------
+// Nsmear steps of APE smearing without unitarization, overwriting s->linkf
+// Optionally project unsmeared links and / or staple sums
 void blocked_APE(int Nsmear, double alpha, int project, int block) {
   register int i, n, dir, dir2;
   register site *s;
@@ -82,11 +134,11 @@ void blocked_APE(int Nsmear, double alpha, int project, int block) {
   Real tr, tr2;
   su3_matrix_f tmat, tmat2;
 
-  tr = alpha / (6.0 * (1.0 - alpha));
+  tr = alpha / (10.0 * (1.0 - alpha));
   tr2 = 1.0 - alpha;
 
   // Set number of links to stride, bl = 2^block
-  // Allow sanity check of reproducing ploop() with this routine
+  // Allow sanity check of reproducing APE_smear() with this routine
   for (j = 1; j < block; j++)
     bl *= 2;
   if (block <= 0)
