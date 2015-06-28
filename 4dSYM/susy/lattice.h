@@ -169,10 +169,10 @@ EXTERN char **gen_pt[N_POINTERS];
 
 #ifdef CORR
 // Scalar field interpolating ops and bilinear traces
-EXTERN su3_matrix_f *Ba[NUMLINK], *Ca[NUMLINK];
-#define numK 3
+#define numK 2
 EXTERN Real *traceBB[numK][NUMLINK][NUMLINK];
 EXTERN double vevK[numK];             // Konishi vacuum subtractions
+EXTERN su3_matrix_f *Ba[numK][NUMLINK];
 #endif
 
 #ifdef BILIN

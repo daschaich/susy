@@ -113,7 +113,9 @@ void stout_smear(int Nsmear, double alpha) {
 // -----------------------------------------------------------------
 // Nsmear steps of APE smearing without unitarization, overwriting s->linkf
 // Optionally project unsmeared links and / or staple sums
+// Only used for correlators at present (other targets don't include polar)
 void APE_smear(int Nsmear, double alpha, int project) {
+#ifdef CORR
   register int i, n, dir, dir2;
   register site *s;
   Real tr, tr2;
@@ -159,5 +161,6 @@ void APE_smear(int Nsmear, double alpha, int project) {
       }
     }
   }
+#endif
 }
 // -----------------------------------------------------------------
