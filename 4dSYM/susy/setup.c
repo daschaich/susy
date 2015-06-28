@@ -139,21 +139,15 @@ void make_fields() {
   FIELD_ALLOC_VEC(tempvec, su3_vector, NUMLINK);
 
 #ifdef CORR
-  size += (double)(2.0 * NUMLINK * sizeof(su3_matrix_f));
+  size += (double)(numK * NUMLINK * sizeof(su3_matrix_f));
   size += (double)(numK * NUMLINK * NUMLINK * sizeof(Real));
-  FIELD_ALLOC_VEC(Ba, su3_matrix_f, NUMLINK);
-  FIELD_ALLOC_VEC(Ca, su3_matrix_f, NUMLINK);
-  for (j = 0; j < numK; j++)
+  for (j = 0; j < numK; j++) {
+    FIELD_ALLOC_VEC(Ba[j], su3_matrix_f, NUMLINK);
     FIELD_ALLOC_MAT(traceBB[j], Real, NUMLINK, NUMLINK);
+  }
 #endif
 
-#ifdef EIG
-  size += (double)(2.0 * sizeof(Twist_Fermion));
-  FIELD_ALLOC(src, Twist_Fermion);
-  FIELD_ALLOC(res, Twist_Fermion);
-#endif
-
-#ifdef PHASE
+#if defined(EIG) || defined(PHASE)
   size += (double)(2.0 * sizeof(Twist_Fermion));
   FIELD_ALLOC(src, Twist_Fermion);
   FIELD_ALLOC(res, Twist_Fermion);

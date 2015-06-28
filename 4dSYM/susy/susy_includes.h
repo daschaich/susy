@@ -140,7 +140,9 @@ void hvy_pot_polar();
 // These construct explicit paths along lattice principal axes, for checking
 void hvy_pot_loop(int do_det);
 void hvy_pot_polar_loop();
+#endif
 
+#if defined(WLOOP) || defined(SMEAR)
 // Use LAPACK in the polar projection
 // http://www.physics.orst.edu/~rubin/nacphy/lapack/routines/zheev.html
 // First argument turns on eigenvector computations
@@ -164,9 +166,6 @@ void monopole();
 void exp_mult();
 void stout_smear(int Nsmear, double alpha);
 void APE_smear(int Nsmear, double alpha, int project);
-void polar(su3_matrix_f *in, su3_matrix_f *out, su3_matrix_f *rho);
-void zheev_(char *doV, char *uplo, int *N1, double *store, int *N2,
-            double *eigs, double *work, int *Nwork, double *Rwork, int *stat);
 #endif
 
 #ifdef MCRG

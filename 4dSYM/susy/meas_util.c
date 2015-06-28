@@ -69,68 +69,46 @@ void exp_mult() {
 void compute_Ba() {
   register int i;
   register site *s;
-  int a, b, j;
+  int a, b, j, k;
   complex tc;
   Real tr;
   su3_matrix_f tmat;
 
-  // B_a is traceless part of the hermitian matrix from the polar projection
-  // C_a is traceless part of U_a Udag_a
   FORALLSITES(i, s) {
+    // Construct scalar fields
     for (a = XUP; a < NUMLINK; a++) {
-      polar(&(s->linkf[a]), &tmat, &(Ba[a][i]));
-      // Hermitian so trace is real
-      tc = trace_su3_f(&(Ba[a][i]));
-      tr = tc.real / (Real)NCOL;
-      for (j = 0; j < NCOL; j++)
-        Ba[a][i].e[j][j].real -= tr;
-      if (fabs(tc.imag) > IMAG_TOL) {
-        printf("WARNING: Im(Tr[Ba[%d][%d]]) = %.4g > %.4g\n",
-               a, i, fabs(tc.imag), IMAG_TOL);
-      }
+      polar(&(s->linkf[a]), &tmat, &(Ba[0][a][i]));
+      mult_su3_na_f(&(s->linkf[a]), &(s->linkf[a]), &(Ba[1][a][i]));
 
-      mult_su3_na_f(&(s->linkf[a]), &(s->linkf[a]), &(Ca[a][i]));
-      tc = trace_su3_f(&(Ca[a][i]));
-      tr = tc.real / (Real)NCOL;
-      for (j = 0; j < NCOL; j++)
-        Ca[a][i].e[j][j].real -= tr;
-      if (fabs(tc.imag) > IMAG_TOL) {
-        printf("WARNING: Im(Tr[Ca[%d][%d]]) = %.4g > %.4g\n",
-               a, i, fabs(tc.imag), IMAG_TOL);
+      // Subtract traces: Both are hermitian so traces are real
+      for (j = 0; j < numK; j++) {
+        tc = trace_su3_f(&(Ba[j][a][i]));
+        tr = tc.real / (Real)NCOL;
+        for (k = 0; k < NCOL; k++)
+          Ba[j][a][i].e[k][k].real -= tr;
+        if (fabs(tc.imag) > IMAG_TOL) {
+          printf("WARNING: Im(Tr[Ba[%d][%d][%d]]) = %.4g > %.4g\n",
+                 j, a, i, fabs(tc.imag), IMAG_TOL);
+        }
       }
     }
 
-    // Bilinear traces are symmetric in a <--> b,
+    // Compute traces of bilinears
+    // Both are symmetric in a <--> b
     // but store all to simplify SUGRA computation
     // Make sure all are purely real
+    // Checked that both are gauge invariant while mixed bilinear is not
     for (a = XUP; a < NUMLINK; a++) {
       for (b = a; b < NUMLINK; b++) {
-        mult_su3_nn_f(&(Ba[a][i]), &(Ba[b][i]), &tmat);
-        tc = trace_su3_f(&tmat);
-        traceBB[0][a][b][i] = tc.real;
-        traceBB[0][a][b][i] = traceBB[0][b][a][i];
-        if (fabs(tc.imag) > IMAG_TOL) {
-          printf("WARNING: Tr(BB[0][%d][%d]) = (%.4g, %.4g) at site %d\n",
-                 a, b, tc.real, tc.imag, i);
-        }
-
-
-        mult_su3_nn_f(&(Ba[a][i]), &(Ca[b][i]), &tmat);
-        tc = trace_su3_f(&tmat);
-        traceBB[1][a][b][i] = tc.real;
-        traceBB[1][a][b][i] = traceBB[1][b][a][i];
-        if (fabs(tc.imag) > IMAG_TOL) {
-          printf("WARNING: Tr(BB[1][%d][%d]) = (%.4g, %.4g) at site %d\n",
-                 a, b, tc.real, tc.imag, i);
-        }
-
-        mult_su3_nn_f(&(Ca[a][i]), &(Ca[b][i]), &tmat);
-        tc = trace_su3_f(&tmat);
-        traceBB[2][a][b][i] = tc.real;
-        traceBB[2][a][b][i] = traceBB[2][b][a][i];
-        if (fabs(tc.imag) > IMAG_TOL) {
-          printf("WARNING: Tr(BB[2][%d][%d]) = (%.4g, %.4g) at site %d\n",
-                 a, b, tc.real, tc.imag, i);
+        for (j = 0; j < numK; j++) {
+          mult_su3_nn_f(&(Ba[j][a][i]), &(Ba[j][b][i]), &tmat);
+          tc = trace_su3_f(&tmat);
+          traceBB[j][a][b][i] = tc.real;
+          traceBB[j][a][b][i] = traceBB[j][b][a][i];
+          if (fabs(tc.imag) > IMAG_TOL) {
+            printf("WARNING: Tr(BB[%d][%d][%d]) = (%.4g, %.4g) at site %d\n",
+                   j, a, b, tc.real, tc.imag, i);
+          }
         }
       }
     }

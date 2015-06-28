@@ -58,6 +58,7 @@ MY_OBJECTS = setup.o        \
              widths.o       \
              hdelta0.o      \
              smear.o        \
+             meas_util.o    \
              congrad_multi_field.o
 
 # Basic set from generic directory
@@ -118,7 +119,7 @@ susy_meas::
 	"EXTRA_OBJECTS = control_meas.o d_konishi.o d_correlator_r.o rsymm.o \
 	                 monopole.o hvy_pot.o hvy_pot_polar.o unit.o gaugefix.o \
 	                 hvy_pot_loop.o hvy_pot_polar_loop.o path.o d_bilinear.o \
-	                 d_plaq4_lcl.o meas_util.o "
+	                 d_plaq4_lcl.o "
 
 susy_hmc_meas::
 	${MAKE} -f ${MAKEFILE} target "MYTARGET= $@" \
@@ -128,8 +129,7 @@ susy_hmc_meas::
 	"EXTRA_OBJECTS = control.o update_o.o update_h.o setup_rhmc.o det_force.o \
 	                 d_konishi.o d_correlator_r.o rsymm.o hvy_pot.o monopole.o \
 	                 hvy_pot_polar.o unit.o gaugefix.o hvy_pot_loop.o path.o \
-	                 hvy_pot_polar_loop.o d_bilinear.o d_plaq4_lcl.o \
-	                 meas_util.o "
+	                 hvy_pot_polar_loop.o d_bilinear.o d_plaq4_lcl.o "
 
 susy_mcrg::
 	${MAKE} -f ${MAKEFILE} target "MYTARGET= $@" \
@@ -137,8 +137,7 @@ susy_mcrg::
 	"LAPACK = -llapack -lblas " \
 	"EXTRA_OBJECTS = control_mcrg.o block_mcrg.o rsymm.o blocked_plaq.o \
 	                 blocked_ops.o blocked_ploop.o blocked_rsymm.o path.o \
-	                 d_plaq4_lcl.o blocked_smear.o blocked_plaq_lcl.o unit.o \
-	                 meas_util.o "
+	                 d_plaq4_lcl.o blocked_smear.o blocked_plaq_lcl.o unit.o "
 
 susy_eig::
 	${MAKE} -f ${MAKEFILE} target "MYTARGET= $@" \
