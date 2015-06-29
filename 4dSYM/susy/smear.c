@@ -131,7 +131,7 @@ void APE_smear(int Nsmear, double alpha, int project) {
         // Polar project, divide out determinant, or nothing
         if (project == 1) {
 //          det_project(&(s->linkf[dir]), &(s->mom[dir]));
-          polar(&(s->linkf[dir]), &tmat, &(s->mom[dir]));
+          polar(&(s->linkf[dir]), &(s->mom[dir]), &tmat);
         }
         else
           su3mat_copy_f(&(s->linkf[dir]), &(s->mom[dir]));
