@@ -150,8 +150,8 @@ void blocked_APE(int Nsmear, double alpha, int project, int block) {
         // Decide what to do with links before smearing
         // Polar project, divide out determinant, or nothing
         if (project == 1) {
-//          det_project(&(s->linkf[dir]), &tmat);
-          polar(&(s->linkf[dir]), &tmat, &tmat2);
+//          det_project(&(s->linkf[dir]), &(s->mom[dir]));
+          polar(&(s->linkf[dir]), &tmat, &(s->mom[dir]));
         }
         else
           su3mat_copy_f(&(s->linkf[dir]), &(s->mom[dir]));
@@ -168,7 +168,7 @@ void blocked_APE(int Nsmear, double alpha, int project, int block) {
           blocked_staple(bl, dir, dir2);
       }
 
-      // Combine (1 - alpha).link + (alpha / 6).staple
+      // Combine (1 - alpha).link + (alpha / 8).staple
       FORALLSITES(i, s) {
 //        if (project == 1)
 //          det_project(&(staple[i]), &tmat2);
