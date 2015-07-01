@@ -115,7 +115,7 @@ void rsymm_path(int *dir, int *sign, int *kind, int length) {
 // -----------------------------------------------------------------
 // Print both usual and transformed Wilson loops
 // Use tempmat1 for temporary storage
-void rsymm() {
+void rsymm(int project) {
   register int i;
   register site *s;
   int dir_normal, dir_inv, dist, dist_inv, mu, length, max = MAX_X + 1;
@@ -126,6 +126,18 @@ void rsymm() {
   su3_matrix_f tmat;
 
   node0_printf("rsymm: MAX = %d\n", max);
+
+  // Optionally consider only hermitian part of links
+  // Save links in f_U for future use (mom will be used for inverses)
+  if (project == 1) {
+    node0_printf("rsymm considering polar-projected links\n");
+    FORALLSITES(i, s) {
+      for (mu = XUP; mu < NUMLINK; mu++) {
+        su3mat_copy_f(&(s->linkf[mu]), &(s->f_U[mu]));
+        polar(&(s->f_U[mu]), &tmat, &(s->linkf[mu]));
+      }
+    }
+  }
 
   // Compute and optionally check inverse matrices
   // Temporarily store the adjoint of the inverse in momentum matrices,
@@ -140,7 +152,7 @@ void rsymm() {
 #define INV_TOL_SQ 1e-24
       // Check inversion -- tmat should be unit matrix
       int j, k;
-      mult_su3_nn_f(&(s->mom[dir]), &(s->linkf[dir]), &tmat);
+      mult_su3_nn_f(&(s->mom[mu]), &(s->linkf[mu]), &tmat);
       for (j = 0; j < NCOL; j++) {
         if (fabs(1 - tmat.e[j][j].real) > INV_TOL
             || fabs(tmat.e[j][j].imag) > INV_TOL) {
@@ -156,7 +168,7 @@ void rsymm() {
         }
       }
       // Check left multiplication in addition to right multiplication
-      mult_su3_nn_f(&(s->linkf[dir]), &(s->mom[dir]), &tmat);
+      mult_su3_nn_f(&(s->linkf[mu]), &(s->mom[mu]), &tmat);
       for (j = 0; j < NCOL; j++) {
         if (fabs(1 - tmat.e[j][j].real) > INV_TOL
             || fabs(tmat.e[j][j].imag) > INV_TOL) {
@@ -263,5 +275,13 @@ void rsymm() {
       } // dist
     } // dir_inv
   } // dir_normal
+
+  // Restore original links from f_U
+  if (project == 1) {
+    FORALLSITES(i, s) {
+      for (mu = XUP; mu < NUMLINK; mu++)
+        su3mat_copy_f(&(s->f_U[mu]), &(s->linkf[mu]));
+    }
+  }
 }
 // -----------------------------------------------------------------
