@@ -96,7 +96,6 @@ int initial_set() {
 // -----------------------------------------------------------------
 // Allocate space for fields
 void make_fields() {
-  int j;
 #ifdef LINEAR_DET
   node0_printf("Supersymmetric constraint on (det[plaq] - 1)\n");
 #else
@@ -139,6 +138,7 @@ void make_fields() {
   FIELD_ALLOC_VEC(tempvec, su3_vector, NUMLINK);
 
 #ifdef CORR
+  int j;
   size += (double)(numK * NUMLINK * sizeof(su3_matrix_f));
   size += (double)(numK * NUMLINK * NUMLINK * sizeof(Real));
   for (j = 0; j < numK; j++) {
@@ -200,7 +200,7 @@ int setup() {
 // Read in parameters for Monte Carlo
 int readin(int prompt) {
   // prompt=1 indicates prompts are to be given for input
-  int status, j;
+  int status;
   Real x;
 
   // On node zero, read parameters and send to all other nodes
@@ -237,6 +237,7 @@ int readin(int prompt) {
 
 #ifdef CORR
     // Konishi vacuum subtractions
+    int j;
     for (j = 0; j < numK; j++)
       IF_OK status += get_f(stdin, prompt, "vevK", &par_buf.vevK[j]);
 #endif

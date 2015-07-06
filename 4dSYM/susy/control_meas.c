@@ -164,7 +164,7 @@ int main(int argc, char *argv[]) {
 
 #ifdef CORR
   // R symmetry transformations -- use find_det and adjugate
-  rsymm(YESDET);
+  rsymm(NODET);
 
   // Measure density of monopole world lines in non-diagonal cubes
   monopole();
