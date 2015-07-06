@@ -141,7 +141,7 @@ susy_mcrg::
 
 susy_eig::
 	${MAKE} -f ${MAKEFILE} target "MYTARGET= $@" \
-	"DEFINES = ${DEFINES} -DPHI_ALGORITHM -DEIG " \
+	"DEFINES = ${DEFINES} -DPHI_ALGORITHM -DEIG -DSMEAR " \
 	"LIBRARIES = ${LIBRARIES} ${PLIB} " \
 	"LAPACK = -llapack -lblas " \
 	"EXTRA_OBJECTS = control_eig.o eig.o gaugefix.o "
