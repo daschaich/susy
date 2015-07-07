@@ -97,7 +97,7 @@ void d_correlator_r() {
   compute_Ba();
 
   // Construct the operators, first Konishi then SUGRA
-  // Average SUGRA over ten components with mu <= nu
+  // Average SUGRA over six components with mu < nu
   FORALLSITES(i, s) {
     for (a = 0; a < NUMLINK; a++) {
       index = i * len;
@@ -258,6 +258,7 @@ void d_correlator_r() {
     node0_printf("\n");
   }
   for (j = 0; j < total_r; j++) {
+    tr = 1.0 / (Real)(count[j] * volume);
     node0_printf("CORR_S %d %.6g", j, lookup[j]);
     for (a = 0; a < numK; a++) {
       for (b = 0; b < numK; b++)
