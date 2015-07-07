@@ -5,8 +5,8 @@
 void blocked_ops(int Nsmear, int block) {
   register int i;
   register site *s;
-  int a, b, j, mu, nu, bl = 2;
-  Real norm, tr, OK[numK], OS[numK];    // Konishi and SUGRA operators
+  int a, b, j, bl = 2;
+  Real norm, OK[numK], OS[numK];    // Konishi and SUGRA operators
 
   // Initialize Konishi and SUGRA operators
   // SUGRA will be symmetric by construction, so ignore nu <= mu
