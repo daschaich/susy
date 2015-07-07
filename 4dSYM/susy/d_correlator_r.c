@@ -49,7 +49,7 @@ Real A4map(x_in, y_in, z_in, t_in) {
 void d_correlator_r() {
   register int i;
   register site *s;
-  int a, b, j, mu, nu, index, x_dist, y_dist, z_dist, t_dist;
+  int a, b, j, index, x_dist, y_dist, z_dist, t_dist;
   int y_start, z_start, t_start, len = 2 * numK;
   int disp[NDIMS] = {0, 0, 0, 0}, this_r, total_r = 0;
   int MAX_pts = 8 * MAX_X * MAX_X * MAX_X, count[MAX_pts];
