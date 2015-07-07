@@ -202,6 +202,9 @@ int readin(int prompt) {
   // prompt=1 indicates prompts are to be given for input
   int status;
   Real x;
+#ifdef CORR
+  int j;
+#endif
 
   // On node zero, read parameters and send to all other nodes
   if (this_node == 0) {
@@ -237,7 +240,6 @@ int readin(int prompt) {
 
 #ifdef CORR
     // Konishi vacuum subtractions
-    int j;
     for (j = 0; j < numK; j++)
       IF_OK status += get_f(stdin, prompt, "vevK", &par_buf.vevK[j]);
 #endif
