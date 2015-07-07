@@ -44,19 +44,18 @@ Real A4map(x_in, y_in, z_in, t_in) {
 
 // -----------------------------------------------------------------
 // Both Konishi and SUGRA correlators as functions of r
-// For gathering, all operators live in array of len = 2numK
 // vevK[numK] are Konishi vacuum subtractions; assume these vanish for SUGRA
 void d_correlator_r() {
   register int i;
   register site *s;
-  int a, b, j, mu, nu, index, x_dist, y_dist, z_dist, t_dist;
-  int y_start, z_start, t_start, len = 2 * numK;
+  int a, b, j, index, x_dist, y_dist, z_dist, t_dist;
+  int y_start, z_start, t_start;
   int disp[NDIMS] = {0, 0, 0, 0}, this_r, total_r = 0;
   int MAX_pts = 8 * MAX_X * MAX_X * MAX_X, count[MAX_pts];
   Real MAX_r = 100.0 * MAX_X, tr;
   Real lookup[MAX_pts], CK[MAX_pts][numK * numK], CS[MAX_pts][numK * numK];
-  Real *ops = malloc(sites_on_node * len * sizeof(*ops));
-  msg_tag *mtag;
+  Real *OK[numK], *OS[numK];
+  msg_tag *Ktag[numK], *Stag[numK];
 
   // Find smallest scalar distance cut by imposing MAX_X
   for (y_dist = 0; y_dist <= MAX_X; y_dist++) {
@@ -72,18 +71,10 @@ void d_correlator_r() {
   // Assume MAX_T >= MAX_X
   node0_printf("d_correlator_r: MAX = %d --> r < %.6g\n", MAX_X, MAX_r);
 
-  // Do vacuum subtraction while initializing operators and correlators
-  // First half are Konishi, second half are SUGRA
-  FORALLSITES(i, s) {
-    index = i * len;
-    for (a = 0; a < numK; a++) {
-      ops[index] = -1.0 * vevK[a];
-      index++;
-    }
-    for (a = 0; a < numK; a++) {
-      ops[index] = 0.0;
-      index++;
-    }
+  // Allocate operators and initialize correlators
+  for (j = 0; j < numK; j++) {
+    OK[j] = malloc(sites_on_node * sizeof(Real));
+    OS[j] = malloc(sites_on_node * sizeof(Real));
   }
   for (j = 0; j < MAX_pts; j++) {
     count[j] = 0;
@@ -96,37 +87,23 @@ void d_correlator_r() {
   // Compute traces of bilinears of scalar field interpolating ops
   compute_Ba();
 
-  // Construct the operators, first Konishi then SUGRA
-  // Average SUGRA over six components with mu < nu
-  FORALLSITES(i, s) {
-    for (a = 0; a < NUMLINK; a++) {
-      index = i * len;
-      for (j = 0; j < numK; j++) {
-        ops[index] += traceBB[j][a][a][i];
-        index++;
+  // Construct the operators
+  node0_printf("(Simple SUGRA)\n");
+  for (j = 0; j < numK; j++) {
+    FORALLSITES(i, s) {
+      OK[j][i] = -1.0 * vevK[j];
+      OS[j][i] = 0.0;
+      for (a = 0; a < NUMLINK; a++) {
+        // First Konishi, summing over diagonal less vacuum
+        OK[j][i] += traceBB[j][a][a][i];
+
+        // Now SUGRA, averaging over ten off-diagonal a < b
+        for (b = a + 1; b < NUMLINK; b++)
+          OS[j][i] += traceBB[j][a][b][i];
       }
 
-      for (b = 0; b < NUMLINK; b++) {
-        index = i * len + numK;
-        for (j = 0; j < numK; j++) {
-          // Now SUGRA with mu--nu trace subtraction
-          // Symmetric and traceless by construction so ignore nu < mu
-          for (mu = 0; mu < NDIMS; mu++) {
-            for (nu = mu + 1; nu < NDIMS; nu++) {
-              tr = P[mu][a] * P[nu][b] + P[nu][a] * P[mu][b];
-              ops[index] += 0.5 * tr * traceBB[j][a][b][i];
-            }
-          }
-          index++;
-        }
-      }
-    }
-
-    // Finishing averaging SUGRA over six components with mu < nu
-    index = i * len + numK;
-    for (j = 0; j < numK; j++) {
-      ops[index] /= 6.0;
-      index++;
+      // Finish averaging SUGRA over ten components with a < b
+      OS[j][i] *= 0.1;
     }
   }
 
@@ -161,24 +138,27 @@ void d_correlator_r() {
 
         // Ignore any t_dist > MAX_X even if t_dist <= MAX_T
         for (t_dist = t_start; t_dist <= MAX_X; t_dist++) {
-          disp[TUP] = t_dist;
-          mtag = start_general_gather_field(ops, len * sizeof(Real),
-                                            disp, EVENANDODD, gen_pt[0]);
-
-          // Figure out scalar distance while general gather runs
+          // Check scalar distance before starting general gathers
           tr = A4map(x_dist, y_dist, z_dist, t_dist);
-          wait_general_gather(mtag);
-
-          if (tr > MAX_r - 1.0e-6) {
-            cleanup_general_gather(mtag);
+          if (tr > MAX_r - 1.0e-6)
             continue;
+
+          // Konishi general gathers
+          disp[TUP] = t_dist;
+          Ktag[0] = start_general_gather_field(OK[0], sizeof(Real), disp,
+                                               EVENANDODD, gen_pt[0]);
+          for (j = 1; j < numK; j++) {
+            wait_general_gather(Ktag[j - 1]);
+            Ktag[j] = start_general_gather_field(OK[j], sizeof(Real), disp,
+                                                 EVENANDODD, gen_pt[j]);
           }
 
           // Combine four-vectors with same scalar distance
+          // Overlap with last Konishi general gather
           this_r = -1;
-          for (j = 0; j < total_r; j++) {
-            if (fabs(tr - lookup[j]) < 1.0e-6) {
-              this_r = j;
+          for (i = 0; i < total_r; i++) {
+            if (fabs(tr - lookup[i]) < 1.0e-6) {
+              this_r = i;
               break;
             }
           }
@@ -193,7 +173,18 @@ void d_correlator_r() {
           }
           count[this_r]++;
 
+          // SUGRA general gathers
+          wait_general_gather(Ktag[numK - 1]);
+          Stag[0] = start_general_gather_field(OS[0], sizeof(Real), disp,
+                                               EVENANDODD, gen_pt[numK]);
+          for (j = 1; j < numK; j++) {
+            wait_general_gather(Stag[j - 1]);
+            Stag[j] = start_general_gather_field(OS[j], sizeof(Real), disp,
+                                                 EVENANDODD, gen_pt[numK + j]);
+          }
+
           // numK^2 Konishi correlators
+          // Overlap with last SUGRA general gather
 #ifdef CHECK_ROT
           // Potentially useful to check rotational invariance
           node0_printf("ROT_K %d %d %d %d", x_dist, y_dist, z_dist, t_dist);
@@ -201,46 +192,44 @@ void d_correlator_r() {
           for (a = 0; a < numK; a++) {
             for (b = 0; b < numK; b++) {
               tr = 0.0;
-              FORALLSITES(i, s) {
-                index = i * len + a;
-                tr += ops[index] * ((Real *)gen_pt[0][i])[b];
-              }
+              FORALLSITES(i, s)
+                tr += *((Real *)(gen_pt[b][i])) * OK[a][i];
               g_doublesum(&tr);
-              index = a * numK + b;
-              CK[this_r][index] += tr;
+              CK[this_r][a * numK + b] += tr;
 #ifdef CHECK_ROT
               // Potentially useful to check rotational invariance
               node0_printf(" %.6g", tr / (Real)volume);
-              if (index == numK * numK - 1)
+              if (a == numK - 1 && b == numK - 1)
                 node0_printf("\n");
 #endif
             }
           }
 
           // numK^2 SUGRA correlators
+          wait_general_gather(Stag[numK - 1]);
 #ifdef CHECK_ROT
           // Potentially useful to check rotational invariance
           node0_printf("ROT_S %d %d %d %d", x_dist, y_dist, z_dist, t_dist);
 #endif
-          for (a = numK; a < 2 * numK; a++) {
-            for (b = numK; b < 2 * numK; b++) {
+          for (a = 0; a < numK; a++) {
+            for (b = 0; b < numK; b++) {
               tr = 0.0;
-              FORALLSITES(i, s) {
-                index = i * len + a;
-                tr += ops[index] * ((Real *)gen_pt[0][i])[b];
-              }
+              FORALLSITES(i, s)
+                tr += *((Real *)(gen_pt[numK + b][i])) * OS[a][i];
               g_doublesum(&tr);
-              index = (a - numK) * numK + (b - numK);
-              CS[this_r][index] += tr;
+              CS[this_r][a * numK + b] += tr;
 #ifdef CHECK_ROT
               // Potentially useful to check rotational invariance
               node0_printf(" %.6g", tr / (Real)volume);
-              if (index == numK * numK - 1)
+              if (a == numK - 1 && b == numK - 1)
                 node0_printf("\n");
 #endif
             }
           }
-          cleanup_general_gather(mtag);
+          for (j = 0; j < numK; j++) {
+            cleanup_general_gather(Ktag[j]);
+            cleanup_general_gather(Stag[j]);
+          }
         } // t_dist
       } // z_dist
     } // y dist
@@ -266,6 +255,9 @@ void d_correlator_r() {
     }
     node0_printf("\n");
   }
-  free(ops);
+  for (j = 0; j < numK; j++) {
+    free(OK[j]);
+    free(OS[j]);
+  }
 }
 // -----------------------------------------------------------------

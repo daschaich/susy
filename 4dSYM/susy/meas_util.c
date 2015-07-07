@@ -104,7 +104,7 @@ void compute_Ba() {
           mult_su3_nn_f(&(Ba[j][a][i]), &(Ba[j][b][i]), &tmat);
           tc = trace_su3_f(&tmat);
           traceBB[j][a][b][i] = tc.real;
-          traceBB[j][a][b][i] = traceBB[j][b][a][i];
+          traceBB[j][b][a][i] = traceBB[j][a][b][i];
           if (fabs(tc.imag) > IMAG_TOL) {
             printf("WARNING: Tr(BB[%d][%d][%d]) = (%.4g, %.4g) at site %d\n",
                    j, a, b, tc.real, tc.imag, i);

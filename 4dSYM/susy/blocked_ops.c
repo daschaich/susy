@@ -24,17 +24,10 @@ void blocked_ops(int Nsmear, int block) {
       for (j = 0; j < numK; j++)
         OK[j] += traceBB[j][a][a][i];
 
-      for (b = 0; b < NUMLINK; b++) {
-        for (j = 0; j < numK; j++) {
-          // Now SUGRA with mu--nu trace subtraction
-          // Symmetric and traceless by construction so ignore nu <= mu
-          for (mu = 0; mu < NDIMS ; mu++) {
-            for (nu = mu + 1; nu < NDIMS ; nu++) {
-              tr = P[mu][a] * P[nu][b] + P[nu][a] * P[mu][b];
-              OS[j] += 0.5 * tr * traceBB[j][a][b][i];
-            }
-          }
-        }
+      // Now SUGRA summed over ten components with a < b
+      for (b = a + 1; b < NUMLINK; b++) {
+        for (j = 0; j < numK; j++)
+          OS[j] += traceBB[j][a][b][i];
       }
     }
   }
@@ -55,8 +48,8 @@ void blocked_ops(int Nsmear, int block) {
     node0_printf(" %.8g", OK[j] / norm);
   node0_printf("\n");
 
-  // SUGRA, averaging over six components with mu < nu
-  norm = (Real)(6.0 * bl * bl * bl * bl);
+  // SUGRA, averaging over ten components with a < b
+  norm = (Real)(10.0 * bl * bl * bl * bl);
   node0_printf("OS %d %d", Nsmear, block);
   for (j = 0; j < numK; j++)
     node0_printf(" %.8g", OS[j] / norm);
