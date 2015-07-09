@@ -49,7 +49,7 @@ Real A4map(x_in, y_in, z_in, t_in) {
 void d_correlator_r() {
   register int i;
   register site *s;
-  int a, b, j, index, x_dist, y_dist, z_dist, t_dist;
+  int a, b, j, mu, nu, index, x_dist, y_dist, z_dist, t_dist;
   int y_start, z_start, t_start, len = 2 * numK;
   int disp[NDIMS] = {0, 0, 0, 0}, this_r, total_r = 0;
   int MAX_pts = 8 * MAX_X * MAX_X * MAX_X, count[MAX_pts];
@@ -97,7 +97,6 @@ void d_correlator_r() {
   compute_Ba();
 
   // Construct the operators
-  node0_printf("(Simple SUGRA)\n");
   FORALLSITES(i, s) {
     for (a = 0; a < NUMLINK; a++) {
       index = i * len;            // First Konishi
@@ -106,11 +105,16 @@ void d_correlator_r() {
         index++;
       }
 
-      // Now SUGRA summed over ten components with a < b
-      for (b = a + 1; b < NUMLINK; b++) {
+      // Now SUGRA summed over six components with mu < nu
+      for (b = 0; b < NUMLINK; b++) {
         index = i * len + numK;
         for (j = 0; j < numK; j++) {
-          ops[index] += traceBB[j][a][b][i];
+          for (mu = 0; mu < NDIMS; mu++) {
+            for (nu = mu + 1; nu < NDIMS; nu++) {
+              tr = P[mu][a] * P[nu][b] + P[nu][a] * P[mu][b];
+              ops[index] += 0.5 * tr * traceBB[j][a][b][i];
+            }
+          }
           index++;
         }
       }
@@ -119,7 +123,7 @@ void d_correlator_r() {
     // Finish averaging SUGRA over ten components with a < b
     index = i * len + numK;
     for (j = 0; j < numK; j++) {
-      ops[index] *= 0.1;
+      ops[index] /= 6.0;
       index++;
     }
   }
