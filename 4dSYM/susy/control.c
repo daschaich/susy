@@ -56,15 +56,18 @@ int main(int argc, char *argv[]) {
   node0_printf("START %.8g %.8g %.8g ", dssplaq, dstplaq, dssplaq + dstplaq);
   dssplaq = d_gauge_action(NODET);
   node0_printf("%.8g\n", dssplaq / (double)volume);
-  linktr_ave = d_link(linktr, &linktr_width, link_det, &det_ave, &det_width);
-  node0_printf("FLINK");
-  for (dir = XUP; dir < NUMLINK; dir++)
-    node0_printf(" %.6g", linktr[dir]);
-  node0_printf(" %.6g %.6g\n", linktr_ave, linktr_width);
-  node0_printf("FLINK_DET");
-  for (dir = XUP; dir < NUMLINK; dir++)
-    node0_printf(" %.6g", link_det[dir]);
-  node0_printf(" %.6g %.6g\n", det_ave, det_width);
+  // N>2 determinant of traceless part of U.Udag crashes with unit config
+  if (startflag != FRESH) {
+    linktr_ave = d_link(linktr, &linktr_width, link_det, &det_ave, &det_width);
+    node0_printf("FLINK");
+    for (dir = XUP; dir < NUMLINK; dir++)
+      node0_printf(" %.6g", linktr[dir]);
+    node0_printf(" %.6g %.6g\n", linktr_ave, linktr_width);
+    node0_printf("FLINK_DET");
+    for (dir = XUP; dir < NUMLINK; dir++)
+      node0_printf(" %.6g", link_det[dir]);
+    node0_printf(" %.6g %.6g\n", det_ave, det_width);
+  }
 
   // Perform warmup trajectories
   f_eps = traj_length / (Real)nsteps[0];
