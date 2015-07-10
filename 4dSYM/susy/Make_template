@@ -58,11 +58,11 @@ MY_OBJECTS = setup.o        \
              widths.o       \
              hdelta0.o      \
              smear.o        \
-             meas_util.o    \
              congrad_multi_field.o
 
 # Basic set from generic directory
 G_OBJECTS = d_plaq4.o      \
+            d_plaq4_lcl.o  \
             ploop_dist.o   \
             io_helpers.o   \
             io_lat.o       \
@@ -109,17 +109,16 @@ ${OBJECTS} : ${HEADERS} ${LASTMAKE} ${ALL_MAKES}
 # susy_mode uses nsrc from -DBILIN
 susy_hmc::
 	${MAKE} -f ${MAKEFILE} target "MYTARGET= $@" \
-	"DEFINES = ${DEFINES} -DPHI_ALGORITHM -DHMC_ALGORITHM " \
+	"DEFINES = ${DEFINES} -DPHI_ALGORITHM -DHMC_ALGORITHM -DSMEAR " \
 	"EXTRA_OBJECTS = control.o update_o.o update_h.o setup_rhmc.o det_force.o "
 
 susy_meas::
 	${MAKE} -f ${MAKEFILE} target "MYTARGET= $@" \
-	"DEFINES = ${DEFINES} -DPHI_ALGORITHM -DCORR -DWLOOP -DBILIN -DSMEAR " \
+	"DEFINES = ${DEFINES} -DPHI_ALGORITHM -DSMEAR -DCORR -DWLOOP -DBILIN " \
 	"LAPACK = -llapack -lblas " \
 	"EXTRA_OBJECTS = control_meas.o d_konishi.o d_correlator_r.o rsymm.o \
 	                 monopole.o hvy_pot.o hvy_pot_polar.o unit.o gaugefix.o \
-	                 hvy_pot_loop.o hvy_pot_polar_loop.o path.o d_bilinear.o \
-	                 d_plaq4_lcl.o "
+	                 hvy_pot_loop.o hvy_pot_polar_loop.o path.o d_bilinear.o "
 
 susy_hmc_meas::
 	${MAKE} -f ${MAKEFILE} target "MYTARGET= $@" \
@@ -129,26 +128,26 @@ susy_hmc_meas::
 	"EXTRA_OBJECTS = control.o update_o.o update_h.o setup_rhmc.o det_force.o \
 	                 d_konishi.o d_correlator_r.o rsymm.o hvy_pot.o monopole.o \
 	                 hvy_pot_polar.o unit.o gaugefix.o hvy_pot_loop.o path.o \
-	                 hvy_pot_polar_loop.o d_bilinear.o d_plaq4_lcl.o "
+	                 hvy_pot_polar_loop.o d_bilinear.o "
 
 susy_mcrg::
 	${MAKE} -f ${MAKEFILE} target "MYTARGET= $@" \
-	"DEFINES = ${DEFINES} -DPHI_ALGORITHM -DCORR -DSMEAR -DMCRG" \
+	"DEFINES = ${DEFINES} -DPHI_ALGORITHM -DSMEAR -DCORR -DMCRG" \
 	"LAPACK = -llapack -lblas " \
 	"EXTRA_OBJECTS = control_mcrg.o block_mcrg.o rsymm.o blocked_plaq.o \
 	                 blocked_ops.o blocked_ploop.o blocked_rsymm.o path.o \
-	                 d_plaq4_lcl.o blocked_smear.o blocked_plaq_lcl.o unit.o "
+	                 blocked_smear.o blocked_plaq_lcl.o unit.o d_konishi.o "
 
 susy_eig::
 	${MAKE} -f ${MAKEFILE} target "MYTARGET= $@" \
-	"DEFINES = ${DEFINES} -DPHI_ALGORITHM -DEIG -DSMEAR " \
+	"DEFINES = ${DEFINES} -DPHI_ALGORITHM -DSMEAR -DEIG " \
 	"LIBRARIES = ${LIBRARIES} ${PLIB} " \
 	"LAPACK = -llapack -lblas " \
 	"EXTRA_OBJECTS = control_eig.o eig.o gaugefix.o "
 
 susy_phase::
 	${MAKE} -f ${MAKEFILE} target "MYTARGET= $@" \
-	"DEFINES = ${DEFINES} -DPHI_ALGORITHM -DPHASE " \
+	"DEFINES = ${DEFINES} -DPHI_ALGORITHM -DSMEAR -DPHASE " \
 	"EXTRA_OBJECTS = control_phase.o d_phase.o gaugefix.o io_phase.o "
 
 susy_mode::

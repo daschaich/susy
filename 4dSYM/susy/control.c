@@ -31,8 +31,8 @@ int main(int argc, char *argv[]) {
   setup_FQ();
   setup_rhmc();
 
-#ifdef WLOOP
-  register int i, mu;
+#if defined(WLOOP) || defined(SMEAR)
+  register int i;
   register site *s;
 #endif
 
@@ -119,10 +119,10 @@ int main(int argc, char *argv[]) {
       node0_printf(" %.8g %.8g\n", dssplaq, dstplaq);
 
       // Overwrite s->linkf
-      // Save unsmeared links in Tr_Uinv (mom and f_U both already used)
-      for (mu = XUP; mu < NUMLINK; mu++) {
+      // Save unsmeared links in Uinv (mom and f_U both already used)
+      for (dir = XUP; dir < NUMLINK; dir++) {
         FORALLSITES(i, s)
-          su3mat_copy_f(&(s->linkf[mu]), &(Tr_Uinv[mu][i]));
+          su3mat_copy_f(&(s->linkf[dir]), &(Uinv[dir][i]));
       }
       APE_smear(Nsmear, alpha, YESDET);
       node0_printf("AFTER  ");
@@ -180,7 +180,7 @@ int main(int argc, char *argv[]) {
 
 #ifdef CORR
       // R symmetry transformations -- use find_det and adjugate
-      rsymm();
+      rsymm(NODET);
 
       // Measure density of monopole world lines in non-diagonal cubes
       monopole();
@@ -192,8 +192,8 @@ int main(int argc, char *argv[]) {
       if (fixflag == COULOMB_GAUGE_FIX) {
         d_plaquette(&dssplaq, &dstplaq);    // To be printed below
         FORALLSITES(i, s) {
-          for (mu = XUP; mu < NUMLINK; mu++)
-            su3mat_copy_f(&(s->linkf[mu]), &(s->mom[mu]));
+          for (dir = XUP; dir < NUMLINK; dir++)
+            su3mat_copy_f(&(s->linkf[dir]), &(s->mom[dir]));
         }
 
         node0_printf("Fixing to Coulomb gauge...\n");
@@ -231,17 +231,17 @@ int main(int argc, char *argv[]) {
       // Restore the un-fixed links to be written to disk if requested
       if (fixflag == COULOMB_GAUGE_FIX) {
         FORALLSITES(i, s) {
-          for (mu = XUP; mu < NUMLINK; mu++)
-            su3mat_copy_f(&(s->mom[mu]), &(s->linkf[mu]));
+          for (dir = XUP; dir < NUMLINK; dir++)
+            su3mat_copy_f(&(s->mom[dir]), &(s->linkf[dir]));
         }
       }
 #endif
 
 #ifdef SMEAR
-      // Restore unsmeared links from Tr_Uinv
-      for (mu = XUP; mu < NUMLINK; mu++) {
+      // Restore unsmeared links from Uinv
+      for (dir = XUP; dir < NUMLINK; dir++) {
         FORALLSITES(i, s)
-          su3mat_copy_f(&(Tr_Uinv[mu][i]), &(s->linkf[mu]));
+          su3mat_copy_f(&(Uinv[dir][i]), &(s->linkf[dir]));
       }
 #endif
     }
