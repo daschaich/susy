@@ -1,4 +1,4 @@
-2  17  17  0.00000005  2500  65
+1  13  13  0.00005  5000  65
 # The numbers are
 #   Nroot  MD_order  action_order  eval_min  eval_max  precision
 # Run ./poly < in > out.N...
