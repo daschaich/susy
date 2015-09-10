@@ -74,6 +74,11 @@ void d_correlator_r() {
 
   // Do vacuum subtraction while initializing operators and correlators
   // First half are Konishi, second half are SUGRA
+  // Make sure vevK and vevS have been set up properly
+  if (vevK[0] < 0) {
+    node0_printf("ERROR: Improperly initialized vacuum subtraction\n");
+    terminate(1);
+  }
   FORALLSITES(i, s) {
     index = i * len;
     for (a = 0; a < numK; a++) {
@@ -81,7 +86,7 @@ void d_correlator_r() {
       index++;
     }
     for (a = 0; a < numK; a++) {
-      ops[index] = 0.0;
+      ops[index] = -1.0 * vevS[a];
       index++;
     }
   }

@@ -120,6 +120,24 @@ void d_konishi() {
   }
 
   // Just print operators for offline vev subtraction and correlator analysis
+  // Use negative input vev[0] to signal that we should subtract volume average
+  if (vevK[0] < 0) {
+    for (j = 0; j < numK; j++) {
+      vevK[j] = 0.0;
+      vevS[j] = 0.0;
+      for (t = 0; t < nt; t++) {
+        vevK[j] += OK[j][t];
+        vevS[j] += OS[j][t];
+      }
+      vevK[j] /= (double)nt;
+      vevS[j] /= (double)nt;
+    }
+  }
+  else {
+    for (j = 0; j < numK; j++)
+      vevS[j] = 0.0;
+  }
+
   for (t = 0; t < nt; t++) {
     node0_printf("KONISHI %d", t);
     for (j = 0; j < numK; j++)
@@ -130,7 +148,7 @@ void d_konishi() {
   for (t = 0; t < nt; t++) {
     node0_printf("SUGRA %d", t);
     for (j = 0; j < numK; j++)
-      node0_printf(" %.16g", OS[j][t]);
+      node0_printf(" %.16g", OS[j][t] - vevS[j]);
     node0_printf("\n");
   }
 

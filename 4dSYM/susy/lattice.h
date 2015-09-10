@@ -171,7 +171,7 @@ EXTERN char **gen_pt[N_POINTERS];
 // Scalar field interpolating ops and bilinear traces
 #define numK 2
 EXTERN Real *traceBB[numK][NUMLINK][NUMLINK];
-EXTERN double vevK[numK];             // Konishi vacuum subtractions
+EXTERN double vevK[numK], vevS[numK];   // Konishi vacuum subtractions
 EXTERN su3_matrix_f *Ba[numK][NUMLINK];
 #endif
 
