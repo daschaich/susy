@@ -126,7 +126,7 @@ smear.c               -- Stout and APE smearing on A4* lattice
 # 1b) Evolution-specific files
 control.c     -- Main program for evolution and measurements
 det_force.c   -- Contribution to force from determinant term
-setup_rhmc.c  -- Initializes RHMC shifts and amplitudes, values copied from ./remez-milc output
+setup_rhmc.c  -- Initializes RHMC shifts and amplitudes, values copied from ./remez output
 update_o.c    -- Omelyan HMC evolution, includes ranmom() routine
 update_h.c    -- Updates gauge momenta
 
@@ -134,6 +134,7 @@ update_h.c    -- Updates gauge momenta
 control_meas.c        -- Main program for standard measurements only
 control_mcrg.c        -- Main program for RG blocking and blocked measurements only
 control_eig.c         -- Main program for eigenvalues measurements only
+control_phase.c       -- Main program for pfaffian measurements only
 meas_utils.c          -- Basic routines used by other measurements
 d_bilinear.c          -- Fermion bilinear and susy transformation calculation
 d_konishi.c           -- Konishi and SUGRA operators projected to zero spatial momentum

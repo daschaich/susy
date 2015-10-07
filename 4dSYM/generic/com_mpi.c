@@ -1716,8 +1716,7 @@ void declare_accumulate_gather_field(
    usage: tag = start_general_gather_site(source, size, displacement, parity, dest)
    example:
   msg_tag *tag;
-  int disp[4];
-        disp[XUP]=1; disp[YUP]= -1; disp[ZUP] = disp[TUP] = 0;
+  int disp[4] = {1, -1, 0, 0};
   tag = start_general_gather_site(F_OFFSET(phi), sizeof(su3_vector), disp,
       EVEN, gen_pt[0]);
     ** do other stuff **

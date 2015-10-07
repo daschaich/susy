@@ -43,7 +43,7 @@ int congrad_multi_field(Twist_Fermion *src, Twist_Fermion **psim,
   Twist_Fermion *mpm = malloc(sites_on_node * sizeof(*mpm));
   Twist_Fermion *pm0 = malloc(sites_on_node * sizeof(*pm0));
   Twist_Fermion *rm  = malloc(sites_on_node * sizeof(*rm));
-  Twist_Fermion **pm  = malloc(Norder * sizeof(**pm));
+  Twist_Fermion **pm = malloc(Norder * sizeof(**pm));
   for (i = 1; i < Norder; i++)    // !!!
     pm[i] = malloc(sites_on_node * sizeof(Twist_Fermion));
 

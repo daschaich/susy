@@ -1747,7 +1747,7 @@ msg_tag* start_general_strided_gather(
   int nsites;   /* number of sites in this receive or send */
   int disp_parity;  /* parity of displacement vector */
   int send_parity;  /* parity of sites that may be sent */
-  int tx, tt;  /* temporary coordinates */
+  int tx, tt;       /* temporary coordinates */
   int othernode;    /* node sent to or received from */
   msg_sr_t *mrecv, *msend;
   msg_tag *mtag;    /* message tag, to be returned */

@@ -99,7 +99,7 @@ int main(int argc, char *argv[]) {
 
 #ifdef SMEAR
   // Optionally smear before main measurements
-  node0_printf("Doing %d APE smearing steps ", Nsmear);
+  node0_printf("Doing %d polar-projected APE smearing steps ", Nsmear);
   node0_printf("with alpha=%.4g\n", alpha);
 
   // Check minimum plaquette in addition to averages
@@ -178,7 +178,6 @@ int main(int argc, char *argv[]) {
     node0_printf("Fixing to Coulomb gauge...\n");
     double gtime = -dclock();
     gaugefix(TUP, 1.5, 5000, GAUGE_FIX_TOL, -1, -1);
-//    gaugefix(-1, 1.5, 5000, GAUGE_FIX_TOL, -1, -1);   // Lorenz gauge
     gtime += dclock();
     node0_printf("GFIX time = %.4g seconds\n", gtime);
     node0_printf("BEFORE %.8g %.8g\n", dssplaq, dstplaq);

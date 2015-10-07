@@ -25,7 +25,6 @@ int main(int argc, char *argv[]) {
 #endif
 
   // Require compilation with smearing enabled
-#define MIN_PLAQ
 #ifndef SMEAR
   printf("ERROR: MCRG uses APE smearing, at least for now\n");
   terminate(1);
@@ -147,7 +146,7 @@ int main(int argc, char *argv[]) {
 
   // Smear (after blocking) in increments of smear_step up to Nsmear
   for (ismear = 1; ismear <= Nsmear; ismear += smear_step) {
-    node0_printf("Doing %d APE smearing steps ", smear_step);
+    node0_printf("Doing %d polar-projected APE smearing steps ", smear_step);
     node0_printf("(total %d) with alpha=%.4g\n", ismear, alpha);
 
     // Check minimum plaquette in addition to averages

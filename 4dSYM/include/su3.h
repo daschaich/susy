@@ -97,11 +97,6 @@ typedef struct { complex e[2][2]; } su2_matrix;
 #define GAMMAFIVE -1    // Some integer which is not a direction
 #define PLUS 1          // Flags for selecting M or M_adjoint
 #define MINUS -1
-
-// Macros to multiply complex numbers by -1 and +-i
-#define TIMESMINUSONE(a,b) { (b).real =  -(a).real; (b).imag = -(a).imag; }
-#define TIMESPLUSI(a,b) { (b).real = -(a).imag; (b).imag =  (a).real; }
-#define TIMESMINUSI(a,b) { (b).real =  (a).imag; (b).imag = -(a).real; }
 // -----------------------------------------------------------------
 
 

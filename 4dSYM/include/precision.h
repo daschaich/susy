@@ -1,9 +1,9 @@
 // -----------------------------------------------------------------
 #ifndef _PRECISION_H
 #define _PRECISION_H
-// Generic floating point type, which defaults to single precision
+// Generic floating point type, which defaults to double precision
 #ifndef PRECISION
-#define PRECISION 1
+#define PRECISION 2
 #endif
 
 #if (PRECISION == 2)

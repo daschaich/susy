@@ -334,10 +334,10 @@ void sort_four_gathers(int index) {
 // Utility function for finding coordinates of neighbor
 // Used by make_gather for nearest neighbor gathers
 static void neighbor_coords_special(
-  int x, int t,       /* coordinates of site */
-  int *dirpt,                       /* direction (eg XUP) */
-  int fb,                           /* "forwards/backwards"  */
-  int *x2p, int *t2p) /* pointers to coordinates of neighbor */
+  int x, int t,         /* coordinates of site */
+  int *dirpt,           /* direction (eg XUP) */
+  int fb,               /* "forwards/backwards"  */
+  int *x2p, int *t2p)   /* pointers to coordinates of neighbor */
 {
   int dir;
 
@@ -457,7 +457,7 @@ int make_gather(
     func(s->x, s->t, args, FORWARDS, &x, &t);
 
     if (x < 0 || t < 0 || x >= nx || t >= nt) {
-      printf("DUMMY! Your gather mapping does not stay in lattice\n");
+      printf("Gather mapping does not stay in lattice\n");
       printf("It mapped %d %d to %d %d\n", s->x, s->t, x, t);
       terminate(1);
     }
@@ -468,9 +468,8 @@ int make_gather(
       s_subl = parity_function(x, t);
 
       if (want_even_odd == ALLOW_EVEN_ODD) {
-        if (send_subl[r_subl] == NOWHERE) {
+        if (send_subl[r_subl] == NOWHERE)
           send_subl[r_subl] = s_subl;
-        }
         else if (send_subl[r_subl] != s_subl) {
           printf("Gather mixes up sublattices: %d vs %d\n",
                  send_subl[r_subl], s_subl);
@@ -844,9 +843,7 @@ void declare_accumulate_gather_field(
 // Usage: tag = start_general_gather_site(src, size, disp, parity, dest)
 // Example:
 //  msg_tag *tag;
-//  int disp[2];    // Displacement
-//  disp[XUP] = 1;
-//  disp[TUP]= -1;
+//  int disp[2] = {1, 0};    // Displacement
 //  tag = start_general_gather_site(F_OFFSET(phi), sizeof(su3_vector), disp,
 //                                  EVEN, gen_pt[0]);
 //

@@ -1,5 +1,5 @@
 // -----------------------------------------------------------------
-// Either stout smearing or APE smearing without SU(3) projection
+// Either stout smearing or APE smearing without SU(N) projection
 // For stout smearing see Morningstar and Peardon, hep-lat/0311018
 #include "susy_includes.h"
 // -----------------------------------------------------------------

@@ -220,29 +220,28 @@ static void send_buf_to_node0(fsu3_matrix_f *tbuf, int tbuf_length,
 // -----------------------------------------------------------------
 // Only node 0 writes the gauge configuration to a binary file gf
 void w_serial(gauge_file *gf) {
+  register int i, j;
+  int rank29, rank31, buf_length, tbuf_length;
+  int x, y, z, t, currentnode, newnode;
   FILE *fp = NULL;
   gauge_header *gh = NULL;
-  int rank29, rank31;
-  fsu3_matrix_f *lbuf = NULL, *tbuf = NULL;
-  int buf_length, tbuf_length;
-  register int i, j;
+  fsu3_matrix_f *lbuf = NULL;
+  fsu3_matrix_f *tbuf = malloc(nx * NUMLINK * sizeof(*tbuf));
   off_t offset;               // File stream pointer
   off_t coord_list_size;      // Size of coordinate list in bytes
   off_t head_size;            // Size of header plus coordinate list
   off_t checksum_offset = 0;  // Location of checksum
   off_t gauge_check_size;     // Size of checksum record
 
-  int currentnode,newnode;
-  int x, y, z, t;
 
   // Allocate message buffer space for one x dimension of the local hypercube
   // The largest possible space we need is nx
-  tbuf = malloc(nx * NUMLINK * sizeof(*tbuf));
   if (tbuf == NULL) {
     printf("w_serial: node%d can't malloc tbuf\n", this_node);
     terminate(1);
   }
 
+  // Only allocate lbuf on node0
   if (this_node == 0) {
     lbuf = malloc(MAX_BUF_LENGTH * NUMLINK * sizeof(*lbuf));
     if (lbuf == NULL) {

@@ -152,7 +152,7 @@ int update_step(double *fnorm, double *gnorm,
 
 // -----------------------------------------------------------------
 int update() {
-  int i, n, iters = 0;
+  int j, n, iters = 0;
   Real final_rsq;
   double startaction, endaction, change;
   Twist_Fermion **src = malloc(Nroot * sizeof(**src));
@@ -161,8 +161,8 @@ int update() {
   for (n = 0; n < Nroot; n++) {
     src[n] = malloc(sites_on_node * sizeof(Twist_Fermion));
     psim[n] = malloc(Norder * sizeof(Twist_Fermion*));
-    for (i = 0; i < Norder; i++)
-      psim[n][i] = malloc(sites_on_node * sizeof(Twist_Fermion));
+    for (j = 0; j < Norder; j++)
+      psim[n][j] = malloc(sites_on_node * sizeof(Twist_Fermion));
   }
 
   // Refresh the momenta
@@ -178,8 +178,8 @@ int update() {
 
   // Do a CG to get psim,
   // rational approximation to (Mdag M)^(-1 / 4) src = (Mdag M)^(-1 / 8) g
-  for (i = 0; i < Norder; i++)
-    shift[i] = shift4[i];
+  for (j = 0; j < Norder; j++)
+    shift[j] = shift4[j];
 #ifdef UPDATE_DEBUG
   node0_printf("Calling CG in update_o -- original action\n");
 #endif
@@ -258,8 +258,8 @@ int update() {
 
   for (n = 0; n < Nroot; n++) {
     free(src[n]);
-    for (i = 0; i < Norder; i++)
-      free(psim[n][i]);
+    for (j = 0; j < Norder; j++)
+      free(psim[n][j]);
     free(psim[n]);
   }
   free(src);

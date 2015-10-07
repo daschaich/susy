@@ -3,9 +3,9 @@ Microcanonical simulation with refreshing
 Machine = Scalar processor, with 1 nodes
 Hybrid Monte Carlo algorithm
 Phi algorithm
-start: Wed Dec 17 11:49:29 2014
+start: Tue Oct  6 20:55:57 2015
 
-type 0 for no prompts  or 1 for prompts
+type 0 for no prompts or 1 for prompts
 nx 4
 nt 4
 iseed 41
@@ -40,7 +40,7 @@ C2=1
 Restored binary gauge configuration serially from file config.U3.44
 Time stamp Sun Sep 21 18:40:17 2014
 Checksums 17c5380 8e9caeaa OK
-Time to reload gauge configuration = 3.409386e-05
+Time to reload gauge configuration = 3.695488e-05
 CHECK PLAQ: 3.2359167245471765e+00
 CHECK NERSC LINKTR: -7.6341684325598180e-03 CKSUM: 0
 START 3.2359167 12.475982
@@ -185,7 +185,7 @@ PLOLAR_LOOP 0 1 3
 PLOLAR_LOOP 1 1 2.97298
 Fixing to Coulomb gauge...
 GFIX ended at step 16. Ave gf action 0.689108, delta 8.93e-08
-GFIX time = 0.000313 seconds
+GFIX time = 0.000314 seconds
 BEFORE 3.0745473
 AFTER  3.0745473
 hvy_pot: MAX_T = 1, MAX_X = 1
@@ -201,6 +201,6 @@ STOP 3.0404102 14.654122
 Average CG iters for steps: 820.5
 Average CG iters for measurements: 223
 
-Time = 2.23 seconds
+Time = 2.28 seconds
 total_iters = 8428
 

@@ -108,9 +108,9 @@ int main(int argc, char *argv[]) {
     // Less frequent measurements every "propinterval" trajectories
     if ((traj_done % propinterval) == (propinterval - 1)) {
 #ifdef SMEAR
-#define MIN_PLAQ
+#ifdef CORR   // !!!Currently need polar defined for smearing
       // Optionally smear before less frequent measurements
-      node0_printf("Doing %d det-divided APE smearing steps ", Nsmear);
+      node0_printf("Doing %d polar-projected APE smearing steps ", Nsmear);
       node0_printf("with alpha=%.4g\n", alpha);
 
       // Check minimum plaquette in addition to averages
@@ -128,6 +128,7 @@ int main(int argc, char *argv[]) {
       node0_printf("AFTER  ");
       d_plaquette_lcl(&dssplaq, &dstplaq);    // Prints out MIN_PLAQ
       node0_printf(" %.8g %.8g\n", dssplaq, dstplaq);
+#endif
 #endif
 
       // Plaquette determinant
@@ -238,11 +239,13 @@ int main(int argc, char *argv[]) {
 #endif
 
 #ifdef SMEAR
+#ifdef CORR   // !!!Currently need polar defined for smearing
       // Restore unsmeared links from Uinv
       for (dir = XUP; dir < NUMLINK; dir++) {
         FORALLSITES(i, s)
           su3mat_copy_f(&(Uinv[dir][i]), &(s->linkf[dir]));
       }
+#endif
 #endif
     }
     fflush(stdout);
