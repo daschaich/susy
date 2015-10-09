@@ -80,10 +80,6 @@ EXTERN Real traj_length;
 EXTERN su3_matrix_f Lambda[DIMF], Lambda_prod[DIMF][DIMF];
 EXTERN Real perm[NUMLINK][NUMLINK][NUMLINK][NUMLINK][NUMLINK];
 
-// Submatrix to convert from 5- to 4-component notation
-// Fifth row is just all 1 / sqrt(5)
-EXTERN Real P[NDIMS][NUMLINK];
-
 // Translate (mu, nu) to linear index of anti-symmetric matrix
 EXTERN int plaq_index[NUMLINK][NUMLINK];
 
@@ -168,13 +164,24 @@ EXTERN site *lattice;
 EXTERN char **gen_pt[N_POINTERS];
 
 #ifdef CORR
-// Various scalar fields and their bilinear traces
 #define N_B 2
 #define N_K 3    // N_B * (N_B + 1) / 2
-EXTERN su3_matrix_f *Ba[N_K][NUMLINK];
-EXTERN Real *traceBB[N_K][NUMLINK][NUMLINK];
+// Multiple scalar fields and their bilinear traces
+EXTERN su3_matrix_f *Ba[N_B][NUMLINK];
+EXTERN double *traceBB[N_K][NUMLINK][NUMLINK];
+
 // Ensemble averages and volume averages for subtracting
 EXTERN double vevK[N_K], volS[N_K], volK[N_K];
+
+// Structs for operators and correlators with either subtraction
+typedef struct {
+  double OK[N_K][2];
+  double OS[N_K][2];
+} Kops;
+typedef struct {
+  double C[N_K][N_K][2];
+} Kcorrs;
+EXTERN Kops *tempops, *tempops2;
 #endif
 
 #ifdef BILIN

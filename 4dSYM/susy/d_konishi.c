@@ -43,24 +43,24 @@ void compute_Ba() {
 
   // Compute traces of bilinears
   // Symmetric in a <--> b but store all to simplify SUGRA computation
-  // Make sure all are purely real
-  // Checked that both are gauge invariant while mixed bilinear is not
+  // Have checked that all are purely real and gauge invariant
   for (a = XUP; a < NUMLINK; a++) {
-    for (b = a; b < NUMLINK; b++) {
-      for (j = 0; j < N_B; j++) {
-        for (k = j; k < N_B; k++) {   // Skip {0, 1} = {1, 0}
-          index = j + k;              // !!!
-          FORALLSITES(i, s) {
-            mult_su3_nn_f(&(Ba[j][a][i]), &(Ba[k][b][i]), &tmat);
-            tc = trace_su3_f(&tmat);
-            traceBB[index][a][b][i] = tc.real;
-            traceBB[index][b][a][i] = traceBB[index][a][b][i];
-            if (fabs(tc.imag) > IMAG_TOL) {
-              printf("WARNING: Tr(BB[%d][%d][%d]) = (%.4g, %.4g) at site %d\n",
-                     index, a, b, tc.real, tc.imag, i);
-            }
-          }
-        }
+    for (b = XUP; b < NUMLINK; b++) {
+      FORALLSITES(i, s) {
+        mult_su3_nn_f(&(Ba[0][a][i]), &(Ba[0][b][i]), &tmat);
+        tc = trace_su3_f(&tmat);
+        traceBB[0][a][b][i] = tc.real;
+
+        mult_su3_nn_f(&(Ba[1][a][i]), &(Ba[1][b][i]), &tmat);
+        tc = trace_su3_f(&tmat);
+        traceBB[2][a][b][i] = tc.real;
+
+        mult_su3_nn_f(&(Ba[0][a][i]), &(Ba[1][b][i]), &tmat);
+        tc = trace_su3_f(&tmat);
+        traceBB[1][a][b][i] = 0.5 * tc.real;
+        mult_su3_nn_f(&(Ba[1][a][i]), &(Ba[0][b][i]), &tmat);
+        tc = trace_su3_f(&tmat);
+        traceBB[1][a][b][i] += 0.5 * tc.real;
       }
     }
   }
@@ -74,15 +74,14 @@ void compute_Ba() {
 void d_konishi() {
   register int i;
   register site *s;
-  int a, b, mu, nu, t, j;
+  int a, b, t, j;
   Real tr, norm;
   double *OK[N_K], *OS[N_K];  // Konishi and SUGRA operators on each time slice
 
   // Allocate and initialize Konishi and SUGRA operators
-  // SUGRA will be symmetric by construction, so ignore nu < mu
   for (j = 0; j < N_K; j++) {
-    OK[j] = malloc(nt * sizeof(*OK[j]));
-    OS[j] = malloc(nt * sizeof(*OS[j]));
+    OK[j] = malloc(nt * sizeof(double));
+    OS[j] = malloc(nt * sizeof(double));
     for (t = 0; t < nt; t++) {
       OK[j][t] = 0.0;
       OS[j][t] = 0.0;
@@ -93,23 +92,17 @@ void d_konishi() {
   compute_Ba();
 
   // Now form the zero momentum projected operators (summing across nodes)
-  // Average SUGRA over ten components with mu <= nu
-  for (a = 0; a < NUMLINK; a++) {
-    FORALLSITES(i, s) {
-      t = s->t;
-      for (j = 0; j < N_K; j++)
-        OK[j][t] += traceBB[j][a][a][i];
+  FORALLSITES(i, s) {
+    t = s->t;
+    for (a = XUP; a < NUMLINK; a++) {
+      for (j = 0; j < N_K; j++) {
+        OK[j][t] += traceBB[j][a][a][i];    // Konishi
 
-      for (b = 0; b < NUMLINK; b++) {
-        for (j = 0; j < N_K; j++) {
-          // Now SUGRA with mu--nu trace subtraction
-          // Symmetric and traceless by construction so ignore nu <= mu
-          for (mu = 0; mu < NDIMS; mu++) {
-            for (nu = mu + 1; nu < NDIMS; nu++) {
-              tr = P[mu][a] * P[nu][b] + P[nu][a] * P[mu][b];
-              OS[j][t] += 0.5 * tr * traceBB[j][a][b][i];
-            }
-          }
+        // Now SUGRA, averaged over 20 off-diagonal components
+        for (b = XUP; b < NUMLINK; b++) {
+          if (a == b)
+            continue;
+          OS[j][t] += 0.05 * traceBB[j][a][b][i];
         }
       }
     }
@@ -121,7 +114,7 @@ void d_konishi() {
       OK[j][t] /= norm;
       g_doublesum(&(OK[j][t]));
 
-      OS[j][t] /= (6.0 * norm);
+      OS[j][t] /= norm;
       g_doublesum(&(OS[j][t]));
     }
   }

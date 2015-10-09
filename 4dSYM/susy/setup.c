@@ -141,10 +141,13 @@ void make_fields() {
   int j;
   size += (double)(N_B * NUMLINK * sizeof(su3_matrix_f));
   size += (double)(N_K * NUMLINK * NUMLINK * sizeof(Real));
+  size += (double)(2.0 * sizeof(Kops));
   for (j = 0; j < N_B; j++)
     FIELD_ALLOC_VEC(Ba[j], su3_matrix_f, NUMLINK);
   for (j = 0; j < N_K; j++)
-    FIELD_ALLOC_MAT(traceBB[j], Real, NUMLINK, NUMLINK);
+    FIELD_ALLOC_MAT(traceBB[j], double, NUMLINK, NUMLINK);
+  FIELD_ALLOC(tempops, Kops);
+  FIELD_ALLOC(tempops2, Kops);
 #endif
 
 #if defined(EIG) || defined(PHASE)

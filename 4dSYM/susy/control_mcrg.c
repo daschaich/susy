@@ -102,11 +102,6 @@ int main(int argc, char *argv[]) {
   // Monitor widths of plaquette and plaquette determinant distributions
   widths();
 
-  // Set up P matrix for Konishi and SUGRA operators
-#ifdef CORR
-  setup_P();
-#endif
-
   // ---------------------------------------------------------------
   // First print unsmeared unblocked observables
   // Unsmeared unblocked Tr[Udag.U] / N and its width
