@@ -168,11 +168,13 @@ EXTERN site *lattice;
 EXTERN char **gen_pt[N_POINTERS];
 
 #ifdef CORR
-// Scalar field interpolating ops and bilinear traces
-#define numK 2
-EXTERN Real *traceBB[numK][NUMLINK][NUMLINK];
-EXTERN double vevK[numK], vevS[numK];   // Konishi vacuum subtractions
-EXTERN su3_matrix_f *Ba[numK][NUMLINK];
+// Various scalar fields and their bilinear traces
+#define N_B 2
+#define N_K 3    // N_B * (N_B + 1) / 2
+EXTERN su3_matrix_f *Ba[N_K][NUMLINK];
+EXTERN Real *traceBB[N_K][NUMLINK][NUMLINK];
+// Ensemble averages and volume averages for subtracting
+EXTERN double vevK[N_K], volS[N_K], volK[N_K];
 #endif
 
 #ifdef BILIN

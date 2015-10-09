@@ -44,17 +44,19 @@ Real A4map(x_in, y_in, z_in, t_in) {
 
 // -----------------------------------------------------------------
 // Both Konishi and SUGRA correlators as functions of r
-// For gathering, all operators live in array of len = 2numK
-// vevK[numK] are Konishi vacuum subtractions; assume these vanish for SUGRA
+// For gathering, all operators live in array of len = 4N_K
+// vevK[N_K] are Konishi ensemble averages; assume these vanish for SUGRA
+// volK[N_K] and volS[N_K] are Konishi and SUGRA volume averages
+// Check to make sure the latter have been set by d_konishi()
 void d_correlator_r() {
   register int i;
   register site *s;
   int a, b, j, mu, nu, index, x_dist, y_dist, z_dist, t_dist;
-  int y_start, z_start, t_start, len = 2 * numK;
+  int y_start, z_start, t_start, len = 4 * N_K, subs;
   int disp[NDIMS] = {0, 0, 0, 0}, this_r, total_r = 0;
   int MAX_pts = 8 * MAX_X * MAX_X * MAX_X, count[MAX_pts];
-  Real MAX_r = 100.0 * MAX_X, tr;
-  Real lookup[MAX_pts], CK[MAX_pts][numK * numK], CS[MAX_pts][numK * numK];
+  Real MAX_r = 100.0 * MAX_X, tr;   // To be overwritten
+  Real lookup[MAX_pts], CK[MAX_pts][len * N_K], CS[MAX_pts][len * N_K]; // !!!
   Real *ops = malloc(sites_on_node * len * sizeof(*ops));
   msg_tag *mtag;
 
@@ -72,27 +74,36 @@ void d_correlator_r() {
   // Assume MAX_T >= MAX_X
   node0_printf("d_correlator_r: MAX = %d --> r < %.6g\n", MAX_X, MAX_r);
 
-  // Do vacuum subtraction while initializing operators and correlators
+  // Subtract either ensemble average or volume average (respectively)
+  // while initializing operators and correlators
   // First half are Konishi, second half are SUGRA
   // Make sure vevK and vevS have been set up properly
-  if (vevK[0] < 0) {
+  if (volK[0] < 0.0) {
     node0_printf("ERROR: Improperly initialized vacuum subtraction\n");
     terminate(1);
   }
   FORALLSITES(i, s) {
     index = i * len;
-    for (a = 0; a < numK; a++) {
+    for (a = 0; a < N_K; a++) {
       ops[index] = -1.0 * vevK[a];
       index++;
     }
-    for (a = 0; a < numK; a++) {
-      ops[index] = -1.0 * vevS[a];
+    for (a = 0; a < N_K; a++) {
+      ops[index] = -1.0 * volK[a];
+      index++;
+    }
+    for (a = 0; a < N_K; a++) {
+      ops[index] = 0.0;   // Assume vanishing SUGRA vev
+      index++;
+    }
+    for (a = 0; a < N_K; a++) {
+      ops[index] = -1.0 * volS[a];
       index++;
     }
   }
   for (j = 0; j < MAX_pts; j++) {
     count[j] = 0;
-    for (a = 0; a < numK * numK; a++) {
+    for (a = 0; a < 4 * N_K * N_K; a++) {
       CK[j][a] = 0.0;
       CS[j][a] = 0.0;
     }
@@ -104,30 +115,37 @@ void d_correlator_r() {
   // Construct the operators
   FORALLSITES(i, s) {
     for (a = 0; a < NUMLINK; a++) {
-      index = i * len;            // First Konishi
-      for (j = 0; j < numK; j++) {
-        ops[index] += traceBB[j][a][a][i];
-        index++;
+      index = i * len;
+      // First Konishi subtracting ensemble average
+      //          then subtracting   volume average
+      for (subs = 0; subs < 2; subs++) {
+        for (j = 0; j < N_K; j++) {
+          ops[index] += traceBB[j][a][a][i];
+          index++;
+        }
       }
 
       // Now SUGRA summed over six components with mu < nu
+      // Same story with subtractions
       for (b = 0; b < NUMLINK; b++) {
-        index = i * len + numK;
-        for (j = 0; j < numK; j++) {
-          for (mu = 0; mu < NDIMS; mu++) {
-            for (nu = mu + 1; nu < NDIMS; nu++) {
-              tr = P[mu][a] * P[nu][b] + P[nu][a] * P[mu][b];
-              ops[index] += 0.5 * tr * traceBB[j][a][b][i];
+        index = i * len + 2 * N_K;
+        for (subs = 0; subs < 2; subs++) {
+          for (j = 0; j < N_K; j++) {
+            for (mu = 0; mu < NDIMS; mu++) {
+              for (nu = mu + 1; nu < NDIMS; nu++) {
+                tr = P[mu][a] * P[nu][b] + P[nu][a] * P[mu][b];
+                ops[index] += 0.5 * tr * traceBB[j][a][b][i];
+              }
             }
+            index++;
           }
-          index++;
         }
       }
     }
 
-    // Finish averaging SUGRA over ten components with a < b
-    index = i * len + numK;
-    for (j = 0; j < numK; j++) {
+    // Finish averaging SUGRA over six components with mu < nu
+    index = i * len + 2 * N_K;
+    for (j = 0; j < 2 * N_K; j++) {
       ops[index] /= 6.0;
       index++;
     }
@@ -196,51 +214,57 @@ void d_correlator_r() {
           }
           count[this_r]++;
 
-          // numK^2 Konishi correlators
+          // Don't mix different kinds of subtractions...
+          // So only 2 * N_K^2 Konishi correlators
+          // !!! Should each N_K x N_K correlator matrix be symmetric???
 #ifdef CHECK_ROT
           // Potentially useful to check rotational invariance
           node0_printf("ROT_K %d %d %d %d", x_dist, y_dist, z_dist, t_dist);
 #endif
-          for (a = 0; a < numK; a++) {
-            for (b = 0; b < numK; b++) {
-              tr = 0.0;
-              FORALLSITES(i, s) {
-                index = i * len + a;
-                tr += ops[index] * ((Real *)gen_pt[0][i])[b];
-              }
-              g_doublesum(&tr);
-              index = a * numK + b;
-              CK[this_r][index] += tr;
+          for (subs = 0; subs < 2; subs++) {
+            for (a = 0; a < N_K; a++) {
+              for (b = 0; b < N_K; b++) {
+                tr = 0.0;
+                FORALLSITES(i, s) {
+                  index = i * len + subs * N_K + a;
+                  tr += ops[index] * ((Real *)gen_pt[0][i])[subs * N_K + b];
+                }
+                g_doublesum(&tr);
+                index = subs * N_K * N_K + a * N_K + b;
+                CK[this_r][index] += tr;
 #ifdef CHECK_ROT
-              // Potentially useful to check rotational invariance
-              node0_printf(" %.6g", tr / (Real)volume);
-              if (index == numK * numK - 1)
-                node0_printf("\n");
+                // Potentially useful to check rotational invariance
+                node0_printf(" %.6g", tr / (Real)volume);
+                if (index == N_K * N_K - 1)
+                  node0_printf("\n");
 #endif
+              }
             }
           }
 
-          // numK^2 SUGRA correlators
+          // 2 * N_K^2 SUGRA correlators
 #ifdef CHECK_ROT
           // Potentially useful to check rotational invariance
           node0_printf("ROT_S %d %d %d %d", x_dist, y_dist, z_dist, t_dist);
 #endif
-          for (a = numK; a < 2 * numK; a++) {
-            for (b = numK; b < 2 * numK; b++) {
-              tr = 0.0;
-              FORALLSITES(i, s) {
-                index = i * len + a;
-                tr += ops[index] * ((Real *)gen_pt[0][i])[b];
-              }
-              g_doublesum(&tr);
-              index = (a - numK) * numK + (b - numK);
-              CS[this_r][index] += tr;
+          for (subs = 0; subs < 2; subs++) {
+            for (a = 2 * N_K; a < 3 * N_K; a++) {
+              for (b = 2 * N_K; b < 3 * N_K; b++) {
+                tr = 0.0;
+                FORALLSITES(i, s) {
+                  index = i * len + subs * N_K + a;
+                  tr += ops[index] * ((Real *)gen_pt[0][i])[subs * N_K + b];
+                }
+                g_doublesum(&tr);
+                index = subs * N_K * N_K + (a - 2 * N_K) * N_K + (b - 2 * N_K);
+                CS[this_r][index] += tr;
 #ifdef CHECK_ROT
-              // Potentially useful to check rotational invariance
-              node0_printf(" %.6g", tr / (Real)volume);
-              if (index == numK * numK - 1)
-                node0_printf("\n");
+                // Potentially useful to check rotational invariance
+                node0_printf(" %.6g", tr / (Real)volume);
+                if (index == N_K * N_K - 1)
+                  node0_printf("\n");
 #endif
+              }
             }
           }
           cleanup_general_gather(mtag);
@@ -254,18 +278,26 @@ void d_correlator_r() {
   for (j = 0; j < total_r; j++) {
     tr = 1.0 / (Real)(count[j] * volume);
     node0_printf("CORR_K %d %.6g", j, lookup[j]);
-    for (a = 0; a < numK; a++) {
-      for (b = 0; b < numK; b++)
-        node0_printf(" %.8g", CK[j][a * numK + b] * tr);
+    for (subs = 0; subs < 2; subs++) {
+      for (a = 0; a < N_K; a++) {
+        for (b = 0; b < N_K; b++) {
+          index = subs * N_K * N_K + a * N_K + b;
+          node0_printf(" %.8g", CK[j][index] * tr);
+        }
+      }
     }
     node0_printf("\n");
   }
   for (j = 0; j < total_r; j++) {
     tr = 1.0 / (Real)(count[j] * volume);
     node0_printf("CORR_S %d %.6g", j, lookup[j]);
-    for (a = 0; a < numK; a++) {
-      for (b = 0; b < numK; b++)
-        node0_printf(" %.8g", CS[j][a * numK + b] * tr);
+    for (subs = 0; subs < 2; subs++) {
+      for (a = 0; a < N_K; a++) {
+        for (b = 0; b < N_K; b++) {
+          index = subs * N_K * N_K + a * N_K + b;
+          node0_printf(" %.8g", CS[j][index] * tr);
+        }
+      }
     }
     node0_printf("\n");
   }

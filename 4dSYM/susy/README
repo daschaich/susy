@@ -15,7 +15,7 @@ susy_spill for printing out configuration in format expected by serial C++ code
 
 # Dependences:
 Measurements involving polar-projected matrices (susy_meas and susy_hmc_meas) require LAPACK
-Eigenvalue measurements (susy_eig) require PRIMME and LAPACK -- PRIMME can be obtained from http://www.cs.wm.edu/~andreas/software/
+Eigenvalue measurements (susy_eig) require PRIMME and LAPACK -- PRIMME can be obtained from https://github.com/primme/primme
 
 # Defines for compilation:
 -DPHI_ALGORITHM for the basic phi algorithm (REQUIRED)

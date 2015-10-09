@@ -139,12 +139,12 @@ void make_fields() {
 
 #ifdef CORR
   int j;
-  size += (double)(numK * NUMLINK * sizeof(su3_matrix_f));
-  size += (double)(numK * NUMLINK * NUMLINK * sizeof(Real));
-  for (j = 0; j < numK; j++) {
+  size += (double)(N_B * NUMLINK * sizeof(su3_matrix_f));
+  size += (double)(N_K * NUMLINK * NUMLINK * sizeof(Real));
+  for (j = 0; j < N_B; j++)
     FIELD_ALLOC_VEC(Ba[j], su3_matrix_f, NUMLINK);
+  for (j = 0; j < N_K; j++)
     FIELD_ALLOC_MAT(traceBB[j], Real, NUMLINK, NUMLINK);
-  }
 #endif
 
 #if defined(EIG) || defined(PHASE)
@@ -240,7 +240,7 @@ int readin(int prompt) {
 
 #ifdef CORR
     // Konishi vacuum subtractions
-    for (j = 0; j < numK; j++)
+    for (j = 0; j < N_K; j++)
       IF_OK status += get_f(stdin, prompt, "vevK", &par_buf.vevK[j]);
 #endif
 
@@ -339,8 +339,11 @@ int readin(int prompt) {
   alpha = par_buf.alpha;
 #endif
 #ifdef CORR
-  for (j = 0; j < numK; j++)
+  for (j = 0; j < N_K; j++) {
     vevK[j] = par_buf.vevK[j];
+    // Will check positivity of volK to make sure it has been set
+    volK[j] = -1.0;
+  }
 #endif
 #ifdef PHASE
   ckpt_load = par_buf.ckpt_load;

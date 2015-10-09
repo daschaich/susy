@@ -6,12 +6,13 @@
 
 // -----------------------------------------------------------------
 // Compute traces of bilinears of scalar field interpolating ops:
-//   traceless part of the hermitian matrix returned by the polar projection
-//   traceless part of U_a Udag_a
+// 0) traceless part of the hermitian matrix returned by the polar projection
+//    (use tempmat1 as temporary storage while shifting from x+a to x)
+// 1) traceless part of U_a Udag_a
 void compute_Ba() {
   register int i;
   register site *s;
-  int a, b, j, k;
+  int a, b, j, k, index;
   complex tc;
   Real tr;
   su3_matrix_f tmat;
@@ -23,7 +24,7 @@ void compute_Ba() {
       mult_su3_na_f(&(s->linkf[a]), &(s->linkf[a]), &(Ba[1][a][i]));
 
       // Subtract traces: Both are hermitian so traces are real
-      for (j = 0; j < numK; j++) {
+      for (j = 0; j < N_B; j++) {
         tc = trace_su3_f(&(Ba[j][a][i]));
         tr = tc.real / (Real)NCOL;
         for (k = 0; k < NCOL; k++)
@@ -34,22 +35,30 @@ void compute_Ba() {
         }
       }
     }
+  }
 
-    // Compute traces of bilinears
-    // Both are symmetric in a <--> b
-    // but store all to simplify SUGRA computation
-    // Make sure all are purely real
-    // Checked that both are gauge invariant while mixed bilinear is not
-    for (a = XUP; a < NUMLINK; a++) {
-      for (b = a; b < NUMLINK; b++) {
-        for (j = 0; j < numK; j++) {
-          mult_su3_nn_f(&(Ba[j][a][i]), &(Ba[j][b][i]), &tmat);
-          tc = trace_su3_f(&tmat);
-          traceBB[j][a][b][i] = tc.real;
-          traceBB[j][b][a][i] = traceBB[j][a][b][i];
-          if (fabs(tc.imag) > IMAG_TOL) {
-            printf("WARNING: Tr(BB[%d][%d][%d]) = (%.4g, %.4g) at site %d\n",
-                   j, a, b, tc.real, tc.imag, i);
+  // Shift polar scalar field from x+a to x to obtain gauge-invariant traceBB
+  for (a = XUP; a < NUMLINK; a++)
+    shiftmat(Ba[0][a], tempmat1, goffset[a] + 1);
+
+  // Compute traces of bilinears
+  // Symmetric in a <--> b but store all to simplify SUGRA computation
+  // Make sure all are purely real
+  // Checked that both are gauge invariant while mixed bilinear is not
+  for (a = XUP; a < NUMLINK; a++) {
+    for (b = a; b < NUMLINK; b++) {
+      for (j = 0; j < N_B; j++) {
+        for (k = j; k < N_B; k++) {   // Skip {0, 1} = {1, 0}
+          index = j + k;              // !!!
+          FORALLSITES(i, s) {
+            mult_su3_nn_f(&(Ba[j][a][i]), &(Ba[k][b][i]), &tmat);
+            tc = trace_su3_f(&tmat);
+            traceBB[index][a][b][i] = tc.real;
+            traceBB[index][b][a][i] = traceBB[index][a][b][i];
+            if (fabs(tc.imag) > IMAG_TOL) {
+              printf("WARNING: Tr(BB[%d][%d][%d]) = (%.4g, %.4g) at site %d\n",
+                     index, a, b, tc.real, tc.imag, i);
+            }
           }
         }
       }
@@ -61,22 +70,20 @@ void compute_Ba() {
 
 
 // -----------------------------------------------------------------
-// Measure the Konishi and SUGRA operators on each timeslice
+// Measure and print the Konishi and SUGRA operators on each timeslice
 void d_konishi() {
   register int i;
   register site *s;
   int a, b, mu, nu, t, j;
   Real tr, norm;
-  double *OK[numK], *OS[numK];      // Konishi and SUGRA operators
+  double *OK[N_K], *OS[N_K];  // Konishi and SUGRA operators on each time slice
 
   // Allocate and initialize Konishi and SUGRA operators
   // SUGRA will be symmetric by construction, so ignore nu < mu
-  for (j = 0; j < numK; j++) {
+  for (j = 0; j < N_K; j++) {
     OK[j] = malloc(nt * sizeof(*OK[j]));
     OS[j] = malloc(nt * sizeof(*OS[j]));
-  }
-  for (t = 0; t < nt; t++) {
-    for (j = 0; j < numK; j++) {
+    for (t = 0; t < nt; t++) {
       OK[j][t] = 0.0;
       OS[j][t] = 0.0;
     }
@@ -90,13 +97,13 @@ void d_konishi() {
   for (a = 0; a < NUMLINK; a++) {
     FORALLSITES(i, s) {
       t = s->t;
-      for (j = 0; j < numK; j++)
+      for (j = 0; j < N_K; j++)
         OK[j][t] += traceBB[j][a][a][i];
 
       for (b = 0; b < NUMLINK; b++) {
-        for (j = 0; j < numK; j++) {
+        for (j = 0; j < N_K; j++) {
           // Now SUGRA with mu--nu trace subtraction
-          // Symmetric and traceless by construction so ignore nu < mu
+          // Symmetric and traceless by construction so ignore nu <= mu
           for (mu = 0; mu < NDIMS; mu++) {
             for (nu = mu + 1; nu < NDIMS; nu++) {
               tr = P[mu][a] * P[nu][b] + P[nu][a] * P[mu][b];
@@ -110,7 +117,7 @@ void d_konishi() {
   // Normalization removed from site loop, followed by sum over nodes
   norm = (Real)(nx * ny * nz);
   for (t = 0; t < nt; t++) {
-    for (j = 0; j < numK; j++) {
+    for (j = 0; j < N_K; j++) {
       OK[j][t] /= norm;
       g_doublesum(&(OK[j][t]));
 
@@ -119,40 +126,38 @@ void d_konishi() {
     }
   }
 
-  // Just print operators for offline vev subtraction and correlator analysis
-  // Use negative input vev[0] to signal that we should subtract volume average
-  if (vevK[0] < 0) {
-    for (j = 0; j < numK; j++) {
-      vevK[j] = 0.0;
-      vevS[j] = 0.0;
-      for (t = 0; t < nt; t++) {
-        vevK[j] += OK[j][t];
-        vevS[j] += OS[j][t];
-      }
-      vevK[j] /= (double)nt;
-      vevS[j] /= (double)nt;
+  // Print operators
+  // Subtract either ensemble average or volume average (respectively)
+  for (j = 0; j < N_K; j++) {
+    volK[j] = OK[j][0];
+    volS[j] = OS[j][0];
+    for (t = 1; t < nt; t++) {
+      volK[j] += OK[j][t];
+      volS[j] += OS[j][t];
     }
-  }
-  else {
-    for (j = 0; j < numK; j++)
-      vevS[j] = 0.0;
+    volK[j] /= (double)nt;
+    volS[j] /= (double)nt;
   }
 
   for (t = 0; t < nt; t++) {
     node0_printf("KONISHI %d", t);
-    for (j = 0; j < numK; j++)
+    for (j = 0; j < N_K; j++)
       node0_printf(" %.16g", OK[j][t] - vevK[j]);
+    for (j = 0; j < N_K; j++)
+      node0_printf(" %.16g", OK[j][t] - volK[j]);
     node0_printf("\n");
   }
 
   for (t = 0; t < nt; t++) {
     node0_printf("SUGRA %d", t);
-    for (j = 0; j < numK; j++)
-      node0_printf(" %.16g", OS[j][t] - vevS[j]);
+    for (j = 0; j < N_K; j++)
+      node0_printf(" %.16g", OS[j][t]);   // Assume vanishing vev
+    for (j = 0; j < N_K; j++)
+      node0_printf(" %.16g", OS[j][t] - volS[j]);
     node0_printf("\n");
   }
 
-  for (j = 0; j < numK; j++) {
+  for (j = 0; j < N_K; j++) {
     free(OK[j]);
     free(OS[j]);
   }
