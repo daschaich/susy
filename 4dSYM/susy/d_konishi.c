@@ -12,7 +12,7 @@
 void compute_Ba() {
   register int i;
   register site *s;
-  int a, b, j, k, index;
+  int a, b, j, k;
   complex tc;
   Real tr;
   su3_matrix_f tmat;
@@ -75,10 +75,9 @@ void d_konishi() {
   register int i;
   register site *s;
   int a, b, t, j;
-  Real tr, norm;
-  double *OK[N_K], *OS[N_K];  // Konishi and SUGRA operators on each time slice
+  double norm, *OK[N_K], *OS[N_K];
 
-  // Allocate and initialize Konishi and SUGRA operators
+  // Allocate and initialize Konishi and SUGRA operators on each time slice
   for (j = 0; j < N_K; j++) {
     OK[j] = malloc(nt * sizeof(double));
     OS[j] = malloc(nt * sizeof(double));
@@ -119,7 +118,7 @@ void d_konishi() {
     }
   }
 
-  // Print operators
+  // Print operators on each time slice
   // Subtract either ensemble average or volume average (respectively)
   for (j = 0; j < N_K; j++) {
     volK[j] = OK[j][0];

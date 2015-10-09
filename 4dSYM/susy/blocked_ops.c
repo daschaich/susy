@@ -5,12 +5,11 @@
 void blocked_ops(int Nsmear, int block) {
   register int i;
   register site *s;
-  int a, b, j, mu, nu, bl = 2;
-  Real norm, tr, OK[numK], OS[numK];    // Konishi and SUGRA operators
+  int a, b, j, bl = 2;
+  double norm, OK[N_K], OS[N_K];
 
   // Initialize Konishi and SUGRA operators
-  // SUGRA will be symmetric by construction, so ignore nu <= mu
-  for (j = 0; j < numK; j++) {
+  for (j = 0; j < N_K; j++) {
     OK[j] = 0.0;
     OS[j] = 0.0;
   }
@@ -19,45 +18,38 @@ void blocked_ops(int Nsmear, int block) {
   compute_Ba();
 
   // Now sum operators over lattice volume
-  for (a = 0; a < NUMLINK; a++) {
-    FORALLSITES(i, s) {
-      for (j = 0; j < numK; j++)
-        OK[j] += traceBB[j][a][a][i];
+  FORALLSITES(i, s) {
+    for (a = 0; a < NUMLINK; a++) {
+      for (j = 0; j < N_K; j++) {
+        OK[j] += traceBB[j][a][a][i];   // Konishi
 
-      // Now SUGRA summed over six components with mu < nu
-      for (b = 0; b < NUMLINK; b++) {
-        for (j = 0; j < numK; j++) {
-          for (mu = 0; mu < NDIMS ; mu++) {
-            for (nu = mu + 1; nu < NDIMS ; nu++) {
-              tr = P[mu][a] * P[nu][b] + P[nu][a] * P[mu][b];
-              OS[j] += 0.5 * tr * traceBB[j][a][b][i];
-            }
-          }
+        // Now SUGRA, averaged over 20 off-diagonal components
+        for (b = 0; b < NUMLINK; b++) {
+          if (a == b)
+            continue;
+          OS[j] += 0.05 * traceBB[j][a][b][i];
         }
       }
     }
   }
-  for (j = 0; j < numK; j++) {
+  for (j = 0; j < N_K; j++) {
     g_doublesum(&(OK[j]));
     g_doublesum(&(OS[j]));
   }
 
-  // Print out integrated operators
-  // Have to divide by number 2^(4block) = bl^4 of blocked lattices
+  // Print operators summed over volume
+  // Have to divide by number of blocked lattices: 2^(4block) = bl^4
   for (a = 1; a < block; a++)
     bl *= 2;
   if (block <= 0)
     bl = 1;
   norm = (Real)(bl * bl * bl * bl);
-  node0_printf("OK %d %d", Nsmear, block);
-  for (j = 0; j < numK; j++)
+  node0_printf("OK %d %d", Nsmear, block);    // Konishi
+  for (j = 0; j < N_K; j++)
     node0_printf(" %.8g", OK[j] / norm);
   node0_printf("\n");
-
-  // SUGRA, averaging over six components with mu < nu
-  norm = (Real)(6.0 * bl * bl * bl * bl);
-  node0_printf("OS %d %d", Nsmear, block);
-  for (j = 0; j < numK; j++)
+  node0_printf("OS %d %d", Nsmear, block);    // SUGRA
+  for (j = 0; j < N_K; j++)
     node0_printf(" %.8g", OS[j] / norm);
   node0_printf("\n");
 }
