@@ -15,7 +15,12 @@ void blocked_ops(int Nsmear, int block) {
   }
 
   // Compute traces of bilinears of scalar field interpolating ops
-  compute_Ba();
+  // Needs to know how much to shift hermitian part of paolor decomposition
+  for (j = 1; j < block; j++)
+    bl *= 2;
+  if (block <= 0)
+    bl = 1;
+  compute_Ba(bl);
 
   // Now sum operators over lattice volume
   FORALLSITES(i, s) {
@@ -39,10 +44,6 @@ void blocked_ops(int Nsmear, int block) {
 
   // Print operators summed over volume
   // Have to divide by number of blocked lattices: 2^(4block) = bl^4
-  for (a = 1; a < block; a++)
-    bl *= 2;
-  if (block <= 0)
-    bl = 1;
   norm = (Real)(bl * bl * bl * bl);
   node0_printf("OK %d %d", Nsmear, block);    // Konishi
   for (j = 0; j < N_K; j++)

@@ -218,7 +218,7 @@ void d_correlator_r() {
   }
 
   // Compute traces of bilinears of scalar field interpolating ops
-  compute_Ba();
+  compute_Ba(1);
 
   // Construct the operators for all definitions and subtractions
   FORALLSITES(i, s) {

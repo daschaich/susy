@@ -9,7 +9,7 @@
 // 0) traceless part of the hermitian matrix returned by the polar projection
 //    (use tempmat1 as temporary storage while shifting from x+a to x)
 // 1) traceless part of U_a Udag_a
-void compute_Ba() {
+void compute_Ba(int stride) {
   register int i;
   register site *s;
   int a, b, j, k;
@@ -38,8 +38,11 @@ void compute_Ba() {
   }
 
   // Shift polar scalar field from x+a to x to obtain gauge-invariant traceBB
-  for (a = XUP; a < NUMLINK; a++)
-    shiftmat(Ba[0][a], tempmat1, goffset[a] + 1);
+  // Need to include stride in case the lattice has been blocked
+  for (a = XUP; a < NUMLINK; a++) {
+    for (j = 0; j < stride; j++)
+      shiftmat(Ba[0][a], tempmat1, goffset[a] + 1);
+  }
 
   // Compute traces of bilinears
   // Symmetric in a <--> b but store all to simplify SUGRA computation
@@ -88,7 +91,7 @@ void d_konishi() {
   }
 
   // Compute traces of bilinears of scalar field interpolating ops
-  compute_Ba();
+  compute_Ba(1);
 
   // Now form the zero momentum projected operators (summing across nodes)
   FORALLSITES(i, s) {
