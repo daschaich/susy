@@ -15,13 +15,13 @@ susy_spill for printing out configuration in format expected by serial C++ code
 
 # Dependences:
 Measurements involving polar-projected matrices (susy_meas and susy_hmc_meas) require LAPACK
-Eigenvalue measurements (susy_eig) require PRIMME and LAPACK -- PRIMME can be obtained from https://github.com/primme/primme
+Eigenvalue measurements (susy_eig) require PRIMME (https://github.com/primme/primme) and LAPACK
 
 # Defines for compilation:
 -DPHI_ALGORITHM for the basic phi algorithm (REQUIRED)
 -DHMC_ALGORITHM switches on the accept/reject step
 -DCORR switches on the Konishi and SUGRA correlator calculation
--DSMEAR switches on smearing for measurements, either stout or APE-like
+-DSTOUT switches on stout smearing for measurements
 -DWLOOP switches on the gauge-fixed Wilson loop calculation
 -DBILIN switches on the fermion bilinear calculation
 -DEIG switches on the PRIMME eigenvalue calculation
@@ -72,12 +72,8 @@ fmass 0.0             # Mass shift in fermion operator
 G 0.1                 # Q-invariant plaquette determinant coupling
 B 1.0                 # Q-invariant scalar potential coupling
 
-Nsmear 1              # Number of smearing steps -- only include with -DSMEAR
-alpha 0.1             # Stout smearing parameter -- only include with -DSMEAR
-
-vevK 0.0              # numK Konishi vacuum subtractions
-vevK 0.0
-vevK 0.0
+Nstout 1              # Number of stout smearing steps -- only include with -DSTOUT
+rho 0.1               # Stout smearing parameter -- only include with -DSTOUT
 
 max_cg_iterations 500 # Maximum number of CG iterations
 error_per_site 1e-5   # Stopping condition for CG (will be squared)
@@ -104,7 +100,6 @@ forget                # What to do with lattice at end: only forget or save_seri
 defines.h       -- Defines Omelyan parameters, RHMC degree, temporal boundary conditions, and numbers of links, generators, offsets and terms in the action
 lattice.h       -- Defines Twist_Fermions, the site struct, global variables and fields
 params.h        -- Defines a struct for reading input parameters
-primme.h        -- Defines for PRIMME eigenvalue calculations
 susy_includes.h -- Defines lots of routines, some of which are discussed below
 
 # 1) Routines in this directory:
@@ -121,23 +116,19 @@ utilities.c           -- Many basic routines associated with parts of the action
 d_link.c              -- Computes average link
 determinant.c         -- Utilities for finding determinants
 gauge_info.c          -- Puts information into configuration files
-smear.c               -- Stout and APE smearing on A4* lattice
 
 # 1b) Evolution-specific files
 control.c     -- Main program for evolution and measurements
 det_force.c   -- Contribution to force from determinant term
-setup_rhmc.c  -- Initializes RHMC shifts and amplitudes, values copied from ./remez output
+setup_rhmc.c  -- Initializes RHMC shifts and amplitudes, values copied from ./remez-milc output
 update_o.c    -- Omelyan HMC evolution, includes ranmom() routine
 update_h.c    -- Updates gauge momenta
 
 # 1c) Measurement-specific files
 control_meas.c        -- Main program for standard measurements only
-control_mcrg.c        -- Main program for RG blocking and blocked measurements only
 control_eig.c         -- Main program for eigenvalues measurements only
-control_phase.c       -- Main program for pfaffian measurements only
-meas_utils.c          -- Basic routines used by other measurements
 d_bilinear.c          -- Fermion bilinear and susy transformation calculation
-d_konishi.c           -- Konishi and SUGRA operators projected to zero spatial momentum
+d_correlator.c        -- Konishi and SUGRA correlators C(t) (zero momentum projected)
 d_correlator_r.c      -- Konishi and SUGRA correlators C(r)
 hvy_pot.c             -- Computes correlators of gauge-fixed timelike links
 hvy_pot_polar.c       -- Computes correlators of polar-projected gauge-fixed timelike links
@@ -147,15 +138,9 @@ hvy_pot_polar_loop.c  -- Computes more standard Wilson loops of polar-projected 
                          (NB: overwrites links, as above)
 path.c                -- Used to construct Wilson loops for hvy_pot_loop.c and hvy_pot_polar_loop.c
 rsymm.c               -- Modified Wilson loops related to R symmetry transformations
-block_mcrg.c          -- RG blocking
-blocked_smear.c       -- Stout and APE smearing on blocked lattices
-blocked_ops.c         -- Blocked Konishi and SUGRA operators
-blocked_plaq.c        -- Blocked plaquette
-blocked_plaq_lcl.c    -- Blocked plaquette with check of minimum plaquette
-blocked_ploop.c       -- Blocked Polyakov loop
-blocked_rsymm.c       -- Blocked modified Wilson loops related to R symmetry transformations
 eig.c                 -- Eigenvalue measurements using PRIMME
-                         Must specify path to libzprimme.a as PLIB in makefile
+                         !!!May need to modify path to primme.h
+                         !!!May need to modify PLIB in makefile to provide libzprimme.a
                          Also need LAPACK and BLAS in linkable location
 d_phase.c             -- Phase and (log of) magnitude of the pfaffian
 
@@ -178,12 +163,13 @@ nersc_cksum.c           -- Compute link trace sum for lattice I/O (cksum itself 
 ranstuff.c              -- Random number stuff, both for serial and parallel running
 remap_stdio_from_args.c -- For reading input parameters
 layout_hyper_prime.c    -- Layout lattice on processors
+stout.c                 -- Stout smearing on A4* lattice
 
 # 2b) Measurement-specific files
 gaugefix.c          -- Fixes to Coulomb gauge (requires even number of sites in all directions)
 restrict_fourier.c  -- Fast Fourier transform routine only used with -DPL_CORR
 d_plaq4_lcl.c       -- Calculates the plaquette with options to print more info
-                       Used to monitor minimum plaquette when smearing with -DSMEAR
+                       Used to monitor minimum plaquette when smearing with -DSTOUT
 io_phase.c          -- Primitive (for now) dump and load routines for checkpointing pfaffian computations
 # ------------------------------------------------------------------
 

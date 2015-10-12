@@ -102,7 +102,7 @@ void invert(su3_matrix_f *in, su3_matrix_f *out);
 
 // Modified Wilson loops use invert and path
 void path(int *dir, int *sign, int length);
-void rsymm(int project);    // Optional polar projection
+void rsymm();
 // -----------------------------------------------------------------
 
 
@@ -112,7 +112,7 @@ void rsymm(int project);    // Optional polar projection
 #ifdef CORR
 // Konishi and SUGRA correlators
 void setup_P();
-void compute_Ba(int stride);
+void compute_Ba();
 void d_konishi();       // Operators averaged over each timeslice
 
 // Map (x, y, z, t) to scalar displacements r
@@ -140,9 +140,7 @@ void hvy_pot_polar();
 // These construct explicit paths along lattice principal axes, for checking
 void hvy_pot_loop(int do_det);
 void hvy_pot_polar_loop();
-#endif
 
-#if defined(WLOOP) || defined(SMEAR)
 // Use LAPACK in the polar projection
 // http://www.physics.orst.edu/~rubin/nacphy/lapack/routines/zheev.html
 // First argument turns on eigenvector computations
@@ -155,7 +153,7 @@ void hvy_pot_polar_loop();
 // Final argument reports success or information about failure
 void zheev_(char *doV, char *uplo, int *N1, double *store, int *N2,
             double *eigs, double *work, int *Nwork, double *Rwork, int *stat);
-void polar(su3_matrix_f *in, su3_matrix_f *out, su3_matrix_f *rho);
+void polar(su3_matrix_f *a, su3_matrix_f *b);
 #endif
 
 // Monopole computation uses find_det
@@ -163,7 +161,8 @@ void monopole();
 
 #ifdef SMEAR
 // APE and stout smearing, the former with optional projections
-void exp_mult();
+// stout.c contains directional_staple used by APE.c
+void directional_staple(int dir1, int dir2);
 void stout_smear(int Nsmear, double alpha);
 void APE_smear(int Nsmear, double alpha, int project);
 #endif
@@ -177,9 +176,9 @@ void blocked_ploop(int Nsmear, int bl);
 void blocked_rsymm(int Nsmear, int bl);
 
 #ifdef SMEAR
-// Blocked APE and stout smearing, the former with optional projections
-void blocked_stout(int Nsmear, double alpha, int block);
+// Blocked APE smearing with optional projections
 void blocked_APE(int Nsmear, double alpha, int project, int block);
+void polar(su3_matrix_f *a, su3_matrix_f *b);
 #endif
 #endif
 // -----------------------------------------------------------------
@@ -189,7 +188,6 @@ void blocked_APE(int Nsmear, double alpha, int project, int block);
 // -----------------------------------------------------------------
 // Eigenvalue routines
 #ifdef EIG
-#include "primme.h"
 int make_evs(int Nvec, Twist_Fermion **eigVec, double *eigVal, int flag);
 void check_Dmat(int Nvec, Twist_Fermion **eigVec);
 
