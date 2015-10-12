@@ -80,6 +80,7 @@ void coldlat() {
 // Then hit with stout smearing to smooth
 // Exponentiation helper function overlaps with exp_mult() in stout.c
 void exponentiate_ahm(anti_hermitmat *in, su3_matrix_f *link) {
+#ifdef SMEAR
   Real t2, t3, t4, t5, t6, t7, t8;
   su3_matrix_f temp1, temp2, htemp;
 
@@ -115,9 +116,14 @@ void exponentiate_ahm(anti_hermitmat *in, su3_matrix_f *link) {
 
   mult_su3_nn_f(&htemp, &temp2, &temp1);
   add_su3_matrix_f(link, &temp1, link);
+#endif
 }
 
 void randomlat() {
+#ifndef SMEAR
+  printf("Need to recompile with smearing to use a random config\n");
+  exit(1);
+#else
   register int i, j, k, dir;
   register site *s;
   int num_stout = 0;
@@ -152,6 +158,7 @@ void randomlat() {
   }
   node0_printf("random gauge NUMLINK configuration loaded ");
   node0_printf("with %d stout smearing steps\n", num_stout);
+#endif
 }
 // -----------------------------------------------------------------
 
