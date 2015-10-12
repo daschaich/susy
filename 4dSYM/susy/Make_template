@@ -37,7 +37,6 @@ GLOBAL_HEADERS = ${INCLUDEDIR}/config.h      \
 MY_HEADERS = lattice.h \
              params.h  \
              defines.h \
-             primme.h  \
              susy_includes.h
 
 HEADERS = ${GLOBAL_HEADERS} ${MY_HEADERS} ${INLINE_HEADERS}

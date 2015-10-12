@@ -188,7 +188,6 @@ void polar(su3_matrix_f *a, su3_matrix_f *b);
 // -----------------------------------------------------------------
 // Eigenvalue routines
 #ifdef EIG
-#include "primme.h"
 int make_evs(int Nvec, Twist_Fermion **eigVec, double *eigVal, int flag);
 void check_Dmat(int Nvec, Twist_Fermion **eigVec);
 

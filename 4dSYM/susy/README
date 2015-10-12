@@ -15,7 +15,7 @@ susy_spill for printing out configuration in format expected by serial C++ code
 
 # Dependences:
 Measurements involving polar-projected matrices (susy_meas and susy_hmc_meas) require LAPACK
-Eigenvalue measurements (susy_eig) require PRIMME and LAPACK -- PRIMME can be obtained from https://github.com/primme/primme
+Eigenvalue measurements (susy_eig) require PRIMME (https://github.com/primme/primme) and LAPACK
 
 # Defines for compilation:
 -DPHI_ALGORITHM for the basic phi algorithm (REQUIRED)
@@ -100,7 +100,6 @@ forget                # What to do with lattice at end: only forget or save_seri
 defines.h       -- Defines Omelyan parameters, RHMC degree, temporal boundary conditions, and numbers of links, generators, offsets and terms in the action
 lattice.h       -- Defines Twist_Fermions, the site struct, global variables and fields
 params.h        -- Defines a struct for reading input parameters
-primme.h        -- Defines for PRIMME eigenvalue calculations
 susy_includes.h -- Defines lots of routines, some of which are discussed below
 
 # 1) Routines in this directory:
@@ -140,7 +139,8 @@ hvy_pot_polar_loop.c  -- Computes more standard Wilson loops of polar-projected 
 path.c                -- Used to construct Wilson loops for hvy_pot_loop.c and hvy_pot_polar_loop.c
 rsymm.c               -- Modified Wilson loops related to R symmetry transformations
 eig.c                 -- Eigenvalue measurements using PRIMME
-                         Must specify path to libzprimme.a as PLIB in makefile
+                         !!!May need to modify path to primme.h
+                         !!!May need to modify PLIB in makefile to provide libzprimme.a
                          Also need LAPACK and BLAS in linkable location
 d_phase.c             -- Phase and (log of) magnitude of the pfaffian
 
