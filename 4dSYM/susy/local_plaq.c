@@ -8,8 +8,6 @@
 // Similarly the other plaquettes are given by plaq_perp[xx]
 
 // #define MIN_PLAQ turns on measurement of minimum plaquette per config
-// for tuning nHYP as in Hasenfratz & Knechtli, hep-lat/0103029
-
 // #define PLAQ_DIST prints out all plaquettes for plotting distribution
 // CAUTION: Do not run PLAQ_DIST with MPI!
 
@@ -22,9 +20,9 @@ static int print_dir = 0;   // Controls printing out MY_DIR
 #endif
 
 //#define PLAQ_DIST
-#include "generic_includes.h"
+#include "susy_includes.h"
 
-void d_plaquette_lcl(double *ss_plaq, double *st_plaq) {
+void local_plaquette(double *ss_plaq, double *st_plaq) {
   register int i, dir, dir2;
   register site *s;
   register su3_matrix_f *m1, *m4;
@@ -159,6 +157,7 @@ void d_plaquette_lcl(double *ss_plaq, double *st_plaq) {
 #endif
 
 #ifdef MIN_PLAQ
+  // Somewhat hacky since we don't have g_doublemin...
   min_plaq = -min_plaq;
   g_doublemax(&min_plaq);
   min_plaq = -min_plaq;

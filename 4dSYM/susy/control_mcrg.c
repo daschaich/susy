@@ -65,7 +65,7 @@ int main(int argc, char *argv[]) {
   }
 
   // Check: compute initial plaquette and bosonic action
-  d_plaquette(&dssplaq, &dstplaq);
+  plaquette(&dssplaq, &dstplaq);
   node0_printf("START %.8g %.8g %.8g ", dssplaq, dstplaq, dssplaq + dstplaq);
   dssplaq = d_gauge_action(NODET);
   node0_printf("%.8g\n", dssplaq / (double)volume);
@@ -85,7 +85,7 @@ int main(int argc, char *argv[]) {
   // Polyakov loop and plaquette measurements
   // Format: GMES Re(Polyakov) Im(Poyakov) cg_iters ss_plaq st_plaq
   plp = ploop(&plpMod);
-  d_plaquette(&dssplaq, &dstplaq);
+  plaquette(&dssplaq, &dstplaq);
   node0_printf("GMES %.8g %.8g 0 %.8g %.8g ",
                plp.real, plp.imag, dssplaq, dstplaq);
 
@@ -146,12 +146,12 @@ int main(int argc, char *argv[]) {
 
     // Check minimum plaquette in addition to averages
     node0_printf("BEFORE ");
-    blocked_plaq_lcl(ismear, 0);    // Prints out MIN_PLAQ
+    blocked_local_plaq(ismear, 0);    // Prints out MIN_PLAQ
 
     // Overwrite s->linkf
     blocked_APE(smear_step, alpha, YESDET, 0);
     node0_printf("AFTER  ");
-    blocked_plaq_lcl(ismear, 0);    // Prints out MIN_PLAQ
+    blocked_local_plaq(ismear, 0);    // Prints out MIN_PLAQ
 
     // Smeared unblocked Tr[Udag.U] / N and its width
     linktr_ave = d_link(linktr, &linktr_width, link_det, &det_ave, &det_width);
@@ -226,17 +226,17 @@ int main(int argc, char *argv[]) {
 
     // Smear (after blocking) in increments of smear_step up to Nsmear
     for (ismear = 1; ismear <= Nsmear; ismear += smear_step) {
-      node0_printf("Doing %d APE smearing steps ", smear_step);
+      node0_printf("Doing %d polar-projected APE smearing steps ", smear_step);
       node0_printf("(total %d) with alpha=%.4g\n", ismear, alpha);
 
       // Check minimum plaquette in addition to averages
       node0_printf("BEFORE ");
-      blocked_plaq_lcl(ismear, bl);    // Prints out MIN_PLAQ
+      blocked_local_plaq(ismear, bl);     // Prints out MIN_PLAQ
 
       // Overwrites s->linkf
       blocked_APE(smear_step, alpha, YESDET, bl);
       node0_printf("AFTER  ");
-      blocked_plaq_lcl(ismear, bl);    // Prints out MIN_PLAQ
+      blocked_local_plaq(ismear, bl);     // Prints out MIN_PLAQ
 
       // Smeared blocked Tr[Udag.U] / N and its width
       linktr_ave = d_link(linktr, &linktr_width, link_det, &det_ave, &det_width);

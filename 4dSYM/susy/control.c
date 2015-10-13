@@ -52,7 +52,7 @@ int main(int argc, char *argv[]) {
   dtime = -dclock();
 
   // Check: compute initial plaquette and bosonic action
-  d_plaquette(&dssplaq, &dstplaq);
+  plaquette(&dssplaq, &dstplaq);
   node0_printf("START %.8g %.8g %.8g ", dssplaq, dstplaq, dssplaq + dstplaq);
   dssplaq = d_gauge_action(NODET);
   node0_printf("%.8g\n", dssplaq / (double)volume);
@@ -94,7 +94,7 @@ int main(int argc, char *argv[]) {
     // Polyakov loop and plaquette measurements
     // Format: GMES Re(Polyakov) Im(Poyakov) cg_iters ss_plaq st_plaq
     plp = ploop(&plpMod);
-    d_plaquette(&dssplaq, &dstplaq);
+    plaquette(&dssplaq, &dstplaq);
     node0_printf("GMES %.8g %.8g %d %.8g %.8g ",
                  plp.real, plp.imag, s_iters, dssplaq, dstplaq);
 
@@ -115,7 +115,7 @@ int main(int argc, char *argv[]) {
 
       // Check minimum plaquette in addition to averages
       node0_printf("BEFORE ");
-      d_plaquette_lcl(&dssplaq, &dstplaq);    // Prints out MIN_PLAQ
+      local_plaquette(&dssplaq, &dstplaq);    // Prints out MIN_PLAQ
       node0_printf(" %.8g %.8g\n", dssplaq, dstplaq);
 
       // Overwrite s->linkf
@@ -126,7 +126,7 @@ int main(int argc, char *argv[]) {
       }
       APE_smear(Nsmear, alpha, YESDET);
       node0_printf("AFTER  ");
-      d_plaquette_lcl(&dssplaq, &dstplaq);    // Prints out MIN_PLAQ
+      local_plaquette(&dssplaq, &dstplaq);      // Prints out MIN_PLAQ
       node0_printf(" %.8g %.8g\n", dssplaq, dstplaq);
 #endif
 #endif
@@ -190,7 +190,7 @@ int main(int argc, char *argv[]) {
       // Gauge fix to easily access arbitrary displacements
       // Save un-fixed links to be written to disk if requested
       if (fixflag == COULOMB_GAUGE_FIX) {
-        d_plaquette(&dssplaq, &dstplaq);    // To be printed below
+        plaquette(&dssplaq, &dstplaq);    // To be printed below
         FORALLSITES(i, s) {
           for (dir = XUP; dir < NUMLINK; dir++)
             su3mat_copy_f(&(s->linkf[dir]), &(s->mom[dir]));
@@ -206,7 +206,7 @@ int main(int argc, char *argv[]) {
         gtime += dclock();
         node0_printf("GFIX time = %.4g seconds\n", gtime);
         node0_printf("BEFORE %.8g %.8g\n", dssplaq, dstplaq);
-        d_plaquette(&dssplaq, &dstplaq);
+        plaquette(&dssplaq, &dstplaq);
         node0_printf("AFTER  %.8g %.8g\n", dssplaq, dstplaq);
       }
       else if (fixflag == NO_GAUGE_FIX) { // Braces suppress compiler warning
@@ -252,7 +252,7 @@ int main(int argc, char *argv[]) {
   node0_printf("RUNNING COMPLETED\n");
 
   // Check: compute final plaquette and bosonic action
-  d_plaquette(&dssplaq, &dstplaq);
+  plaquette(&dssplaq, &dstplaq);
   node0_printf("STOP %.8g %.8g %.8g ",
                dssplaq, dstplaq, dssplaq + dstplaq);
   dssplaq = d_gauge_action(NODET);

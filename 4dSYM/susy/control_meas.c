@@ -52,7 +52,7 @@ int main(int argc, char *argv[]) {
 
   // Uncomment this block to print plaquette, determinant & trace distributions
   // Be sure to uncomment PLAQ_DIST and DET_DIST, and run in serial
-//  d_plaquette_lcl(&dssplaq, &dstplaq);
+//  local_plaquette(&dssplaq, &dstplaq);
 //  node0_printf("\n");
 //  if (G < IMAG_TOL)
 //    G = 999;
@@ -65,7 +65,7 @@ int main(int argc, char *argv[]) {
 //  return 0;
 
   // Check: compute initial plaquette and bosonic action
-  d_plaquette(&dssplaq, &dstplaq);
+  plaquette(&dssplaq, &dstplaq);
   node0_printf("START %.8g %.8g %.8g ", dssplaq, dstplaq, dssplaq + dstplaq);
   dssplaq = d_gauge_action(NODET);
   node0_printf("%.8g\n", dssplaq / (double)volume);
@@ -85,7 +85,7 @@ int main(int argc, char *argv[]) {
   // Polyakov loop and plaquette measurements
   // Format: GMES Re(Polyakov) Im(Poyakov) cg_iters ss_plaq st_plaq
   plp = ploop(&plpMod);
-  d_plaquette(&dssplaq, &dstplaq);
+  plaquette(&dssplaq, &dstplaq);
   node0_printf("GMES %.8g %.8g 0 %.8g %.8g ",
                plp.real, plp.imag, dssplaq, dstplaq);
 
@@ -104,13 +104,13 @@ int main(int argc, char *argv[]) {
 
   // Check minimum plaquette in addition to averages
   node0_printf("BEFORE ");
-  d_plaquette_lcl(&dssplaq, &dstplaq);    // Prints out MIN_PLAQ
+  local_plaquette(&dssplaq, &dstplaq);      // Prints out MIN_PLAQ
   node0_printf(" %.8g %.8g\n", dssplaq, dstplaq);
 
   // Overwrite s->linkf
   APE_smear(Nsmear, alpha, YESDET);
   node0_printf("AFTER  ");
-  d_plaquette_lcl(&dssplaq, &dstplaq);    // Prints out MIN_PLAQ
+  local_plaquette(&dssplaq, &dstplaq);      // Prints out MIN_PLAQ
   node0_printf(" %.8g %.8g\n", dssplaq, dstplaq);
 #endif
 
@@ -163,7 +163,7 @@ int main(int argc, char *argv[]) {
 
 #ifdef CORR
   // R symmetry transformations -- use find_det and adjugate
-  rsymm(YESDET);
+  rsymm(NODET);
 
   // Measure density of monopole world lines in non-diagonal cubes
   monopole();
@@ -173,14 +173,14 @@ int main(int argc, char *argv[]) {
   // Gauge fix to Coulomb gauge
   // This lets us easily access arbitrary displacements
   if (fixflag == COULOMB_GAUGE_FIX) {
-    d_plaquette(&dssplaq, &dstplaq);    // To be printed below
+    plaquette(&dssplaq, &dstplaq);    // To be printed below
     node0_printf("Fixing to Coulomb gauge...\n");
     double gtime = -dclock();
     gaugefix(TUP, 1.5, 5000, GAUGE_FIX_TOL, -1, -1);
     gtime += dclock();
     node0_printf("GFIX time = %.4g seconds\n", gtime);
     node0_printf("BEFORE %.8g %.8g\n", dssplaq, dstplaq);
-    d_plaquette(&dssplaq, &dstplaq);
+    plaquette(&dssplaq, &dstplaq);
     node0_printf("AFTER  %.8g %.8g\n", dssplaq, dstplaq);
   }
   hvy_pot(NODET);

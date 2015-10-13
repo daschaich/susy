@@ -2,34 +2,9 @@
 // Evaluate the Polyakov loop using repeated single-timeslice gathers
 // Despite the file name we don't consider the distribution of ploop values
 // at each spatial site
-#include "generic_includes.h"
-// -----------------------------------------------------------------
-
-
-
-// -----------------------------------------------------------------
-// Shift a matrix without parallel transport
-// The dir should come from goffset
-void shiftmat(su3_matrix_f *dat, su3_matrix_f *temp, int dir) {
-  register int i;
-  register site *s;
-  msg_tag *mtag;
-
-  mtag = start_gather_field(dat, sizeof(su3_matrix_f),
-                            dir, EVENANDODD, gen_pt[0]);
-  wait_gather(mtag);
-  FORALLSITES(i, s)
-    su3mat_copy_f((su3_matrix_f *)gen_pt[0][i], &(temp[i]));
-  cleanup_gather(mtag);
-  FORALLSITES(i, s)
-    su3mat_copy_f(&(temp[i]), &(dat[i]));
-}
-// -----------------------------------------------------------------
-
-
-
-// -----------------------------------------------------------------
 // Use tempmat1, tempmat2 and staple for temporary storage
+#include "susy_includes.h"
+
 complex ploop(double *plpMod) {
   register int i;
   register site *s;

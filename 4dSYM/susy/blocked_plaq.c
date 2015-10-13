@@ -1,66 +1,47 @@
 // -----------------------------------------------------------------
 // Evaluate the plaquette after block RG blocking steps
 // Also print blocked det and widths sqrt(<P^2> - <P>^2) of distributions
-// Use general_gathers; lattice must be divisible by 2^block in all dirs
-// Use tempmat1 and tempmat2 for temporary storage
+// Allow sanity check of reproducing plaquette() with block <= 0
+// Use tempmat1, tempmat2 and Fmunu for temporary storage
 #include "susy_includes.h"
 
 void blocked_plaq(int Nsmear, int block) {
   register int i, dir, dir2;
   register site *s;
-  register su3_matrix_f *m1, *m4;
-  int j, bl = 2, d1[4] = {0, 0, 0, 0}, d2[4] = {0, 0, 0, 0};
+  int j, stride = 1;
   double plaq = 0.0, plaqSq = 0.0, re = 0.0, reSq = 0.0, im = 0.0, imSq = 0.0;
   double ss_sum = 0.0, st_sum = 0.0, norm = 10.0 * volume, tr;
   complex det = cmplx(0.0, 0.0), tc;
-  msg_tag *mtag;
-  su3_matrix_f *mat, tmat, tmat2;
+  su3_matrix_f tmat, tmat2, tmat3;
 
-  // Set number of links to stride, bl = 2^block
-  // Allow sanity check of reproducing d_plaquette() with this routine
-  for (j = 1; j < block; j++)
-    bl *= 2;
-  if (block <= 0)
-    bl = 1;
+  // Set number of links to stride, 2^block
+  for (j = 0; j < block; j++)
+    stride *= 2;
 
-  // Compute the bl-strided plaquette, exploiting a symmetry under dir<-->dir2
+  // Compute the strided plaquette, exploiting a symmetry under dir<-->dir2
   for (dir = YUP; dir < NUMLINK; dir++) {
     for (dir2 = XUP; dir2 < dir; dir2++) {
-      for (j = 0; j < NDIMS; j++) {
-        d1[j] = bl * offset[dir][j];
-        d2[j] = bl * offset[dir2][j];
-      }
-      // Can only have one general gather at once...
-      mtag = start_general_gather_site(F_OFFSET(linkf[dir2]),
-                                       sizeof(su3_matrix_f), d1,
-                                       EVENANDODD, gen_pt[0]);
-
-      // tempmat2 = Udag_b(x) U_a(x)
+      // Copy links to tempmat1 and tempmat2 to be shifted
       FORALLSITES(i, s) {
-        m1 = &(s->linkf[dir]);
-        m4 = &(s->linkf[dir2]);
-        mult_su3_an_f(m4, m1, &(tempmat2[i]));
+        su3mat_copy_f(&(s->linkf[dir]), &(tempmat1[i]));
+        su3mat_copy_f(&(s->linkf[dir2]), &(tempmat2[i]));
       }
 
-      // Copy first gather to tempmat1
-      wait_general_gather(mtag);
-      FORALLSITES(i, s)
-        su3mat_copy_f((su3_matrix_f *)(gen_pt[0][i]), &(tempmat1[i]));
-      cleanup_general_gather(mtag);
+      // Get mom[dir2] from dir and mom[dir] from dir2, both with stride
+      // This order may be easier on cache
+      for (j = 0; j < stride; j++)
+        shiftmat(tempmat2, Fmunu[2], goffset[dir]);
+      for (j = 0; j < stride; j++)
+        shiftmat(tempmat1, Fmunu[1], goffset[dir2]);
 
-      mtag = start_general_gather_site(F_OFFSET(linkf[dir]),
-                                       sizeof(su3_matrix_f), d2,
-                                       EVENANDODD, gen_pt[0]);
-      wait_general_gather(mtag);
-
-      // Compute tr[Udag_a(x+d2) Udag_b(x) U_a(x) U_b(x+d1)]
-      // Also monitor determinant
+      // Compute tmat  = U_1(x) U_2(x + dir)
+      //     and tmat2 = U_2(x) U_1(x + dir2)
+      // then plaq = realtrace(tmat2, tmat)[ U_1(x) ]
+      //           = tr[Udag_1(x + dir2) Udag_2(x) U_1(x) U_2(x + dir)]
       FORALLSITES(i, s) {
-        mat = (su3_matrix_f *)(gen_pt[0][i]);
-        mult_su3_nn_f(&(tempmat2[i]), &(tempmat1[i]), &tmat);
-        mult_su3_an_f(mat, &tmat, &tmat2);
-        tc = trace_su3_f(&tmat2);
-        tr = (double)tc.real;
+        mult_su3_nn_f(&(s->linkf[dir]), &(tempmat2[i]), &tmat);
+        mult_su3_nn_f(&(s->linkf[dir2]), &(tempmat1[i]), &tmat2);
+        tr = (double)realtrace_su3_f(&tmat2, &tmat);
         plaq += tr;
         plaqSq += tr * tr;
         if (dir == TUP || dir2 == TUP)
@@ -68,15 +49,16 @@ void blocked_plaq(int Nsmear, int block) {
         else
           ss_sum += tr;
 
-        su3_adjoint_f(&tmat2, &tmat);   // Match sign conventions
-        tc = find_det(&tmat);
+        // Also monitor determinant
+        // (na instead of an to match sign conventions)
+        mult_su3_na_f(&tmat2, &tmat, &tmat3);
+        tc = find_det(&tmat3);
         CSUM(det, tc);
         re += tc.real;
         reSq += tc.real * tc.real;
         im += tc.imag;
         imSq += tc.imag * tc.imag;
       }
-      cleanup_general_gather(mtag);
     }
   }
   g_doublesum(&plaq);

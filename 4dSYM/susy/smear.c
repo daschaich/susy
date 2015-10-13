@@ -1,63 +1,7 @@
 // -----------------------------------------------------------------
-// Either stout smearing or APE smearing without SU(N) projection
+// Either stout smearing or APE-like smearing without SU(N) projection
 // For stout smearing see Morningstar and Peardon, hep-lat/0311018
 #include "susy_includes.h"
-// -----------------------------------------------------------------
-
-
-
-// -----------------------------------------------------------------
-// Calculate newU = exp(Q).U, overwriting s->linkf
-// Here Q is the traceless anti-hermitian lattice field from stout_smear
-// Go to eighth order in the exponential:
-//   exp(Q) * U = (1 + Q + Q^2/2 + Q^3/6 ...) * U
-//              = U + Q*(U + (Q/2)*(U + (Q/3)*( ... )))
-void exp_mult() {
-  register int i, dir;
-  register site *s;
-  register Real t2, t3, t4, t5, t6, t7, t8;
-  su3_matrix_f *link, tmat, tmat2, htemp;
-
-  // Take divisions out of site loop (can't be done by compiler)
-  t2 = 1.0 / 2.0;
-  t3 = 1.0 / 3.0;
-  t4 = 1.0 / 4.0;
-  t5 = 1.0 / 5.0;
-  t6 = 1.0 / 6.0;
-  t7 = 1.0 / 7.0;
-  t8 = 1.0 / 8.0;
-
-  for (dir = XUP; dir < NUMLINK; dir++) {
-    FORALLSITES(i, s) {
-      uncompress_anti_hermitian(&(Q[dir][i]), &htemp);
-      link = &(s->linkf[dir]);
-
-      mult_su3_nn_f(&htemp, link, &tmat);
-      scalar_mult_add_su3_matrix_f(link, &tmat, t8, &tmat2);
-
-      mult_su3_nn_f(&htemp, &tmat2, &tmat);
-      scalar_mult_add_su3_matrix_f(link, &tmat, t7, &tmat2);
-
-      mult_su3_nn_f(&htemp, &tmat2, &tmat);
-      scalar_mult_add_su3_matrix_f(link, &tmat, t6, &tmat2);
-
-      mult_su3_nn_f(&htemp, &tmat2, &tmat);
-      scalar_mult_add_su3_matrix_f(link, &tmat, t5, &tmat2);
-
-      mult_su3_nn_f(&htemp, &tmat2, &tmat);
-      scalar_mult_add_su3_matrix_f(link, &tmat, t4, &tmat2);
-
-      mult_su3_nn_f(&htemp, &tmat2, &tmat);
-      scalar_mult_add_su3_matrix_f(link, &tmat, t3, &tmat2);
-
-      mult_su3_nn_f(&htemp, &tmat2, &tmat);
-      scalar_mult_add_su3_matrix_f(link, &tmat, t2, &tmat2);
-
-      mult_su3_nn_f(&htemp, &tmat2, &tmat);
-      add_su3_matrix_f(link, &tmat, &(s->linkf[dir]));
-    }
-  }
-}
 // -----------------------------------------------------------------
 
 
@@ -68,7 +12,7 @@ void exp_mult() {
 // dir is the direction of the original link
 // dir2 is the other direction that defines the staple
 // Use gather offsets to handle all five links!
-// Use tempmat1 for temporary storage
+// Use tempmat1 and tempmat2 for temporary storage
 void directional_staple(int dir, int dir2) {
   register int i;
   register site *s;
@@ -84,17 +28,16 @@ void directional_staple(int dir, int dir2) {
                            goffset[dir2], EVENANDODD, gen_pt[1]);
 
   // Start working on the lower staple while we wait for the gathers
-  // The lower staple is prepared at x-dir2 and stored in tempmat1,
+  // The lower staple is prepared at x-dir2 and stored in tempmat2,
   // then gathered to x
   FORALLSITES(i, s)
-    mult_su3_an_f(&(s->mom[dir2]), &(s->mom[dir]), &(tempmat1[i]));
+    mult_su3_an_f(&(s->mom[dir2]), &(s->mom[dir]), &(tempmat2[i]));
 
   // Finish lower staple after gather is done
   wait_gather(tag0);
   FORALLSITES(i, s) {
     mat0 = (su3_matrix_f *)gen_pt[0][i];
-    mult_su3_nn_f(&(tempmat1[i]), mat0, &tmat);
-    su3mat_copy_f(&tmat, &(tempmat1[i]));
+    mult_su3_nn_f(&(tempmat2[i]), mat0, &(tempmat1[i]));
   }
 
   // Gather staple from direction -dir2 to "home" site
@@ -169,9 +112,7 @@ void stout_smear(int Nsmear, double alpha) {
 // -----------------------------------------------------------------
 // Nsmear steps of APE smearing without unitarization, overwriting s->linkf
 // Optionally project unsmeared links and / or staple sums
-// Only used for correlators at present (other targets don't include polar)
 void APE_smear(int Nsmear, double alpha, int project) {
-#ifdef CORR
   register int i, n, dir, dir2;
   register site *s;
   Real tr, tr2;
@@ -205,7 +146,7 @@ void APE_smear(int Nsmear, double alpha, int project) {
       }
 
       // Combine (1 - alpha).link + (alpha / 8).staple
-      // Don't do anything to this link!
+      // optionally projecting the staple, but not the end result
       FORALLSITES(i, s) {
 //        if (project == 1)
 //          det_project(&(staple[i]), &tmat2);
@@ -217,6 +158,5 @@ void APE_smear(int Nsmear, double alpha, int project) {
       }
     }
   }
-#endif
 }
 // -----------------------------------------------------------------

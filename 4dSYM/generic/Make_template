@@ -10,8 +10,6 @@
 G_ALL = \
  com_mpi.o \
  com_vanilla.o \
- d_plaq4.o \
- d_plaq4_lcl.o \
  gaugefix.o \
  io_ansi.o \
  io_helpers.o \
@@ -21,7 +19,6 @@ G_ALL = \
  layout_hyper_prime.o \
  make_lattice.o \
  nersc_cksum.o \
- ploop_dist.o \
  ranstuff.o \
  remap_stdio_from_args.o \
  restrict_fourier.o
@@ -50,10 +47,6 @@ com_mpi.o: ../generic/com_mpi.c
 	${CC} -c ${CFLAGS} $<
 com_vanilla.o: ../generic/com_vanilla.c
 	${CC} -c ${CFLAGS} $<
-d_plaq4.o: ../generic/d_plaq4.c
-	${CC} -c ${CFLAGS} $<
-d_plaq4_lcl.o: ../generic/d_plaq4_lcl.c
-	${CC} -c ${CFLAGS} $<
 gaugefix.o: ../generic/gaugefix.c
 	${CC} -c ${CFLAGS} $<
 io_ansi.o: ../generic/io_ansi.c
@@ -74,8 +67,6 @@ layout_hyper_prime.o: ../generic/layout_hyper_prime.c
 make_lattice.o: ../generic/make_lattice.c
 	${CC} -c ${CFLAGS} $<
 nersc_cksum.o: ../generic/nersc_cksum.c
-	${CC} -c ${CFLAGS} $<
-ploop_dist.o: ../generic/ploop_dist.c
 	${CC} -c ${CFLAGS} $<
 ranstuff.o: ../generic/ranstuff.c
 	${CC} -c ${CFLAGS} $<

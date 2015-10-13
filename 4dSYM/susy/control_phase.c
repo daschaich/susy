@@ -40,7 +40,7 @@ int main(int argc, char *argv[]) {
   dtime = -dclock();
 
   // Check: compute initial plaquette and bosonic action
-  d_plaquette(&dssplaq, &dstplaq);
+  plaquette(&dssplaq, &dstplaq);
   node0_printf("START %.8g %.8g %.8g ", dssplaq, dstplaq, dssplaq + dstplaq);
   dssplaq = d_gauge_action(NODET);
   node0_printf("%.8g\n", dssplaq / (double)volume);
@@ -63,7 +63,7 @@ int main(int argc, char *argv[]) {
   // Polyakov loop and plaquette measurements
   // Format: GMES Re(Polyakov) Im(Poyakov) cg_iters ss_plaq st_plaq
   plp = ploop(&plpMod);
-  d_plaquette(&dssplaq, &dstplaq);
+  plaquette(&dssplaq, &dstplaq);
   node0_printf("GMES %.8g %.8g 0 %.8g %.8g ",
                plp.real, plp.imag, dssplaq, dstplaq);
 
@@ -76,7 +76,7 @@ int main(int argc, char *argv[]) {
 
 #if 0
   // Optionally fix to Coulomb gauge to check gauge invariance
-  d_plaquette(&dssplaq, &dstplaq);    // To be printed below
+  plaquette(&dssplaq, &dstplaq);    // To be printed below
   node0_printf("Fixing to Coulomb gauge...\n");
   double gtime = -dclock();
 
@@ -87,7 +87,7 @@ int main(int argc, char *argv[]) {
   gtime += dclock();
   node0_printf("GFIX time = %.4g seconds\n", gtime);
   node0_printf("BEFORE %.8g %.8g\n", dssplaq, dstplaq);
-  d_plaquette(&dssplaq, &dstplaq);
+  plaquette(&dssplaq, &dstplaq);
   node0_printf("AFTER  %.8g %.8g\n", dssplaq, dstplaq);
 #endif
 

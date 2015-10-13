@@ -15,7 +15,7 @@ gauge_file *save_lattice(int flag, char *filename) {
   gauge_file *gf = NULL;
 
 #ifndef NOLINKS
-  d_plaquette(&g_ssplaq, &g_stplaq);
+  plaquette(&g_ssplaq, &g_stplaq);
   d_linktrsum(&linktrsum);
   nersc_checksum = nersc_cksum();
 #endif
@@ -148,11 +148,11 @@ void randomlat() {
       exponentiate_ahm(&tahm, &(s->linkf[dir]));
     }
   }
-  d_plaquette(&dssplaq, &dstplaq);
+  plaquette(&dssplaq, &dstplaq);
   plaq = (dssplaq + dstplaq) / 2.0;
   while (plaq < 0.999 * NCOL && num_stout < volume) {
     stout_smear(1, 0.1);
-    d_plaquette(&dssplaq, &dstplaq);
+    plaquette(&dssplaq, &dstplaq);
     plaq = (dssplaq + dstplaq) / 2.0;
     num_stout++;
   }
@@ -221,7 +221,7 @@ gauge_file *reload_lattice(int flag, char *filename) {
     node0_printf("Time to reload gauge configuration = %e\n", dtime);
 
 #ifndef NOLINKS
-  d_plaquette(&g_ssplaq, &g_stplaq);
+  plaquette(&g_ssplaq, &g_stplaq);
   d_linktrsum(&linktrsum);
   nersc_checksum = nersc_cksum();
 #endif

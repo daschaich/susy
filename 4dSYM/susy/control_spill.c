@@ -2,11 +2,7 @@
 // Main procedure for N=4 SYM lattice printing
 #define CONTROL
 #include "susy_includes.h"
-// -----------------------------------------------------------------
 
-
-
-// -----------------------------------------------------------------
 int main(int argc, char *argv[]) {
   int prompt, s, x, y, z, t, mu, i, j;
   Real re, im;
