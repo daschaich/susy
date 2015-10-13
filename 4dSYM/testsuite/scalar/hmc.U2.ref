@@ -3,7 +3,7 @@ Microcanonical simulation with refreshing
 Machine = Scalar processor, with 1 nodes
 Hybrid Monte Carlo algorithm
 Phi algorithm
-start: Tue Oct  6 21:13:38 2015
+start: Tue Oct 13 19:18:03 2015
 
 type 0 for no prompts or 1 for prompts
 nx 4
@@ -48,7 +48,7 @@ C2=1
 Restored binary gauge configuration serially from file config.U2.4444
 Time stamp Fri Apr 17 18:03:10 2015
 Checksums 2ffa97f c37b9702 OK
-Time to reload gauge configuration = 3.074288e-02
+Time to reload gauge configuration = 1.239777e-04
 CHECK PLAQ: 1.8931639183150830e+00 1.9392207138255673e+00
 CHECK NERSC LINKTR: 1.7868842204883606e-02 CKSUM: 0
 START 1.8931639 1.9392207 3.8323846 15.877752
@@ -83,12 +83,15 @@ MONITOR_FORCE_FERMION0 0.03764 0.04759
 FLINK 1.07486 1.08638 1.0743 1.18135 1.11036 1.10545 0.178288
 GMES -2.1377995 -0.20421106 665 2.0472783 2.1099817 15.202722 2.2356115
 BACTION 15.202722
-DET 0.939995 0.00147384 0.986191 0.105777 0.211979
-WIDTHS 0.389933 0.320314 0.32523
+Doing 1 polar-projected APE smearing steps with alpha=0.1
+BEFORE MIN_PLAQ 0.98750846 2.0472783 2.1099817
+AFTER  MIN_PLAQ 1.0614403 2.0013663 2.061106
+DET 0.91486 0.000867243 0.914017 0.0747686 0.159066
+WIDTHS 0.335765 0.277576 0.273437
 RUNNING COMPLETED
 STOP 2.0472783 2.1099817 4.15726 15.202722
 Average CG iters for steps: 671
 
-Time = 44.19 seconds
+Time = 45.87 seconds
 total_iters = 2013
 

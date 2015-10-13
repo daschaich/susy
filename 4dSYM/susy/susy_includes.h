@@ -50,7 +50,7 @@ int grsource(Twist_Fermion *source);
 
 // Basic observables
 void plaquette(double *ss_plaq, double *st_plaq);
-void local_plaquette_lcl(double *ss_plaq, double *st_plaq);
+void local_plaquette(double *ss_plaq, double *st_plaq);
 complex ploop(double *plpMod);
 
 // Action routines
@@ -179,7 +179,7 @@ void APE_smear(int Nsmear, double alpha, int project);
 #ifdef MCRG
 void block_mcrg(int bl);
 void blocked_plaq(int Nsmear, int bl);    // Also monitors det and widths
-void blocked_plaq_lcl(int Nsmear, int bl);
+void blocked_local_plaq(int Nsmear, int bl);
 void blocked_ops(int Nsmear, int bl);
 void blocked_ploop(int Nsmear, int bl);
 void blocked_rsymm(int Nsmear, int bl);

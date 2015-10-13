@@ -31,7 +31,7 @@ int main(int argc, char *argv[]) {
   setup_FQ();
   setup_rhmc();
 
-#if defined(WLOOP) || defined(SMEAR)
+#ifdef SMEAR
   register int i;
   register site *s;
 #endif
@@ -108,7 +108,6 @@ int main(int argc, char *argv[]) {
     // Less frequent measurements every "propinterval" trajectories
     if ((traj_done % propinterval) == (propinterval - 1)) {
 #ifdef SMEAR
-#ifdef CORR   // !!!Currently need polar defined for smearing
       // Optionally smear before less frequent measurements
       node0_printf("Doing %d polar-projected APE smearing steps ", Nsmear);
       node0_printf("with alpha=%.4g\n", alpha);
@@ -128,7 +127,6 @@ int main(int argc, char *argv[]) {
       node0_printf("AFTER  ");
       local_plaquette(&dssplaq, &dstplaq);      // Prints out MIN_PLAQ
       node0_printf(" %.8g %.8g\n", dssplaq, dstplaq);
-#endif
 #endif
 
       // Plaquette determinant
@@ -190,6 +188,10 @@ int main(int argc, char *argv[]) {
       // Gauge fix to easily access arbitrary displacements
       // Save un-fixed links to be written to disk if requested
       if (fixflag == COULOMB_GAUGE_FIX) {
+#ifndef SMEAR
+        register int i;
+        register site *s;
+#endif
         plaquette(&dssplaq, &dstplaq);    // To be printed below
         FORALLSITES(i, s) {
           for (dir = XUP; dir < NUMLINK; dir++)
@@ -238,13 +240,11 @@ int main(int argc, char *argv[]) {
 #endif
 
 #ifdef SMEAR
-#ifdef CORR   // !!!Currently need polar defined for smearing
       // Restore unsmeared links from Uinv
       for (dir = XUP; dir < NUMLINK; dir++) {
         FORALLSITES(i, s)
           su3mat_copy_f(&(Uinv[dir][i]), &(s->linkf[dir]));
       }
-#endif
 #endif
     }
     fflush(stdout);
