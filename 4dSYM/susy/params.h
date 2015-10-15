@@ -49,7 +49,8 @@ typedef struct {
 #endif
 
 #ifdef SMEAR
-  // Parameters for either APE or stout smearing
+  // Parameters for APE or stout smearing
+  int smearflag;                // NONE, STOUT, APE
   int Nsmear;
   Real alpha;
 #endif

@@ -14,38 +14,11 @@
 
 
 // -----------------------------------------------------------------
-void ranmom() {
-  register int i, j, mu;
-  register site *s;
-  complex grn;
-
-  FORALLSITES(i, s) {
-    for (mu = 0; mu < NUMLINK; mu++) {
-      clear_su3mat_f(&(s->mom[mu]));
-      for (j = 0; j < DIMF; j++) {
-#ifdef SITERAND
-        grn.real = gaussian_rand_no(&(s->site_prn));
-        grn.imag = gaussian_rand_no(&(s->site_prn));
-#else
-        grn.real = gaussian_rand_no(&(s->node_prn));
-        grn.imag = gaussian_rand_no(&(s->node_prn));
-#endif
-        c_scalar_mult_add_su3mat_f(&(s->mom[mu]), &(Lambda[j]), &grn,
-                                   &(s->mom[mu]));
-      }
-    }
-  }
-}
-// -----------------------------------------------------------------
-
-
-
-// -----------------------------------------------------------------
 void update_uu(Real eps) {
   register int i, mu;
   register site *s;
 
-  for (mu = 0; mu < NUMLINK; mu++) {
+  for (mu = XUP; mu < NUMLINK; mu++) {
     FORALLSITES(i, s)
       scalar_mult_add_su3_matrix_f(&(s->linkf[mu]), &(s->mom[mu]), eps,
                                    &(s->linkf[mu]));
@@ -96,16 +69,18 @@ int update_step(double *fnorm, double *gnorm,
 
 // -----------------------------------------------------------------
 int update() {
-  int i, iters = 0, n;
-  Real final_rsq, cg_time[2], old_cg_time[2], next_cg_time[2];
-  double gnorm = 0.0, fnorm[2] = {0.0, 0.0};
-  double startaction = 0.0, endaction, change;
-  Twist_Fermion *src, **psim;
+  int j, n, iters = 0;
+  Real final_rsq;
+  double startaction, endaction, change;
+  Twist_Fermion **src = malloc(Nroot * sizeof(**src));
+  Twist_Fermion ***psim = malloc(Nroot * sizeof(***psim));
 
-  src = malloc(sites_on_node * sizeof(*src));
-  psim = malloc(Norder * sizeof(*psim));
-  for (i = 0; i < Norder; i++)
-    psim[i] = malloc(sites_on_node * sizeof(Twist_Fermion));
+  for (n = 0; n < Nroot; n++) {
+    src[n] = malloc(sites_on_node * sizeof(Twist_Fermion));
+    psim[n] = malloc(Norder * sizeof(Twist_Fermion*));
+    for (j = 0; j < Norder; j++)
+      psim[n][j] = malloc(sites_on_node * sizeof(Twist_Fermion));
+  }
 
   // Refresh the momenta
   // Higher rep code using fermion_rep:
@@ -120,8 +95,8 @@ int update() {
 
   // Do a CG to get psim,
   // rational approximation to (Mdag M)^(-1 / 4) src = (Mdag M)^(-1 / 8) g
-  for (i = 0; i < Norder; i++)
-    shift[i] = shift4[i];
+  for (j = 0; j < Norder; j++)
+    shift[j] = shift4[j];
 #ifdef UPDATE_DEBUG
   node0_printf("Calling CG in update_leapfrog -- original action\n");
 #endif
@@ -131,7 +106,7 @@ int update() {
 #endif // ifndef PUREGAUGE
 
   // Find initial action
-  startaction = d_action(src, psim);
+  startaction = action(src, psim);
   gnorm = 0.0;
   max_gf = 0.0;
   for (n = 0; n < Nroot; n++) {
@@ -155,7 +130,7 @@ int update() {
 #endif
   for (n = 0; n < Nroot; n++)
     iters += congrad_multi_field(src[n], psim[n], niter, rsqmin, &final_rsq);
-  endaction = d_action(src, psim);
+  endaction = action(src, psim);
   change = endaction - startaction;
 #ifdef HMC_ALGORITHM
   // Reject configurations giving overflow
@@ -193,8 +168,8 @@ int update() {
 
   for (n = 0; n < Nroot; n++) {
     free(src[n]);
-    for (i = 0; i < Norder; i++)
-      free(psim[i][n]);
+    for (j = 0; j < Norder; j++)
+      free(psim[n][j]);
     free(psim[n]);
   }
   free(src);
@@ -207,6 +182,7 @@ int update() {
     for (n = 0; n < Nroot; n++) {
       node0_printf("MONITOR_FORCE_FERMION%d %.4g %.4g\n",
                    n, fnorm[n] / (double)(2 * nsteps[0]), max_ff[n]);
+    }
     return iters;
   }
   else

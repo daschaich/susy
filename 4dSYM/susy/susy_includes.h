@@ -45,7 +45,8 @@ void compute_plaqdet();
 void compute_DmuUmu();    // Computes plaqdet if G is non-zero
 void compute_Fmunu();
 
-// Gaussian random source
+// Gaussian random momentum matrices and pseudofermions
+void ranmom();
 int grsource(Twist_Fermion *source);
 
 // Basic observables
@@ -54,9 +55,9 @@ void local_plaquette(double *ss_plaq, double *st_plaq);
 complex ploop(double *plpMod);
 
 // Action routines
-double d_action(Twist_Fermion **source, Twist_Fermion ***sol);
-double d_gauge_action(int do_det);
-double d_fermion_action();
+double action(Twist_Fermion **source, Twist_Fermion ***sol);
+double gauge_action(int do_det);
+double fermion_action();
 
 // Force routines
 double gauge_force(Real eps);
@@ -65,14 +66,14 @@ double det_force(Real eps);
 
 // Fermion matrix--vector operators (D & D^2) and multi-mass CG
 void fermion_op(Twist_Fermion *src, Twist_Fermion *dest, int sign);
-void hdelta0_field(Twist_Fermion *src, Twist_Fermion *dest);
+void DSq(Twist_Fermion *src, Twist_Fermion *dest);
 int congrad_multi_field(Twist_Fermion *src, Twist_Fermion **psim,
                         int MaxCG, Real RsdCG, Real *size_r);
 
-// Compute average link Tr[Udag U] / N_c
+// Compute average Tr[Udag U] / N_c
 // Number of blocking steps only affects output formatting
-double d_link(double *linktr, double *linktr_width,
-              double *dets, double *det_ave, double *det_width);
+double link_trace(double *linktr, double *linktr_width,
+                  double *dets, double *det_ave, double *det_width);
 
 Real order(int i, int j, int k, int l, int m);
 void epsilon();
@@ -92,7 +93,6 @@ void scalar_mult_TF(Twist_Fermion *src, Real s, Twist_Fermion *dest);
 // Other routines in library_util.c that loop over all sites
 void gauge_field_copy_f(field_offset src, field_offset dest);
 void shiftmat(su3_matrix_f *dat, su3_matrix_f *temp, int dir);
-void exp_mult();
 
 // Random gauge transformation for testing gauge invariance
 void random_gauge_trans(Twist_Fermion *TF);
@@ -122,22 +122,24 @@ void rsymm(int project);    // Optional polar projection
 // Konishi and SUGRA correlators
 void setup_P();
 void compute_Ba(int stride);
-void d_konishi();       // Operators averaged over each timeslice
+void konishi();       // Operators averaged over each timeslice
 
 // Map (x, y, z, t) to scalar displacements r
 Real A4map(int x_in, int y_in, int z_in, int t_in);
-void d_correlator_r();            // Functions of r
+void correlator_r();            // Functions of r
 #endif
+
 #ifdef BILIN
-// vevs to explore susy breaking
-int d_bilinear();       // Fermion bilinear
-int d_susyTrans();      // Supersymmetry transformation
+// Ward identity involving eta.psi_a fermion bilinear
+int bilinearWard();
 #endif
+
 #ifdef PL_CORR
 // Polyakov loop correlator -- NOT CURRENTLY IN USE
 void ploop_c();         // Computes Polyakov loop at each spatial site
 void print_var3(char *label);
 #endif
+
 #ifdef WLOOP
 // Wilson loops -- including determinant division and polar projection
 // These look at correlators of products of temporal links,
@@ -171,7 +173,9 @@ void polar(su3_matrix_f *in, su3_matrix_f *out, su3_matrix_f *rho);
 void monopole();
 
 #ifdef SMEAR
-// APE and stout smearing, the former with optional projections
+// Stout and APE-like smearing, the latter with no final SU(N) projections
+// APE-like smearing optionally builds staples from projected links
+void exp_mult();
 void stout_smear(int Nsmear, double alpha);
 void APE_smear(int Nsmear, double alpha, int project);
 #endif
@@ -183,9 +187,7 @@ void blocked_local_plaq(int Nsmear, int bl);
 void blocked_ops(int Nsmear, int bl);
 void blocked_ploop(int Nsmear, int bl);
 void blocked_rsymm(int Nsmear, int bl);
-
-#ifdef SMEAR
-// Blocked APE and stout smearing, the former with optional projections
+#ifdef SMEAR            // Blocked stout and APE-like smearing, as above
 void blocked_stout(int Nsmear, double alpha, int block);
 void blocked_APE(int Nsmear, double alpha, int project, int block);
 #endif
@@ -223,7 +225,7 @@ void zgeev_(char *doL, char *doR, int *N1, double *store, int *N2, double *eigs,
 // -----------------------------------------------------------------
 // Pfaffian phase
 #ifdef PHASE
-void d_phase();
+void phase();
 #endif
 // -----------------------------------------------------------------
 

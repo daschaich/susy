@@ -111,10 +111,6 @@ void make_fields() {
   FIELD_ALLOC_VEC(plaq_src, su3_vector, NPLAQ);
   FIELD_ALLOC_VEC(plaq_dest, su3_vector, NPLAQ);
 
-  // Stout smearing stuff needed for `hot-start' random configurations
-  size += (double)(NUMLINK * sizeof(anti_hermitmat));
-  FIELD_ALLOC_VEC(Q, anti_hermitmat, NUMLINK);    // To be exponentiated
-
   // For convenience in calculating action and force
   size += (double)(1.0 + NPLAQ + 3.0 * NUMLINK) * sizeof(su3_matrix_f);
   size += (double)(NUMLINK + 4.0 * NPLAQ) * sizeof(complex);
@@ -148,6 +144,12 @@ void make_fields() {
     FIELD_ALLOC_MAT(traceBB[j], double, NUMLINK, NUMLINK);
   FIELD_ALLOC(tempops, Kops);
   FIELD_ALLOC(tempops2, Kops);
+#endif
+
+#ifdef SMEAR
+  // Stout smearing stuff needed for `hot-start' random configurations
+  size += (double)(NUMLINK * sizeof(anti_hermitmat));
+  FIELD_ALLOC_VEC(Q, anti_hermitmat, NUMLINK);    // To be exponentiated
 #endif
 
 #if defined(EIG) || defined(PHASE)
@@ -200,6 +202,43 @@ int setup() {
 
 
 // -----------------------------------------------------------------
+// Find out what smearing to use
+int ask_smear_type(FILE *fp, int prompt, int *flag) {
+  int status = 0;
+  char savebuf[256];
+
+  if (prompt != 0)
+    printf("enter 'no_smear', 'stout_smear' or 'APE_smear'\n");
+  status = fscanf(fp, "%s", savebuf);
+  if (status == EOF) {
+    printf("ask_smear_type: EOF on STDIN\n");
+    return 1;
+  }
+  if (status != 1) {
+    printf("\nask_smear_type: ERROR IN INPUT: ");
+    printf("can't read smearing option\n");
+    return 1;
+  }
+
+  printf("%s\n", savebuf);
+  if (strcmp("no_smear", savebuf) == 0)
+    *flag = NO_SMEAR;
+  else if (strcmp("stout_smear", savebuf) == 0)
+    *flag = STOUT_SMEAR;
+  else if (strcmp("APE_smear", savebuf) == 0)
+    *flag = APE_SMEAR;
+  else {
+    printf("Error in input: invalid smear type\n");
+    printf("Only no_smear, stout_smear and APE_smear supported\n");
+    return 1;
+  }
+  return 0;
+}
+// -----------------------------------------------------------------
+
+
+
+// -----------------------------------------------------------------
 // Read in parameters for Monte Carlo
 int readin(int prompt) {
   // prompt=1 indicates prompts are to be given for input
@@ -237,6 +276,7 @@ int readin(int prompt) {
 
 #ifdef SMEAR
     // Smearing stuff -- passed to either APE or stout routines by application
+    IF_OK status += ask_smear_type(stdin, prompt, &par_buf.smearflag);
     IF_OK status += get_i(stdin, prompt, "Nsmear", &par_buf.Nsmear);
     IF_OK status += get_f(stdin, prompt, "alpha", &par_buf.alpha);
 #endif
@@ -269,12 +309,6 @@ int readin(int prompt) {
     IF_OK status += get_i(stdin, prompt, "maxIter", &par_buf.maxIter);
 #endif
 
-#ifdef PHASE
-    // Optional checkpointing for pfaffian computation
-    IF_OK status += get_i(stdin, prompt, "ckpt_load", &par_buf.ckpt_load);
-    IF_OK status += get_i(stdin, prompt, "ckpt_save", &par_buf.ckpt_save);
-#endif
-
 #ifdef MODE
     // Which order polynomial to use in step function
     IF_OK status += get_i(stdin, prompt, "order", &par_buf.order);
@@ -285,12 +319,20 @@ int readin(int prompt) {
     IF_OK status += get_f(stdin, prompt, "spacing", &par_buf.spacing);
 #endif
 
+#ifdef PHASE
+    // Optional checkpointing for pfaffian computation
+    IF_OK status += get_i(stdin, prompt, "ckpt_load", &par_buf.ckpt_load);
+    IF_OK status += get_i(stdin, prompt, "ckpt_save", &par_buf.ckpt_save);
+#endif
+
+#ifdef WLOOP
+    // Find out whether or not to gauge fix to Coulomb gauge
+    IF_OK status += ask_gauge_fix(stdin, prompt, &par_buf.fixflag);
+#endif
+
     // Find out what kind of starting lattice to use
     IF_OK status += ask_starting_lattice(stdin,  prompt, &par_buf.startflag,
                                          par_buf.startfile);
-
-    // Find out whether or not to gauge fix to Coulomb gauge
-    IF_OK status += ask_gauge_fix(stdin, prompt, &par_buf.fixflag);
 
     // Find out what to do with lattice at end
     IF_OK status += ask_ending_lattice(stdin,  prompt, &(par_buf.saveflag),
@@ -338,8 +380,13 @@ int readin(int prompt) {
   maxIter = par_buf.maxIter;
 #endif
 #ifdef SMEAR
+  smearflag = par_buf.smearflag;
   Nsmear = par_buf.Nsmear;
   alpha = par_buf.alpha;
+  if (smearflag == NO_SMEAR) {
+    Nsmear = 0;
+    alpha = 0.0;
+  }
 #endif
 #ifdef CORR
   for (j = 0; j < N_K; j++) {

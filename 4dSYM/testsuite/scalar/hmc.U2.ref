@@ -3,7 +3,7 @@ Microcanonical simulation with refreshing
 Machine = Scalar processor, with 1 nodes
 Hybrid Monte Carlo algorithm
 Phi algorithm
-start: Tue Oct 13 19:18:03 2015
+start: Wed Oct 14 18:03:11 2015
 
 type 0 for no prompts or 1 for prompts
 nx 4
@@ -19,7 +19,7 @@ ON EACH NODE 4 x 4 x 4 x 4
 Mallocing 3.0 MBytes per core for lattice
 Antiperiodic temporal boundary conditions
 Supersymmetric constraint on (det[plaq] - 1)
-Mallocing 1.6 MBytes per core for fields
+Mallocing 1.5 MBytes per core for fields
 Using Nroot = 1
 RHMC Norder 15 for spectral range [1e-7, 1000]
 
@@ -36,19 +36,16 @@ bmass 1
 fmass 0
 G 0.1
 B 1
-Nsmear 1
-alpha 0.1
 max_cg_iterations 5000
 error_per_site 1e-05
 reload_serial config.U2.4444
-coulomb_gauge_fix
 forget
 lambda=1 --> kappa=Nc/(2lambda)=1
 C2=1
 Restored binary gauge configuration serially from file config.U2.4444
 Time stamp Fri Apr 17 18:03:10 2015
 Checksums 2ffa97f c37b9702 OK
-Time to reload gauge configuration = 1.239777e-04
+Time to reload gauge configuration = 1.249313e-04
 CHECK PLAQ: 1.8931639183150830e+00 1.9392207138255673e+00
 CHECK NERSC LINKTR: 1.7868842204883606e-02 CKSUM: 0
 START 1.8931639 1.9392207 3.8323846 15.877752
@@ -56,8 +53,8 @@ FLINK 1.04928 1.04712 1.07092 1.09201 1.07306 1.06648 0.175463
 FLINK_DET -0.151868 -0.176766 -0.197088 -0.191462 -0.180953 -0.179627 0.156754
 f_eps 0.2 g_eps 0.025
 WARMUPS COMPLETED
-action: gauge 4064.7045 bmass 45.064396 det 499.16814 fermion0 16479.232 hmom 5029.9007 sum 26118.07
-action: gauge 3880.5766 bmass 48.500877 det 518.71578 fermion0 16404.366 hmom 5264.9815 sum 26117.141
+action: gauge 4064.7045 bmass 45.064396 det 499.16814 fermion0 16479.232 mom 5029.9007 sum 26118.07
+action: gauge 3880.5766 bmass 48.500877 det 518.71578 fermion0 16404.366 mom 5264.9815 sum 26117.141
 ACCEPT: delta S = -0.9292 start S = 26118.0701434 end S = 26117.14093
 IT_PER_TRAJ 674
 MONITOR_FORCE_GAUGE    0.03268 0.0335
@@ -65,8 +62,8 @@ MONITOR_FORCE_FERMION0 0.03834 0.048
 FLINK 1.09326 1.08932 1.06535 1.11611 1.07924 1.08866 0.173296
 GMES -1.4457579 -0.43082828 674 2.021989 2.0030294 15.158502 1.5991728
 BACTION 15.158502
-action: gauge 3880.5766 bmass 48.500877 det 518.71578 fermion0 16097.049 hmom 5074.2308 sum 25619.073
-action: gauge 3895.3307 bmass 51.411411 det 515.54348 fermion0 16076.645 hmom 5080.3031 sum 25619.233
+action: gauge 3880.5766 bmass 48.500877 det 518.71578 fermion0 16097.049 mom 5074.2308 sum 25619.073
+action: gauge 3895.3307 bmass 51.411411 det 515.54348 fermion0 16076.645 mom 5080.3031 sum 25619.233
 ACCEPT: delta S = 0.1604 start S = 25619.0730814 end S = 25619.2334715
 IT_PER_TRAJ 674
 MONITOR_FORCE_GAUGE    0.03273 0.03428
@@ -74,8 +71,8 @@ MONITOR_FORCE_FERMION0 0.03704 0.04654
 FLINK 1.08511 1.08602 1.07388 1.15487 1.08878 1.09773 0.174968
 GMES -1.9092263 -0.47480798 674 2.0316104 2.0679911 15.216135 2.0356182
 BACTION 15.216135
-action: gauge 3895.3307 bmass 51.411411 det 515.54348 fermion0 16412.472 hmom 5112.8507 sum 25987.608
-action: gauge 3891.8967 bmass 54.920345 det 542.66541 fermion0 16377.908 hmom 5119.9925 sum 25987.383
+action: gauge 3895.3307 bmass 51.411411 det 515.54348 fermion0 16412.472 mom 5112.8507 sum 25987.608
+action: gauge 3891.8967 bmass 54.920345 det 542.66541 fermion0 16377.908 mom 5119.9925 sum 25987.383
 ACCEPT: delta S = -0.2251 start S = 25987.6082215 end S = 25987.383103
 IT_PER_TRAJ 665
 MONITOR_FORCE_GAUGE    0.03307 0.03494
@@ -83,15 +80,12 @@ MONITOR_FORCE_FERMION0 0.03764 0.04759
 FLINK 1.07486 1.08638 1.0743 1.18135 1.11036 1.10545 0.178288
 GMES -2.1377995 -0.20421106 665 2.0472783 2.1099817 15.202722 2.2356115
 BACTION 15.202722
-Doing 1 polar-projected APE smearing steps with alpha=0.1
-BEFORE MIN_PLAQ 0.98750846 2.0472783 2.1099817
-AFTER  MIN_PLAQ 1.0614403 2.0013663 2.061106
-DET 0.91486 0.000867243 0.914017 0.0747686 0.159066
-WIDTHS 0.335765 0.277576 0.273437
+DET 0.939995 0.00147384 0.986191 0.105777 0.211979
+WIDTHS 0.389933 0.320314 0.32523
 RUNNING COMPLETED
 STOP 2.0472783 2.1099817 4.15726 15.202722
 Average CG iters for steps: 671
 
-Time = 45.87 seconds
+Time = 44.01 seconds
 total_iters = 2013
 

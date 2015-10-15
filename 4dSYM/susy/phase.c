@@ -108,7 +108,7 @@ void matvec(complex *in, complex *out) {
   // Check that we didn't miss any components of the input vector
   int Ndat = 16 * DIMF;
   if (iter != sites_on_node * Ndat) {
-    printf("d_phase: cycled over %d of %d input components\n",
+    printf("phase: cycled over %d of %d input components\n",
            iter, sites_on_node * Ndat);
     terminate(1);
   }
@@ -188,7 +188,7 @@ void matvec(complex *in, complex *out) {
 #ifdef DEBUG_CHECK
   // Check that we didn't miss any components of the output vector
   if (iter != sites_on_node * Ndat) {
-    printf("d_phase: cycled over %d of %d output components\n",
+    printf("phase: cycled over %d of %d output components\n",
            iter, sites_on_node * Ndat);
     terminate(1);
   }
@@ -200,7 +200,7 @@ void matvec(complex *in, complex *out) {
 
 // -----------------------------------------------------------------
 #ifdef PHASE
-void d_phase() {
+void phase() {
   register int i, j, k;
   int Ndat = 16 * DIMF, shift = this_node * sites_on_node * Ndat;
   double phase, log_mag, tr, dtime;
@@ -210,7 +210,7 @@ void d_phase() {
   complex **Q = malloc(volume * Ndat * sizeof(**Q));
 
   if (Q == NULL) {
-    printf("d_phase: can't malloc Q\n");
+    printf("phase: can't malloc Q\n");
     fflush(stdout);
     terminate(1);
   }
@@ -229,7 +229,7 @@ void d_phase() {
     diag[i] = cmplx(0.0, 0.0);    // Initialize to zero
   }
   if (Q[volume * Ndat - 1] == NULL) {
-    printf("d_phase: can't malloc Q[i]\n");
+    printf("phase: can't malloc Q[i]\n");
     fflush(stdout);
     terminate(1);
   }
@@ -265,7 +265,7 @@ void d_phase() {
     temp = dot(Q[i + 1], MonC);
     // !!! Must have non-vanishing matrix element!
     if (cabs_sq(&temp) < PFA_TOL) {
-      node0_printf("d_phase: <%d | D | %d> = (%.4g, %.4g) too small\n",
+      node0_printf("phase: <%d | D | %d> = (%.4g, %.4g) too small\n",
                    i + 2, i + 1, temp.real, temp.imag);
       terminate(1);
     }

@@ -1,6 +1,6 @@
 // -----------------------------------------------------------------
 // Main procedure for N=4 SYM RG blocking
-// and measurements of blocked observables including scalar correlators,
+// and measurements of blocked observables including scalar operators,
 // Wilson loops and discrete R symmetry observables
 #define CONTROL
 #include "susy_includes.h"
@@ -14,7 +14,7 @@ int main(int argc, char *argv[]) {
   register site *s;
   int prompt, dir, ismear, j, bl, blmax;
   int smear_step = 1;    // This might be worth reading in at some point
-  double dssplaq, dstplaq, dtime, plpMod = 0.0;
+  double ss_plaq, st_plaq, dtime, plpMod = 0.0;
   double linktr[NUMLINK], linktr_ave, linktr_width;
   double link_det[NUMLINK], det_ave, det_width;
   complex plp = cmplx(99.0, 99.0);
@@ -26,7 +26,7 @@ int main(int argc, char *argv[]) {
 
   // Require compilation with smearing enabled
 #ifndef SMEAR
-  printf("ERROR: MCRG uses APE smearing, at least for now\n");
+  printf("ERROR: MCRG needs smearing\n");
   terminate(1);
 #endif
 
@@ -65,14 +65,15 @@ int main(int argc, char *argv[]) {
   }
 
   // Check: compute initial plaquette and bosonic action
-  plaquette(&dssplaq, &dstplaq);
-  node0_printf("START %.8g %.8g %.8g ", dssplaq, dstplaq, dssplaq + dstplaq);
-  dssplaq = d_gauge_action(NODET);
-  node0_printf("%.8g\n", dssplaq / (double)volume);
+  plaquette(&ss_plaq, &st_plaq);
+  node0_printf("START %.8g %.8g %.8g ", ss_plaq, st_plaq, ss_plaq + st_plaq);
+  ss_plaq = gauge_action(NODET);
+  node0_printf("%.8g\n", ss_plaq / (double)volume);
 
   // Do "local" measurements to check configuration
   // Tr[Udag.U] / N
-  linktr_ave = d_link(linktr, &linktr_width, link_det, &det_ave, &det_width);
+  linktr_ave = link_trace(linktr, &linktr_width,
+                          link_det, &det_ave, &det_width);
   node0_printf("FLINK");
   for (dir = XUP; dir < NUMLINK; dir++)
     node0_printf(" %.6g", linktr[dir]);
@@ -85,16 +86,16 @@ int main(int argc, char *argv[]) {
   // Polyakov loop and plaquette measurements
   // Format: GMES Re(Polyakov) Im(Poyakov) cg_iters ss_plaq st_plaq
   plp = ploop(&plpMod);
-  plaquette(&dssplaq, &dstplaq);
+  plaquette(&ss_plaq, &st_plaq);
   node0_printf("GMES %.8g %.8g 0 %.8g %.8g ",
-               plp.real, plp.imag, dssplaq, dstplaq);
+               plp.real, plp.imag, ss_plaq, st_plaq);
 
   // Bosonic action (printed twice by request)
   // Might as well spit out volume average of Polyakov loop modulus
-  dssplaq = d_gauge_action(NODET) / (double)volume;
-  node0_printf("%.8g ", dssplaq);
+  ss_plaq = gauge_action(NODET) / (double)volume;
+  node0_printf("%.8g ", ss_plaq);
   node0_printf("%.8g\n", plpMod);
-  node0_printf("BACTION %.8g\n", dssplaq);
+  node0_printf("BACTION %.8g\n", ss_plaq);
 
   // Plaquette determinant
   measure_det();
@@ -105,7 +106,8 @@ int main(int argc, char *argv[]) {
   // ---------------------------------------------------------------
   // First print unsmeared unblocked observables
   // Unsmeared unblocked Tr[Udag.U] / N and its width
-  linktr_ave = d_link(linktr, &linktr_width, link_det, &det_ave, &det_width);
+  linktr_ave = link_trace(linktr, &linktr_width,
+                          link_det, &det_ave, &det_width);
   node0_printf("BFLINK 0 0");
   for (dir = XUP; dir < NUMLINK; dir++)
     node0_printf(" %.6g", linktr[dir]);
@@ -140,21 +142,32 @@ int main(int argc, char *argv[]) {
   }
 
   // Smear (after blocking) in increments of smear_step up to Nsmear
+  // NO_SMEAR sets Nsmear = 0
   for (ismear = 1; ismear <= Nsmear; ismear += smear_step) {
-    node0_printf("Doing %d polar-projected APE smearing steps ", smear_step);
-    node0_printf("(total %d) with alpha=%.4g\n", ismear, alpha);
+    if (smearflag == STOUT_SMEAR) {
+      node0_printf("Doing %d stout smearing steps ", smear_step);
+      node0_printf("(total %d) with rho=%.4g\n", ismear, alpha);
+    }
+    else if (smearflag == APE_SMEAR) {
+      node0_printf("Doing %d polar-projected APE smearing steps ", smear_step);
+      node0_printf("(total %d) with alpha=%.4g\n", ismear, alpha);
+    }
 
     // Check minimum plaquette in addition to averages
     node0_printf("BEFORE ");
     blocked_local_plaq(ismear, 0);    // Prints out MIN_PLAQ
 
     // Overwrite s->linkf
-    blocked_APE(smear_step, alpha, YESDET, 0);
+    if (smearflag == STOUT_SMEAR)
+      blocked_stout(smear_step, alpha, 0);
+    else if (smearflag == APE_SMEAR)
+      blocked_APE(smear_step, alpha, YESDET, 0);
     node0_printf("AFTER  ");
     blocked_local_plaq(ismear, 0);    // Prints out MIN_PLAQ
 
     // Smeared unblocked Tr[Udag.U] / N and its width
-    linktr_ave = d_link(linktr, &linktr_width, link_det, &det_ave, &det_width);
+    linktr_ave = link_trace(linktr, &linktr_width,
+                            link_det, &det_ave, &det_width);
     node0_printf("BFLINK %d 0", ismear);
     for (dir = XUP; dir < NUMLINK; dir++)
       node0_printf(" %.6g", linktr[dir]);
@@ -195,7 +208,8 @@ int main(int argc, char *argv[]) {
     block_mcrg(bl);
 
     // Unsmeared blocked Tr[Udag.U] / N and its width
-    linktr_ave = d_link(linktr, &linktr_width, link_det, &det_ave, &det_width);
+    linktr_ave = link_trace(linktr, &linktr_width,
+                            link_det, &det_ave, &det_width);
     node0_printf("BFLINK 0 %d", bl);
     for (dir = XUP; dir < NUMLINK; dir++)
       node0_printf(" %.6g", linktr[dir]);
@@ -226,20 +240,31 @@ int main(int argc, char *argv[]) {
 
     // Smear (after blocking) in increments of smear_step up to Nsmear
     for (ismear = 1; ismear <= Nsmear; ismear += smear_step) {
-      node0_printf("Doing %d polar-projected APE smearing steps ", smear_step);
-      node0_printf("(total %d) with alpha=%.4g\n", ismear, alpha);
+      if (smearflag == STOUT_SMEAR) {
+        node0_printf("Doing %d stout smearing steps ", smear_step);
+        node0_printf("(total %d) with rho=%.4g\n", ismear, alpha);
+      }
+      else if (smearflag == APE_SMEAR) {
+        node0_printf("Doing %d polar-projected APE smearing steps ",
+                     smear_step);
+        node0_printf("(total %d) with alpha=%.4g\n", ismear, alpha);
+      }
 
       // Check minimum plaquette in addition to averages
       node0_printf("BEFORE ");
       blocked_local_plaq(ismear, bl);     // Prints out MIN_PLAQ
 
       // Overwrites s->linkf
-      blocked_APE(smear_step, alpha, YESDET, bl);
+      if (smearflag == STOUT_SMEAR)
+        blocked_stout(smear_step, alpha, bl);
+      else if (smearflag == APE_SMEAR)
+        blocked_APE(smear_step, alpha, YESDET, bl);
       node0_printf("AFTER  ");
       blocked_local_plaq(ismear, bl);     // Prints out MIN_PLAQ
 
       // Smeared blocked Tr[Udag.U] / N and its width
-      linktr_ave = d_link(linktr, &linktr_width, link_det, &det_ave, &det_width);
+      linktr_ave = link_trace(linktr, &linktr_width,
+                              link_det, &det_ave, &det_width);
       node0_printf("BFLINK %d %d", ismear, bl);
       for (dir = XUP; dir < NUMLINK; dir++)
         node0_printf(" %.6g", linktr[dir]);

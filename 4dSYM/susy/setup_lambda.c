@@ -90,7 +90,7 @@ void setup_lambda() {
             CSUM(trace, tt);
           }
           if (cabs_sq(&trace) > IMAG_TOL)
-            node0_printf("Sum_a Lambda^a_{%d%d} Lambda^a_{%d%d} = (%.4g, %.4g)\n",
+            node0_printf("Sum_a La^a_{%d%d} La^a_{%d%d} = (%.4g, %.4g)\n",
                          k, j, i, l, trace.real, trace.imag);
         }
       }
@@ -105,7 +105,8 @@ void setup_lambda() {
 #ifdef DEBUG_CHECK
       trace = trace_su3_f(&(Lambda_prod[i][j]));
       if (trace.real * trace.real > IMAG_TOL)
-        node0_printf("Tr[T_%d T_%d] = (%.4g, %.4g)\n", i, j, trace.real, trace.imag);
+        node0_printf("Tr[T_%d T_%d] = (%.4g, %.4g)\n",
+                     i, j, trace.real, trace.imag);
 #endif
     }
   }

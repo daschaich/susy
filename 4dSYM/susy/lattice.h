@@ -85,13 +85,13 @@ EXTERN int plaq_index[NUMLINK][NUMLINK];
 
 EXTERN Real rsqmin, rsqprop;
 EXTERN Real lambda, kappa, bmass, fmass, kappa_u1, G, B;
-EXTERN double g_ssplaq, g_stplaq;
+EXTERN double g_ssplaq, g_stplaq;   // Global plaqs for I/O
 EXTERN double_complex linktrsum;
 EXTERN u_int32type nersc_checksum;
 EXTERN char startfile[MAXFILENAME], savefile[MAXFILENAME];
-EXTERN int startflag; // Beginning lattice: CONTINUE, RELOAD, FRESH
-EXTERN int fixflag;   // Gauge fixing: COULOMB_GAUGE_FIX, NO_GAUGE_FIX
-EXTERN int saveflag;  // 1 if we will save the lattice;
+EXTERN int startflag;     // Beginning lattice: CONTINUE, RELOAD, FRESH
+EXTERN int fixflag;       // Gauge fixing: COULOMB_GAUGE_FIX, NO_GAUGE_FIX
+EXTERN int saveflag;      // 1 if we will save the lattice;
 EXTERN int total_iters;   // To be incremented by the multi-mass CG
 
 // Some of these global variables are node dependent
@@ -190,11 +190,11 @@ EXTERN int nsrc;
 
 #ifdef SMEAR
 // APE or stout smearing stuff
+EXTERN int smearflag;                 // NONE, STOUT, APE
 EXTERN int Nsmear;
 EXTERN double alpha;
-#endif
-// This is needed for smearing a `hot-start' random configuration
 EXTERN anti_hermitmat *Q[NUMLINK];    // To be exponentiated
+#endif
 
 #ifdef EIG
 // Eigenvalue stuff

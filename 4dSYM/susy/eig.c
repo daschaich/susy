@@ -102,7 +102,7 @@ void av_ov (void *x, void *y, int *Nvec, primme_params *primme) {
     dump_TF(&(src[0]));
 #endif
 
-    hdelta0_field(src, res);    // D^2 + fmass^2
+    DSq(src, res);    // D^2 + fmass^2
 
     // Copy the resulting Twist_Fermion res back to complex vector y
     // Each Twist_Fermion has Ndat=16DIMF non-trivial complex components
@@ -283,7 +283,7 @@ int make_evs(int Nvec, Twist_Fermion **eigVec, double *eigVal, int flag) {
   // Print results and check |D^dag D phi - lambda phi|^2
   for (ivec = 0; ivec < Nvec; ivec++) {
     check = 0.0;
-    hdelta0_field(eigVec[ivec], tmpTF);
+    DSq(eigVec[ivec], tmpTF);
     FORALLSITES(i, s) {
       // tTF = tmpTF - eigVal[ivec] * eigVec[ivec]
       scalar_mult_add_TF(&(tmpTF[i]), &(eigVec[ivec][i]),

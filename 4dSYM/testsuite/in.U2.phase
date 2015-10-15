@@ -30,5 +30,4 @@ ckpt_load 0
 ckpt_save 0
 
 reload_serial config.U2.2222
-coulomb_gauge_fix
 forget

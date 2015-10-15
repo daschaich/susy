@@ -74,7 +74,7 @@ void compute_Ba(int stride) {
 
 // -----------------------------------------------------------------
 // Measure and print the Konishi and SUGRA operators on each timeslice
-void d_konishi() {
+void konishi() {
   register int i;
   register site *s;
   int a, b, t, j;

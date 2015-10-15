@@ -1,5 +1,5 @@
 // -----------------------------------------------------------------
-// Measure average space--space and space--time plaquettes,
+// Measure average space--space and space--time plaquettes
 // Use tempmat1 for temporary storage
 
 // #define LOCAL_PLAQ turns on plaquette measurement on hypersurfaces
@@ -31,7 +31,7 @@ void local_plaquette(double *ss_plaq, double *st_plaq) {
   double min_plaq = 200.0 * NCOL;
 #endif
   msg_tag *mtag0, *mtag1;
-  su3_matrix_f mtmp;
+  su3_matrix_f tmat;
 
 #ifdef LOCAL_PLAQ
   int xx;
@@ -72,8 +72,8 @@ void local_plaquette(double *ss_plaq, double *st_plaq) {
         FORALLSITES(i, s) {
           m1 = (su3_matrix_f *)(gen_pt[0][i]);
           m4 = (su3_matrix_f *)(gen_pt[1][i]);
-          mult_su3_nn_f(&(tempmat1[i]), m1, &mtmp);
-          cur_plaq = (double)realtrace_su3_f(m4, &mtmp);
+          mult_su3_nn_f(&(tempmat1[i]), m1, &tmat);
+          cur_plaq = (double)realtrace_su3_f(m4, &tmat);
 #ifdef MIN_PLAQ
           if (cur_plaq < min_plaq)
             min_plaq = cur_plaq;
@@ -95,8 +95,8 @@ void local_plaquette(double *ss_plaq, double *st_plaq) {
         FORALLSITES(i, s) {
           m1 = (su3_matrix_f *)(gen_pt[0][i]);
           m4 = (su3_matrix_f *)(gen_pt[1][i]);
-          mult_su3_nn_f(&(tempmat1[i]), m1, &mtmp);
-          cur_plaq = (double)realtrace_su3_f(m4, &mtmp);
+          mult_su3_nn_f(&(tempmat1[i]), m1, &tmat);
+          cur_plaq = (double)realtrace_su3_f(m4, &tmat);
 #ifdef MIN_PLAQ
           if (cur_plaq < min_plaq)
             min_plaq = cur_plaq;

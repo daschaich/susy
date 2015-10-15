@@ -1,5 +1,5 @@
 // -----------------------------------------------------------------
-// Measure fermion bilinear and Konishi superpartner correlator
+// Measure Ward identity involving eta.psi_a fermion bilinear
 #include "susy_includes.h"
 // -----------------------------------------------------------------
 
@@ -10,7 +10,7 @@
 // and all components of link fermions
 // src = Mdag g_rand
 // Adapted from grsource to mimic pbp calculation
-void bilinsrc(Twist_Fermion *g_rand, Twist_Fermion *src, int N) {
+void bilinear_src(Twist_Fermion *g_rand, Twist_Fermion *src, int N) {
   register int i, j, mu;
   register site *s;
 
@@ -87,7 +87,7 @@ void bilinsrc(Twist_Fermion *g_rand, Twist_Fermion *src, int N) {
     source_norm += (double)magsq_TF(&(g_rand[i]));
   g_doublesum(&source_norm);
   source_norm /= (volume * N);
-  node0_printf("average bilinsrc component magSq %.4g\n", source_norm);
+  node0_printf("average bilinear_src component magSq %.4g\n", source_norm);
 #endif
 }
 // -----------------------------------------------------------------
@@ -95,107 +95,11 @@ void bilinsrc(Twist_Fermion *g_rand, Twist_Fermion *src, int N) {
 
 
 // -----------------------------------------------------------------
-// Measure the fermion bilinear
-//   sum_a tr(eta psi_a Ubar_a) - tr(eta)/N tr(psi_a Ubar_a)
-// Return total number of iterations
-int d_bilinear() {
-  if (nsrc < 1)   // Only run if there are inversions to do
-    return 0;
-  register int i;
-  register site *s;
-  int mu, isrc, iters, tot_iters = 0, sav = Norder;
-  Real size_r, norm;
-  double_complex tc, StoL, LtoS, ave = cmplx(0.0, 0.0);
-  su3_vector tvec;
-  Twist_Fermion *g_rand, *src, **psim;
-
-  g_rand = malloc(sites_on_node * sizeof(*g_rand));
-  src = malloc(sites_on_node * sizeof(*src));
-
-  // Hack a basic CG out of the multi-mass CG
-  Norder = 1;
-  psim = malloc(sizeof(**psim));
-  psim[0] = malloc(sites_on_node * sizeof(Twist_Fermion));
-  shift[0] = 0;             // Reset in update or grsource
-
-  // Normalization: sum over NUMLINK but divide by volume
-  // and divide by 2kappa as discussed on 15--17 December 2013
-  norm = 2.0 * kappa * (Real)volume;
-
-  for (isrc = 0; isrc < nsrc; isrc++) {
-    // Make random source g_rand without trace piece
-    // Hit it with Mdag to get src, invert to get M^{-1} g_rand
-    // congrad_multi_field initializes psim and calls fermion_rep()
-    bilinsrc(g_rand, src, DIMF - 1);
-    iters = congrad_multi_field(src, psim, niter, rsqmin, &size_r);
-    tot_iters += iters;
-#ifdef DEBUG_CHECK
-    dump_TF(&(psim[0][10]));    // Check what components are non-zero
-#endif
-
-    // Now construct bilinear -- all on same site, no gathers
-    StoL = cmplx(0.0, 0.0);
-    LtoS = cmplx(0.0, 0.0);
-    FORALLSITES(i, s) {
-      // First site-to-link, g^dag . sum_a psi_a Vdag_a
-      for (mu = XUP; mu < NUMLINK; mu++) {
-        mult_su3_vec_adj_mat(&(psim[0][i].Flink[mu]), &(s->link[mu]), &tvec);
-        tc = su3_dot(&(g_rand[i].Fsite), &tvec);
-#ifdef DEBUG_CHECK
-        printf("StoL[%d](%d) %d (%.4g, %.4g)\n",
-               i, mu, isrc, tc.real, tc.imag);
-#endif
-        CSUM(StoL, tc);
-      }
-
-      // Now link-to-site, sum_a g_a^dag . eta Vdag_a
-      // Omit last component of site propagator to avoid trace piece
-      psim[0][i].Fsite.c[DIMF - 1] = cmplx(0.0, 0.0);
-      for (mu = XUP; mu < NUMLINK; mu++) {
-        mult_adj_su3_mat_vec(&(s->link[mu]), &(psim[0][i].Fsite), &tvec);
-        tc = su3_dot(&(g_rand[i].Flink[mu]), &tvec);
-#ifdef DEBUG_CHECK
-        printf("LtoS[%d](%d) %d (%.4g, %.4g)\n",
-               i, mu, isrc, tc.real, tc.imag);
-#endif
-        CSUM(LtoS, tc);
-      }
-    }
-    g_dcomplexsum(&StoL);
-    g_dcomplexsum(&LtoS);
-
-    // Normalize and print
-    CDIVREAL(StoL, norm, StoL);   // Sum over NUMLINK
-    CDIVREAL(LtoS, norm, LtoS);
-    node0_printf("bilin %.6g %.6g %.6g %.6g ( %d of %d ) %d\n",
-                 StoL.real, StoL.imag, LtoS.real, LtoS.imag,
-                 isrc + 1, nsrc, iters);
-
-    CSUM(ave, StoL);
-    CDIF(ave, LtoS);
-  }
-  // Normalize by number of sources (already averaged over volume)
-  CDIVREAL(ave, 2.0 * (Real)nsrc, ave);
-  node0_printf("BILIN %.6g %.6g ( ave over %d )\n", ave.real, ave.imag, nsrc);
-
-  // Reset multi-mass CG and clean up
-  Norder = sav;
-  free(g_rand);
-  free(src);
-  free(psim[0]);
-  free(psim);
-  return tot_iters;
-}
-// -----------------------------------------------------------------
-
-
-
-// -----------------------------------------------------------------
-// Measure the supersymmetry transformation
+// Measure Ward identity involving eta.psi_a fermion bilinear,
 //   Q sum_a tr(eta U_a Ubar_a) = tr(sum_b Dbar_b U_b sum_a U_a Ubar_a)
 //                                 - sum_a tr(eta psi_a Ubar_a)
 // Return total number of iterations
-int d_susyTrans() {
+int bilinearWard() {
   if (nsrc < 1)   // Only run if there are inversions to do
     return 0;
   register int i;
@@ -225,7 +129,7 @@ int d_susyTrans() {
     // Make random source g_rand, now including trace piece
     // Hit it with Mdag to get src, invert to get M^{-1} g_rand
     // congrad_multi_field initializes psim and calls fermion_rep()
-    bilinsrc(g_rand, src, DIMF);
+    bilinear_src(g_rand, src, DIMF);
     iters = congrad_multi_field(src, psim, niter, rsqmin, &size_r);
     tot_iters += iters;
 #ifdef DEBUG_CHECK

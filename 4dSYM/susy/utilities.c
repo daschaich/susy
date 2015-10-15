@@ -88,137 +88,6 @@ void compute_plaqdet() {
 
 
 
-
-// -----------------------------------------------------------------
-// Compute at each site
-//   sum_mu [U_mu(x) * Udag_mu(x) - Udag_mu(x - mu) * U_mu(x - mu)]
-// Add plaquette determinant contribution if G is non-zero
-// Add scalar potential contribution if B is non-zero
-// Use tempmat1 and tempmat2 as temporary storage
-void compute_DmuUmu() {
-  register int i;
-  register site *s;
-  int mu, nu, j;
-  Real tr;
-  complex tc;
-  msg_tag *mtag0 = NULL;
-  su3_matrix_f tmat, *mat;
-
-#ifdef TR_DIST
-  if (this_node != 0) {
-    printf("compute_DmuUmu: don't run TR_DIST in parallel\n");
-    fflush(stdout);
-    terminate(1);
-  }
-#endif
-
-  for (mu = XUP; mu < NUMLINK; mu++) {
-    FORALLSITES(i, s) {
-      mult_su3_na_f(&(s->linkf[mu]), &(s->linkf[mu]), &(tempmat1[i]));
-      mult_su3_an_f(&(s->linkf[mu]), &(s->linkf[mu]), &(tempmat2[i]));
-    }
-
-    // Gather tempmat2 from below
-    mtag0 = start_gather_field(tempmat2, sizeof(su3_matrix_f),
-                               goffset[mu] + 1, EVENANDODD, gen_pt[0]);
-    wait_gather(mtag0);
-    if (mu == 0) {
-      FORALLSITES(i, s) {
-        mat = (su3_matrix_f *)(gen_pt[0][i]);
-        sub_su3_matrix_f(&(tempmat1[i]), mat, &(DmuUmu[i]));
-      }
-    }
-    else {
-      FORALLSITES(i, s) {
-        mat = (su3_matrix_f *)(gen_pt[0][i]);
-        sub_su3_matrix_f(&(tempmat1[i]), mat, &tmat);
-        add_su3_matrix_f(&(DmuUmu[i]), &tmat, &(DmuUmu[i]));
-      }
-    }
-    cleanup_gather(mtag0);
-  }
-
-  // Add plaquette determinant contribution if G is non-zero
-  if (G > IMAG_TOL) {
-    compute_plaqdet();
-    FORALLSITES(i, s) {
-      for (mu = XUP; mu < NUMLINK; mu++) {
-        for (nu = XUP; nu < NUMLINK; nu++) {
-          if (mu == nu)
-            continue;
-
-          CADD(plaqdet[mu][nu][i], minus1, tc);
-#ifdef LINEAR_DET
-          CMULREAL(tc, G, tc);
-          for (j = 0; j < NCOL; j++)
-            CADD(DmuUmu[i].e[j][j], tc, DmuUmu[i].e[j][j]);
-#else
-          tr = G * cabs_sq(&tc);
-          for (j = 0; j < NCOL; j++)
-            DmuUmu[i].e[j][j].real += tr;
-#endif
-        }
-      }
-    }
-  }
-
-  // Add scalar potential contribution if B is non-zero
-  if (B > IMAG_TOL) {
-    FORALLSITES(i, s) {
-      for (mu = XUP; mu < NUMLINK; mu++) {
-        tr = 1.0 / (Real)NCOL;
-        tr *= realtrace_su3_f(&(s->linkf[mu]), &(s->linkf[mu]));
-        tr -= 1.0;
-        for (j = 0; j < NCOL; j++)
-          DmuUmu[i].e[j][j].real += B * B * tr * tr;
-#ifdef TR_DIST
-          printf("TR_DIST %d %d %d %d %d %.4g\n",
-                 s->x, s->y, s->z, s->t, mu, tr);
-#endif
-      }
-    }
-  }
-}
-// -----------------------------------------------------------------
-
-
-
-// -----------------------------------------------------------------
-// Compute at each site
-//   U_mu(x) * U_mu(x + mu) - Udag_nu(x) * U_mu(x + nu)
-// Use tempmat1 and tempmat2 as temporary storage
-void compute_Fmunu() {
-  register int i;
-  register site *s;
-  int mu, nu, index;
-  su3_matrix_f *mat0, *mat1;
-  msg_tag *mtag0 = NULL, *mtag1 = NULL;
-
-  for (mu = 0; mu < NUMLINK; mu++) {
-    for (nu = mu + 1; nu < NUMLINK; nu++) {
-      index = plaq_index[mu][nu];
-      mtag0 = start_gather_site(F_OFFSET(linkf[nu]), sizeof(su3_matrix_f),
-                                goffset[mu], EVENANDODD, gen_pt[0]);
-      mtag1 = start_gather_site(F_OFFSET(linkf[mu]), sizeof(su3_matrix_f),
-                                goffset[nu], EVENANDODD, gen_pt[1]);
-      wait_gather(mtag0);
-      wait_gather(mtag1);
-      FORALLSITES(i, s) {
-        mat0 = (su3_matrix_f *)(gen_pt[0][i]);
-        mat1 = (su3_matrix_f *)(gen_pt[1][i]);
-        mult_su3_nn_f(&(s->linkf[mu]), mat0, &(tempmat1[i]));
-        mult_su3_nn_f(&(s->linkf[nu]), mat1, &(tempmat2[i]));
-        sub_su3_matrix_f(&(tempmat1[i]), &(tempmat2[i]), &(Fmunu[index][i]));
-      }
-      cleanup_gather(mtag0);
-      cleanup_gather(mtag1);
-    }
-  }
-}
-// -----------------------------------------------------------------
-
-
-
 // -----------------------------------------------------------------
 // Separate routines for each term in the fermion operator
 // All called by fermion_op at the bottom of the file
@@ -974,6 +843,26 @@ void fermion_op(Twist_Fermion *src, Twist_Fermion *dest, int sign) {
       }
       conjTF(&tf, &(dest[i]));
     }
+  }
+}
+// -----------------------------------------------------------------
+
+
+
+// -----------------------------------------------------------------
+// Squared Twist_Fermion matrix--vector operation
+//   dest = (D^2 + fmass^2).src
+// Use tempTF for temporary storage
+void DSq(Twist_Fermion *src, Twist_Fermion *dest) {
+  register int i;
+  register site *s;
+  Real fmass2 = fmass * fmass;
+
+  fermion_op(src, tempTF, PLUS);
+  fermion_op(tempTF, dest, MINUS);
+  if (fmass2 > IMAG_TOL) {
+    FORALLSITES(i, s)
+      scalar_mult_add_TF(&(dest[i]), &(src[i]), fmass2, &(dest[i]));
   }
 }
 // -----------------------------------------------------------------

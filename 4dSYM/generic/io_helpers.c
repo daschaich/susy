@@ -76,95 +76,6 @@ void coldlat() {
 
 
 // -----------------------------------------------------------------
-// Set linkf to exponentiated random anti-hermitian matrices
-// Then hit with stout smearing to smooth
-// Exponentiation helper function overlaps with exp_mult() in stout.c
-void exponentiate_ahm(anti_hermitmat *in, su3_matrix_f *link) {
-#ifdef SMEAR
-  Real t2, t3, t4, t5, t6, t7, t8;
-  su3_matrix_f temp1, temp2, htemp;
-
-  t2 = 1.0 / 2.0;
-  t3 = 1.0 / 3.0;
-  t4 = 1.0 / 4.0;
-  t5 = 1.0 / 5.0;
-  t6 = 1.0 / 6.0;
-  t7 = 1.0 / 7.0;
-  t8 = 1.0 / 8.0;
-
-  uncompress_anti_hermitian(in, &htemp);
-  mult_su3_nn_f(&htemp, link, &temp1);
-  scalar_mult_add_su3_matrix_f(link, &temp1, t8, &temp2);
-
-  mult_su3_nn_f(&htemp, &temp2, &temp1);
-  scalar_mult_add_su3_matrix_f(link, &temp1, t7, &temp2);
-
-  mult_su3_nn_f(&htemp, &temp2, &temp1);
-  scalar_mult_add_su3_matrix_f(link, &temp1, t6, &temp2);
-
-  mult_su3_nn_f(&htemp, &temp2, &temp1);
-  scalar_mult_add_su3_matrix_f(link, &temp1, t5, &temp2);
-
-  mult_su3_nn_f(&htemp, &temp2, &temp1);
-  scalar_mult_add_su3_matrix_f(link, &temp1, t4, &temp2);
-
-  mult_su3_nn_f(&htemp, &temp2, &temp1);
-  scalar_mult_add_su3_matrix_f(link, &temp1, t3, &temp2);
-
-  mult_su3_nn_f(&htemp, &temp2, &temp1);
-  scalar_mult_add_su3_matrix_f(link, &temp1, t2, &temp2);
-
-  mult_su3_nn_f(&htemp, &temp2, &temp1);
-  add_su3_matrix_f(link, &temp1, link);
-#endif
-}
-
-void randomlat() {
-#ifndef SMEAR
-  printf("Need to recompile with smearing to use a random config\n");
-  exit(1);
-#else
-  register int i, j, k, dir;
-  register site *s;
-  int num_stout = 0;
-  double dssplaq, dstplaq, plaq;
-  anti_hermitmat tahm;
-
-  FORALLSITES(i, s) {
-    for (dir = 0; dir < NUMLINK; dir++) {
-      for (j = 0; j < NCOL; j++) {
-        for (k = 0; k < NCOL; k++) {
-          if (j != k)
-            s->linkf[dir].e[j][k] = cmplx(0.0, 0.0);
-          else
-            s->linkf[dir].e[j][k] = cmplx(1.0, 0.0);
-        }
-      }
-#ifdef SITERAND
-      random_anti_hermitian(&tahm, &(s->site_prn));
-#else
-      random_anti_hermitian(&tahm, &(node_prn));
-#endif
-      exponentiate_ahm(&tahm, &(s->linkf[dir]));
-    }
-  }
-  plaquette(&dssplaq, &dstplaq);
-  plaq = (dssplaq + dstplaq) / 2.0;
-  while (plaq < 0.999 * NCOL && num_stout < volume) {
-    stout_smear(1, 0.1);
-    plaquette(&dssplaq, &dstplaq);
-    plaq = (dssplaq + dstplaq) / 2.0;
-    num_stout++;
-  }
-  node0_printf("random gauge NUMLINK configuration loaded ");
-  node0_printf("with %d stout smearing steps\n", num_stout);
-#endif
-}
-// -----------------------------------------------------------------
-
-
-
-// -----------------------------------------------------------------
 // Set linkf to funny matrices for debugging
 void funnylat() {
   register int i, j, k, dir;
@@ -205,10 +116,6 @@ gauge_file *reload_lattice(int flag, char *filename) {
       coldlat();
       gf = NULL;
       break;
-    case RANDOM:          // Random (hot) lattice
-      randomlat();
-      gf = NULL;
-      break;
     case RELOAD_SERIAL:   // Read binary lattice serially
       gf = restore_serial(filename);
       break;
@@ -217,7 +124,7 @@ gauge_file *reload_lattice(int flag, char *filename) {
       terminate(1);
   }
   dtime += dclock();
-  if (flag != FRESH && flag != RANDOM && flag != CONTINUE)
+  if (flag != FRESH && flag != CONTINUE)
     node0_printf("Time to reload gauge configuration = %e\n", dtime);
 
 #ifndef NOLINKS
@@ -254,7 +161,7 @@ int ask_starting_lattice(FILE *fp, int prompt, int *flag, char *filename) {
   int status;
 
   if (prompt!=0)
-    printf("enter 'continue', 'fresh', 'random' or 'reload_serial'\n");
+    printf("enter 'continue', 'fresh' or 'reload_serial'\n");
   status = fscanf(fp, "%s", savebuf);
   if (status == EOF) {
     printf("ask_starting_lattice: EOF on STDIN.\n");
@@ -262,17 +169,13 @@ int ask_starting_lattice(FILE *fp, int prompt, int *flag, char *filename) {
   }
   if (status != 1) {
     printf("\nask_starting_lattice: ERROR IN INPUT: ");
-    printf("can't read starting lattice command\n");
+    printf("can't read starting lattice option\n");
     return 1;
   }
 
   printf("%s", savebuf);
   if (strcmp("fresh", savebuf) == 0) {
     *flag = FRESH;
-    printf("\n");
-  }
-  else if (strcmp("random", savebuf) == 0) {
-    *flag = RANDOM;
     printf("\n");
   }
   else if (strcmp("continue", savebuf) == 0) {
@@ -282,12 +185,12 @@ int ask_starting_lattice(FILE *fp, int prompt, int *flag, char *filename) {
   else if (strcmp("reload_serial", savebuf) == 0)
     *flag = RELOAD_SERIAL;
   else {
-    printf(" is not a valid starting lattice command. INPUT ERROR.\n");
+    printf(" is not a valid starting lattice option. INPUT ERROR.\n");
     return 1;
   }
 
   // Read name of file and load it
-  if (*flag != FRESH && *flag != RANDOM && *flag != CONTINUE) {
+  if (*flag != FRESH && *flag != CONTINUE) {
     if (prompt != 0)
       printf("enter name of file containing lattice\n");
     status = fscanf(fp, " %s", filename);
@@ -362,7 +265,7 @@ int ask_gauge_fix(FILE *fp, int prompt, int *flag) {
   }
   if (status != 1) {
     printf("\nask_gauge_fix: ERROR IN INPUT: ");
-    printf("can't read starting lattice command\n");
+    printf("can't read gauge fixing option\n");
     return 1;
   }
 
@@ -372,7 +275,7 @@ int ask_gauge_fix(FILE *fp, int prompt, int *flag) {
   else if (strcmp("no_gauge_fix", savebuf) == 0)
     *flag = NO_GAUGE_FIX;
   else {
-    printf("Error in input: invalid gauge fixing_command\n");
+    printf("Error in input: invalid gauge fixing option\n");
     printf("Only no_gauge_fix and coulomb_gauge_fix supported\n");
     return 1;
   }

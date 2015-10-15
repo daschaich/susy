@@ -189,7 +189,7 @@ void rsymm(int project) {
 
   // First check average value of the inverted link
   // Tr[U^{-1} (U^{-1})^dag] / N and corresponding width
-  // Just like d_link() but use s->mom instead of s->linkf
+  // Just like link_trace() but use s->mom instead of s->linkf
   for (dir_inv = XUP; dir_inv < NUMLINK; dir_inv++) {
     invlink[dir_inv] = 0.0;
     FORALLSITES(i, s) {

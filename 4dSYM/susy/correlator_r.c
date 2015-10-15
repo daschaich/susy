@@ -147,8 +147,8 @@ void shift_ops(Kops *dat, Kops *temp, int dir) {
 // For gathering, all operators live in array of len = 4N_K
 // vevK[N_K] are Konishi ensemble averages; assume these vanish for SUGRA
 // volK[N_K] and volS[N_K] are Konishi and SUGRA volume averages
-// Check to make sure the latter have been set by d_konishi()
-void d_correlator_r() {
+// Check to make sure the latter have been set by konishi()
+void correlator_r() {
   register int i;
   register site *s;
   int a, b, j, x_dist, y_dist, z_dist, t_dist;
@@ -171,7 +171,7 @@ void d_correlator_r() {
   }
 
   // Assume MAX_T >= MAX_X
-  node0_printf("d_correlator_r: MAX = %d --> r < %.6g\n", MAX_X, MAX_r);
+  node0_printf("correlator_r: MAX = %d --> r < %.6g\n", MAX_X, MAX_r);
 
   // Count number of unique scalar distances r < MAX_r
   // Copy sav and temp into lookup and count, respectively
@@ -298,7 +298,7 @@ void d_correlator_r() {
             }
           }
           if (this_r < 0) {
-            node0_printf("d_correlator_r: bad scalar distance %.4g ", tr);
+            node0_printf("correlator_r: bad scalar distance %.4g ", tr);
             node0_printf("from displacement %d %d %d %d\n",
                          x_dist, y_dist, z_dist, t_dist);
             terminate(1);
