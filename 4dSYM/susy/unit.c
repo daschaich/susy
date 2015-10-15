@@ -1,13 +1,12 @@
 // -----------------------------------------------------------------
-// Polar projection now uses LAPACK to remove scalar contributions
+// Polar decomposition now uses LAPACK to isolate gauge vs. scalar d.o.f.
 #include "susy_includes.h"
 
-// Given matrix in, calculate the unitary polar decomposition element
-//   in = out.P --> out = in.[1 / P] and P = sqrt[in^dag.in]
-// We diagonalize PSq = in^dag.in using LAPACK,
+// Given matrix in = P.u, calculate the unitary matrix u = [1 / P].in
+//   and the positive P = sqrt[in.in^dag]
+// We diagonalize PSq = in.in^dag using LAPACK,
 // then project out its inverse square root
-// Also return the hermitian matrix P
-void polar(su3_matrix_f *in, su3_matrix_f *out, su3_matrix_f *P) {
+void polar(su3_matrix_f *in, su3_matrix_f *u, su3_matrix_f *P) {
   char V = 'V', U = 'U';
   int row, col, Npt = NCOL, stat = 0, Nwork = 2 * NCOL;
   double *store, *work, *Rwork, *eigs;
@@ -21,7 +20,7 @@ void polar(su3_matrix_f *in, su3_matrix_f *out, su3_matrix_f *P) {
   eigs = malloc(NCOL * sizeof(*eigs));
 
   // Convert PSq to column-major double array used by LAPACK
-  mult_su3_an_f(in, in, &PSq);
+  mult_su3_na_f(in, in, &PSq);
   for (row = 0; row < NCOL; row++) {
     for (col = 0; col < NCOL; col++) {
       store[2 * (col * NCOL + row)] = PSq.e[row][col].real;
@@ -30,7 +29,7 @@ void polar(su3_matrix_f *in, su3_matrix_f *out, su3_matrix_f *P) {
   }
 //  dumpmat_f(&PSq);
 
-  // Compute eigenvalues and eigenvectors
+  // Compute eigenvalues and eigenvectors of PSq
   zheev_(&V, &U, &Npt, store, &Npt, eigs, work, &Nwork, Rwork, &stat);
 
   // Check for degenerate eigenvalues (broke previous Jacobi algorithm)
@@ -44,7 +43,7 @@ void polar(su3_matrix_f *in, su3_matrix_f *out, su3_matrix_f *P) {
   }
 
   // Move the results back into su3_matrix_f structures
-  // Overwriting PSq with its eigenvectors for projection
+  // Overwrite PSq to hold the eigenvectors for projection
   for (row = 0; row < NCOL; row++) {
     for (col = 0; col < NCOL; col++) {
       PSq.e[row][col].real = store[2 * (col * NCOL + row)];
@@ -62,13 +61,13 @@ void polar(su3_matrix_f *in, su3_matrix_f *out, su3_matrix_f *P) {
 //  dumpmat_f(&PSq);
 //  node0_printf("\n");
 
-  // Now project out 1 / sqrt[in^dag.in] to find out
+  // Now project out 1 / sqrt[in.in^dag] to find u = [1 / P].in
   mult_su3_na_f(&Pinv, &PSq, &tmat);
   mult_su3_nn_f(&PSq, &tmat, &Pinv);
-  mult_su3_nn_f(in, &Pinv, out);
+  mult_su3_nn_f(&Pinv, in, u);
 
-  // Check unitarity of out
-  mult_su3_na_f(out, out, &PSq);
+  // Check unitarity of u
+  mult_su3_na_f(u, u, &PSq);
   c_scalar_add_diag_su3_f(&PSq, &minus1);
   for (row = 0; row < NCOL; row++) {
     for (col = 0; col < NCOL; col++) {
@@ -78,7 +77,7 @@ void polar(su3_matrix_f *in, su3_matrix_f *out, su3_matrix_f *P) {
                cabs(&(PSq.e[row][col])), IMAG_TOL, row, col);
 
         dumpmat_f(in);
-        dumpmat_f(out);
+        dumpmat_f(u);
         dumpmat_f(P);
         return;
       }
@@ -96,15 +95,15 @@ void polar(su3_matrix_f *in, su3_matrix_f *out, su3_matrix_f *P) {
                cabs(&(PSq.e[row][col])), IMAG_TOL, row, col);
 
         dumpmat_f(in);
-        dumpmat_f(out);
+        dumpmat_f(u);
         dumpmat_f(P);
         return;
       }
     }
   }
 
-  // Check in = out.P
-  mult_su3_nn_f(out, P, &tmat);
+  // Check that in = P.u
+  mult_su3_nn_f(P, u, &tmat);
   c_scalar_mult_add_su3mat_f(in, &tmat, &minus1, &PSq);
   for (row = 0; row < NCOL; row++) {
     for (col = 0; col < NCOL; col++) {
@@ -114,7 +113,7 @@ void polar(su3_matrix_f *in, su3_matrix_f *out, su3_matrix_f *P) {
                cabs(&(PSq.e[row][col])), IMAG_TOL, row, col);
 
         dumpmat_f(in);
-        dumpmat_f(out);
+        dumpmat_f(u);
         dumpmat_f(P);
         return;
       }

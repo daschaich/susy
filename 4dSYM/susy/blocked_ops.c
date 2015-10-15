@@ -20,7 +20,7 @@ void blocked_ops(int Nsmear, int block) {
     bl *= 2;
   if (block <= 0)
     bl = 1;
-  compute_Ba(bl);
+  compute_Ba();
 
   // Now sum operators over lattice volume
   FORALLSITES(i, s) {
@@ -42,16 +42,13 @@ void blocked_ops(int Nsmear, int block) {
     g_doublesum(&(OS[j]));
   }
 
-  // Print operators summed over volume
+  // Print each operator summed over volume
   // Have to divide by number of blocked lattices: 2^(4block) = bl^4
+  // Format: TAG  block  a  op[a]  subtracted[a]
   norm = (Real)(bl * bl * bl * bl);
-  node0_printf("OK %d %d", Nsmear, block);    // Konishi
-  for (j = 0; j < N_K; j++)
-    node0_printf(" %.8g", OK[j] / norm);
-  node0_printf("\n");
-  node0_printf("OS %d %d", Nsmear, block);    // SUGRA
-  for (j = 0; j < N_K; j++)
-    node0_printf(" %.8g", OS[j] / norm);
-  node0_printf("\n");
+  for (j = 0; j < N_K; j++)    // Konishi
+    node0_printf("OK %d %d %d %.8g\n", Nsmear, block, j, OK[j] / norm);
+  for (j = 0; j < N_K; j++)    // SUGRA
+    node0_printf("OS %d %d %d %.8g\n", Nsmear, block, j, OS[j] / norm);
 }
 // -----------------------------------------------------------------

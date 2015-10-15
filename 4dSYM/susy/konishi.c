@@ -5,11 +5,13 @@
 
 
 // -----------------------------------------------------------------
-// Compute traces of bilinears of scalar field interpolating ops:
-// 0) traceless part of the hermitian matrix returned by the polar projection
-//    (use tempmat1 as temporary storage while shifting from x+a to x)
-// 1) traceless part of U_a Udag_a
-void compute_Ba(int stride) {
+// Compute traces of three bilinears using two scalar field interpolating ops
+// Op 0 ("P") is traceless part of hermitian matrix P from polar decomposition
+// Op 1 ("U") is traceless part of U_a Udag_a
+// Bilin 0 is Tr[PP]
+// Bilin 1 is (Tr[UP] + Tr[PU]) / 2
+// Bilin 2 is Tr[UU]
+void compute_Ba() {
   register int i;
   register site *s;
   int a, b, j, k;
@@ -37,13 +39,6 @@ void compute_Ba(int stride) {
     }
   }
 
-  // Shift polar scalar field from x+a to x to obtain gauge-invariant traceBB
-  // Need to include stride in case the lattice has been blocked
-  for (a = XUP; a < NUMLINK; a++) {
-    for (j = 0; j < stride; j++)
-      shiftmat(Ba[0][a], tempmat1, goffset[a] + 1);
-  }
-
   // Compute traces of bilinears
   // Symmetric in a <--> b but store all to simplify SUGRA computation
   // Have checked that all are purely real and gauge invariant
@@ -52,12 +47,13 @@ void compute_Ba(int stride) {
       FORALLSITES(i, s) {
         mult_su3_nn_f(&(Ba[0][a][i]), &(Ba[0][b][i]), &tmat);
         tc = trace_su3_f(&tmat);
-        traceBB[0][a][b][i] = tc.real;
+        traceBB[0][a][b][i] = tc.real;    // Tr[PP]
 
         mult_su3_nn_f(&(Ba[1][a][i]), &(Ba[1][b][i]), &tmat);
         tc = trace_su3_f(&tmat);
-        traceBB[2][a][b][i] = tc.real;
+        traceBB[2][a][b][i] = tc.real;    // Tr[UU]
 
+        // (Tr[UP] + Tr[PU]) / 2
         mult_su3_nn_f(&(Ba[0][a][i]), &(Ba[1][b][i]), &tmat);
         tc = trace_su3_f(&tmat);
         traceBB[1][a][b][i] = 0.5 * tc.real;
@@ -91,7 +87,7 @@ void konishi() {
   }
 
   // Compute traces of bilinears of scalar field interpolating ops
-  compute_Ba(1);
+  compute_Ba();
 
   // Now form the zero momentum projected operators (summing across nodes)
   FORALLSITES(i, s) {
@@ -121,8 +117,9 @@ void konishi() {
     }
   }
 
-  // Print operators on each time slice
+  // Print each operator on each time slice
   // Subtract either ensemble average or volume average (respectively)
+  // Format: TAG  t  a  op[a]  subtracted[a]
   for (j = 0; j < N_K; j++) {
     volK[j] = OK[j][0];
     volS[j] = OS[j][0];
@@ -135,21 +132,14 @@ void konishi() {
   }
 
   for (t = 0; t < nt; t++) {
-    node0_printf("KONISHI %d", t);
     for (j = 0; j < N_K; j++)
-      node0_printf(" %.16g", OK[j][t] - vevK[j]);
-    for (j = 0; j < N_K; j++)
-      node0_printf(" %.16g", OK[j][t] - volK[j]);
-    node0_printf("\n");
+      node0_printf("KONISHI %d %d %.16g %.16g\n", t, j,
+                   OK[j][t] - vevK[j], OK[j][t] - volK[j]);
   }
-
   for (t = 0; t < nt; t++) {
-    node0_printf("SUGRA %d", t);
-    for (j = 0; j < N_K; j++)
-      node0_printf(" %.16g", OS[j][t]);   // Assume vanishing vev
-    for (j = 0; j < N_K; j++)
-      node0_printf(" %.16g", OS[j][t] - volS[j]);
-    node0_printf("\n");
+    for (j = 0; j < N_K; j++)     // Assume vanishing vev
+      node0_printf("SUGRA %d %d %.16g %.16g\n", t, j,
+                   OS[j][t], OS[j][t] - volS[j]);
   }
 
   for (j = 0; j < N_K; j++) {

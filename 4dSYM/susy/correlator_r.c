@@ -218,7 +218,7 @@ void correlator_r() {
   }
 
   // Compute traces of bilinears of scalar field interpolating ops
-  compute_Ba(1);
+  compute_Ba();
 
   // Construct the operators for all definitions and subtractions
   FORALLSITES(i, s) {
@@ -305,7 +305,6 @@ void correlator_r() {
           }
 
           // 2 * N_K^2 Konishi correlators
-          // For each N_K x N_K correlator matrix to be symmetric
 #ifdef CHECK_ROT
           // Potentially useful to check rotational invariance
           node0_printf("ROT_K %d %d %d %d", x_dist, y_dist, z_dist, t_dist);
@@ -314,10 +313,8 @@ void correlator_r() {
             for (a = 0; a < N_K; a++) {
               for (b = 0; b < N_K; b++) {
                 tr = 0.0;
-                FORALLSITES(i, s) {
-                  tr += 0.5 * ops[i].OK[a][sub] * tempops[i].OK[b][sub];
-                  tr += 0.5 * ops[i].OK[b][sub] * tempops[i].OK[a][sub];
-                }
+                FORALLSITES(i, s)
+                  tr += ops[i].OK[a][sub] * tempops[i].OK[b][sub];
                 g_doublesum(&tr);
                 CK[this_r].C[a][b][sub] += tr;
 #ifdef CHECK_ROT
@@ -336,10 +333,8 @@ void correlator_r() {
             for (a = 0; a < N_K; a++) {
               for (b = 0; b < N_K; b++) {
                 tr = 0.0;
-                FORALLSITES(i, s) {
-                  tr += 0.5 * ops[i].OS[a][sub] * tempops[i].OS[b][sub];
-                  tr += 0.5 * ops[i].OS[b][sub] * tempops[i].OS[a][sub];
-                }
+                FORALLSITES(i, s)
+                  tr += ops[i].OS[a][sub] * tempops[i].OS[b][sub];
                 g_doublesum(&tr);
                 CS[this_r].C[a][b][sub] += tr;
 #ifdef CHECK_ROT
@@ -360,28 +355,25 @@ void correlator_r() {
   free(ops);
 
   // Now cycle through unique scalar distances and print results
-  // Won't be sorted, but this is easy to do offline
+  // Distances won't be sorted, but this is easy to do offline
+  // Format: CORR_?  tag  r  a  b  corr[a][b]  subtracted[a][b]
   for (j = 0; j < total_r; j++) {
     tr = 1.0 / (Real)(count[j] * volume);
-    node0_printf("CORR_K %d %.6g", j, lookup[j]);
-    for (sub = 0; sub < 2; sub++) {
-      for (a = 0; a < N_K; a++) {
-        for (b = 0; b < N_K; b++)
-          node0_printf(" %.8g", CK[j].C[a][b][sub] * tr);
+    for (a = 0; a < N_K; a++) {
+      for (b = 0; b < N_K; b++) {
+        node0_printf("CORR_K %d %.6g %d %d %.8g %.8g\n", j, lookup[j], a, b,
+                     CK[j].C[a][b][0] * tr, CK[j].C[a][b][1] * tr);
       }
     }
-    node0_printf("\n");
   }
   for (j = 0; j < total_r; j++) {
     tr = 1.0 / (Real)(count[j] * volume);
-    node0_printf("CORR_S %d %.6g", j, lookup[j]);
-    for (sub = 0; sub < 2; sub++) {
-      for (a = 0; a < N_K; a++) {
-        for (b = 0; b < N_K; b++)
-          node0_printf(" %.8g", CS[j].C[a][b][sub] * tr);
+    for (a = 0; a < N_K; a++) {
+      for (b = 0; b < N_K; b++) {
+        node0_printf("CORR_S %d %.6g %d %d %.8g %.8g\n", j, lookup[j], a, b,
+                     CS[j].C[a][b][0] * tr, CS[j].C[a][b][1] * tr);
       }
     }
-    node0_printf("\n");
   }
   free(lookup);
   free(count);
