@@ -854,11 +854,7 @@ void declare_accumulate_gather_field(
 // Usage: tag = start_general_gather_site(src, size, disp, parity, dest)
 // Example:
 //  msg_tag *tag;
-//  int disp[4];    // Displacement
-//  disp[XUP] = 1;
-//  disp[YUP] = -1;
-//  disp[ZUP] = 0;
-//  disp[TUP] = 0;
+//  int disp[4] = {1, -1, 0, 0};    // Displacement
 //  tag = start_general_gather_site(F_OFFSET(phi), sizeof(su3_vector), disp,
 //                                  EVEN, gen_pt[0]);
 //

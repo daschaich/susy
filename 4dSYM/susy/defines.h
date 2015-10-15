@@ -45,7 +45,8 @@
 // Measurement stuff
 // Threshold to print warning about non-zero imaginary components
 // of quantities expected to be real
-#define IMAG_TOL 1e-12
+#define IMAG_TOL 1.0e-8
+#define SQ_TOL 1.0e-16
 
 // Maximum time value and spatial distance for Wilson loops
 #define MAX_T (nt / 2)

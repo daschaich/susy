@@ -1,11 +1,11 @@
 // -----------------------------------------------------------------
-// Measure the average value of the link Tr[Udag U] / N
+// Measure the average value of Tr[U.Ubar] / N
 // as well as the width sqrt(<tr^2> - <tr>^2) of its distribution
 // At the same time, measure (real) determinants of traceless parts
 #include "susy_includes.h"
 
-double d_link(double *linktr, double *width,
-              double *link_det, double *det_ave, double *det_width) {
+double link_trace(double *linktr, double *width,
+                  double *link_det, double *det_ave, double *det_width) {
 
   register int i, j, dir;
   register site *s;

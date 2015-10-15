@@ -135,29 +135,29 @@ complex cofactor(su3_matrix_f *src, int row, int col) {
 
 #if (NCOL == 3)
   // Here things are easy
-  complex tc1, tc2;
-  CMUL(submat[0][0], submat[1][1], tc1);
+  complex tc, tc2;
+  CMUL(submat[0][0], submat[1][1], tc);
   CMUL(submat[1][0], submat[0][1], tc2);
-  CSUB(tc1, tc2, cof);
+  CSUB(tc, tc2, cof);
 #endif
 #if (NCOL == 4)
   // Here things are less fun, but still not tough
   // det = 00(11*22 - 21*12) - 01(10*22 - 20*12) + 02(10*21 - 20*11)
-  complex tc1, tc2, tc3, sav;
-  CMUL(submat[1][1], submat[2][2], tc1);
+  complex tc, tc2, tc3, sav;
+  CMUL(submat[1][1], submat[2][2], tc);
   CMUL(submat[2][1], submat[1][2], tc2);
-  CSUB(tc1, tc2, tc3);
+  CSUB(tc, tc2, tc3);
   CMUL(submat[0][0], tc3, cof);
 
-  CMUL(submat[1][0], submat[2][2], tc1);
+  CMUL(submat[1][0], submat[2][2], tc);
   CMUL(submat[2][0], submat[1][2], tc2);
-  CSUB(tc2, tc1, tc3);    // Absorb negative sign
+  CSUB(tc2, tc, tc3);    // Absorb negative sign
   CMUL(submat[0][1], tc3, sav);
   CSUM(cof, sav);
 
-  CMUL(submat[1][0], submat[2][1], tc1);
+  CMUL(submat[1][0], submat[2][1], tc);
   CMUL(submat[2][0], submat[1][1], tc2);
-  CSUB(tc1, tc2, tc3);
+  CSUB(tc, tc2, tc3);
   CMUL(submat[0][2], tc3, sav);
   CSUM(cof, sav);
 #endif
@@ -272,20 +272,20 @@ void measure_det() {
 // Divide the determinant out of the matrix in
 void det_project(su3_matrix_f *in, su3_matrix_f *out) {
   Real frac = -1.0 / (Real)NCOL;
-  complex tc1, tc2;
+  complex tc, tc2;
 
-  tc1 = find_det(in);
-  tc2 = clog(&tc1);
-  CMULREAL(tc2, frac, tc1);
-  tc2 = cexp(&tc1);
+  tc = find_det(in);
+  tc2 = clog(&tc);
+  CMULREAL(tc2, frac, tc);
+  tc2 = cexp(&tc);
   c_scalar_mult_su3mat_f(in, &tc2, out);
 
 #ifdef DEBUG_CHECK
   // Sanity check
-  tc1 = find_det(out);
-  if (fabs(tc1.imag) > IMAG_TOL || fabs(1.0 - tc1.real) > IMAG_TOL) {
+  tc = find_det(out);
+  if (fabs(tc.imag) > IMAG_TOL || fabs(1.0 - tc.real) > IMAG_TOL) {
     printf("node%d WARNING: det = (%.4g, %.4g) after projection...\n",
-        this_node, tc1.real, tc1.imag);
+        this_node, tc.real, tc.imag);
   }
 #endif
 }

@@ -1,7 +1,7 @@
 // -----------------------------------------------------------------
 // Mostly routines on individual Twist_Fermions,
 // which could be moved into the libraries
-// The last two are exceptions: they copy or shift for all sites
+// The last two are exceptions that loop over all sites
 #include "susy_includes.h"
 // -----------------------------------------------------------------
 
@@ -151,5 +151,26 @@ void gauge_field_copy_f(field_offset src, field_offset dest) {
       dest2 += sizeof(su3_matrix_f);
     }
   }
+}
+// -----------------------------------------------------------------
+
+
+
+// -----------------------------------------------------------------
+// Shift a matrix without parallel transport
+// The dir should come from goffset
+void shiftmat(su3_matrix_f *dat, su3_matrix_f *temp, int dir) {
+  register int i;
+  register site *s;
+  msg_tag *mtag;
+
+  mtag = start_gather_field(dat, sizeof(su3_matrix_f),
+                            dir, EVENANDODD, gen_pt[0]);
+  wait_gather(mtag);
+  FORALLSITES(i, s)
+    su3mat_copy_f((su3_matrix_f *)gen_pt[0][i], &(temp[i]));
+  cleanup_gather(mtag);
+  FORALLSITES(i, s)
+    su3mat_copy_f(&(temp[i]), &(dat[i]));
 }
 // -----------------------------------------------------------------

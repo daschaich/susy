@@ -22,6 +22,11 @@
 // Gauge fixing options
 #define NO_GAUGE_FIX 30
 #define COULOMB_GAUGE_FIX 31
+
+// Smearing options
+#define NO_SMEAR 40
+#define STOUT_SMEAR 41
+#define APE_SMEAR 42
 // -----------------------------------------------------------------
 
 
@@ -29,12 +34,12 @@
 // -----------------------------------------------------------------
 // field offset and field pointer
 // Used when fields in the site are arguments to subroutines
-/* Usage:  fo = F_OFFSET( field ), where "field" is the name of a field
-  in lattice.
-     address = F_PT( &site , fo ), where &site is the address of the
-  site and fo is a field_offset.  Usually, the result will have to be
-  cast to a pointer to the appropriate type. (It is naturally a char *).
-*/
+// Usage: fo = F_OFFSET(field)
+//   where "field" is the name of a field in the site struct
+// Usage: address = F_PT(&site, fo)
+//   where &site is the address of the site and fo is a field_offset
+//   Usually, the result will have to be cast to an appropriate pointer
+//   It is naturally a char*
 typedef int field_offset;
 #define F_OFFSET(a) \
   ((field_offset)(((char *)&(lattice[0]. a ))-((char *)&(lattice[0])) ))

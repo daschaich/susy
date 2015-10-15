@@ -90,7 +90,7 @@ void setup_lambda() {
             CSUM(trace, tt);
           }
           if (cabs_sq(&trace) > IMAG_TOL)
-            node0_printf("Sum_a Lambda^a_{%d%d} Lambda^a_{%d%d} = (%.4g, %.4g)\n",
+            node0_printf("Sum_a La^a_{%d%d} La^a_{%d%d} = (%.4g, %.4g)\n",
                          k, j, i, l, trace.real, trace.imag);
         }
       }
@@ -105,7 +105,8 @@ void setup_lambda() {
 #ifdef DEBUG_CHECK
       trace = trace_su3_f(&(Lambda_prod[i][j]));
       if (trace.real * trace.real > IMAG_TOL)
-        node0_printf("Tr[T_%d T_%d] = (%.4g, %.4g)\n", i, j, trace.real, trace.imag);
+        node0_printf("Tr[T_%d T_%d] = (%.4g, %.4g)\n",
+                     i, j, trace.real, trace.imag);
 #endif
     }
   }
@@ -292,44 +293,5 @@ void setup_FQ() {
     node0_printf("ERROR: Too many terms in FQ_lookup\n");
     terminate(1);
   }
-}
-// -----------------------------------------------------------------
-
-
-
-// -----------------------------------------------------------------
-// Set up submatrix to convert from 5- to 4-component notation
-//  P[NDIMS][NUMLINK] = {{t2, -t2, 0.0, 0.0, 0.0},
-//                       {t6, t6, -2.0 * t6, 0.0, 0.0},
-//                       {t12, t12, t12, -3.0 * t12, 0.0},
-//                       {t20, t20, t20, t20, -4.0 * t20}};
-// Fifth row is just all 1 / sqrt(5)
-void setup_P() {
-  Real t2 = 1.0 / sqrt(2),    t6 = 1.0 / sqrt(6);
-  Real t12 = 1.0 / sqrt(12),  t20 = 1.0 / sqrt(20);
-
-  P[0][0] = t2;
-  P[0][1] = -t2;
-  P[0][2] = 0.0;
-  P[0][3] = 0.0;
-  P[0][4] = 0.0;
-
-  P[1][0] = t6;
-  P[1][1] = t6;
-  P[1][2] = -2.0 * t6;
-  P[1][3] = 0.0;
-  P[1][4] = 0.0;
-
-  P[2][0] = t12;
-  P[2][1] = t12;
-  P[2][2] = t12;
-  P[2][3] = -3.0 * t12;
-  P[2][4] = 0.0;
-
-  P[3][0] = t20;
-  P[3][1] = t20;
-  P[3][2] = t20;
-  P[3][3] = t20;
-  P[3][4] = -4.0 * t20;
 }
 // -----------------------------------------------------------------

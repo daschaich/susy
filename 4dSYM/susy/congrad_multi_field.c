@@ -43,7 +43,7 @@ int congrad_multi_field(Twist_Fermion *src, Twist_Fermion **psim,
   Twist_Fermion *mpm = malloc(sites_on_node * sizeof(*mpm));
   Twist_Fermion *pm0 = malloc(sites_on_node * sizeof(*pm0));
   Twist_Fermion *rm  = malloc(sites_on_node * sizeof(*rm));
-  Twist_Fermion **pm  = malloc(Norder * sizeof(**pm));
+  Twist_Fermion **pm = malloc(Norder * sizeof(**pm));
   for (i = 1; i < Norder; i++)    // !!!
     pm[i] = malloc(sites_on_node * sizeof(Twist_Fermion));
 
@@ -85,7 +85,7 @@ int congrad_multi_field(Twist_Fermion *src, Twist_Fermion **psim,
 
   for (N_iter = 0; N_iter < MaxCG && rsq > rsqstop; N_iter++) {
     // mp = (M(u) + shift[0]) pm
-    hdelta0_field(pm0, mpm);
+    DSq(pm0, mpm);
     iteration++;
     total_iters++;
     FORALLSITES(i,s)
@@ -218,7 +218,7 @@ int congrad_multi_field(Twist_Fermion *src, Twist_Fermion **psim,
     g_doublesum(&source_norm);
     node0_printf("Norm of psim %d shift %.4g is %.4g\n", j, shift[j], source_norm);
 
-    hdelta0_field(psim[j], mpm);    // mpm = (D^2 + fmass^2).psim[j]
+    DSq(psim[j], mpm);              // mpm = (D^2 + fmass^2).psim[j]
     source_norm = 0;                // Re-using for convenience
     FORALLSITES(i, s) {             // Add shift.psi and subtract src
       scalar_mult_add_TF(&(mpm[i]), &(psim[j][i]), shift[j],  &(mpm[i]));

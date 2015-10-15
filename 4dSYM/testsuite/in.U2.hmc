@@ -27,5 +27,4 @@ max_cg_iterations 5000
 error_per_site 1e-5
 
 reload_serial config.U2.4444
-coulomb_gauge_fix
 forget

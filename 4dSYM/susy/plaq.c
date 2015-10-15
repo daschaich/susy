@@ -1,9 +1,9 @@
 // -----------------------------------------------------------------
 // Measure average space--space and space--time plaquettes
 // Use tempmat1 for temporary storage
-#include "generic_includes.h"
+#include "susy_includes.h"
 
-void d_plaquette(double *ss_plaq, double *st_plaq) {
+void plaquette(double *ss_plaq, double *st_plaq) {
   register int i, dir, dir2;
   register site *s;
   register su3_matrix_f *m1, *m4;

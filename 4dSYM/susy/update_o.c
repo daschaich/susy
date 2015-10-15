@@ -1,7 +1,6 @@
 // -----------------------------------------------------------------
 // Update lattice
-// Omelyan integrator with Urbach, Jansen, Schindler, Wenger multiscale
-// (CPC 174:87, 2006)
+// Omelyan integrator multiscale following CPC 174:87 (2006)
 
 // Begin at "integral" time, with H and U evaluated at the same time
 // For the final accept/reject, we already have a good solution to the CG
@@ -13,33 +12,6 @@
 #ifdef HAVE_IEEEFP_H
 #include <ieeefp.h>         // For "finite"
 #endif
-// -----------------------------------------------------------------
-
-
-
-// -----------------------------------------------------------------
-void ranmom() {
-  register int i, j, mu;
-  register site *s;
-  complex grn;
-
-  FORALLSITES(i, s) {
-    for (mu = XUP; mu < NUMLINK; mu++) {
-      clear_su3mat_f(&(s->mom[mu]));
-      for (j = 0; j < DIMF; j++) {
-#ifdef SITERAND
-        grn.real = gaussian_rand_no(&(s->site_prn));
-        grn.imag = gaussian_rand_no(&(s->site_prn));
-#else
-        grn.real = gaussian_rand_no(&(s->node_prn));
-        grn.imag = gaussian_rand_no(&(s->node_prn));
-#endif
-        c_scalar_mult_add_su3mat_f(&(s->mom[mu]), &(Lambda[j]), &grn,
-                                   &(s->mom[mu]));
-      }
-    }
-  }
-}
 // -----------------------------------------------------------------
 
 
@@ -152,7 +124,7 @@ int update_step(double *fnorm, double *gnorm,
 
 // -----------------------------------------------------------------
 int update() {
-  int i, n, iters = 0;
+  int j, n, iters = 0;
   Real final_rsq;
   double startaction, endaction, change;
   Twist_Fermion **src = malloc(Nroot * sizeof(**src));
@@ -161,8 +133,8 @@ int update() {
   for (n = 0; n < Nroot; n++) {
     src[n] = malloc(sites_on_node * sizeof(Twist_Fermion));
     psim[n] = malloc(Norder * sizeof(Twist_Fermion*));
-    for (i = 0; i < Norder; i++)
-      psim[n][i] = malloc(sites_on_node * sizeof(Twist_Fermion));
+    for (j = 0; j < Norder; j++)
+      psim[n][j] = malloc(sites_on_node * sizeof(Twist_Fermion));
   }
 
   // Refresh the momenta
@@ -178,8 +150,8 @@ int update() {
 
   // Do a CG to get psim,
   // rational approximation to (Mdag M)^(-1 / 4) src = (Mdag M)^(-1 / 8) g
-  for (i = 0; i < Norder; i++)
-    shift[i] = shift4[i];
+  for (j = 0; j < Norder; j++)
+    shift[j] = shift4[j];
 #ifdef UPDATE_DEBUG
   node0_printf("Calling CG in update_o -- original action\n");
 #endif
@@ -189,7 +161,7 @@ int update() {
 #endif // ifndef PUREGAUGE
 
   // Find initial action
-  startaction = d_action(src, psim);
+  startaction = action(src, psim);
   gnorm = 0.0;
   max_gf = 0.0;
   for (n = 0; n < Nroot; n++) {
@@ -205,7 +177,7 @@ int update() {
 //    random_gauge_trans(src[n]);
 //    congrad_multi_field(src[n], psim[n], niter, rsqmin, &final_rsq);
 //  }
-//  startaction = d_action(src, psim);
+//  startaction = action(src, psim);
 //  node0_printf("AFTER  GTRANS %.8g\n", startaction);
 //  terminate(1);
 
@@ -220,7 +192,7 @@ int update() {
   // Find ending action
   // Reuse data from update_step, don't need CG to get (Mdag M)^(-1) chi
   // If the final step were a gauge update, CG would be necessary
-  endaction = d_action(src, psim);
+  endaction = action(src, psim);
   change = endaction - startaction;
 #ifdef HMC_ALGORITHM
   // Reject configurations giving overflow
@@ -258,8 +230,8 @@ int update() {
 
   for (n = 0; n < Nroot; n++) {
     free(src[n]);
-    for (i = 0; i < Norder; i++)
-      free(psim[n][i]);
+    for (j = 0; j < Norder; j++)
+      free(psim[n][j]);
     free(psim[n]);
   }
   free(src);

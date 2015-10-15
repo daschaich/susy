@@ -80,22 +80,18 @@ EXTERN Real traj_length;
 EXTERN su3_matrix_f Lambda[DIMF], Lambda_prod[DIMF][DIMF];
 EXTERN Real perm[NUMLINK][NUMLINK][NUMLINK][NUMLINK][NUMLINK];
 
-// Submatrix to convert from 5- to 4-component notation
-// Fifth row is just all 1 / sqrt(5)
-EXTERN Real P[NDIMS][NUMLINK];
-
 // Translate (mu, nu) to linear index of anti-symmetric matrix
 EXTERN int plaq_index[NUMLINK][NUMLINK];
 
 EXTERN Real rsqmin, rsqprop;
 EXTERN Real lambda, kappa, bmass, fmass, kappa_u1, G, B;
-EXTERN double g_ssplaq, g_stplaq;
+EXTERN double g_ssplaq, g_stplaq;   // Global plaqs for I/O
 EXTERN double_complex linktrsum;
 EXTERN u_int32type nersc_checksum;
 EXTERN char startfile[MAXFILENAME], savefile[MAXFILENAME];
-EXTERN int startflag; // Beginning lattice: CONTINUE, RELOAD, FRESH
-EXTERN int fixflag;   // Gauge fixing: COULOMB_GAUGE_FIX, NO_GAUGE_FIX
-EXTERN int saveflag;  // 1 if we will save the lattice;
+EXTERN int startflag;     // Beginning lattice: CONTINUE, RELOAD, FRESH
+EXTERN int fixflag;       // Gauge fixing: COULOMB_GAUGE_FIX, NO_GAUGE_FIX
+EXTERN int saveflag;      // 1 if we will save the lattice;
 EXTERN int total_iters;   // To be incremented by the multi-mass CG
 
 // Some of these global variables are node dependent
@@ -168,9 +164,24 @@ EXTERN site *lattice;
 EXTERN char **gen_pt[N_POINTERS];
 
 #ifdef CORR
-EXTERN su3_matrix_f *Ba[NUMLINK];         // Scalar field interpolating op
-EXTERN Real *traceBB[NUMLINK][NUMLINK];   // Tr[B_a B_b]
-EXTERN double vevK;                       // Konishi vacuum subtraction
+#define N_B 2
+#define N_K 3    // N_B * (N_B + 1) / 2
+// Multiple scalar fields and their bilinear traces
+EXTERN su3_matrix_f *Ba[N_B][NUMLINK];
+EXTERN double *traceBB[N_K][NUMLINK][NUMLINK];
+
+// Ensemble averages and volume averages for subtracting
+EXTERN double vevK[N_K], volS[N_K], volK[N_K];
+
+// Structs for operators and correlators with either subtraction
+typedef struct {
+  double OK[N_K][2];
+  double OS[N_K][2];
+} Kops;
+typedef struct {
+  double C[N_K][N_K][2];
+} Kcorrs;
+EXTERN Kops *tempops, *tempops2;
 #endif
 
 #ifdef BILIN
@@ -179,11 +190,11 @@ EXTERN int nsrc;
 
 #ifdef SMEAR
 // APE or stout smearing stuff
+EXTERN int smearflag;                 // NONE, STOUT, APE
 EXTERN int Nsmear;
 EXTERN double alpha;
-#endif
-// This is needed for smearing a `hot-start' random configuration
 EXTERN anti_hermitmat *Q[NUMLINK];    // To be exponentiated
+#endif
 
 #ifdef EIG
 // Eigenvalue stuff

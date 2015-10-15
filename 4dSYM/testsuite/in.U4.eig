@@ -31,5 +31,4 @@ eig_tol 1e-8
 maxIter 5000
 
 reload_serial config.U4.4444
-coulomb_gauge_fix
 forget

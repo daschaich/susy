@@ -35,7 +35,7 @@ typedef struct {
   char startfile[MAXFILENAME], savefile[MAXFILENAME];
 
 #ifdef CORR
-  double vevK;                  // Konishi vacuum subtraction
+  double vevK[N_K];             // Konishi vacuum subtractions
 #endif
 
 #ifdef BILIN
@@ -49,7 +49,8 @@ typedef struct {
 #endif
 
 #ifdef SMEAR
-  // Parameters for either APE or stout smearing
+  // Parameters for APE or stout smearing
+  int smearflag;                // NONE, STOUT, APE
   int Nsmear;
   Real alpha;
 #endif

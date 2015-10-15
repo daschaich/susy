@@ -15,7 +15,7 @@ gauge_file *save_lattice(int flag, char *filename) {
   gauge_file *gf = NULL;
 
 #ifndef NOLINKS
-  d_plaquette(&g_ssplaq, &g_stplaq);
+  plaquette(&g_ssplaq, &g_stplaq);
   d_linktrsum(&linktrsum);
   nersc_checksum = nersc_cksum();
 #endif
@@ -76,88 +76,6 @@ void coldlat() {
 
 
 // -----------------------------------------------------------------
-// Set linkf to exponentiated random anti-hermitian matrices
-// Then hit with L*Nt smearing steps to smooth
-// Exponentiation helper function overlaps with exp_mult() in stout.c
-void exponentiate_ahm(anti_hermitmat *in, su3_matrix_f *link) {
-  Real t2, t3, t4, t5, t6, t7, t8;
-  su3_matrix_f temp1, temp2, htemp;
-
-  t2 = 1.0 / 2.0;
-  t3 = 1.0 / 3.0;
-  t4 = 1.0 / 4.0;
-  t5 = 1.0 / 5.0;
-  t6 = 1.0 / 6.0;
-  t7 = 1.0 / 7.0;
-  t8 = 1.0 / 8.0;
-
-  uncompress_anti_hermitian(in, &htemp);
-  mult_su3_nn_f(&htemp, link, &temp1);
-  scalar_mult_add_su3_matrix_f(link, &temp1, t8, &temp2);
-
-  mult_su3_nn_f(&htemp, &temp2, &temp1);
-  scalar_mult_add_su3_matrix_f(link, &temp1, t7, &temp2);
-
-  mult_su3_nn_f(&htemp, &temp2, &temp1);
-  scalar_mult_add_su3_matrix_f(link, &temp1, t6, &temp2);
-
-  mult_su3_nn_f(&htemp, &temp2, &temp1);
-  scalar_mult_add_su3_matrix_f(link, &temp1, t5, &temp2);
-
-  mult_su3_nn_f(&htemp, &temp2, &temp1);
-  scalar_mult_add_su3_matrix_f(link, &temp1, t4, &temp2);
-
-  mult_su3_nn_f(&htemp, &temp2, &temp1);
-  scalar_mult_add_su3_matrix_f(link, &temp1, t3, &temp2);
-
-  mult_su3_nn_f(&htemp, &temp2, &temp1);
-  scalar_mult_add_su3_matrix_f(link, &temp1, t2, &temp2);
-
-  mult_su3_nn_f(&htemp, &temp2, &temp1);
-  add_su3_matrix_f(link, &temp1, link);
-}
-
-void randomlat() {
-  register int i, j, k, dir;
-  register site *s;
-  int num_stout = 0;
-  double dssplaq, dstplaq, plaq;
-  anti_hermitmat tahm;
-
-  FORALLSITES(i, s) {
-    for (dir = 0; dir < NUMLINK; dir++) {
-      for (j = 0; j < NCOL; j++) {
-        for (k = 0; k < NCOL; k++) {
-          if (j != k)
-            s->linkf[dir].e[j][k] = cmplx(0.0, 0.0);
-          else
-            s->linkf[dir].e[j][k] = cmplx(1.0, 0.0);
-        }
-      }
-#ifdef SITERAND
-      random_anti_hermitian(&tahm, &(s->site_prn));
-#else
-      random_anti_hermitian(&tahm, &(node_prn));
-#endif
-      exponentiate_ahm(&tahm, &(s->linkf[dir]));
-    }
-  }
-  d_plaquette(&dssplaq, &dstplaq);
-  plaq = (dssplaq + dstplaq) / 2.0;
-  while (plaq < 0.999 * NCOL && num_stout < volume) {
-    stout_smear(1, 0.1);
-    d_plaquette(&dssplaq, &dstplaq);
-    plaq = (dssplaq + dstplaq) / 2.0;
-    num_stout++;
-  }
-  node0_printf("random gauge NUMLINK configuration loaded ");
-  node0_printf("with %d stout smearing steps\n", num_stout);
-}
-// -----------------------------------------------------------------
-
-
-
-// -----------------------------------------------------------------
 // Set linkf to funny matrices for debugging
 void funnylat() {
   register int i, j, k, dir;
@@ -198,10 +116,6 @@ gauge_file *reload_lattice(int flag, char *filename) {
       coldlat();
       gf = NULL;
       break;
-    case RANDOM:          // Random (hot) lattice
-      randomlat();
-      gf = NULL;
-      break;
     case RELOAD_SERIAL:   // Read binary lattice serially
       gf = restore_serial(filename);
       break;
@@ -210,11 +124,11 @@ gauge_file *reload_lattice(int flag, char *filename) {
       terminate(1);
   }
   dtime += dclock();
-  if (flag != FRESH && flag != RANDOM && flag != CONTINUE)
-    node0_printf("Time to reload gauge configuration = %e\n",dtime);
+  if (flag != FRESH && flag != CONTINUE)
+    node0_printf("Time to reload gauge configuration = %e\n", dtime);
 
 #ifndef NOLINKS
-  d_plaquette(&g_ssplaq, &g_stplaq);
+  plaquette(&g_ssplaq, &g_stplaq);
   d_linktrsum(&linktrsum);
   nersc_checksum = nersc_cksum();
 #endif
@@ -247,7 +161,7 @@ int ask_starting_lattice(FILE *fp, int prompt, int *flag, char *filename) {
   int status;
 
   if (prompt!=0)
-    printf("enter 'continue', 'fresh', 'random' or 'reload_serial'\n");
+    printf("enter 'continue', 'fresh' or 'reload_serial'\n");
   status = fscanf(fp, "%s", savebuf);
   if (status == EOF) {
     printf("ask_starting_lattice: EOF on STDIN.\n");
@@ -255,17 +169,13 @@ int ask_starting_lattice(FILE *fp, int prompt, int *flag, char *filename) {
   }
   if (status != 1) {
     printf("\nask_starting_lattice: ERROR IN INPUT: ");
-    printf("can't read starting lattice command\n");
+    printf("can't read starting lattice option\n");
     return 1;
   }
 
   printf("%s", savebuf);
   if (strcmp("fresh", savebuf) == 0) {
     *flag = FRESH;
-    printf("\n");
-  }
-  else if (strcmp("random", savebuf) == 0) {
-    *flag = RANDOM;
     printf("\n");
   }
   else if (strcmp("continue", savebuf) == 0) {
@@ -275,12 +185,12 @@ int ask_starting_lattice(FILE *fp, int prompt, int *flag, char *filename) {
   else if (strcmp("reload_serial", savebuf) == 0)
     *flag = RELOAD_SERIAL;
   else {
-    printf(" is not a valid starting lattice command. INPUT ERROR.\n");
+    printf(" is not a valid starting lattice option. INPUT ERROR.\n");
     return 1;
   }
 
   // Read name of file and load it
-  if (*flag != FRESH && *flag != RANDOM && *flag != CONTINUE) {
+  if (*flag != FRESH && *flag != CONTINUE) {
     if (prompt != 0)
       printf("enter name of file containing lattice\n");
     status = fscanf(fp, " %s", filename);
@@ -355,7 +265,7 @@ int ask_gauge_fix(FILE *fp, int prompt, int *flag) {
   }
   if (status != 1) {
     printf("\nask_gauge_fix: ERROR IN INPUT: ");
-    printf("can't read starting lattice command\n");
+    printf("can't read gauge fixing option\n");
     return 1;
   }
 
@@ -365,7 +275,7 @@ int ask_gauge_fix(FILE *fp, int prompt, int *flag) {
   else if (strcmp("no_gauge_fix", savebuf) == 0)
     *flag = NO_GAUGE_FIX;
   else {
-    printf("Error in input: invalid gauge fixing_command\n");
+    printf("Error in input: invalid gauge fixing option\n");
     printf("Only no_gauge_fix and coulomb_gauge_fix supported\n");
     return 1;
   }
@@ -376,39 +286,39 @@ int ask_gauge_fix(FILE *fp, int prompt, int *flag) {
 
 
 // -----------------------------------------------------------------
-/* Read and echo the next tag.  Echo any intervening comments */
-/* Comments begin with # and apply to the rest of the line */
-/* Verify that the input tag agrees with the expected tag */
+// Read and echo the next tag.  Echo any intervening comments
+// Comments begin with # and apply to the rest of the line
+// Verify that the input tag agrees with the expected tag
 static int get_tag(FILE *fp, char *tag, char *myname) {
   static char checktag[80];
   char line[512];
   int s;
 
   while (1) {
-    s = fscanf(fp,"%s",checktag);
+    s = fscanf(fp, "%s", checktag);
     if (s == EOF) {
-      printf("%s(%d): EOF on input.\n",myname,this_node);
+      printf("%s(%d): EOF on input\n", myname, this_node);
       return 1;
     }
     if (s == 0) {
-      printf("%s(%d) Error reading %s\n",myname,this_node,tag);
+      printf("%s(%d) Error reading %s\n", myname, this_node, tag);
       return 1;
     }
-    if (strchr(checktag,'#')!=NULL) {
-      printf("%s",checktag);
-      if (fgets(line,512,fp)==NULL) {
-        printf("%s(%d) EOF on input.\n",myname,this_node);
+    if (strchr(checktag, '#') != NULL) {
+      printf("%s", checktag);
+      if (fgets(line, 512, fp) == NULL) {
+        printf("%s(%d) EOF on input.\n", myname, this_node);
         return 1;
       }
-      printf("%s",line);
+      printf("%s", line);
     }
     else {
-      if (strcmp(checktag,tag) != 0) {
+      if (strcmp(checktag, tag) != 0) {
         printf("\n%s: ERROR IN INPUT: expected %s but found %s\n",
-            myname,tag,checktag);
+               myname, tag, checktag);
         return 1;
       }
-      printf("%s ",tag);
+      printf("%s ", tag);
       return 0;
     }
   }
@@ -418,16 +328,14 @@ static int get_tag(FILE *fp, char *tag, char *myname) {
 
 
 // -----------------------------------------------------------------
-/* Check return value of scanf */
+// Check return value of scanf
 static int check_read(int s, char *myname, char *tag) {
   if (s == EOF) {
-    printf("\n%s: Expecting value for %s but found EOF.\n",
-     myname,tag);
+    printf("\n%s: Expecting value for %s but found EOF\n", myname, tag);
     return 1;
   }
   else if (s == 0) {
-    printf("\n%s: Format error reading value for %s\n",
-     myname,tag);
+    printf("\n%s: Format error reading value for %s\n", myname, tag);
     return 1;
   }
   else
@@ -470,11 +378,11 @@ int get_f(FILE *fp, int prompt, char *tag, Real *value) {
       return 1;
 
 #if PRECISION == 1
-    s = fscanf(fp,"%e",value);
+    s = fscanf(fp, "%e", value);
 #else
-    s = fscanf(fp,"%le",value);
+    s = fscanf(fp, "%le", value);
 #endif
-    if (check_read(s,myname,tag) == 1)
+    if (check_read(s, myname, tag) == 1)
       return 1;
 
     printf("%g\n", *value);
@@ -490,22 +398,22 @@ int get_i(FILE *fp, int prompt, char *tag, int *value) {
   if (prompt) {
     s = 0;
     while (s != 1) {
-      printf("enter %s ",tag);
-      fscanf(fp,"%s",checkvalue);
-      s=sscanf(checkvalue,"%d",value);
-      if (s==EOF)return 1;
-      if (s==0)printf("Data format error.\n");
-      else printf("%s %d\n",tag,*value);
+      printf("enter %s ", tag);
+      fscanf(fp, "%s", checkvalue);
+      s=sscanf(checkvalue,"%d", value);
+      if (s == EOF) return 1;
+      if (s == 0) printf("Data format error\n");
+      else printf("%s %d\n", tag, *value);
     }
   }
   else {
     if (get_tag(fp, tag, myname) == 1)
       return 1;
 
-    s = fscanf(fp,"%d",value);
-    if (check_read(s,myname,tag) == 1)
+    s = fscanf(fp, "%d", value);
+    if (check_read(s, myname, tag) == 1)
       return 1;
-    printf("%d\n",*value);
+    printf("%d\n", *value);
   }
   return 0;
 }
@@ -522,19 +430,19 @@ int get_s(FILE *fp, int prompt, char *tag, char *value) {
   if (prompt) {
     s = 0;
     while (s != 1) {
-      printf("enter %s ",tag);
-      s=fscanf(fp,"%s",value);
-      if (s==EOF)return 1;
-      if (s==0)printf("Data format error.\n");
-      else printf("%s %s\n",tag,value);
+      printf("enter %s ", tag);
+      s = fscanf(fp, "%s", value);
+      if (s == EOF) return 1;
+      if (s == 0) printf("Data format error\n");
+      else printf("%s %s\n", tag, value);
     }
   }
   else {
-    if (get_tag(fp, tag, myname) == 1)return 1;
+    if (get_tag(fp, tag, myname) == 1) return 1;
 
-    s = fscanf(fp,"%s",value);
-    if (check_read(s,myname,tag) == 1)return 1;
-    printf("%s\n",value);
+    s = fscanf(fp, "%s", value);
+    if (check_read(s, myname, tag) == 1) return 1;
+    printf("%s\n", value);
   }
   return 0;
 }
@@ -545,29 +453,29 @@ int get_s(FILE *fp, int prompt, char *tag, char *value) {
 // -----------------------------------------------------------------
 // Read a vector of integers
 int get_vi(FILE* fp, int prompt, char *tag, int *value, int nvalues) {
-  int s,i;
+  int s, i;
   char myname[] = "get_vi";
 
   if (prompt) {
     s = 0;
-    printf("enter %s with %d values",tag, nvalues);
+    printf("enter %s with %d values", tag, nvalues);
     for (i = 0; i < nvalues; i++) {
       while (s != 1) {
-        printf("\n[%d] ",i);
-        s=fscanf(fp,"%d",value+i);
-        if (s==EOF)return 1;
-        if (s==0)printf("Data format error.\n");
-        printf("%s %d\n",tag,value[i]);
+        printf("\n[%d] ", i);
+        s=fscanf(fp, "%d", value + i);
+        if (s == EOF) return 1;
+        if (s == 0) printf("Data format error\n");
+        printf("%s %d\n", tag, value[i]);
       }
     }
   }
   else {
-    if (get_tag(fp, tag, myname) == 1)return 1;
+    if (get_tag(fp, tag, myname) == 1) return 1;
 
     for (i = 0; i < nvalues; i++) {
-      s = fscanf(fp,"%d",value + i);
-      if (check_read(s,myname,tag) == 1)return 1;
-      printf("%d ",value[i]);
+      s = fscanf(fp, "%d", value + i);
+      if (check_read(s, myname, tag) == 1) return 1;
+      printf("%d ", value[i]);
     }
     printf("\n");
   }
@@ -597,9 +505,9 @@ int get_vf(FILE* fp, int prompt, char *tag, Real *value, int nvalues) {
         if (s == EOF)
           return 1;
         if (s == 0)
-          printf("Data format error.\n");
+          printf("Data format error\n");
 
-        printf("%s %g\n",tag,*(value+i));
+        printf("%s %g\n", tag, *(value + i));
       }
     }
   }
@@ -636,18 +544,18 @@ int get_prompt(FILE *fp, int *prompt) {
   char myname[] = "get_prompt";
 
   *prompt = -1;
-  printf("type 0 for no prompts  or 1 for prompts\n");
+  printf("type 0 for no prompts or 1 for prompts\n");
   while (1) {
-    status = fscanf(fp, "%s",initial_prompt);
+    status = fscanf(fp, "%s", initial_prompt);
     if (status != 1) {
-      printf("\n%s: Can't read input\n",myname);
+      printf("\n%s: Can't read input\n", myname);
       terminate(1);
     }
-    if (strchr(initial_prompt,'#')==NULL)break;
-    /* Provide for comment lines with # before "prompt" */
+    if (strchr(initial_prompt,'#') == NULL) break;
+    // Provide for comment lines with # before "prompt"
     else {
-      printf("%s",initial_prompt);
-      if (fgets(initial_prompt,512,fp) == NULL) {
+      printf("%s", initial_prompt);
+      if (fgets(initial_prompt, 512, fp) == NULL) {
         printf("%s(%d) EOF on input.\n", myname, this_node);
         return 1;
       }

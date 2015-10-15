@@ -2,11 +2,7 @@
 // Main procedure for N=4 SYM lattice printing
 #define CONTROL
 #include "susy_includes.h"
-// -----------------------------------------------------------------
 
-
-
-// -----------------------------------------------------------------
 int main(int argc, char *argv[]) {
   int prompt, s, x, y, z, t, mu, i, j;
   Real re, im;
@@ -34,31 +30,6 @@ int main(int argc, char *argv[]) {
   // Serial code!
   if (this_node != 0) {
     node0_printf("ERROR: run this thing in serial!\n");
-    terminate(1);
-  }
-
-  // Optionally gauge fix to Coulomb gauge
-  if (fixflag == COULOMB_GAUGE_FIX) {
-    d_plaquette(&dssplaq, &dstplaq);    // To be printed below
-    node0_printf("Fixing to Coulomb gauge...\n");
-    double gtime = -dclock();
-
-    // Gauge fixing arguments explained in generic/gaugefix.c
-    // With first argument outside XUP, ..., TUP,
-    // first four links are included in gauge-fixing condition
-    gaugefix(TUP, 1.5, 5000, GAUGE_FIX_TOL, -1, -1);
-    gtime += dclock();
-    node0_printf("GFIX time = %.4g seconds\n", gtime);
-    node0_printf("BEFORE %.8g %.8g\n", dssplaq, dstplaq);
-    d_plaquette(&dssplaq, &dstplaq);
-    node0_printf("AFTER  %.8g %.8g\n", dssplaq, dstplaq);
-  }
-  else if (fixflag == NO_GAUGE_FIX) { // Braces suppress compiler warning
-    node0_printf("Gauge fixing skipped\n");
-  }
-  else {
-    node0_printf("ERROR: only COULOMB_GAUGE_FIX ");
-    node0_printf("and NO_GAUGE_FIX supported\n");
     terminate(1);
   }
 
