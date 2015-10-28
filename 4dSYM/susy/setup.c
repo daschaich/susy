@@ -14,7 +14,7 @@ params par_buf;
 // -----------------------------------------------------------------
 // On node zero, read lattice size and seed, and send to others
 int initial_set() {
-  int prompt, status;
+  int prompt = 0, status = 0;
   if (mynode() == 0) {
     // Print banner
     // stringification kludge from GNU preprocessor manual

@@ -229,7 +229,7 @@ int ask_ending_lattice(FILE *fp, int prompt, int *flag, char *filename) {
     printf("\n");
   }
   else {
-    printf("is not a save lattice command. INPUT ERROR\n");
+    printf(" is not a save lattice command. INPUT ERROR\n");
     return 1;
   }
 
