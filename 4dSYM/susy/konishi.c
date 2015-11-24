@@ -15,8 +15,8 @@ void compute_Ba() {
   register int i;
   register site *s;
   int a, b, j, k;
-  complex tc;
   Real tr;
+  complex tc;
   su3_matrix_f tmat;
 
   FORALLSITES(i, s) {

@@ -7,7 +7,8 @@
 // We diagonalize PSq = in.in^dag using LAPACK,
 // then project out its inverse square root
 void polar(su3_matrix_f *in, su3_matrix_f *u, su3_matrix_f *P) {
-  char V = 'V', U = 'U';
+  char V = 'V';     // Ask LAPACK for both eigenvalues and eigenvectors
+  char U = 'U';     // Have LAPACK store upper triangle of U.Ubar
   int row, col, Npt = NCOL, stat = 0, Nwork = 2 * NCOL;
   double *store, *work, *Rwork, *eigs;
   complex minus1 = cmplx(-1.0, 0.0);
