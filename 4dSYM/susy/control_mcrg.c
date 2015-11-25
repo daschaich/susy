@@ -103,6 +103,10 @@ int main(int argc, char *argv[]) {
   // Monitor widths of plaquette and plaquette determinant distributions
   widths();
 
+  // Monitor average, extrema and widths of scalar eigenvalues
+  scalar_eig(NODET);
+  scalar_eig(YESDET);
+
   // ---------------------------------------------------------------
   // First print unsmeared unblocked observables
   // Unsmeared unblocked Tr[Udag.U] / N and its width

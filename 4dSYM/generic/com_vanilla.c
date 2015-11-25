@@ -45,27 +45,27 @@
    declare_gather_field() Create a message tag that defines specific
                             details of a gather from field to be used later
    prepare_gather()       Optional call that allocates buffers for a previously
-                           declared gather.  Will automatically be called from
-                           do_gather() if not done before.
-   do_gather()           executes a previously declared gather
-   wait_gather()         waits for receives to finish, insuring that the
-                           data has actually arrived.
-   cleanup_gather()      frees all the buffers that were allocated, WHICH
-                           MEANS THAT THE GATHERED DATA MAY SOON DISAPPEAR.
-   accumulate_gather()   combines gathers into single message tag
-   declare_accumulate_gather_site()  does declare_gather_site() and
-                            accumulate_gather() in single step.
-   declare_accumulate_gather_field()  does declare_gather_field() and
-                                           accumulate_gather() in single step.
-   start_gather_site()        older function which does declare/prepare/do_gather
+                            declared gather.  Will automatically be called from
+                            do_gather() if not done before
+   do_gather()            Execute a previously declared gather
+   wait_gather()          Wait for receives to finish, insuring that the
+                            data has actually arrived
+   cleanup_gather()       Free all the buffers that were allocated, WHICH
+                            MEANS THAT THE GATHERED DATA MAY SOON DISAPPEAR
+   accumulate_gather()    Combine gathers into single message tag
+   declare_accumulate_gather_site()   Do declare_gather_site() and
+                                      accumulate_gather() in single step
+   declare_accumulate_gather_field()  Do declare_gather_field() and
+                                      accumulate_gather() in single step
+   start_gather_site()    Older function which does declare/prepare/do_gather
                            in a single step
-   start_gather_field()  older function which does
-                               declare_gather_field/prepare_gather/do_gather
+   start_gather_field()   Older function which does
+                               declare/prepare/do_gather_field
    start_general_gather_site()  starts asynchronous sends and receives required
                              to gather fields at arbitrary displacement.
    start_general_gather_field() starts asynchronous sends and receives
-                             required to gather neighbors from a temporary
-           array of fields
+                             required to gather neighbors from an
+                                array of fields
    wait_general_gather()   waits for receives to finish, insuring that the
                              data has actually arrived, and sets pointers to
            received data.
@@ -178,7 +178,7 @@ void g_floatsum(Real *fpt) {
 }
 
 // Sum a vector of Reals over all nodes
-void g_vecfloatsum(Real *fpt, int nReals) {
+void g_vecfloatsum(Real *fpt, int length) {
 }
 
 // Sum double over all nodes
@@ -294,8 +294,8 @@ double dclock_cpu() {
 #include <sys/time.h>
 double dclock() {
   struct timeval tp;
-  gettimeofday(&tp,NULL);
-  return ((double) tp.tv_sec + (double) tp.tv_usec * 1.e-6);
+  gettimeofday(&tp, NULL);
+  return ((double)tp.tv_sec + (double)tp.tv_usec * 1.e-6);
 }
 #else
 double dclock() {
@@ -328,11 +328,12 @@ void sort_eight_gathers(int index) {
     memcpy(&tt[i], &gather_array[index + i], sizeof(gather_t));
   for (i = XUP; i <= TUP; i++) {
     memcpy(&gather_array[index + i], &tt[2 * i], sizeof(gather_t));
-    memcpy(&gather_array[index + OPP_DIR(i)], &tt[2 * i + 1], sizeof(gather_t));
+    memcpy(&gather_array[index + OPP_DIR(i)],
+           &tt[2 * i + 1], sizeof(gather_t));
   }
 }
 
-// Utility function for finding coordinates of neighbor
+// Find coordinates of neighbor
 // Used by make_gather for nearest neighbor gathers
 static void neighbor_coords_special(
   int x, int y, int z, int t,       /* coordinates of site */
@@ -374,7 +375,7 @@ void make_nn_gathers() {
   gather_array_len = 8;
   gather_array = malloc(gather_array_len * sizeof(*gather_array));
   if (gather_array == NULL) {
-    printf("error: not enough room for gather_array in make_nn_gathers\n");
+    printf("make_nn_gathers: node%d can't malloc gather_array\n", this_node);
     terminate(1);
   }
 
@@ -440,7 +441,7 @@ int make_gather(
   if (inverse == WANT_INVERSE) {
     dir = n_gathers - 2;  // Index of gather we are working on
     gather_array[dir].neighbor = malloc(sites_on_node * sizeof(int));
-    if (gather_array[dir].neighbor==NULL) {
+    if (gather_array[dir].neighbor == NULL) {
       printf("make_gather: node%d no room for neighbor vector\n", this_node);
       terminate(1);
     }
@@ -621,9 +622,10 @@ msg_tag* declare_strided_gather(
     }
   }
   else {
-    FORSOMEPARITY(i,s,subl) { if (gt->neighbor[i] != NOWHERE) {
-      dest[i] = (char *)field + gt->neighbor[i]*stride;
-    }}
+    FORSOMEPARITY(i, s, subl) {
+      if (gt->neighbor[i] != NOWHERE)
+        dest[i] = (char *)field + gt->neighbor[i] * stride;
+    }
   }
   return NULL;
 }
@@ -663,7 +665,7 @@ msg_tag* declare_gather_site(
          index, parity, dest);
 }
 
-// Old style gather routine which declares and starts in one call
+// Old style gather routine: declare and start in one call
 msg_tag* start_gather_site(
   field_offset field, /* which field? Some member of structure "site" */
   int size,   /* size in bytes of the field (eg sizeof(su3_vector))*/
@@ -688,7 +690,7 @@ msg_tag* start_gather_site(
 
 // -----------------------------------------------------------------
 // Gather routines from an array of fields
-// Declares a gather from an array of fields
+// Declare a gather from an array of fields
 msg_tag* declare_gather_field(
   void *field,   /* which field? Pointer returned by malloc() */
   int size,   /* size in bytes of the field (eg sizeof(su3_vector))*/
@@ -701,7 +703,7 @@ msg_tag* declare_gather_field(
   return declare_strided_gather(field, size, size, index, parity, dest);
 }
 
-// Old style gather routine which declares and starts in one call
+// Old style gather routine: declare and start in one call
 msg_tag* start_gather_field(
   void *field,   /* which field? Pointer returned by malloc() */
   int size,   /* size in bytes of the field (eg sizeof(su3_vector))*/
@@ -763,9 +765,9 @@ msg_tag* start_gather_field(
 
    mtag = NULL;
    declare_accumulate_gather_site(&mtag, F_OFFSET(phi), sizeof(su3_vector),
-                              XUP, EVEN, gen_pt1);
+                                  XUP, EVEN, gen_pt1);
    declare_accumulate_gather_site(&mtag, F_OFFSET(phi), sizeof(su3_vector),
-                              XDOWN, EVEN, gen_pt2);
+                                  XDOWN, EVEN, gen_pt2);
    prepare_gather(mtag);  ** optional **
    do_gather(mtag);
    wait_gather(mtag);
@@ -774,10 +776,10 @@ msg_tag* start_gather_field(
    wait_gather(mtag);
    cleanup_gather(mtag);
 
- one coule also replace
+ one could also replace
    mtag = NULL;
    declare_accumulate_gather_site(&mtag, F_OFFSET(phi), sizeof(su3_vector),
-                              XUP,EVEN, gen_pt1);
+                                  XUP, EVEN, gen_pt1);
  with
    mtag = declare_gather_site(F_OFFSET(phi), sizeof(su3_vector), XUP,
                     EVEN, gen_pt1);
@@ -789,8 +791,7 @@ msg_tag* start_gather_field(
 void accumulate_gather(msg_tag **mmtag, msg_tag *mtag) {
 }
 
-// Declare and merge gather
-// Handle both the site structure and an array of fields
+// Declare and merge gather, handling both site structure and array of fields
 static void declare_accumulate_strided_gather(
   msg_tag **mmtag,      /* tag to accumulate gather into */
   void *field,          /* which field? Some member of structure "site" */

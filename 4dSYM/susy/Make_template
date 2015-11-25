@@ -49,6 +49,7 @@ MY_OBJECTS = setup.o        \
              action.o       \
              plaq.o         \
              ploop.o        \
+             scalar_eig.o   \
              link_trace.o   \
              widths.o       \
              determinant.o  \
@@ -107,6 +108,7 @@ ${OBJECTS} : ${HEADERS} ${LASTMAKE} ${ALL_MAKES}
 susy_hmc::
 	${MAKE} -f ${MAKEFILE} target "MYTARGET= $@" \
 	"DEFINES = ${DEFINES} -DPHI_ALGORITHM -DHMC_ALGORITHM " \
+	"LAPACK = -llapack -lblas " \
 	"EXTRA_OBJECTS = control.o update_o.o update_h.o setup_rhmc.o det_force.o "
 
 susy_meas::

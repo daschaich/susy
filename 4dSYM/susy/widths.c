@@ -65,6 +65,7 @@ void widths() {
   g_doublesum(&imSq);
 
   // Now compute and print square root of variances
+  // Format: WIDTHS plaq re im
   plaq /= norm;
   plaqSq /= norm;
   re /= norm;

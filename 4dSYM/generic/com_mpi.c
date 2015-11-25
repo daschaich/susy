@@ -327,11 +327,11 @@ void g_floatsum(Real *fpt) {
 
 // Sum a vector of Reals over all nodes
 void g_vecfloatsum(Real *fpt, int length) {
-  Real *work;
   int i;
-  work = (Real *)malloc(length*sizeof(Real));
+  Real *work = malloc(length * sizeof(*work));
   MPI_Allreduce(fpt, work, length, OUR_MPI_REAL, MPI_SUM, MPI_COMM_WORLD);
-  for (i = 0; i<length; i++) fpt[i] = work[i];
+  for (i = 0; i<length; i++)
+    fpt[i] = work[i];
   free(work);
 }
 
@@ -343,29 +343,29 @@ void g_doublesum(double *dpt) {
 }
 
 // Sum a vector of doubles over all nodes
-void g_vecdoublesum(double *dpt, int ndoubles) {
-  double *work;
+void g_vecdoublesum(double *dpt, int length) {
   int i;
-  work = (double *)malloc(ndoubles*sizeof(double));
-  MPI_Allreduce(dpt, work, ndoubles, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-  for (i = 0; i < ndoubles; i++) dpt[i] = work[i];
+  double *work = malloc(length * sizeof(*work));
+  MPI_Allreduce(dpt, work, length, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+  for (i = 0; i < length; i++)
+    dpt[i] = work[i];
   free(work);
 }
 
-// Sum the generic precision complex type over all nodes
+// Sum complex over all nodes
 void g_complexsum(complex *cpt) {
   complex work;
   MPI_Allreduce(cpt, &work, 2, OUR_MPI_REAL, MPI_SUM, MPI_COMM_WORLD);
   *cpt = work;
 }
 
-// Sum a vector of the generic precision complex type over all nodes
-void g_veccomplexsum(complex *cpt, int ncomplex) {
-  complex *work;
+// Sum a vector of complex over all nodes
+void g_veccomplexsum(complex *cpt, int length) {
   int i;
-  work = (complex *)malloc(ncomplex*sizeof(complex));
-  MPI_Allreduce(cpt, work, 2*ncomplex, OUR_MPI_REAL, MPI_SUM, MPI_COMM_WORLD);
-  for (i = 0; i < ncomplex; i++) cpt[i] = work[i];
+  complex *work = malloc(length * sizeof(*work));
+  MPI_Allreduce(cpt, work, 2 * length, OUR_MPI_REAL, MPI_SUM, MPI_COMM_WORLD);
+  for (i = 0; i < length; i++)
+    cpt[i] = work[i];
   free(work);
 }
 
@@ -377,12 +377,12 @@ void g_dcomplexsum(double_complex *cpt) {
 }
 
 // Sum a vector of double_complex over all nodes
-void g_vecdcomplexsum(double_complex *cpt, int ncomplex) {
-  double_complex *work;
+void g_vecdcomplexsum(double_complex *cpt, int length) {
   int i;
-  work = (double_complex *)malloc(ncomplex*sizeof(double_complex));
-  MPI_Allreduce(cpt, work, 2*ncomplex, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-  for (i = 0; i < ncomplex; i++) cpt[i] = work[i];
+  double_complex *work = malloc(length * sizeof(*work));
+  MPI_Allreduce(cpt, work, 2 * length, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+  for (i = 0; i < length; i++)
+    cpt[i] = work[i];
   free(work);
 }
 // -----------------------------------------------------------------
@@ -396,10 +396,10 @@ void g_xor32(u_int32type *pt) {
   u_int32type work;
 #ifdef SHORT_IS_32BIT
   MPI_Allreduce(pt, &work, 1, MPI_UNSIGNED_SHORT,
-     MPI_BXOR, MPI_COMM_WORLD);
+                MPI_BXOR, MPI_COMM_WORLD);
 #else
   MPI_Allreduce(pt, &work, 1, MPI_UNSIGNED,
-     MPI_BXOR, MPI_COMM_WORLD);
+                MPI_BXOR, MPI_COMM_WORLD);
 #endif
   *pt = work;
 }

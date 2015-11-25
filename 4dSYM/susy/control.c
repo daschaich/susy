@@ -147,6 +147,10 @@ int main(int argc, char *argv[]) {
       // Monitor widths of plaquette and plaquette determinant distributions
       widths();
 
+      // Monitor average, extrema and widths of scalar eigenvalues
+      scalar_eig(NODET);
+      scalar_eig(YESDET);
+
 #ifdef PL_CORR
       // Polyakov loop correlator
       // Compute ploop_corr and take the absolute square of its FFT

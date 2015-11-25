@@ -36,10 +36,8 @@ void polar(su3_matrix_f *in, su3_matrix_f *u, su3_matrix_f *P) {
   // Check for degenerate eigenvalues (broke previous Jacobi algorithm)
   for (row = 0; row < NCOL; row++) {
     for (col = row + 1; col < NCOL; col++) {
-      if (fabs(eigs[row] - eigs[col]) < IMAG_TOL) {
-        printf("WARNING: w[%d] = w[%d] = %.8g\n",
-               row, col, Pinv.e[row][row].real);
-      }
+      if (fabs(eigs[row] - eigs[col]) < IMAG_TOL)
+        printf("WARNING: w[%d] = w[%d] = %.8g\n", row, col, eigs[row]);
     }
   }
 

@@ -50,9 +50,14 @@ void ranmom();
 int grsource(Twist_Fermion *source);
 
 // Basic observables
+// Uncomment PLAQ_DIST in local_plaquette to print all plaquettes in serial
 void plaquette(double *ss_plaq, double *st_plaq);
 void local_plaquette(double *ss_plaq, double *st_plaq);
 complex ploop(double *plpMod);
+
+// Scalar eigenvalues: averages, extrema and width
+// Uncomment SCALAR_EIG_DIST to print all eigenvalues in serial
+void scalar_eig(int project);
 
 // Action routines
 double action(Twist_Fermion **source, Twist_Fermion ***sol);
