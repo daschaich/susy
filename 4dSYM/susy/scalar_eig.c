@@ -2,7 +2,6 @@
 // Average and extremal eigenvalues of traceless part of U.Ubar
 // Use LAPACK for arbitrary NCOL
 // Note two-color trace subtraction --> +/- eigenvalue pairs
-// TODO: Add polar field...
 
 // #define SCALAR_EIG_DIST prints out all eigenvalues for plotting distribution
 // CAUTION: Do not run PLAQ_DIST with MPI!
