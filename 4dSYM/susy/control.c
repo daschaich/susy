@@ -95,7 +95,7 @@ int main(int argc, char *argv[]) {
 
     // Polyakov loop and plaquette measurements
     // Format: GMES Re(Polyakov) Im(Poyakov) cg_iters ss_plaq st_plaq
-    plp = ploop(&plpMod);
+    plp = ploop(TUP, NODET, &plpMod);
     plaquette(&ss_plaq, &st_plaq);
     node0_printf("GMES %.8g %.8g %d %.8g %.8g ",
                  plp.real, plp.imag, s_iters, ss_plaq, st_plaq);
@@ -106,6 +106,29 @@ int main(int argc, char *argv[]) {
     node0_printf("%.8g ", ss_plaq / (double)volume);
     node0_printf("%.8g\n", plpMod);
     node0_printf("BACTION %.8g\n", ss_plaq / (double)volume);
+
+    // Full and polar-projected Wilson lines in all five basis dirs
+    node0_printf("LINES      ");
+    for (dir = XUP; dir < NUMLINK; dir++) {
+      plp = ploop(dir, NODET, &plpMod);
+      node0_printf(" %.6g %.6g", plp.real, plp.imag);
+    }
+    node0_printf("\nLINES_POLAR");
+    for (dir = XUP; dir < NUMLINK; dir++) {
+      plp = ploop(dir, YESDET, &plpMod);
+      node0_printf(" %.6g %.6g", plp.real, plp.imag);
+    }
+    node0_printf("\n");
+
+    // Plaquette determinant
+    measure_det();
+
+    // Monitor widths of plaquette and plaquette determinant distributions
+    widths();
+
+    // Monitor average, extrema and widths of scalar eigenvalues
+    scalar_eig(NODET);
+    scalar_eig(YESDET);
 
     // Less frequent measurements every "propinterval" trajectories
     if ((traj_done % propinterval) == (propinterval - 1)) {
@@ -140,16 +163,6 @@ int main(int argc, char *argv[]) {
       local_plaquette(&ss_plaq, &st_plaq);      // Prints out MIN_PLAQ
       node0_printf(" %.8g %.8g\n", ss_plaq, st_plaq);
 #endif
-
-      // Plaquette determinant
-      measure_det();
-
-      // Monitor widths of plaquette and plaquette determinant distributions
-      widths();
-
-      // Monitor average, extrema and widths of scalar eigenvalues
-      scalar_eig(NODET);
-      scalar_eig(YESDET);
 
 #ifdef PL_CORR
       // Polyakov loop correlator

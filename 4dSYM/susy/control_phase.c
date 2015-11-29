@@ -47,8 +47,6 @@ int main(int argc, char *argv[]) {
 
   // Do "local" measurements to check configuration
   // Polyakov loop measurement
-  plp = ploop(&plpMod);
-
   // Tr[Udag.U] / N
   linktr_ave = link_trace(linktr, &linktr_width,
                           link_det, &det_ave, &det_width);
@@ -63,7 +61,7 @@ int main(int argc, char *argv[]) {
 
   // Polyakov loop and plaquette measurements
   // Format: GMES Re(Polyakov) Im(Poyakov) cg_iters ss_plaq st_plaq
-  plp = ploop(&plpMod);
+  plp = ploop(TUP, NODET, &plpMod);
   plaquette(&ss_plaq, &st_plaq);
   node0_printf("GMES %.8g %.8g 0 %.8g %.8g ",
                plp.real, plp.imag, ss_plaq, st_plaq);

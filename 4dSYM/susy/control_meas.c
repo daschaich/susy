@@ -85,7 +85,7 @@ int main(int argc, char *argv[]) {
 
   // Polyakov loop and plaquette measurements
   // Format: GMES Re(Polyakov) Im(Poyakov) cg_iters ss_plaq st_plaq
-  plp = ploop(&plpMod);
+  plp = ploop(TUP, NODET, &plpMod);
   plaquette(&ss_plaq, &st_plaq);
   node0_printf("GMES %.8g %.8g 0 %.8g %.8g ",
                plp.real, plp.imag, ss_plaq, st_plaq);
@@ -97,6 +97,19 @@ int main(int argc, char *argv[]) {
   node0_printf("%.8g ", ss_plaq);
   node0_printf("%.8g\n", plpMod);
   node0_printf("BACTION %.8g\n", ss_plaq);
+
+  // Full and polar-projected Wilson lines in all five basis dirs
+  node0_printf("LINES      ");
+  for (dir = XUP; dir < NUMLINK; dir++) {
+    plp = ploop(dir, NODET, &plpMod);
+    node0_printf(" %.6g %.6g", plp.real, plp.imag);
+  }
+  node0_printf("\nLINES_POLAR");
+  for (dir = XUP; dir < NUMLINK; dir++) {
+    plp = ploop(dir, YESDET, &plpMod);
+    node0_printf(" %.6g %.6g", plp.real, plp.imag);
+  }
+  node0_printf("\n");
 
 #ifdef SMEAR
   // Optionally smear before main measurements

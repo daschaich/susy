@@ -1,5 +1,5 @@
 // -----------------------------------------------------------------
-// Average and extremal eigenvalues of traceless part of U.Ubar
+// Average and extremal scalar eigenvalues, and widths of distributions
 // Use LAPACK for arbitrary NCOL
 // Note two-color trace subtraction --> +/- eigenvalue pairs
 
@@ -9,6 +9,8 @@
 //#define SCALAR_EIG_DIST
 #include "susy_includes.h"
 
+// project == 1 tells us to consider scalar fields from polar decomposition
+// rather than scalar fields from the U.Ubar product
 void scalar_eig(int project) {
   register int i, dir;
   register site *s;
