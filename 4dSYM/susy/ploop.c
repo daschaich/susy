@@ -9,7 +9,7 @@ complex ploop(int dir, int project, double *plpMod) {
   register int i;
   register site *s;
   int j, t, len = nt;
-  double norm = (double)(nx * ny * nz);
+  double norm = 0.0;
   complex sum  = cmplx(0.0, 0.0), plp;
   su3_matrix_f tmat, tmat2;
 
@@ -23,15 +23,27 @@ complex ploop(int dir, int project, double *plpMod) {
     }
   }
 
-  FORALLSITES(i, s)
-    su3mat_copy_f(&(s->linkf[dir]), &(tempmat1[i]));
-
   switch(dir) {
-    case XUP:   len = nx; break;
-    case YUP:   len = ny; break;
-    case ZUP:   len = nz; break;
-    case TUP:   len = nt; break;
-    case DIR_5: len = nt; break;
+    case XUP:
+      len = nx;
+      norm = (double)(nt * ny * nz);
+      break;
+    case YUP:
+      len = ny;
+      norm = (double)(nx * nt * nz);
+      break;
+    case ZUP:
+      len = nz;
+      norm = (double)(nx * ny * nt);
+      break;
+    case TUP:
+      len = nt;
+      norm = (double)(nx * ny * nz);
+      break;
+    case DIR_5:
+      len = nt;
+      norm = (double)(nx * ny * nz);
+      break;
     default:
       printf("ploop: unrecognized direction %d\n", dir);
       fflush(stdout);
@@ -60,6 +72,9 @@ complex ploop(int dir, int project, double *plpMod) {
   }
 
   // Compute line by steadily shifting links to hyperplane 0
+  FORALLSITES(i, s)
+    su3mat_copy_f(&(s->linkf[dir]), &(tempmat1[i]));
+
   for (t = 1; t < len; t++) {
     shiftmat(tempmat1, tempmat2, goffset[dir]);
     FORALLSITES(i, s) {
