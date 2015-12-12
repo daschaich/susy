@@ -111,9 +111,9 @@ void scalar_eig(int project) {
   for (j = 0; j < NCOL; j++) {
     width = sqrt(sq_eigs[j] - ave_eigs[j] * ave_eigs[j]);
     if (project == 1)
-      printf("POLAR_EIG ");
+      node0_printf("POLAR_EIG ");
     else
-      printf("UUBAR_EIG ");
+      node0_printf("UUBAR_EIG ");
     node0_printf("%d %.6g %.6g %.6g %.6g\n",
                  j, ave_eigs[j], width, min_eigs[j], max_eigs[j]);
   }
