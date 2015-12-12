@@ -8,7 +8,7 @@
 complex ploop(int dir, int project, double *plpMod) {
   register int i;
   register site *s;
-  int t, len = nt;
+  int j, t, len = nt;
   double norm = (double)(nx * ny * nz);
   complex sum  = cmplx(0.0, 0.0), plp;
   su3_matrix_f tmat, tmat2;
@@ -38,10 +38,39 @@ complex ploop(int dir, int project, double *plpMod) {
       terminate(1);
   }
 
+  // Special case: len == 1
+  if (len == 1) {
+    *plpMod = 0.0;
+    FORALLSITES(i, s) {
+      plp = trace_su3_f(&(s->linkf[dir]));
+      CSUM(sum, plp);
+      *plpMod += cabs(&plp);
+    }
+    g_complexsum(&sum);
+    g_doublesum(plpMod);
+    CDIVREAL(sum, norm, sum);
+    *plpMod /= norm;
+
+    if (project == 1) {       // Reset original links
+      FORALLSITES(i, s)
+        su3mat_copy_f(&(DmuUmu[i]), &(s->linkf[dir]));
+    }
+
+    return sum;
+  }
+
+  // Compute line by steadily shifting links to hyperplane 0
   for (t = 1; t < len; t++) {
     shiftmat(tempmat1, tempmat2, goffset[dir]);
     FORALLSITES(i, s) {
-      if (s->t != 0)
+      j = s->x;
+      switch(dir) {
+        case YUP:   j = s->y; break;
+        case ZUP:   j = s->z; break;
+        case TUP:   j = s->t; break;
+        case DIR_5: j = s->t; break;
+      }
+      if (j != 0)
         continue;
 
       if (t == 1)
@@ -55,7 +84,14 @@ complex ploop(int dir, int project, double *plpMod) {
 
   *plpMod = 0.0;
   FORALLSITES(i, s) {
-    if (s->t != 0)
+    j = s->x;
+    switch(dir) {
+      case YUP:   j = s->y; break;
+      case ZUP:   j = s->z; break;
+      case TUP:   j = s->t; break;
+      case DIR_5: j = s->t; break;
+    }
+    if (j != 0)
       continue;
 
     plp = trace_su3_f(&(staple[i]));
