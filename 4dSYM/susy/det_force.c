@@ -91,7 +91,16 @@ double det_force(Real eps) {
 
     // Now update momenta
     FORALLSITES(i, s) {
+#if (NCOL == 2 || NCOL == 3 || NCOL == 4)
       adjugate(&(s->linkf[dir1]), &dlink);
+#endif
+#if (NCOL > 4)
+      // Determine adjugate as determinant times inverse
+      // Checked that this produces the correct results for NCOL <= 4
+      invert(&(s->linkf[dir1]), &tmat);
+      linkf_det = find_det(&(s->linkf[dir1]));
+      c_scalar_mult_su3mat_f(&tmat, &linkf_det, &dlink);
+#endif
       c_scalar_mult_su3mat_f(&dlink, &(force[i]), &tmat);
       su3_adjoint_f(&tmat, &(s->f_U[dir1]));
       /* and update the momentum from the gauge force --

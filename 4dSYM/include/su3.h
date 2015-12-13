@@ -26,11 +26,6 @@
 //#define NCOL 4
 //#define DIMF 16
 
-// Restrictions due to anti_hermitian structs
-#if (NCOL > 4)
-  #error "NCOL must be <5!"
-#endif
-
 #if (NCOL!=3 || DIMF!=3)
 #ifdef FAST
   #error "FAST only works if NCOL=DIMF=3!"

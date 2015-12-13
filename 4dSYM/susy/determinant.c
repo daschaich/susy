@@ -6,6 +6,29 @@
 
 
 // -----------------------------------------------------------------
+// Use LAPACK for more than 4 colors
+#if (NCOL > 4)
+// Compute LU decomposition of a complex matrix
+// http://www.physics.orst.edu/~rubin/nacphy/lapack/routines/zgetrf.html
+// First and second arguments are the dimensions of the matrix
+// Third argument is the LU-decomposed matrix
+// Fourth argument is the
+// Fifth argument is the LU decomposition pivot matrix
+// Final argument reports success or information about failure
+void zgetrf_(int *N1, int *N2, double *store, int *lda, int *ipiv, int *stat);
+
+// Invert a complex matrix given its LU decomposition
+// http://www.physics.orst.edu/~rubin/nacphy/lapack/routines/zgetri.html
+// First four and last arguments are defined above
+// Fifth argument is real workspace of size given by the sixth argument
+void zgetri_(int *N, double *store, int *lda, int *ipiv,
+             double *work, int *Nwork, int* stat);
+#endif
+// -----------------------------------------------------------------
+
+
+
+// -----------------------------------------------------------------
 // LU decomposition based on Numerical Recipes
 void ludcmp_cx(su3_matrix_f *a, int *indx, Real *d) {
   int i, imax, j, k;
@@ -82,9 +105,6 @@ void ludcmp_cx(su3_matrix_f *a, int *indx, Real *d) {
 complex find_det(su3_matrix_f *Q) {
   complex det;
 
-#if (NCOL == 1)
-  det = Q->e[0][0];
-#endif
 #if (NCOL == 2)
   complex det2;
 
@@ -162,7 +182,7 @@ complex cofactor(su3_matrix_f *src, int row, int col) {
   CSUM(cof, sav);
 #endif
 #if (NCOL > 4)
-  node0_printf("Haven't coded cofactor for more than 4 colors\n");
+  node0_printf("Should not be calling cofactor with more than 4 colors\n");
   terminate(1);
 #endif
   return cof;
@@ -174,9 +194,6 @@ complex cofactor(su3_matrix_f *src, int row, int col) {
 // -----------------------------------------------------------------
 // Transpose of the cofactor matrix
 void adjugate(su3_matrix_f *src, su3_matrix_f *dest) {
-#if (NCOL == 1)
-  dest->e[0][0] = cmplx(1.0, 0.0);
-#endif
 #if (NCOL == 2)
   dest->e[0][0] = src->e[1][1];
   dest->e[1][1] = src->e[0][0];
@@ -197,7 +214,7 @@ void adjugate(su3_matrix_f *src, su3_matrix_f *dest) {
   }
 #endif
 #if (NCOL > 4)
-  node0_printf("Haven't coded adjugate for more than 4 colors\n");
+  node0_printf("Should not be calling adjugate with more than 4 colors\n");
   exit(1);
 #endif
 }
@@ -209,11 +226,6 @@ void adjugate(su3_matrix_f *src, su3_matrix_f *dest) {
 // Compute link matrix inverse as adjugate matrix
 // normalized by the determinant
 void invert(su3_matrix_f *in, su3_matrix_f *out) {
-#if (NCOL == 1)
-  complex one = cmplx(1.0, 0.0);
-  CDIV(one, in->e[0][0], out->e[0][0]);
-#endif
-
 #if (NCOL == 2 || NCOL == 3 || NCOL == 4)
   int i, j;
   complex tc, det = find_det(in);
@@ -226,8 +238,42 @@ void invert(su3_matrix_f *in, su3_matrix_f *out) {
   }
 #endif
 #if (NCOL > 4)
-  node0_printf("Haven't coded invert for more than 4 colors\n");
-  exit(1);
+  // Use LAPACK for more than 4 colors
+  // Checked that this produces the correct results for NCOL <= 4
+  int row, col, Npt = NCOL, stat = 0, Nwork = 2 * NCOL, *ipiv;
+  double *store, *work;
+
+  // Allocate arrays to be used by LAPACK
+  ipiv = malloc(NCOL * sizeof(*ipiv));
+  store = malloc(2 * NCOL * NCOL * sizeof(*store));
+  work = malloc(2 * Nwork * sizeof(*work));
+
+  // Convert in to column-major double array used by LAPACK
+  for (row = 0; row < NCOL; row++) {
+    for (col = 0; col < NCOL; col++) {
+      store[2 * (col * NCOL + row)] = in->e[row][col].real;
+      store[2 * (col * NCOL + row) + 1] = in->e[row][col].imag;
+    }
+  }
+
+  // Compute LU decomposition of in
+  zgetrf_(&Npt, &Npt, store, &Npt, ipiv, &stat);
+
+  // Invert in given its LU decomposition
+  zgetri_(&Npt, store, &Npt, ipiv, work, &Nwork, &stat);
+
+  // Move the results into the su3_matrix_f structure for out
+  for (row = 0; row < NCOL; row++) {
+    for (col = 0; col < NCOL; col++) {
+      out->e[row][col].real = store[2 * (col * NCOL + row)];
+      out->e[row][col].imag = store[2 * (col * NCOL + row) + 1];
+    }
+  }
+
+  // Free arrays used by LAPACK
+  free(ipiv);
+  free(store);
+  free(work);
 #endif
 }
 // -----------------------------------------------------------------
