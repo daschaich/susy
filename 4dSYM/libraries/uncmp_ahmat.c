@@ -5,58 +5,23 @@
 #include "../include/su3.h"
 
 void uncompress_anti_hermitian(anti_hermitmat *src, su3_matrix_f *dest) {
+  int i, j, index = 0;
   Real tr;
 
-  dest->e[0][0].imag = src->m00im;
-  dest->e[0][0].real = 0.0;
-  dest->e[1][1].imag = src->m11im;
-  dest->e[1][1].real = 0.0;
-  dest->e[0][1].imag = src->m01.imag;
+  for (i = 0; i < NCOL; i++) {
+    dest->e[i][i].imag = src->im_diag[i];
+    dest->e[i][i].real = 0.0;
+  }
+  for (i = 0; i < NCOL; i++) {
+    for (j = i + 1; j < NCOL; j++) {
+      dest->e[i][j].imag = src->m[index].imag;
+      dest->e[j][i].imag = src->m[index].imag;
 
-  tr = src->m01.real;
-  dest->e[0][1].real = tr;
-  dest->e[1][0].real = -tr;
-  dest->e[1][0].imag = src->m01.imag;
-#if (NCOL > 2)
-  dest->e[2][2].imag = src->m22im;
-  dest->e[2][2].real = 0.0;
-  dest->e[0][2].imag = src->m02.imag;
-
-  tr = src->m02.real;
-  dest->e[0][2].real = tr;
-  dest->e[2][0].real = -tr;
-  dest->e[2][0].imag = src->m02.imag;
-  dest->e[1][2].imag = src->m12.imag;
-
-  tr = src->m12.real;
-  dest->e[1][2].real = tr;
-  dest->e[2][1].real = -tr;
-  dest->e[2][1].imag = src->m12.imag;
-#endif
-#if (NCOL > 3)
-  dest->e[3][3].imag = src->m33im;
-  dest->e[3][3].real = 0.0;
-  dest->e[0][3].imag = src->m03.imag;
-
-  tr = src->m03.real;
-  dest->e[0][3].real = tr;
-  dest->e[3][0].real = -tr;
-  dest->e[3][0].imag = src->m03.imag;
-  dest->e[1][3].imag = src->m13.imag;
-
-  tr = src->m13.real;
-  dest->e[1][3].real = tr;
-  dest->e[3][1].real = -tr;
-  dest->e[3][1].imag = src->m13.imag;
-  dest->e[2][3].imag = src->m23.imag;
-
-  tr = src->m23.real;
-  dest->e[2][3].real = tr;
-  dest->e[3][2].real = -tr;
-  dest->e[3][2].imag = src->m23.imag;
-#endif
-#if (NCOL > 4)
-  node0_printf("uncompress_anti_hermitian only works for NCOL<=4!");
-#endif
+      tr = src->m[index].real;
+      dest->e[i][j].real = tr;
+      dest->e[j][i].real = -tr;
+      index++;
+    }
+  }
 }
 // -----------------------------------------------------------------

@@ -42,20 +42,10 @@ typedef struct { fcomplex e[DIMF][DIMF]; } fsu3_matrix;
 typedef struct { fcomplex c[NCOL]; } fsu3_vector_f;
 typedef struct { fcomplex c[DIMF]; } fsu3_vector;
 
-// Anti-hermitian matrices require NCOL<=4
+// Anti-hermitian matrices for general NCOL
 typedef struct {
-#if (NCOL == 2)
-  fcomplex m01;
-  float m00im, m11im;
-#endif
-#if (NCOL == 3)
-  fcomplex m01, m02, m12;
-  float m00im, m11im, m22im;
-#endif
-#if (NCOL == 4)
-  fcomplex m01, m02, m03, m12, m13, m23;
-  float m00im, m11im, m22im, m33im;
-#endif
+  fcomplex m[NCOL * (NCOL - 1) / 2];
+  float im_diag[NCOL];
 } fanti_hermitmat;
 
 typedef struct { dcomplex e[NCOL][NCOL]; } dsu3_matrix_f;
@@ -63,18 +53,8 @@ typedef struct { dcomplex e[DIMF][DIMF]; } dsu3_matrix;
 typedef struct { dcomplex c[NCOL]; } dsu3_vector_f;
 typedef struct { dcomplex c[DIMF]; } dsu3_vector;
 typedef struct {
-#if (NCOL == 2)
-  dcomplex m01;
-  double m00im, m11im;
-#endif
-#if (NCOL == 3)
-  dcomplex m01, m02, m12;
-  double m00im, m11im, m22im;
-#endif
-#if (NCOL == 4)
-  dcomplex m01, m02, m03, m12, m13, m23;
-  double m00im, m11im, m22im, m33im;
-#endif
+  dcomplex m[NCOL * (NCOL - 1) / 2];
+  double im_diag[NCOL];
 } danti_hermitmat;
 
 #if (PRECISION==1)
@@ -185,6 +165,9 @@ void uncompress_anti_hermitian(anti_hermitmat *ah, su3_matrix_f *m);
 
 // In file cmp_ahmat.c
 void compress_anti_hermitian(su3_matrix_f *m, anti_hermitmat *ah);
+
+// In file dump_ahmat.c
+void dump_ahmat(anti_hermitmat *ahm);
 // -----------------------------------------------------------------
 
 

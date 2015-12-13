@@ -10,8 +10,8 @@ void dump_ahmat_f(su3_matrix_f *m) {
   for (i = 0; i < NCOL; i++) {
     for (j = 0; j < NCOL; j++) {
       printf("(%.4g, %.4g) ",
-             (m->e[i][j].real - m->e[j][i].real) / 2.0,
-             (m->e[i][j].imag + m->e[j][i].imag) / 2.0);
+             (m->e[i][j].real - m->e[j][i].real) * 0.5,
+             (m->e[i][j].imag + m->e[j][i].imag) * 0.5);
     }
     printf("\n");
   }
