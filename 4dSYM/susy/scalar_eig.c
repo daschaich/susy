@@ -105,9 +105,15 @@ void scalar_eig(int project) {
   // Format: SCALAR_EIG ave1 ... aveN min max width
   for (j = 0; j < NCOL; j++) {
     g_doublesum(&(ave_eigs[j]));
-    g_doublesum(&(sq_eigs[j]));
     ave_eigs[j] /= norm;
+
+    g_doublesum(&(sq_eigs[j]));
     sq_eigs[j] /= norm;
+
+    g_doublemax(&(max_eigs[j]));
+    min_eigs[j] = -min_eigs[j];
+    g_doublemax(&(min_eigs[j]));
+    min_eigs[j] = -min_eigs[j];
   }
 
   for (j = 0; j < NCOL; j++) {

@@ -22,11 +22,12 @@ static int print_dir = 0;   // Controls printing out MY_DIR
 //#define PLAQ_DIST
 #include "susy_includes.h"
 
-void local_plaquette(double *ss_plaq, double *st_plaq) {
+double local_plaquette(double *ss_plaq, double *st_plaq) {
   register int i, dir, dir2;
   register site *s;
   register su3_matrix_f *m1, *m4;
   double ss_sum = 0.0, st_sum = 0.0, cur_plaq;
+  double max_plaq = 0.0;
 #ifdef MIN_PLAQ
   double min_plaq = 200.0 * NCOL;
 #endif
@@ -77,6 +78,8 @@ void local_plaquette(double *ss_plaq, double *st_plaq) {
 #ifdef MIN_PLAQ
           if (cur_plaq < min_plaq)
             min_plaq = cur_plaq;
+          if (cur_plaq > max_plaq)
+            max_plaq = cur_plaq;
 #endif
 #ifdef PLAQ_DIST
           printf("PLAQ_DIST %d %d %d %d %d %d %.4g\n",
@@ -100,6 +103,8 @@ void local_plaquette(double *ss_plaq, double *st_plaq) {
 #ifdef MIN_PLAQ
           if (cur_plaq < min_plaq)
             min_plaq = cur_plaq;
+          if (cur_plaq > max_plaq)
+            max_plaq = cur_plaq;
 #endif
 #ifdef PLAQ_DIST
           printf("PLAQ_DIST %d %d %d %d %d %d %.4g\n",
@@ -158,10 +163,12 @@ void local_plaquette(double *ss_plaq, double *st_plaq) {
 
 #ifdef MIN_PLAQ
   // Somewhat hacky since we don't have g_doublemin...
+  g_doublemax(&max_plaq);
   min_plaq = -min_plaq;
   g_doublemax(&min_plaq);
   min_plaq = -min_plaq;
   node0_printf("MIN_PLAQ %.8g", min_plaq);
 #endif
+  return max_plaq;
 }
 // -----------------------------------------------------------------

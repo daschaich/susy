@@ -30,6 +30,10 @@ int main(int argc, char *argv[]) {
   setup_PtoP();
   setup_FQ();
 
+#ifdef SMEAR
+  double max_plaq = 0.0;
+#endif
+
 #ifdef WLOOP
   register int i;
   register site *s;
@@ -125,8 +129,8 @@ int main(int argc, char *argv[]) {
 
   // Check minimum plaquette in addition to averages
   node0_printf("BEFORE ");
-  local_plaquette(&ss_plaq, &st_plaq);      // Prints out MIN_PLAQ
-  node0_printf(" %.8g %.8g\n", ss_plaq, st_plaq);
+  max_plaq = local_plaquette(&ss_plaq, &st_plaq);     // Prints out MIN_PLAQ
+  node0_printf(" %.8g %.8g %.8g\n", ss_plaq, st_plaq, max_plaq);
 
   // Overwrite s->linkf
   if (smearflag == STOUT_SMEAR)
@@ -134,8 +138,8 @@ int main(int argc, char *argv[]) {
   else if (smearflag == APE_SMEAR)
     APE_smear(Nsmear, alpha, YESDET);
   node0_printf("AFTER  ");
-  local_plaquette(&ss_plaq, &st_plaq);      // Prints out MIN_PLAQ
-  node0_printf(" %.8g %.8g\n", ss_plaq, st_plaq);
+  max_plaq = local_plaquette(&ss_plaq, &st_plaq);      // Prints out MIN_PLAQ
+  node0_printf(" %.8g %.8g %.8g\n", ss_plaq, st_plaq, max_plaq);
 #endif
 
   // Main measurements

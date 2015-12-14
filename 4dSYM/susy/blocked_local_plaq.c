@@ -14,7 +14,7 @@ void blocked_local_plaq(int Nsmear, int block) {
   int j, stride = 1;
   double ss_sum = 0.0, st_sum = 0.0, tr;
 #ifdef MIN_PLAQ
-  double min_plaq = 200.0 * NCOL;   // To be overwritten
+  double min_plaq = 200.0 * NCOL, max_plaq = -200.0 * NCOL;
 #endif
   su3_matrix_f tmat, tmat2;
 
@@ -49,6 +49,8 @@ void blocked_local_plaq(int Nsmear, int block) {
 #ifdef MIN_PLAQ
         if (tr < min_plaq)
           min_plaq = tr;
+        if (tr > max_plaq)
+          max_plaq = tr;
 #endif
         if (dir == TUP || dir2 == TUP)
           st_sum += tr;
@@ -62,6 +64,7 @@ void blocked_local_plaq(int Nsmear, int block) {
 
 #ifdef MIN_PLAQ
   // Somewhat hacky since we don't have g_doublemin...
+  g_doublemax(&max_plaq);
   min_plaq = -min_plaq;
   g_doublemax(&min_plaq);
   min_plaq = -min_plaq;
@@ -72,6 +75,6 @@ void blocked_local_plaq(int Nsmear, int block) {
   // and six that do not
   ss_sum /= ((double)(6.0 * volume));
   st_sum /= ((double)(4.0 * volume));
-  node0_printf(" %.8g %.8g\n", ss_sum, st_sum);
+  node0_printf(" %.8g %.8g %.8g\n", ss_sum, st_sum, max_plaq);
 }
 // -----------------------------------------------------------------

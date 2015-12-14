@@ -52,7 +52,7 @@ int grsource(Twist_Fermion *source);
 // Basic observables
 // Uncomment PLAQ_DIST in local_plaquette to print all plaquettes in serial
 void plaquette(double *ss_plaq, double *st_plaq);
-void local_plaquette(double *ss_plaq, double *st_plaq);
+double local_plaquette(double *ss_plaq, double *st_plaq); // Return max plaq
 complex ploop(int dir, int project, double *plpMod);
 
 // Scalar eigenvalues: averages, extrema and width
@@ -186,7 +186,7 @@ void APE_smear(int Nsmear, double alpha, int project);
 #ifdef MCRG
 void block_mcrg(int bl);
 void blocked_plaq(int Nsmear, int bl);    // Also monitors det and widths
-void blocked_local_plaq(int Nsmear, int bl);
+void blocked_local_plaq(int Nsmear, int bl);    // Print max plaq
 void blocked_ops(int Nsmear, int bl);
 void blocked_ploop(int Nsmear, int bl);
 void blocked_rsymm(int Nsmear, int bl);
