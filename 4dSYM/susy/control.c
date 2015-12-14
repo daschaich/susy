@@ -162,7 +162,7 @@ int main(int argc, char *argv[]) {
         APE_smear(Nsmear, alpha, YESDET);
       node0_printf("AFTER  ");
       max_plaq = local_plaquette(&ss_plaq, &st_plaq);      // Prints out MIN_PLAQ
-      node0_printf(" %.8g %.8g %.8g\n", ss_plaq, st_plaq);
+      node0_printf(" %.8g %.8g %.8g\n", ss_plaq, st_plaq, max_plaq);
 #endif
 
 #ifdef PL_CORR
