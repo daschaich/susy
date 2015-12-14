@@ -104,6 +104,8 @@ void scalar_eig(int project) {
   // Print averages, extrema and square root of variance
   // Format: SCALAR_EIG ave1 ... aveN min max width
   for (j = 0; j < NCOL; j++) {
+    g_doublesum(&(ave_eigs[j]));
+    g_doublesum(&(sq_eigs[j]));
     ave_eigs[j] /= norm;
     sq_eigs[j] /= norm;
   }
