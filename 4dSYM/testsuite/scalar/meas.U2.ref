@@ -2,7 +2,7 @@ N=4 SYM, Nc = 2, DIMF = 4, fermion rep = adjoint
 Microcanonical simulation with refreshing
 Machine = Scalar processor, with 1 nodes
 Phi algorithm
-start: Sat Dec 12 13:05:08 2015
+start: Mon Dec 14 16:56:04 2015
 
 type 0 for no prompts or 1 for prompts
 nx 4
@@ -50,7 +50,7 @@ C2=1
 Restored binary gauge configuration serially from file config.U2.4444
 Time stamp Fri Apr 17 18:03:10 2015
 Checksums 2ffa97f c37b9702 OK
-Time to reload gauge configuration = 1.360080e-01
+Time to reload gauge configuration = 1.220703e-04
 CHECK PLAQ: 1.8931639183150830e+00 1.9392207138255673e+00
 CHECK NERSC LINKTR: 1.7868842204883606e-02 CKSUM: 0
 START 1.8931639 1.9392207 3.8323846 15.877752
@@ -61,8 +61,8 @@ BACTION 15.877752
 LINES       -0.172053 -0.226954 -0.305368 0.297293 -1.3433 0.370827 -0.74289 -0.689731 1.93841 -0.134011
 LINES_POLAR -0.0669568 -0.225901 0.0339666 0.073701 -1.22623 0.110968 -0.135166 -0.650379 1.77759 -0.0854113
 Doing 1 stout smearing steps with rho=0.1
-BEFORE MIN_PLAQ 0.74167347 1.8931639 1.9392207
-AFTER  MIN_PLAQ 0.91705257 2.0255753 2.0708101
+BEFORE MIN_PLAQ 0.74167347 1.8931639 1.9392207 3.4770211
+AFTER  MIN_PLAQ 0.91705257 2.0255753 2.0708101 3.569949
 DET 0.864044 -0.00150989 0.839497 0.0835779 0.194988
 WIDTHS 0.358891 0.304837 0.289095
 UUBAR_EIG 0 -0.387688 0.171247 -1.1197 -0.0403911
@@ -237,7 +237,7 @@ RSYMM 2 [4] 2 [3] 2.1541354 2.6681387
 MONOPOLE 0 0  0 0  0 0  0 0    0 0
 Fixing to Coulomb gauge...
 GFIX ended at step 89. Ave gf action 0.530119, delta 9.3e-08
-GFIX time = 0.0162 seconds
+GFIX time = 0.01593 seconds
 BEFORE 2.0255753 2.0708101
 AFTER  2.0255753 2.0708101
 hvy_pot: MAX_T = 2, MAX_X = 1 --> r < 1.41421
@@ -265,4 +265,4 @@ RUNNING COMPLETED
 CG iters for measurements: 148
 total_iters = 148
 
-Time = 2.218 seconds
+Time = 2.004 seconds

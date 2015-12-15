@@ -3,7 +3,7 @@ Microcanonical simulation with refreshing
 Machine = Scalar processor, with 1 nodes
 Hybrid Monte Carlo algorithm
 Phi algorithm
-start: Sat Dec 12 13:50:01 2015
+start: Mon Dec 14 17:42:33 2015
 
 type 0 for no prompts or 1 for prompts
 nx 4
@@ -53,7 +53,7 @@ C2=1
 Restored binary gauge configuration serially from file config.U4.4444
 Time stamp Sun Apr 19 21:34:20 2015
 Checksums 9098c02 35224501 OK
-Time to reload gauge configuration = 3.769398e-04
+Time to reload gauge configuration = 6.010532e-04
 CHECK PLAQ: 4.1503788625513707e+00 4.1297157023877400e+00
 CHECK NERSC LINKTR: -3.1120252429257533e-03 CKSUM: 0
 START 4.1503789 4.1297157 8.2800946 78.268997
@@ -125,8 +125,8 @@ POLAR_EIG 1 -0.0927338 0.0527285 -0.26691 0.0632189
 POLAR_EIG 2 0.103508 0.0518919 -0.0535827 0.25071
 POLAR_EIG 3 0.305937 0.0653677 0.143213 0.543693
 Doing 1 stout smearing steps with rho=0.1
-BEFORE MIN_PLAQ 2.8670445 4.0809893 4.0648227
-AFTER  MIN_PLAQ 3.2073264 4.3874419 4.3725665
+BEFORE MIN_PLAQ 2.8670445 4.0809893 4.0648227 5.4187321
+AFTER  MIN_PLAQ 3.2073264 4.3874419 4.3725665 5.6735013
 KONISHI 0 0 1.13085915311827 -0.007714428925804873
 KONISHI 0 1 2.292447360530731 -0.02061449171371299
 KONISHI 0 2 4.706243264828427 -0.05311178968246821
@@ -295,7 +295,7 @@ RSYMM 2 [4] 2 [3] 4.8154551 5.2141686
 MONOPOLE 0 0  0 0  0 0  0 0    0 0
 Fixing to Coulomb gauge...
 GFIX ended at step 73. Ave gf action 0.77806, delta 9.86e-08
-GFIX time = 0.1137 seconds
+GFIX time = 0.1133 seconds
 BEFORE 4.3874419 4.3725665
 AFTER  4.3874419 4.3725665
 hvy_pot: MAX_T = 2, MAX_X = 1 --> r < 1.41421
@@ -324,6 +324,6 @@ STOP 4.0809893 4.0648227 8.145812 71.200623
 Average CG iters for steps: 1750
 Average CG iters for measurements: 174
 
-Time = 1590 seconds
+Time = 1564 seconds
 total_iters = 5425
 
