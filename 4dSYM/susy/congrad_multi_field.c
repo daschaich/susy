@@ -216,7 +216,8 @@ int congrad_multi_field(Twist_Fermion *src, Twist_Fermion **psim,
       source_norm += (double)magsq_TF(&(psim[j][i]));
 
     g_doublesum(&source_norm);
-    node0_printf("Norm of psim %d shift %.4g is %.4g\n", j, shift[j], source_norm);
+    node0_printf("Norm of psim %d shift %.4g is %.4g\n",
+                 j, shift[j], source_norm);
 
     DSq(psim[j], mpm);              // mpm = (D^2 + fmass^2).psim[j]
     source_norm = 0;                // Re-using for convenience
