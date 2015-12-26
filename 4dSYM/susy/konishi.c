@@ -6,7 +6,7 @@
 
 // -----------------------------------------------------------------
 // Compute traces of three bilinears using two scalar field interpolating ops
-// Op 0 ("P") is traceless part of hermitian matrix P from polar decomposition
+// Op 0 ("P") is log of hermitian matrix P from polar decomposition
 // Op 1 ("U") is traceless part of U_a Udag_a
 // Bilin 0 is Tr[PP]
 // Bilin 1 is (Tr[UP] + Tr[PU]) / 2
@@ -22,18 +22,23 @@ void compute_Ba() {
   FORALLSITES(i, s) {
     // Construct scalar fields
     for (a = XUP; a < NUMLINK; a++) {
-      polar(&(s->linkf[a]), &tmat, &(Ba[0][a][i]));
-      mult_su3_na_f(&(s->linkf[a]), &(s->linkf[a]), &(Ba[1][a][i]));
+      // Log of hermitian part of polar decomposition
+      polar(&(s->linkf[a]), &(Ba[0][a][i]), &tmat);
+      matrix_log(&tmat, &(Ba[0][a][i]));
 
-      // Subtract traces: Both are hermitian so traces are real
-      for (j = 0; j < N_B; j++) {
+      // Traceless part of U.Udag (hermitian so trace is real)
+      mult_su3_na_f(&(s->linkf[a]), &(s->linkf[a]), &(Ba[1][a][i]));
+      tc = trace_su3_f(&(Ba[1][a][i]));
+      tr = tc.real / (Real)NCOL;
+      for (k = 0; k < NCOL; k++)
+        Ba[1][a][i].e[k][k].real -= tr;
+
+      // Check reality of resulting scalar fields
+      for (j = 0; j < N_B; j++){
         tc = trace_su3_f(&(Ba[j][a][i]));
-        tr = tc.real / (Real)NCOL;
-        for (k = 0; k < NCOL; k++)
-          Ba[j][a][i].e[k][k].real -= tr;
         if (fabs(tc.imag) > IMAG_TOL) {
-          printf("WARNING: Im(Tr[Ba[%d][%d][%d]]) = %.4g > %.4g\n",
-                 j, a, i, fabs(tc.imag), IMAG_TOL);
+          printf("WARNING: Tr[Ba[%d][%d][%d]] = (%.4g, %.4g) is not real\n",
+                 j, a, i, tc.real, tc.imag);
         }
       }
     }

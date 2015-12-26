@@ -1,7 +1,74 @@
 // -----------------------------------------------------------------
 // Polar decomposition now uses LAPACK to isolate gauge vs. scalar d.o.f.
 #include "susy_includes.h"
+// -----------------------------------------------------------------
 
+
+
+// -----------------------------------------------------------------
+// Take log of hermitian part of decomposition to define scalar field
+void matrix_log(su3_matrix_f *in, su3_matrix_f *out) {
+  char V = 'V';     // Ask LAPACK for both eigenvalues and eigenvectors
+  char U = 'U';     // Have LAPACK store upper triangle of U.Ubar
+  int row, col, Npt = NCOL, stat = 0, Nwork = 2 * NCOL;
+  double *store, *work, *Rwork, *eigs;
+  su3_matrix_f evecs, tmat;
+
+  // Allocate double arrays to be used by LAPACK
+  store = malloc(2 * NCOL * NCOL * sizeof(*store));
+  work = malloc(2 * Nwork * sizeof(*work));
+  Rwork = malloc((3 * NCOL - 2) * sizeof(*Rwork));
+  eigs = malloc(NCOL * sizeof(*eigs));
+
+  // Convert in to column-major double array used by LAPACK
+  for (row = 0; row < NCOL; row++) {
+    for (col = 0; col < NCOL; col++) {
+      store[2 * (col * NCOL + row)] = in->e[row][col].real;
+      store[2 * (col * NCOL + row) + 1] = in->e[row][col].imag;
+    }
+  }
+//  dumpmat_f(in);
+
+  // Compute eigenvalues and eigenvectors of in
+  zheev_(&V, &U, &Npt, store, &Npt, eigs, work, &Nwork, Rwork, &stat);
+
+  // Check for degenerate eigenvalues (broke previous Jacobi algorithm)
+  for (row = 0; row < NCOL; row++) {
+    for (col = row + 1; col < NCOL; col++) {
+      if (fabs(eigs[row] - eigs[col]) < IMAG_TOL)
+        printf("WARNING: w[%d] = w[%d] = %.8g\n", row, col, eigs[row]);
+    }
+  }
+
+  // Move the results back into su3_matrix_f structures
+  // Use evecs to hold the eigenvectors for projection
+  clear_su3mat_f(out);
+  for (row = 0; row < NCOL; row++) {
+    for (col = 0; col < NCOL; col++) {
+      evecs.e[row][col].real = store[2 * (col * NCOL + row)];
+      evecs.e[row][col].imag = store[2 * (col * NCOL + row) + 1];
+    }
+//    node0_printf("%.4g, ", eigs[row]);
+    out->e[row][row].real = log(eigs[row]);
+  }
+  // Inverse of eigenvector matrix is simply adjoint
+  mult_su3_na_f(out, &evecs, &tmat);
+  mult_su3_nn_f(&evecs, &tmat, out);
+//  node0_printf("\n");
+//  dumpmat_f(out);
+//  node0_printf("\n");
+
+  // Free double arrays used by LAPACK
+  free(store);
+  free(work);
+  free(Rwork);
+  free(eigs);
+}
+// -----------------------------------------------------------------
+
+
+
+// -----------------------------------------------------------------
 // Given matrix in = P.u, calculate the unitary matrix u = [1 / P].in
 //   and the positive P = sqrt[in.in^dag]
 // We diagonalize PSq = in.in^dag using LAPACK,

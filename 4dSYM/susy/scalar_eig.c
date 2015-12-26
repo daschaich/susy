@@ -49,17 +49,19 @@ void scalar_eig(int project) {
 
   FORALLSITES(i, s) {
     for (dir = XUP; dir < NUMLINK; dir++) {
-      if (project == 1)     // Consider polar-projected scalar fields
-        polar(&(s->linkf[dir]), &tmat, &USq);
-      else                  // Consider U.Ubar scalar fields
+      if (project == 1) {   // Consider polar-projected scalar fields
+        polar(&(s->linkf[dir]), &USq, &tmat);
+        // Take log
+        matrix_log(&tmat, &USq);
+      }
+      else {                // Consider U.Ubar scalar fields
         mult_su3_na_f(&(s->linkf[dir]), &(s->linkf[dir]), &USq);
-
-      // In either case, take traceless part
-      tc = trace_su3_f(&USq);
-      tr = tc.real / (Real)NCOL;
-      for (j = 0; j < NCOL; j++)
-        USq.e[j][j].real -= tr;
-//      dumpmat_f(&USq);
+        // Take traceless part
+        tc = trace_su3_f(&USq);
+        tr = tc.real / (Real)NCOL;
+        for (j = 0; j < NCOL; j++)
+          USq.e[j][j].real -= tr;
+      }
 
       // Convert USq to column-major double array used by LAPACK
       for (row = 0; row < NCOL; row++) {

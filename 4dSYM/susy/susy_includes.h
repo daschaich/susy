@@ -170,7 +170,8 @@ void hvy_pot_polar_loop();
 // Final argument reports success or information about failure
 void zheev_(char *doV, char *uplo, int *N1, double *store, int *N2,
             double *eigs, double *work, int *Nwork, double *Rwork, int *stat);
-void polar(su3_matrix_f *in, su3_matrix_f *out, su3_matrix_f *rho);
+void polar(su3_matrix_f *in, su3_matrix_f *u, su3_matrix_f *P);
+void matrix_log(su3_matrix_f *in, su3_matrix_f *out);
 
 // Monopole computation uses find_det
 void monopole();
