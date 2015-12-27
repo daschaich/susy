@@ -149,6 +149,7 @@ susy_eig::
 susy_phase::
 	${MAKE} -f ${MAKEFILE} target "MYTARGET= $@" \
 	"DEFINES = ${DEFINES} -DPHI_ALGORITHM -DPHASE " \
+	"LAPACK = -llapack -lblas " \
 	"EXTRA_OBJECTS = control_phase.o phase.o io_phase.o "
 
 susy_mode::
