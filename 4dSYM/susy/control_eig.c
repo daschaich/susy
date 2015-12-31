@@ -106,6 +106,10 @@ int main(int argc, char *argv[]) {
     for (ivec = 0; ivec < Nvec; ivec++)
       eigVec[ivec] = malloc(sites_on_node * sizeof(Twist_Fermion));
   }
+  // Also shouldn't need extremely tight precision
+  // (which can cause problems in lower dimensions)
+  if (eig_tol < 1.0e-12)
+    eig_tol = 1.0e-12;
   total_iters += make_evs(Nvec, eigVec, eigVal, -1);
 
   node0_printf("RUNNING COMPLETED\n");
