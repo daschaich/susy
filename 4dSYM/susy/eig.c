@@ -248,9 +248,11 @@ int make_evs(int Nvec, Twist_Fermion **eigVec, double *eigVal, int flag) {
 
   // Call the actual EV finder and check return value
   ret = zprimme(eigVal, workVecs, rnorms, &primme);
-  if (ret != 0) {
-    node0_printf("PRIMME failed with return value %d\n", ret);
-    terminate(1);
+  while (ret != 0) {
+    // Try again with looser residual
+    primme.eps *= 10;
+    node0_printf("Loosening stopping condition to %.4g\n", primme.eps);
+    ret = zprimme(eigVal, workVecs, rnorms, &primme);
   }
 
   // Copy double-precision temporary fields back into output
