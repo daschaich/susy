@@ -272,6 +272,20 @@ int main(int argc, char *argv[]) {
     blocked_ploop(0, bl);
     blocked_rsymm(0, bl);
 
+    // Unsmeared blocked scalar eigenvalues
+    scalar_eig(NODET, ave_eigs, eig_widths, min_eigs, max_eigs);
+    for (j = 0; j < NCOL; j++) {
+      node0_printf("UUBAR_EIG 0 %d ", bl);
+      node0_printf("%d %.6g %.6g %.6g %.6g\n",
+                   j, ave_eigs[j], eig_widths[j], min_eigs[j], max_eigs[j]);
+    }
+    scalar_eig(YESDET, ave_eigs, eig_widths, min_eigs, max_eigs);
+    for (j = 0; j < NCOL; j++) {
+      node0_printf("POLAR_EIG 0 %d ", bl);
+      node0_printf("%d %.6g %.6g %.6g %.6g\n",
+                   j, ave_eigs[j], eig_widths[j], min_eigs[j], max_eigs[j]);
+    }
+
     // Save unsmeared blocked links for next blocking step
     // Use f_U -- mom is used for temporary storage by the blocking routine
     FORALLSITES(i, s) {
