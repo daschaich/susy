@@ -4,14 +4,16 @@
 // Note two-color trace subtraction --> +/- eigenvalue pairs
 
 // #define SCALAR_EIG_DIST prints out all eigenvalues for plotting distribution
-// CAUTION: Do not run PLAQ_DIST with MPI!
+// CAUTION: Do not run SCALAR_EIG_DIST with MPI!
 
 //#define SCALAR_EIG_DIST
 #include "susy_includes.h"
 
 // project == 1 tells us to consider scalar fields from polar decomposition
 // rather than scalar fields from the U.Ubar product
-void scalar_eig(int project) {
+void scalar_eig(int project, double *ave_eigs, double *eig_widths,
+                double *min_eigs, double *max_eigs) {
+
   register int i, dir;
   register site *s;
   char N = 'N';     // Ask LAPACK only for eigenvalues
@@ -19,7 +21,7 @@ void scalar_eig(int project) {
   int row, col, Npt = NCOL, stat = 0, Nwork = 2 * NCOL, j;
   Real tr;
   double *store, *work, *Rwork, *eigs, norm = NUMLINK * volume;
-  double *ave_eigs, *sq_eigs, width, *min_eigs, *max_eigs;
+  double *sq_eigs = malloc(NCOL * sizeof(*sq_eigs));
   complex tc;
   su3_matrix_f USq, tmat;
 
@@ -36,10 +38,8 @@ void scalar_eig(int project) {
   work = malloc(2 * Nwork * sizeof(*work));
   Rwork = malloc((3 * NCOL - 2) * sizeof(*Rwork));
   eigs = malloc(NCOL * sizeof(*eigs));
-  ave_eigs = malloc(NCOL * sizeof(*ave_eigs));
-  max_eigs = malloc(NCOL * sizeof(*max_eigs));
-  min_eigs = malloc(NCOL * sizeof(*min_eigs));
-  sq_eigs = malloc(NCOL * sizeof(*ave_eigs));
+
+  // Initialize averages and extrema
   for (j = 0; j < NCOL; j++) {
     ave_eigs[j] = 0.0;
     min_eigs[j] =  99.0;
@@ -103,8 +103,7 @@ void scalar_eig(int project) {
     }
   }
 
-  // Print averages, extrema and square root of variance
-  // Format: SCALAR_EIG ave1 ... aveN min max width
+  // Finalize averages, extrema and square root of variance
   for (j = 0; j < NCOL; j++) {
     g_doublesum(&(ave_eigs[j]));
     ave_eigs[j] /= norm;
@@ -112,21 +111,13 @@ void scalar_eig(int project) {
     g_doublesum(&(sq_eigs[j]));
     sq_eigs[j] /= norm;
 
+    eig_widths[j] = sqrt(sq_eigs[j] - ave_eigs[j] * ave_eigs[j]);
+
     g_doublemax(&(max_eigs[j]));
+
     min_eigs[j] = -min_eigs[j];
     g_doublemax(&(min_eigs[j]));
     min_eigs[j] = -min_eigs[j];
-  }
-
-  for (j = 0; j < NCOL; j++) {
-    width = sqrt(sq_eigs[j] - ave_eigs[j] * ave_eigs[j]);
-    if (project == 1) {
-      node0_printf("POLAR_EIG ");
-    }
-    else
-      node0_printf("UUBAR_EIG ");
-    node0_printf("%d %.6g %.6g %.6g %.6g\n",
-                 j, ave_eigs[j], width, min_eigs[j], max_eigs[j]);
   }
 
   // Free double arrays used by LAPACK
@@ -134,9 +125,6 @@ void scalar_eig(int project) {
   free(work);
   free(Rwork);
   free(eigs);
-  free(ave_eigs);
-  free(min_eigs);
-  free(max_eigs);
   free(sq_eigs);
 }
 // -----------------------------------------------------------------

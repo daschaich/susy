@@ -17,6 +17,7 @@ int main(int argc, char *argv[]) {
   double ss_plaq, st_plaq, dtime, plpMod = 0.0;
   double linktr[NUMLINK], linktr_ave, linktr_width;
   double link_det[NUMLINK], det_ave, det_width;
+  double ave_eigs[NCOL], eig_widths[NCOL], min_eigs[NCOL], max_eigs[NCOL];
   complex plp = cmplx(99.0, 99.0);
 
 #ifndef MCRG
@@ -116,10 +117,6 @@ int main(int argc, char *argv[]) {
   // Monitor widths of plaquette and plaquette determinant distributions
   widths();
 
-  // Monitor average, extrema and widths of scalar eigenvalues
-  scalar_eig(NODET);
-  scalar_eig(YESDET);
-
   // ---------------------------------------------------------------
   // First print unsmeared unblocked observables
   // Unsmeared unblocked Tr[Udag.U] / N and its width
@@ -144,6 +141,19 @@ int main(int argc, char *argv[]) {
 
   // Unsmeared unblocked Wilson loops and R symmetry transformations
   blocked_rsymm(0, 0);
+
+  // Unsmeared unblocked scalar eigenvalues
+  // Format: SCALAR_EIG ismear bl # ave width min max
+  scalar_eig(NODET, ave_eigs, eig_widths, min_eigs, max_eigs);
+  for (j = 0; j < NCOL; j++) {
+    node0_printf("UUBAR_EIG 0 0 %d %.6g %.6g %.6g %.6g\n",
+                 j, ave_eigs[j], eig_widths[j], min_eigs[j], max_eigs[j]);
+  }
+  scalar_eig(YESDET, ave_eigs, eig_widths, min_eigs, max_eigs);
+  for (j = 0; j < NCOL; j++) {
+    node0_printf("POLAR_EIG 0 0 %d %.6g %.6g %.6g %.6g\n",
+                 j, ave_eigs[j], eig_widths[j], min_eigs[j], max_eigs[j]);
+  }
   // ---------------------------------------------------------------
 
 
@@ -204,6 +214,20 @@ int main(int argc, char *argv[]) {
 
     // Smeared unblocked Wilson loops and R symmetry transformations
     blocked_rsymm(ismear, 0);
+
+    // Smeared unblocked scalar eigenvalues
+    scalar_eig(NODET, ave_eigs, eig_widths, min_eigs, max_eigs);
+    for (j = 0; j < NCOL; j++) {
+      node0_printf("UUBAR_EIG %d 0 ", ismear);
+      node0_printf("%d %.6g %.6g %.6g %.6g\n",
+                   j, ave_eigs[j], eig_widths[j], min_eigs[j], max_eigs[j]);
+    }
+    scalar_eig(YESDET, ave_eigs, eig_widths, min_eigs, max_eigs);
+    for (j = 0; j < NCOL; j++) {
+      node0_printf("POLAR_EIG %d 0 ", ismear);
+      node0_printf("%d %.6g %.6g %.6g %.6g\n",
+                   j, ave_eigs[j], eig_widths[j], min_eigs[j], max_eigs[j]);
+    }
   }
 
   // Restore unsmeared unblocked links from f_U
@@ -301,6 +325,20 @@ int main(int argc, char *argv[]) {
 
       // Smeared blocked Wilson loops and R symmetry transformations
       blocked_rsymm(ismear, bl);
+
+      // Smeared blocked scalar eigenvalues
+      scalar_eig(NODET, ave_eigs, eig_widths, min_eigs, max_eigs);
+      for (j = 0; j < NCOL; j++) {
+        node0_printf("UUBAR_EIG %d %d ", ismear, bl);
+        node0_printf("%d %.6g %.6g %.6g %.6g\n",
+                     j, ave_eigs[j], eig_widths[j], min_eigs[j], max_eigs[j]);
+      }
+      scalar_eig(YESDET, ave_eigs, eig_widths, min_eigs, max_eigs);
+      for (j = 0; j < NCOL; j++) {
+        node0_printf("POLAR_EIG %d %d ", ismear, bl);
+        node0_printf("%d %.6g %.6g %.6g %.6g\n",
+                     j, ave_eigs[j], eig_widths[j], min_eigs[j], max_eigs[j]);
+      }
     }
 
     // Restore unsmeared blocked links from f_U

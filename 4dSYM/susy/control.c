@@ -8,12 +8,13 @@
 
 // -----------------------------------------------------------------
 int main(int argc, char *argv[]) {
-  int prompt, dir;
+  int prompt, dir, j;
   int traj_done, s_iters, avs_iters = 0, avm_iters = 0, Nmeas = 0;
   Real f_eps, g_eps;
   double ss_plaq, st_plaq, dtime, plpMod = 0.0;
   double linktr[NUMLINK], linktr_ave, linktr_width;
   double link_det[NUMLINK], det_ave, det_width;
+  double ave_eigs[NCOL], eig_widths[NCOL], min_eigs[NCOL], max_eigs[NCOL];
   complex plp = cmplx(99.0, 99.0);
 
   // Setup
@@ -127,9 +128,18 @@ int main(int argc, char *argv[]) {
     // Monitor widths of plaquette and plaquette determinant distributions
     widths();
 
-    // Monitor average, extrema and widths of scalar eigenvalues
-    scalar_eig(NODET);
-    scalar_eig(YESDET);
+    // Monitor scalar eigenvalues
+    // Format: SCALAR_EIG # ave width min max
+    scalar_eig(NODET, ave_eigs, eig_widths, min_eigs, max_eigs);
+    for (j = 0; j < NCOL; j++) {
+      node0_printf("UUBAR_EIG %d %.6g %.6g %.6g %.6g\n",
+                   j, ave_eigs[j], eig_widths[j], min_eigs[j], max_eigs[j]);
+    }
+    scalar_eig(YESDET, ave_eigs, eig_widths, min_eigs, max_eigs);
+    for (j = 0; j < NCOL; j++) {
+      node0_printf("POLAR_EIG %d %.6g %.6g %.6g %.6g\n",
+                   j, ave_eigs[j], eig_widths[j], min_eigs[j], max_eigs[j]);
+    }
 
     // Less frequent measurements every "propinterval" trajectories
     if ((traj_done % propinterval) == (propinterval - 1)) {
