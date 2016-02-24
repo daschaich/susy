@@ -36,9 +36,11 @@ int update_step(double *fnorm, double *gnorm,
   Real final_rsq, eps = traj_length / (Real)nsteps[0], tr;
   node0_printf("eps %.4g\n", eps);
 
+  // First u(t/2)
+  update_uu(0.5 * eps);
+
   for (step = 0; step < nsteps[0]; step++) {
-    // One step u(t/2) p(t) u(t/2)
-    update_uu(0.5 * eps);
+    // Inner steps p(t) u(t)
     tr = gauge_force(eps);
     *gnorm += tr;
     if (tr > max_gf)
@@ -56,7 +58,10 @@ int update_step(double *fnorm, double *gnorm,
     }
 #endif
 
-    update_uu(0.5 * eps);
+    if (step < nsteps[0] - 1)
+      update_uu(eps);
+    else                // Final u(t/2)
+      update_uu(0.5 * eps);
 #ifndef PUREGAUGE
     fermion_rep();
 #endif

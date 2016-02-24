@@ -377,7 +377,7 @@ void r_serial(gauge_file *gf) {
   char *filename;
   int byterevflag;
 
-  off_t offset = 0 ;          // File stream pointer
+  off_t offset = 0;           // File stream pointer
   off_t gauge_check_size;     // Size of gauge configuration checksum record
   off_t coord_list_size;      // Size of coordinate list in bytes
   off_t head_size;            // Size of header plus coordinate list
@@ -412,7 +412,7 @@ void r_serial(gauge_file *gf) {
     head_size = checksum_offset + gauge_check_size;
 
     // Allocate single precision read buffer
-    lbuf = malloc(MAX_BUF_LENGTH*NUMLINK*sizeof(fsu3_matrix_f));
+    lbuf = malloc(MAX_BUF_LENGTH * NUMLINK * sizeof(fsu3_matrix_f));
     if (lbuf == NULL) {
       printf("r_serial: node%d can't malloc lbuf\n", this_node);
       fflush(stdout);
@@ -475,7 +475,7 @@ void r_serial(gauge_file *gf) {
 
         stat = (int)fread(lbuf, NUMLINK * sizeof(fsu3_matrix_f), buf_length, fp);
         if (stat != buf_length) {
-          printf("r_serial: node %d gauge configuration read error %d file %s\n",
+          printf("r_serial: node%d gauge configuration read error %d file %s\n",
                  this_node, errno, filename);
           fflush(stdout);
           terminate(1);
@@ -516,8 +516,8 @@ void r_serial(gauge_file *gf) {
       for (k = 0, val = (u_int32type *)tmpsu3;
            k < NUMLINK * (int)sizeof(fsu3_matrix_f) / (int)sizeof(int32type);
            k++, val++) {
-        test_gc.sum29 ^= (*val)<<rank29 | (*val)>>(32-rank29);
-        test_gc.sum31 ^= (*val)<<rank31 | (*val)>>(32-rank31);
+        test_gc.sum29 ^= (*val)<<rank29 | (*val)>>(32 - rank29);
+        test_gc.sum31 ^= (*val)<<rank31 | (*val)>>(32 - rank31);
         rank29++;
         if (rank29 >= 29)
           rank29 = 0;

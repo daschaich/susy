@@ -40,7 +40,7 @@
 // make_gather()          Calculate and store necessary communications lists
 //                          for a given gather mapping
 // declare_gather_site()  Create a message tag that defines specific
-//                          details of a site gather be used later
+//                          details of a site gather to be used later
 // declare_gather_field() Create a message tag that defines specific
 //                          details of a field gather to be used later
 // prepare_gather()       Allocate buffers for a previously declared gather
@@ -66,13 +66,13 @@
 //                          to gather site data at arbitrary displacement
 // start_general_gather_field()
 //                        Start asynchronous sends and receives required to
-//                          to gather field data at arbitrary displacement
+//                          gather field data at arbitrary displacement
 // wait_general_gather()  Wait for receives to finish, insuring that the
-//                          ensuring that the data have actually arrived,
+//                          data have actually arrived,
 //                          and set pointers to received data
 // cleanup_general_gather()
-//                        Frees all the buffers that were allocated
-//                          NB: the gathered data may soon disappear.
+//                        Free all the buffers that were allocated
+//                          NB: the gathered data may soon disappear
 #include <time.h>
 #include "generic_includes.h"
 #include <mpi.h>
@@ -220,15 +220,15 @@ void initialize_machine(int *argc, char ***argv) {
 
   // Check if 32 bit int is set correctly
 #ifdef SHORT_IS_32BIT
-  if (sizeof(unsigned short)!=4) {
-    printf("node%d: SHORT_IS_32BIT is set but sizeof(unsigned short)=%d\n",
-     mynode(), sizeof(unsigned short));
+  if (sizeof(unsigned short) != 4) {
+    printf("node%i: SHORT_IS_32BIT is set but sizeof(unsigned short) = %i\n",
+           mynode(), sizeof(unsigned short));
     terminate(1);
   }
 #else
-  if (sizeof(unsigned int)!=4) {
-    printf("node%d: SHORT_IS_32BIT is not set but sizeof(unsigned int)=%d\n",
-     mynode(), (int) sizeof(unsigned int));
+  if (sizeof(unsigned int) != 4) {
+    printf("node%i: SHORT_IS_32BIT is not set but sizeof(unsigned int) = %i\n",
+           mynode(), (int)sizeof(unsigned int));
     terminate(1);
   }
 #endif
@@ -544,11 +544,11 @@ void sort_eight_gathers(int index) {
 // Find coordinates of neighbor
 // Used by make_gather for nearest neighbor gathers
 static void neighbor_coords_special(
-  int x, int y, int z, int t,       /* coordinates of site */
-  int *dirpt,                       /* direction (eg XUP) */
-  int fb,                           /* "forwards/backwards"  */
+  int x, int y, int z, int t,       // Coordinates of site
+  int *dirpt,                       // Direction (eg XUP)
+  int fb,                           // Forwards/backwards
   int *x2p, int *y2p, int *z2p, int *t2p)
-                                    /* pointers to coordinates of neighbor */
+                                    // Pointers to coordinates of neighbor
 {
   int dir;
 
@@ -693,7 +693,7 @@ static void sort_site_list(
 
 // Make comlink for send or receive
 static comlink* make_send_receive_list(
-  void (*func)(int, int, int, int, int *, int, int *, int *, int *, int *),
+  void (*func)(int, int, int, int, int*, int, int*, int*, int*, int*),
             /* function which defines sites to gather from */
   int *args,    /* list of arguments, to be passed to function */
   int want_even_odd,  /* ALLOW_EVEN_ODD or NO_EVEN_ODD */
@@ -783,11 +783,11 @@ static comlink* make_send_receive_list(
   FORALLSITES(i, s) {
     /* find coordinates, node, and sublattice of receiving site */
     if (send_recv == RECEIVE) {
-      func(s->x, s->y, s->z, s->t, args, forw_back, &x,&y,&z,&t);
-      subl = parity_function(s->x,s->y,s->z,s->t);
+      func(s->x, s->y, s->z, s->t, args, forw_back, &x, &y, &z, &t);
+      subl = parity_function(s->x, s->y, s->z, s->t);
     }
     else {  /* SEND */
-      func(s->x, s->y, s->z, s->t, args, -forw_back, &x,&y,&z,&t);
+      func(s->x, s->y, s->z, s->t, args, -forw_back, &x, &y, &z, &t);
       subl = parity_function(x, y, z, t);
     }
     j = node_number(x, y, z, t);
@@ -1120,30 +1120,30 @@ int make_gather(
 
    example:
   msg_tag *tag;
-  tag = declare_gather_site(F_OFFSET(phi), sizeof(su3_vector), XUP,
-                        EVEN, gen_pt[0]);
-        prepare_gather(tag);  ** this step is optional **
-        do_gather(tag);
+  tag = declare_gather_site(F_OFFSET(src), sizeof(su3_vector), XUP,
+                            EVEN, gen_pt[0]);
+  prepare_gather(tag);  ** this step is optional **
+  do_gather(tag);
     ** do other stuff, but don't modify tag or gen_pt[0] **
   wait_gather(tag);
-    ** gen_pt[0][i] now contains the address of the phi
+    ** gen_pt[0][i] now contains the address of the src
      vector (or a copy thereof) on the neighbor of site i in the
      XUP direction for all even sites i.
      Do whatever you want with it here, but don't modify tag or
      gen_pt[0].
-     Do modify the source field phi. **
+     Do modify the source field src **
   do_gather(tag);
     ** do other stuff **
   wait_gather(tag);
-    ** gen_pt[0][i] now contains the address of the modified phi.
-     The restart-wait may be repeated as often as desired.  **
+    ** gen_pt[0][i] now contains the address of the modified src.
+     The restart-wait may be repeated as often as desired
   cleanup_gather(tag);
     ** subsequent calls will overwrite the gathered fields. but if you
-     don't clean up, you will eventually run out of space **
+     don't clean up, you will eventually run out of space
 */
 
 // Return msg_tag containing details for specific gather
-// Handle gathers from both site structure and field arrays
+// Handle gathers from both the site structure and an array of fields
 msg_tag* declare_strided_gather(
   void *field,          /* source buffer aligned to desired field */
   int stride,           /* bytes between fields in source buffer */
@@ -1332,8 +1332,8 @@ void prepare_gather(msg_tag *mtag) {
   }
 }
 
-// Actually execute the gather
-void do_gather(msg_tag *mtag) { /* previously returned by start_gather_site */
+// Actually execute the gather using mtag returned by start_gather_site
+void do_gather(msg_tag *mtag) {
   register int i, j;
   register char *tpt; /* scratch pointer in buffers */
   msg_sr_t *mbuf;
@@ -1358,10 +1358,10 @@ void do_gather(msg_tag *mtag) { /* previously returned by start_gather_site */
     tpt = mbuf[i].msg_buf;
     gmem = mbuf[i].gmem;
     do {
-      for (j=0; j<gmem->num; ++j,tpt+=gmem->size) {
-  memcpy(tpt, gmem->mem + gmem->sitelist[j]*gmem->stride, gmem->size);
+      for (j = 0; j < gmem->num; ++j, tpt += gmem->size) {
+        memcpy(tpt, gmem->mem + gmem->sitelist[j]*gmem->stride, gmem->size);
       }
-    } while ((gmem=gmem->next) != NULL);
+    } while ((gmem = gmem->next) != NULL);
     /* start the send */
     MPI_Isend(mbuf[i].msg_buf, mbuf[i].msg_size, MPI_BYTE, mbuf[i].msg_node,
          GATHER_ID(mtag->ids[mbuf[i].id_offset]), MPI_COMM_WORLD,
@@ -1455,7 +1455,7 @@ msg_tag* start_gather_site(
   msg_tag *mt;
 
   mt = declare_strided_gather((char *)lattice + field, sizeof(site), size,
-             index, parity, dest);
+                              index, parity, dest);
   prepare_gather(mt);
   do_gather(mt);
 
@@ -1466,8 +1466,8 @@ msg_tag* start_gather_site(
 
 
 // -----------------------------------------------------------------
-// Gather routines from arrays of fields
-// Declare a gather from a field
+// Gather routines from an array of fields
+// Declare a gather from an array of fields
 msg_tag* declare_gather_field(
   void *field,   /* which field? Pointer returned by malloc() */
   int size,   /* size in bytes of the field (eg sizeof(su3_vector))*/
@@ -1516,9 +1516,9 @@ msg_tag* start_gather_field(
    msg_tag *tag1, *tag2, *mtag;
 
    tag1 = declare_gather_site(F_OFFSET(phi), sizeof(su3_vector), XUP,
-                    EVEN, gen_pt1);
+                              EVEN, gen_pt1);
    tag2 = declare_gather_site(F_OFFSET(phi), sizeof(su3_vector), XDOWN,
-                    EVEN, gen_pt2);
+                              EVEN, gen_pt2);
    mtag = NULL;
    accumulate_gather(&mtag, tag1);
    accumulate_gather(&mtag, tag2);
@@ -1541,10 +1541,10 @@ msg_tag* start_gather_field(
    msg_tag *mtag;
 
    mtag = NULL;
-   declare_accumulate_gather_site(&mtag, F_OFFSET(phi), sizeof(su3_vector), XUP,
-                        EVEN, gen_pt1);
-   declare_accumulate_gather_site(&mtag, F_OFFSET(phi), sizeof(su3_vector), XDOWN,
-                        EVEN, gen_pt2);
+   declare_accumulate_gather_site(&mtag, F_OFFSET(phi), sizeof(su3_vector),
+                                  XUP, EVEN, gen_pt1);
+   declare_accumulate_gather_site(&mtag, F_OFFSET(phi), sizeof(su3_vector),
+                                  XDOWN, EVEN, gen_pt2);
    prepare_gather(mtag);  ** optional **
    do_gather(mtag);
    wait_gather(mtag);
@@ -1553,10 +1553,10 @@ msg_tag* start_gather_field(
    wait_gather(mtag);
    cleanup_gather(mtag);
 
- one coule also replace
+ one could also replace
    mtag = NULL;
-   declare_accumulate_gather_site(&mtag, F_OFFSET(phi), sizeof(su3_vector), XUP,
-                        EVEN, gen_pt1);
+   declare_accumulate_gather_site(&mtag, F_OFFSET(phi), sizeof(su3_vector),
+                                  XUP, EVEN, gen_pt1);
  with
    mtag = declare_gather_site(F_OFFSET(phi), sizeof(su3_vector), XUP,
                     EVEN, gen_pt1);
@@ -1690,7 +1690,7 @@ void declare_accumulate_gather_site(
              sizeof(site), size, index, parity, dest);
 }
 
-// Declare and merge gather from field
+// Declare and merge gather from an array of fields
 void declare_accumulate_gather_field(
   msg_tag **mmtag,
   void *field,   /* which field? Pointer returned by malloc() */

@@ -1,10 +1,8 @@
 // -----------------------------------------------------------------
-// General purpose high level routines for susy code
-// Loop over mu = 0 to NUMLINK
-// Do not reunitarize
+// General purpose IO-related routines for susy code
+// Loop over directions up to NUMLINK and do not reunitarize
 #include "generic_includes.h"
 #include "../include/io_lat.h"
-#include "../susy/susy_includes.h"    // For stout smearing
 // -----------------------------------------------------------------
 
 
@@ -132,20 +130,17 @@ gauge_file *reload_lattice(int flag, char *filename) {
   d_linktrsum(&linktrsum);
   nersc_checksum = nersc_cksum();
 #endif
-  if (this_node == 0) {
+
 #if PRECISION == 1
-    node0_printf("CHECK PLAQ: %e %e\n", g_ssplaq, g_stplaq);
-    node0_printf("CHECK NERSC LINKTR: %e CKSUM: %x\n",
-                 linktrsum.real / (Real)NCOL, nersc_checksum);
-    fflush(stdout);
-#else
-    // Double precision
-    node0_printf("CHECK PLAQ: %.16e %.16e\n", g_ssplaq, g_stplaq);
-    node0_printf("CHECK NERSC LINKTR: %.16e CKSUM: %x\n",
-                 linktrsum.real / (Real)NCOL, nersc_checksum);
-    fflush(stdout);
+  node0_printf("CHECK PLAQ: %e %e\n", g_ssplaq, g_stplaq);
+  node0_printf("CHECK NERSC LINKTR: %e CKSUM: %x\n",
+               linktrsum.real / (Real)NCOL, nersc_checksum);
+#else             // Double precision
+  node0_printf("CHECK PLAQ: %.16e %.16e\n", g_ssplaq, g_stplaq);
+  node0_printf("CHECK NERSC LINKTR: %.16e CKSUM: %x\n",
+               linktrsum.real / (Real)NCOL, nersc_checksum);
 #endif
-  }
+  fflush(stdout);
   dtime = -dclock();
   return gf;
 }
@@ -346,11 +341,10 @@ static int check_read(int s, char *myname, char *tag) {
 
 
 // -----------------------------------------------------------------
-/* get_f is used to get a floating point number.  If prompt is non-zero,
-it will prompt for the input value with the variable_name_string.  If
-prompt is zero, it will require that variable_name_string precede the
-input value.  get_i gets an integer.
-get_i and get_f return the values, and exit on error */
+// Get a floating point number
+// If prompt is non-zero, ask for the input value with tag
+// If prompt is zero, require that tag precede the input value
+// Return the value and exit on error
 int get_f(FILE *fp, int prompt, char *tag, Real *value) {
   int s;
   char checkvalue[80];
@@ -389,7 +383,12 @@ int get_f(FILE *fp, int prompt, char *tag, Real *value) {
   }
   return 0;
 }
+// -----------------------------------------------------------------
 
+
+
+// -----------------------------------------------------------------
+// Get an integer with same behavior as get_f
 int get_i(FILE *fp, int prompt, char *tag, int *value) {
   int s;
   char checkvalue[80];
@@ -422,7 +421,7 @@ int get_i(FILE *fp, int prompt, char *tag, int *value) {
 
 
 // -----------------------------------------------------------------
-// Read a single word as a string
+// Read a single word as a string with same behavior as get_f
 int get_s(FILE *fp, int prompt, char *tag, char *value) {
   int s;
   char myname[] = "get_s";
@@ -451,7 +450,7 @@ int get_s(FILE *fp, int prompt, char *tag, char *value) {
 
 
 // -----------------------------------------------------------------
-// Read a vector of integers
+// Read a vector of integers with same behavior as get_f
 int get_vi(FILE* fp, int prompt, char *tag, int *value, int nvalues) {
   int s, i;
   char myname[] = "get_vi";
@@ -462,7 +461,7 @@ int get_vi(FILE* fp, int prompt, char *tag, int *value, int nvalues) {
     for (i = 0; i < nvalues; i++) {
       while (s != 1) {
         printf("\n[%d] ", i);
-        s=fscanf(fp, "%d", value + i);
+        s = fscanf(fp, "%d", value + i);
         if (s == EOF) return 1;
         if (s == 0) printf("Data format error\n");
         printf("%s %d\n", tag, value[i]);
@@ -472,12 +471,14 @@ int get_vi(FILE* fp, int prompt, char *tag, int *value, int nvalues) {
   else {
     if (get_tag(fp, tag, myname) == 1) return 1;
 
-    for (i = 0; i < nvalues; i++) {
+    for (i = 0; i < nvalues - 1; i++) {
       s = fscanf(fp, "%d", value + i);
       if (check_read(s, myname, tag) == 1) return 1;
       printf("%d ", value[i]);
     }
-    printf("\n");
+    s = fscanf(fp, "%d", value + nvalues - 1);
+    if (check_read(s, myname, tag) == 1) return 1;
+    printf("%d\n", value[nvalues - 1]);
   }
   return 0;
 }
@@ -486,7 +487,7 @@ int get_vi(FILE* fp, int prompt, char *tag, int *value, int nvalues) {
 
 
 // -----------------------------------------------------------------
-// Read a vector of reals
+// Read a vector of reals with same behavior as get_f
 int get_vf(FILE* fp, int prompt, char *tag, Real *value, int nvalues) {
   int s, i;
   char myname[] = "get_vf";

@@ -145,17 +145,17 @@ int write_gauge_info_item(FILE *fpout,    /* ascii file pointer */
 
   // Check for valid keyword
   for (i = 0; strlen(gauge_info_keyword[i]) > 0 &&
-      strcmp(gauge_info_keyword[i],keyword) != 0; i++);
+      strcmp(gauge_info_keyword[i], keyword) != 0; i++);
   if (strlen(gauge_info_keyword[i]) == 0)
     printf("write_gauge_info_item: WARNING: keyword %s not in table\n",
-      keyword);
+           keyword);
 
   // Write keyword
-  fprintf(fpout,"%s =",keyword);
+  fprintf(fpout, "%s =", keyword);
 
   // Write count if more than one item
   if (count > 1)
-    fprintf(fpout,"[%d]",count);
+    fprintf(fpout, "[%d]", count);
 
   n = count;
   if (n == 0)
@@ -163,24 +163,23 @@ int write_gauge_info_item(FILE *fpout,    /* ascii file pointer */
 
   // Write data
   for (k = 0, data = (char *)src; k < n; k++, data += stride) {
-      fprintf(fpout," ");
-      if (strstr(fmt,"s") != NULL)
-  fprintf(fpout,fmt,data);
-      else if (strstr(fmt,"d") != NULL)
-  fprintf(fpout,fmt,*(int *)data);
-      else if (strstr(fmt,"lu") != NULL)
-  fprintf(fpout,fmt,*(unsigned long *)data);
-      else if (strstr(fmt,"e") != NULL ||
-        strstr(fmt,"f") != NULL ||
-        strstr(fmt,"g") != NULL) {
-    tt = *(Real *)data;
-    fprintf(fpout,fmt,tt);
-  }
-      else {
-    printf("write_gauge_info_item: Unrecognized data type %s\n",fmt);
-    return 1;
-  }
+    fprintf(fpout," ");
+    if (strstr(fmt,"s") != NULL)
+      fprintf(fpout,fmt,data);
+    else if (strstr(fmt,"d") != NULL)
+      fprintf(fpout,fmt,*(int *)data);
+    else if (strstr(fmt,"lu") != NULL)
+      fprintf(fpout,fmt,*(unsigned long *)data);
+    else if (strstr(fmt,"e") != NULL || strstr(fmt,"f") != NULL ||
+                                        strstr(fmt,"g") != NULL) {
+      tt = *(Real *)data;
+      fprintf(fpout,fmt,tt);
     }
+    else {
+      printf("write_gauge_info_item: Unrecognized data type %s\n",fmt);
+      return 1;
+    }
+  }
   fprintf(fpout,"\n");
   return 0;
 }
@@ -208,12 +207,11 @@ int sprint_gauge_info_item(
   float tt;
 
   /* Check for valid keyword */
-
-  for (i=0;strlen(gauge_info_keyword[i])>0 &&
-      strcmp(gauge_info_keyword[i],keyword) != 0; i++);
+  for (i = 0; strlen(gauge_info_keyword[i]) > 0 &&
+      strcmp(gauge_info_keyword[i], keyword) != 0; i++);
   if (strlen(gauge_info_keyword[i]) == 0)
     printf("write_gauge_info_item: WARNING: keyword %s not in table\n",
-      keyword);
+           keyword);
 
   /* Write keyword */
   bytes = 0;
@@ -232,43 +230,39 @@ int sprint_gauge_info_item(
   n = count; if (n == 0)n = 1;
 
   /* Write data */
-  for (k = 0, data = (char *)src; k < n; k++, data += stride)
-    {
-      snprintf(string+bytes, nstring-bytes," ");
-      bytes = strlen(string);
-      if (bytes >= nstring)return 1;
-
-      if (strstr(fmt,"s") != NULL) {
-  snprintf(string+bytes,nstring-bytes, fmt,data);
-  bytes = strlen(string);
-  if (bytes >= nstring)return 1;
-      }
-      else if (strstr(fmt,"d") != NULL) {
-  snprintf(string+bytes,nstring-bytes,fmt,*(int *)data);
-  bytes = strlen(string);
-  if (bytes >= nstring)return 1;
-      }
-      else if (strstr(fmt,"lu") != NULL) {
-  snprintf(string+bytes,nstring-bytes,fmt,*(unsigned long *)data);
-  bytes = strlen(string);
-  if (bytes >= nstring)return 1;
-      }
-      else if (strstr(fmt,"e") != NULL ||
-        strstr(fmt,"f") != NULL ||
-        strstr(fmt,"g") != NULL)
-  {
-    tt = *(Real *)data;
-    snprintf(string+bytes,nstring-bytes,fmt,tt);
+  for (k = 0, data = (char *)src; k < n; k++, data += stride) {
+    snprintf(string+bytes, nstring-bytes," ");
     bytes = strlen(string);
     if (bytes >= nstring)return 1;
-  }
-      else
-  {
-    printf("write_gauge_info_item: Unrecognized data type %s\n",fmt);
-    return 1;
-  }
+
+    if (strstr(fmt,"s") != NULL) {
+      snprintf(string+bytes,nstring-bytes, fmt,data);
+      bytes = strlen(string);
+      if (bytes >= nstring)return 1;
     }
-  snprintf(string+bytes,nstring-bytes,"\n");
+    else if (strstr(fmt,"d") != NULL) {
+      snprintf(string+bytes,nstring-bytes,fmt,*(int *)data);
+      bytes = strlen(string);
+      if (bytes >= nstring)return 1;
+    }
+    else if (strstr(fmt,"lu") != NULL) {
+      snprintf(string + bytes, nstring - bytes, fmt, *(unsigned long *)data);
+      bytes = strlen(string);
+      if (bytes >= nstring)return 1;
+    }
+    else if (strstr(fmt, "e") != NULL || strstr(fmt, "f") != NULL ||
+                                         strstr(fmt, "g") != NULL) {
+      tt = *(Real *)data;
+      snprintf(string+bytes,nstring-bytes,fmt,tt);
+      bytes = strlen(string);
+      if (bytes >= nstring)return 1;
+    }
+    else {
+      printf("write_gauge_info_item: Unrecognized data type %s\n",fmt);
+      return 1;
+    }
+  }
+  snprintf(string + bytes, nstring - bytes, "\n");
   bytes = strlen(string);
   if (bytes >= nstring)return 1;
 
@@ -295,9 +289,10 @@ void write_gauge_info_file(gauge_file *gf) {
 
   // Open header file
   if ((info_fp = fopen(info_filename,"w")) == NULL) {
-      printf("write_gauge_info_file: Can't open ascii info file %s\n",info_filename);
-      return;
-    }
+    printf("write_gauge_info_file: Can't open ascii info file %s\n",
+           info_filename);
+    return;
+  }
 
   // Write required information
   write_gauge_info_item(info_fp, "magic_number", "%d", (char *)&gh->magic_number, 0, 0);
@@ -311,7 +306,7 @@ void write_gauge_info_file(gauge_file *gf) {
   write_appl_gauge_info(info_fp);
   fclose(info_fp);
 
-  printf("Wrote info file %s\n",info_filename);
+  printf("Wrote info file %s\n", info_filename);
 }
 // -----------------------------------------------------------------
 
@@ -321,31 +316,23 @@ void write_gauge_info_file(gauge_file *gf) {
 // Set up the input gauge file and gauge header structures
 gauge_file* setup_input_gauge_file(char *filename) {
   char myname[] = "setup_input_gauge_file";
-  gauge_file *gf;
-  gauge_header *gh;
+  gauge_file *gf = malloc(sizeof(*gf));
+  gauge_header *gh = malloc(sizeof(*gh));
 
-  /* Allocate space for the file structure */
-
-  gf = (gauge_file *)malloc(sizeof(gauge_file));
-  if (gf == NULL)
-    {
-      printf("%s: Can't malloc gf\n",myname);
-      terminate(1);
-    }
+  // Check that file structure and header structure were set up successfully
+  if (gf == NULL) {
+    printf("%s: Can't malloc gf\n", myname);
+    terminate(1);
+  }
+  if (gh == NULL) {
+    printf("%s: Can't malloc gh\n", myname);
+    terminate(1);
+  }
 
   gf->filename = filename;
 
-  /* Allocate space for the header */
-
-  /* Make sure compilation gave us a 32 bit integer type */
+  // Make sure compilation gave us a 32 bit integer type
   assert(sizeof(int32type) == 4);
-
-  gh = (gauge_header *)malloc(sizeof(gauge_header));
-  if (gh == NULL)
-    {
-      printf("%s: Can't malloc gh\n",myname);
-      terminate(1);
-    }
 
   gf->header = gh;
   gf->rank2rcv = NULL;
@@ -471,32 +458,28 @@ void read_site_list(gauge_file *gf) {
      natural order */
 
   if (gf->header->order != NATURAL_ORDER) {
-      gf->rank2rcv = malloc(volume * sizeof(int32type));
-      if (gf->rank2rcv == NULL)
-  {
-    printf("read_site_list: Can't malloc rank2rcv table\n");
-    terminate(1);
-  }
-
-      /* Only node0 reads the site list */
-
-      if (this_node == 0)
-  {
-
-    /* Reads receiving site coordinate if file is not in natural order */
-        if ((int)fread(gf->rank2rcv,sizeof(int32type), volume,gf->fp) != volume) {
-      printf("read_site_list: Node %d site list read error %d\n",
-       this_node,errno);
+    gf->rank2rcv = malloc(volume * sizeof(int32type));
+    if (gf->rank2rcv == NULL) {
+      printf("read_site_list: Can't malloc rank2rcv table\n");
       terminate(1);
     }
 
-    if (gf->byterevflag == 1)
-      byterevn(gf->rank2rcv, volume);
-  }
+    // Only node0 reads the site list
+    if (this_node == 0) {
+      /* Reads receiving site coordinate if file is not in natural order */
+      if ((int)fread(gf->rank2rcv,sizeof(int32type), volume,gf->fp) != volume) {
+        printf("read_site_list: Node %d site list read error %d\n",
+            this_node,errno);
+        terminate(1);
+      }
 
-      /* Broadcast result to all nodes */
-      broadcast_bytes((char *)gf->rank2rcv, volume * sizeof(int32type));
+      if (gf->byterevflag == 1)
+        byterevn(gf->rank2rcv, volume);
     }
+
+    // Broadcast result to all nodes
+    broadcast_bytes((char *)gf->rank2rcv, volume * sizeof(int32type));
+  }
   else
     gf->rank2rcv = NULL;  // If no site list
 }
@@ -542,7 +525,7 @@ int read_gauge_hdr(gauge_file *gf) {
   else if (tmp == LIME_MAGIC_NO || btmp == LIME_MAGIC_NO) {
     // LIME format suggests a SciDAC file
     // Print error, set flag and return
-    printf("%s: Looks like a SciDAC-formatted file\n",myname);
+    printf("%s: Looks like a SciDAC-formatted file\n", myname);
     gh->magic_number = LIME_MAGIC_NO;
     return 0;
   }
@@ -573,7 +556,7 @@ int read_gauge_hdr(gauge_file *gf) {
     if (nx != -1 || ny != -1 || nz != -1 || nt != -1) {
       printf("%s: Incorrect lattice dimensions ",myname);
       for (j = 0; j < NDIMS; j++)
-        printf("%d ",gh->dims[j]);
+        printf("%d ", gh->dims[j]);
       printf("\n");
       fflush(stdout);
       terminate(1);
@@ -583,7 +566,7 @@ int read_gauge_hdr(gauge_file *gf) {
       ny = gh->dims[1];
       nz = gh->dims[2];
       nt = gh->dims[3];
-      volume = nx*ny*nz*nt;
+      volume = nx * ny * nz * nt;
     }
   }
   // Read date and time stamp

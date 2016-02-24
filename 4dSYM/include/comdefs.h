@@ -67,7 +67,7 @@ void sort_eight_gathers(int index);
 #define sort_eight_neighborlists sort_eight_gathers
 
 int make_gather(
-  void (*func)(int, int, int, int, int *, int, int *, int *, int *, int *),
+  void (*func)(int, int, int, int, int*, int, int*, int*, int*, int*),
             /* function which defines sites to gather from */
   int *args,    /* list of arguments, to be passed to function */
   int inverse,    /* OWN_INVERSE, WANT_INVERSE, or NO_INVERSE */

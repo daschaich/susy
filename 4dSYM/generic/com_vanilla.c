@@ -336,11 +336,11 @@ void sort_eight_gathers(int index) {
 // Find coordinates of neighbor
 // Used by make_gather for nearest neighbor gathers
 static void neighbor_coords_special(
-  int x, int y, int z, int t,       /* coordinates of site */
-  int *dirpt,                       /* direction (eg XUP) */
-  int fb,                           /* "forwards/backwards"  */
+  int x, int y, int z, int t,       // Coordinates of site
+  int *dirpt,                       // Direction (eg XUP)
+  int fb,                           // Forwards/backwards
   int *x2p, int *y2p, int *z2p, int *t2p)
-                                    /* pointers to coordinates of neighbor */
+                                    // Pointers to coordinates of neighbor
 {
   int dir;
 
@@ -484,7 +484,7 @@ int make_gather(
         else if (send_subl[r_subl] != s_subl) {
           printf("Gather mixes up sublattices: %d vs %d\n",
                  send_subl[r_subl], s_subl);
-          printf("on mapping %i %i %i %i -> %i %i %i %i\n",
+          printf("on mapping %d %d %d %d -> %d %d %d %d\n",
                  s->x, s->y, s->z, s->t, x, y, z, t);
           terminate(1);
         }

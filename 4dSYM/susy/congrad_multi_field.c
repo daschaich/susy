@@ -88,7 +88,7 @@ int congrad_multi_field(Twist_Fermion *src, Twist_Fermion **psim,
     DSq(pm0, mpm);
     iteration++;
     total_iters++;
-    FORALLSITES(i,s)
+    FORALLSITES(i, s)
       scalar_mult_add_TF(&(mpm[i]), &(pm0[i]), shift[0], &(mpm[i]));
 
     // beta_i[0] = -(r, r) / (pm, Mpm)
