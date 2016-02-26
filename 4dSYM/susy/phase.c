@@ -320,7 +320,7 @@ void phase() {
     // Print some timing information
     // and make sure diagonal elements are still sane
     dtime += dclock();
-    node0_printf("%d matvecs in %.4g seconds ", Nmatvecs, dtime);
+    node0_printf("%li matvecs in %.4g seconds ", Nmatvecs, dtime);
 
     // Save diagonal element and free columns i and i+1
     // We use shift to single out the appropriate node, then sum

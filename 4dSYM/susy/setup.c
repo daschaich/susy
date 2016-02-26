@@ -167,7 +167,7 @@ void make_fields() {
   // Total size of matrix is (volume * 16 * DIMF) x (sites_on_node * 16 * DIMF)
   size = (double)(volume * 16.0 * DIMF * 16.0 * DIMF * sizeof(complex));
   size *= sites_on_node;
-  node0_printf("Q has %d columns --> %d matvecs and %.1f MBytes per core...",
+  node0_printf("Q has %d columns --> %li matvecs and %.1f MBytes per core...",
                volume * 16 * DIMF, Nmatvecs, size / 1e6);
 #endif
 }
