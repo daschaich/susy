@@ -3,6 +3,7 @@
 // Loop over directions up to NUMLINK and do not reunitarize
 #include "generic_includes.h"
 #include "../include/io_lat.h"
+#include "../susy/susy_includes.h"    // For plaquette
 // -----------------------------------------------------------------
 
 
@@ -12,11 +13,9 @@ gauge_file *save_lattice(int flag, char *filename) {
   double dtime;
   gauge_file *gf = NULL;
 
-#ifndef NOLINKS
   plaquette(&g_ssplaq, &g_stplaq);
   d_linktrsum(&linktrsum);
   nersc_checksum = nersc_cksum();
-#endif
 
   dtime = -dclock();
   switch(flag) {
@@ -125,11 +124,9 @@ gauge_file *reload_lattice(int flag, char *filename) {
   if (flag != FRESH && flag != CONTINUE)
     node0_printf("Time to reload gauge configuration = %e\n", dtime);
 
-#ifndef NOLINKS
   plaquette(&g_ssplaq, &g_stplaq);
   d_linktrsum(&linktrsum);
   nersc_checksum = nersc_cksum();
-#endif
 
 #if PRECISION == 1
   node0_printf("CHECK PLAQ: %e %e\n", g_ssplaq, g_stplaq);
