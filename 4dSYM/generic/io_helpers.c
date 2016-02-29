@@ -80,16 +80,11 @@ void funnylat() {
 
   FORALLSITES(i, s) {
     for (dir = XUP; dir <= TUP; dir++) {
-      for (j = 0; j < NCOL; ++j) {
-        for (k = 0; k < NCOL; ++k)
-          s->linkf[dir].e[j][k] = cmplx(0.0, 0.0);
+      s->linkf[dir].e[0][0] = complx(dir, dir);
+      for (j = 1; j < NCOL; ++j) {
+        for (k = 1; k < NCOL; ++k)
+          s->linkf[dir].e[j][k] = cmplx(10 * j * s->x, 10 * k * s->z);
       }
-      s->linkf[dir].e[0][0].real = dir;
-      s->linkf[dir].e[1][1].real = 10 * s->x;
-      s->linkf[dir].e[2][2].real = 100 * s->y;
-      s->linkf[dir].e[0][0].imag = dir;
-      s->linkf[dir].e[1][1].imag = 10 * s->z;
-      s->linkf[dir].e[2][2].imag = 100 * s->t;
     }
   }
 }
