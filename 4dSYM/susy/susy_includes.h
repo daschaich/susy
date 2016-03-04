@@ -117,7 +117,7 @@ void invert(su3_matrix_f *in, su3_matrix_f *out);
 
 // Modified Wilson loops use invert and path
 void path(int *dir, int *sign, int length);
-void rsymm(int project);    // Optional polar projection
+void rsymm();
 // -----------------------------------------------------------------
 
 

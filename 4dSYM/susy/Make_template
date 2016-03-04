@@ -104,8 +104,8 @@ ALL_MAKES =               \
 ${OBJECTS} : ${HEADERS} ${LASTMAKE} ${ALL_MAKES}
 
 ##### Targets:
-# -DEIG, -DWLOOP and now -DSMEAR need lapack and blas
-# susy_mode uses nsrc from -DBILIN
+# lapack and blas needed for polar decomposition (scalar eigenvalues)
+# and also by -DEIG, -DWLOOP, -DSMEAR
 susy_hmc::
 	${MAKE} -f ${MAKEFILE} target "MYTARGET= $@" \
 	"DEFINES = ${DEFINES} -DPHI_ALGORITHM -DHMC_ALGORITHM " \

@@ -14,17 +14,9 @@
 
 // -----------------------------------------------------------------
 // N=4 SYM fermions always in adjoint rep
-// U(2)
+// Gauge group U(NCOL) and size of adjoint rep DIMF = NCOL^2
 #define NCOL 2
 #define DIMF 4
-
-// U(3)
-//#define NCOL 3
-//#define DIMF 9
-
-// U(4)
-//#define NCOL 4
-//#define DIMF 16
 
 #if (NCOL!=3 || DIMF!=3)
 #ifdef FAST

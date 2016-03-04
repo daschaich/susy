@@ -115,7 +115,7 @@ void rsymm_path(int *dir, int *sign, int *kind, int length) {
 // -----------------------------------------------------------------
 // Print both usual and transformed Wilson loops
 // Use tempmat1 for temporary storage
-void rsymm(int project) {
+void rsymm() {
   register int i;
   register site *s;
   int dir_normal, dir_inv, dist, dist_inv, mu, length, max = MAX_X + 1;
@@ -126,18 +126,6 @@ void rsymm(int project) {
   su3_matrix_f tmat;
 
   node0_printf("rsymm: MAX = %d\n", max);
-
-  // Optionally consider only hermitian part of links
-  // Save links in f_U for future use (mom will be used for inverses)
-  if (project == 1) {
-    node0_printf("rsymm considering polar-projected links\n");
-    FORALLSITES(i, s) {
-      for (mu = XUP; mu < NUMLINK; mu++) {
-        su3mat_copy_f(&(s->linkf[mu]), &(s->f_U[mu]));
-        polar(&(s->f_U[mu]), &tmat, &(s->linkf[mu]));
-      }
-    }
-  }
 
   // Compute and optionally check inverse matrices
   // Temporarily store the adjoint of the inverse in momentum matrices,
@@ -275,13 +263,5 @@ void rsymm(int project) {
       } // dist
     } // dir_inv
   } // dir_normal
-
-  // Restore original links from f_U
-  if (project == 1) {
-    FORALLSITES(i, s) {
-      for (mu = XUP; mu < NUMLINK; mu++)
-        su3mat_copy_f(&(s->f_U[mu]), &(s->linkf[mu]));
-    }
-  }
 }
 // -----------------------------------------------------------------
