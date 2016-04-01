@@ -1,8 +1,7 @@
-# Makefile for Libraries for QCD programs
-#
-#  This template file defines rules and macros common to all architectures
-#  It is intended to be an include file for other Makefiles.
-#  Don't use it by itself!
+# Four-dimensional N=4 supersymmetric Yang--Mills theory
+# This template file defines rules and macros common to all architectures
+# It is intended to be an include file for other Makefiles
+# Don't use it by itself!
 
 .SUFFIXES: .1o .2o
 
@@ -13,14 +12,13 @@
 
 # List of headers currently used by some or all library routines
 # or by inheritance from their header files
-HEADERS = \
-  ../include/config.h \
-  ../include/complex.h \
-  ../include/dirs.h \
-  ../include/random.h \
-  ../include/int32type.h \
-  ../include/precision.h \
-  ../include/su3.h
+HEADERS = ../include/config.h    \
+          ../include/complex.h   \
+          ../include/dirs.h      \
+          ../include/random.h    \
+          ../include/int32type.h \
+          ../include/precision.h \
+          ../include/su3.h
 
 # To force a full remake when switching or updating Makefiles
 LASTMAKE = .lastmake.${MAKEFILE}
@@ -57,12 +55,10 @@ SU3OBJS1 = addmat.1o addvec.1o cmp_ahmat.1o cs_m_a_vec.1o cs_m_a_mat.1o \
            m_matvec_s.1o make_ahmat.1o realtr.1o complextr.1o \
            s_m_a_mat.1o s_m_a_vec.1o s_m_s_mat.1o \
            s_m_s_vec.1o s_m_sum_vec.1o s_m_vec.1o s_m_mat.1o cs_m_mat.1o \
-           cs_m_s_mat.1o su3_adjoint.1o su3_dot.1o su3_rdot.1o su3_proj.1o \
+           cs_m_s_mat.1o su3_adjoint.1o su3_dot.1o su3_rdot.1o \
            su3mat_copy.1o su3vec_copy.1o submat.1o subvec.1o trace_su3.1o \
-           uncmp_ahmat.1o msq_su3vec.1o sub4vecs.1o m_amv_4dir.1o m_amv_4vec.1o \
-           m_mv_s_4dir.1o dumpsu2.1o \
-           m_su2_mat_vec_n.1o m_su2_mat_vec_a.1o \
-           gaussrand.1o byterevn.1o \
+           uncmp_ahmat.1o msq_su3vec.1o sub4vecs.1o dumpsu2.1o \
+           m_su2_mat_vec_n.1o m_su2_mat_vec_a.1o gaussrand.1o byterevn.1o \
            m_mat_an_f.1o m_mat_na_f.1o m_mat_nn_f.1o realtr_f.1o s_m_a_mat_f.1o \
            s_m_s_mat_f.1o su3_adjoint_f.1o su3mat_copy_f.1o trace_su3_f.1o \
            dumpmat_f.1o dump_ahmat_f.1o clear_mat_f.1o addmat_f.1o submat_f.1o \
@@ -79,12 +75,10 @@ SU3OBJS2 = addmat.2o addvec.2o cmp_ahmat.2o cs_m_a_vec.2o cs_m_a_mat.2o \
            m_matvec_s.2o make_ahmat.2o realtr.2o complextr.2o \
            s_m_a_mat.2o s_m_a_vec.2o s_m_s_mat.2o \
            s_m_s_vec.2o s_m_sum_vec.2o s_m_vec.2o s_m_mat.2o cs_m_mat.2o \
-           cs_m_s_mat.2o su3_adjoint.2o su3_dot.2o su3_rdot.2o su3_proj.2o \
+           cs_m_s_mat.2o su3_adjoint.2o su3_dot.2o su3_rdot.2o \
            su3mat_copy.2o su3vec_copy.2o submat.2o subvec.2o trace_su3.2o \
-           uncmp_ahmat.2o msq_su3vec.2o sub4vecs.2o m_amv_4dir.2o m_amv_4vec.2o \
-           m_mv_s_4dir.2o dumpsu2.2o \
-           m_su2_mat_vec_n.2o m_su2_mat_vec_a.2o \
-           gaussrand.2o byterevn.2o \
+           uncmp_ahmat.2o msq_su3vec.2o sub4vecs.2o dumpsu2.2o \
+           m_su2_mat_vec_n.2o m_su2_mat_vec_a.2o gaussrand.2o byterevn.2o \
            m_mat_an_f.2o m_mat_na_f.2o m_mat_nn_f.2o realtr_f.2o s_m_a_mat_f.2o \
            s_m_s_mat_f.2o su3_adjoint_f.2o su3mat_copy_f.2o trace_su3_f.2o \
            clear_mat_f.2o dumpmat_f.2o dump_ahmat_f.2o addmat_f.2o submat_f.2o \

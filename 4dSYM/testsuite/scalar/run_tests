@@ -1,5 +1,5 @@
 #!/bin/bash
-# This script needs to be run from 4dSYM/testsuite/scalar directory
+# This script needs to be run from the 4dSYM/testsuite/scalar directory
 
 # Allow user to specify particular target
 if [ $# -gt 1 ]; then

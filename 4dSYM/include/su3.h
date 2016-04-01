@@ -1,6 +1,6 @@
 // -----------------------------------------------------------------
-// Defines and subroutine declarations for U(N) and SU(N)
-// with fermions in the DIMF-dimensional adjoint rep
+// Defines and subroutine declarations for N=4 SYM with gauge group U(NCOL)
+// and fermions in the DIMF-dimensional adjoint rep
 // The original names now refer to objects of dimension DIMF or DIMFxDIMF
 // New objects with suffix _f have dimension NCOL or NCOLxNCOL
 #ifndef _SUN_H
@@ -44,7 +44,7 @@ typedef struct {
   double im_diag[NCOL];
 } danti_hermitmat;
 
-#if (PRECISION==1)
+#if (PRECISION == 1)
 #define su3_matrix_f    fsu3_matrix_f
 #define su3_matrix      fsu3_matrix
 #define su3_vector_f    fsu3_vector_f
@@ -304,28 +304,12 @@ void mult_su3_vec_adj_mat(su3_vector *b, su3_matrix *a, su3_vector *c);
 
 // c <-- c + b * adag, in file m_vecamat_s.c
 void mult_su3_vec_adj_mat_sum(su3_vector *b, su3_matrix *a, su3_vector *c);
-
-// In file m_amv_4dir.c
-void mult_adj_su3_mat_vec_4dir(su3_matrix *a, su3_vector *b, su3_vector *c);
-
-// In file m_amv_4vec.c
-void mult_adj_su3_mat_4vec(su3_matrix *mat, su3_vector *src,
-                           su3_vector *dest0, su3_vector *dest1,
-                           su3_vector *dest2, su3_vector *dest3);
-
-// In file m_mv_s_4dir.c
-void mult_su3_mat_vec_sum_4dir(su3_matrix *a, su3_vector *b0,
-                               su3_vector *b1, su3_vector *b2,
-                               su3_vector *b3, su3_vector *c);
-
-// In file su3_proj.c
-void su3_projector(su3_vector *a, su3_vector *b, su3_matrix *c);
 // -----------------------------------------------------------------
 
 
 
 // -----------------------------------------------------------------
-// Routines mixing SU(2) and SU(N)
+// Routines mixing SU(2) and U(N)
 // In file l_su2_hit_n.c
 void left_su2_hit_n(su2_matrix *u, int p, int q, su3_matrix *link);
 

@@ -36,7 +36,7 @@ int initial_set() {
     exit(1);
 #endif
     time_stamp("start");
-    status = get_prompt(stdin,  &prompt);
+    status = get_prompt(stdin, &prompt);
 
     IF_OK status += get_i(stdin, prompt, "nx", &par_buf.nx);
     IF_OK status += get_i(stdin, prompt, "ny", &par_buf.ny);
@@ -240,8 +240,8 @@ int ask_smear_type(FILE *fp, int prompt, int *flag) {
 
 // -----------------------------------------------------------------
 // Read in parameters for Monte Carlo
+// prompt=1 indicates prompts are to be given for input
 int readin(int prompt) {
-  // prompt=1 indicates prompts are to be given for input
   int status;
   Real x;
 #ifdef CORR
@@ -331,11 +331,11 @@ int readin(int prompt) {
 #endif
 
     // Find out what kind of starting lattice to use
-    IF_OK status += ask_starting_lattice(stdin,  prompt, &par_buf.startflag,
+    IF_OK status += ask_starting_lattice(stdin, prompt, &par_buf.startflag,
                                          par_buf.startfile);
 
     // Find out what to do with lattice at end
-    IF_OK status += ask_ending_lattice(stdin,  prompt, &(par_buf.saveflag),
+    IF_OK status += ask_ending_lattice(stdin, prompt, &(par_buf.saveflag),
                                        par_buf.savefile);
 
     if (status > 0)

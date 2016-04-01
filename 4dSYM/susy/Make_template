@@ -1,10 +1,9 @@
 # Four-dimensional N=4 supersymmetric Yang--Mills theory
-#
 # Generic make-include file
 # This template file defines rules and macros common to all architectures
 # It is intended to be an include file for other Makefiles
 # Don't use it by itself!
-#
+
 # Targets:
 #   susy_phi uses phi algorithm
 #   susy_hmc uses hybrid Monte Carlo algorithm, i.e., phi + accept/reject
@@ -15,13 +14,13 @@
 #   susy_eig calculates eigenvalues using PRIMME
 #   susy_phase calculates the pfaffian phase
 # Edit the Makefiles to change this.
-#
+
 # Routines in this directory use RHMC, multiple time scale integration,
 # and Omelyan integrators.  See README.
 
 MYINCLUDEDIR = .
 INCLUDEDIR = ../include
-#Where the complex and su3 libraries are
+# Where the complex and su3 libraries are
 LIBDIR = ../libraries
 
 GLOBAL_HEADERS = ${INCLUDEDIR}/config.h      \
@@ -39,7 +38,7 @@ MY_HEADERS = lattice.h \
              defines.h \
              susy_includes.h
 
-HEADERS = ${GLOBAL_HEADERS} ${MY_HEADERS} ${INLINE_HEADERS}
+HEADERS = ${GLOBAL_HEADERS} ${MY_HEADERS}
 
 # All required object files
 # Basic set from current directory
@@ -79,7 +78,7 @@ ADD_OBJECTS = ${MACHINE_DEP_IO} ${COMMPKG}
 OBJECTS = ${MY_OBJECTS} ${G_OBJECTS} \
           ${LAYOUT} ${ADD_OBJECTS} ${EXTRA_OBJECTS}
 
-#Libraries for complex numbers and su3 functions
+# Libraries for complex numbers and su3 functions
 QCDLIB = ${LIBDIR}/su3.${PRECISION}.a ${LIBDIR}/complex.${PRECISION}.a
 LIBRARIES = ${QCDLIB}
 
@@ -95,10 +94,9 @@ ${LASTMAKE}: ${ALL_MAKES}
 	touch ${LASTMAKE}
 
 # All make files used in this compilation
-ALL_MAKES =               \
-  Make_template           \
-  ${MAKEFILE}             \
-  ../generic/Make_template
+ALL_MAKES = Make_template \
+            ${MAKEFILE}   \
+            ../generic/Make_template
 
 # To force a remake when changing any make file, header, or target
 ${OBJECTS} : ${HEADERS} ${LASTMAKE} ${ALL_MAKES}

@@ -1,9 +1,8 @@
 // -----------------------------------------------------------------
 // Create link in adjoint rep from linkf in fundamental rep
-// Allow SU(N) in addition to U(N)
 #include "susy_includes.h"
 
-#if (DIMF != NCOL * NCOL && DIMF != NCOL * NCOL - 1)
+#if (DIMF != NCOL * NCOL)
   #error "Fermions must be in adjoint rep!"
 #endif
 

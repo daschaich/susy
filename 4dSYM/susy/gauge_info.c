@@ -59,7 +59,7 @@ char *create_QCDML() {
   bytes = strlen(info);
 
   snprintf(info + bytes, max - bytes, "<plaq>%e</plaq>",
-           (myssplaq + mystplaq) / 6.0);
+           (myssplaq + mystplaq) / 10.0);
   bytes = strlen(info);
 
   bytes = strlen(info);

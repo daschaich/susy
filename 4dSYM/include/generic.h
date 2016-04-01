@@ -1,8 +1,8 @@
 // -----------------------------------------------------------------
+// Macros and declarations for miscellaneous generic routines
 #ifndef _GENERIC_H
 #define _GENERIC_H
-// Macros and declarations for miscellaneous generic routines
-// This header is for codes that call generic routines
+
 // Other generic directory declarations are elsewhere:
 //   See comdefs.h for communications
 //   See io_lat.h for I/O

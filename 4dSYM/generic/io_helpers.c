@@ -281,7 +281,7 @@ static int get_tag(FILE *fp, char *tag, char *myname) {
   char line[512];
   int s;
 
-  while (1) {
+  while(1) {
     s = fscanf(fp, "%s", checktag);
     if (s == EOF) {
       printf("%s(%d): EOF on input\n", myname, this_node);
@@ -538,7 +538,7 @@ int get_prompt(FILE *fp, int *prompt) {
 
   *prompt = -1;
   printf("type 0 for no prompts or 1 for prompts\n");
-  while (1) {
+  while(1) {
     status = fscanf(fp, "%s", initial_prompt);
     if (status != 1) {
       printf("\n%s: Can't read input\n", myname);
