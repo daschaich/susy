@@ -113,7 +113,7 @@ void make_fields() {
 
   // For convenience in calculating action and force
   size += (double)(1.0 + NPLAQ + 3.0 * NUMLINK) * sizeof(su3_matrix_f);
-  size += (double)(NUMLINK + 4.0 * NPLAQ) * sizeof(complex);
+  size += (double)(NUMLINK + 6.0 * NPLAQ) * sizeof(complex);
   FIELD_ALLOC(DmuUmu, su3_matrix_f);
   FIELD_ALLOC_VEC(Tr_Uinv, complex, NUMLINK);
   FIELD_ALLOC_VEC(Fmunu, su3_matrix_f, NPLAQ);
@@ -121,7 +121,12 @@ void make_fields() {
   FIELD_ALLOC_VEC(Udag_inv, su3_matrix_f, NUMLINK);
   FIELD_ALLOC_VEC(UpsiU, su3_matrix_f, NUMLINK);
   FIELD_ALLOC_MAT_OFFDIAG(plaqdet, complex, NUMLINK);
+  FIELD_ALLOC_MAT_OFFDIAG(tempdet, complex, NUMLINK);
   FIELD_ALLOC_MAT_OFFDIAG(ZWstar, complex, NUMLINK);
+#ifdef LINEAR_DET
+  size += (double)(2.0 * NPLAQ * sizeof(complex));
+  FIELD_ALLOC_MAT_OFFDIAG(tempZW, complex, NUMLINK);
+#endif
 
   // Temporary vectors, matrices and Twist_Fermion
   size += (double)(3.0 * sizeof(su3_matrix_f));
@@ -413,6 +418,8 @@ int readin(int prompt) {
 
   // Do whatever is needed to get lattice
   startlat_p = reload_lattice(startflag, startfile);
+  // Compute initial plaqdet
+  compute_plaqdet();
   // Generate the adjoint links
   fermion_rep();
   return 0;

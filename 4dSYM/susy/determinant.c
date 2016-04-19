@@ -282,6 +282,7 @@ void invert(su3_matrix_f *in, su3_matrix_f *out) {
 
 // -----------------------------------------------------------------
 // Average plaquette determinant over lattice volume
+// Assume compute_plaqdet() has already been run
 void measure_det() {
   register int i, a, b;
   register site *s;
@@ -289,7 +290,6 @@ void measure_det() {
   double WSq = 0.0;
   complex tot = cmplx(0.0, 0.0), tot_sq = cmplx(0.0, 0.0), tc;
 
-  compute_plaqdet();
   for (a = YUP; a < NUMLINK; a++) {
     for (b = XUP; b < a; b++) {
       FORALLSITES(i, s) {

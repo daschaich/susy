@@ -10,7 +10,8 @@
 // -----------------------------------------------------------------
 // Update mom[NUMLINK] with the gauge force
 // Include tunable coefficient C2 in the d^2 term of the action
-// Use tr_dest and tempmat1 for temporary storage
+// Use tr_dest, tempmat1 and tempdet for temporary storage
+// Assume compute_plaqdet() has already been run
 double gauge_force(Real eps) {
   register int i, mu, nu, index;
   register site *s;
@@ -50,7 +51,7 @@ double gauge_force(Real eps) {
   //   U_mu^{-1}(x) 2G sum_nu {D[nu][mu](x) + D[mu][nu](x-nu)}
   // In the global case D is Tr[DmuUmu] plaqdet[mu][nu]
   // In the local case D is 2Tr[DmuUmu] ZWstar[mu][nu]
-  // In both cases we save D in a modified plaqdet[mu][nu]
+  // In both cases we save D in tempdet[mu][nu]
   // Only compute if G is non-zero
   // Use tr_dest for temporary storage
   if (G > IMAG_TOL) {
@@ -59,18 +60,12 @@ double gauge_force(Real eps) {
       for (mu = XUP; mu < NUMLINK; mu++) {
         for (nu = mu + 1; nu < NUMLINK; nu++) {
 #ifdef LINEAR_DET
-          CMUL(tc, plaqdet[mu][nu][i], tc2);
+          CMUL(tc, plaqdet[mu][nu][i], tempdet[mu][nu][i]);
+          CMUL(tc, plaqdet[nu][mu][i], tempdet[nu][mu][i]);
 #else
-          CMUL(tc, ZWstar[mu][nu][i], tc2);
+          CMUL(tc, ZWstar[mu][nu][i], tempdet[mu][nu][i]);
+          CMUL(tc, ZWstar[nu][mu][i], tempdet[nu][mu][i]);
 #endif
-          plaqdet[mu][nu][i] = tc2;
-
-#ifdef LINEAR_DET
-          CMUL(tc, plaqdet[nu][mu][i], tc2);
-#else
-          CMUL(tc, ZWstar[nu][mu][i], tc2);
-#endif
-          plaqdet[nu][mu][i] = tc2;
         }
       }
     }
@@ -85,12 +80,12 @@ double gauge_force(Real eps) {
           continue;
 
         // Gather D[mu][nu] from x - nu
-        tag0 = start_gather_field(plaqdet[mu][nu], sizeof(complex),
+        tag0 = start_gather_field(tempdet[mu][nu], sizeof(complex),
                                   goffset[nu] + 1, EVENANDODD, gen_pt[0]);
 
         // Add D[nu][mu](x) to sum while gather runs
         FORALLSITES(i, s)
-          CSUM(tr_dest[i], plaqdet[nu][mu][i]);
+          CSUM(tr_dest[i], tempdet[nu][mu][i]);
 
         // Add D[mu][nu](x-nu) to sum
         wait_gather(tag0);
@@ -465,7 +460,9 @@ void F2Q(su3_vector *plaq_sol[NPLAQ], su3_vector *plaq_psol[NPLAQ]) {
 // -----------------------------------------------------------------
 // Plaquette determinant contributions to the fermion force
 // Use Uinv, Udag_inv, UpsiU, Tr_Uinv and tr_dest for temporary storage
+// Also use tempdet and (if global det) tempZW for temporary storage
 // The accumulator names refer to the corresponding derivatives
+// Assume compute_plaqdet() has already been run
 // If sign = 1 then take adjoint of eta
 // If sign = -1 then take adjoint of psi
 // A bit more code reuse may be possible
@@ -493,7 +490,6 @@ void detF(su3_vector *eta, su3_vector *psi[NUMLINK], int sign) {
 
   // Set up and store some basic ingredients
   // Need all five directions for upcoming sums
-  compute_plaqdet();        // Will modify plaqdet (and ZWstar) below
   for (a = XUP; a < NUMLINK; a++) {
     // Save U_a(x)^{-1} in Uinv[a] and Udag_a(x)^{-1} in Udag_inv[a]
     // Save sum_j Tr[U_a(x)^{-1} Lambda^j] psi_a^j(x) in Tr_Uinv[a]
@@ -524,9 +520,8 @@ void detF(su3_vector *eta, su3_vector *psi[NUMLINK], int sign) {
                                    &(UpsiU[a][i]));
       }
 
-      // Save either eta^D(x) plaqdet[a][b](x) (global)
-      //          or eta^D(x) |plaqdet[a][b](x)|^2 (local)
-      // in modified plaqdet[a][b](x)
+      // tempdet holds either eta^D(x) plaqdet[a][b](x) (global)
+      //                   or eta^D(x) |plaqdet[a][b](x)|^2 (local)
       if (sign == 1) {    // Braces suppress compiler error
         CONJG(eta[i].c[DIMF - 1], tc);
       }
@@ -535,15 +530,14 @@ void detF(su3_vector *eta, su3_vector *psi[NUMLINK], int sign) {
 
       for (b = a + 1; b < NUMLINK; b++) {
 #ifdef LINEAR_DET
-        CMUL(tc, plaqdet[a][b][i], tc2);
-        CMUL(tc, plaqdet[b][a][i], tc3);
+        CMUL(tc, plaqdet[a][b][i], tempdet[a][b][i]);
+        CMUL(tc, plaqdet[b][a][i], tempdet[b][a][i]);
 #else
         tr = cabs_sq(&(plaqdet[a][b][i]));
-        CMULREAL(tc, tr, tc2);
-        tc3 = tc2;                  // Square is symmetric under a<-->b
+        CMULREAL(tc, tr, tempdet[a][b][i]);
+        // Square is symmetric under a<-->b
+        tempdet[b][a][i] = tempdet[a][b][i];
 #endif
-        plaqdet[a][b][i] = tc2;
-        plaqdet[b][a][i] = tc3;
       }
     }
   }
@@ -568,7 +562,7 @@ void detF(su3_vector *eta, su3_vector *psi[NUMLINK], int sign) {
         continue;
 
       // Summary of gathers and shorthand:
-      //   D[a][b](x) is eta^D(x) plaqdet[a][b](x)
+      //   D[a][b](x) is eta^D(x) tempdet[a][b](x)
       //   T[a](x) is Tr[U_a(x)^{-1} psi_a(x)]
       // 0) T[b](x + a - b) in two steps
       // 1) D[a][b](x - b)
@@ -579,9 +573,9 @@ void detF(su3_vector *eta, su3_vector *psi[NUMLINK], int sign) {
       // 6) T[b](x - b)
       mtag[0] = start_gather_field(Tr_Uinv[b], sizeof(complex),
                                    goffset[a], EVENANDODD, gen_pt[0]);
-      mtag[1] = start_gather_field(plaqdet[a][b], sizeof(complex),
+      mtag[1] = start_gather_field(tempdet[a][b], sizeof(complex),
                                    goffset[b] + 1, EVENANDODD, gen_pt[1]);
-      mtag[2] = start_gather_field(plaqdet[b][a], sizeof(complex),
+      mtag[2] = start_gather_field(tempdet[b][a], sizeof(complex),
                                    goffset[b] + 1, EVENANDODD, gen_pt[2]);
       mtag[3] = start_gather_field(Tr_Uinv[a], sizeof(complex),
                                    goffset[b], EVENANDODD, gen_pt[3]);
@@ -617,7 +611,7 @@ void detF(su3_vector *eta, su3_vector *psi[NUMLINK], int sign) {
         tc = *((complex *)(gen_pt[5][i]));    // T[b](x + a)
         CMULREAL(tc, s->bc1[a], tc);
         CADD(Tr_Uinv[a][i], tc, tc2);
-        CMUL(plaqdet[b][a][i], tc2, tc);
+        CMUL(tempdet[b][a][i], tc2, tc);
         CSUM(plaq_term[i], tc);
 
         // D[a][b](x - b) {T[a](x) + T[b](x - b)}
@@ -633,7 +627,7 @@ void detF(su3_vector *eta, su3_vector *psi[NUMLINK], int sign) {
         tc = *((complex *)(gen_pt[3][i]));    // T[a](x + b)
         CMULREAL(tc, s->bc1[b], tc);
         CADD(Tr_Uinv[b][i], tc, tc2);
-        CMUL(plaqdet[a][b][i], tc2, tc);
+        CMUL(tempdet[a][b][i], tc2, tc);
         CSUM(adj_term[i], tc);
 
         // D[b][a](x - b) {T[a](x - b) + T[b](x + a - b) bc1[a](x - b)}
@@ -647,7 +641,7 @@ void detF(su3_vector *eta, su3_vector *psi[NUMLINK], int sign) {
         // Accumulate inv_term = sum_b D[b][a](x) + D[a][b](x - b)
         tc = *((complex *)(gen_pt[1][i]));    // D[a][b](x - b)
         CMULREAL(tc, s->bc1[OPP_LDIR(b)], tc);
-        CADD(plaqdet[b][a][i], tc, tc2);
+        CADD(tempdet[b][a][i], tc, tc2);
         CSUM(inv_term[i], tc2);
       }
       cleanup_gather(mtag[0]);
@@ -693,7 +687,7 @@ void detF(su3_vector *eta, su3_vector *psi[NUMLINK], int sign) {
   // Set up and store one more ingredient
   for (a = XUP; a < NUMLINK; a++) {
     FORALLSITES(i, s) {
-      // Save eta^D(x) ZWstar[a][b](x) in modified ZWstar[a][b](x)
+      // Save eta^D(x) ZWstar[a][b](x) in tempZW[a][b](x)
       if (sign == 1) {    // Braces suppress compiler error
         CONJG(eta[i].c[DIMF - 1], tc);
       }
@@ -701,11 +695,8 @@ void detF(su3_vector *eta, su3_vector *psi[NUMLINK], int sign) {
         tc = eta[i].c[DIMF - 1];
 
       for (b = a + 1; b < NUMLINK; b++) {
-        CMUL(tc, ZWstar[a][b][i], tc2);
-        ZWstar[a][b][i] = tc2;
-
-        CMUL(tc, ZWstar[b][a][i], tc2);
-        ZWstar[b][a][i] = tc2;
+        CMUL(tc, ZWstar[a][b][i], tempZW[a][b][i]);
+        CMUL(tc, ZWstar[b][a][i], tempZW[b][a][i]);
       }
     }
   }
@@ -725,8 +716,8 @@ void detF(su3_vector *eta, su3_vector *psi[NUMLINK], int sign) {
         continue;
 
       // Summary of gathers and shorthand:
-      //   ZSq[a][b](x) is eta^{D*}(x) |plaqdet[a][b](x)|^2
-      //   ZW[a][b](x) is eta^{D*}(x)plaqdet[a][b](x)[plaqdet[a][b](x)-1]^*
+      //   ZSq[a][b](x) is eta^{D*}(x) |tempdet[a][b](x)|^2
+      //   ZW[a][b](x) is eta^{D*}(x)tempdet[a][b](x)[tempdet[a][b](x)-1]^*
       //   T[a](x) is Tr[U_a(x)^{-1} psi_a(x)]
       // 0) T[b](x - b + a) in two steps
       // 1) ZSq[a][b](x - b)
@@ -738,11 +729,11 @@ void detF(su3_vector *eta, su3_vector *psi[NUMLINK], int sign) {
       // 7) T[b](x - b)
       mtag[0] = start_gather_field(Tr_Uinv[b], sizeof(complex),
                                    goffset[a], EVENANDODD, gen_pt[0]);
-      mtag[1] = start_gather_field(plaqdet[a][b], sizeof(complex),
+      mtag[1] = start_gather_field(tempdet[a][b], sizeof(complex),
                                    goffset[b] + 1, EVENANDODD, gen_pt[1]);
-      mtag[2] = start_gather_field(ZWstar[a][b], sizeof(complex),
+      mtag[2] = start_gather_field(tempZW[a][b], sizeof(complex),
                                    goffset[b] + 1, EVENANDODD, gen_pt[2]);
-      mtag[3] = start_gather_field(ZWstar[b][a], sizeof(complex),
+      mtag[3] = start_gather_field(tempZW[b][a], sizeof(complex),
                                    goffset[b] + 1, EVENANDODD, gen_pt[3]);
       mtag[4] = start_gather_field(Tr_Uinv[a], sizeof(complex),
                                    goffset[b], EVENANDODD, gen_pt[4]);
@@ -780,9 +771,9 @@ void detF(su3_vector *eta, su3_vector *psi[NUMLINK], int sign) {
         tc = *((complex *)(gen_pt[6][i]));    // T[b](x + a)
         CMULREAL(tc, s->bc1[a], tc);
         CADD(Tr_Uinv[a][i], tc, tc2);
-        CMUL(ZWstar[b][a][i], tc2, tc);       // dZdU
+        CMUL(tempZW[b][a][i], tc2, tc);       // dZdU
         CSUM(dZdU[i], tc);
-        CMUL(plaqdet[b][a][i], tc2, tc);      // dWdUdag
+        CMUL(tempdet[b][a][i], tc2, tc);      // dWdUdag
         CSUM(dWdUdag[i], tc);
 
         // Z(x - b) {T[b](x - b) + BC[-b](x) T[a](x)}
@@ -802,9 +793,9 @@ void detF(su3_vector *eta, su3_vector *psi[NUMLINK], int sign) {
         tc = *((complex *)(gen_pt[4][i]));    // T[a](x + b)
         CMULREAL(tc, s->bc1[b], tc);
         CADD(Tr_Uinv[b][i], tc, tc2);
-        CMUL(plaqdet[a][b][i], tc2, tc);      // dWdU
+        CMUL(tempdet[a][b][i], tc2, tc);      // dWdU
         CSUM(dWdU[i], tc);
-        CMUL(ZWstar[a][b][i], tc2, tc);       // dZdUdag
+        CMUL(tempZW[a][b][i], tc2, tc);       // dZdUdag
         CSUM(dZdUdag[i], tc);
 
         // Z(x - b) {T[a](x - b) + BC[a](x - b) T[b](x - b + a)}
@@ -821,7 +812,7 @@ void detF(su3_vector *eta, su3_vector *psi[NUMLINK], int sign) {
         // Finally dTdU accumulates ZW[b][a](x) + BC[-b](x) ZW[a][b](x - b)
         tc = *((complex *)(gen_pt[2][i]));    // ZW[a][b](x - b)
         CMULREAL(tc, s->bc1[OPP_LDIR(b)], tc);
-        CADD(ZWstar[b][a][i], tc, tc2);
+        CADD(tempZW[b][a][i], tc, tc2);
         CSUM(dTdU[i], tc2);
       }
       cleanup_gather(mtag[0]);

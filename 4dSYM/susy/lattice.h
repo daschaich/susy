@@ -141,7 +141,10 @@ EXTERN su3_vector *site_dest, *link_dest[NUMLINK], *plaq_dest[NPLAQ];
 // May be wasteful of space
 EXTERN complex minus1;
 EXTERN complex *tr_dest, *Tr_Uinv[NUMLINK], *plaqdet[NUMLINK][NUMLINK];
-EXTERN complex *ZWstar[NUMLINK][NUMLINK];
+EXTERN complex *ZWstar[NUMLINK][NUMLINK], *tempdet[NUMLINK][NUMLINK];
+#ifdef LINEAR_DET
+EXTERN complex *tempZW[NUMLINK][NUMLINK];
+#endif
 EXTERN su3_matrix_f *DmuUmu, *Fmunu[NPLAQ];
 EXTERN su3_matrix_f *Uinv[NUMLINK], *Udag_inv[NUMLINK], *UpsiU[NUMLINK];
 

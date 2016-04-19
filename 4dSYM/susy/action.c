@@ -57,8 +57,8 @@ void compute_DmuUmu() {
   }
 
   // Add plaquette determinant contribution if G is non-zero
+  // Assume compute_plaqdet() has already been run
   if (G > IMAG_TOL) {
-    compute_plaqdet();
     FORALLSITES(i, s) {
       for (mu = XUP; mu < NUMLINK; mu++) {
         for (nu = XUP; nu < NUMLINK; nu++) {
@@ -209,13 +209,13 @@ double bmass_action() {
 
 // -----------------------------------------------------------------
 // Plaquette determinant contribution to the action
+// Assume compute_plaqdet() has already been run
 double det_action() {
   register int i;
   register site *s;
   int a, b;
   double re, im, det_action = 0.0;
 
-  compute_plaqdet();
   FORALLSITES(i, s) {
     for (a = XUP; a < NUMLINK; a++) {
       for (b = a + 1; b < NUMLINK; b++) {

@@ -26,6 +26,9 @@ void update_uu(Real eps) {
       scalar_mult_add_su3_matrix_f(&(s->linkf[mu]), &(s->mom[mu]), eps,
                                    &(s->linkf[mu]));
   }
+
+  // Update plaquette determinants with new links
+  compute_plaqdet();
 }
 // -----------------------------------------------------------------
 
@@ -214,6 +217,7 @@ int update() {
   if (exp(-change) < (double)xrandom) {
     if (traj_length > 0.0) {
       gauge_field_copy_f(F_OFFSET(old_linkf[0]), F_OFFSET(linkf[0]));
+      compute_plaqdet();
       fermion_rep();
     }
     node0_printf("REJECT: delta S = %.4g start S = %.12g end S = %.12g\n",
