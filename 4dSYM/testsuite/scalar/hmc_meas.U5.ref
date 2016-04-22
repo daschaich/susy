@@ -3,7 +3,7 @@ Microcanonical simulation with refreshing
 Machine = Scalar processor, with 1 nodes
 Hybrid Monte Carlo algorithm
 Phi algorithm
-start: Sat Dec 26 15:46:32 2015
+start: Thu Apr 21 21:11:34 2016
 
 type 0 for no prompts or 1 for prompts
 nx 1
@@ -154,8 +154,8 @@ SUGRA 3 1 -0.2138192321633917 -0.01748255925141226
 SUGRA 3 2 -0.4183828084241902 -0.1685214622622283
 correlator_r: MAX = -1 --> r < -100
 susy 4.14507 0.107327 -4.96126 0.746839 ( 1 of 3 ) 59
-susy 4.68798 0.0480225 -4.35688 -0.314651 ( 2 of 3 ) 60
-susy 5.54157 -0.050936 -4.25246 0.226417 ( 3 of 3 ) 60
+susy 4.68798 0.0480226 -4.35688 -0.314651 ( 2 of 3 ) 60
+susy 5.54157 -0.0509359 -4.25246 0.226417 ( 3 of 3 ) 60
 SUSY 4.65754 -0.0923651 -1.68189 -6.33942 ( ave over 3 )
 rsymm: MAX = 0
 INVLINK 1.41308 1.67165 1.39674 1.68703 2.6577 1.76524 0.543277
@@ -169,6 +169,6 @@ STOP 6.0184392 7.9287287 13.947168 104.20181
 Average CG iters for steps: 1926
 Average CG iters for measurements: 179
 
-Time = 62.03 seconds
+Time = 57.46 seconds
 total_iters = 5958
 

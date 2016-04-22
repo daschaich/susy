@@ -2,7 +2,7 @@ N=4 SYM, Nc = 4, DIMF = 16, fermion rep = adjoint
 Microcanonical simulation with refreshing
 Machine = Scalar processor, with 1 nodes
 Phi algorithm
-start: Sun Jan  3 13:01:30 2016
+start: Fri Apr 22 06:57:32 2016
 
 type 0 for no prompts or 1 for prompts
 nx 4
@@ -18,7 +18,7 @@ ON EACH NODE 4 x 4 x 4 x 4
 Mallocing 8.5 MBytes per core for lattice
 Antiperiodic temporal boundary conditions
 Supersymmetric constraint on (det[plaq] - 1)
-Mallocing 6.6 MBytes per core for fields
+Mallocing 6.7 MBytes per core for fields
 
 
 warms 0
@@ -50,7 +50,7 @@ C2=1
 Restored binary gauge configuration serially from file config.U4.4444
 Time stamp Sun Apr 19 21:34:20 2015
 Checksums 9098c02 35224501 OK
-Time to reload gauge configuration = 4.119873e-04
+Time to reload gauge configuration = 3.221035e-04
 CHECK PLAQ: 4.1503788625513707e+00 4.1297157023877400e+00
 CHECK NERSC LINKTR: -3.1120252429257533e-03 CKSUM: 0
 START 4.1503789 4.1297157 8.2800946 78.268997
@@ -153,9 +153,9 @@ CORR_S 2 1.09545 2 0 0.00078362333 -5.1858157e-06
 CORR_S 2 1.09545 2 1 0.0014989883 -3.3292616e-05
 CORR_S 2 1.09545 2 2 0.0028051807 -9.6423966e-05
 susy 3.82332 -0.0255612 -3.93719 0.0144541 ( 1 of 3 ) 60
-susy 3.86893 -0.0105318 -3.87849 0.0610538 ( 2 of 3 ) 61
+susy 3.86893 -0.0105318 -3.87849 0.0610537 ( 2 of 3 ) 61
 susy 3.90227 0.0352173 -3.87418 -0.0739042 ( 3 of 3 ) 59
-SUSY 3.88073 -0.000413244 4.3768 0.496068 ( ave over 3 )
+SUSY 3.88073 -0.000413246 4.3768 0.496068 ( ave over 3 )
 rsymm: MAX = 2
 INVLINK 1.20716 1.17581 1.16765 1.18133 1.18024 1.18244 0.157388
 RSYMM 1 [0] 1 [1] 4.4736622 4.6598897
@@ -241,7 +241,7 @@ RSYMM 2 [4] 2 [3] 4.9765772 5.2437152
 MONOPOLE 0 0  0 0  0 0  0 0    0 0
 Fixing to Coulomb gauge...
 GFIX ended at step 90. Ave gf action 0.780106, delta 9.6e-08
-GFIX time = 0.1461 seconds
+GFIX time = 0.137 seconds
 BEFORE 4.4639193 4.432641
 AFTER  4.4639193 4.432641
 hvy_pot: MAX_T = 2, MAX_X = 1 --> r < 1.41421
@@ -269,4 +269,4 @@ RUNNING COMPLETED
 CG iters for measurements: 180
 total_iters = 180
 
-Time = 27.18 seconds
+Time = 20.49 seconds
