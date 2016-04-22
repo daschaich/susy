@@ -123,7 +123,7 @@ void make_fields() {
   FIELD_ALLOC_MAT_OFFDIAG(plaqdet, complex, NUMLINK);
   FIELD_ALLOC_MAT_OFFDIAG(tempdet, complex, NUMLINK);
   FIELD_ALLOC_MAT_OFFDIAG(ZWstar, complex, NUMLINK);
-#ifdef LINEAR_DET
+#ifndef LINEAR_DET
   size += (double)(2.0 * NPLAQ * sizeof(complex));
   FIELD_ALLOC_MAT_OFFDIAG(tempZW, complex, NUMLINK);
 #endif
