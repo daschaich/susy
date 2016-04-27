@@ -8,17 +8,12 @@
 #ifndef FAST
 void mult_adj_su3_mat_vec_nsum(su3_matrix *a, su3_vector *b, su3_vector *c) {
   register int i, j;
-  register complex x, y, z;
+  register complex y;
   for (i = 0; i < DIMF; i++) {
-    x.real = 0.0;
-    x.imag = 0.0;
     for (j = 0; j < DIMF; j++) {
-      CONJG(a->e[j][i], z);
-      CMUL(z, b->c[j], y);
-      CSUM(x, y);
+      CMULJ_(a->e[j][i], b->c[j], y);
+      CDIF(c->c[i], y);
     }
-    c->c[i].real -= x.real;
-    c->c[i].imag -= x.imag;
   }
 }
 #else   // FAST version for DIMF=3 only

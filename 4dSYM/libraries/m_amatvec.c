@@ -8,13 +8,11 @@
 #ifndef FAST
 void mult_adj_su3_mat_vec(su3_matrix *a, su3_vector *b, su3_vector *c) {
   register int i, j;
-  register complex y, z;
+  register complex y;
   for (i = 0; i < DIMF; i++) {
-    CONJG(a->e[0][i], z);
-    CMUL(z, b->c[0], c->c[i]);
+    CMULJ_(a->e[0][i], b->c[0], c->c[i]);
     for (j = 1; j < DIMF; j++) {
-      CONJG(a->e[j][i], z);
-      CMUL(z, b->c[j], y);
+      CMULJ_(a->e[j][i], b->c[j], y);
       CSUM(c->c[i], y);
     }
   }

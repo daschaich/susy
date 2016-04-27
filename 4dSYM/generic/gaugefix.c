@@ -82,11 +82,11 @@ void accum_gauge_hit(int gauge_dir, int parity) {
 
       if (sumvec_offset >= 0) {
         for (j = 0; j < NCOL; j++)
-          CSUM(((su3_vector_f *)F_PT(s,sumvec_offset))->c[j], m1->e[j][j]);
+          CSUM(((su3_vector_f *)F_PT(s, sumvec_offset))->c[j], m1->e[j][j]);
       }
       else {
         for (j = 0; j < NCOL; j++)
-          CSUM(sumvecp[i].c[j],m1->e[j][j]);
+          CSUM(sumvecp[i].c[j], m1->e[j][j]);
       }
     }
   }
@@ -98,8 +98,8 @@ void accum_gauge_hit(int gauge_dir, int parity) {
       m2 = (su3_matrix_f *)gen_pt[dir][i];
 
       if (diffmat_offset >= 0) {
-        add_su3_matrix_f((su3_matrix_f *)F_PT(s,diffmat_offset), m2,
-                         (su3_matrix_f *)F_PT(s,diffmat_offset));
+        add_su3_matrix_f((su3_matrix_f *)F_PT(s, diffmat_offset), m2,
+                         (su3_matrix_f *)F_PT(s, diffmat_offset));
       }
       else
         add_su3_matrix_f(&diffmatp[i], m2, &diffmatp[i]);
