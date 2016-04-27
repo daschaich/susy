@@ -8,16 +8,14 @@
 #ifndef FAST
 void mult_su3_an(su3_matrix *a, su3_matrix *b, su3_matrix *c) {
   register int i, j, k;
-  register complex x, y;
+  register complex y;
   for (i = 0; i < DIMF; i++) {
     for (j = 0; j < DIMF; j++) {
-      x.real = 0.0;
-      x.imag = 0.0;
-      for (k = 0; k < DIMF; k++) {
+      CMULJ_(a->e[0][i], b->e[0][j], c->e[i][j]);
+      for (k = 1; k < DIMF; k++) {
         CMULJ_(a->e[k][i], b->e[k][j], y);
-        CSUM(x, y);
+        CSUM(c->e[i][j], y);
       }
-      c->e[i][j] = x;
     }
   }
 }

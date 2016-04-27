@@ -231,7 +231,7 @@ void F1Q(su3_vector *plaq_sol[NPLAQ], su3_vector *plaq_psol[NPLAQ]) {
   register site *s;
   char **local_pt[2][4];
   int a, b, c, d, e, j, l, m, i_ab, i_de, gather, next, flip = 0;
-  Real permm, BC;
+  Real permm, perm1, perm2;
   complex tc;
   msg_tag *tag0[2], *tag1[2], *tag2[2], *tag3[2];
   su3_vector *vec0, *vec1, *vec2, *vec3;
@@ -306,19 +306,17 @@ void F1Q(su3_vector *plaq_sol[NPLAQ], su3_vector *plaq_psol[NPLAQ]) {
       vec1 = (su3_vector *)(local_pt[flip][1][i]);
       vec2 = (su3_vector *)(local_pt[flip][2][i]);
       vec3 = (su3_vector *)(local_pt[flip][3][i]);
+      perm1 = permm * (s->bc3[a][b][c]) * (s->bc1[c]);
+      perm2 = -1.0 * permm * (s->bc2[OPP_LDIR(a)][OPP_LDIR(b)]) * (s->bc1[c]);
       for (l = 0; l < DIMF; l++) {
         for (m = 0; m < DIMF; m++) {
           CMULJ_(vec0->c[l], vec1->c[m], tc);
-          CMULREAL(tc, permm, tc);
-          BC = (s->bc3[a][b][c]) * (s->bc1[c]);
-          CMULREAL(tc, BC, tc);
+          CMULREAL(tc, perm1, tc);
           c_scalar_mult_add_su3mat_f(&(tempmat1[i]), &(Lambda_prod[l][m]),
                                      &tc, &(tempmat1[i]));
 
           CMULJ_(vec2->c[l], vec3->c[m], tc);
-          CMULREAL(tc, -permm, tc);
-          BC = (s->bc2[OPP_LDIR(a)][OPP_LDIR(b)]) * (s->bc1[c]);
-          CMULREAL(tc, BC, tc);
+          CMULREAL(tc, perm2, tc);
           c_scalar_mult_add_su3mat_f(&(tempmat1[i]), &(Lambda_prod[m][l]),
                                      &tc, &(tempmat1[i]));
         }
@@ -348,7 +346,7 @@ void F2Q(su3_vector *plaq_sol[NPLAQ], su3_vector *plaq_psol[NPLAQ]) {
   register site *s;
   char **local_pt[2][4];
   int a, b, c, d, e, j, l, m, i_ab, i_de, gather, next, flip = 0;
-  Real permm, BC;
+  Real permm, perm1, perm2;
   complex tc;
   msg_tag *tag0[2], *tag1[2], *tag2[2], *tag3[2];
   su3_vector *vec0, *vec1, *vec2, *vec3;
@@ -423,19 +421,17 @@ void F2Q(su3_vector *plaq_sol[NPLAQ], su3_vector *plaq_psol[NPLAQ]) {
       vec1 = (su3_vector *)(local_pt[flip][1][i]);
       vec2 = (su3_vector *)(local_pt[flip][2][i]);
       vec3 = (su3_vector *)(local_pt[flip][3][i]);
+      perm1 = permm * (s->bc2[OPP_LDIR(a)][OPP_LDIR(b)]) * (s->bc1[c]);
+      perm2 = -1.0 * permm * (s->bc3[a][b][c]) * (s->bc1[c]);
       for (l = 0; l < DIMF; l++) {
         for (m = 0; m < DIMF; m++) {
           CMULJ_(vec0->c[l], vec1->c[m], tc);
-          CMULREAL(tc, permm, tc);
-          BC = (s->bc2[OPP_LDIR(a)][OPP_LDIR(b)]) * (s->bc1[c]);
-          CMULREAL(tc, BC, tc);
+          CMULREAL(tc, perm1, tc);
           c_scalar_mult_add_su3mat_f(&(tempmat1[i]), &(Lambda_prod[l][m]),
                                      &tc, &(tempmat1[i]));
 
           CMULJ_(vec2->c[l], vec3->c[m], tc);
-          CMULREAL(tc, -permm, tc);
-          BC = (s->bc3[a][b][c]) * (s->bc1[c]);
-          CMULREAL(tc, BC, tc);
+          CMULREAL(tc, perm2, tc);
           c_scalar_mult_add_su3mat_f(&(tempmat1[i]), &(Lambda_prod[m][l]),
                                      &tc, &(tempmat1[i]));
         }

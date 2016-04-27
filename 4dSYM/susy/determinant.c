@@ -240,19 +240,14 @@ void invert(su3_matrix_f *in, su3_matrix_f *out) {
 #if (NCOL > 4)
   // Use LAPACK for more than 4 colors
   // Checked that this produces the correct results for NCOL <= 4
-  int row, col, Npt = NCOL, stat = 0, Nwork = 2 * NCOL, *ipiv;
-  double *store, *work;
-
-  // Allocate arrays to be used by LAPACK
-  ipiv = malloc(NCOL * sizeof(*ipiv));
-  store = malloc(2 * NCOL * NCOL * sizeof(*store));
-  work = malloc(2 * Nwork * sizeof(*work));
+  int i, row, col, Npt = NCOL, stat = 0, Nwork = 2 * NCOL;
 
   // Convert in to column-major double array used by LAPACK
   for (row = 0; row < NCOL; row++) {
     for (col = 0; col < NCOL; col++) {
-      store[2 * (col * NCOL + row)] = in->e[row][col].real;
-      store[2 * (col * NCOL + row) + 1] = in->e[row][col].imag;
+      i = 2 * (col * NCOL + row);
+      store[i] = in->e[row][col].real;
+      store[i + 1] = in->e[row][col].imag;
     }
   }
 
@@ -265,15 +260,11 @@ void invert(su3_matrix_f *in, su3_matrix_f *out) {
   // Move the results into the su3_matrix_f structure for out
   for (row = 0; row < NCOL; row++) {
     for (col = 0; col < NCOL; col++) {
-      out->e[row][col].real = store[2 * (col * NCOL + row)];
-      out->e[row][col].imag = store[2 * (col * NCOL + row) + 1];
+      i = 2 * (col * NCOL + row);
+      out->e[row][col].real = store[i];
+      out->e[row][col].imag = store[i + 1];
     }
   }
-
-  // Free arrays used by LAPACK
-  free(ipiv);
-  free(store);
-  free(work);
 #endif
 }
 // -----------------------------------------------------------------
@@ -331,7 +322,7 @@ void det_project(su3_matrix_f *in, su3_matrix_f *out) {
   tc = find_det(out);
   if (fabs(tc.imag) > IMAG_TOL || fabs(1.0 - tc.real) > IMAG_TOL) {
     printf("node%d WARNING: det = (%.4g, %.4g) after projection...\n",
-        this_node, tc.real, tc.imag);
+           this_node, tc.real, tc.imag);
   }
 #endif
 }

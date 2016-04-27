@@ -154,6 +154,12 @@ EXTERN su3_vector *tempvec[NUMLINK];
 EXTERN su3_matrix_f *tempmat1, *tempmat2, *staple;
 EXTERN Twist_Fermion *tempTF;
 
+#if (NCOL > 4)
+// Arrays to be used by LAPACK in determinant.c
+EXTERN int *ipiv;
+EXTERN double *store, *work;
+#endif
+
 EXTERN gauge_file *startlat_p;
 EXTERN gauge_file *savelat_p;
 
