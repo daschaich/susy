@@ -593,7 +593,7 @@ void DbminusLtoS(su3_vector *src[NUMLINK], su3_vector *dest) {
     mult_adj_su3_mat_vec(&(s->link[0]), &(src[0][i]), &(tempvec[0][i]));
   }
   tag[0] = start_gather_field(tempvec[0], sizeof(su3_vector),
-      goffset[0] + 1, EVENANDODD, gen_pt[0]);
+                              goffset[0] + 1, EVENANDODD, gen_pt[0]);
 
   for (mu = 0; mu < NUMLINK; mu++) {
     if (mu < NUMLINK - 1) {   // Start next gather
@@ -789,21 +789,21 @@ void fermion_op(Twist_Fermion *src, Twist_Fermion *dest, int sign) {
   DbplusStoL(site_src, link_dest);        // Adds to link_dest2
 
   // Site-to-link plaquette determinant contribution if G is non-zero
-  if (G > IMAG_TOL)
+  if (doG)
     detStoL(site_src, link_dest);         // Adds to link_dest
 
   // Site-to-link scalar potential contribution if B is non-zero
-  if (B > IMAG_TOL)
+  if (doB)
     potStoL(site_src, link_dest);         // Adds to link_dest
 
   DbminusLtoS(link_src, site_dest);       // Initializes site_dest
 
   // Link-to-site plaquette determinant contribution if G is non-zero
-  if (G > IMAG_TOL)
+  if (doG)
     detLtoS(link_src, site_dest);         // Adds to site_dest
 
   // Link-to-site scalar potential contribution if B is non-zero
-  if (B > IMAG_TOL)
+  if (doB)
     potLtoS(link_src, site_dest);         // Adds to site_dest
 #endif
 
@@ -847,11 +847,11 @@ void fermion_op(Twist_Fermion *src, Twist_Fermion *dest, int sign) {
 void DSq(Twist_Fermion *src, Twist_Fermion *dest) {
   register int i;
   register site *s;
-  Real fmass2 = fmass * fmass;
 
   fermion_op(src, tempTF, PLUS);
   fermion_op(tempTF, dest, MINUS);
-  if (fmass2 > IMAG_TOL) {
+  if (fmass > IMAG_TOL) {
+    Real fmass2 = fmass * fmass;
     FORALLSITES(i, s)
       scalar_mult_add_TF(&(dest[i]), &(src[i]), fmass2, &(dest[i]));
   }

@@ -11,7 +11,6 @@
 complex su3_dot(su3_vector *a, su3_vector *b) {
 #ifndef FAST
   complex temp1, temp2;
-#if (DIMF <= 6)
   CMULJ_(a->c[0], b->c[0], temp1);
   CMULJ_(a->c[1], b->c[1], temp2);
   CSUM(temp1, temp2);
@@ -27,20 +26,23 @@ complex su3_dot(su3_vector *a, su3_vector *b) {
 #if (DIMF > 5)
   CMULJ_(a->c[5], b->c[5], temp2);
   CSUM(temp1, temp2);
-#endif
-#endif
-#endif
-#endif
-#else  // DIMF > 6
-  int i;
-  CMULJ_(a->c[0], b->c[0], temp1);
-  for (i = 1; i < DIMF; i++) {
+#if (DIMF > 6)
+  CMULJ_(a->c[6], b->c[6], temp2);
+  CSUM(temp1, temp2);
+#if (DIMF > 7)
+  register int i;
+  for (i = 7; i < DIMF; i++) {
     CMULJ_(a->c[i], b->c[i], temp2);
     CSUM(temp1, temp2);
   }
 #endif
+#endif
+#endif
+#endif
+#endif
+#endif
   return temp1;
-#else // FAST
+#else // FAST version for DIMF=3 only
   register Real ar, ai, br, bi, cr, ci;
   register complex cc;
 

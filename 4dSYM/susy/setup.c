@@ -370,7 +370,15 @@ int readin(int prompt) {
   bmass = par_buf.bmass;
   fmass = par_buf.fmass;
   G = par_buf.G;
+  if (G > IMAG_TOL)
+    doG = 1;
+  else
+    doG = 0;
   B = par_buf.B;
+  if (B > IMAG_TOL)
+    doB = 1;
+  else
+    doB = 0;
   kappa = (Real)NCOL * 0.5 / lambda;
   node0_printf("lambda=%.4g --> kappa=Nc/(2lambda)=%.4g\n",
                lambda, kappa);

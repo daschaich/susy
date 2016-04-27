@@ -54,7 +54,7 @@ double gauge_force(Real eps) {
   // In both cases we save D in tempdet[mu][nu]
   // Only compute if G is non-zero
   // Use tr_dest for temporary storage
-  if (G > IMAG_TOL) {
+  if (doG) {
     FORALLSITES(i, s) {
       tc = trace_su3_f(&DmuUmu[i]);
       for (mu = XUP; mu < NUMLINK; mu++) {
@@ -111,7 +111,7 @@ double gauge_force(Real eps) {
   //   Udag_mu(x) 2B^2/N Tr[DmuUmu](x) Y(x)
   // where Y(x) = Tr[U_mu(x) Udag_mu(x)] / N - 1
   // Only compute if B is non-zero
-  if (B > IMAG_TOL) {
+  if (doB) {
     Real tr, twoBSqOvN = 2.0 * B * B / (Real)NCOL;
 
     FORALLSITES(i, s) {
@@ -1163,7 +1163,7 @@ void assemble_fermion_force(Twist_Fermion *sol, Twist_Fermion *psol) {
   }
 
   // Plaquette determinant contributions if G is non-zero
-  if (G > IMAG_TOL) {
+  if (doG) {
     // First connect link_sol with site_psol[DIMF - 1]^dag (LtoS)
     detF(site_psol, link_sol, 1);
 
@@ -1173,7 +1173,7 @@ void assemble_fermion_force(Twist_Fermion *sol, Twist_Fermion *psol) {
 
   // Scalar potential contributions if B is non-zero
   // Use tempmat1 and Tr_Uinv for temporary storage
-  if (B > IMAG_TOL) {
+  if (doB) {
     // First connect link_sol with site_psol[DIMF - 1]^dag (LtoS)
     pot_force(site_psol, link_sol, 1);
 
@@ -1244,7 +1244,7 @@ double fermion_force(Real eps, Twist_Fermion *src, Twist_Fermion **sol) {
     for (mu = XUP; mu < NUMLINK; mu++) {
       FORALLSITES(i, s) {
         add_su3_matrix_f(&(fullforce[mu][i]), &(s->f_U[mu]),
-            &(fullforce[mu][i]));
+                         &(fullforce[mu][i]));
 #ifdef FORCE_DEBUG
 //      if (s->x == 0 && s->y == 0 && s->z == 0 && s->t == 0 && mu == 3) {
 //        printf("Fermion force mu=%d on site (%d, %d, %d, %d)\n",

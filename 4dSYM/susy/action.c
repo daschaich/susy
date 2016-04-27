@@ -58,7 +58,7 @@ void compute_DmuUmu() {
 
   // Add plaquette determinant contribution if G is non-zero
   // Assume compute_plaqdet() has already been run
-  if (G > IMAG_TOL) {
+  if (doG) {
     FORALLSITES(i, s) {
       for (mu = XUP; mu < NUMLINK; mu++) {
         for (nu = XUP; nu < NUMLINK; nu++) {
@@ -81,7 +81,7 @@ void compute_DmuUmu() {
   }
 
   // Add scalar potential contribution if B is non-zero
-  if (B > IMAG_TOL) {
+  if (doB) {
     FORALLSITES(i, s) {
       for (mu = XUP; mu < NUMLINK; mu++) {
         tr = 1.0 / (Real)NCOL;

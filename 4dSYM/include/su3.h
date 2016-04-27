@@ -209,10 +209,6 @@ void c_scalar_mult_add_su3vec(su3_vector *v1, complex *phase, su3_vector *v2);
 
 // In file cs_m_s_vec.c
 void c_scalar_mult_sub_su3vec(su3_vector *v1, complex *phase, su3_vector *v2);
-
-// In file sub4vecs.c
-void sub_four_su3_vecs(su3_vector *a, su3_vector *b1, su3_vector *b2,
-                       su3_vector *b3, su3_vector *b4);
 // -----------------------------------------------------------------
 
 
