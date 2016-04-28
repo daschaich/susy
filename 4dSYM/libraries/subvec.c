@@ -16,8 +16,8 @@ void sub_su3_vector(su3_vector *a, su3_vector *b, su3_vector *c) {
   CSUB(a->c[6], b->c[6], c->c[6]);
   CSUB(a->c[7], b->c[7], c->c[7]);
   CSUB(a->c[8], b->c[8], c->c[8]);
-  CSUB(a->c[9], b->c[9], c->c[9]);
 #if (DIMF > 9)
+  CSUB(a->c[9], b->c[9], c->c[9]);
   CSUB(a->c[10], b->c[10], c->c[10]);
   CSUB(a->c[11], b->c[11], c->c[11]);
   CSUB(a->c[12], b->c[12], c->c[12]);

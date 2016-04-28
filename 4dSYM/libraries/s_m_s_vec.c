@@ -1,6 +1,6 @@
 // -----------------------------------------------------------------
 // Subtract result of scalar multiplication on irrep vector
-// c <-- a - s*b
+// c <-- a - s * b
 #include "../include/config.h"
 #include "../include/complex.h"
 #include "../include/su3.h"

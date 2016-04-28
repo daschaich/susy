@@ -11,7 +11,7 @@ void mult_su3_an(su3_matrix *a, su3_matrix *b, su3_matrix *c) {
   register complex y;
   for (i = 0; i < DIMF; i++) {
     for (j = 0; j < DIMF; j++) {
-      CMULJ_(a->e[0][i], b->e[0][j], c->e[i][j]);
+      CMULJ_(a->e[0][i], b->e[0][j], c->e[i][j]);   // Initialize
       for (k = 1; k < DIMF; k++) {
         CMULJ_(a->e[k][i], b->e[k][j], y);
         CSUM(c->e[i][j], y);

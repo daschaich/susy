@@ -11,7 +11,7 @@ void mult_su3_na_f(su3_matrix_f *a, su3_matrix_f *b, su3_matrix_f *c) {
   register complex y;
   for (i = 0; i < NCOL; i++) {
     for (j = 0; j < NCOL; j++) {
-      CMUL_J(a->e[i][0], b->e[j][0], c->e[i][j]);
+      CMUL_J(a->e[i][0], b->e[j][0], c->e[i][j]);   // Initialize
       for (k = 1; k < NCOL; k++) {
         CMUL_J(a->e[i][k], b->e[j][k], y);
         CSUM(c->e[i][j], y);

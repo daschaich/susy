@@ -295,11 +295,20 @@ void mult_adj_su3_mat_vec_nsum(su3_matrix *a, su3_vector *b, su3_vector *c);
 // c <-- b * a, in file m_vecmat.c
 void mult_su3_vec_mat(su3_vector *b, su3_matrix *a, su3_vector *c);
 
+// c <-- c + b * a, in file m_vecmat_s.c
+void mult_su3_vec_mat_sum(su3_vector *b, su3_matrix *a, su3_vector *c);
+
+// c <-- c - b * a, in file m_vecmat_ns.c
+void mult_su3_vec_mat_nsum(su3_vector *b, su3_matrix *a, su3_vector *c);
+
 // c <-- b * adag, in file m_vecamat.c
 void mult_su3_vec_adj_mat(su3_vector *b, su3_matrix *a, su3_vector *c);
 
 // c <-- c + b * adag, in file m_vecamat_s.c
 void mult_su3_vec_adj_mat_sum(su3_vector *b, su3_matrix *a, su3_vector *c);
+
+// c <-- c - b * adag, in file m_vecamat_ns.c
+void mult_su3_vec_adj_mat_nsum(su3_vector *b, su3_matrix *a, su3_vector *c);
 // -----------------------------------------------------------------
 
 

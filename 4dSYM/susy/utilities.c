@@ -96,7 +96,7 @@ void Dplus(su3_vector *src[NUMLINK], su3_vector *dest[NPLAQ]) {
   register int i;
   register site *s;
   int mu, nu, index;
-  su3_vector vtmp1, vtmp2, vtmp3, vtmp4, *vec0, *vec2;
+  su3_vector vtmp, *vec0, *vec2;
   su3_matrix *mat1, *mat3;
   msg_tag *mtag0 = NULL, *mtag1 = NULL, *mtag2 = NULL, *mtag3 = NULL;
 
@@ -124,17 +124,19 @@ void Dplus(su3_vector *src[NUMLINK], su3_vector *dest[NPLAQ]) {
         mat1 = (su3_matrix *)(gen_pt[1][i]);
         vec2 = (su3_vector *)(gen_pt[2][i]);
         mat3 = (su3_matrix *)(gen_pt[3][i]);
-        mult_su3_mat_vec(&(s->link[mu]), vec0, &vtmp1);
-        scalar_mult_su3_vector(&vtmp1, s->bc1[mu], &vtmp1);
 
-        mult_su3_vec_mat(&(src[nu][i]), mat1, &vtmp2);
-        mult_su3_mat_vec(&(s->link[nu]), vec2, &vtmp3);
-        scalar_mult_su3_vector(&vtmp3, s->bc1[nu], &vtmp3);
+        // Initialize dest[index][i]
+        mult_su3_mat_vec(&(s->link[mu]), vec0, &vtmp);
+        scalar_mult_su3_vector(&vtmp, s->bc1[mu], &(dest[index][i]));
 
-        mult_su3_vec_mat(&(src[mu][i]), mat3, &vtmp4);
-        sub_su3_vector(&vtmp1, &vtmp2, &vtmp1);
-        sub_su3_vector(&vtmp3, &vtmp4, &vtmp3);
-        sub_su3_vector(&vtmp1, &vtmp3, &(dest[index][i]));   // Initialize
+        // Add or subtract the other three terms
+        mult_su3_vec_mat_nsum(&(src[nu][i]), mat1, &(dest[index][i]));
+
+        mult_su3_mat_vec(&(s->link[nu]), vec2, &vtmp);
+        scalar_mult_sub_su3_vector(&(dest[index][i]), &vtmp, s->bc1[nu],
+                                   &(dest[index][i]));
+
+        mult_su3_vec_mat_sum(&(src[mu][i]), mat3, &(dest[index][i]));
       }
       cleanup_gather(mtag0);
       cleanup_gather(mtag1);
@@ -155,7 +157,7 @@ void Dminus(su3_vector *src[NPLAQ], su3_vector *dest[NUMLINK]) {
   register int i;
   register site *s;
   int mu, nu, index;
-  su3_vector vtmp1, vtmp2, *vec;
+  su3_vector vtmp, *vec;
   su3_matrix *mat;
   msg_tag *mtag0 = NULL, *mtag1 = NULL;
 
@@ -173,8 +175,8 @@ void Dminus(su3_vector *src[NPLAQ], su3_vector *dest[NUMLINK]) {
 
       FORALLSITES(i, s) {
         if (mu > nu) {    // src is anti-symmetric under mu <--> nu
-          scalar_mult_su3_vector(&(src[index][i]), -1.0, &vtmp1);
-          mult_su3_vec_mat(&vtmp1, &(s->link[mu]), &(tempvec[0][i]));
+          scalar_mult_su3_vector(&(src[index][i]), -1.0, &vtmp);
+          mult_su3_vec_mat(&vtmp, &(s->link[mu]), &(tempvec[0][i]));
         }
         else
           mult_su3_vec_mat(&(src[index][i]), &(s->link[mu]), &(tempvec[0][i]));
@@ -187,15 +189,13 @@ void Dminus(su3_vector *src[NPLAQ], su3_vector *dest[NUMLINK]) {
       FORALLSITES(i, s) {
         mat = (su3_matrix *)(gen_pt[0][i]);
         vec = (su3_vector *)(gen_pt[1][i]);
-        if (mu > nu) {    // src is anti-symmetric under mu <--> nu
-          scalar_mult_su3_vector(&(src[index][i]), -1.0, &vtmp2);
-          mult_su3_mat_vec(mat, &vtmp2, &vtmp1);
-        }
+        if (mu > nu)      // src is anti-symmetric under mu <--> nu
+          mult_su3_mat_vec_nsum(mat, &(src[index][i]), &(dest[nu][i]));
         else
-          mult_su3_mat_vec(mat, &(src[index][i]), &vtmp1);
-        scalar_mult_su3_vector(vec, s->bc1[OPP_LDIR(mu)], &vtmp2);
-        sub_su3_vector(&vtmp1, &vtmp2, &vtmp1);
-        add_su3_vector(&(dest[nu][i]), &vtmp1, &(dest[nu][i]));
+          mult_su3_mat_vec_sum(mat, &(src[index][i]), &(dest[nu][i]));
+
+        scalar_mult_sub_su3_vector(&(dest[nu][i]), vec,
+                                   s->bc1[OPP_LDIR(mu)], &(dest[nu][i]));
       }
       cleanup_gather(mtag0);
       cleanup_gather(mtag1);
@@ -215,8 +215,8 @@ void DbplusPtoP(su3_vector *src[NPLAQ], su3_vector *dest[NPLAQ]) {
   register site *s;
   char **local_pt[2][4];
   int a, b, c, d, e, j, gather, next, flip = 0, i_ab, i_de;
-  Real tr;
-  su3_vector *vec1, *vec2, vtmp1, vtmp2;
+  Real tr, tr2;
+  su3_vector *vec1, *vec2, vtmp;
   su3_matrix *mat0, *mat3;
   msg_tag *tag0[2], *tag1[2], *tag2[2], *tag3[2];
 
@@ -282,14 +282,15 @@ void DbplusPtoP(su3_vector *src[NPLAQ], su3_vector *dest[NPLAQ]) {
       vec1 = (su3_vector *)(local_pt[flip][1][i]);
       vec2 = (su3_vector *)(local_pt[flip][2][i]);
       mat3 = (su3_matrix *)(local_pt[flip][3][i]);
-      mult_su3_vec_adj_mat(vec1, mat0, &vtmp1);
-      scalar_mult_su3_vector(&vtmp1, s->bc3[a][b][c], &vtmp1);
 
-      mult_adj_su3_mat_vec(mat3, vec2, &vtmp2);
-      scalar_mult_su3_vector(&vtmp2, s->bc2[a][b], &vtmp2);
+      tr2 = tr * s->bc3[a][b][c];
+      mult_su3_vec_adj_mat(vec1, mat0, &vtmp);
+      scalar_mult_add_su3_vector(&(dest[i_ab][i]), &vtmp, tr2,
+                                 &(dest[i_ab][i]));
 
-      sub_su3_vector(&vtmp1, &vtmp2, &vtmp1);
-      scalar_mult_add_su3_vector(&(dest[i_ab][i]), &vtmp1, tr,
+      tr2 = tr * s->bc2[a][b];
+      mult_adj_su3_mat_vec(mat3, vec2, &vtmp);
+      scalar_mult_sub_su3_vector(&(dest[i_ab][i]), &vtmp, tr2,
                                  &(dest[i_ab][i]));
     }
     cleanup_gather(tag0[flip]);
@@ -312,8 +313,8 @@ void DbminusPtoP(su3_vector *src[NPLAQ], su3_vector *dest[NPLAQ]) {
   register site *s;
   char **local_pt[2][4];
   int a, b, c, d, e, j, gather, next, flip = 0, i_ab, i_de;
-  Real tr;
-  su3_vector *vec1, *vec2, vtmp1, vtmp2, vtmp3;
+  Real tr, tr2;
+  su3_vector *vec1, *vec2, vtmp;
   su3_matrix *mat0, *mat3;
   msg_tag *tag0[2], *tag1[2], *tag2[2], *tag3[2];
 
@@ -379,17 +380,15 @@ void DbminusPtoP(su3_vector *src[NPLAQ], su3_vector *dest[NPLAQ]) {
       vec1 = (su3_vector *)(local_pt[flip][1][i]);
       vec2 = (su3_vector *)(local_pt[flip][2][i]);
       mat3 = (su3_matrix *)(local_pt[flip][3][i]);
-      mult_su3_vec_adj_mat(vec1, mat0, &vtmp1);
-      scalar_mult_su3_vector(&vtmp1, s->bc2[OPP_LDIR(a)][OPP_LDIR(b)],
-                             &vtmp1);
 
-      mult_adj_su3_mat_vec(mat3, vec2, &vtmp2);
-      scalar_mult_su3_vector(&vtmp2,
-                             s->bc3[OPP_LDIR(a)][OPP_LDIR(b)][OPP_LDIR(c)],
-                             &vtmp2);
+      tr2 = tr * s->bc2[OPP_LDIR(a)][OPP_LDIR(b)];
+      mult_su3_vec_adj_mat(vec1, mat0, &vtmp);
+      scalar_mult_add_su3_vector(&(dest[i_de][i]), &vtmp, tr2,
+                                 &(dest[i_de][i]));
 
-      sub_su3_vector(&vtmp1, &vtmp2, &vtmp3);
-      scalar_mult_add_su3_vector(&(dest[i_de][i]), &vtmp3, tr,
+      tr2 = tr * s->bc3[OPP_LDIR(a)][OPP_LDIR(b)][OPP_LDIR(c)];
+      mult_adj_su3_mat_vec(mat3, vec2, &vtmp);
+      scalar_mult_sub_su3_vector(&(dest[i_de][i]), &vtmp, tr2,
                                  &(dest[i_de][i]));
     }
     cleanup_gather(tag0[flip]);
@@ -413,7 +412,7 @@ void DbplusStoL(su3_vector *src, su3_vector *dest[NUMLINK]) {
   register int i;
   register site *s;
   int mu;
-  su3_vector vtmp1, vtmp2, *vec;
+  su3_vector vtmp, *vec;
   msg_tag *tag[NUMLINK];
 
   tag[0] = start_gather_field(src, sizeof(su3_vector),
@@ -427,11 +426,10 @@ void DbplusStoL(su3_vector *src, su3_vector *dest[NUMLINK]) {
     wait_gather(tag[mu]);
     FORALLSITES(i, s) {
       vec = (su3_vector *)(gen_pt[mu][i]);
-      mult_su3_vec_adj_mat(vec, &(s->link[mu]), &vtmp1);
-      scalar_mult_su3_vector(&vtmp1, s->bc1[mu], &vtmp1);
-      mult_adj_su3_mat_vec(&(s->link[mu]), &(src[i]), &vtmp2);
-      sub_su3_vector(&vtmp1, &vtmp2, &vtmp1);
-      scalar_mult_add_su3_vector(&(dest[mu][i]), &vtmp1, 0.5, &(dest[mu][i]));
+      mult_su3_vec_adj_mat(vec, &(s->link[mu]), &vtmp);
+      scalar_mult_su3_vector(&vtmp, s->bc1[mu], &vtmp);
+      mult_adj_su3_mat_vec_nsum(&(s->link[mu]), &(src[i]), &vtmp);
+      scalar_mult_add_su3_vector(&(dest[mu][i]), &vtmp, 0.5, &(dest[mu][i]));
     }
     cleanup_gather(tag[mu]);
   }
@@ -585,7 +583,7 @@ void DbminusLtoS(su3_vector *src[NUMLINK], su3_vector *dest) {
   register int i;
   register site *s;
   int mu;
-  su3_vector vtmp1, vtmp2, vtmp3, *vec;
+  su3_vector vtmp, *vec;
   msg_tag *tag[NUMLINK];
 
   FORALLSITES(i, s) {         // Set up first gather
@@ -609,10 +607,9 @@ void DbminusLtoS(su3_vector *src[NUMLINK], su3_vector *dest) {
     wait_gather(tag[mu]);
     FORALLSITES(i, s) {
       vec = (su3_vector *)(gen_pt[mu][i]);
-      mult_su3_vec_adj_mat(&(src[mu][i]), &(s->link[mu]), &vtmp1);
-      scalar_mult_su3_vector(vec, s->bc1[OPP_LDIR(mu)], &vtmp3);
-      sub_su3_vector(&vtmp1, &vtmp3, &vtmp2);
-      scalar_mult_add_su3_vector(&(dest[i]), &vtmp2, 0.5, &(dest[i]));
+      scalar_mult_su3_vector(vec, s->bc1[OPP_LDIR(mu)], &vtmp);
+      mult_su3_vec_adj_mat_nsum(&(src[mu][i]), &(s->link[mu]), &vtmp);
+      scalar_mult_sub_su3_vector(&(dest[i]), &vtmp, 0.5, &(dest[i]));
     }
     cleanup_gather(tag[mu]);
   }

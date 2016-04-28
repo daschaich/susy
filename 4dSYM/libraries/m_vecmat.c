@@ -9,9 +9,9 @@ void mult_su3_vec_mat(su3_vector *b, su3_matrix *a, su3_vector *c) {
   register int i, j;
   register complex y;
   for (i = 0; i < DIMF; i++) {
-    CMUL(a->e[0][i], b->c[0], c->c[i]);
+    CMUL(a->e[0][i], b->c[0], c->c[i]);   // Initialize
     for (j = 1; j < DIMF; j++) {
-      CMUL(a->e[j][i], b->c[j], y)
+      CMUL(a->e[j][i], b->c[j], y);
       CSUM(c->c[i], y);
     }
   }
