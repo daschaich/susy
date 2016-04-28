@@ -158,7 +158,7 @@ int update() {
 #ifdef UPDATE_DEBUG
   node0_printf("Calling CG in update_o -- original action\n");
 #endif
-  // congrad_multi_field initializes psim and calls fermion_rep()
+  // congrad_multi_field initializes psim
   for (n = 0; n < Nroot; n++)
     iters += congrad_multi_field(src[n], psim[n], niter, rsqmin, &final_rsq);
 #endif // ifndef PUREGAUGE

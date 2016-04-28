@@ -60,12 +60,15 @@ SU3OBJS1 = addmat.1o addvec.1o cmp_ahmat.1o cs_m_a_vec.1o cs_m_a_mat.1o \
            su3mat_copy.1o su3vec_copy.1o submat.1o subvec.1o trace_su3.1o \
            uncmp_ahmat.1o msq_su3vec.1o dumpsu2.1o \
            m_su2_mat_vec_n.1o m_su2_mat_vec_a.1o gaussrand.1o byterevn.1o \
-           m_mat_an_f.1o m_mat_na_f.1o m_mat_nn_f.1o realtr_f.1o s_m_a_mat_f.1o \
+           m_mat_an_f.1o m_mat_na_f.1o m_mat_nn_f.1o realtr_f.1o \
+           s_m_a_mat_f.1o s_m_a_amat_f.1o \
            s_m_s_mat_f.1o su3_adjoint_f.1o su3mat_copy_f.1o trace_su3_f.1o \
-           dumpmat_f.1o dump_ahmat_f.1o clear_mat_f.1o addmat_f.1o submat_f.1o \
+           dumpmat_f.1o dump_ahmat_f.1o clear_mat_f.1o \
+           addmat_f.1o addamat_f.1o  submat_f.1o subamat_f.1o \
            clearvec_f.1o r_su2_hit_a_f.1o l_su2_hit_n_f.1o s_m_mat_f.1o \
            s_a_d_mat_f.1o cs_a_d_mat_f.1o \
-           complextr_f.1o cs_m_mat_f.1o cs_m_a_mat_f.1o
+           complextr_f.1o cs_m_mat_f.1o \
+           cs_m_a_mat_f.1o cs_m_a_amat_f.1o cs_m_a_mata_f.1o cs_m_s_mat_f.1o
 # Not used? REALREP broken: l_su2_hit_n.1o r_su2_hit_a.1o
 
 SU3OBJS2 = addmat.2o addvec.2o cmp_ahmat.2o cs_m_a_vec.2o cs_m_a_mat.2o \
@@ -81,12 +84,15 @@ SU3OBJS2 = addmat.2o addvec.2o cmp_ahmat.2o cs_m_a_vec.2o cs_m_a_mat.2o \
            su3mat_copy.2o su3vec_copy.2o submat.2o subvec.2o trace_su3.2o \
            uncmp_ahmat.2o msq_su3vec.2o dumpsu2.2o \
            m_su2_mat_vec_n.2o m_su2_mat_vec_a.2o gaussrand.2o byterevn.2o \
-           m_mat_an_f.2o m_mat_na_f.2o m_mat_nn_f.2o realtr_f.2o s_m_a_mat_f.2o \
+           m_mat_an_f.2o m_mat_na_f.2o m_mat_nn_f.2o realtr_f.2o \
+           s_m_a_mat_f.2o s_m_a_amat_f.2o \
            s_m_s_mat_f.2o su3_adjoint_f.2o su3mat_copy_f.2o trace_su3_f.2o \
-           clear_mat_f.2o dumpmat_f.2o dump_ahmat_f.2o addmat_f.2o submat_f.2o \
+           clear_mat_f.2o dumpmat_f.2o dump_ahmat_f.2o \
+           addmat_f.2o addamat_f.2o submat_f.2o subamat_f.2o \
            clearvec_f.2o r_su2_hit_a_f.2o l_su2_hit_n_f.2o s_m_mat_f.2o \
            s_a_d_mat_f.2o cs_a_d_mat_f.2o \
-           complextr_f.2o cs_m_mat_f.2o cs_m_a_mat_f.2o
+           complextr_f.2o cs_m_mat_f.2o \
+           cs_m_a_mat_f.2o cs_m_a_amat_f.2o cs_m_a_mata_f.2o cs_m_s_mat_f.2o
 # Not used? REALREP broken: l_su2_hit_n.2o r_su2_hit_a.2o
 
 # Special header dependencies

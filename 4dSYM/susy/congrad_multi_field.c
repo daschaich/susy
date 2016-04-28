@@ -47,9 +47,6 @@ int congrad_multi_field(Twist_Fermion *src, Twist_Fermion **psim,
   for (i = 1; i < Norder; i++)    // !!!
     pm[i] = malloc(sites_on_node * sizeof(Twist_Fermion));
 
-  // Make sure irrep links used by the fermion operator are up to date
-  fermion_rep();
-
   // Initialize zero initial guess, etc.
   // dest = 0, r = source, pm[j] = r
   errormin = RsdCG * RsdCG;
@@ -136,7 +133,7 @@ int congrad_multi_field(Twist_Fermion *src, Twist_Fermion **psim,
     // r = r + beta[0] * mp
     floatvar = (Real)beta_i[0];
     FORALLSITES(i, s)
-      scalar_mult_add_TF(&(rm[i]), &(mpm[i]),floatvar, &(rm[i]));
+      scalar_mult_add_TF(&(rm[i]), &(mpm[i]), floatvar, &(rm[i]));
 
     // alpha_ip1[j]
     rsqnew = 0;
@@ -168,7 +165,7 @@ int congrad_multi_field(Twist_Fermion *src, Twist_Fermion **psim,
       for (j = 1; j < Norder; j++) {
         if (converged[j] == 0) {
           scalar_mult_TF(&(rm[i]), floatvarj[j], &(mpm[i]));
-          scalar_mult_add_TF(&(mpm[i]), &(pm[j][i]),floatvark[j], &(pm[j][i]));
+          scalar_mult_add_TF(&(mpm[i]), &(pm[j][i]), floatvark[j], &(pm[j][i]));
         }
       }
     }

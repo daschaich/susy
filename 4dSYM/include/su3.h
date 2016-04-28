@@ -100,8 +100,14 @@ void su3_adjoint_f(su3_matrix_f *a, su3_matrix_f *b);
 // In file addmat_f.c
 void add_su3_matrix_f(su3_matrix_f *a, su3_matrix_f *b, su3_matrix_f *c);
 
+// In file addamat_f.c
+void add_su3_adj_matrix_f(su3_matrix_f *a, su3_matrix_f *b, su3_matrix_f *c);
+
 // In file submat_f.c
 void sub_su3_matrix_f(su3_matrix_f *a, su3_matrix_f *b, su3_matrix_f *c);
+
+// In file subamat_f.c
+void sub_su3_adj_matrix_f(su3_matrix_f *a, su3_matrix_f *b, su3_matrix_f *c);
 
 // In file s_a_d_mat_f.c
 void scalar_add_diag_su3_f(su3_matrix_f *a, Real s);
@@ -113,6 +119,10 @@ void scalar_mult_su3_matrix_f(su3_matrix_f *src, Real scalar,
 // In file s_m_a_mat_f.c
 void scalar_mult_add_su3_matrix_f(su3_matrix_f *src1, su3_matrix_f *src2,
                                   Real scalar, su3_matrix_f *dest);
+
+// In file s_m_a_amat_f.c
+void scalar_mult_add_su3_adj_matrix_f(su3_matrix_f *src1, su3_matrix_f *src2,
+                                      Real scalar, su3_matrix_f *dest);
 
 // In file s_m_s_mat_f.c
 void scalar_mult_sub_su3_matrix_f(su3_matrix_f *src1, su3_matrix_f *src2,
@@ -126,6 +136,17 @@ void c_scalar_mult_su3mat_f(su3_matrix_f *b, complex *s, su3_matrix_f *c);
 
 // In file cs_m_a_mat_f.c
 void c_scalar_mult_add_su3mat_f(su3_matrix_f *m1, su3_matrix_f *m2,
+                                complex *phase, su3_matrix_f *m3);
+
+// In file cs_m_a_amat_f.c
+void c_scalar_mult_add_adj_su3mat_f(su3_matrix_f *m1, su3_matrix_f *m2,
+                                    complex *phase, su3_matrix_f *m3);
+// In file cs_m_a_mata_f.c
+void c_scalar_mult_add_su3mat_adj_f(su3_matrix_f *m1, su3_matrix_f *m2,
+                                    complex *phase, su3_matrix_f *m3);
+
+// In file cs_m_s_mat_f.c
+void c_scalar_mult_sub_su3mat_f(su3_matrix_f *m1, su3_matrix_f *m2,
                                 complex *phase, su3_matrix_f *m3);
 
 // In file dumpmat_f.c

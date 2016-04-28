@@ -21,7 +21,6 @@ void bilinear_src(Twist_Fermion *g_rand, Twist_Fermion *src, int N) {
   }
   int index = node_index(1, 1, 1, 1);
   g_rand[index].Flink[0].c[0].real = 1;
-  fermion_rep();          // Make sure adjoint links are up to date
   fermion_op(g_rand, src, PLUS);
   FORALLSITES(i, s) {
     if (magsq_TF(&(src[i])) > IMAG_TOL) {
@@ -73,7 +72,6 @@ void bilinear_src(Twist_Fermion *g_rand, Twist_Fermion *src, int N) {
   }
 
   // Set up src = Mdag g_rand
-  fermion_rep();          // Make sure adjoint links are up to date
   fermion_op(g_rand, src, MINUS);
   FORALLSITES(i, s)
     scalar_mult_add_TF(&(src[i]), &(g_rand[i]), fmass, &(src[i]));
@@ -128,7 +126,7 @@ int bilinearWard() {
   for (isrc = 0; isrc < nsrc; isrc++) {
     // Make random source g_rand, now including trace piece
     // Hit it with Mdag to get src, invert to get M^{-1} g_rand
-    // congrad_multi_field initializes psim and calls fermion_rep()
+    // congrad_multi_field initializes psim
     bilinear_src(g_rand, src, DIMF);
     iters = congrad_multi_field(src, psim, niter, rsqmin, &size_r);
     tot_iters += iters;
