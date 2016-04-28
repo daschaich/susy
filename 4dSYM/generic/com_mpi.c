@@ -1283,16 +1283,16 @@ void prepare_gather(msg_tag *mtag) {
   }
 
   nids = mtag->nids;
-  if (nids!=0) {
-    mtag->ids = ids = (int *)malloc(nids*sizeof(int));
-    for (i=0, j=id_offset; i < nids; i++, j=(j+1)%num_gather_ids) {
-      /* find next available type */
-      while (id_array[j]!=0) {
-  j = (j+1)%num_gather_ids;
-  if (j==id_offset) {
-    printf("error: not enough message ids\n");
-    terminate(1);
-  }
+  if (nids != 0) {
+    mtag->ids = ids = malloc(nids * sizeof(*ids));
+    for (i = 0, j = id_offset; i < nids; i++, j = (j + 1) % num_gather_ids) {
+      // Find next available type
+      while (id_array[j] != 0) {
+        j = (j + 1) % num_gather_ids;
+        if (j==id_offset) {
+          printf("error: not enough message ids\n");
+          terminate(1);
+        }
       }
       ids[i] = j;
       id_array[j] = 1;
@@ -1312,21 +1312,21 @@ void prepare_gather(msg_tag *mtag) {
       printf("NO ROOM for msg_buf, node%d\n", mynode());
       terminate(1);
     }
-    /* set pointers in sites to correct location */
+    // Set pointers in sites to correct location
     gmem = mrecv[i].gmem;
     do {
-      for (j=0; j<gmem->num; ++j,tpt+=gmem->size) {
-  ((char **)gmem->mem)[gmem->sitelist[j]] = tpt;
+      for (j = 0; j < gmem->num; ++j,tpt += gmem->size) {
+        ((char **)gmem->mem)[gmem->sitelist[j]] = tpt;
       }
     } while ((gmem=gmem->next) != NULL);
   }
 
   msend = mtag->send_msgs;
-  /* for each node whose neighbors I have */
+  // For each node whose neighbors I have
   for (i = 0; i < mtag->nsends; ++i) {
-    msend[i].msg_buf = (char *)malloc(msend[i].msg_size);
+    msend[i].msg_buf = malloc(msend[i].msg_size);
     if (msend[i].msg_buf == NULL) {
-      printf("NO ROOM for msg_buf, node%d\n",mynode());
+      printf("NO ROOM for msg_buf, node%d\n", mynode());
       terminate(1);
     }
   }
@@ -1343,29 +1343,29 @@ void do_gather(msg_tag *mtag) {
     prepare_gather(mtag);
 
   mbuf = mtag->recv_msgs;
-  /* for each node which has neighbors of my sites */
+  // For each node which has neighbors of my sites
   for (i = 0; i < mtag->nrecvs; i++) {
-    /* post receive */
+    // Post receive
     MPI_Irecv(mbuf[i].msg_buf, mbuf[i].msg_size, MPI_BYTE, MPI_ANY_SOURCE,
-         GATHER_ID(mtag->ids[mbuf[i].id_offset]), MPI_COMM_WORLD,
-         &mbuf[i].msg_req);
+              GATHER_ID(mtag->ids[mbuf[i].id_offset]), MPI_COMM_WORLD,
+              &mbuf[i].msg_req);
   }
 
   mbuf = mtag->send_msgs;
-  /* for each node whose neighbors I have */
+  // For each node whose neighbors I have
   for (i = 0; i < mtag->nsends; ++i) {
-    /* gather data into the buffer */
+    // Gather data into the buffer
     tpt = mbuf[i].msg_buf;
     gmem = mbuf[i].gmem;
     do {
       for (j = 0; j < gmem->num; ++j, tpt += gmem->size) {
-        memcpy(tpt, gmem->mem + gmem->sitelist[j]*gmem->stride, gmem->size);
+        memcpy(tpt, gmem->mem + gmem->sitelist[j] * gmem->stride, gmem->size);
       }
     } while ((gmem = gmem->next) != NULL);
-    /* start the send */
+    // Start the send
     MPI_Isend(mbuf[i].msg_buf, mbuf[i].msg_size, MPI_BYTE, mbuf[i].msg_node,
-         GATHER_ID(mtag->ids[mbuf[i].id_offset]), MPI_COMM_WORLD,
-         &mbuf[i].msg_req);
+              GATHER_ID(mtag->ids[mbuf[i].id_offset]), MPI_COMM_WORLD,
+              &mbuf[i].msg_req);
   }
 }
 

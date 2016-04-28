@@ -50,6 +50,8 @@ typedef int field_offset;
 
 // -----------------------------------------------------------------
 // Macros for looping over directions
+#define FORALLDIR(dir) for (dir = XUP; dir < NUMLINK; dir++)
+
 #define FORALLUPDIR(dir) for (dir = XUP; dir <= TUP; dir++)
 
 #define FORALLUPDIRBUT(direction, dir) \
