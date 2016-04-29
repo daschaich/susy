@@ -233,16 +233,16 @@ void Dminus(su3_vector *src[NPLAQ], su3_vector *dest[NUMLINK]) {
   // Start first set of gathers (mu = 1 and nu = 0)
   index = plaq_index[1][0];
   tag0[0] = start_gather_site(F_OFFSET(link[1]), sizeof(su3_matrix),
-                              goffset[0], EVENANDODD, gen_pt[0]);
+                              goffset[0], EVENANDODD, local_pt[0][0]);
 
-  FORALLSITES(i, s) { // mu = 1 > nu = 0
+  FORALLSITES(i, s) {   // mu = 1 > nu = 0
     scalar_mult_su3_vector(&(src[index][i]), -1.0, &vtmp);
     mult_su3_vec_mat(&vtmp, &(s->link[1]), &(tempvec[0][i]));
     FORALLDIR(nu)
       clearvec(&(dest[nu][i]));         // Initialize
   }
   tag1[0] = start_gather_field(tempvec[0], sizeof(su3_vector),
-                               goffset[1] + 1, EVENANDODD, gen_pt[1]);
+                               goffset[1] + 1, EVENANDODD, local_pt[0][1]);
 
   // Main loop
   FORALLDIR(nu) {
@@ -250,7 +250,7 @@ void Dminus(su3_vector *src[NPLAQ], su3_vector *dest[NUMLINK]) {
       if (mu == nu)
         continue;
 
-      gather =  (flip + 1) % 2;
+      gather = (flip + 1) % 2;
       if (nu < NUMLINK - 1 || mu < NUMLINK - 2) { // Start next set of gathers
         if (mu == NUMLINK - 1) {
           a = 0;

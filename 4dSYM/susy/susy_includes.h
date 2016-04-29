@@ -42,7 +42,7 @@ void fermion_rep();
 
 // Helper routines for action and force computations
 void compute_plaqdet();
-void compute_DmuUmu();    // Computes plaqdet if G is non-zero
+void compute_DmuUmu();
 void compute_Fmunu();
 
 // Gaussian random momentum matrices and pseudofermions

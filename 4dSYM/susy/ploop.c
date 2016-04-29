@@ -1,6 +1,6 @@
 // -----------------------------------------------------------------
 // Evaluate the Polyakov loop using repeated single-timeslice gathers
-// Use tempmat1, tempmat2, staple and DmuUmu for temporary storage
+// Use tempmat1, tempmat2, staple and Uinv[0] for temporary storage
 #include "susy_includes.h"
 
 // dir tells us the direction of the product: XUP, YUP, ZUP, TUP or DIR_5
@@ -14,10 +14,10 @@ complex ploop(int dir, int project, double *plpMod) {
   su3_matrix_f tmat, tmat2;
 
   // Optionally consider polar-projected links,
-  // saving original values in DmuUmu to be reset at end
+  // saving original values in Uinv[0] to be reset at end
   if (project == 1) {
     FORALLSITES(i, s) {
-      su3mat_copy_f(&(s->linkf[dir]), &(DmuUmu[i]));
+      su3mat_copy_f(&(s->linkf[dir]), &(Uinv[0][i]));
       polar(&(s->linkf[dir]), &tmat, &tmat2);
       su3mat_copy_f(&tmat, &(s->linkf[dir]));
     }
@@ -65,7 +65,7 @@ complex ploop(int dir, int project, double *plpMod) {
 
     if (project == 1) {       // Reset original links
       FORALLSITES(i, s)
-        su3mat_copy_f(&(DmuUmu[i]), &(s->linkf[dir]));
+        su3mat_copy_f(&(Uinv[0][i]), &(s->linkf[dir]));
     }
 
     return sum;
@@ -120,7 +120,7 @@ complex ploop(int dir, int project, double *plpMod) {
 
   if (project == 1) {       // Reset original links
     FORALLSITES(i, s)
-      su3mat_copy_f(&(DmuUmu[i]), &(s->linkf[dir]));
+      su3mat_copy_f(&(Uinv[0][i]), &(s->linkf[dir]));
   }
 
   return sum;

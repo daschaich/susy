@@ -97,6 +97,7 @@ void bilinear_src(Twist_Fermion *g_rand, Twist_Fermion *src, int N) {
 //   Q sum_a tr(eta U_a Ubar_a) = tr(sum_b Dbar_b U_b sum_a U_a Ubar_a)
 //                                 - sum_a tr(eta psi_a Ubar_a)
 // Return total number of iterations
+// Assume compute_DmuUmu() has already been run
 int bilinearWard() {
   if (nsrc < 1)   // Only run if there are inversions to do
     return 0;
@@ -209,7 +210,6 @@ int bilinearWard() {
   // Now add gauge piece, including plaquette determinant term
   // Accumulate sum_a U_a Udag_a in tmat
   // Multiply by DmuUmu into tmat2 and trace
-  compute_DmuUmu();     // Compute sum_b [U_b Udag_b - Udag_b U_b]
   FORALLSITES(i, s) {
     mult_su3_na_f(&(s->linkf[0]), &(s->linkf[0]), &tmat);
     for (mu = 1; mu < NUMLINK; mu++) {

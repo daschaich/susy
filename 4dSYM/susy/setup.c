@@ -427,8 +427,10 @@ int readin(int prompt) {
   // Do whatever is needed to get lattice
   startlat_p = reload_lattice(startflag, startfile);
 
-  // Compute initial plaqdet
+  // Compute initial plaqdet, DmuUmu and Fmunu
   compute_plaqdet();
+  compute_DmuUmu();
+  compute_Fmunu();
 
   // Generate the adjoint links
   fermion_rep();

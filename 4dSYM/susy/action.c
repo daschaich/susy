@@ -112,7 +112,7 @@ void compute_Fmunu() {
   su3_matrix_f *mat0, *mat1;
   msg_tag *mtag0 = NULL, *mtag1 = NULL;
 
-  for (mu = 0; mu < NUMLINK; mu++) {
+  FORALLDIR(mu) {
     for (nu = mu + 1; nu < NUMLINK; nu++) {
       index = plaq_index[mu][nu];
       mtag0 = start_gather_site(F_OFFSET(linkf[nu]), sizeof(su3_matrix_f),
@@ -148,8 +148,6 @@ double gauge_action(int do_det) {
   complex tc;
   su3_matrix_f tmat, tmat2;
 
-  compute_DmuUmu();
-  compute_Fmunu();
   FORALLSITES(i, s) {
     // d^2 term normalized by C2 / 2
     // DmuUmu includes the plaquette determinant contribution if G is non-zero
@@ -278,8 +276,8 @@ double mom_action() {
   register site *s;
   double sum = 0.0;
 
-  for (mu = XUP; mu < NUMLINK; mu++) {
-    FORALLSITES(i, s)
+  FORALLSITES(i, s) {
+    FORALLDIR(mu)
       sum += (double)realtrace_su3_f(&(s->mom[mu]), &(s->mom[mu]));
   }
   g_doublesum(&sum);

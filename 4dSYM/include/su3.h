@@ -116,6 +116,10 @@ void scalar_add_diag_su3_f(su3_matrix_f *a, Real s);
 void scalar_mult_su3_matrix_f(su3_matrix_f *src, Real scalar,
                               su3_matrix_f *dest);
 
+// In file s_m_amat_f.c
+void scalar_mult_su3_adj_matrix_f(su3_matrix_f *src, Real scalar,
+                                  su3_matrix_f *dest);
+
 // In file s_m_a_mat_f.c
 void scalar_mult_add_su3_matrix_f(su3_matrix_f *src1, su3_matrix_f *src2,
                                   Real scalar, su3_matrix_f *dest);
@@ -127,6 +131,10 @@ void scalar_mult_add_su3_adj_matrix_f(su3_matrix_f *src1, su3_matrix_f *src2,
 // In file s_m_s_mat_f.c
 void scalar_mult_sub_su3_matrix_f(su3_matrix_f *src1, su3_matrix_f *src2,
                                   Real scalar, su3_matrix_f *dest);
+
+// In file s_m_s_amat_f.c
+void scalar_mult_sub_su3_adj_matrix_f(su3_matrix_f *src1, su3_matrix_f *src2,
+                                      Real scalar, su3_matrix_f *dest);
 
 // In file cs_a_d_mat_f.c
 void c_scalar_add_diag_su3_f(su3_matrix_f *a, complex *f);

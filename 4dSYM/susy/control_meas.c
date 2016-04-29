@@ -141,6 +141,11 @@ int main(int argc, char *argv[]) {
   node0_printf("AFTER  ");
   max_plaq = local_plaquette(&ss_plaq, &st_plaq);      // Prints out MIN_PLAQ
   node0_printf(" %.8g %.8g %.8g\n", ss_plaq, st_plaq, max_plaq);
+
+  // Update plaquette determinants, DmuUmu and Fmunu with smeared links
+  compute_plaqdet();
+  compute_DmuUmu();
+  compute_Fmunu();
 #endif
 
   // Main measurements

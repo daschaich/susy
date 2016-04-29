@@ -23,6 +23,12 @@ void update_uu(Real eps) {
       scalar_mult_add_su3_matrix_f(&(s->linkf[mu]), &(s->mom[mu]), eps,
                                    &(s->linkf[mu]));
   }
+
+  // Update plaquette determinants, DmuUmu and Fmunu with new links
+  // (Needs to be done before calling gauge_force)
+  compute_plaqdet();
+  compute_DmuUmu();
+  compute_Fmunu();
 }
 // -----------------------------------------------------------------
 
@@ -49,7 +55,6 @@ int update_step(double *fnorm, double *gnorm,
 #ifndef PUREGAUGE
     for (n = 0; n < Nroot; n++) {
       // Do conjugate gradient to get (Mdag M)^(-1 / 4) chi
-      // congrad_multi_field calls fermion_rep()
       iters += congrad_multi_field(src[n], psim[n], niter, rsqmin, &final_rsq);
       tr = fermion_force(eps, src[n], psim[n]);
       fnorm[n] += tr;
@@ -105,7 +110,7 @@ int update() {
 #ifdef UPDATE_DEBUG
   node0_printf("Calling CG in update_leapfrog -- original action\n");
 #endif
-  // congrad_multi_field initializes psim and calls fermion_rep()
+  // congrad_multi_field initializes psim
   for (n = 0; n < Nroot; n++)
     iters += congrad_multi_field(src[n], psim[n], niter, rsqmin, &final_rsq);
 #endif // ifndef PUREGAUGE
@@ -157,6 +162,9 @@ int update() {
   if (exp(-change) < (double)xrandom) {
     if (traj_length > 0.0) {
       gauge_field_copy_f(F_OFFSET(old_linkf[0]), F_OFFSET(linkf[0]));
+      compute_plaqdet();
+      compute_DmuUmu();
+      compute_Fmunu();
       fermion_rep();
     }
     node0_printf("REJECT: delta S = %.4g start S = %.12g end S = %.12g\n",

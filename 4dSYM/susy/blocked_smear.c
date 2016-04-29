@@ -13,7 +13,7 @@
 // dir is the direction of the original link
 // dir2 is the other direction that defines the staple
 // Use gather offsets to handle all five links!
-// Use tempmat1, tempmat2, DmuUmu and Fmunu for temporary storage
+// Use tempmat1, tempmat2 and Uinv[0123] for temporary storage
 void blocked_staple(int stride, int dir, int dir2) {
   register int i;
   register site *s;
@@ -29,26 +29,26 @@ void blocked_staple(int stride, int dir, int dir2) {
   // Get mom[dir2] from dir and mom[dir] from dir2, both with stride
   // This order may be easier on cache
   for (j = 0; j < stride; j++)
-    shiftmat(tempmat2, Fmunu[2], goffset[dir]);
+    shiftmat(tempmat2, Uinv[1], goffset[dir]);
   for (j = 0; j < stride; j++)
-    shiftmat(tempmat1, Fmunu[1], goffset[dir2]);
+    shiftmat(tempmat1, Uinv[2], goffset[dir2]);
 
-  // Compute the lower staple at x - stride * dir2, store it in DmuUmu,
+  // Compute the lower staple at x - stride * dir2, store it in Uinv[0],
   // and gather it to x, again with stride
   // then gathered to x
   FORALLSITES(i, s) {
     mult_su3_an_f(&(s->mom[dir2]), &(s->mom[dir]), &tmat);
-    mult_su3_nn_f(&tmat, &(tempmat2[i]), &(DmuUmu[i]));
+    mult_su3_nn_f(&tmat, &(tempmat2[i]), &(Uinv[0][i]));
   }
   for (j = 0; j < stride; j++)
-    shiftmat(DmuUmu, Fmunu[0], goffset[dir2] + 1);
+    shiftmat(Uinv[0], Uinv[3], goffset[dir2] + 1);
 
   // Calculate upper staple, add both staples to sum
   FORALLSITES(i, s) {
     mult_su3_nn_f(&(s->mom[dir2]), &(tempmat1[i]), &tmat);
     mult_su3_na_f(&tmat, &(tempmat2[i]), &tmat2);
     add_su3_matrix_f(&(staple[i]), &tmat2, &(staple[i]));
-    add_su3_matrix_f(&(staple[i]), &(DmuUmu[i]), &(staple[i]));
+    add_su3_matrix_f(&(staple[i]), &(Uinv[0][i]), &(staple[i]));
   }
 }
 // -----------------------------------------------------------------

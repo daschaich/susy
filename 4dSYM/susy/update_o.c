@@ -27,8 +27,11 @@ void update_uu(Real eps) {
                                    &(s->linkf[mu]));
   }
 
-  // Update plaquette determinants with new links
+  // Update plaquette determinants, DmuUmu and Fmunu with new links
+  // (Needs to be done before calling gauge_force)
   compute_plaqdet();
+  compute_DmuUmu();
+  compute_Fmunu();
 }
 // -----------------------------------------------------------------
 
@@ -218,6 +221,8 @@ int update() {
     if (traj_length > 0.0) {
       gauge_field_copy_f(F_OFFSET(old_linkf[0]), F_OFFSET(linkf[0]));
       compute_plaqdet();
+      compute_DmuUmu();
+      compute_Fmunu();
       fermion_rep();
     }
     node0_printf("REJECT: delta S = %.4g start S = %.12g end S = %.12g\n",
