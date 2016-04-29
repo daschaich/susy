@@ -1004,7 +1004,7 @@ void assemble_fermion_force(Twist_Fermion *sol, Twist_Fermion *psol) {
   char **local_pt[2][2];
   int mu, nu, a, b, c, d, gather, flip = 0, index, next;
   complex tc;
-  msg_tag *mtag[NUMLINK], *mtag0 = NULL, *mtag1 = NULL, *tag0[2], *tag1[2];
+  msg_tag *mtag[NUMLINK], *tag0[2], *tag1[2];
   su3_vector tvec;
   su3_matrix_f *mat[2];
 
