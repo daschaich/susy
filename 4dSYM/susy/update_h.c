@@ -995,13 +995,19 @@ void assemble_fermion_force(Twist_Fermion *sol, Twist_Fermion *psol) {
   FORALLSITES(i, s) {
     vec_copy(&(sol[i].Fsite), &(site_sol[i]));
     vec_copy(&(psol[i].Fsite), &(site_psol[i]));
+    reconstruct(&(sol[i].Fsite), &(site_mat[i]));
+    reconstruct_star(&(psol[i].Fsite), &(site_pmat[i]));
     FORALLDIR(mu) {
       vec_copy(&(sol[i].Flink[mu]), &(link_sol[mu][i]));
       vec_copy(&(psol[i].Flink[mu]), &(link_psol[mu][i]));
+      reconstruct(&(sol[i].Flink[mu]), &(link_mat[mu][i]));
+      reconstruct_star(&(psol[i].Flink[mu]), &(link_pmat[mu][i]));
     }
     for (mu = 0; mu < NPLAQ; mu++) {
       vec_copy(&(sol[i].Fplaq[mu]), &(plaq_sol[mu][i]));
       vec_copy(&(psol[i].Fplaq[mu]), &(plaq_psol[mu][i]));
+      reconstruct(&(sol[i].Fplaq[mu]), &(plaq_mat[mu][i]));
+      reconstruct_star(&(psol[i].Fplaq[mu]), &(plaq_pmat[mu][i]));
     }
   }
 

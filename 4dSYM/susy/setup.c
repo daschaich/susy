@@ -111,6 +111,14 @@ void make_fields() {
   FIELD_ALLOC_VEC(plaq_src, vector, NPLAQ);
   FIELD_ALLOC_VEC(plaq_dest, vector, NPLAQ);
 
+  size += (double)(2.0 * (1 + NUMLINK + NPLAQ)) * sizeof(matrix_f);
+  FIELD_ALLOC(site_src, matrix_f);
+  FIELD_ALLOC(site_dest, matrix_f);
+  FIELD_ALLOC_VEC(link_src, matrix_f, NUMLINK);
+  FIELD_ALLOC_VEC(link_dest, matrix_f, NUMLINK);
+  FIELD_ALLOC_VEC(plaq_src, matrix_f, NPLAQ);
+  FIELD_ALLOC_VEC(plaq_dest, matrix_f, NPLAQ);
+
   // For convenience in calculating action and force
   size += (double)(1.0 + NPLAQ + 3.0 * NUMLINK) * sizeof(matrix_f);
   size += (double)(NUMLINK + 6.0 * NPLAQ) * sizeof(complex);
