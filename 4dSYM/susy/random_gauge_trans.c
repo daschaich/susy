@@ -32,7 +32,7 @@ void random_gauge_trans(Twist_Fermion *TF) {
     tc.real = gaussian_rand_no(&(lattice[0].node_prn));
     tc.imag = gaussian_rand_no(&(lattice[0].node_prn));
 #endif
-    c_scalar_mult_add_mat_f(&tmat, &(Lambda[j]), &tc, &tmat);
+    c_scalar_mult_sum_mat_f(&(Lambda[j]), &tc, &tmat);
   }
   polar(&tmat, &Gmat);
 
@@ -47,7 +47,7 @@ void random_gauge_trans(Twist_Fermion *TF) {
   for (j = 0; j < DIMF; j++) {
     mult_nn_f(&Gmat, &(Lambda[j]), &tmat);
     tc = TF[s].Fsite.c[j];
-    c_scalar_mult_add_mat_f(&etamat, &tmat, &tc, &etamat);
+    c_scalar_mult_sum_mat_f(&tmat, &tc, &etamat);
   }
   // Project out eta^j = -Tr[Lambda^j G eta]
   for (j = 0; j < DIMF; j++) {
@@ -62,7 +62,7 @@ void random_gauge_trans(Twist_Fermion *TF) {
   for (j = 0; j < DIMF; j++) {
     mult_na_f(&(Lambda[j]), &Gmat, &tmat);
     tc = TF[s].Fsite.c[j];
-    c_scalar_mult_add_mat_f(&etamat, &tmat, &tc, &etamat);
+    c_scalar_mult_sum_mat_f(&tmat, &tc, &etamat);
   }
   // Project out eta^j = -Tr[eta Gdag Lambda^j]
   for (j = 0; j < DIMF; j++) {
@@ -80,7 +80,7 @@ void random_gauge_trans(Twist_Fermion *TF) {
     for (j = 0; j < DIMF; j++) {
       mult_nn_f(&Gmat, &(Lambda[j]), &tmat);
       tc = TF[s].Flink[a].c[j];
-      c_scalar_mult_add_mat_f(&(psimat[a]), &tmat, &tc, &(psimat[a]));
+      c_scalar_mult_sum_mat_f(&tmat, &tc, &(psimat[a]));
     }
     for (j = 0; j < DIMF; j++) {
       mult_nn_f(&(Lambda[j]), &(psimat[a]), &tmat);
@@ -94,7 +94,7 @@ void random_gauge_trans(Twist_Fermion *TF) {
       for (j = 0; j < DIMF; j++) {
         mult_na_f(&(Lambda[j]), &Gmat, &tmat);
         tc = TF[s].Fplaq[i].c[j];
-        c_scalar_mult_add_mat_f(&(chimat[i]), &tmat, &tc, &(chimat[i]));
+        c_scalar_mult_sum_mat_f(&tmat, &tc, &(chimat[i]));
       }
       for (j = 0; j < DIMF; j++) {
         mult_nn_f(&(chimat[i]), &(Lambda[j]), &tmat);
@@ -113,7 +113,7 @@ void random_gauge_trans(Twist_Fermion *TF) {
   for (j = 0; j < DIMF; j++) {
     mult_na_f(&(Lambda[j]), &Gmat, &tmat);
     tc = TF[s].Flink[0].c[j];
-    c_scalar_mult_add_mat_f(&(psimat[0]), &tmat, &tc, &(psimat[0]));
+    c_scalar_mult_sum_mat_f(&tmat, &tc, &(psimat[0]));
   }
   for (j = 0; j < DIMF; j++) {
     mult_nn_f(&(psimat[0]), &(Lambda[j]), &tmat);
@@ -128,7 +128,7 @@ void random_gauge_trans(Twist_Fermion *TF) {
   for (j = 0; j < DIMF; j++) {
     mult_na_f(&(Lambda[j]), &Gmat, &tmat);
     tc = TF[s].Flink[1].c[j];
-    c_scalar_mult_add_mat_f(&(psimat[1]), &tmat, &tc, &(psimat[1]));
+    c_scalar_mult_sum_mat_f(&tmat, &tc, &(psimat[1]));
   }
   for (j = 0; j < DIMF; j++) {
     mult_nn_f(&(psimat[1]), &(Lambda[j]), &tmat);
@@ -143,7 +143,7 @@ void random_gauge_trans(Twist_Fermion *TF) {
   for (j = 0; j < DIMF; j++) {
     mult_na_f(&(Lambda[j]), &Gmat, &tmat);
     tc = TF[s].Flink[2].c[j];
-    c_scalar_mult_add_mat_f(&(psimat[2]), &tmat, &tc, &(psimat[2]));
+    c_scalar_mult_sum_mat_f(&tmat, &tc, &(psimat[2]));
   }
   for (j = 0; j < DIMF; j++) {
     mult_nn_f(&(psimat[2]), &(Lambda[j]), &tmat);
@@ -158,7 +158,7 @@ void random_gauge_trans(Twist_Fermion *TF) {
   for (j = 0; j < DIMF; j++) {
     mult_na_f(&(Lambda[j]), &Gmat, &tmat);
     tc = TF[s].Flink[3].c[j];
-    c_scalar_mult_add_mat_f(&(psimat[3]), &tmat, &tc, &(psimat[3]));
+    c_scalar_mult_sum_mat_f(&tmat, &tc, &(psimat[3]));
   }
   for (j = 0; j < DIMF; j++) {
     mult_nn_f(&(psimat[3]), &(Lambda[j]), &tmat);
@@ -173,7 +173,7 @@ void random_gauge_trans(Twist_Fermion *TF) {
   for (j = 0; j < DIMF; j++) {
     mult_na_f(&(Lambda[j]), &Gmat, &tmat);
     tc = TF[s].Flink[4].c[j];
-    c_scalar_mult_add_mat_f(&(psimat[4]), &tmat, &tc, &(psimat[4]));
+    c_scalar_mult_sum_mat_f(&tmat, &tc, &(psimat[4]));
   }
   for (j = 0; j < DIMF; j++) {
     mult_nn_f(&(psimat[4]), &(Lambda[j]), &tmat);
@@ -188,7 +188,7 @@ void random_gauge_trans(Twist_Fermion *TF) {
   for (j = 0; j < DIMF; j++) {
     mult_nn_f(&Gmat, &(Lambda[j]), &tmat);
     tc = TF[s].Fplaq[i].c[j];
-    c_scalar_mult_add_mat_f(&(chimat[i]), &tmat, &tc, &(chimat[i]));
+    c_scalar_mult_sum_mat_f(&tmat, &tc, &(chimat[i]));
   }
   for (j = 0; j < DIMF; j++) {
     mult_nn_f(&(Lambda[j]), &(chimat[i]), &tmat);
@@ -202,7 +202,7 @@ void random_gauge_trans(Twist_Fermion *TF) {
   for (j = 0; j < DIMF; j++) {
     mult_nn_f(&Gmat, &(Lambda[j]), &tmat);
     tc = TF[s].Fplaq[i].c[j];
-    c_scalar_mult_add_mat_f(&(chimat[i]), &tmat, &tc, &(chimat[i]));
+    c_scalar_mult_sum_mat_f(&tmat, &tc, &(chimat[i]));
   }
   for (j = 0; j < DIMF; j++) {
     mult_nn_f(&(Lambda[j]), &(chimat[i]), &tmat);
@@ -216,7 +216,7 @@ void random_gauge_trans(Twist_Fermion *TF) {
   for (j = 0; j < DIMF; j++) {
     mult_nn_f(&Gmat, &(Lambda[j]), &tmat);
     tc = TF[s].Fplaq[i].c[j];
-    c_scalar_mult_add_mat_f(&(chimat[i]), &tmat, &tc, &(chimat[i]));
+    c_scalar_mult_sum_mat_f(&tmat, &tc, &(chimat[i]));
   }
   for (j = 0; j < DIMF; j++) {
     mult_nn_f(&(Lambda[j]), &(chimat[i]), &tmat);
@@ -230,7 +230,7 @@ void random_gauge_trans(Twist_Fermion *TF) {
   for (j = 0; j < DIMF; j++) {
     mult_nn_f(&Gmat, &(Lambda[j]), &tmat);
     tc = TF[s].Fplaq[i].c[j];
-    c_scalar_mult_add_mat_f(&(chimat[i]), &tmat, &tc, &(chimat[i]));
+    c_scalar_mult_sum_mat_f(&tmat, &tc, &(chimat[i]));
   }
   for (j = 0; j < DIMF; j++) {
     mult_nn_f(&(Lambda[j]), &(chimat[i]), &tmat);
@@ -244,7 +244,7 @@ void random_gauge_trans(Twist_Fermion *TF) {
   for (j = 0; j < DIMF; j++) {
     mult_nn_f(&Gmat, &(Lambda[j]), &tmat);
     tc = TF[s].Fplaq[i].c[j];
-    c_scalar_mult_add_mat_f(&(chimat[i]), &tmat, &tc, &(chimat[i]));
+    c_scalar_mult_sum_mat_f(&tmat, &tc, &(chimat[i]));
   }
   for (j = 0; j < DIMF; j++) {
     mult_nn_f(&(Lambda[j]), &(chimat[i]), &tmat);
@@ -258,7 +258,7 @@ void random_gauge_trans(Twist_Fermion *TF) {
   for (j = 0; j < DIMF; j++) {
     mult_nn_f(&Gmat, &(Lambda[j]), &tmat);
     tc = TF[s].Fplaq[i].c[j];
-    c_scalar_mult_add_mat_f(&(chimat[i]), &tmat, &tc, &(chimat[i]));
+    c_scalar_mult_sum_mat_f(&tmat, &tc, &(chimat[i]));
   }
   for (j = 0; j < DIMF; j++) {
     mult_nn_f(&(Lambda[j]), &(chimat[i]), &tmat);
@@ -272,7 +272,7 @@ void random_gauge_trans(Twist_Fermion *TF) {
   for (j = 0; j < DIMF; j++) {
     mult_nn_f(&Gmat, &(Lambda[j]), &tmat);
     tc = TF[s].Fplaq[i].c[j];
-    c_scalar_mult_add_mat_f(&(chimat[i]), &tmat, &tc, &(chimat[i]));
+    c_scalar_mult_sum_mat_f(&tmat, &tc, &(chimat[i]));
   }
   for (j = 0; j < DIMF; j++) {
     mult_nn_f(&(Lambda[j]), &(chimat[i]), &tmat);
@@ -286,7 +286,7 @@ void random_gauge_trans(Twist_Fermion *TF) {
   for (j = 0; j < DIMF; j++) {
     mult_nn_f(&Gmat, &(Lambda[j]), &tmat);
     tc = TF[s].Fplaq[i].c[j];
-    c_scalar_mult_add_mat_f(&(chimat[i]), &tmat, &tc, &(chimat[i]));
+    c_scalar_mult_sum_mat_f(&tmat, &tc, &(chimat[i]));
   }
   for (j = 0; j < DIMF; j++) {
     mult_nn_f(&(Lambda[j]), &(chimat[i]), &tmat);
@@ -300,7 +300,7 @@ void random_gauge_trans(Twist_Fermion *TF) {
   for (j = 0; j < DIMF; j++) {
     mult_nn_f(&Gmat, &(Lambda[j]), &tmat);
     tc = TF[s].Fplaq[i].c[j];
-    c_scalar_mult_add_mat_f(&(chimat[i]), &tmat, &tc, &(chimat[i]));
+    c_scalar_mult_sum_mat_f(&tmat, &tc, &(chimat[i]));
   }
   for (j = 0; j < DIMF; j++) {
     mult_nn_f(&(Lambda[j]), &(chimat[i]), &tmat);
@@ -314,7 +314,7 @@ void random_gauge_trans(Twist_Fermion *TF) {
   for (j = 0; j < DIMF; j++) {
     mult_nn_f(&Gmat, &(Lambda[j]), &tmat);
     tc = TF[s].Fplaq[i].c[j];
-    c_scalar_mult_add_mat_f(&(chimat[i]), &tmat, &tc, &(chimat[i]));
+    c_scalar_mult_sum_mat_f(&tmat, &tc, &(chimat[i]));
   }
   for (j = 0; j < DIMF; j++) {
     mult_nn_f(&(Lambda[j]), &(chimat[i]), &tmat);

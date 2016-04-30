@@ -27,7 +27,7 @@ void exp_mult() {
   t7 = 1.0 / 7.0;
   t8 = 1.0 / 8.0;
 
-  for (dir = XUP; dir < NUMLINK; dir++) {
+  FORALLDIR(dir) {
     FORALLSITES(i, s) {
       uncompress_anti_hermitian(&(Q[dir][i]), &htemp);
       link = &(s->linkf[dir]);

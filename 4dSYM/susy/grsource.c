@@ -25,8 +25,7 @@ void ranmom() {
         grn.real = gaussian_rand_no(&(s->node_prn));
         grn.imag = gaussian_rand_no(&(s->node_prn));
 #endif
-        c_scalar_mult_add_mat_f(&(s->mom[mu]), &(Lambda[j]), &grn,
-                                &(s->mom[mu]));
+        c_scalar_mult_sum_mat_f(&(Lambda[j]), &grn, &(s->mom[mu]));
       }
     }
   }

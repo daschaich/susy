@@ -12,11 +12,11 @@
 
 
 // -----------------------------------------------------------------
-// dir1 is the direction of the original link
+// dir is the direction of the original link
 // dir2 is the other direction that defines the staple
 // Use gather offsets to handle all five links!
 // stp must be cleared before being this function is called!
-void staple_hyp(int dir1, int dir2, matrix_f *lnk1,
+void staple_hyp(int dir, int dir2, matrix_f *lnk1,
                 matrix_f *lnk2, matrix_f *stp) {
 
   register int i;
@@ -24,11 +24,11 @@ void staple_hyp(int dir1, int dir2, matrix_f *lnk1,
   msg_tag *tag0, *tag1, *tag2;
   matrix_f tmat1, tmat2;
 
-  // Get blocked_link[dir2] from direction dir1
-  tag0 = start_gather_field(lnk2, sizeof(matrix_f), goffset[dir1],
+  // Get blocked_link[dir2] from direction dir
+  tag0 = start_gather_field(lnk2, sizeof(matrix_f), goffset[dir],
                             EVENANDODD, gen_pt[0]);
 
-  // Get blocked_link[dir1] from direction dir2
+  // Get blocked_link[dir] from direction dir2
   tag1 = start_gather_field(lnk1, sizeof(matrix_f), goffset[dir2],
                             EVENANDODD, gen_pt[1]);
 
@@ -73,35 +73,35 @@ void staple_hyp(int dir1, int dir2, matrix_f *lnk1,
 
 // -----------------------------------------------------------------
 void block_hyp1() {
-  register int dir1, dir2, i;
+  register int dir, dir2, i;
   register site *s;
   Real ftmp1, ftmp2;
   matrix_f Omega, tmat;
 
-  ftmp1 = alpha_smear[2] / (2 * (1 - alpha_smear[2]));
-  ftmp2 = (1 - alpha_smear[2]);
+  ftmp1 = alpha_smear[2] / (2.0 * (1.0 - alpha_smear[2]));
+  ftmp2 = (1.0 - alpha_smear[2]);
 
-  // dir1 is the direction of the original linkf
+  // dir is the direction of the original linkf
   // dir2 is the other direction that defines the staple
   // Only smear spatial staples into diagonal link
-  for (dir1 = XUP; dir1 < NUMLINK; dir1++) {
+  FORALLDIR(dir) {
     for (dir2 = XUP; dir2 <= TUP; dir2++) {
-      if (dir1 == DIR_5 && dir2 == TUP)
+      if (dir == DIR_5 && dir2 == TUP)
         continue;   // Actually, we should be done at this point
-      if (dir1 != dir2) {
+      if (dir != dir2) {
        FORALLSITES(i, s)
          clear_mat_f(&(tempmat[i]));
 
         // Compute the staple
-        staple_hyp(dir1, dir2, thin_link[dir1],
+        staple_hyp(dir, dir2, thin_link[dir],
                    thin_link[dir2], tempmat);
 
         FORALLSITES(i, s) {
           // Make Omega
-          scalar_mult_add_matrix_f(thin_link[dir1] + i,
+          scalar_mult_add_matrix_f(thin_link[dir] + i,
                                    tempmat + i, ftmp1, &tmat);
           scalar_mult_matrix_f(&tmat, ftmp2, &Omega);
-          hyplink1[dir2][dir1][i] = Omega;
+          hyplink1[dir2][dir][i] = Omega;
         }
       }
     } // Loop over dir2
@@ -118,8 +118,8 @@ void block_hyp2() {
   Real ftmp1, ftmp2;
   matrix_f Omega, tmat;
 
-  ftmp1 = alpha_smear[1] / (4 * (1 - alpha_smear[1]));
-  ftmp2 = (1 - alpha_smear[1]);
+  ftmp1 = alpha_smear[1] / (4.0 * (1.0 - alpha_smear[1]));
+  ftmp2 = (1.0 - alpha_smear[1]);
 
   for (dir = XUP; dir < NUMLINK; dir++) {
     for (dir2 = XUP; dir2 <= TUP; dir2++) {
@@ -130,9 +130,9 @@ void block_hyp2() {
           clear_mat_f(tempmat + i);
 
         // Compute the staple
-        for (dir3 = XUP; dir3 <= TUP; dir3++) {
+        FORALLUPDIR(dir3) {
           if (dir3 != dir && dir3 != dir2) {
-            for (dir4 = XUP; dir4 <= TUP; dir4++) {
+            FORALLUPDIR(dir4) {
               if (dir4 != dir && dir4 != dir2 && dir4 != dir3)
                 break;
             }
@@ -164,15 +164,15 @@ void block_hyp3() {
   Real ftmp1, ftmp2;
   matrix_f Omega, tmat;
 
-  ftmp1 = alpha_smear[0] / (6 * (1 - alpha_smear[0]));
-  ftmp2 = 1 - alpha_smear[0];
+  ftmp1 = alpha_smear[0] / (6.0 * (1.0 - alpha_smear[0]));
+  ftmp2 = 1.0 - alpha_smear[0];
 
-  for (dir = XUP; dir < NUMLINK; dir++) {
+  FORALLDIR(dir) {
     FORALLSITES(i, s)
       clear_mat_f(&tempmat[i]);
 
     // Compute the staple
-    for (dir2 = XUP; dir2 <= TUP; dir2++) {
+    FORALLUPDIR(dir2) {
       if (dir == DIR_5 && dir2 == TUP)
         continue;   // Actually, we should be done at this point
       if (dir2 != dir)
@@ -201,7 +201,7 @@ void block_hyp() {
   register int i, dir;
   register site *s;
 
-  for (dir = XUP; dir < NUMLINK; dir++) {
+  FORALLDIR(dir) {
     FORALLSITES(i, s)
       mat_copy_f(&(s->linkf[dir]), &(thin_link[dir][i]));
   }
@@ -210,7 +210,7 @@ void block_hyp() {
   block_hyp2();
   block_hyp3();
 
-  for (dir = XUP; dir < NUMLINK; dir++) {
+  FORALLDIR(dir) {
     FORALLSITES(i, s)
       mat_copy_f(&(smeared_link[dir][i]), &(s->linkf[dir]));
   }

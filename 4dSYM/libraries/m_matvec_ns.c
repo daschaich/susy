@@ -6,7 +6,7 @@
 #include "../include/susy.h"
 
 #ifndef FAST
-void mult_mat_vec_nsum(matrix *a, vector *b, vector *c) {
+void mult_mat_vec_dif(matrix *a, vector *b, vector *c) {
   register int i, j;
   register complex y;
   for (i = 0; i < DIMF; i++) {
@@ -17,7 +17,7 @@ void mult_mat_vec_nsum(matrix *a, vector *b, vector *c) {
   }
 }
 #else   // FAST version for DIMF=3 only
-void mult_mat_vec_nsum(matrix *a, vector *b, vector *c) {
+void mult_mat_vec_dif(matrix *a, vector *b, vector *c) {
   int i;
   register Real t, ar, ai, br, bi, cr, ci;
   for(i = 0; i < 3; i++) {

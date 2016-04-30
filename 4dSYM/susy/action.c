@@ -158,7 +158,7 @@ double gauge_action(int do_det) {
     // F^2 term
     for (index = 0; index < NPLAQ; index++) {
       mult_an_f(&(Fmunu[index][i]), &(Fmunu[index][i]), &tmat2);
-      scalar_mult_add_matrix_f(&tmat, &tmat2, 2.0, &tmat);
+      scalar_mult_sum_matrix_f(&tmat2, 2.0, &tmat);
     }
 
     if (do_det == 1)

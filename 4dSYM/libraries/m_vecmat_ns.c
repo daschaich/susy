@@ -5,7 +5,7 @@
 #include "../include/complex.h"
 #include "../include/susy.h"
 
-void mult_vec_mat_nsum(vector *b, matrix *a, vector *c) {
+void mult_vec_mat_dif(vector *b, matrix *a, vector *c) {
   register int i, j;
   register complex y;
   for (i = 0; i < DIMF; i++) {

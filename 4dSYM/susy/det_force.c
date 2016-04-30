@@ -4,7 +4,7 @@
 #include "susy_includes.h"
 
 double det_force(Real eps) {
-  register int i, dir1, dir2;
+  register int i, dir, dir2;
   register site *s;
   double returnit = 0;
   complex staple_det, linkf_det, prod_det, tforce;
@@ -12,27 +12,27 @@ double det_force(Real eps) {
   matrix_f tmat, dlink, *mat0, *mat2;
   msg_tag *tag0 = NULL, *tag1 = NULL, *tag2 = NULL;
 
-  // Loop over directions, update mom[dir1]
-  for (dir1 = XUP; dir1 < NUMLINK; dir1++) {
+  // Loop over directions, update mom[dir]
+  FORALLDIR(dir) {
     FORALLSITES(i, s)
       force[i] = cmplx(0.0, 0.0);
 
     // Loop over other directions,
-    // computing force from plaquettes in the dir1, dir2 plane
-    for (dir2 = XUP; dir2 < NUMLINK; dir2++) {
-      if (dir2 != dir1) {
-        // Get linkf[dir2] from direction dir1
+    // computing force from plaquettes in the dir, dir2 plane
+    FORALLDIR(dir2) {
+      if (dir2 != dir) {
+        // Get linkf[dir2] from direction dir
         tag0 = start_gather_site(F_OFFSET(linkf[dir2]), sizeof(matrix_f),
-                                 goffset[dir1], EVENANDODD, gen_pt[0]);
+                                 goffset[dir], EVENANDODD, gen_pt[0]);
 
         // Start gather for the upper staple
-        tag2 = start_gather_site(F_OFFSET(linkf[dir1]), sizeof(matrix_f),
+        tag2 = start_gather_site(F_OFFSET(linkf[dir]), sizeof(matrix_f),
                                  goffset[dir2], EVENANDODD, gen_pt[2]);
 
         // Begin the computation at the dir2DOWN point
         wait_gather(tag0);
         FORALLSITES(i, s) {
-          mult_an_f(&(s->linkf[dir2]), &(s->linkf[dir1]), &tmat);
+          mult_an_f(&(s->linkf[dir2]), &(s->linkf[dir]), &tmat);
           mult_nn_f(&tmat, (matrix_f *)gen_pt[0][i], &(tempmat[i]));
         }
         // Gather this intermediate result up to home site
@@ -55,7 +55,7 @@ double det_force(Real eps) {
           // --> F = (det[staple U^dag] - 1) * det[staple]^* * d(det U)/dU
           //       = prod_det * staple_det^* * dlink
           staple_det = find_det(&(staple[i]));
-          linkf_det = find_det(&(s->linkf[dir1]));
+          linkf_det = find_det(&(s->linkf[dir]));
 
           // prod_det = kappa_u1 * (staple_det * linkf_det^* - 1)
           CMUL_J(staple_det, linkf_det, prod_det);
@@ -71,7 +71,7 @@ double det_force(Real eps) {
         wait_gather(tag1);
         FORALLSITES(i,s) {
           staple_det = find_det((matrix_f *)gen_pt[1][i]);
-          linkf_det = find_det(&(s->linkf[dir1]));
+          linkf_det = find_det(&(s->linkf[dir]));
 
           // prod_det = kappa_u1 * (staple_det * linkf_det^* - 1)
           CMUL_J(staple_det, linkf_det, prod_det);
@@ -91,28 +91,26 @@ double det_force(Real eps) {
     // Now update momenta
     FORALLSITES(i, s) {
 #if (NCOL == 2 || NCOL == 3 || NCOL == 4)
-      adjugate(&(s->linkf[dir1]), &dlink);
+      adjugate(&(s->linkf[dir]), &dlink);
 #endif
 #if (NCOL > 4)
       // Determine adjugate as determinant times inverse
       // Checked that this produces the correct results for NCOL <= 4
-      invert(&(s->linkf[dir1]), &tmat);
-      linkf_det = find_det(&(s->linkf[dir1]));
+      invert(&(s->linkf[dir]), &tmat);
+      linkf_det = find_det(&(s->linkf[dir]));
       c_scalar_mult_mat_f(&tmat, &linkf_det, &dlink);
 #endif
-      c_scalar_mult_mat_f(&dlink, &(force[i]), &tmat);
-      adjoint_f(&tmat, &(s->f_U[dir1]));
+      c_scalar_mult_mat_f(&dlink, &(force[i]), &(s->f_U[dir]));
       /* and update the momentum from the gauge force --
-         sub because I computed dS/dU and the adjoint because of the way it is */
-      scalar_mult_sub_matrix_f(&(s->mom[dir1]), &(s->f_U[dir1]), eps,
-                                   &(s->mom[dir1]));
+         dif because I computed dS/dU and the adjoint because of the way it is */
+      scalar_mult_dif_adj_matrix_f(&(s->f_U[dir]), eps, &(s->mom[dir]));
     }
   }
 
   // Compute average gauge force
   FORALLSITES(i, s) {
-    for (dir1 = XUP; dir1 < NUMLINK; dir1++)
-      returnit += realtrace_f(&(s->f_U[dir1]), &(s->f_U[dir1]));
+    FORALLDIR(dir)
+      returnit += realtrace_f(&(s->f_U[dir]), &(s->f_U[dir]));
   }
   g_doublesum(&returnit);
 

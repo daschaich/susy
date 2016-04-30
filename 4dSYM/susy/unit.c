@@ -152,7 +152,7 @@ void polar(matrix_f *in, matrix_f *u, matrix_f *P) {
 
   // Check hermiticity of P
   adjoint_f(P, &tmat);
-  c_scalar_mult_add_mat_f(P, &tmat, &minus1, &PSq);
+  sub_matrix_f(P, &tmat, &PSq);
   for (row = 0; row < NCOL; row++) {
     for (col = 0; col < NCOL; col++) {
       if (cabs_sq(&(PSq.e[row][col])) > SQ_TOL) {
@@ -170,7 +170,7 @@ void polar(matrix_f *in, matrix_f *u, matrix_f *P) {
 
   // Check that in = P.u
   mult_nn_f(P, u, &tmat);
-  c_scalar_mult_add_mat_f(in, &tmat, &minus1, &PSq);
+  sub_matrix_f(in, &tmat, &PSq);
   for (row = 0; row < NCOL; row++) {
     for (col = 0; col < NCOL; col++) {
       if (cabs_sq(&(PSq.e[row][col])) > SQ_TOL) {

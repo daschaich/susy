@@ -189,7 +189,7 @@ void Dplus(vector *src[NUMLINK], vector *dest[NPLAQ]) {
         scalar_mult_vector(&(dest[index][i]), s->bc1[mu], &(dest[index][i]));
 
         // Add or subtract the other three terms
-        mult_vec_mat_nsum(&(src[nu][i]), mat1, &(dest[index][i]));
+        mult_vec_mat_dif(&(src[nu][i]), mat1, &(dest[index][i]));
 
         mult_mat_vec(&(s->link[nu]), vec2, &vtmp);
         scalar_mult_sub_vector(&(dest[index][i]), &vtmp, s->bc1[nu],
@@ -288,7 +288,7 @@ void Dminus(vector *src[NPLAQ], vector *dest[NUMLINK]) {
         mat = (matrix *)(local_pt[flip][0][i]);
         vec = (vector *)(local_pt[flip][1][i]);
         if (mu > nu)      // src is anti-symmetric under mu <--> nu
-          mult_mat_vec_nsum(mat, &(src[index][i]), &(dest[nu][i]));
+          mult_mat_vec_dif(mat, &(src[index][i]), &(dest[nu][i]));
         else
           mult_mat_vec_sum(mat, &(src[index][i]), &(dest[nu][i]));
 
@@ -522,7 +522,7 @@ void DbplusStoL(vector *src, vector *dest[NUMLINK]) {
       vec = (vector *)(gen_pt[mu][i]);
       mult_vec_adj_mat(vec, &(s->link[mu]), &vtmp);
       scalar_mult_vector(&vtmp, s->bc1[mu], &vtmp);
-      mult_adj_mat_vec_nsum(&(s->link[mu]), &(src[i]), &vtmp);
+      mult_adj_mat_vec_dif(&(s->link[mu]), &(src[i]), &vtmp);
       scalar_mult_add_vector(&(dest[mu][i]), &vtmp, 0.5, &(dest[mu][i]));
     }
     cleanup_gather(tag[mu]);
@@ -701,7 +701,7 @@ void DbminusLtoS(vector *src[NUMLINK], vector *dest) {
     FORALLSITES(i, s) {
       vec = (vector *)(gen_pt[mu][i]);
       scalar_mult_vector(vec, s->bc1[OPP_LDIR(mu)], &vtmp);
-      mult_vec_adj_mat_nsum(&(src[mu][i]), &(s->link[mu]), &vtmp);
+      mult_vec_adj_mat_dif(&(src[mu][i]), &(s->link[mu]), &vtmp);
       scalar_mult_sub_vector(&(dest[i]), &vtmp, 0.5, &(dest[i]));
     }
     cleanup_gather(tag[mu]);
