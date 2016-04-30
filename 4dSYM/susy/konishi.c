@@ -17,7 +17,7 @@ void compute_Ba() {
   int a, b, j, k;
   Real tr;
   complex tc;
-  su3_matrix_f tmat;
+  matrix_f tmat;
 
   FORALLSITES(i, s) {
     // Construct scalar fields
@@ -27,15 +27,15 @@ void compute_Ba() {
       matrix_log(&tmat, &(Ba[0][a][i]));
 
       // Traceless part of U.Udag (hermitian so trace is real)
-      mult_su3_na_f(&(s->linkf[a]), &(s->linkf[a]), &(Ba[1][a][i]));
-      tc = trace_su3_f(&(Ba[1][a][i]));
+      mult_na_f(&(s->linkf[a]), &(s->linkf[a]), &(Ba[1][a][i]));
+      tc = trace_f(&(Ba[1][a][i]));
       tr = tc.real / (Real)NCOL;
       for (k = 0; k < NCOL; k++)
         Ba[1][a][i].e[k][k].real -= tr;
 
       // Check reality of resulting scalar fields
       for (j = 0; j < N_B; j++){
-        tc = trace_su3_f(&(Ba[j][a][i]));
+        tc = trace_f(&(Ba[j][a][i]));
         if (fabs(tc.imag) > IMAG_TOL) {
           printf("WARNING: Tr[Ba[%d][%d][%d]] = (%.4g, %.4g) is not real\n",
                  j, a, i, tc.real, tc.imag);
@@ -50,20 +50,20 @@ void compute_Ba() {
   for (a = XUP; a < NUMLINK; a++) {
     for (b = XUP; b < NUMLINK; b++) {
       FORALLSITES(i, s) {
-        mult_su3_nn_f(&(Ba[0][a][i]), &(Ba[0][b][i]), &tmat);
-        tc = trace_su3_f(&tmat);
+        mult_nn_f(&(Ba[0][a][i]), &(Ba[0][b][i]), &tmat);
+        tc = trace_f(&tmat);
         traceBB[0][a][b][i] = tc.real;    // Tr[PP]
 
-        mult_su3_nn_f(&(Ba[1][a][i]), &(Ba[1][b][i]), &tmat);
-        tc = trace_su3_f(&tmat);
+        mult_nn_f(&(Ba[1][a][i]), &(Ba[1][b][i]), &tmat);
+        tc = trace_f(&tmat);
         traceBB[2][a][b][i] = tc.real;    // Tr[UU]
 
         // (Tr[UP] + Tr[PU]) / 2
-        mult_su3_nn_f(&(Ba[0][a][i]), &(Ba[1][b][i]), &tmat);
-        tc = trace_su3_f(&tmat);
+        mult_nn_f(&(Ba[0][a][i]), &(Ba[1][b][i]), &tmat);
+        tc = trace_f(&tmat);
         traceBB[1][a][b][i] = 0.5 * tc.real;
-        mult_su3_nn_f(&(Ba[1][a][i]), &(Ba[0][b][i]), &tmat);
-        tc = trace_su3_f(&tmat);
+        mult_nn_f(&(Ba[1][a][i]), &(Ba[0][b][i]), &tmat);
+        tc = trace_f(&tmat);
         traceBB[1][a][b][i] += 0.5 * tc.real;
       }
     }

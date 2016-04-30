@@ -29,7 +29,7 @@ Eigenvalue measurements (susy_eig) require PRIMME (https://github.com/primme/pri
 -DPUREGAUGE switches off the fermions (FOR TESTING)
 
 # Gauge group and fermion rep:
-NCOL and DIMF defined in ../include/su3.h
+NCOL and DIMF defined in ../include/susy.h
 For now we fix U(NCOL) gauge group with DIMF=NCOL*NCOL for adjoint rep
 
 # Boundary conditions for fermions:

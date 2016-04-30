@@ -68,11 +68,11 @@ void clear_TF(Twist_Fermion *vec) {
 Real magsq_TF(Twist_Fermion *vec) {
   register int i;
   register Real sum;
-  sum = magsq_su3vec(&(vec->Fsite));
+  sum = magsq_vec(&(vec->Fsite));
   for (i = 0; i < NUMLINK; i++)
-    sum += magsq_su3vec(&(vec->Flink[i]));
+    sum += magsq_vec(&(vec->Flink[i]));
   for (i = 0; i < NPLAQ; i++)
-    sum += magsq_su3vec(&(vec->Fplaq[i]));
+    sum += magsq_vec(&(vec->Fplaq[i]));
   return sum;
 }
 // -----------------------------------------------------------------
@@ -84,13 +84,13 @@ Real magsq_TF(Twist_Fermion *vec) {
 complex TF_dot(Twist_Fermion *a, Twist_Fermion *b) {
   register int i;
   complex sum, tc;
-  sum = su3_dot(&(a->Fsite), &(b->Fsite));
+  sum = dot(&(a->Fsite), &(b->Fsite));
   for (i = 0; i < NUMLINK; i++) {
-    tc = su3_dot(&(a->Flink[i]), &(b->Flink[i]));
+    tc = dot(&(a->Flink[i]), &(b->Flink[i]));
     CSUM(sum, tc);
   }
   for (i = 0; i < NPLAQ; i++) {
-    tc = su3_dot(&(a->Fplaq[i]), &(b->Fplaq[i]));
+    tc = dot(&(a->Fplaq[i]), &(b->Fplaq[i]));
     CSUM(sum, tc);
   }
   return sum;
@@ -105,16 +105,14 @@ void scalar_mult_add_TF(Twist_Fermion *src1, Twist_Fermion *src2,
                         Real s, Twist_Fermion *dest) {
 
   register int i;
-  scalar_mult_add_su3_vector(&(src1->Fsite), &(src2->Fsite),
-                             s, &(dest->Fsite));
-
+  scalar_mult_add_vector(&(src1->Fsite), &(src2->Fsite), s, &(dest->Fsite));
   for (i = 0; i < NUMLINK; i++) {
-    scalar_mult_add_su3_vector(&(src1->Flink[i]), &(src2->Flink[i]),
-                               s, &(dest->Flink[i]));
+    scalar_mult_add_vector(&(src1->Flink[i]), &(src2->Flink[i]), s,
+                           &(dest->Flink[i]));
   }
   for (i = 0; i < NPLAQ; i++) {
-    scalar_mult_add_su3_vector(&(src1->Fplaq[i]), &(src2->Fplaq[i]),
-                               s, &(dest->Fplaq[i]));
+    scalar_mult_add_vector(&(src1->Fplaq[i]), &(src2->Fplaq[i]), s,
+                           &(dest->Fplaq[i]));
 
   }
 }
@@ -125,18 +123,18 @@ void scalar_mult_add_TF(Twist_Fermion *src1, Twist_Fermion *src2,
 // -----------------------------------------------------------------
 void scalar_mult_TF(Twist_Fermion *src, Real s, Twist_Fermion *dest) {
   register int i;
-  scalar_mult_su3_vector(&(src->Fsite), s, &(dest->Fsite));
+  scalar_mult_vector(&(src->Fsite), s, &(dest->Fsite));
   for (i = 0; i < NUMLINK; i++)
-    scalar_mult_su3_vector(&(src->Flink[i]), s, &(dest->Flink[i]));
+    scalar_mult_vector(&(src->Flink[i]), s, &(dest->Flink[i]));
   for (i = 0; i < NPLAQ; i++)
-    scalar_mult_su3_vector(&(src->Fplaq[i]), s, &(dest->Fplaq[i]));
+    scalar_mult_vector(&(src->Fplaq[i]), s, &(dest->Fplaq[i]));
 }
 // -----------------------------------------------------------------
 
 
 
 // -----------------------------------------------------------------
-// Copy a gauge field as an array of NUMLINK su3_matrices
+// Copy a gauge field as an array of NUMLINK matrices
 void gauge_field_copy_f(field_offset src, field_offset dest) {
   register int i, dir, src2, dest2;
   register site *s;
@@ -144,11 +142,10 @@ void gauge_field_copy_f(field_offset src, field_offset dest) {
   FORALLSITES(i, s) {
     src2 = src;
     dest2 = dest;
-    for (dir = 0; dir < NUMLINK; dir++) {
-      su3mat_copy_f((su3_matrix_f *)F_PT(s, src2),
-                    (su3_matrix_f *)F_PT(s, dest2));
-      src2 += sizeof(su3_matrix_f);
-      dest2 += sizeof(su3_matrix_f);
+    FORALLDIR(dir) {
+      mat_copy_f((matrix_f *)F_PT(s, src2), (matrix_f *)F_PT(s, dest2));
+      src2 += sizeof(matrix_f);
+      dest2 += sizeof(matrix_f);
     }
   }
 }
@@ -159,18 +156,18 @@ void gauge_field_copy_f(field_offset src, field_offset dest) {
 // -----------------------------------------------------------------
 // Shift a matrix without parallel transport
 // The dir should come from goffset
-void shiftmat(su3_matrix_f *dat, su3_matrix_f *temp, int dir) {
+void shiftmat(matrix_f *dat, matrix_f *temp, int dir) {
   register int i;
   register site *s;
   msg_tag *mtag;
 
-  mtag = start_gather_field(dat, sizeof(su3_matrix_f),
+  mtag = start_gather_field(dat, sizeof(matrix_f),
                             dir, EVENANDODD, gen_pt[0]);
   wait_gather(mtag);
   FORALLSITES(i, s)
-    su3mat_copy_f((su3_matrix_f *)gen_pt[0][i], &(temp[i]));
+    mat_copy_f((matrix_f *)gen_pt[0][i], &(temp[i]));
   cleanup_gather(mtag);
   FORALLSITES(i, s)
-    su3mat_copy_f(&(temp[i]), &(dat[i]));
+    mat_copy_f(&(temp[i]), &(dat[i]));
 }
 // -----------------------------------------------------------------

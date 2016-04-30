@@ -9,7 +9,7 @@
 #include <stdio.h>
 #include "../include/int32type.h"
 #include "../include/complex.h"
-#include "../include/su3.h"
+#include "../include/susy.h"
 #include "../include/macros.h"
 #include "../include/random.h"
 #include "../include/file_types.h"

@@ -3,10 +3,10 @@
 // c <-- adag * b
 #include "../include/config.h"
 #include "../include/complex.h"
-#include "../include/su3.h"
+#include "../include/susy.h"
 
 #ifndef FAST
-void mult_su3_an(su3_matrix *a, su3_matrix *b, su3_matrix *c) {
+void mult_an(matrix *a, matrix *b, matrix *c) {
   register int i, j, k;
   register complex y;
   for (i = 0; i < DIMF; i++) {
@@ -20,7 +20,7 @@ void mult_su3_an(su3_matrix *a, su3_matrix *b, su3_matrix *c) {
   }
 }
 #else   // FAST version for DIMF=3 only
-void mult_su3_an(su3_matrix *a, su3_matrix *b, su3_matrix *c) {
+void mult_an(matrix *a, matrix *b, matrix *c) {
   int j;
   register Real a0r, a0i, a1r, a1i, a2r, a2i;
   register Real b0r, b0i, b1r, b1i, b2r, b2i;

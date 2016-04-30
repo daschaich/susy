@@ -3,10 +3,10 @@
 // c <-- a * b
 #include "../include/config.h"
 #include "../include/complex.h"
-#include "../include/su3.h"
+#include "../include/susy.h"
 
 #ifndef FAST
-void mult_su3_nn_f(su3_matrix_f *a, su3_matrix_f *b, su3_matrix_f *c) {
+void mult_nn_f(matrix_f *a, matrix_f *b, matrix_f *c) {
   register int i, j, k;
   register complex y;
   for (i = 0; i < NCOL; i++) {
@@ -20,7 +20,7 @@ void mult_su3_nn_f(su3_matrix_f *a, su3_matrix_f *b, su3_matrix_f *c) {
   }
 }
 #else   // FAST version for NCOL=3 only
-void mult_su3_nn_f(su3_matrix_f *a, su3_matrix_f *b, su3_matrix_f *c) {
+void mult_nn_f(matrix_f *a, matrix_f *b, matrix_f *c) {
   int i, j;
   register Real t, ar, ai, br, bi, cr, ci;
   for (i = 0; i < 3; i++) {

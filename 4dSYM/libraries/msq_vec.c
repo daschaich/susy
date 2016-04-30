@@ -2,10 +2,10 @@
 // Squared magnitude of irrep vector
 #include "../include/config.h"
 #include "../include/complex.h"
-#include "../include/su3.h"
+#include "../include/susy.h"
 
 #ifndef FAST
-Real magsq_su3vec(su3_vector *a) {
+Real magsq_vec(vector *a) {
   register Real sum = 0.0;
   register int i;
   for (i = 0; i < DIMF; i++)
@@ -14,7 +14,7 @@ Real magsq_su3vec(su3_vector *a) {
   return sum;
 }
 #else   // FAST version for DIMF=3 only
-Real magsq_su3vec(su3_vector *a) {
+Real magsq_vec(vector *a) {
   register Real temp, sum = 0.0;
   temp = a->c[0].real * a->c[0].real;
   sum += temp;

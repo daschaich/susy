@@ -4,9 +4,9 @@
 // link <-- link * udag
 #include "../include/config.h"
 #include "../include/complex.h"
-#include "../include/su3.h"
+#include "../include/susy.h"
 
-void right_su2_hit_a_f(su2_matrix *u, int p, int q, su3_matrix_f *link) {
+void right_su2_hit_a_f(su2_matrix *u, int p, int q, matrix_f *link) {
   register int m;
 
   for (m = 0; m < NCOL; m++)

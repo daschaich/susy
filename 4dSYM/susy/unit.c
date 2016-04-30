@@ -7,12 +7,12 @@
 
 // -----------------------------------------------------------------
 // Take log of hermitian part of decomposition to define scalar field
-void matrix_log(su3_matrix_f *in, su3_matrix_f *out) {
+void matrix_log(matrix_f *in, matrix_f *out) {
   char V = 'V';     // Ask LAPACK for both eigenvalues and eigenvectors
   char U = 'U';     // Have LAPACK store upper triangle of U.Ubar
   int row, col, Npt = NCOL, stat = 0, Nwork = 2 * NCOL;
   double *store, *work, *Rwork, *eigs;
-  su3_matrix_f evecs, tmat;
+  matrix_f evecs, tmat;
 
   // Allocate double arrays to be used by LAPACK
   store = malloc(2 * NCOL * NCOL * sizeof(*store));
@@ -40,9 +40,9 @@ void matrix_log(su3_matrix_f *in, su3_matrix_f *out) {
     }
   }
 
-  // Move the results back into su3_matrix_f structures
+  // Move the results back into matrix_f structures
   // Use evecs to hold the eigenvectors for projection
-  clear_su3mat_f(out);
+  clear_mat_f(out);
   for (row = 0; row < NCOL; row++) {
     for (col = 0; col < NCOL; col++) {
       evecs.e[row][col].real = store[2 * (col * NCOL + row)];
@@ -52,8 +52,8 @@ void matrix_log(su3_matrix_f *in, su3_matrix_f *out) {
     out->e[row][row].real = log(eigs[row]);
   }
   // Inverse of eigenvector matrix is simply adjoint
-  mult_su3_na_f(out, &evecs, &tmat);
-  mult_su3_nn_f(&evecs, &tmat, out);
+  mult_na_f(out, &evecs, &tmat);
+  mult_nn_f(&evecs, &tmat, out);
 //  node0_printf("\n");
 //  dumpmat_f(out);
 //  node0_printf("\n");
@@ -73,13 +73,13 @@ void matrix_log(su3_matrix_f *in, su3_matrix_f *out) {
 //   and the positive P = sqrt[in.in^dag]
 // We diagonalize PSq = in.in^dag using LAPACK,
 // then project out its inverse square root
-void polar(su3_matrix_f *in, su3_matrix_f *u, su3_matrix_f *P) {
+void polar(matrix_f *in, matrix_f *u, matrix_f *P) {
   char V = 'V';     // Ask LAPACK for both eigenvalues and eigenvectors
   char U = 'U';     // Have LAPACK store upper triangle of U.Ubar
   int row, col, Npt = NCOL, stat = 0, Nwork = 2 * NCOL;
   double *store, *work, *Rwork, *eigs;
   complex minus1 = cmplx(-1.0, 0.0);
-  su3_matrix_f PSq, Pinv, tmat;
+  matrix_f PSq, Pinv, tmat;
 
   // Allocate double arrays to be used by LAPACK
   store = malloc(2 * NCOL * NCOL * sizeof(*store));
@@ -88,7 +88,7 @@ void polar(su3_matrix_f *in, su3_matrix_f *u, su3_matrix_f *P) {
   eigs = malloc(NCOL * sizeof(*eigs));
 
   // Convert PSq to column-major double array used by LAPACK
-  mult_su3_na_f(in, in, &PSq);
+  mult_na_f(in, in, &PSq);
   for (row = 0; row < NCOL; row++) {
     for (col = 0; col < NCOL; col++) {
       store[2 * (col * NCOL + row)] = PSq.e[row][col].real;
@@ -108,7 +108,7 @@ void polar(su3_matrix_f *in, su3_matrix_f *u, su3_matrix_f *P) {
     }
   }
 
-  // Move the results back into su3_matrix_f structures
+  // Move the results back into matrix_f structures
   // Overwrite PSq to hold the eigenvectors for projection
   for (row = 0; row < NCOL; row++) {
     for (col = 0; col < NCOL; col++) {
@@ -121,20 +121,20 @@ void polar(su3_matrix_f *in, su3_matrix_f *u, su3_matrix_f *P) {
     P->e[row][row].real = sqrt(eigs[row]);
     Pinv.e[row][row].real = 1.0 / sqrt(eigs[row]);
   }
-  mult_su3_na_f(P, &PSq, &tmat);
-  mult_su3_nn_f(&PSq, &tmat, P);
+  mult_na_f(P, &PSq, &tmat);
+  mult_nn_f(&PSq, &tmat, P);
 //  node0_printf("\n");
 //  dumpmat_f(&PSq);
 //  node0_printf("\n");
 
   // Now project out 1 / sqrt[in.in^dag] to find u = [1 / P].in
-  mult_su3_na_f(&Pinv, &PSq, &tmat);
-  mult_su3_nn_f(&PSq, &tmat, &Pinv);
-  mult_su3_nn_f(&Pinv, in, u);
+  mult_na_f(&Pinv, &PSq, &tmat);
+  mult_nn_f(&PSq, &tmat, &Pinv);
+  mult_nn_f(&Pinv, in, u);
 
   // Check unitarity of u
-  mult_su3_na_f(u, u, &PSq);
-  c_scalar_add_diag_su3_f(&PSq, &minus1);
+  mult_na_f(u, u, &PSq);
+  c_scalar_add_diag_f(&PSq, &minus1);
   for (row = 0; row < NCOL; row++) {
     for (col = 0; col < NCOL; col++) {
       if (cabs_sq(&(PSq.e[row][col])) > SQ_TOL) {
@@ -151,8 +151,8 @@ void polar(su3_matrix_f *in, su3_matrix_f *u, su3_matrix_f *P) {
   }
 
   // Check hermiticity of P
-  su3_adjoint_f(P, &tmat);
-  c_scalar_mult_add_su3mat_f(P, &tmat, &minus1, &PSq);
+  adjoint_f(P, &tmat);
+  c_scalar_mult_add_mat_f(P, &tmat, &minus1, &PSq);
   for (row = 0; row < NCOL; row++) {
     for (col = 0; col < NCOL; col++) {
       if (cabs_sq(&(PSq.e[row][col])) > SQ_TOL) {
@@ -169,8 +169,8 @@ void polar(su3_matrix_f *in, su3_matrix_f *u, su3_matrix_f *P) {
   }
 
   // Check that in = P.u
-  mult_su3_nn_f(P, u, &tmat);
-  c_scalar_mult_add_su3mat_f(in, &tmat, &minus1, &PSq);
+  mult_nn_f(P, u, &tmat);
+  c_scalar_mult_add_mat_f(in, &tmat, &minus1, &PSq);
   for (row = 0; row < NCOL; row++) {
     for (col = 0; col < NCOL; col++) {
       if (cabs_sq(&(PSq.e[row][col])) > SQ_TOL) {

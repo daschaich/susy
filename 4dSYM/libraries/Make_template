@@ -18,7 +18,7 @@ HEADERS = ../include/config.h    \
           ../include/random.h    \
           ../include/int32type.h \
           ../include/precision.h \
-          ../include/su3.h
+          ../include/susy.h
 
 # To force a full remake when switching or updating Makefiles
 LASTMAKE = .lastmake.${MAKEFILE}
@@ -56,13 +56,13 @@ SU3OBJS1 = addmat.1o addvec.1o cmp_ahmat.1o cs_m_a_vec.1o cs_m_a_mat.1o \
            m_matvec_s.1o make_ahmat.1o realtr.1o complextr.1o \
            s_m_a_mat.1o s_m_a_vec.1o s_m_s_mat.1o \
            s_m_s_vec.1o s_m_sum_vec.1o s_m_vec.1o s_m_mat.1o cs_m_mat.1o \
-           cs_m_s_mat.1o su3_adjoint.1o su3_dot.1o su3_rdot.1o \
-           su3mat_copy.1o su3vec_copy.1o submat.1o subvec.1o trace_su3.1o \
-           uncmp_ahmat.1o msq_su3vec.1o dumpsu2.1o \
+           cs_m_s_mat.1o adjoint.1o dot.1o rdot.1o \
+           mat_copy.1o vec_copy.1o submat.1o subvec.1o trace.1o \
+           uncmp_ahmat.1o msq_vec.1o dumpsu2.1o \
            m_su2_mat_vec_n.1o m_su2_mat_vec_a.1o gaussrand.1o byterevn.1o \
            m_mat_an_f.1o m_mat_na_f.1o m_mat_nn_f.1o realtr_f.1o \
            s_m_a_mat_f.1o s_m_a_amat_f.1o s_m_s_mat_f.1o s_m_s_amat_f.1o\
-           su3_adjoint_f.1o su3mat_copy_f.1o trace_su3_f.1o \
+           adjoint_f.1o mat_copy_f.1o trace_f.1o \
            dumpmat_f.1o dump_ahmat_f.1o clear_mat_f.1o \
            addmat_f.1o addamat_f.1o  submat_f.1o subamat_f.1o \
            clearvec_f.1o r_su2_hit_a_f.1o l_su2_hit_n_f.1o \
@@ -80,13 +80,13 @@ SU3OBJS2 = addmat.2o addvec.2o cmp_ahmat.2o cs_m_a_vec.2o cs_m_a_mat.2o \
            m_matvec_s.2o make_ahmat.2o realtr.2o complextr.2o \
            s_m_a_mat.2o s_m_a_vec.2o s_m_s_mat.2o \
            s_m_s_vec.2o s_m_sum_vec.2o s_m_vec.2o s_m_mat.2o cs_m_mat.2o \
-           cs_m_s_mat.2o su3_adjoint.2o su3_dot.2o su3_rdot.2o \
-           su3mat_copy.2o su3vec_copy.2o submat.2o subvec.2o trace_su3.2o \
-           uncmp_ahmat.2o msq_su3vec.2o dumpsu2.2o \
+           cs_m_s_mat.2o adjoint.2o dot.2o rdot.2o \
+           mat_copy.2o vec_copy.2o submat.2o subvec.2o trace.2o \
+           uncmp_ahmat.2o msq_vec.2o dumpsu2.2o \
            m_su2_mat_vec_n.2o m_su2_mat_vec_a.2o gaussrand.2o byterevn.2o \
            m_mat_an_f.2o m_mat_na_f.2o m_mat_nn_f.2o realtr_f.2o \
            s_m_a_mat_f.2o s_m_a_amat_f.2o s_m_s_mat_f.2o s_m_s_amat_f.2o \
-           su3_adjoint_f.2o su3mat_copy_f.2o trace_su3_f.2o \
+           adjoint_f.2o mat_copy_f.2o trace_f.2o \
            clear_mat_f.2o dumpmat_f.2o dump_ahmat_f.2o \
            addmat_f.2o addamat_f.2o submat_f.2o subamat_f.2o \
            clearvec_f.2o r_su2_hit_a_f.2o l_su2_hit_n_f.2o \
@@ -103,14 +103,14 @@ gaussrand.2o : ../include/random.h
 ${SU3OBJS1} : ${HEADERS} ${ALLMAKES} ${LASTMAKE}
 ${SU3OBJS2} : ${HEADERS} ${ALLMAKES} ${LASTMAKE}
 
-su3.1.a::	 ${SU3OBJS1}
+susy.1.a::	 ${SU3OBJS1}
 	${AR} rcs $@ ${SU3OBJS1}
 
-su3.2.a::	 ${SU3OBJS2}
+susy.2.a::	 ${SU3OBJS2}
 	${AR} rcs $@ ${SU3OBJS2}
 
-LIBRARIES1 = complex.1.a su3.1.a
-LIBRARIES2 = complex.2.a su3.2.a
+LIBRARIES1 = complex.1.a susy.1.a
+LIBRARIES2 = complex.2.a susy.2.a
 
 ifeq ($(strip ${PRECISION}),1)
 

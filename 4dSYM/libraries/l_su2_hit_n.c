@@ -4,9 +4,9 @@
 // link <-- u * link
 #include "../include/config.h"
 #include "../include/complex.h"
-#include "../include/su3.h"
+#include "../include/susy.h"
 
-void left_su2_hit_n(su2_matrix *u, int p, int q, su3_matrix *link) {
+void left_su2_hit_n(su2_matrix *u, int p, int q, matrix *link) {
   register int m;
 
   for (m = 0; m < DIMF; m++)

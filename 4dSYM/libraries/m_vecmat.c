@@ -3,9 +3,9 @@
 // c <-- b * a
 #include "../include/config.h"
 #include "../include/complex.h"
-#include "../include/su3.h"
+#include "../include/susy.h"
 
-void mult_su3_vec_mat(su3_vector *b, su3_matrix *a, su3_vector *c) {
+void mult_vec_mat(vector *b, matrix *a, vector *c) {
   register int i, j;
   register complex y;
   for (i = 0; i < DIMF; i++) {

@@ -1,14 +1,14 @@
 // -----------------------------------------------------------------
-// Adjoint of an irrep matrix
+// Adjoint of a fundamental matrix
 // b <-- adag
 #include "../include/config.h"
 #include "../include/complex.h"
-#include "../include/su3.h"
+#include "../include/susy.h"
 
-void su3_adjoint(su3_matrix *a, su3_matrix *b) {
+void adjoint_f(matrix_f *a, matrix_f *b) {
   register int i, j;
-  for (i = 0; i < DIMF; i++) {
-    for (j = 0; j < DIMF; j++)
+  for (i = 0; i < NCOL; i++) {
+    for (j = 0; j < NCOL; j++)
       CONJG(a->e[j][i], b->e[i][j]);
   }
 }

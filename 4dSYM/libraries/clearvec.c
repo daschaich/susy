@@ -2,9 +2,9 @@
 // Clear an irrep vector
 #include "../include/config.h"
 #include "../include/complex.h"
-#include "../include/su3.h"
+#include "../include/susy.h"
 
-void clearvec(su3_vector *v) {
+void clearvec(vector *v) {
   v->c[0].real = 0.0;     v->c[0].imag = 0.0;
   v->c[1].real = 0.0;     v->c[1].imag = 0.0;
   v->c[2].real = 0.0;     v->c[2].imag = 0.0;

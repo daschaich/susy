@@ -20,12 +20,12 @@
 
 MYINCLUDEDIR = .
 INCLUDEDIR = ../include
-# Where the complex and su3 libraries are
+# Where the complex and susy libraries are
 LIBDIR = ../libraries
 
 GLOBAL_HEADERS = ${INCLUDEDIR}/config.h      \
                  ${INCLUDEDIR}/complex.h     \
-                 ${INCLUDEDIR}/su3.h         \
+                 ${INCLUDEDIR}/susy.h        \
                  ${INCLUDEDIR}/comdefs.h     \
                  ${INCLUDEDIR}/macros.h      \
                  ${INCLUDEDIR}/field_alloc.h \
@@ -78,9 +78,8 @@ ADD_OBJECTS = ${MACHINE_DEP_IO} ${COMMPKG}
 OBJECTS = ${MY_OBJECTS} ${G_OBJECTS} \
           ${LAYOUT} ${ADD_OBJECTS} ${EXTRA_OBJECTS}
 
-# Libraries for complex numbers and su3 functions
-QCDLIB = ${LIBDIR}/su3.${PRECISION}.a ${LIBDIR}/complex.${PRECISION}.a
-LIBRARIES = ${QCDLIB}
+# Libraries for complex numbers and susy functions
+LIBRARIES = ${LIBDIR}/susy.${PRECISION}.a ${LIBDIR}/complex.${PRECISION}.a
 
 # Default rule for C compilation
 .c.o: ; ${CC} -c ${CFLAGS} $<

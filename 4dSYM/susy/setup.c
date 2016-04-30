@@ -102,24 +102,24 @@ void make_fields() {
   node0_printf("Supersymmetric constraint on |det[plaq] - 1|^2\n");
 #endif
   double size = (double)(sizeof(complex));
-  size += (double)(2.0 * (1 + NUMLINK + NPLAQ)) * sizeof(su3_vector);
-  FIELD_ALLOC(site_src, su3_vector);
-  FIELD_ALLOC(site_dest, su3_vector);
+  size += (double)(2.0 * (1 + NUMLINK + NPLAQ)) * sizeof(vector);
+  FIELD_ALLOC(site_src, vector);
+  FIELD_ALLOC(site_dest, vector);
   FIELD_ALLOC(tr_dest, complex);
-  FIELD_ALLOC_VEC(link_src, su3_vector, NUMLINK);
-  FIELD_ALLOC_VEC(link_dest, su3_vector, NUMLINK);
-  FIELD_ALLOC_VEC(plaq_src, su3_vector, NPLAQ);
-  FIELD_ALLOC_VEC(plaq_dest, su3_vector, NPLAQ);
+  FIELD_ALLOC_VEC(link_src, vector, NUMLINK);
+  FIELD_ALLOC_VEC(link_dest, vector, NUMLINK);
+  FIELD_ALLOC_VEC(plaq_src, vector, NPLAQ);
+  FIELD_ALLOC_VEC(plaq_dest, vector, NPLAQ);
 
   // For convenience in calculating action and force
-  size += (double)(1.0 + NPLAQ + 3.0 * NUMLINK) * sizeof(su3_matrix_f);
+  size += (double)(1.0 + NPLAQ + 3.0 * NUMLINK) * sizeof(matrix_f);
   size += (double)(NUMLINK + 6.0 * NPLAQ) * sizeof(complex);
-  FIELD_ALLOC(DmuUmu, su3_matrix_f);
+  FIELD_ALLOC(DmuUmu, matrix_f);
   FIELD_ALLOC_VEC(Tr_Uinv, complex, NUMLINK);
-  FIELD_ALLOC_VEC(Fmunu, su3_matrix_f, NPLAQ);
-  FIELD_ALLOC_VEC(Uinv, su3_matrix_f, NUMLINK);
-  FIELD_ALLOC_VEC(Udag_inv, su3_matrix_f, NUMLINK);
-  FIELD_ALLOC_VEC(UpsiU, su3_matrix_f, NUMLINK);
+  FIELD_ALLOC_VEC(Fmunu, matrix_f, NPLAQ);
+  FIELD_ALLOC_VEC(Uinv, matrix_f, NUMLINK);
+  FIELD_ALLOC_VEC(Udag_inv, matrix_f, NUMLINK);
+  FIELD_ALLOC_VEC(UpsiU, matrix_f, NUMLINK);
   FIELD_ALLOC_MAT_OFFDIAG(plaqdet, complex, NUMLINK);
   FIELD_ALLOC_MAT_OFFDIAG(tempdet, complex, NUMLINK);
   FIELD_ALLOC_MAT_OFFDIAG(ZWstar, complex, NUMLINK);
@@ -129,22 +129,22 @@ void make_fields() {
 #endif
 
   // Temporary vectors, matrices and Twist_Fermion
-  size += (double)(3.0 * sizeof(su3_matrix_f));
+  size += (double)(3.0 * sizeof(matrix_f));
   size += (double)(sizeof(Twist_Fermion));
-  size += (double)(NUMLINK * sizeof(su3_vector));
-  FIELD_ALLOC(tempmat1, su3_matrix_f);
-  FIELD_ALLOC(tempmat2, su3_matrix_f);
-  FIELD_ALLOC(staple, su3_matrix_f);
+  size += (double)(NUMLINK * sizeof(vector));
+  FIELD_ALLOC(tempmat, matrix_f);
+  FIELD_ALLOC(tempmat2, matrix_f);
+  FIELD_ALLOC(staple, matrix_f);
   FIELD_ALLOC(tempTF, Twist_Fermion);
-  FIELD_ALLOC_VEC(tempvec, su3_vector, NUMLINK);
+  FIELD_ALLOC_VEC(tempvec, vector, NUMLINK);
 
 #ifdef CORR
   int j;
-  size += (double)(N_B * NUMLINK * sizeof(su3_matrix_f));
+  size += (double)(N_B * NUMLINK * sizeof(matrix_f));
   size += (double)(N_K * NUMLINK * NUMLINK * sizeof(Real));
   size += (double)(2.0 * sizeof(Kops));
   for (j = 0; j < N_B; j++)
-    FIELD_ALLOC_VEC(Ba[j], su3_matrix_f, NUMLINK);
+    FIELD_ALLOC_VEC(Ba[j], matrix_f, NUMLINK);
   for (j = 0; j < N_K; j++)
     FIELD_ALLOC_MAT(traceBB[j], double, NUMLINK, NUMLINK);
   FIELD_ALLOC(tempops, Kops);

@@ -8,7 +8,7 @@
 
 
 // -----------------------------------------------------------------
-// Use tempmat1 and staple as temporary storage
+// Use tempmat and staple as temporary storage
 void widths() {
   register int i;
   register site *s;
@@ -17,22 +17,22 @@ void widths() {
   double re = 0.0, reSq = 0.0, im = 0.0, imSq = 0.0;
   complex tc;
   msg_tag *mtag0 = NULL, *mtag1 = NULL;
-  su3_matrix_f tmat, *mat;
+  matrix_f tmat, *mat;
 
   for (a = XUP; a < NUMLINK; a++) {
     for (b = a + 1; b < NUMLINK; b++) {
       // gen_pt[0] is U_b(x+a), gen_pt[1] is U_a(x+b)
-      mtag0 = start_gather_site(F_OFFSET(linkf[b]), sizeof(su3_matrix_f),
+      mtag0 = start_gather_site(F_OFFSET(linkf[b]), sizeof(matrix_f),
                                 goffset[a], EVENANDODD, gen_pt[0]);
-      mtag1 = start_gather_site(F_OFFSET(linkf[a]), sizeof(su3_matrix_f),
+      mtag1 = start_gather_site(F_OFFSET(linkf[a]), sizeof(matrix_f),
                                 goffset[b], EVENANDODD, gen_pt[1]);
 
-      // tempmat1 = Udag_b(x+a) Udag_a(x) = [U_a(x) U_b(x+a)]^dag
+      // tempmat = Udag_b(x+a) Udag_a(x) = [U_a(x) U_b(x+a)]^dag
       wait_gather(mtag0);
       FORALLSITES(i, s) {
-        mat = (su3_matrix_f *)(gen_pt[0][i]);
-        mult_su3_nn_f(&(s->linkf[a]), mat, &tmat);
-        su3_adjoint_f(&tmat, &(tempmat1[i]));
+        mat = (matrix_f *)(gen_pt[0][i]);
+        mult_nn_f(&(s->linkf[a]), mat, &tmat);
+        adjoint_f(&tmat, &(tempmat[i]));
       }
       cleanup_gather(mtag0);
 
@@ -40,11 +40,11 @@ void widths() {
       // tmat = U_b(x) U_a(x+b) Udag_b(x+a) Udag_a(x) = P_ab
       wait_gather(mtag1);
       FORALLSITES(i, s) {
-        mat = (su3_matrix_f *)(gen_pt[1][i]);
-        mult_su3_nn_f(mat, &(tempmat1[i]), &(staple[i]));
-        mult_su3_nn_f(&(s->linkf[b]), &(staple[i]), &tmat);
+        mat = (matrix_f *)(gen_pt[1][i]);
+        mult_nn_f(mat, &(tempmat[i]), &(staple[i]));
+        mult_nn_f(&(s->linkf[b]), &(staple[i]), &tmat);
 
-        tc = trace_su3_f(&tmat);
+        tc = trace_f(&tmat);
         plaq += tc.real;
         plaqSq += tc.real * tc.real;
 

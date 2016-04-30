@@ -3,10 +3,10 @@
 // c <-- a + s * b
 #include "../include/config.h"
 #include "../include/complex.h"
-#include "../include/su3.h"
+#include "../include/susy.h"
 
-void c_scalar_mult_add_su3mat_f(su3_matrix_f *a, su3_matrix_f *b,
-                                complex *s, su3_matrix_f *c) {
+void c_scalar_mult_add_mat_f(matrix_f *a, matrix_f *b,
+                             complex *s, matrix_f *c) {
 
   register int i, j;
   for (i = 0; i < NCOL; i++) {

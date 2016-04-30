@@ -12,7 +12,7 @@
 //   sum_mu [U_mu(x) * Udag_mu(x) - Udag_mu(x - mu) * U_mu(x - mu)]
 // Add plaquette determinant contribution if G is non-zero
 // Add scalar potential contribution if B is non-zero
-// Use tempmat1 and tempmat2 as temporary storage
+// Use tempmat and tempmat2 as temporary storage
 void compute_DmuUmu() {
   register int i;
   register site *s;
@@ -20,7 +20,7 @@ void compute_DmuUmu() {
   Real tr;
   complex tc;
   msg_tag *mtag0 = NULL;
-  su3_matrix_f tmat, *mat;
+  matrix_f tmat, *mat;
 
 #ifdef TR_DIST
   if (this_node != 0) {
@@ -32,25 +32,25 @@ void compute_DmuUmu() {
 
   for (mu = XUP; mu < NUMLINK; mu++) {
     FORALLSITES(i, s) {
-      mult_su3_na_f(&(s->linkf[mu]), &(s->linkf[mu]), &(tempmat1[i]));
-      mult_su3_an_f(&(s->linkf[mu]), &(s->linkf[mu]), &(tempmat2[i]));
+      mult_na_f(&(s->linkf[mu]), &(s->linkf[mu]), &(tempmat[i]));
+      mult_an_f(&(s->linkf[mu]), &(s->linkf[mu]), &(tempmat2[i]));
     }
 
     // Gather tempmat2 from below
-    mtag0 = start_gather_field(tempmat2, sizeof(su3_matrix_f),
+    mtag0 = start_gather_field(tempmat2, sizeof(matrix_f),
                                goffset[mu] + 1, EVENANDODD, gen_pt[0]);
     wait_gather(mtag0);
     if (mu == 0) {
       FORALLSITES(i, s) {
-        mat = (su3_matrix_f *)(gen_pt[0][i]);
-        sub_su3_matrix_f(&(tempmat1[i]), mat, &(DmuUmu[i]));
+        mat = (matrix_f *)(gen_pt[0][i]);
+        sub_matrix_f(&(tempmat[i]), mat, &(DmuUmu[i]));
       }
     }
     else {
       FORALLSITES(i, s) {
-        mat = (su3_matrix_f *)(gen_pt[0][i]);
-        sub_su3_matrix_f(&(tempmat1[i]), mat, &tmat);
-        add_su3_matrix_f(&(DmuUmu[i]), &tmat, &(DmuUmu[i]));
+        mat = (matrix_f *)(gen_pt[0][i]);
+        sub_matrix_f(&(tempmat[i]), mat, &tmat);
+        add_matrix_f(&(DmuUmu[i]), &tmat, &(DmuUmu[i]));
       }
     }
     cleanup_gather(mtag0);
@@ -85,7 +85,7 @@ void compute_DmuUmu() {
     FORALLSITES(i, s) {
       for (mu = XUP; mu < NUMLINK; mu++) {
         tr = 1.0 / (Real)NCOL;
-        tr *= realtrace_su3_f(&(s->linkf[mu]), &(s->linkf[mu]));
+        tr *= realtrace_f(&(s->linkf[mu]), &(s->linkf[mu]));
         tr -= 1.0;
         for (j = 0; j < NCOL; j++)
           DmuUmu[i].e[j][j].real += B * B * tr * tr;
@@ -104,29 +104,29 @@ void compute_DmuUmu() {
 // -----------------------------------------------------------------
 // For the gauge action and force, compute at each site
 //   U_mu(x) * U_mu(x + mu) - Udag_nu(x) * U_mu(x + nu)
-// Use tempmat1 and tempmat2 as temporary storage
+// Use tempmat and tempmat2 as temporary storage
 void compute_Fmunu() {
   register int i;
   register site *s;
   int mu, nu, index;
-  su3_matrix_f *mat0, *mat1;
+  matrix_f *mat0, *mat1;
   msg_tag *mtag0 = NULL, *mtag1 = NULL;
 
   FORALLDIR(mu) {
     for (nu = mu + 1; nu < NUMLINK; nu++) {
       index = plaq_index[mu][nu];
-      mtag0 = start_gather_site(F_OFFSET(linkf[nu]), sizeof(su3_matrix_f),
+      mtag0 = start_gather_site(F_OFFSET(linkf[nu]), sizeof(matrix_f),
                                 goffset[mu], EVENANDODD, gen_pt[0]);
-      mtag1 = start_gather_site(F_OFFSET(linkf[mu]), sizeof(su3_matrix_f),
+      mtag1 = start_gather_site(F_OFFSET(linkf[mu]), sizeof(matrix_f),
                                 goffset[nu], EVENANDODD, gen_pt[1]);
       wait_gather(mtag0);
       wait_gather(mtag1);
       FORALLSITES(i, s) {
-        mat0 = (su3_matrix_f *)(gen_pt[0][i]);
-        mat1 = (su3_matrix_f *)(gen_pt[1][i]);
-        mult_su3_nn_f(&(s->linkf[mu]), mat0, &(tempmat1[i]));
-        mult_su3_nn_f(&(s->linkf[nu]), mat1, &(tempmat2[i]));
-        sub_su3_matrix_f(&(tempmat1[i]), &(tempmat2[i]), &(Fmunu[index][i]));
+        mat0 = (matrix_f *)(gen_pt[0][i]);
+        mat1 = (matrix_f *)(gen_pt[1][i]);
+        mult_nn_f(&(s->linkf[mu]), mat0, &(tempmat[i]));
+        mult_nn_f(&(s->linkf[nu]), mat1, &(tempmat2[i]));
+        sub_matrix_f(&(tempmat[i]), &(tempmat2[i]), &(Fmunu[index][i]));
       }
       cleanup_gather(mtag0);
       cleanup_gather(mtag1);
@@ -146,27 +146,27 @@ double gauge_action(int do_det) {
   int index;
   double g_action = 0.0, norm = 0.5 * C2;
   complex tc;
-  su3_matrix_f tmat, tmat2;
+  matrix_f tmat, tmat2;
 
   FORALLSITES(i, s) {
     // d^2 term normalized by C2 / 2
     // DmuUmu includes the plaquette determinant contribution if G is non-zero
     // and the scalar potential contribution if B is non-zero
-    mult_su3_nn_f(&(DmuUmu[i]), &(DmuUmu[i]), &tmat);
-    scalar_mult_su3_matrix_f(&tmat, norm, &tmat);
+    mult_nn_f(&(DmuUmu[i]), &(DmuUmu[i]), &tmat);
+    scalar_mult_matrix_f(&tmat, norm, &tmat);
 
     // F^2 term
     for (index = 0; index < NPLAQ; index++) {
-      mult_su3_an_f(&(Fmunu[index][i]), &(Fmunu[index][i]), &tmat2);
-      scalar_mult_add_su3_matrix_f(&tmat, &tmat2, 2.0, &tmat);
+      mult_an_f(&(Fmunu[index][i]), &(Fmunu[index][i]), &tmat2);
+      scalar_mult_add_matrix_f(&tmat, &tmat2, 2.0, &tmat);
     }
 
     if (do_det == 1)
       det_project(&tmat, &tmat2);
     else
-      su3mat_copy_f(&tmat, &tmat2);
+      mat_copy_f(&tmat, &tmat2);
 
-    tc = trace_su3_f(&tmat2);
+    tc = trace_f(&tmat2);
     g_action += tc.real;
 #ifdef DEBUG_CHECK
     if (fabs(tc.imag) > IMAG_TOL)
@@ -193,7 +193,7 @@ double bmass_action() {
   FORALLSITES(i, s) {
     for (mu = XUP; mu < NUMLINK; mu++) {
       tr = 1.0 / (double)NCOL;
-      tr *= realtrace_su3_f(&(s->linkf[mu]), &(s->linkf[mu]));
+      tr *= realtrace_f(&(s->linkf[mu]), &(s->linkf[mu]));
       tr -= 1.0;
       sum += kappa * bmass * bmass * tr * tr;
     }
@@ -278,7 +278,7 @@ double mom_action() {
 
   FORALLSITES(i, s) {
     FORALLDIR(mu)
-      sum += (double)realtrace_su3_f(&(s->mom[mu]), &(s->mom[mu]));
+      sum += (double)realtrace_f(&(s->mom[mu]), &(s->mom[mu]));
   }
   g_doublesum(&sum);
   return sum;

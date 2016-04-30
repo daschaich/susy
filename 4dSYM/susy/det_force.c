@@ -1,6 +1,6 @@
 // -----------------------------------------------------------------
 // Update the momenta with the determinant force
-// Use tempmat1 and staple for temporary storage
+// Use tempmat and staple for temporary storage
 #include "susy_includes.h"
 
 double det_force(Real eps) {
@@ -9,7 +9,7 @@ double det_force(Real eps) {
   double returnit = 0;
   complex staple_det, linkf_det, prod_det, tforce;
   complex *force = malloc(sites_on_node * sizeof(*force));
-  su3_matrix_f tmat, dlink, *mat0, *mat2;
+  matrix_f tmat, dlink, *mat0, *mat2;
   msg_tag *tag0 = NULL, *tag1 = NULL, *tag2 = NULL;
 
   // Loop over directions, update mom[dir1]
@@ -22,22 +22,21 @@ double det_force(Real eps) {
     for (dir2 = XUP; dir2 < NUMLINK; dir2++) {
       if (dir2 != dir1) {
         // Get linkf[dir2] from direction dir1
-        tag0 = start_gather_site(F_OFFSET(linkf[dir2]), sizeof(su3_matrix_f),
+        tag0 = start_gather_site(F_OFFSET(linkf[dir2]), sizeof(matrix_f),
                                  goffset[dir1], EVENANDODD, gen_pt[0]);
 
         // Start gather for the upper staple
-        tag2 = start_gather_site(F_OFFSET(linkf[dir1]), sizeof(su3_matrix_f),
+        tag2 = start_gather_site(F_OFFSET(linkf[dir1]), sizeof(matrix_f),
                                  goffset[dir2], EVENANDODD, gen_pt[2]);
 
         // Begin the computation at the dir2DOWN point
         wait_gather(tag0);
         FORALLSITES(i, s) {
-          mult_su3_an_f(&(s->linkf[dir2]), &(s->linkf[dir1]), &tmat);
-          mult_su3_nn_f(&tmat, (su3_matrix_f *)gen_pt[0][i],
-                        &(tempmat1[i]));
+          mult_an_f(&(s->linkf[dir2]), &(s->linkf[dir1]), &tmat);
+          mult_nn_f(&tmat, (matrix_f *)gen_pt[0][i], &(tempmat[i]));
         }
         // Gather this intermediate result up to home site
-        tag1 = start_gather_field(tempmat1, sizeof(su3_matrix_f),
+        tag1 = start_gather_field(tempmat, sizeof(matrix_f),
                                   goffset[dir2] + 1, EVENANDODD, gen_pt[1]);
 
         // Begin the computation of the upper staple
@@ -46,10 +45,10 @@ double det_force(Real eps) {
         // The plaquette is staple*U^dag due to the orientation of the gathers
         wait_gather(tag2);
         FORALLSITES(i, s) {
-          mat0 = (su3_matrix_f *)gen_pt[0][i];
-          mat2 = (su3_matrix_f *)gen_pt[2][i];
-          mult_su3_nn_f(&(s->linkf[dir2]), mat2, &tmat);
-          mult_su3_na_f(&tmat, mat0, &(staple[i]));
+          mat0 = (matrix_f *)gen_pt[0][i];
+          mat2 = (matrix_f *)gen_pt[2][i];
+          mult_nn_f(&(s->linkf[dir2]), mat2, &tmat);
+          mult_na_f(&tmat, mat0, &(staple[i]));
 
           // Now we have the upper staple -- compute its force
           // S = (det[staple U^dag] - 1) * (det[staple^dag U] - 1)
@@ -71,7 +70,7 @@ double det_force(Real eps) {
         // We have gathered up the lower staple -- compute its force
         wait_gather(tag1);
         FORALLSITES(i,s) {
-          staple_det = find_det((su3_matrix_f *)gen_pt[1][i]);
+          staple_det = find_det((matrix_f *)gen_pt[1][i]);
           linkf_det = find_det(&(s->linkf[dir1]));
 
           // prod_det = kappa_u1 * (staple_det * linkf_det^* - 1)
@@ -99,13 +98,13 @@ double det_force(Real eps) {
       // Checked that this produces the correct results for NCOL <= 4
       invert(&(s->linkf[dir1]), &tmat);
       linkf_det = find_det(&(s->linkf[dir1]));
-      c_scalar_mult_su3mat_f(&tmat, &linkf_det, &dlink);
+      c_scalar_mult_mat_f(&tmat, &linkf_det, &dlink);
 #endif
-      c_scalar_mult_su3mat_f(&dlink, &(force[i]), &tmat);
-      su3_adjoint_f(&tmat, &(s->f_U[dir1]));
+      c_scalar_mult_mat_f(&dlink, &(force[i]), &tmat);
+      adjoint_f(&tmat, &(s->f_U[dir1]));
       /* and update the momentum from the gauge force --
          sub because I computed dS/dU and the adjoint because of the way it is */
-      scalar_mult_sub_su3_matrix_f(&(s->mom[dir1]), &(s->f_U[dir1]), eps,
+      scalar_mult_sub_matrix_f(&(s->mom[dir1]), &(s->f_U[dir1]), eps,
                                    &(s->mom[dir1]));
     }
   }
@@ -113,7 +112,7 @@ double det_force(Real eps) {
   // Compute average gauge force
   FORALLSITES(i, s) {
     for (dir1 = XUP; dir1 < NUMLINK; dir1++)
-      returnit += realtrace_su3_f(&(s->f_U[dir1]), &(s->f_U[dir1]));
+      returnit += realtrace_f(&(s->f_U[dir1]), &(s->f_U[dir1]));
   }
   g_doublesum(&returnit);
 

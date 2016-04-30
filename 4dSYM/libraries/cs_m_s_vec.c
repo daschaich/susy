@@ -3,9 +3,9 @@
 // a <-- a - s * b
 #include "../include/config.h"
 #include "../include/complex.h"
-#include "../include/su3.h"
+#include "../include/susy.h"
 
-void c_scalar_mult_sub_su3vec(su3_vector *a, complex *s, su3_vector *b) {
+void c_scalar_mult_sub_vec(vector *a, complex *s, vector *b) {
   register int i;
   complex t;
   for (i = 0; i < DIMF; i++) {

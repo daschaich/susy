@@ -21,7 +21,7 @@ void hvy_pot_polar() {
   int count[MAX_pts], this_r, total_r = 0;
   Real MAX_r = 100.0 * MAX_X, tr, lookup[MAX_pts], W[MAX_pts];
   double wloop;
-  su3_matrix_f tmat, tmat2, *mat;
+  matrix_f tmat, tmat2, *mat;
   msg_tag *mtag = NULL;
 
   // Initialize Wilson loop accumulators
@@ -46,26 +46,26 @@ void hvy_pot_polar() {
    // To be multiplied together after projecting
    // !!! Overwrites links
    polar(&(s->linkf[TUP]), &tmat, &tmat2);
-   su3mat_copy_f(&tmat, &(s->linkf[TUP]));
+   mat_copy_f(&tmat, &(s->linkf[TUP]));
   }
 
   // Use staple to hold product of t_dist links at each (x, y, z)
   for (t_dist = 1; t_dist <= MAX_T; t_dist++) {
     if (t_dist == 1) {
       FORALLSITES(i, s)
-        su3mat_copy_f(&(s->linkf[TUP]), &(staple[i]));
+        mat_copy_f(&(s->linkf[TUP]), &(staple[i]));
     }
     else {
-      mtag = start_gather_field(staple, sizeof(su3_matrix_f),
+      mtag = start_gather_field(staple, sizeof(matrix_f),
                                 goffset[TUP], EVENANDODD, gen_pt[0]);
       wait_gather(mtag);
       FORALLSITES(i, s) {
-        mat = (su3_matrix_f *)gen_pt[0][i];
-        mult_su3_nn_f(&(s->linkf[TUP]), mat, &(tempmat2[i]));
+        mat = (matrix_f *)gen_pt[0][i];
+        mult_nn_f(&(s->linkf[TUP]), mat, &(tempmat2[i]));
       }
       cleanup_gather(mtag);
       FORALLSITES(i, s)
-        su3mat_copy_f(&(tempmat2[i]), &(staple[i]));
+        mat_copy_f(&(tempmat2[i]), &(staple[i]));
     }
 
     for (x_dist = 0; x_dist <= MAX_X; x_dist++) {
@@ -74,15 +74,15 @@ void hvy_pot_polar() {
       else
         y_start = 0;    // Don't need negative y_dist when x_dist = 0
       for (y_dist = y_start; y_dist <= MAX_X; y_dist++) {
-        // Gather staple to tempmat1 along spatial offset, using tempmat2
+        // Gather staple to tempmat along spatial offset, using tempmat2
         FORALLSITES(i, s)
-          su3mat_copy_f(&(staple[i]), &(tempmat1[i]));
+          mat_copy_f(&(staple[i]), &(tempmat[i]));
         for (j = 0; j < x_dist; j++)
-          shiftmat(tempmat1, tempmat2, goffset[XUP]);
+          shiftmat(tempmat, tempmat2, goffset[XUP]);
         for (j = 0; j < y_dist; j++)
-          shiftmat(tempmat1, tempmat2, goffset[YUP]);
+          shiftmat(tempmat, tempmat2, goffset[YUP]);
         for (j = y_dist; j < 0; j++)
-          shiftmat(tempmat1, tempmat2, goffset[YUP] + 1);
+          shiftmat(tempmat, tempmat2, goffset[YUP] + 1);
 
         // If either x_dist or y_dist are positive,
         // we need to start with MAX_X shifts in the -z direction
@@ -91,7 +91,7 @@ void hvy_pot_polar() {
         else
           z_start = 0;
         for (j = z_start; j < 0; j++)
-          shiftmat(tempmat1, tempmat2, goffset[ZUP] + 1);
+          shiftmat(tempmat, tempmat2, goffset[ZUP] + 1);
         for (z_dist = z_start; z_dist <= MAX_X; z_dist++) {
           // Figure out scalar distance
           tr = A4map_slice(x_dist, y_dist, z_dist);
@@ -108,7 +108,7 @@ void hvy_pot_polar() {
 #endif
 #endif
             // Need to increment z and shift in z direction
-            shiftmat(tempmat1, tempmat2, goffset[ZUP]);
+            shiftmat(tempmat, tempmat2, goffset[ZUP]);
             continue;
           }
 
@@ -134,7 +134,7 @@ void hvy_pot_polar() {
           // Evaluate potential at this separation
           wloop = 0.0;
           FORALLSITES(i, s)
-            wloop += (double)realtrace_su3_f(&(staple[i]), &(tempmat1[i]));
+            wloop += (double)realtrace_f(&(staple[i]), &(tempmat[i]));
           g_doublesum(&wloop);
           W[this_r] += wloop;
 #ifdef CHECK_ROT
@@ -144,7 +144,7 @@ void hvy_pot_polar() {
 #endif
 
           // As we increment z, shift in z direction
-          shiftmat(tempmat1, tempmat2, goffset[ZUP]);
+          shiftmat(tempmat, tempmat2, goffset[ZUP]);
         } // z_dist
       } // y_dist
     } // x_dist

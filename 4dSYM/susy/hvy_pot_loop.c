@@ -9,7 +9,7 @@
 
 
 // -----------------------------------------------------------------
-// Use tempmat1 for temporary storage
+// Use tempmat for temporary storage
 void hvy_pot_loop(int do_det) {
   register int i;
   register site *s;
@@ -17,11 +17,11 @@ void hvy_pot_loop(int do_det) {
   int dir[2 * (MAX_T + MAX_X)], sign[2 * (MAX_T + MAX_X)];
   double wloop;
   complex tc;
-  su3_matrix_f tmat;
+  matrix_f tmat;
 
   node0_printf("hvy_pot_loop: MAX_T = %d, MAX_X = %d\n", MAX_T, MAX_X);
 
-  // Use tempmat1 to hold loop product at each site
+  // Use tempmat to hold loop product at each site
   for (t_dist = 1; t_dist <= MAX_T; t_dist++) {
     // Set up rectangular path as list of dir * sign
     for (mu = XUP; mu <= ZUP; mu++) {
@@ -53,16 +53,16 @@ void hvy_pot_loop(int do_det) {
         node0_printf("\n");
 #endif
 
-        // path accumulates the product in tempmat1
+        // path accumulates the product in tempmat
         path(dir, sign, length);
         wloop = 0.0;
         FORALLSITES(i, s) {
           if (do_det == 1)
-            det_project(&(tempmat1[i]), &tmat);
+            det_project(&(tempmat[i]), &tmat);
           else
-            su3mat_copy_f(&(tempmat1[i]), &tmat);
+            mat_copy_f(&(tempmat[i]), &tmat);
 
-          tc = trace_su3_f(&tmat);
+          tc = trace_f(&tmat);
           wloop += tc.real;
         }
         g_doublesum(&wloop);

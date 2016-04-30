@@ -35,7 +35,7 @@ void matvec(complex *in, complex *out) {
   register site *s;
   int i, j, iter;
   msg_tag *mtag0 = NULL, *mtag1 = NULL, *mtag2;
-  su3_vector *plaq23, *plaq13, *plaq12;
+  vector *plaq23, *plaq13, *plaq12;
 
   // Copy complex vector into Twist_Fermion src
   // Each Twist_Fermion has Ndat = 16DIMF non-trivial complex components
@@ -85,20 +85,20 @@ void matvec(complex *in, complex *out) {
   // Gather plaq_src[7] (2, 3) from x - 0 - 1 (gather path 23),
   // plaq_src[5] (1, 3) from x - 0 - 2 (gather path 31)
   // and plaq_src[4] (1, 2) from x - 0 - 3 (gather path 35)
-  mtag0 = start_gather_field(plaq_src[7], sizeof(su3_vector),
+  mtag0 = start_gather_field(plaq_src[7], sizeof(vector),
                              23, EVENANDODD, gen_pt[0]);
-  mtag1 = start_gather_field(plaq_src[5], sizeof(su3_vector),
+  mtag1 = start_gather_field(plaq_src[5], sizeof(vector),
                              31, EVENANDODD, gen_pt[1]);
-  mtag2 = start_gather_field(plaq_src[4], sizeof(su3_vector),
+  mtag2 = start_gather_field(plaq_src[4], sizeof(vector),
                              35, EVENANDODD, gen_pt[2]);
 
   wait_gather(mtag0);
   wait_gather(mtag1);
   wait_gather(mtag2);
   FORALLSITES(i, s) {
-    su3vec_copy((su3_vector *)(gen_pt[0][i]), &(src[i].Fplaq[7]));  // 2, 3
-    su3vec_copy((su3_vector *)(gen_pt[1][i]), &(src[i].Fplaq[5]));  // 1, 3
-    su3vec_copy((su3_vector *)(gen_pt[2][i]), &(src[i].Fplaq[4]));  // 1, 2
+    vec_copy((vector *)(gen_pt[0][i]), &(src[i].Fplaq[7]));  // 2, 3
+    vec_copy((vector *)(gen_pt[1][i]), &(src[i].Fplaq[5]));  // 1, 3
+    vec_copy((vector *)(gen_pt[2][i]), &(src[i].Fplaq[4]));  // 1, 2
   }
   cleanup_gather(mtag0);
   cleanup_gather(mtag1);
@@ -123,15 +123,15 @@ void matvec(complex *in, complex *out) {
   // plaq_src[5] (1, 3) from x + 0 + 2 (gather path 30)
   // and plaq_src[4] (1, 2) from x + 0 + 3 (gather path 34)
   FORALLSITES(i, s) {
-    su3vec_copy(&(res[i].Fplaq[7]), &(plaq_src[7][i]));
-    su3vec_copy(&(res[i].Fplaq[5]), &(plaq_src[5][i]));
-    su3vec_copy(&(res[i].Fplaq[4]), &(plaq_src[4][i]));
+    vec_copy(&(res[i].Fplaq[7]), &(plaq_src[7][i]));
+    vec_copy(&(res[i].Fplaq[5]), &(plaq_src[5][i]));
+    vec_copy(&(res[i].Fplaq[4]), &(plaq_src[4][i]));
   }
-  mtag0 = start_gather_field(plaq_src[7], sizeof(su3_vector),
+  mtag0 = start_gather_field(plaq_src[7], sizeof(vector),
                              22, EVENANDODD, gen_pt[0]);
-  mtag1 = start_gather_field(plaq_src[5], sizeof(su3_vector),
+  mtag1 = start_gather_field(plaq_src[5], sizeof(vector),
                              30, EVENANDODD, gen_pt[1]);
-  mtag2 = start_gather_field(plaq_src[4], sizeof(su3_vector),
+  mtag2 = start_gather_field(plaq_src[4], sizeof(vector),
                              34, EVENANDODD, gen_pt[2]);
 
   wait_gather(mtag0);
@@ -139,9 +139,9 @@ void matvec(complex *in, complex *out) {
   wait_gather(mtag2);
   iter = 0;
   FORALLSITES(i, s) {
-    plaq23 = (su3_vector *)(gen_pt[0][i]);
-    plaq13 = (su3_vector *)(gen_pt[1][i]);
-    plaq12 = (su3_vector *)(gen_pt[2][i]);
+    plaq23 = (vector *)(gen_pt[0][i]);
+    plaq13 = (vector *)(gen_pt[1][i]);
+    plaq12 = (vector *)(gen_pt[2][i]);
     for (j = 0; j < DIMF; j++) {
       set_complex_equal(&(res[i].Fsite.c[j]), &(out[iter]));
       iter++;

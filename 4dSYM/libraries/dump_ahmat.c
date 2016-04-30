@@ -3,7 +3,7 @@
 #include "../include/config.h"
 #include <stdio.h>
 #include "../include/complex.h"
-#include "../include/su3.h"
+#include "../include/susy.h"
 
 void dump_ahmat(anti_hermitmat *ahm) {
   int i, j, index = 0;

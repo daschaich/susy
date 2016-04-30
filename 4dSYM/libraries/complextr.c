@@ -2,9 +2,9 @@
 // Return complex trace of irrep matrix product adag * b
 #include "../include/config.h"
 #include "../include/complex.h"
-#include "../include/su3.h"
+#include "../include/susy.h"
 
-complex complextrace_su3(su3_matrix *a, su3_matrix *b) {
+complex complextrace(matrix *a, matrix *b) {
   register int i, j;
   register Real sumr = 0.0, sumi = 0.0;
   complex sum;

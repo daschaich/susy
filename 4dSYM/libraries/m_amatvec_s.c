@@ -3,10 +3,10 @@
 // c <-- c + adag * b
 #include "../include/config.h"
 #include "../include/complex.h"
-#include "../include/su3.h"
+#include "../include/susy.h"
 
 #ifndef FAST
-void mult_adj_su3_mat_vec_sum(su3_matrix *a, su3_vector *b, su3_vector *c) {
+void mult_adj_mat_vec_sum(matrix *a, vector *b, vector *c) {
   register int i, j;
   register complex y;
   for (i = 0; i < DIMF; i++) {
@@ -17,7 +17,7 @@ void mult_adj_su3_mat_vec_sum(su3_matrix *a, su3_vector *b, su3_vector *c) {
   }
 }
 #else   // FAST version for DIMF=3 only
-void mult_adj_su3_mat_vec_sum( su3_matrix *a, su3_vector *b, su3_vector *c) {
+void mult_adj_mat_vec_sum( matrix *a, vector *b, vector *c) {
   register Real c0r, c0i, c1r, c1i, c2r, c2i;
   register Real br, bi, a0, a1, a2;
 

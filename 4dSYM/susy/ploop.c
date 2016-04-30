@@ -1,6 +1,6 @@
 // -----------------------------------------------------------------
 // Evaluate the Polyakov loop using repeated single-timeslice gathers
-// Use tempmat1, tempmat2, staple and Uinv[0] for temporary storage
+// Use tempmat, tempmat2, staple and Uinv[0] for temporary storage
 #include "susy_includes.h"
 
 // dir tells us the direction of the product: XUP, YUP, ZUP, TUP or DIR_5
@@ -11,15 +11,15 @@ complex ploop(int dir, int project, double *plpMod) {
   int j, t, len = nt;
   double norm = 0.0;
   complex sum  = cmplx(0.0, 0.0), plp;
-  su3_matrix_f tmat, tmat2;
+  matrix_f tmat, tmat2;
 
   // Optionally consider polar-projected links,
   // saving original values in Uinv[0] to be reset at end
   if (project == 1) {
     FORALLSITES(i, s) {
-      su3mat_copy_f(&(s->linkf[dir]), &(Uinv[0][i]));
+      mat_copy_f(&(s->linkf[dir]), &(Uinv[0][i]));
       polar(&(s->linkf[dir]), &tmat, &tmat2);
-      su3mat_copy_f(&tmat, &(s->linkf[dir]));
+      mat_copy_f(&tmat, &(s->linkf[dir]));
     }
   }
 
@@ -54,7 +54,7 @@ complex ploop(int dir, int project, double *plpMod) {
   if (len == 1) {
     *plpMod = 0.0;
     FORALLSITES(i, s) {
-      plp = trace_su3_f(&(s->linkf[dir]));
+      plp = trace_f(&(s->linkf[dir]));
       CSUM(sum, plp);
       *plpMod += cabs(&plp);
     }
@@ -65,7 +65,7 @@ complex ploop(int dir, int project, double *plpMod) {
 
     if (project == 1) {       // Reset original links
       FORALLSITES(i, s)
-        su3mat_copy_f(&(Uinv[0][i]), &(s->linkf[dir]));
+        mat_copy_f(&(Uinv[0][i]), &(s->linkf[dir]));
     }
 
     return sum;
@@ -73,10 +73,10 @@ complex ploop(int dir, int project, double *plpMod) {
 
   // Compute line by steadily shifting links to hyperplane 0
   FORALLSITES(i, s)
-    su3mat_copy_f(&(s->linkf[dir]), &(tempmat1[i]));
+    mat_copy_f(&(s->linkf[dir]), &(tempmat[i]));
 
   for (t = 1; t < len; t++) {
-    shiftmat(tempmat1, tempmat2, goffset[dir]);
+    shiftmat(tempmat, tempmat2, goffset[dir]);
     FORALLSITES(i, s) {
       j = s->x;
       switch(dir) {
@@ -89,10 +89,10 @@ complex ploop(int dir, int project, double *plpMod) {
         continue;
 
       if (t == 1)
-        mult_su3_nn_f(&(s->linkf[dir]), &(tempmat1[i]), &(staple[i]));
+        mult_nn_f(&(s->linkf[dir]), &(tempmat[i]), &(staple[i]));
       else {
-        mult_su3_nn_f(&(staple[i]), &(tempmat1[i]), &(tempmat2[i]));
-        su3mat_copy_f(&(tempmat2[i]), &(staple[i]));
+        mult_nn_f(&(staple[i]), &(tempmat[i]), &(tempmat2[i]));
+        mat_copy_f(&(tempmat2[i]), &(staple[i]));
       }
     }
   }
@@ -109,7 +109,7 @@ complex ploop(int dir, int project, double *plpMod) {
     if (j != 0)
       continue;
 
-    plp = trace_su3_f(&(staple[i]));
+    plp = trace_f(&(staple[i]));
     CSUM(sum, plp);
     *plpMod += cabs(&plp);
   }
@@ -120,7 +120,7 @@ complex ploop(int dir, int project, double *plpMod) {
 
   if (project == 1) {       // Reset original links
     FORALLSITES(i, s)
-      su3mat_copy_f(&(Uinv[0][i]), &(s->linkf[dir]));
+      mat_copy_f(&(Uinv[0][i]), &(s->linkf[dir]));
   }
 
   return sum;

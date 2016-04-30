@@ -4,7 +4,7 @@
 // Allows dimension p * 2^k with any p (up to storage limit)
 
 /* The field consists of "size" consecutive complex
-   numbers.  For example, an su3_vector is three consecutive
+   numbers.  For example, a vector is three consecutive
    complex numbers, and a wilson_vector is 12.
 
    The setup_restrict_fourier() routine makes all the tables needed for the
@@ -33,7 +33,7 @@ int *butterfly_dir[4];  /* indices for butterflies.  First index is
          range from 0 to n-1 when the dimension is 2^n */
 int pbaserev_dir;       /* index for base p analog of bit reverse map */
 int pcyclic_dir[4];     /* index for cyclic mod p gather */
-int dmin[4],dmax[4];    /* Restrictions on range of FT */
+int dmin[4], dmax[4];   /* Restrictions on range of FT */
 int pfactor[4];         /* Residual prime factor p */
 int notbase2;           /* True if we need to do a base p != 2 transform */
 // -----------------------------------------------------------------
@@ -50,14 +50,14 @@ void setup_restrict_fourier( int *key, int *slice) {
      "slice" is a four component array.  Not used unless key[dir]=2. */
   register int dir,i,j;
   int arg[2];
-  void bitrev_map(int x,int y,int z,int t,int *key,int fb,
-      int *xp,int *yp,int *zp,int *tp);
-  void butterfly_map(int x,int y,int z,int t,int *arg,int fb,
-         int *xp,int *yp,int *zp,int *tp);
-  void pbaserev_map( int x,int y,int z,int t,int *key,int fb,
-      int *xp,int *yp,int *zp,int *tp);
-  void pcyclic_map( int x,int y,int z,int t,int *arg,int fb,
-       int *xp,int *yp,int *zp,int *tp);
+  void bitrev_map(int x, int y, int z, int t, int *key, int fb,
+                  int *xp, int *yp, int *zp, int *tp);
+  void butterfly_map(int x, int y, int z, int t, int *arg, int fb,
+                     int *xp, int *yp, int *zp, int *tp);
+  void pbaserev_map(int x, int y, int z, int t, int *key, int fb,
+                    int *xp, int *yp, int *zp, int *tp);
+  void pcyclic_map(int x, int y, int z, int t, int *arg, int fb,
+                   int *xp, int *yp, int *zp, int *tp);
 
   /* Initialize limits on coordinate range of FT */
   dmin[XUP] = dmin[YUP] = dmin[ZUP] = dmin[TUP] = 0;
@@ -71,7 +71,7 @@ void setup_restrict_fourier( int *key, int *slice) {
   FORALLUPDIR(dir) {
     pfactor[dir] = 1;
     if (key[dir]==1) {
-      for ( j=0,i=dim[dir] ; (i&0x01) == 0; i>>=1 )j++;
+      for (j= 0, i = dim[dir] ; (i&0x01) == 0; i>>=1 )j++;
       pfactor[dir] = i;
       notbase2 |= (i != 1);  /* If dim[dir] != 2^k and key[dir] != 1 */
       logdim[dir]=j;
@@ -133,7 +133,7 @@ void setup_restrict_fourier( int *key, int *slice) {
    one bit reverse map, sites labeled b in a second bit reverse map, and the
    same for c.  The result of the bit reverse map is then the ordering
    0 1 2  6 7 8  3 4 5  9 10 11 */
-int bitrev_one_int( int i,int n,int p ) {
+int bitrev_one_int( int i, int n, int p ) {
   register int j,k;
   int idivp,imodp;
   if (p!=1) {idivp = i/p;  imodp = i % p;} else{idivp = i; imodp = 0;}
@@ -152,8 +152,8 @@ int bitrev_one_int( int i,int n,int p ) {
 
 // -----------------------------------------------------------------
 /* Function that defines the bit reverse mapping */
-void bitrev_map(int x,int y,int z,int t,int *key,int fb,
-    int *xp,int *yp,int *zp,int *tp) {
+void bitrev_map(int x, int y, int z, int t, int *key, int fb,
+    int *xp, int *yp, int *zp, int *tp) {
 
   *xp = x; *yp = y; *zp = z; *tp = t;
   // If any coordinate is outside a restricted range, do not touch the point
@@ -189,8 +189,8 @@ int butterfly_map_one_int( int i, int mask, int p) {
    In this case the butterfly map is done for the 2^n part,
    treating the sites in groups of p */
 /* arg contains the direction of the butterfly and the level */
-void butterfly_map(int x,int y,int z,int t,int *arg,int fb,
-       int *xp,int *yp,int *zp,int *tp) {
+void butterfly_map(int x, int y, int z, int t, int *arg, int fb,
+       int *xp, int *yp, int *zp, int *tp) {
 
   int mask, level;
 
@@ -239,8 +239,8 @@ int pbaserev_one_int(int i, int p, int fb, int n) {
 
 // -----------------------------------------------------------------
 /* Function that defines the analog of bit-reverse for base p */
-void pbaserev_map( int x,int y,int z,int t,int *key,int fb,
-      int *xp,int *yp,int *zp,int *tp) {
+void pbaserev_map( int x, int y, int z, int t, int *key, int fb,
+      int *xp, int *yp, int *zp, int *tp) {
 
   *xp = x; *yp = y; *zp = z; *tp = t;
 
@@ -266,12 +266,12 @@ void pbaserev_map( int x,int y,int z,int t,int *key,int fb,
 
 // -----------------------------------------------------------------
 /* Function that defines the base p cyclic map */
-void pcyclic_map( int x,int y,int z,int t,int *arg,int fb,
-    int *xp,int *yp,int *zp,int *tp) {
+void pcyclic_map(int x, int y, int z, int t, int *arg, int fb,
+                 int *xp, int *yp, int *zp, int *tp) {
 
   /* arg contains the direction of the cyclic map */
   /* This map permutes the sites cyclically in groups mod p */
-  *xp=x; *yp=y; *zp=z; *tp=t;
+  *xp = x; *yp = y; *zp = z; *tp = t;
   // If any coordinate is outside a restricted range, do not touch the point
   if ((x < dmin[XUP])||(x >= dmax[XUP]))return;
   if ((y < dmin[YUP])||(y >= dmax[YUP]))return;
@@ -310,7 +310,7 @@ void restrict_fourier(
                          /* space2 is needed only for non power of 2 */
      int size,     /* Size of field in bytes.  The field must
           consist of size/sizeof(complex) consecutive
-          complex numbers.  For example, an su3_vector
+          complex numbers.  For example, a vector
           is 3 complex numbers. */
      int isign)    /* 1 for x -> k, -1 for k -> x */
 {

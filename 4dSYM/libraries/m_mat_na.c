@@ -3,10 +3,10 @@
 // c <-- a * bdag
 #include "../include/config.h"
 #include "../include/complex.h"
-#include "../include/su3.h"
+#include "../include/susy.h"
 
 #ifndef FAST
-void mult_su3_na(su3_matrix *a, su3_matrix *b, su3_matrix *c) {
+void mult_na(matrix *a, matrix *b, matrix *c) {
   register int i, j, k;
   register complex y;
   for (i = 0; i < DIMF; i++) {
@@ -20,7 +20,7 @@ void mult_su3_na(su3_matrix *a, su3_matrix *b, su3_matrix *c) {
   }
 }
 #else   // FAST version for DIMF=3 only
-void mult_su3_na(su3_matrix *a, su3_matrix *b, su3_matrix *c) {
+void mult_na(matrix *a, matrix *b, matrix *c) {
   int i, j;
   register Real t, ar, ai, br, bi, cr, ci;
   for (i = 0; i < 3; i++) {

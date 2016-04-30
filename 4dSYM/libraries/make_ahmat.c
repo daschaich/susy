@@ -3,9 +3,9 @@
 // of a fundamental matrix
 #include "../include/config.h"
 #include "../include/complex.h"
-#include "../include/su3.h"
+#include "../include/susy.h"
 
-void make_anti_hermitian(su3_matrix_f *src, anti_hermitmat *dest) {
+void make_anti_hermitian(matrix_f *src, anti_hermitmat *dest) {
   int i, j, index = 0;
   Real temp;
 

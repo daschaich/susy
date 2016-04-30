@@ -15,8 +15,8 @@ void ranmom() {
   complex grn;
 
   FORALLSITES(i, s) {
-    for (mu = XUP; mu < NUMLINK; mu++) {
-      clear_su3mat_f(&(s->mom[mu]));
+    FORALLDIR(mu) {
+      clear_mat_f(&(s->mom[mu]));
       for (j = 0; j < DIMF; j++) {
 #ifdef SITERAND
         grn.real = gaussian_rand_no(&(s->site_prn));
@@ -25,8 +25,8 @@ void ranmom() {
         grn.real = gaussian_rand_no(&(s->node_prn));
         grn.imag = gaussian_rand_no(&(s->node_prn));
 #endif
-        c_scalar_mult_add_su3mat_f(&(s->mom[mu]), &(Lambda[j]), &grn,
-                                   &(s->mom[mu]));
+        c_scalar_mult_add_mat_f(&(s->mom[mu]), &(Lambda[j]), &grn,
+                                &(s->mom[mu]));
       }
     }
   }

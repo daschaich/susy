@@ -1,7 +1,7 @@
 // -----------------------------------------------------------------
 // Evaluate the Polyakov loop after block RG blocking steps
 // Use general_gathers; lattice must be divisible by 2^block in all dirs
-// Use tempmat1 and tempmat2 for temporary storage
+// Use tempmat and tempmat2 for temporary storage
 #include "susy_includes.h"
 
 void blocked_ploop(int Nsmear, int block) {
@@ -10,7 +10,7 @@ void blocked_ploop(int Nsmear, int block) {
   int j, bl = 2, d[4] = {0, 0, 0, 0};
   complex sum = cmplx(0.0, 0.0), plp;
   msg_tag *tag;
-  su3_matrix_f *mat;
+  matrix_f *mat;
 
   // Allow sanity check of reproducing ploop() with this routine
   if (block <= 0)
@@ -20,33 +20,33 @@ void blocked_ploop(int Nsmear, int block) {
   for (j = 1; j < block; j++)
     bl *= 2;
 
-  // Copy temporal links to tempmat1
+  // Copy temporal links to tempmat
   FORALLSITES(i, s)
-    su3mat_copy_f(&(s->linkf[TUP]), &(tempmat1[i]));
+    mat_copy_f(&(s->linkf[TUP]), &(tempmat[i]));
 
   // Compute the bl-strided Polyakov loop "at" ALL the sites
   // on the first bl = 2^block timeslices
   for (j = bl; j < nt; j += bl) {
     d[TUP] = j;               // Path from which to gather
-    tag = start_general_gather_field(tempmat1, sizeof(su3_matrix_f),
+    tag = start_general_gather_field(tempmat, sizeof(matrix_f),
                                      d, EVENANDODD, gen_pt[0]);
     wait_general_gather(tag);
 
-    // Overwrite tempmat1 on the first bl time slices
+    // Overwrite tempmat on the first bl time slices
     // Leave the others undisturbed so we can still gather them
     FORALLSITES(i, s) {
       if (s->t >= bl)
         continue;
-      mat = (su3_matrix_f *)gen_pt[0][i];
-      mult_su3_nn_f(&(tempmat1[i]), mat, &(tempmat2[i]));
-      su3mat_copy_f(&(tempmat2[i]), &(tempmat1[i]));
+      mat = (matrix_f *)gen_pt[0][i];
+      mult_nn_f(&(tempmat[i]), mat, &(tempmat2[i]));
+      mat_copy_f(&(tempmat2[i]), &(tempmat[i]));
     }
     cleanup_general_gather(tag);
   }
   FORALLSITES(i, s) {
     if (s->t >= bl)
       continue;
-    plp = trace_su3_f(&(tempmat1[i]));
+    plp = trace_f(&(tempmat[i]));
     CSUM(sum, plp);
   }
 

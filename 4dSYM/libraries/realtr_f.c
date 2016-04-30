@@ -2,9 +2,9 @@
 // Return real trace of fundamental matrix product adag * b
 #include "../include/config.h"
 #include "../include/complex.h"
-#include "../include/su3.h"
+#include "../include/susy.h"
 
-Real realtrace_su3_f(su3_matrix_f *a, su3_matrix_f *b) {
+Real realtrace_f(matrix_f *a, matrix_f *b) {
   register int i, j;
   register Real sum = 0.0;
 

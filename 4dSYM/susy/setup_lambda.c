@@ -20,7 +20,7 @@ void setup_lambda() {
 
   // Make sure Lambda matrices are initialized
   for (i = 0; i < DIMF; i++)
-    clear_su3mat_f(&(Lambda[i]));
+    clear_mat_f(&(Lambda[i]));
 
   // N * (N - 1) off-diagonal SU(N) generators
   // (T^{ij, +})_{kl} = i * (de_{ki} de_{lj} + de_{kj} de_{li}) / sqrt(2)
@@ -64,7 +64,7 @@ void setup_lambda() {
   // U(1) generator i * I_N / sqrt(N)
   if (DIMF == NCOL * NCOL) {    // Allow SU(N) compilation for now
     i_inv_sqrt = cmplx(0.0, 1.0 / sqrt((Real)NCOL));
-    clear_su3mat_f(&(Lambda[DIMF - 1]));
+    clear_mat_f(&(Lambda[DIMF - 1]));
     for (i = 0; i < NCOL; i++)
       Lambda[DIMF - 1].e[i][i] = i_inv_sqrt;
   }
@@ -101,9 +101,9 @@ void setup_lambda() {
   // Test orthogonality and compute products of Lambdas for fermion forces
   for (i = 0; i < DIMF; i++) {
     for (j = 0; j < DIMF; j++) {
-      mult_su3_nn_f(&(Lambda[i]), &(Lambda[j]), &(Lambda_prod[i][j]));
+      mult_nn_f(&(Lambda[i]), &(Lambda[j]), &(Lambda_prod[i][j]));
 #ifdef DEBUG_CHECK
-      trace = trace_su3_f(&(Lambda_prod[i][j]));
+      trace = trace_f(&(Lambda_prod[i][j]));
       if (trace.real * trace.real > IMAG_TOL)
         node0_printf("Tr[T_%d T_%d] = (%.4g, %.4g)\n",
                      i, j, trace.real, trace.imag);

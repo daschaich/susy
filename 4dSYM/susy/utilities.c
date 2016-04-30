@@ -118,13 +118,13 @@ void compute_plaqdet() {
 // Separate routines for each term in the fermion operator
 // All called by fermion_op at the bottom of the file
 #ifdef VP
-void Dplus(su3_vector *src[NUMLINK], su3_vector *dest[NPLAQ]) {
+void Dplus(vector *src[NUMLINK], vector *dest[NPLAQ]) {
   register int i;
   register site *s;
   char **local_pt[2][4];
   int mu, nu, index, gather, flip = 0, a, b;
-  su3_vector vtmp, *vec0, *vec2;
-  su3_matrix *mat1, *mat3;
+  vector vtmp, *vec0, *vec2;
+  matrix *mat1, *mat3;
   msg_tag *tag0[2], *tag1[2], *tag2[2], *tag3[2];
 
   for (mu = 0; mu < 4; mu++) {
@@ -133,16 +133,16 @@ void Dplus(su3_vector *src[NUMLINK], su3_vector *dest[NPLAQ]) {
   }
 
   // Start first set of gathers (mu = 0 and nu = 1)
-  tag0[0] = start_gather_field(src[1], sizeof(su3_vector),
+  tag0[0] = start_gather_field(src[1], sizeof(vector),
                                goffset[0], EVENANDODD, local_pt[0][0]);
 
-  tag1[0] = start_gather_site(F_OFFSET(link[0]), sizeof(su3_matrix),
+  tag1[0] = start_gather_site(F_OFFSET(link[0]), sizeof(matrix),
                               goffset[1], EVENANDODD, local_pt[0][1]);
 
-  tag2[0] = start_gather_field(src[0], sizeof(su3_vector),
+  tag2[0] = start_gather_field(src[0], sizeof(vector),
                                goffset[1], EVENANDODD, local_pt[0][2]);
 
-  tag3[0] = start_gather_site(F_OFFSET(link[1]), sizeof(su3_matrix),
+  tag3[0] = start_gather_site(F_OFFSET(link[1]), sizeof(matrix),
                               goffset[0], EVENANDODD, local_pt[0][3]);
 
   // Main loop
@@ -159,19 +159,17 @@ void Dplus(su3_vector *src[NUMLINK], su3_vector *dest[NPLAQ]) {
           a = mu;
           b = nu + 1;
         }
-        tag0[gather] = start_gather_field(src[b], sizeof(su3_vector),
-                                          goffset[a], EVENANDODD,
-                                          local_pt[gather][0]);
+        tag0[gather] = start_gather_field(src[b], sizeof(vector), goffset[a],
+                                          EVENANDODD, local_pt[gather][0]);
 
-        tag1[gather] = start_gather_site(F_OFFSET(link[a]), sizeof(su3_matrix),
+        tag1[gather] = start_gather_site(F_OFFSET(link[a]), sizeof(matrix),
                                          goffset[b], EVENANDODD,
                                          local_pt[gather][1]);
 
-        tag2[gather] = start_gather_field(src[a], sizeof(su3_vector),
-                                          goffset[b], EVENANDODD,
-                                          local_pt[gather][2]);
+        tag2[gather] = start_gather_field(src[a], sizeof(vector), goffset[b],
+                                          EVENANDODD, local_pt[gather][2]);
 
-        tag3[gather] = start_gather_site(F_OFFSET(link[b]), sizeof(su3_matrix),
+        tag3[gather] = start_gather_site(F_OFFSET(link[b]), sizeof(matrix),
                                          goffset[a], EVENANDODD,
                                          local_pt[gather][3]);
       }
@@ -181,24 +179,23 @@ void Dplus(su3_vector *src[NUMLINK], su3_vector *dest[NPLAQ]) {
       wait_gather(tag2[flip]);
       wait_gather(tag3[flip]);
       FORALLSITES(i, s) {
-        vec0 = (su3_vector *)(local_pt[flip][0][i]);
-        mat1 = (su3_matrix *)(local_pt[flip][1][i]);
-        vec2 = (su3_vector *)(local_pt[flip][2][i]);
-        mat3 = (su3_matrix *)(local_pt[flip][3][i]);
+        vec0 = (vector *)(local_pt[flip][0][i]);
+        mat1 = (matrix *)(local_pt[flip][1][i]);
+        vec2 = (vector *)(local_pt[flip][2][i]);
+        mat3 = (matrix *)(local_pt[flip][3][i]);
 
         // Initialize dest[index][i]
-        mult_su3_mat_vec(&(s->link[mu]), vec0, &(dest[index][i]));
-        scalar_mult_su3_vector(&(dest[index][i]), s->bc1[mu],
-                               &(dest[index][i]));
+        mult_mat_vec(&(s->link[mu]), vec0, &(dest[index][i]));
+        scalar_mult_vector(&(dest[index][i]), s->bc1[mu], &(dest[index][i]));
 
         // Add or subtract the other three terms
-        mult_su3_vec_mat_nsum(&(src[nu][i]), mat1, &(dest[index][i]));
+        mult_vec_mat_nsum(&(src[nu][i]), mat1, &(dest[index][i]));
 
-        mult_su3_mat_vec(&(s->link[nu]), vec2, &vtmp);
-        scalar_mult_sub_su3_vector(&(dest[index][i]), &vtmp, s->bc1[nu],
-                                   &(dest[index][i]));
+        mult_mat_vec(&(s->link[nu]), vec2, &vtmp);
+        scalar_mult_sub_vector(&(dest[index][i]), &vtmp, s->bc1[nu],
+                               &(dest[index][i]));
 
-        mult_su3_vec_mat_sum(&(src[mu][i]), mat3, &(dest[index][i]));
+        mult_vec_mat_sum(&(src[mu][i]), mat3, &(dest[index][i]));
       }
       cleanup_gather(tag0[flip]);
       cleanup_gather(tag1[flip]);
@@ -216,13 +213,13 @@ void Dplus(su3_vector *src[NUMLINK], su3_vector *dest[NPLAQ]) {
 // -----------------------------------------------------------------
 // Use tempvec[01] for temporary storage
 #ifdef VP
-void Dminus(su3_vector *src[NPLAQ], su3_vector *dest[NUMLINK]) {
+void Dminus(vector *src[NPLAQ], vector *dest[NUMLINK]) {
   register int i;
   register site *s;
   char **local_pt[2][2];
   int mu, nu, index, gather, flip = 0, a, b, next;
-  su3_vector vtmp, *vec;
-  su3_matrix *mat;
+  vector vtmp, *vec;
+  matrix *mat;
   msg_tag *tag0[2], *tag1[2];
 
   for (mu = 0; mu < 2; mu++) {
@@ -232,16 +229,16 @@ void Dminus(su3_vector *src[NPLAQ], su3_vector *dest[NUMLINK]) {
 
   // Start first set of gathers (mu = 1 and nu = 0)
   index = plaq_index[1][0];
-  tag0[0] = start_gather_site(F_OFFSET(link[1]), sizeof(su3_matrix),
+  tag0[0] = start_gather_site(F_OFFSET(link[1]), sizeof(matrix),
                               goffset[0], EVENANDODD, local_pt[0][0]);
 
   FORALLSITES(i, s) {   // mu = 1 > nu = 0
-    scalar_mult_su3_vector(&(src[index][i]), -1.0, &vtmp);
-    mult_su3_vec_mat(&vtmp, &(s->link[1]), &(tempvec[0][i]));
+    scalar_mult_vector(&(src[index][i]), -1.0, &vtmp);
+    mult_vec_mat(&vtmp, &(s->link[1]), &(tempvec[0][i]));
     FORALLDIR(nu)
       clearvec(&(dest[nu][i]));         // Initialize
   }
-  tag1[0] = start_gather_field(tempvec[0], sizeof(su3_vector),
+  tag1[0] = start_gather_field(tempvec[0], sizeof(vector),
                                goffset[1] + 1, EVENANDODD, local_pt[0][1]);
 
   // Main loop
@@ -265,21 +262,21 @@ void Dminus(su3_vector *src[NPLAQ], su3_vector *dest[NUMLINK]) {
           b = nu;
         }
         next = plaq_index[a][b];
-        tag0[gather] = start_gather_site(F_OFFSET(link[a]), sizeof(su3_matrix),
+        tag0[gather] = start_gather_site(F_OFFSET(link[a]), sizeof(matrix),
                                          goffset[b], EVENANDODD,
                                          local_pt[gather][0]);
 
         FORALLSITES(i, s) {
           if (a > b) {      // src is anti-symmetric under a <--> b
-            scalar_mult_su3_vector(&(src[next][i]), -1.0, &vtmp);
-            mult_su3_vec_mat(&vtmp, &(s->link[a]), &(tempvec[gather][i]));
+            scalar_mult_vector(&(src[next][i]), -1.0, &vtmp);
+            mult_vec_mat(&vtmp, &(s->link[a]), &(tempvec[gather][i]));
           }
           else {
-            mult_su3_vec_mat(&(src[next][i]), &(s->link[a]),
-                             &(tempvec[gather][i]));
+            mult_vec_mat(&(src[next][i]), &(s->link[a]),
+                         &(tempvec[gather][i]));
           }
         }
-        tag1[gather] = start_gather_field(tempvec[gather], sizeof(su3_vector),
+        tag1[gather] = start_gather_field(tempvec[gather], sizeof(vector),
                                           goffset[a] + 1, EVENANDODD,
                                           local_pt[gather][1]);
       }
@@ -288,14 +285,14 @@ void Dminus(su3_vector *src[NPLAQ], su3_vector *dest[NUMLINK]) {
       wait_gather(tag0[flip]);
       wait_gather(tag1[flip]);
       FORALLSITES(i, s) {
-        mat = (su3_matrix *)(local_pt[flip][0][i]);
-        vec = (su3_vector *)(local_pt[flip][1][i]);
+        mat = (matrix *)(local_pt[flip][0][i]);
+        vec = (vector *)(local_pt[flip][1][i]);
         if (mu > nu)      // src is anti-symmetric under mu <--> nu
-          mult_su3_mat_vec_nsum(mat, &(src[index][i]), &(dest[nu][i]));
+          mult_mat_vec_nsum(mat, &(src[index][i]), &(dest[nu][i]));
         else
-          mult_su3_mat_vec_sum(mat, &(src[index][i]), &(dest[nu][i]));
+          mult_mat_vec_sum(mat, &(src[index][i]), &(dest[nu][i]));
 
-        scalar_mult_sub_su3_vector(&(dest[nu][i]), vec,
+        scalar_mult_sub_vector(&(dest[nu][i]), vec,
                                    s->bc1[OPP_LDIR(mu)], &(dest[nu][i]));
       }
       cleanup_gather(tag0[flip]);
@@ -312,14 +309,14 @@ void Dminus(su3_vector *src[NPLAQ], su3_vector *dest[NUMLINK]) {
 // -----------------------------------------------------------------
 // Add to dest instead of overwriting; note factor of 1/2
 #ifdef QCLOSED
-void DbplusPtoP(su3_vector *src[NPLAQ], su3_vector *dest[NPLAQ]) {
+void DbplusPtoP(vector *src[NPLAQ], vector *dest[NPLAQ]) {
   register int i;
   register site *s;
   char **local_pt[2][4];
   int a, b, c, d, e, j, gather, next, flip = 0, i_ab, i_de;
   Real tr, tr2;
-  su3_vector *vec1, *vec2, vtmp;
-  su3_matrix *mat0, *mat3;
+  vector *vec1, *vec2, vtmp;
+  matrix *mat0, *mat3;
   msg_tag *tag0[2], *tag1[2], *tag2[2], *tag3[2];
 
   for (a = 0; a < 4; a++) {
@@ -333,13 +330,13 @@ void DbplusPtoP(su3_vector *src[NPLAQ], su3_vector *dest[NPLAQ]) {
   d = DbplusPtoP_lookup[0][3];
   e = DbplusPtoP_lookup[0][4];
   i_de = plaq_index[d][e];
-  tag0[0] = start_gather_site(F_OFFSET(link[c]), sizeof(su3_matrix),
+  tag0[0] = start_gather_site(F_OFFSET(link[c]), sizeof(matrix),
                               DbpP_d1[0], EVENANDODD, local_pt[0][0]);
-  tag1[0] = start_gather_field(src[i_de], sizeof(su3_vector),
+  tag1[0] = start_gather_field(src[i_de], sizeof(vector),
                                DbpP_d2[0], EVENANDODD, local_pt[0][1]);
-  tag2[0] = start_gather_field(src[i_de], sizeof(su3_vector),
+  tag2[0] = start_gather_field(src[i_de], sizeof(vector),
                                DbpP_d1[0], EVENANDODD, local_pt[0][2]);
-  tag3[0] = start_gather_site(F_OFFSET(link[c]), sizeof(su3_matrix),
+  tag3[0] = start_gather_site(F_OFFSET(link[c]), sizeof(matrix),
                               goffset[c] + 1, EVENANDODD, local_pt[0][3]);
 
   // Loop over lookup table
@@ -352,18 +349,18 @@ void DbplusPtoP(su3_vector *src[NPLAQ], su3_vector *dest[NPLAQ]) {
       e = DbplusPtoP_lookup[next][4];
       i_de = plaq_index[d][e];
 
-      tag0[gather] = start_gather_site(F_OFFSET(link[c]),
-                              sizeof(su3_matrix), DbpP_d1[next], EVENANDODD,
-                              local_pt[gather][0]);
-      tag1[gather] = start_gather_field(src[i_de],
-                              sizeof(su3_vector), DbpP_d2[next], EVENANDODD,
-                              local_pt[gather][1]);
-      tag2[gather] = start_gather_field(src[i_de],
-                              sizeof(su3_vector), DbpP_d1[next], EVENANDODD,
-                              local_pt[gather][2]);
-      tag3[gather] = start_gather_site(F_OFFSET(link[c]),
-                              sizeof(su3_matrix), goffset[c] + 1, EVENANDODD,
-                              local_pt[gather][3]);
+      tag0[gather] = start_gather_site(F_OFFSET(link[c]), sizeof(matrix),
+                                       DbpP_d1[next], EVENANDODD,
+                                       local_pt[gather][0]);
+      tag1[gather] = start_gather_field(src[i_de], sizeof(vector),
+                                        DbpP_d2[next], EVENANDODD,
+                                        local_pt[gather][1]);
+      tag2[gather] = start_gather_field(src[i_de], sizeof(vector),
+                                        DbpP_d1[next], EVENANDODD,
+                                        local_pt[gather][2]);
+      tag3[gather] = start_gather_site(F_OFFSET(link[c]), sizeof(matrix),
+                                       goffset[c] + 1, EVENANDODD,
+                                       local_pt[gather][3]);
     }
 
     // Do this set of computations while next set of gathers runs
@@ -380,20 +377,18 @@ void DbplusPtoP(su3_vector *src[NPLAQ], su3_vector *dest[NPLAQ]) {
     wait_gather(tag2[flip]);
     wait_gather(tag3[flip]);
     FORALLSITES(i, s) {
-      mat0 = (su3_matrix *)(local_pt[flip][0][i]);
-      vec1 = (su3_vector *)(local_pt[flip][1][i]);
-      vec2 = (su3_vector *)(local_pt[flip][2][i]);
-      mat3 = (su3_matrix *)(local_pt[flip][3][i]);
+      mat0 = (matrix *)(local_pt[flip][0][i]);
+      vec1 = (vector *)(local_pt[flip][1][i]);
+      vec2 = (vector *)(local_pt[flip][2][i]);
+      mat3 = (matrix *)(local_pt[flip][3][i]);
 
       tr2 = tr * s->bc3[a][b][c];
-      mult_su3_vec_adj_mat(vec1, mat0, &vtmp);
-      scalar_mult_add_su3_vector(&(dest[i_ab][i]), &vtmp, tr2,
-                                 &(dest[i_ab][i]));
+      mult_vec_adj_mat(vec1, mat0, &vtmp);
+      scalar_mult_add_vector(&(dest[i_ab][i]), &vtmp, tr2, &(dest[i_ab][i]));
 
       tr2 = tr * s->bc2[a][b];
-      mult_adj_su3_mat_vec(mat3, vec2, &vtmp);
-      scalar_mult_sub_su3_vector(&(dest[i_ab][i]), &vtmp, tr2,
-                                 &(dest[i_ab][i]));
+      mult_adj_mat_vec(mat3, vec2, &vtmp);
+      scalar_mult_sub_vector(&(dest[i_ab][i]), &vtmp, tr2, &(dest[i_ab][i]));
     }
     cleanup_gather(tag0[flip]);
     cleanup_gather(tag1[flip]);
@@ -410,14 +405,14 @@ void DbplusPtoP(su3_vector *src[NPLAQ], su3_vector *dest[NPLAQ]) {
 // -----------------------------------------------------------------
 // Add to dest instead of overwriting; note factor of 1/2
 #ifdef QCLOSED
-void DbminusPtoP(su3_vector *src[NPLAQ], su3_vector *dest[NPLAQ]) {
+void DbminusPtoP(vector *src[NPLAQ], vector *dest[NPLAQ]) {
   register int i;
   register site *s;
   char **local_pt[2][4];
   int a, b, c, d, e, j, gather, next, flip = 0, i_ab, i_de;
   Real tr, tr2;
-  su3_vector *vec1, *vec2, vtmp;
-  su3_matrix *mat0, *mat3;
+  vector *vec1, *vec2, vtmp;
+  matrix *mat0, *mat3;
   msg_tag *tag0[2], *tag1[2], *tag2[2], *tag3[2];
 
   for (a = 0; a < 4; a++) {
@@ -432,13 +427,13 @@ void DbminusPtoP(su3_vector *src[NPLAQ], su3_vector *dest[NPLAQ]) {
   c = DbminusPtoP_lookup[0][2];
   i_ab = plaq_index[a][b];
 
-  tag0[0] = start_gather_site(F_OFFSET(link[c]), sizeof(su3_matrix),
+  tag0[0] = start_gather_site(F_OFFSET(link[c]), sizeof(matrix),
                               DbmP_d1[0], EVENANDODD, local_pt[0][0]);
-  tag1[0] = start_gather_field(src[i_ab], sizeof(su3_vector),
+  tag1[0] = start_gather_field(src[i_ab], sizeof(vector),
                                DbmP_d2[0], EVENANDODD, local_pt[0][1]);
-  tag2[0] = start_gather_field(src[i_ab], sizeof(su3_vector),
+  tag2[0] = start_gather_field(src[i_ab], sizeof(vector),
                                DbmP_d1[0], EVENANDODD, local_pt[0][2]);
-  tag3[0] = start_gather_site(F_OFFSET(link[c]), sizeof(su3_matrix),
+  tag3[0] = start_gather_site(F_OFFSET(link[c]), sizeof(matrix),
                               goffset[c] + 1, EVENANDODD, local_pt[0][3]);
 
   // Loop over lookup table
@@ -450,18 +445,18 @@ void DbminusPtoP(su3_vector *src[NPLAQ], su3_vector *dest[NPLAQ]) {
       b = DbminusPtoP_lookup[next][1];
       c = DbminusPtoP_lookup[next][2];
       i_ab = plaq_index[a][b];
-      tag0[gather] = start_gather_site(F_OFFSET(link[c]),
-                              sizeof(su3_matrix), DbmP_d1[next], EVENANDODD,
-                              local_pt[gather][0]);
-      tag1[gather] = start_gather_field(src[i_ab],
-                              sizeof(su3_vector), DbmP_d2[next], EVENANDODD,
-                              local_pt[gather][1]);
-      tag2[gather] = start_gather_field(src[i_ab],
-                              sizeof(su3_vector), DbmP_d1[next], EVENANDODD,
-                              local_pt[gather][2]);
-      tag3[gather] = start_gather_site(F_OFFSET(link[c]),
-                              sizeof(su3_matrix), goffset[c] + 1, EVENANDODD,
-                              local_pt[gather][3]);
+      tag0[gather] = start_gather_site(F_OFFSET(link[c]), sizeof(matrix),
+                                       DbmP_d1[next], EVENANDODD,
+                                       local_pt[gather][0]);
+      tag1[gather] = start_gather_field(src[i_ab], sizeof(vector),
+                                        DbmP_d2[next], EVENANDODD,
+                                        local_pt[gather][1]);
+      tag2[gather] = start_gather_field(src[i_ab], sizeof(vector),
+                                        DbmP_d1[next], EVENANDODD,
+                                        local_pt[gather][2]);
+      tag3[gather] = start_gather_site(F_OFFSET(link[c]), sizeof(matrix),
+                                       goffset[c] + 1, EVENANDODD,
+                                       local_pt[gather][3]);
     }
 
     // Do this set of computations while next set of gathers runs
@@ -478,20 +473,18 @@ void DbminusPtoP(su3_vector *src[NPLAQ], su3_vector *dest[NPLAQ]) {
     wait_gather(tag2[flip]);
     wait_gather(tag3[flip]);
     FORALLSITES(i, s) {
-      mat0 = (su3_matrix *)(local_pt[flip][0][i]);
-      vec1 = (su3_vector *)(local_pt[flip][1][i]);
-      vec2 = (su3_vector *)(local_pt[flip][2][i]);
-      mat3 = (su3_matrix *)(local_pt[flip][3][i]);
+      mat0 = (matrix *)(local_pt[flip][0][i]);
+      vec1 = (vector *)(local_pt[flip][1][i]);
+      vec2 = (vector *)(local_pt[flip][2][i]);
+      mat3 = (matrix *)(local_pt[flip][3][i]);
 
       tr2 = tr * s->bc2[OPP_LDIR(a)][OPP_LDIR(b)];
-      mult_su3_vec_adj_mat(vec1, mat0, &vtmp);
-      scalar_mult_add_su3_vector(&(dest[i_de][i]), &vtmp, tr2,
-                                 &(dest[i_de][i]));
+      mult_vec_adj_mat(vec1, mat0, &vtmp);
+      scalar_mult_add_vector(&(dest[i_de][i]), &vtmp, tr2, &(dest[i_de][i]));
 
       tr2 = tr * s->bc3[OPP_LDIR(a)][OPP_LDIR(b)][OPP_LDIR(c)];
-      mult_adj_su3_mat_vec(mat3, vec2, &vtmp);
-      scalar_mult_sub_su3_vector(&(dest[i_de][i]), &vtmp, tr2,
-                                 &(dest[i_de][i]));
+      mult_adj_mat_vec(mat3, vec2, &vtmp);
+      scalar_mult_sub_vector(&(dest[i_de][i]), &vtmp, tr2, &(dest[i_de][i]));
     }
     cleanup_gather(tag0[flip]);
     cleanup_gather(tag1[flip]);
@@ -510,28 +503,27 @@ void DbminusPtoP(su3_vector *src[NPLAQ], su3_vector *dest[NPLAQ]) {
 // bc1[mu](x) on psi_mu(x) eta(x + mu)
 // Add to dest instead of overwriting; note factor of 1/2
 #ifdef SV
-void DbplusStoL(su3_vector *src, su3_vector *dest[NUMLINK]) {
+void DbplusStoL(vector *src, vector *dest[NUMLINK]) {
   register int i;
   register site *s;
   int mu;
-  su3_vector vtmp, *vec;
+  vector vtmp, *vec;
   msg_tag *tag[NUMLINK];
 
-  tag[0] = start_gather_field(src, sizeof(su3_vector),
-                              goffset[0], EVENANDODD, gen_pt[0]);
+  tag[0] = start_gather_field(src, sizeof(vector), goffset[0],
+                              EVENANDODD, gen_pt[0]);
   FORALLDIR(mu) {
     if (mu < NUMLINK - 1)     // Start next gather
-      tag[mu + 1] = start_gather_field(src, sizeof(su3_vector),
-                                       goffset[mu + 1], EVENANDODD,
-                                       gen_pt[mu + 1]);
+      tag[mu + 1] = start_gather_field(src, sizeof(vector), goffset[mu + 1],
+                                       EVENANDODD, gen_pt[mu + 1]);
 
     wait_gather(tag[mu]);
     FORALLSITES(i, s) {
-      vec = (su3_vector *)(gen_pt[mu][i]);
-      mult_su3_vec_adj_mat(vec, &(s->link[mu]), &vtmp);
-      scalar_mult_su3_vector(&vtmp, s->bc1[mu], &vtmp);
-      mult_adj_su3_mat_vec_nsum(&(s->link[mu]), &(src[i]), &vtmp);
-      scalar_mult_add_su3_vector(&(dest[mu][i]), &vtmp, 0.5, &(dest[mu][i]));
+      vec = (vector *)(gen_pt[mu][i]);
+      mult_vec_adj_mat(vec, &(s->link[mu]), &vtmp);
+      scalar_mult_vector(&vtmp, s->bc1[mu], &vtmp);
+      mult_adj_mat_vec_nsum(&(s->link[mu]), &(src[i]), &vtmp);
+      scalar_mult_add_vector(&(dest[mu][i]), &vtmp, 0.5, &(dest[mu][i]));
     }
     cleanup_gather(tag[mu]);
   }
@@ -553,7 +545,7 @@ void DbplusStoL(su3_vector *src, su3_vector *dest[NUMLINK]) {
 // Add negative to dest instead of overwriting
 // Negative sign is due to anti-commuting eta past psi
 #ifdef SV
-void detStoL(su3_vector *src, su3_vector *dest[NUMLINK]) {
+void detStoL(vector *src, vector *dest[NUMLINK]) {
   register int i;
   register site *s;
   int a, b, j, next;
@@ -562,7 +554,7 @@ void detStoL(su3_vector *src, su3_vector *dest[NUMLINK]) {
 #ifdef LINEAR_DET
   CMULREAL(Gc, 0.5, Gc);                  // Since not squared
 #endif
-  su3_matrix_f tmat, tmat2;
+  matrix_f tmat, tmat2;
   msg_tag *tag[NUMLINK];
 
   // Save Tr[eta(x)] plaqdet[a][b](x)
@@ -625,8 +617,8 @@ void detStoL(su3_vector *src, su3_vector *dest[NUMLINK]) {
       invert(&(s->linkf[a]), &tmat);
       CMUL(tr_dest[i], Gc, tc);
       for (j = 0; j < DIMF; j++) {
-        mult_su3_nn_f(&tmat, &(Lambda[j]), &tmat2);
-        tc2 = trace_su3_f(&tmat2);
+        mult_nn_f(&tmat, &(Lambda[j]), &tmat2);
+        tc2 = trace_f(&tmat2);
         CMUL(tc, tc2, tc3);
         CSUM(dest[a][i].c[j], tc3);
       }
@@ -644,24 +636,24 @@ void detStoL(su3_vector *src, su3_vector *dest[NUMLINK]) {
 // Add negative to dest instead of overwriting
 // Negative sign is due to anti-commuting eta past psi
 #ifdef SV
-void potStoL(su3_vector *src, su3_vector *dest[NUMLINK]) {
+void potStoL(vector *src, vector *dest[NUMLINK]) {
   register int i, a, j;
   register site *s;
   Real tr;
   complex tc, tc2, tc3;
   complex Bc = cmplx(0.0, -1.0 * C2 * B * B / sqrt((Real)NCOL));
-  su3_matrix_f tmat;
+  matrix_f tmat;
 
   FORALLSITES(i, s) {
     FORALLDIR(a) {
       tr = 1.0 / (Real)NCOL;
-      tr *= realtrace_su3_f(&(s->linkf[a]), &(s->linkf[a]));
+      tr *= realtrace_f(&(s->linkf[a]), &(s->linkf[a]));
       tr -= 1.0;
       CMULREAL(Bc, tr, tc);
       CMUL(src[i].c[DIMF - 1], tc, tc2);
       for (j = 0; j < DIMF; j++) {
-        mult_su3_na_f(&(Lambda[j]), &(s->linkf[a]), &tmat);
-        tc = trace_su3_f(&tmat);
+        mult_na_f(&(Lambda[j]), &(s->linkf[a]), &tmat);
+        tc = trace_f(&tmat);
         CMUL(tc, tc2, tc3);
         CSUM(dest[a][i].c[j], tc3);
       }
@@ -680,37 +672,37 @@ void potStoL(su3_vector *src, su3_vector *dest[NUMLINK]) {
 // bc1[OPP_LDIR(mu)](x) on eta(x - mu) psi_mu(x - mu)
 // Initialize dest; note factor of 1/2
 #ifdef SV
-void DbminusLtoS(su3_vector *src[NUMLINK], su3_vector *dest) {
+void DbminusLtoS(vector *src[NUMLINK], vector *dest) {
   register int i;
   register site *s;
   int mu;
-  su3_vector vtmp, *vec;
+  vector vtmp, *vec;
   msg_tag *tag[NUMLINK];
 
   FORALLSITES(i, s) {         // Set up first gather
     clearvec(&(dest[i]));     // Initialize
-    mult_adj_su3_mat_vec(&(s->link[0]), &(src[0][i]), &(tempvec[0][i]));
+    mult_adj_mat_vec(&(s->link[0]), &(src[0][i]), &(tempvec[0][i]));
   }
-  tag[0] = start_gather_field(tempvec[0], sizeof(su3_vector),
+  tag[0] = start_gather_field(tempvec[0], sizeof(vector),
                               goffset[0] + 1, EVENANDODD, gen_pt[0]);
 
   FORALLDIR(mu) {
     if (mu < NUMLINK - 1) {   // Start next gather
       FORALLSITES(i, s) {
-        mult_adj_su3_mat_vec(&(s->link[mu + 1]), &(src[mu + 1][i]),
+        mult_adj_mat_vec(&(s->link[mu + 1]), &(src[mu + 1][i]),
                              &(tempvec[mu + 1][i]));
       }
-      tag[mu + 1] = start_gather_field(tempvec[mu + 1], sizeof(su3_vector),
+      tag[mu + 1] = start_gather_field(tempvec[mu + 1], sizeof(vector),
                                        goffset[mu + 1] + 1, EVENANDODD,
                                        gen_pt[mu + 1]);
     }
 
     wait_gather(tag[mu]);
     FORALLSITES(i, s) {
-      vec = (su3_vector *)(gen_pt[mu][i]);
-      scalar_mult_su3_vector(vec, s->bc1[OPP_LDIR(mu)], &vtmp);
-      mult_su3_vec_adj_mat_nsum(&(src[mu][i]), &(s->link[mu]), &vtmp);
-      scalar_mult_sub_su3_vector(&(dest[i]), &vtmp, 0.5, &(dest[i]));
+      vec = (vector *)(gen_pt[mu][i]);
+      scalar_mult_vector(vec, s->bc1[OPP_LDIR(mu)], &vtmp);
+      mult_vec_adj_mat_nsum(&(src[mu][i]), &(s->link[mu]), &vtmp);
+      scalar_mult_sub_vector(&(dest[i]), &vtmp, 0.5, &(dest[i]));
     }
     cleanup_gather(tag[mu]);
   }
@@ -732,7 +724,7 @@ void DbminusLtoS(su3_vector *src[NUMLINK], su3_vector *dest) {
 // Add to dest instead of overwriting
 // Has same sign as DbminusLtoS
 #ifdef SV
-void detLtoS(su3_vector *src[NUMLINK], su3_vector *dest) {
+void detLtoS(vector *src[NUMLINK], vector *dest) {
   register int i;
   register site *s;
   int a, b, j, next;
@@ -741,7 +733,7 @@ void detLtoS(su3_vector *src[NUMLINK], su3_vector *dest) {
 #ifdef LINEAR_DET
   CMULREAL(Gc, 0.5, Gc);                  // Since not squared
 #endif
-  su3_matrix_f tmat, tmat2;
+  matrix_f tmat, tmat2;
   msg_tag *tag[NUMLINK];
 
   // Prepare Tr[U_a^{-1} psi_a] = sum_j Tr[U_a^{-1} Lambda^j] psi_a^j
@@ -751,8 +743,8 @@ void detLtoS(su3_vector *src[NUMLINK], su3_vector *dest) {
       invert(&(s->linkf[a]), &tmat);
       Tr_Uinv[a][i] = cmplx(0.0, 0.0);              // Initialize
       for (j = 0; j < DIMF; j++) {
-        mult_su3_nn_f(&tmat, &(Lambda[j]), &tmat2);
-        tc = trace_su3_f(&tmat2);
+        mult_nn_f(&tmat, &(Lambda[j]), &tmat2);
+        tc = trace_f(&tmat2);
         CMUL(tc, src[a][i].c[j], tc2);
         CSUM(Tr_Uinv[a][i], tc2);                   // Accumulate
       }
@@ -811,23 +803,23 @@ void detLtoS(su3_vector *src[NUMLINK], su3_vector *dest) {
 // Add to dest instead of overwriting
 // Has same sign as DbminusLtoS
 #ifdef SV
-void potLtoS(su3_vector *src[NUMLINK], su3_vector *dest) {
+void potLtoS(vector *src[NUMLINK], vector *dest) {
   register int i, a, j;
   register site *s;
   Real tr;
   complex tc, tc2, tc3;
   complex Bc = cmplx(0.0, C2 * B * B / sqrt((Real)NCOL));
-  su3_matrix_f tmat;
+  matrix_f tmat;
 
   FORALLSITES(i, s) {
     FORALLDIR(a) {
       tr = 1.0 / (Real)NCOL;
-      tr *= realtrace_su3_f(&(s->linkf[a]), &(s->linkf[a]));
+      tr *= realtrace_f(&(s->linkf[a]), &(s->linkf[a]));
       tr -= 1.0;
       CMULREAL(Bc, tr, tc2);
       for (j = 0; j < DIMF; j++) {
-        mult_su3_na_f(&(Lambda[j]), &(s->linkf[a]), &tmat);
-        tc = trace_su3_f(&tmat);
+        mult_na_f(&(Lambda[j]), &(s->linkf[a]), &tmat);
+        tc = trace_f(&tmat);
         CMUL(tc, src[a][i].c[j], tc3);
         CMUL(tc2, tc3, tc);
         CSUM(dest[i].c[DIMF - 1], tc);

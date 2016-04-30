@@ -164,8 +164,8 @@ int main(int argc, char *argv[]) {
   // Save unsmeared unblocked links for next blocking step
   // Use f_U -- mom is used for temporary storage by the smearing routine
   FORALLSITES(i, s) {
-    for (dir = XUP; dir < NUMLINK; dir++)
-      su3mat_copy_f(&(s->linkf[dir]), &(s->f_U[dir]));
+    FORALLDIR(dir)
+      mat_copy_f(&(s->linkf[dir]), &(s->f_U[dir]));
   }
 
   // Smear (after blocking) in increments of smear_step up to Nsmear
@@ -232,8 +232,8 @@ int main(int argc, char *argv[]) {
 
   // Restore unsmeared unblocked links from f_U
   FORALLSITES(i, s) {
-    for (dir = XUP; dir < NUMLINK; dir++)
-      su3mat_copy_f(&(s->f_U[dir]), &(s->linkf[dir]));
+    FORALLDIR(dir)
+      mat_copy_f(&(s->f_U[dir]), &(s->linkf[dir]));
   }
   // ---------------------------------------------------------------
 
@@ -289,8 +289,8 @@ int main(int argc, char *argv[]) {
     // Save unsmeared blocked links for next blocking step
     // Use f_U -- mom is used for temporary storage by the blocking routine
     FORALLSITES(i, s) {
-      for (dir = XUP; dir < NUMLINK; dir++)
-        su3mat_copy_f(&(s->linkf[dir]), &(s->f_U[dir]));
+      FORALLDIR(dir)
+        mat_copy_f(&(s->linkf[dir]), &(s->f_U[dir]));
     }
 
     // Smear (after blocking) in increments of smear_step up to Nsmear
@@ -357,8 +357,8 @@ int main(int argc, char *argv[]) {
 
     // Restore unsmeared blocked links from f_U
     FORALLSITES(i, s) {
-      for (dir = XUP; dir < NUMLINK; dir++)
-        su3mat_copy_f(&(s->f_U[dir]), &(s->linkf[dir]));
+      FORALLDIR(dir)
+        mat_copy_f(&(s->f_U[dir]), &(s->linkf[dir]));
     }
   }
   // ---------------------------------------------------------------

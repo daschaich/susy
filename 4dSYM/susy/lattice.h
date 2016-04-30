@@ -6,7 +6,7 @@
 #include "defines.h"
 #include "../include/macros.h"    // For MAXFILENAME
 #include "../include/io_lat.h"    // For gauge_file
-#include "../include/su3.h"
+#include "../include/susy.h"
 #include "../include/random.h"    // For double_prn
 #include "../include/dirs.h"      // For NDIMS
 // -----------------------------------------------------------------
@@ -16,9 +16,9 @@
 // -----------------------------------------------------------------
 // Twist_Fermion struct
 typedef struct {
-  su3_vector Fsite;
-  su3_vector Flink[NUMLINK];
-  su3_vector Fplaq[NPLAQ];
+  vector Fsite;
+  vector Flink[NUMLINK];
+  vector Fplaq[NPLAQ];
 } Twist_Fermion;
 // -----------------------------------------------------------------
 
@@ -36,17 +36,17 @@ typedef struct {
   double_prn site_prn;
 #endif
 
-  su3_matrix_f linkf[NUMLINK];    // Gauge links
-  su3_matrix link[NUMLINK];       // Adjoint links
+  matrix_f linkf[NUMLINK];    // Gauge links
+  matrix link[NUMLINK];       // Adjoint links
 
 #ifdef HMC_ALGORITHM
-  su3_matrix_f old_linkf[NUMLINK];  // For accept/reject
+  matrix_f old_linkf[NUMLINK];  // For accept/reject
 #endif
 
   // Momentum matrices in each direction are just U(N) matrices
   // as opposed to anti-hermitian matrices
-  su3_matrix_f mom[NUMLINK];
-  su3_matrix_f f_U[NUMLINK];        // Force matrices
+  matrix_f mom[NUMLINK];
+  matrix_f f_U[NUMLINK];        // Force matrices
 
   // Boundary conditions -- many unused
   Real bc1[2 * NUMLINK], bc2[2 * NUMLINK][2 * NUMLINK];
@@ -77,7 +77,7 @@ EXTERN int warms, trajecs, niter, propinterval;
 EXTERN Real traj_length;
 
 // U(N) generators, epsilon tensor
-EXTERN su3_matrix_f Lambda[DIMF], Lambda_prod[DIMF][DIMF];
+EXTERN matrix_f Lambda[DIMF], Lambda_prod[DIMF][DIMF];
 EXTERN Real perm[NUMLINK][NUMLINK][NUMLINK][NUMLINK][NUMLINK];
 
 // Translate (mu, nu) to linear index of anti-symmetric matrix
@@ -135,8 +135,8 @@ EXTERN int FQ_lookup[NTERMS][NUMLINK];
 
 // Persistent site, link and plaq fermions for matrix--vector operation
 // Used in fermion_op and assemble_fermion_force
-EXTERN su3_vector *site_src, *link_src[NUMLINK], *plaq_src[NPLAQ];
-EXTERN su3_vector *site_dest, *link_dest[NUMLINK], *plaq_dest[NPLAQ];
+EXTERN vector *site_src, *link_src[NUMLINK], *plaq_src[NPLAQ];
+EXTERN vector *site_dest, *link_dest[NUMLINK], *plaq_dest[NPLAQ];
 
 // For convenience in calculating action and force
 // May be wasteful of space
@@ -146,12 +146,12 @@ EXTERN complex *ZWstar[NUMLINK][NUMLINK], *tempdet[NUMLINK][NUMLINK];
 #ifndef LINEAR_DET
 EXTERN complex *tempZW[NUMLINK][NUMLINK];
 #endif
-EXTERN su3_matrix_f *DmuUmu, *Fmunu[NPLAQ];
-EXTERN su3_matrix_f *Uinv[NUMLINK], *Udag_inv[NUMLINK], *UpsiU[NUMLINK];
+EXTERN matrix_f *DmuUmu, *Fmunu[NPLAQ];
+EXTERN matrix_f *Uinv[NUMLINK], *Udag_inv[NUMLINK], *UpsiU[NUMLINK];
 
 // Temporary vectors, matrices and Twist_Fermion
-EXTERN su3_vector *tempvec[NUMLINK];
-EXTERN su3_matrix_f *tempmat1, *tempmat2, *staple;
+EXTERN vector *tempvec[NUMLINK];
+EXTERN matrix_f *tempmat, *tempmat2, *staple;
 EXTERN Twist_Fermion *tempTF;
 
 #if (NCOL > 4)
@@ -177,7 +177,7 @@ EXTERN char **gen_pt[N_POINTERS];
 #define N_B 2
 #define N_K 3    // N_B * (N_B + 1) / 2
 // Multiple scalar fields and their bilinear traces
-EXTERN su3_matrix_f *Ba[N_B][NUMLINK];
+EXTERN matrix_f *Ba[N_B][NUMLINK];
 EXTERN double *traceBB[N_K][NUMLINK][NUMLINK];
 
 // Ensemble averages and volume averages for subtracting

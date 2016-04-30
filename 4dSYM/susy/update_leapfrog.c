@@ -20,8 +20,8 @@ void update_uu(Real eps) {
 
   for (mu = XUP; mu < NUMLINK; mu++) {
     FORALLSITES(i, s)
-      scalar_mult_add_su3_matrix_f(&(s->linkf[mu]), &(s->mom[mu]), eps,
-                                   &(s->linkf[mu]));
+      scalar_mult_add_matrix_f(&(s->linkf[mu]), &(s->mom[mu]), eps,
+                               &(s->linkf[mu]));
   }
 
   // Update plaquette determinants, DmuUmu and Fmunu with new links

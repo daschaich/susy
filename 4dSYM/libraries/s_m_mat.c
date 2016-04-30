@@ -3,9 +3,9 @@
 // b <-- s * a
 #include "../include/config.h"
 #include "../include/complex.h"
-#include "../include/su3.h"
+#include "../include/susy.h"
 
-void scalar_mult_su3_matrix(su3_matrix *a, Real s, su3_matrix *b) {
+void scalar_mult_matrix(matrix *a, Real s, matrix *b) {
 #ifndef FAST
   register int i, j;
   for (i = 0; i < DIMF; i++) {

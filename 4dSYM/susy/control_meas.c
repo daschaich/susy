@@ -233,10 +233,10 @@ int main(int argc, char *argv[]) {
 
   // Save and restore links overwritten by polar projection
   FORALLSITES(i, s)
-    su3mat_copy_f(&(s->linkf[TUP]), &(s->mom[TUP]));
+    mat_copy_f(&(s->linkf[TUP]), &(s->mom[TUP]));
   hvy_pot_polar();
   FORALLSITES(i, s)
-    su3mat_copy_f(&(s->mom[TUP]), &(s->linkf[TUP]));
+    mat_copy_f(&(s->mom[TUP]), &(s->linkf[TUP]));
 #endif
 
   node0_printf("RUNNING COMPLETED\n");

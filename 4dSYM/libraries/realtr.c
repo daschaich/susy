@@ -2,9 +2,9 @@
 // Return real trace of irrep matrix product adag * b
 #include "../include/config.h"
 #include "../include/complex.h"
-#include "../include/su3.h"
+#include "../include/susy.h"
 
-Real realtrace_su3(su3_matrix *a, su3_matrix *b) {
+Real realtrace(matrix *a, matrix *b) {
   register int i, j;
   register Real sum = 0.0;
 

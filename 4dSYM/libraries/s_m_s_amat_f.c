@@ -3,10 +3,10 @@
 // c <-- a + s*b
 #include "../include/config.h"
 #include "../include/complex.h"
-#include "../include/su3.h"
+#include "../include/susy.h"
 
-void scalar_mult_sub_su3_adj_matrix_f(su3_matrix_f *a, su3_matrix_f *b,
-                                      Real s, su3_matrix_f *c) {
+void scalar_mult_sub_adj_matrix_f(matrix_f *a, matrix_f *b,
+                                  Real s, matrix_f *c) {
 
   register int i, j;
   for (i = 0; i < NCOL; i++) {

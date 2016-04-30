@@ -16,52 +16,52 @@
 // dir2 is the other direction that defines the staple
 // Use gather offsets to handle all five links!
 // stp must be cleared before being this function is called!
-void staple_hyp(int dir1, int dir2, su3_matrix_f *lnk1,
-                su3_matrix_f *lnk2, su3_matrix_f *stp) {
+void staple_hyp(int dir1, int dir2, matrix_f *lnk1,
+                matrix_f *lnk2, matrix_f *stp) {
 
   register int i;
   register site *s;
   msg_tag *tag0, *tag1, *tag2;
-  su3_matrix_f tmat1, tmat2;
+  matrix_f tmat1, tmat2;
 
   // Get blocked_link[dir2] from direction dir1
-  tag0 = start_gather_field(lnk2, sizeof(su3_matrix_f), goffset[dir1],
+  tag0 = start_gather_field(lnk2, sizeof(matrix_f), goffset[dir1],
                             EVENANDODD, gen_pt[0]);
 
   // Get blocked_link[dir1] from direction dir2
-  tag1 = start_gather_field(lnk1, sizeof(su3_matrix_f), goffset[dir2],
+  tag1 = start_gather_field(lnk1, sizeof(matrix_f), goffset[dir2],
                             EVENANDODD, gen_pt[1]);
 
   // Start working on the lower staple while we wait for the gathers
   // The lower staple is prepared at x-dir2 and stored in tempmat,
   // then gathered to x
   FORALLSITES(i, s)
-    mult_su3_an_f(lnk2 + i, lnk1 + i, &(tempmat[i]));
+    mult_an_f(lnk2 + i, lnk1 + i, &(tempmat[i]));
 
   wait_gather(tag0);
   wait_gather(tag1);
 
   // Finish lower staple
   FORALLSITES(i, s) {
-    mult_su3_nn_f(&(tempmat[i]), (su3_matrix_f *)gen_pt[0][i], &tmat1);
-    su3mat_copy_f(&tmat1, &(tempmat[i]));
+    mult_nn_f(&(tempmat[i]), (matrix_f *)gen_pt[0][i], &tmat1);
+    mat_copy_f(&tmat1, &(tempmat[i]));
   }
 
   // Gather staple from direction -dir2 to "home" site
-  tag2 = start_gather_field(tempmat, sizeof(su3_matrix_f),
+  tag2 = start_gather_field(tempmat, sizeof(matrix_f),
                             goffset[dir2] + 1, EVENANDODD, gen_pt[2]);
 
   // Calculate upper staple, add it
   FORALLSITES(i, s) {
-    mult_su3_nn_f(lnk2 + i, (su3_matrix_f *)gen_pt[1][i], &tmat1);
-    mult_su3_na_f(&tmat1, (su3_matrix_f *)gen_pt[0][i], &tmat2);
-    add_su3_matrix_f(stp + i, &tmat2, stp + i);
+    mult_nn_f(lnk2 + i, (matrix_f *)gen_pt[1][i], &tmat1);
+    mult_na_f(&tmat1, (matrix_f *)gen_pt[0][i], &tmat2);
+    add_matrix_f(stp + i, &tmat2, stp + i);
   }
 
   // Finally add the lower staple
   wait_gather(tag2);
   FORALLSITES(i, s)
-    add_su3_matrix_f(stp + i, (su3_matrix_f *)gen_pt[2][i], stp + i);
+    add_matrix_f(stp + i, (matrix_f *)gen_pt[2][i], stp + i);
 
   cleanup_gather(tag0);
   cleanup_gather(tag1);
@@ -76,7 +76,7 @@ void block_hyp1() {
   register int dir1, dir2, i;
   register site *s;
   Real ftmp1, ftmp2;
-  su3_matrix_f Omega, tmat;
+  matrix_f Omega, tmat;
 
   ftmp1 = alpha_smear[2] / (2 * (1 - alpha_smear[2]));
   ftmp2 = (1 - alpha_smear[2]);
@@ -90,7 +90,7 @@ void block_hyp1() {
         continue;   // Actually, we should be done at this point
       if (dir1 != dir2) {
        FORALLSITES(i, s)
-         clear_su3mat_f(&(tempmat[i]));
+         clear_mat_f(&(tempmat[i]));
 
         // Compute the staple
         staple_hyp(dir1, dir2, thin_link[dir1],
@@ -98,9 +98,9 @@ void block_hyp1() {
 
         FORALLSITES(i, s) {
           // Make Omega
-          scalar_mult_add_su3_matrix_f(thin_link[dir1] + i,
-                                       tempmat + i, ftmp1, &tmat);
-          scalar_mult_su3_matrix_f(&tmat, ftmp2, &Omega);
+          scalar_mult_add_matrix_f(thin_link[dir1] + i,
+                                   tempmat + i, ftmp1, &tmat);
+          scalar_mult_matrix_f(&tmat, ftmp2, &Omega);
           hyplink1[dir2][dir1][i] = Omega;
         }
       }
@@ -116,7 +116,7 @@ void block_hyp2() {
   register int dir, dir2, dir3, dir4, i;
   register site *s;
   Real ftmp1, ftmp2;
-  su3_matrix_f Omega, tmat;
+  matrix_f Omega, tmat;
 
   ftmp1 = alpha_smear[1] / (4 * (1 - alpha_smear[1]));
   ftmp2 = (1 - alpha_smear[1]);
@@ -127,7 +127,7 @@ void block_hyp2() {
         continue;   // Actually, we should be done at this point
       if (dir2 != dir) {
         FORALLSITES(i, s)
-          clear_su3mat_f(tempmat + i);
+          clear_mat_f(tempmat + i);
 
         // Compute the staple
         for (dir3 = XUP; dir3 <= TUP; dir3++) {
@@ -143,10 +143,10 @@ void block_hyp2() {
 
         FORALLSITES(i, s) {
           // Make Omega
-          scalar_mult_add_su3_matrix_f(thin_link[dir] + i,
-                                       tempmat + i, ftmp1, &tmat);
+          scalar_mult_add_matrix_f(thin_link[dir] + i,
+                                   tempmat + i, ftmp1, &tmat);
 
-          scalar_mult_su3_matrix_f(&tmat, ftmp2, &Omega);
+          scalar_mult_matrix_f(&tmat, ftmp2, &Omega);
           hyplink2[dir2][dir][i] = Omega;
         }
       }
@@ -162,14 +162,14 @@ void block_hyp3() {
   register int dir, dir2, i;
   register site *s;
   Real ftmp1, ftmp2;
-  su3_matrix_f Omega, tmat;
+  matrix_f Omega, tmat;
 
   ftmp1 = alpha_smear[0] / (6 * (1 - alpha_smear[0]));
   ftmp2 = 1 - alpha_smear[0];
 
   for (dir = XUP; dir < NUMLINK; dir++) {
     FORALLSITES(i, s)
-      clear_su3mat_f(&tempmat[i]);
+      clear_mat_f(&tempmat[i]);
 
     // Compute the staple
     for (dir2 = XUP; dir2 <= TUP; dir2++) {
@@ -182,10 +182,10 @@ void block_hyp3() {
 
     FORALLSITES(i, s) {
       // Make Omega
-      scalar_mult_add_su3_matrix_f(thin_link[dir] + i,
-                                   tempmat + i, ftmp1, &tmat);
+      scalar_mult_add_matrix_f(thin_link[dir] + i,
+                               tempmat + i, ftmp1, &tmat);
 
-      scalar_mult_su3_matrix_f(&tmat, ftmp2, &Omega);
+      scalar_mult_matrix_f(&tmat, ftmp2, &Omega);
       smeared_link[dir][i] = Omega;
     }
   }
@@ -203,7 +203,7 @@ void block_hyp() {
 
   for (dir = XUP; dir < NUMLINK; dir++) {
     FORALLSITES(i, s)
-      su3mat_copy_f(&(s->linkf[dir]), &(thin_link[dir][i]));
+      mat_copy_f(&(s->linkf[dir]), &(thin_link[dir][i]));
   }
 
   block_hyp1();
@@ -212,7 +212,7 @@ void block_hyp() {
 
   for (dir = XUP; dir < NUMLINK; dir++) {
     FORALLSITES(i, s)
-      su3mat_copy_f(&(smeared_link[dir][i]), &(s->linkf[dir]));
+      mat_copy_f(&(smeared_link[dir][i]), &(s->linkf[dir]));
   }
 }
 // -----------------------------------------------------------------

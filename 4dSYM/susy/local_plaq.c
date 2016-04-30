@@ -1,6 +1,6 @@
 // -----------------------------------------------------------------
 // Measure average space--space and space--time plaquettes
-// Use tempmat1 for temporary storage
+// Use tempmat for temporary storage
 
 // #define LOCAL_PLAQ turns on plaquette measurement on hypersurfaces
 // plaq_prll[xx] gives the average of the in a fixed MY_X hypersurface,
@@ -25,14 +25,13 @@ static int print_dir = 0;   // Controls printing out MY_DIR
 double local_plaquette(double *ss_plaq, double *st_plaq) {
   register int i, dir, dir2;
   register site *s;
-  register su3_matrix_f *m1, *m4;
   double ss_sum = 0.0, st_sum = 0.0, cur_plaq;
   double max_plaq = 0.0;
 #ifdef MIN_PLAQ
   double min_plaq = 200.0 * NCOL;
 #endif
   msg_tag *mtag0, *mtag1;
-  su3_matrix_f tmat;
+  matrix_f tmat;
 
 #ifdef LOCAL_PLAQ
   int xx;
@@ -56,25 +55,20 @@ double local_plaquette(double *ss_plaq, double *st_plaq) {
   // We can exploit a symmetry under dir<-->dir2
   for (dir = YUP; dir < NUMLINK; dir++) {
     for (dir2 = XUP; dir2 < dir; dir2++) {
-      mtag0 = start_gather_site(F_OFFSET(linkf[dir2]), sizeof(su3_matrix_f),
+      mtag0 = start_gather_site(F_OFFSET(linkf[dir2]), sizeof(matrix_f),
                                 goffset[dir], EVENANDODD, gen_pt[0]);
-      mtag1 = start_gather_site(F_OFFSET(linkf[dir]), sizeof(su3_matrix_f),
+      mtag1 = start_gather_site(F_OFFSET(linkf[dir]), sizeof(matrix_f),
                                 goffset[dir2], EVENANDODD, gen_pt[1]);
 
-      FORALLSITES(i, s) {
-        m1 = &(s->linkf[dir]);
-        m4 = &(s->linkf[dir2]);
-        mult_su3_an_f(m4, m1, &(tempmat1[i]));
-      }
+      FORALLSITES(i, s)
+        mult_an_f(&(s->linkf[dir2]), &(s->linkf[dir]), &(tempmat[i]));
       wait_gather(mtag0);
       wait_gather(mtag1);
 
       if (dir == TUP || dir2 == TUP) {
         FORALLSITES(i, s) {
-          m1 = (su3_matrix_f *)(gen_pt[0][i]);
-          m4 = (su3_matrix_f *)(gen_pt[1][i]);
-          mult_su3_nn_f(&(tempmat1[i]), m1, &tmat);
-          cur_plaq = (double)realtrace_su3_f(m4, &tmat);
+          mult_nn_f(&(tempmat[i]), (matrix_f *)(gen_pt[0][i]), &tmat);
+          cur_plaq = (double)realtrace_f((matrix_f *)(gen_pt[1][i]), &tmat);
 #ifdef MIN_PLAQ
           if (cur_plaq < min_plaq)
             min_plaq = cur_plaq;
@@ -96,10 +90,8 @@ double local_plaquette(double *ss_plaq, double *st_plaq) {
       }
       else {
         FORALLSITES(i, s) {
-          m1 = (su3_matrix_f *)(gen_pt[0][i]);
-          m4 = (su3_matrix_f *)(gen_pt[1][i]);
-          mult_su3_nn_f(&(tempmat1[i]), m1, &tmat);
-          cur_plaq = (double)realtrace_su3_f(m4, &tmat);
+          mult_nn_f(&(tempmat[i]), (matrix_f *)(gen_pt[0][i]), &tmat);
+          cur_plaq = (double)realtrace_f((matrix_f *)(gen_pt[1][i]), &tmat);
 #ifdef MIN_PLAQ
           if (cur_plaq < min_plaq)
             min_plaq = cur_plaq;

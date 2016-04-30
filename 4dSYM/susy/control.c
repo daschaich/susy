@@ -162,9 +162,9 @@ int main(int argc, char *argv[]) {
 
       // Overwrite s->linkf
       // Save unsmeared links in Uinv (mom and f_U both already used)
-      for (dir = XUP; dir < NUMLINK; dir++) {
+      FORALLDIR(dir) {
         FORALLSITES(i, s)
-          su3mat_copy_f(&(s->linkf[dir]), &(Uinv[dir][i]));
+          mat_copy_f(&(s->linkf[dir]), &(Uinv[dir][i]));
       }
       if (smearflag == STOUT_SMEAR)
         stout_smear(Nsmear, alpha);
@@ -235,8 +235,8 @@ int main(int argc, char *argv[]) {
 #endif
         plaquette(&ss_plaq, &st_plaq);    // To be printed below
         FORALLSITES(i, s) {
-          for (dir = XUP; dir < NUMLINK; dir++)
-            su3mat_copy_f(&(s->linkf[dir]), &(s->mom[dir]));
+          FORALLDIR(dir)
+            mat_copy_f(&(s->linkf[dir]), &(s->mom[dir]));
         }
 
         node0_printf("Fixing to Coulomb gauge...\n");
@@ -266,25 +266,25 @@ int main(int argc, char *argv[]) {
       // Save and restore links overwritten by polar projection
       // Don't use mom[TUP], which is already storing the un-fixed links
       FORALLSITES(i, s)
-        su3mat_copy_f(&(s->linkf[TUP]), &(s->f_U[TUP]));
+        mat_copy_f(&(s->linkf[TUP]), &(s->f_U[TUP]));
       hvy_pot_polar();
       FORALLSITES(i, s)
-        su3mat_copy_f(&(s->f_U[TUP]), &(s->linkf[TUP]));
+        mat_copy_f(&(s->f_U[TUP]), &(s->linkf[TUP]));
 
       // Restore the un-fixed links to be written to disk if requested
       if (fixflag == COULOMB_GAUGE_FIX) {
         FORALLSITES(i, s) {
-          for (dir = XUP; dir < NUMLINK; dir++)
-            su3mat_copy_f(&(s->mom[dir]), &(s->linkf[dir]));
+          FORALLDIR(dir)
+            mat_copy_f(&(s->mom[dir]), &(s->linkf[dir]));
         }
       }
 #endif
 
 #ifdef SMEAR
       // Restore unsmeared links from Uinv
-      for (dir = XUP; dir < NUMLINK; dir++) {
+      FORALLDIR(dir) {
         FORALLSITES(i, s)
-          su3mat_copy_f(&(Uinv[dir][i]), &(s->linkf[dir]));
+          mat_copy_f(&(Uinv[dir][i]), &(s->linkf[dir]));
       }
 #endif
     }

@@ -24,7 +24,7 @@ G_ALL = com_mpi.o               \
 # Must match our headers in generic_includes.h
 G_HEADERS = ../include/config.h    \
             ../include/complex.h   \
-            ../include/su3.h       \
+            ../include/susy.h      \
             ../include/macros.h    \
             ../include/comdefs.h   \
             ../include/generic.h   \

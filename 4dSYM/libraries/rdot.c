@@ -2,9 +2,9 @@
 // Real part of dot product of two irrep vectors
 #include "../include/config.h"
 #include "../include/complex.h"
-#include "../include/su3.h"
+#include "../include/susy.h"
 
-Real su3_rdot(su3_vector *a, su3_vector *b) {
+Real rdot(vector *a, vector *b) {
   register Real temp1,temp2;
   temp2 = a->c[0].real * b->c[0].real;
   temp1 = a->c[0].imag * b->c[0].imag;

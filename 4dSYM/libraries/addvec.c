@@ -3,9 +3,9 @@
 // c <-- a + b
 #include "../include/config.h"
 #include "../include/complex.h"
-#include "../include/su3.h"
+#include "../include/susy.h"
 
-void add_su3_vector(su3_vector *a, su3_vector *b, su3_vector *c) {
+void add_vector(vector *a, vector *b, vector *c) {
   CADD(a->c[0], b->c[0], c->c[0]);
   CADD(a->c[1], b->c[1], c->c[1]);
   CADD(a->c[2], b->c[2], c->c[2]);

@@ -23,7 +23,7 @@ void scalar_eig(int project, double *ave_eigs, double *eig_widths,
   double *store, *work, *Rwork, *eigs, norm = NUMLINK * volume;
   double *sq_eigs = malloc(NCOL * sizeof(*sq_eigs));
   complex tc;
-  su3_matrix_f USq, tmat;
+  matrix_f USq, tmat;
 
 #ifdef SCALAR_EIG_DIST
   if (this_node != 0) {
@@ -55,9 +55,9 @@ void scalar_eig(int project, double *ave_eigs, double *eig_widths,
         matrix_log(&tmat, &USq);
       }
       else {                // Consider U.Ubar scalar fields
-        mult_su3_na_f(&(s->linkf[dir]), &(s->linkf[dir]), &USq);
+        mult_na_f(&(s->linkf[dir]), &(s->linkf[dir]), &USq);
         // Take traceless part
-        tc = trace_su3_f(&USq);
+        tc = trace_f(&USq);
         tr = tc.real / (Real)NCOL;
         for (j = 0; j < NCOL; j++)
           USq.e[j][j].real -= tr;

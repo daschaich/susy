@@ -3,9 +3,9 @@
 // b <-- s * adag
 #include "../include/config.h"
 #include "../include/complex.h"
-#include "../include/su3.h"
+#include "../include/susy.h"
 
-void scalar_mult_su3_adj_matrix_f(su3_matrix_f *a, Real s, su3_matrix_f *b) {
+void scalar_mult_adj_matrix_f(matrix_f *a, Real s, matrix_f *b) {
   register int i, j;
   for (i = 0; i < NCOL; i++) {
     for (j = 0; j < NCOL; j++) {
