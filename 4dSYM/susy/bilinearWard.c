@@ -211,11 +211,9 @@ int bilinearWard() {
   // Accumulate sum_a U_a Udag_a in tmat
   // Multiply by DmuUmu into tmat2 and trace
   FORALLSITES(i, s) {
-    mult_na_f(&(s->linkf[0]), &(s->linkf[0]), &tmat);
-    for (mu = 1; mu < NUMLINK; mu++) {
-      mult_na_f(&(s->linkf[mu]), &(s->linkf[mu]), &tmat2);
-      add_matrix_f(&tmat, &tmat2, &tmat);
-    }
+    mult_na_f(&(s->linkf[0]), &(s->linkf[0]), &tmat);   // Initialize
+    for (mu = 1; mu < NUMLINK; mu++)
+      mult_na_sum_f(&(s->linkf[mu]), &(s->linkf[mu]), &tmat);
     mult_nn_f(&(DmuUmu[i]), &tmat, &tmat2);
     tc = trace_f(&tmat2);
     // Make sure trace really is real

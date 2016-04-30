@@ -54,14 +54,13 @@ void staple_hyp(int dir, int dir2, matrix_f *lnk1,
   // Calculate upper staple, add it
   FORALLSITES(i, s) {
     mult_nn_f(lnk2 + i, (matrix_f *)gen_pt[1][i], &tmat1);
-    mult_na_f(&tmat1, (matrix_f *)gen_pt[0][i], &tmat2);
-    add_matrix_f(stp + i, &tmat2, stp + i);
+    mult_na_sum_f(&tmat1, (matrix_f *)gen_pt[0][i], stp + i);
   }
 
   // Finally add the lower staple
   wait_gather(tag2);
   FORALLSITES(i, s)
-    add_matrix_f(stp + i, (matrix_f *)gen_pt[2][i], stp + i);
+    sum_matrix_f((matrix_f *)gen_pt[2][i], stp + i);
 
   cleanup_gather(tag0);
   cleanup_gather(tag1);
@@ -85,7 +84,7 @@ void block_hyp1() {
   // dir2 is the other direction that defines the staple
   // Only smear spatial staples into diagonal link
   FORALLDIR(dir) {
-    for (dir2 = XUP; dir2 <= TUP; dir2++) {
+    FORALLUPDIR(dir2) {
       if (dir == DIR_5 && dir2 == TUP)
         continue;   // Actually, we should be done at this point
       if (dir != dir2) {
@@ -121,8 +120,8 @@ void block_hyp2() {
   ftmp1 = alpha_smear[1] / (4.0 * (1.0 - alpha_smear[1]));
   ftmp2 = (1.0 - alpha_smear[1]);
 
-  for (dir = XUP; dir < NUMLINK; dir++) {
-    for (dir2 = XUP; dir2 <= TUP; dir2++) {
+  FORALLDIR(dir) {
+    FORALLUPDIR(dir2) {
       if (dir == DIR_5 && dir2 == TUP)
         continue;   // Actually, we should be done at this point
       if (dir2 != dir) {

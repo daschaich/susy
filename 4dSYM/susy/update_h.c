@@ -220,7 +220,7 @@ double gauge_force(Real eps) {
         }
         else
           mult_na_f((matrix_f *)local_pt[flip][0][i],
-                        &(Fmunu[index][i]), &tmat2);
+                    &(Fmunu[index][i]), &tmat2);
 
         sub_matrix_f(&tmat2, (matrix_f *)local_pt[flip][1][i], &tmat);
         scalar_mult_sum_matrix_f(&tmat, 2.0, &(s->f_U[mu]));
@@ -1157,8 +1157,7 @@ void assemble_fermion_force(Twist_Fermion *sol, Twist_Fermion *psol) {
             c_scalar_mult_sum_mat_f(&(Lambda_prod[b][a]), &tc, &(s->f_U[mu]));
           }
         }
-        add_matrix_f(&(s->f_U[mu]), (matrix_f *)(local_pt[flip][1][i]),
-                     &(s->f_U[mu]));
+        sum_matrix_f((matrix_f *)(local_pt[flip][1][i]), &(s->f_U[mu]));
       }
       cleanup_gather(tag0[flip]);
       cleanup_gather(tag1[flip]);
@@ -1244,8 +1243,7 @@ void assemble_fermion_force(Twist_Fermion *sol, Twist_Fermion *psol) {
             c_scalar_mult_sum_mat_f(&(Lambda_prod[a][b]), &tc, &(s->f_U[mu]));
           }
         }
-        sub_matrix_f(&(s->f_U[mu]), (matrix_f *)(local_pt[flip][1][i]),
-                     &(s->f_U[mu]));
+        dif_matrix_f((matrix_f *)(local_pt[flip][1][i]), &(s->f_U[mu]));
       }
       cleanup_gather(tag0[flip]);
       cleanup_gather(tag1[flip]);

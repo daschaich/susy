@@ -106,14 +106,13 @@ void directional_staple(int dir, int dir2) {
     mat0 = (matrix_f *)gen_pt[0][i];
     mat1 = (matrix_f *)gen_pt[1][i];
     mult_nn_f(&(s->mom[dir2]), mat1, &tmat);
-    mult_na_f(&tmat, mat0, &tmat2);
-    add_matrix_f(&(staple[i]), &tmat2, &(staple[i]));
+    mult_na_sum_f(&tmat, mat0, &(staple[i]));
   }
 
   // Finally add the lower staple
   wait_gather(tag2);
   FORALLSITES(i, s)
-    add_matrix_f(&(staple[i]), (matrix_f *)gen_pt[2][i], &(staple[i]));
+    sum_matrix_f((matrix_f *)gen_pt[2][i], &(staple[i]));
 
   cleanup_gather(tag0);
   cleanup_gather(tag1);

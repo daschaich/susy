@@ -20,7 +20,7 @@ void compute_DmuUmu() {
   Real tr;
   complex tc;
   msg_tag *mtag0 = NULL;
-  matrix_f tmat, *mat;
+  matrix_f tmat;
 
 #ifdef TR_DIST
   if (this_node != 0) {
@@ -30,7 +30,7 @@ void compute_DmuUmu() {
   }
 #endif
 
-  for (mu = XUP; mu < NUMLINK; mu++) {
+  FORALLDIR(mu) {
     FORALLSITES(i, s) {
       mult_na_f(&(s->linkf[mu]), &(s->linkf[mu]), &(tempmat[i]));
       mult_an_f(&(s->linkf[mu]), &(s->linkf[mu]), &(tempmat2[i]));
@@ -42,15 +42,14 @@ void compute_DmuUmu() {
     wait_gather(mtag0);
     if (mu == 0) {
       FORALLSITES(i, s) {
-        mat = (matrix_f *)(gen_pt[0][i]);
-        sub_matrix_f(&(tempmat[i]), mat, &(DmuUmu[i]));
+        sub_matrix_f(&(tempmat[i]), (matrix_f *)(gen_pt[0][i]),
+                     &(DmuUmu[i]));   // Initialize
       }
     }
     else {
       FORALLSITES(i, s) {
-        mat = (matrix_f *)(gen_pt[0][i]);
-        sub_matrix_f(&(tempmat[i]), mat, &tmat);
-        add_matrix_f(&(DmuUmu[i]), &tmat, &(DmuUmu[i]));
+        sum_matrix_f(&(tempmat[i]), &(DmuUmu[i]));
+        dif_matrix_f((matrix_f *)(gen_pt[0][i]), &(DmuUmu[i]));
       }
     }
     cleanup_gather(mtag0);
@@ -60,8 +59,8 @@ void compute_DmuUmu() {
   // Assume compute_plaqdet() has already been run
   if (doG) {
     FORALLSITES(i, s) {
-      for (mu = XUP; mu < NUMLINK; mu++) {
-        for (nu = XUP; nu < NUMLINK; nu++) {
+      FORALLDIR(mu) {
+        FORALLDIR(nu) {
           if (mu == nu)
             continue;
 
@@ -83,7 +82,7 @@ void compute_DmuUmu() {
   // Add scalar potential contribution if B is non-zero
   if (doB) {
     FORALLSITES(i, s) {
-      for (mu = XUP; mu < NUMLINK; mu++) {
+      FORALLDIR(mu) {
         tr = 1.0 / (Real)NCOL;
         tr *= realtrace_f(&(s->linkf[mu]), &(s->linkf[mu]));
         tr -= 1.0;
@@ -161,12 +160,13 @@ double gauge_action(int do_det) {
       scalar_mult_sum_matrix_f(&tmat2, 2.0, &tmat);
     }
 
-    if (do_det == 1)
+    if (do_det == 1) {
       det_project(&tmat, &tmat2);
+      tc = trace_f(&tmat2);
+    }
     else
-      mat_copy_f(&tmat, &tmat2);
+      tc = trace_f(&tmat);
 
-    tc = trace_f(&tmat2);
     g_action += tc.real;
 #ifdef DEBUG_CHECK
     if (fabs(tc.imag) > IMAG_TOL)

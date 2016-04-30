@@ -75,10 +75,9 @@ void accum_gauge_hit(int gauge_dir, int parity) {
       // Upward link matrix
       m1 = &(s->linkf[dir]);
       if (diffmat_offset >= 0)
-        sub_matrix_f((matrix_f *)F_PT(s, diffmat_offset), m1,
-                     (matrix_f *)F_PT(s, diffmat_offset));
+        dif_matrix_f(m1, (matrix_f *)F_PT(s, diffmat_offset));
       else
-        sub_matrix_f(&diffmatp[i], m1, &diffmatp[i]);
+        dif_matrix_f(m1, &diffmatp[i]);
 
       if (sumvec_offset >= 0) {
         for (j = 0; j < NCOL; j++)
@@ -97,12 +96,10 @@ void accum_gauge_hit(int gauge_dir, int parity) {
       // Downward link matrix -- gathered in gaugefixstep()
       m2 = (matrix_f *)gen_pt[dir][i];
 
-      if (diffmat_offset >= 0) {
-        add_matrix_f((matrix_f *)F_PT(s, diffmat_offset), m2,
-                     (matrix_f *)F_PT(s, diffmat_offset));
-      }
+      if (diffmat_offset >= 0)
+        sum_matrix_f(m2, (matrix_f *)F_PT(s, diffmat_offset));
       else
-        add_matrix_f(&diffmatp[i], m2, &diffmatp[i]);
+        sum_matrix_f(m2, &diffmatp[i]);
 
       if (sumvec_offset >= 0) {
         for (j = 0; j < NCOL; j++)

@@ -1,9 +1,23 @@
 // -----------------------------------------------------------------
 // Fundamental matrix multiplication with adjoint of second matrix
+// c <-- c + a * bdag
 // c <-- a * bdag
 #include "../include/config.h"
 #include "../include/complex.h"
 #include "../include/susy.h"
+
+void mult_na_sum_f(matrix_f *a, matrix_f *b, matrix_f *c) {
+  register int i, j, k;
+  register complex y;
+  for (i = 0; i < NCOL; i++) {
+    for (j = 0; j < NCOL; j++) {
+      for (k = 0; k < NCOL; k++) {
+        CMUL_J(a->e[i][k], b->e[j][k], y);
+        CSUM(c->e[i][j], y);
+      }
+    }
+  }
+}
 
 #ifndef FAST
 void mult_na_f(matrix_f *a, matrix_f *b, matrix_f *c) {

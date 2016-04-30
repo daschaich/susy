@@ -98,12 +98,14 @@ void mat_copy_f(matrix_f *a, matrix_f *b);
 void adjoint_f(matrix_f *a, matrix_f *b);
 
 // In file addmat_f.c
+void sum_matrix_f(matrix_f *b, matrix_f *c);
 void add_matrix_f(matrix_f *a, matrix_f *b, matrix_f *c);
 
 // In file addamat_f.c
 void add_adj_matrix_f(matrix_f *a, matrix_f *b, matrix_f *c);
 
 // In file submat_f.c
+void dif_matrix_f(matrix_f *b, matrix_f *c);
 void sub_matrix_f(matrix_f *a, matrix_f *b, matrix_f *c);
 
 // In file subamat_f.c
@@ -156,6 +158,7 @@ void dumpmat_f(matrix_f *m);
 void mult_nn_f(matrix_f *a, matrix_f *b, matrix_f *c);
 
 // In file m_mat_na_f.c
+void mult_na_sum_f(matrix_f *a, matrix_f *b, matrix_f *c);
 void mult_na_f(matrix_f *a, matrix_f *b, matrix_f *c);
 
 // In file m_mat_an_f.c

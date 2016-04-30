@@ -46,9 +46,8 @@ void blocked_staple(int stride, int dir, int dir2) {
   // Calculate upper staple, add both staples to sum
   FORALLSITES(i, s) {
     mult_nn_f(&(s->mom[dir2]), &(tempmat[i]), &tmat);
-    mult_na_f(&tmat, &(tempmat2[i]), &tmat2);
-    add_matrix_f(&(staple[i]), &tmat2, &(staple[i]));
-    add_matrix_f(&(staple[i]), &(Uinv[0][i]), &(staple[i]));
+    mult_na_sum_f(&tmat, &(tempmat2[i]), &(staple[i]));
+    sum_matrix_f(&(Uinv[0][i]), &(staple[i]));
   }
 }
 // -----------------------------------------------------------------
