@@ -99,17 +99,17 @@ void setup_lambda() {
 #endif
 
   // Test orthogonality and compute products of Lambdas for fermion forces
+#ifdef DEBUG_CHECK
   for (i = 0; i < DIMF; i++) {
     for (j = 0; j < DIMF; j++) {
-      mult_nn_f(&(Lambda[i]), &(Lambda[j]), &(Lambda_prod[i][j]));
-#ifdef DEBUG_CHECK
-      trace = trace_f(&(Lambda_prod[i][j]));
+      mult_nn_f(&(Lambda[i]), &(Lambda[j]), &tmat);
+      trace = trace_f(&tmat);
       if (trace.real * trace.real > IMAG_TOL)
         node0_printf("Tr[T_%d T_%d] = (%.4g, %.4g)\n",
                      i, j, trace.real, trace.imag);
-#endif
     }
   }
+#endif
 }
 // -----------------------------------------------------------------
 

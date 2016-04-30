@@ -77,7 +77,7 @@ EXTERN int warms, trajecs, niter, propinterval;
 EXTERN Real traj_length;
 
 // U(N) generators, epsilon tensor
-EXTERN matrix_f Lambda[DIMF], Lambda_prod[DIMF][DIMF];
+EXTERN matrix_f Lambda[DIMF];
 EXTERN Real perm[NUMLINK][NUMLINK][NUMLINK][NUMLINK][NUMLINK];
 
 // Translate (mu, nu) to linear index of anti-symmetric matrix

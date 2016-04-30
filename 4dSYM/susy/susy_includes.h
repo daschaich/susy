@@ -40,6 +40,10 @@ void setup_qclosed_offset();
 void setup_rhmc();
 void fermion_rep();
 
+// Reconstruct NxN fermion matrices from N^2 vectors
+void reconstruct(vector *in, matrix_f *out);
+void reconstruct_star(vector *in, matrix_f *out);
+
 // Helper routines for action and force computations
 void compute_plaqdet();
 void compute_DmuUmu();

@@ -20,7 +20,6 @@ void compute_DmuUmu() {
   Real tr;
   complex tc;
   msg_tag *mtag0 = NULL;
-  matrix_f tmat;
 
 #ifdef TR_DIST
   if (this_node != 0) {

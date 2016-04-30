@@ -42,22 +42,23 @@ HEADERS = ${GLOBAL_HEADERS} ${MY_HEADERS}
 
 # All required object files
 # Basic set from current directory
-MY_OBJECTS = setup.o        \
-             setup_lambda.o \
-             setup_offset.o \
-             action.o       \
-             plaq.o         \
-             ploop.o        \
-             unit.o         \
-             scalar_eig.o   \
-             link_trace.o   \
-             widths.o       \
-             determinant.o  \
-             grsource.o     \
-             fermion_rep.o  \
-             utilities.o    \
-             library_util.o \
-             gauge_info.o   \
+MY_OBJECTS = setup.o               \
+             setup_lambda.o        \
+             setup_offset.o        \
+             action.o              \
+             plaq.o                \
+             ploop.o               \
+             unit.o                \
+             scalar_eig.o          \
+             link_trace.o          \
+             widths.o              \
+             determinant.o         \
+             grsource.o            \
+             fermion_rep.o         \
+             reconstruct_fermion.o \
+             utilities.o           \
+             library_util.o        \
+             gauge_info.o          \
              congrad_multi_field.o
 
 # Basic set from generic directory

@@ -8,12 +8,13 @@
 
 void mult_na_sum_f(matrix_f *a, matrix_f *b, matrix_f *c) {
   register int i, j, k;
-  register complex y;
   for (i = 0; i < NCOL; i++) {
     for (j = 0; j < NCOL; j++) {
       for (k = 0; k < NCOL; k++) {
-        CMUL_J(a->e[i][k], b->e[j][k], y);
-        CSUM(c->e[i][j], y);
+        c->e[i][j].real += a->e[i][k].real * b->e[j][k].real
+                         + a->e[i][k].imag * b->e[j][k].imag;
+        c->e[i][j].imag += a->e[i][k].imag * b->e[j][k].real
+                         - a->e[i][k].real * b->e[j][k].imag;
       }
     }
   }
@@ -22,13 +23,18 @@ void mult_na_sum_f(matrix_f *a, matrix_f *b, matrix_f *c) {
 #ifndef FAST
 void mult_na_f(matrix_f *a, matrix_f *b, matrix_f *c) {
   register int i, j, k;
-  register complex y;
   for (i = 0; i < NCOL; i++) {
     for (j = 0; j < NCOL; j++) {
-      CMUL_J(a->e[i][0], b->e[j][0], c->e[i][j]);   // Initialize
+      // Initialize
+      c->e[i][j].real = a->e[i][0].real * b->e[j][0].real
+                      + a->e[i][0].imag * b->e[j][0].imag;
+      c->e[i][j].imag = a->e[i][0].imag * b->e[j][0].real
+                      - a->e[i][0].real * b->e[j][0].imag;
       for (k = 1; k < NCOL; k++) {
-        CMUL_J(a->e[i][k], b->e[j][k], y);
-        CSUM(c->e[i][j], y);
+        c->e[i][j].real += a->e[i][k].real * b->e[j][k].real
+                         + a->e[i][k].imag * b->e[j][k].imag;
+        c->e[i][j].imag += a->e[i][k].imag * b->e[j][k].real
+                         - a->e[i][k].real * b->e[j][k].imag;
       }
     }
   }

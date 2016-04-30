@@ -73,7 +73,7 @@ void directional_staple(int dir, int dir2) {
   register int i;
   register site *s;
   msg_tag *tag0, *tag1, *tag2;
-  matrix_f tmat, tmat2, *mat0, *mat1;
+  matrix_f tmat, *mat0, *mat1;
 
   // Get mom[dir2] from direction dir
   tag0 = start_gather_site(F_OFFSET(mom[dir2]), sizeof(matrix_f),

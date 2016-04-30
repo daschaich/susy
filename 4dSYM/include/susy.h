@@ -155,6 +155,8 @@ void c_scalar_mult_dif_mat_f(matrix_f *b, complex *s, matrix_f *c);
 void dumpmat_f(matrix_f *m);
 
 // In file m_mat_nn_f.c
+void mult_nn_sum_f(matrix_f *a, matrix_f *b, matrix_f *c);
+void mult_nn_dif_f(matrix_f *a, matrix_f *b, matrix_f *c);
 void mult_nn_f(matrix_f *a, matrix_f *b, matrix_f *c);
 
 // In file m_mat_na_f.c

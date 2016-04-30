@@ -8,13 +8,18 @@
 #ifndef FAST
 void mult_an_f(matrix_f *a, matrix_f *b, matrix_f *c) {
   register int i, j, k;
-  register complex y;
   for (i = 0; i < NCOL; i++) {
     for (j = 0; j < NCOL; j++) {
-      CMULJ_(a->e[0][i], b->e[0][j], c->e[i][j]);   // Initialize
+      // Initialize
+      c->e[i][j].real = a->e[0][i].real * b->e[0][j].real
+                      + a->e[0][i].imag * b->e[0][j].imag;
+      c->e[i][j].imag = a->e[0][i].real * b->e[0][j].imag
+                      - a->e[0][i].imag * b->e[0][j].real;
       for (k = 1; k < NCOL; k++) {
-        CMULJ_(a->e[k][i], b->e[k][j], y);
-        CSUM(c->e[i][j], y);
+        c->e[i][j].real += a->e[k][i].real * b->e[k][j].real
+                         + a->e[k][i].imag * b->e[k][j].imag;
+        c->e[i][j].imag += a->e[k][i].real * b->e[k][j].imag
+                         - a->e[k][i].imag * b->e[k][j].real;
       }
     }
   }
