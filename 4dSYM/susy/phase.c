@@ -10,14 +10,15 @@
 
 // -----------------------------------------------------------------
 // Return a_i * b_i for two complex vectors (no conjugation!)
-double_complex dot(complex *a, complex *b) {
+double_complex inner(complex *a, complex *b) {
   int i, Ndat = 16 * DIMF;
-  complex tc;
-  double_complex dot = cmplx(0.0, 0.0);
+  double_complex dot;
 
-  for (i = 0; i < sites_on_node * Ndat; i++) {
-    CMUL(a[i], b[i], tc);
-    CSUM(dot, tc);
+  dot.real = a[0].real * b[0].real - a[0].imag * b[0].imag;
+  dot.imag = a[0].imag * b[0].real + a[0].real * b[0].imag;
+  for (i = 1; i < sites_on_node * Ndat; i++) {
+    dot.real += a[i].real * b[i].real - a[i].imag * b[i].imag;
+    dot.imag += a[i].imag * b[i].real + a[i].real * b[i].imag;
   }
   // Accumulate inner product across all nodes
   g_dcomplexsum(&dot);
@@ -262,7 +263,7 @@ void phase() {
     // q_{i + 1} --> q_{i + 1} / <q_{i + 1} | D | q_i>
     // But only if <q_{i + 1} | D | q_i> is non-zero!
     matvec(Q[i], MonC);
-    temp = dot(Q[i + 1], MonC);
+    temp = inner(Q[i + 1], MonC);
     // !!! Must have non-vanishing matrix element!
     if (cabs_sq(&temp) < PFA_TOL) {
       node0_printf("phase: <%d | D | %d> = (%.4g, %.4g) too small\n",
@@ -289,7 +290,7 @@ void phase() {
     for (k = i + 2; k < volume * Ndat; k++) {
       // q_k --> q_k - q_i <q_{i + 1} | D | q_k> - q_{i + 1} <q_i | D | q_k>
       matvec(Q[k], MonC);
-      temp = dot(Q[i + 1], MonC);
+      temp = inner(Q[i + 1], MonC);
       if (i + 1 < sites_on_node * Ndat) {
         for (j = 0; j < i + 2; j++) {
           CMUL(Q[i][j], temp, temp2);
@@ -303,7 +304,7 @@ void phase() {
         }
       }
 
-      temp = dot(Q[i], MonC);
+      temp = inner(Q[i], MonC);
       if (i + 1 < sites_on_node * Ndat) {
         for (j = 0; j < i + 2; j++) {
           CMUL(Q[i + 1][j], temp, temp2);
