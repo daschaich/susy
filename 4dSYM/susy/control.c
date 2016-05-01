@@ -293,6 +293,9 @@ int main(int argc, char *argv[]) {
   node0_printf("RUNNING COMPLETED\n");
 
   // Check: compute final plaquette and bosonic action
+  // Reset DmuUmu and Fmunu in case they were smeared above
+  compute_DmuUmu();
+  compute_Fmunu();
   plaquette(&ss_plaq, &st_plaq);
   node0_printf("STOP %.8g %.8g %.8g ",
                ss_plaq, st_plaq, ss_plaq + st_plaq);
