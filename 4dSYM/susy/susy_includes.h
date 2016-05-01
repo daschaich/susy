@@ -96,8 +96,9 @@ void copy_TF(Twist_Fermion *src, Twist_Fermion *dest);
 void clear_TF(Twist_Fermion *dest);
 Real magsq_TF(Twist_Fermion *vec);
 complex TF_dot(Twist_Fermion *a, Twist_Fermion *b);
-void scalar_mult_add_TF(Twist_Fermion *src1, Twist_Fermion *src2, Real s,
-                        Twist_Fermion *dest);
+void scalar_mult_sum_TF(Twist_Fermion *b, Real s, Twist_Fermion *c);
+void scalar_mult_add_TF(Twist_Fermion *a, Twist_Fermion *b, Real s,
+                        Twist_Fermion *c);
 void scalar_mult_TF(Twist_Fermion *src, Real s, Twist_Fermion *dest);
 
 // Other routines in library_util.c that loop over all sites

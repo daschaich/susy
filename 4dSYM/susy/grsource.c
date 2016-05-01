@@ -131,7 +131,7 @@ int grsource(Twist_Fermion *src) {
   FORALLSITES(i, s) {
     scalar_mult_TF(&(src[i]), ampdeg8, &(src[i]));
     for (j = 0; j < Norder; j++)
-      scalar_mult_add_TF(&(src[i]), &(psim[j][i]), amp8[j], &(src[i]));
+      scalar_mult_sum_TF(&(psim[j][i]), amp8[j], &(src[i]));
   }
 
   for (i = 0; i < Norder; i++)

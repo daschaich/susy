@@ -74,7 +74,7 @@ void bilinear_src(Twist_Fermion *g_rand, Twist_Fermion *src, int N) {
   // Set up src = Mdag g_rand
   fermion_op(g_rand, src, MINUS);
   FORALLSITES(i, s)
-    scalar_mult_add_TF(&(src[i]), &(g_rand[i]), fmass, &(src[i]));
+    scalar_mult_sum_TF(&(g_rand[i]), fmass, &(src[i]));
 
 #ifdef DEBUG_CHECK
 //  dump_TF(&(src[10]));

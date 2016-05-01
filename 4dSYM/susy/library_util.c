@@ -100,31 +100,32 @@ complex TF_dot(Twist_Fermion *a, Twist_Fermion *b) {
 
 
 // -----------------------------------------------------------------
-// dest <-- src1 + s * src2
-void scalar_mult_add_TF(Twist_Fermion *src1, Twist_Fermion *src2,
-                        Real s, Twist_Fermion *dest) {
+// c <-- c + s * b
+void scalar_mult_sum_TF(Twist_Fermion *b, Real s, Twist_Fermion *c) {
+  register int i;
+  scalar_mult_sum_vector(&(b->Fsite), s, &(c->Fsite));
+  FORALLDIR(i)
+    scalar_mult_sum_vector(&(b->Flink[i]), s, &(c->Flink[i]));
+  for (i = 0; i < NPLAQ; i++)
+    scalar_mult_sum_vector(&(b->Fplaq[i]), s, &(c->Fplaq[i]));
+}
+
+// c <-- a + s * b
+void scalar_mult_add_TF(Twist_Fermion *a, Twist_Fermion *b,
+                        Real s, Twist_Fermion *c) {
 
   register int i;
-  scalar_mult_add_vector(&(src1->Fsite), &(src2->Fsite), s, &(dest->Fsite));
-  for (i = 0; i < NUMLINK; i++) {
-    scalar_mult_add_vector(&(src1->Flink[i]), &(src2->Flink[i]), s,
-                           &(dest->Flink[i]));
-  }
-  for (i = 0; i < NPLAQ; i++) {
-    scalar_mult_add_vector(&(src1->Fplaq[i]), &(src2->Fplaq[i]), s,
-                           &(dest->Fplaq[i]));
-
-  }
+  scalar_mult_add_vector(&(a->Fsite), &(b->Fsite), s, &(c->Fsite));
+  FORALLDIR(i)
+    scalar_mult_add_vector(&(a->Flink[i]), &(b->Flink[i]), s, &(c->Flink[i]));
+  for (i = 0; i < NPLAQ; i++)
+    scalar_mult_add_vector(&(a->Fplaq[i]), &(b->Fplaq[i]), s, &(c->Fplaq[i]));
 }
-// -----------------------------------------------------------------
 
-
-
-// -----------------------------------------------------------------
 void scalar_mult_TF(Twist_Fermion *src, Real s, Twist_Fermion *dest) {
   register int i;
   scalar_mult_vector(&(src->Fsite), s, &(dest->Fsite));
-  for (i = 0; i < NUMLINK; i++)
+  FORALLDIR(i)
     scalar_mult_vector(&(src->Flink[i]), s, &(dest->Flink[i]));
   for (i = 0; i < NPLAQ; i++)
     scalar_mult_vector(&(src->Fplaq[i]), s, &(dest->Fplaq[i]));

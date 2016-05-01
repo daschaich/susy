@@ -86,7 +86,7 @@ int congrad_multi_field(Twist_Fermion *src, Twist_Fermion **psim,
     iteration++;
     total_iters++;
     FORALLSITES(i, s)
-      scalar_mult_add_TF(&(mpm[i]), &(pm0[i]), shift[0], &(mpm[i]));
+      scalar_mult_sum_TF(&(pm0[i]), shift[0], &(mpm[i]));
 
     // beta_i[0] = -(r, r) / (pm, Mpm)
     cd = 0;
@@ -122,18 +122,17 @@ int congrad_multi_field(Twist_Fermion *src, Twist_Fermion **psim,
     }
 
     FORALLSITES(i, s) {
-      scalar_mult_add_TF(&(psim[0][i]), &(pm0[i]), floatvar, &(psim[0][i]));
+      scalar_mult_sum_TF(&(pm0[i]), floatvar, &(psim[0][i]));
       for (j = 1; j < Norder; j++) {
         if (converged[j] == 0)
-          scalar_mult_add_TF(&(psim[j][i]), &(pm[j][i]), floatvarj[j],
-                             &(psim[j][i]));
+          scalar_mult_sum_TF(&(pm[j][i]), floatvarj[j], &(psim[j][i]));
       }
     }
 
     // r = r + beta[0] * mp
     floatvar = (Real)beta_i[0];
     FORALLSITES(i, s)
-      scalar_mult_add_TF(&(rm[i]), &(mpm[i]), floatvar, &(rm[i]));
+      scalar_mult_sum_TF(&(mpm[i]), floatvar, &(rm[i]));
 
     // alpha_ip1[j]
     rsqnew = 0;
@@ -219,8 +218,8 @@ int congrad_multi_field(Twist_Fermion *src, Twist_Fermion **psim,
     DSq(psim[j], mpm);              // mpm = (D^2 + fmass^2).psim[j]
     source_norm = 0;                // Re-using for convenience
     FORALLSITES(i, s) {             // Add shift.psi and subtract src
-      scalar_mult_add_TF(&(mpm[i]), &(psim[j][i]), shift[j],  &(mpm[i]));
-      scalar_mult_add_TF(&(mpm[i]), &(src[i]), -1.0, &(mpm[i]));
+      scalar_mult_sum_TF(&(psim[j][i]), shift[j],  &(mpm[i]));
+      scalar_mult_sum_TF(&(src[i]), -1.0, &(mpm[i]));
       source_norm += (double)magsq_TF(&(mpm[i]));
     }
     g_doublesum(&source_norm);

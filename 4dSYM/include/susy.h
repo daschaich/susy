@@ -214,25 +214,12 @@ void sub_vector(vector *a, vector *b, vector *c);
 // In file s_m_vec.c
 void scalar_mult_vector(vector *src, Real s, vector *c);
 
-// In file s_m_sum_vec.c
-void scalar_mult_sum_vector(vector *a, vector *b, Real scalar);
-
 // In file s_m_a_vec.c
-void scalar_mult_add_vector(vector *a, vector *b,
-                            Real s, vector *c);
+void scalar_mult_sum_vector(vector *b, Real s, vector *c);
+void scalar_mult_add_vector(vector *a, vector *b, Real s, vector *c);
 
 // In file s_m_s_vec.c
-void scalar_mult_sub_vector(vector *a, vector *b,
-                            Real s, vector *c);
-
-// In file cs_m_vec.c
-void c_scalar_mult_vec(vector *src, complex *phase, vector *c);
-
-// In file cs_m_a_vec.c
-void c_scalar_mult_add_vec(vector *v1, complex *phase, vector *v2);
-
-// In file cs_m_s_vec.c
-void c_scalar_mult_sub_vec(vector *v1, complex *phase, vector *v2);
+void scalar_mult_dif_vector(vector *b, Real s, vector *c);
 // -----------------------------------------------------------------
 
 

@@ -192,8 +192,7 @@ void Dplus(vector *src[NUMLINK], vector *dest[NPLAQ]) {
         mult_vec_mat_dif(&(src[nu][i]), mat1, &(dest[index][i]));
 
         mult_mat_vec(&(s->link[nu]), vec2, &vtmp);
-        scalar_mult_sub_vector(&(dest[index][i]), &vtmp, s->bc1[nu],
-                               &(dest[index][i]));
+        scalar_mult_dif_vector(&vtmp, s->bc1[nu], &(dest[index][i]));
 
         mult_vec_mat_sum(&(src[mu][i]), mat3, &(dest[index][i]));
       }
@@ -292,8 +291,7 @@ void Dminus(vector *src[NPLAQ], vector *dest[NUMLINK]) {
         else
           mult_mat_vec_sum(mat, &(src[index][i]), &(dest[nu][i]));
 
-        scalar_mult_sub_vector(&(dest[nu][i]), vec,
-                                   s->bc1[OPP_LDIR(mu)], &(dest[nu][i]));
+        scalar_mult_dif_vector(vec, s->bc1[OPP_LDIR(mu)], &(dest[nu][i]));
       }
       cleanup_gather(tag0[flip]);
       cleanup_gather(tag1[flip]);
@@ -384,11 +382,11 @@ void DbplusPtoP(vector *src[NPLAQ], vector *dest[NPLAQ]) {
 
       tr2 = tr * s->bc3[a][b][c];
       mult_vec_adj_mat(vec1, mat0, &vtmp);
-      scalar_mult_add_vector(&(dest[i_ab][i]), &vtmp, tr2, &(dest[i_ab][i]));
+      scalar_mult_sum_vector(&vtmp, tr2, &(dest[i_ab][i]));
 
       tr2 = tr * s->bc2[a][b];
       mult_adj_mat_vec(mat3, vec2, &vtmp);
-      scalar_mult_sub_vector(&(dest[i_ab][i]), &vtmp, tr2, &(dest[i_ab][i]));
+      scalar_mult_dif_vector(&vtmp, tr2, &(dest[i_ab][i]));
     }
     cleanup_gather(tag0[flip]);
     cleanup_gather(tag1[flip]);
@@ -480,11 +478,11 @@ void DbminusPtoP(vector *src[NPLAQ], vector *dest[NPLAQ]) {
 
       tr2 = tr * s->bc2[OPP_LDIR(a)][OPP_LDIR(b)];
       mult_vec_adj_mat(vec1, mat0, &vtmp);
-      scalar_mult_add_vector(&(dest[i_de][i]), &vtmp, tr2, &(dest[i_de][i]));
+      scalar_mult_sum_vector(&vtmp, tr2, &(dest[i_de][i]));
 
       tr2 = tr * s->bc3[OPP_LDIR(a)][OPP_LDIR(b)][OPP_LDIR(c)];
       mult_adj_mat_vec(mat3, vec2, &vtmp);
-      scalar_mult_sub_vector(&(dest[i_de][i]), &vtmp, tr2, &(dest[i_de][i]));
+      scalar_mult_dif_vector(&vtmp, tr2, &(dest[i_de][i]));
     }
     cleanup_gather(tag0[flip]);
     cleanup_gather(tag1[flip]);
@@ -523,7 +521,7 @@ void DbplusStoL(vector *src, vector *dest[NUMLINK]) {
       mult_vec_adj_mat(vec, &(s->link[mu]), &vtmp);
       scalar_mult_vector(&vtmp, s->bc1[mu], &vtmp);
       mult_adj_mat_vec_dif(&(s->link[mu]), &(src[i]), &vtmp);
-      scalar_mult_add_vector(&(dest[mu][i]), &vtmp, 0.5, &(dest[mu][i]));
+      scalar_mult_sum_vector(&vtmp, 0.5, &(dest[mu][i]));
     }
     cleanup_gather(tag[mu]);
   }
@@ -702,7 +700,7 @@ void DbminusLtoS(vector *src[NUMLINK], vector *dest) {
       vec = (vector *)(gen_pt[mu][i]);
       scalar_mult_vector(vec, s->bc1[OPP_LDIR(mu)], &vtmp);
       mult_vec_adj_mat_dif(&(src[mu][i]), &(s->link[mu]), &vtmp);
-      scalar_mult_sub_vector(&(dest[i]), &vtmp, 0.5, &(dest[i]));
+      scalar_mult_dif_vector(&vtmp, 0.5, &(dest[i]));
     }
     cleanup_gather(tag[mu]);
   }
@@ -943,7 +941,7 @@ void DSq(Twist_Fermion *src, Twist_Fermion *dest) {
   if (fmass > IMAG_TOL) {
     Real fmass2 = fmass * fmass;
     FORALLSITES(i, s)
-      scalar_mult_add_TF(&(dest[i]), &(src[i]), fmass2, &(dest[i]));
+      scalar_mult_sum_TF(&(src[i]), fmass2, &(dest[i]));
   }
 }
 // -----------------------------------------------------------------
