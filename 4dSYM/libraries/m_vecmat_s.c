@@ -7,11 +7,12 @@
 
 void mult_vec_mat_sum(vector *b, matrix *a, vector *c) {
   register int i, j;
-  register complex y;
   for (i = 0; i < DIMF; i++) {
     for (j = 0; j < DIMF; j++) {
-      CMUL(a->e[j][i], b->c[j], y);
-      CSUM(c->c[i], y);
+      c->c[i].real += a->e[j][i].real * b->c[j].real
+                    - a->e[j][i].imag * b->c[j].imag;
+      c->c[i].imag += a->e[j][i].imag * b->c[j].real
+                    + a->e[j][i].real * b->c[j].imag;
     }
   }
 }

@@ -873,14 +873,17 @@ void pot_force(vector *eta, vector *psi[NUMLINK], int sign) {
   register site *s;
   int a, j;
   Real tr;
-  complex tc, tc2, tc3, Bc = cmplx(0.0, C2 * B * B / sqrt((Real)NCOL));
+  complex tc, tc2, tc3, localBc;
   matrix_f tmat;
 
   // Check sign while giving Bc proper sign
   if (sign == 1) {    // Braces suppress compiler error
-    CNEGATE(Bc, Bc);
+    CNEGATE(Bc, localBc);
   }
-  else if (sign != -1) {
+  else if (sign == -1) {
+    set_complex_equal(&Bc, &localBc);
+  }
+  else {
     node0_printf("Error: incorrect sign in detF: %d\n", sign);
     terminate(1);
   }
@@ -921,20 +924,18 @@ void pot_force(vector *eta, vector *psi[NUMLINK], int sign) {
       c_scalar_mult_mat_f(&tmat, &tc, &(tempmat[i]));
 
       // Compute Y(x) = Tr[U_a(x) Udag_a(x)] / N - 1
-      tr = 1.0 / (Real)NCOL;
-      tr *= realtrace_f(&(s->linkf[a]), &(s->linkf[a]));
-      tr -= 1.0;
+      tr = one_ov_N * realtrace_f(&(s->linkf[a]), &(s->linkf[a])) - 1.0;
 
       // We're already ready to add to force
       // Start with eta Tr / N hitting Udag_a(x)
-      CMUL(Bc, tr_dest[i], tc);
+      CMUL(localBc, tr_dest[i], tc);
       c_scalar_mult_sum_mat_adj_f(&(s->linkf[a]), &tc, &(s->f_U[a]));
 
       // Add eta Tr / N hitting U_a(x) and eta Y hitting psi_a(x)
       // and take the adjoint of the sum
       c_scalar_mult_mat_f(&(s->linkf[a]), &(tr_dest[i]), &tmat);
       scalar_mult_sum_matrix_f(&(tempmat[i]), tr, &tmat);
-      c_scalar_mult_sum_adj_mat_f(&tmat, &Bc, &(s->f_U[a]));
+      c_scalar_mult_sum_adj_mat_f(&tmat, &localBc, &(s->f_U[a]));
     }
   }
 }

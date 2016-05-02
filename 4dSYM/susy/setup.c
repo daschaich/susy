@@ -387,6 +387,8 @@ int readin(int prompt) {
     doB = 1;
   else
     doB = 0;
+  Bc = cmplx(0.0, C2 * B * B / sqrt((Real)NCOL));
+  one_ov_N = 1.0 / (Real)NCOL;
   kappa = (Real)NCOL * 0.5 / lambda;
   node0_printf("lambda=%.4g --> kappa=Nc/(2lambda)=%.4g\n",
                lambda, kappa);

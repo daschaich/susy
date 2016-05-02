@@ -91,7 +91,6 @@ void epsilon();
 // Basic Twist_Fermion and gauge field manipulations
 // May eventually move to libraries
 void dump_TF(Twist_Fermion *vec);
-void conjTF(Twist_Fermion *src, Twist_Fermion *dest);
 void copy_TF(Twist_Fermion *src, Twist_Fermion *dest);
 void clear_TF(Twist_Fermion *dest);
 Real magsq_TF(Twist_Fermion *vec);

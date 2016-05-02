@@ -225,65 +225,10 @@ void scalar_mult_dif_vector(vector *b, Real s, vector *c);
 
 
 // -----------------------------------------------------------------
-// Fermion rep matrix operations
-// In file trace.c
-complex trace(matrix *a);
-
-// In file realtr.c
-Real realtrace(matrix *a, matrix *b);
-
-// In file complextr.c
-complex complextrace(matrix *a, matrix *b);
-
-// In file addmat.c
-void add_matrix(matrix *a, matrix *b, matrix *c);
-
-// In file submat.c
-void sub_matrix(matrix *a, matrix *b, matrix *c);
-
-// In file s_m_mat.c
-void scalar_mult_matrix(matrix *src, Real s, matrix *c);
-
-// In file s_m_a_mat.c
-void scalar_mult_add_matrix(matrix *a, matrix *b, Real s, matrix *c);
-
-// In file s_m_s_mat.c
-void scalar_mult_sub_matrix(matrix *a, matrix *b, Real s, matrix *c);
-
-// In file cs_m_mat.c
-void c_scalar_mult_mat(matrix *src, complex *s, matrix *c);
-
-// In file cs_m_a_mat.c
-void c_scalar_mult_add_mat(matrix *a, matrix *b, complex *s, matrix *c);
-
-// In file cs_m_s_mat.c
-void c_scalar_mult_sub_mat(matrix *a, matrix *b, complex *s, matrix *c);
-
-// In file adjoint.c
-void adjoint(matrix *a, matrix *b);
-
-// In file clear_mat.c
-void clear_mat(matrix *c);
-
-// In file mat_copy.c
-void mat_copy(matrix *a, matrix *b);
-
+// Fermion rep matrix operations, most involving vectors as well
 // In file dumpmat.c
 void dumpmat(matrix *m);
 
-// In file m_mat_nn.c
-void mult_nn(matrix *a, matrix *b, matrix *c);
-
-// In file m_mat_na.c
-void mult_na(matrix *a, matrix *b, matrix *c);
-
-// In file m_mat_an.c
-void mult_an(matrix *a, matrix *b, matrix *c);
-// -----------------------------------------------------------------
-
-
-// -----------------------------------------------------------------
-// Routines involving both fermion-rep matrices and vectors
 // c <-- a * b, in file m_matvec.c
 void mult_mat_vec(matrix *a, vector *b, vector *c);
 

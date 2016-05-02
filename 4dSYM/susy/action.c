@@ -82,9 +82,7 @@ void compute_DmuUmu() {
   if (doB) {
     FORALLSITES(i, s) {
       FORALLDIR(mu) {
-        tr = 1.0 / (Real)NCOL;
-        tr *= realtrace_f(&(s->linkf[mu]), &(s->linkf[mu]));
-        tr -= 1.0;
+        tr = one_ov_N * realtrace_f(&(s->linkf[mu]), &(s->linkf[mu])) - 1.0;
         for (j = 0; j < NCOL; j++)
           DmuUmu[i].e[j][j].real += B * B * tr * tr;
 #ifdef TR_DIST
@@ -184,16 +182,13 @@ double gauge_action(int do_det) {
 // Scalar potential contribution to the action
 // Note factor of kappa
 double bmass_action() {
-  register int i;
+  register int i, a;
   register site *s;
-  int mu;
   double sum = 0.0, tr;
 
   FORALLSITES(i, s) {
-    for (mu = XUP; mu < NUMLINK; mu++) {
-      tr = 1.0 / (double)NCOL;
-      tr *= realtrace_f(&(s->linkf[mu]), &(s->linkf[mu]));
-      tr -= 1.0;
+    FORALLDIR(a) {
+      tr = one_ov_N * realtrace_f(&(s->linkf[a]), &(s->linkf[a])) - 1.0;
       sum += kappa * bmass * bmass * tr * tr;
     }
   }

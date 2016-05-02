@@ -8,11 +8,12 @@
 #ifndef FAST
 void mult_adj_mat_vec_sum(matrix *a, vector *b, vector *c) {
   register int i, j;
-  register complex y;
   for (i = 0; i < DIMF; i++) {
     for (j = 0; j < DIMF; j++) {
-      CMULJ_(a->e[j][i], b->c[j], y);
-      CSUM(c->c[i], y);
+      c->c[i].real += a->e[j][i].real * b->c[j].real
+                    + a->e[j][i].imag * b->c[j].imag;
+      c->c[i].imag += a->e[j][i].real * b->c[j].imag
+                    - a->e[j][i].imag * b->c[j].real;
     }
   }
 }

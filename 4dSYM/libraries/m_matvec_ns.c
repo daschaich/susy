@@ -8,11 +8,12 @@
 #ifndef FAST
 void mult_mat_vec_dif(matrix *a, vector *b, vector *c) {
   register int i, j;
-  register complex y;
   for (i = 0; i < DIMF; i++) {
     for (j = 0; j < DIMF; j++) {
-      CMUL(a->e[i][j], b->c[j], y);
-      CDIF(c->c[i], y);
+      c->c[i].real -= a->e[i][j].real * b->c[j].real
+                    - a->e[i][j].imag * b->c[j].imag;
+      c->c[i].imag -= a->e[i][j].imag * b->c[j].real
+                    + a->e[i][j].real * b->c[j].imag;
     }
   }
 }

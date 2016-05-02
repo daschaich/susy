@@ -142,7 +142,8 @@ EXTERN matrix_f *site_pmat, *link_pmat[NUMLINK], *plaq_pmat[NPLAQ];
 
 // For convenience in calculating action and force
 // May be wasteful of space
-EXTERN complex minus1;
+EXTERN Real one_ov_N;
+EXTERN complex Bc, minus1;
 EXTERN complex *tr_dest, *Tr_Uinv[NUMLINK], *plaqdet[NUMLINK][NUMLINK];
 EXTERN complex *ZWstar[NUMLINK][NUMLINK], *tempdet[NUMLINK][NUMLINK];
 #ifndef LINEAR_DET
@@ -152,7 +153,7 @@ EXTERN matrix_f *DmuUmu, *Fmunu[NPLAQ];
 EXTERN matrix_f *Uinv[NUMLINK], *Udag_inv[NUMLINK], *UpsiU[NUMLINK];
 
 // Temporary vectors, matrices and Twist_Fermion
-EXTERN vector *tempvec[NUMLINK];
+EXTERN vector *tempvec[NUMLINK], *tempvec2;
 EXTERN matrix_f *tempmat, *tempmat2, *staple;
 EXTERN Twist_Fermion *tempTF;
 

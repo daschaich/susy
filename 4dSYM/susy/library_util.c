@@ -8,21 +8,6 @@
 
 
 // -----------------------------------------------------------------
-void conjTF(Twist_Fermion *src, Twist_Fermion *dest) {
-  int mu, j;
-  for (j = 0; j < DIMF; j++) {
-    CONJG(src->Fsite.c[j], dest->Fsite.c[j]);
-    for (mu = 0; mu < NUMLINK; mu++)
-      CONJG(src->Flink[mu].c[j], dest->Flink[mu].c[j]);
-    for (mu = 0; mu < NPLAQ; mu++)
-      CONJG(src->Fplaq[mu].c[j], dest->Fplaq[mu].c[j]);
-  }
-}
-// -----------------------------------------------------------------
-
-
-
-// -----------------------------------------------------------------
 void dump_TF(Twist_Fermion *source) {
   int mu;
   node0_printf("Fsite:   ");

@@ -8,12 +8,17 @@
 #ifndef FAST
 void mult_mat_vec(matrix *a, vector *b, vector *c) {
   register int i, j;
-  register complex y;
   for (i = 0; i < DIMF; i++) {
-    CMUL(a->e[i][0] , b->c[0], c->c[i]);    // Initialize
+    // Initialize
+    c->c[i].real = a->e[i][0].real * b->c[0].real
+                 - a->e[i][0].imag * b->c[0].imag;
+    c->c[i].imag = a->e[i][0].imag * b->c[0].real
+                 + a->e[i][0].real * b->c[0].imag;
     for (j = 1; j < DIMF; j++) {
-      CMUL(a->e[i][j] , b->c[j], y);
-      CSUM(c->c[i], y);
+      c->c[i].real += a->e[i][j].real * b->c[j].real
+                    - a->e[i][j].imag * b->c[j].imag;
+      c->c[i].imag += a->e[i][j].imag * b->c[j].real
+                    + a->e[i][j].real * b->c[j].imag;
     }
   }
 }

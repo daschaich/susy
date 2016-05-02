@@ -25,7 +25,7 @@ void mult_an_f(matrix_f *a, matrix_f *b, matrix_f *c) {
   }
 }
 #else   // FAST version for NCOL=3 only
-void mult_an(matrix_f *a, matrix_f *b, matrix_f *c) {
+void mult_an_f(matrix_f *a, matrix_f *b, matrix_f *c) {
   int j;
   register Real a0r, a0i, a1r, a1i, a2r, a2i;
   register Real b0r, b0i, b1r, b1i, b2r, b2i;
