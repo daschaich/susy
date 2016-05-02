@@ -32,9 +32,6 @@ void bilinear_src(Twist_Fermion *g_rand, Twist_Fermion *src, int N) {
 #endif
 
   FORALLSITES(i, s) {
-    clear_TF(&(g_rand[i]));       // Zero plaquette fermions
-    clear_TF(&(src[i]));          // To be safe/explicit
-
     // Source either all or traceless site fermions, depending on N
     // The last Lambda[DIMF - 1] (N = DIMF) is proportional to the identity
     // The others (N = DIMF - 1) are traceless
@@ -49,8 +46,8 @@ void bilinear_src(Twist_Fermion *g_rand, Twist_Fermion *src, int N) {
     }
 
     // Source all link and plaquette fermions
-    for (j = 0; j < DIMF; j++) {
-      for (mu = 0; mu < NUMLINK; mu++) {        // Link fermions
+    FORALLDIR(mu) {                           // Link fermions
+      for (j = 0; j < DIMF; j++) {
 #ifdef SITERAND
         g_rand[i].Flink[mu].c[j].real = gaussian_rand_no(&(s->site_prn));
         g_rand[i].Flink[mu].c[j].imag = gaussian_rand_no(&(s->site_prn));
@@ -59,7 +56,9 @@ void bilinear_src(Twist_Fermion *g_rand, Twist_Fermion *src, int N) {
         g_rand[i].Flink[mu].c[j].imag = gaussian_rand_no(&node_prn);
 #endif
       }
-      for (mu = 0; mu < NPLAQ; mu++) {         // Plaquette fermions
+    }
+    for (mu = 0; mu < NPLAQ; mu++) {         // Plaquette fermions
+      for (j = 0; j < DIMF; j++) {
 #ifdef SITERAND
         g_rand[i].Fplaq[mu].c[j].real = gaussian_rand_no(&(s->site_prn));
         g_rand[i].Fplaq[mu].c[j].imag = gaussian_rand_no(&(s->site_prn));
@@ -108,7 +107,7 @@ int bilinearWard() {
   double sum = 0.0;
   double_complex tc, StoL, LtoS, ave = cmplx(0.0, 0.0);
   vector tvec;
-  matrix_f tmat, tmat2;
+  matrix_f tmat;
   Twist_Fermion *g_rand, *src, **psim;
 
   g_rand = malloc(sites_on_node * sizeof(*g_rand));
@@ -140,7 +139,7 @@ int bilinearWard() {
     StoL = cmplx(0.0, 0.0);
     LtoS = cmplx(0.0, 0.0);
     FORALLSITES(i, s) {
-      for (mu = XUP; mu < NUMLINK; mu++) {
+      FORALLDIR(mu) {
         mult_vec_adj_mat(&(psim[0][i].Flink[mu]), &(s->link[mu]), &tvec);
         tc = dot(&(g_rand[i].Fsite), &tvec);
 #ifdef DEBUG_CHECK
@@ -161,6 +160,7 @@ int bilinearWard() {
         // Explicitly write out matrix multiplications including adjoints
         int a, b;
         double_complex tc2;
+        matrix tmat2;
         for (a = 0; a < DIMF; a++) {
           for (b = 0; b < DIMF; b++) {
             // First site-to-link
@@ -209,13 +209,12 @@ int bilinearWard() {
 
   // Now add gauge piece, including plaquette determinant term
   // Accumulate sum_a U_a Udag_a in tmat
-  // Multiply by DmuUmu into tmat2 and trace
+  // Multiply by DmuUmu into tmat and trace
   FORALLSITES(i, s) {
     mult_na_f(&(s->linkf[0]), &(s->linkf[0]), &tmat);   // Initialize
     for (mu = 1; mu < NUMLINK; mu++)
       mult_na_sum_f(&(s->linkf[mu]), &(s->linkf[mu]), &tmat);
-    mult_nn_f(&(DmuUmu[i]), &tmat, &tmat2);
-    tc = trace_f(&tmat2);
+    tc = complextrace_nn_f(&(DmuUmu[i]), &tmat);
     // Make sure trace really is real
     if (fabs(tc.imag) > IMAG_TOL) {
       printf("node%d WARNING: Im(sum[%d]) = %.4g > %.4g\n",

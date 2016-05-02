@@ -256,7 +256,7 @@ double get_gauge_fix_action(int gauge_dir, int parity) {
   g_doublesum(&gauge_fix_action);
 
   // Average is normalized to max of 1 / 2 on sites of one parity
-  gauge_fix_action /= ((double)(2 * NCOL * ndir * volume));
+  gauge_fix_action *= one_ov_N / ((double)(2.0 * ndir * volume));
   return gauge_fix_action;
 }
 // -----------------------------------------------------------------

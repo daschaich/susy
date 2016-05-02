@@ -21,7 +21,7 @@ void compute_Ba() {
 
   FORALLSITES(i, s) {
     // Construct scalar fields
-    for (a = XUP; a < NUMLINK; a++) {
+    FORALLDIR(a) {
       // Log of hermitian part of polar decomposition
       polar(&(s->linkf[a]), &(Ba[0][a][i]), &tmat);
       matrix_log(&tmat, &(Ba[0][a][i]));
@@ -29,7 +29,7 @@ void compute_Ba() {
       // Traceless part of U.Udag (hermitian so trace is real)
       mult_na_f(&(s->linkf[a]), &(s->linkf[a]), &(Ba[1][a][i]));
       tc = trace_f(&(Ba[1][a][i]));
-      tr = tc.real / (Real)NCOL;
+      tr = one_ov_N * tc.real;
       for (k = 0; k < NCOL; k++)
         Ba[1][a][i].e[k][k].real -= tr;
 
@@ -47,24 +47,17 @@ void compute_Ba() {
   // Compute traces of bilinears
   // Symmetric in a <--> b but store all to simplify SUGRA computation
   // Have checked that all are purely real and gauge invariant
-  for (a = XUP; a < NUMLINK; a++) {
-    for (b = XUP; b < NUMLINK; b++) {
+  // traceBB[0] is Tr[PP], traceBB[1] is Tr[UU],
+  // traceBB[2] is (Tr[UP] + Tr[PU]) / 2
+  FORALLDIR(a) {
+    FORALLDIR(b) {
       FORALLSITES(i, s) {
-        mult_nn_f(&(Ba[0][a][i]), &(Ba[0][b][i]), &tmat);
-        tc = trace_f(&tmat);
-        traceBB[0][a][b][i] = tc.real;    // Tr[PP]
+        traceBB[0][a][b][i] = realtrace_nn_f(&(Ba[0][a][i]), &(Ba[0][b][i]));
+        traceBB[2][a][b][i] = realtrace_nn_f(&(Ba[1][a][i]), &(Ba[1][b][i]));
 
-        mult_nn_f(&(Ba[1][a][i]), &(Ba[1][b][i]), &tmat);
-        tc = trace_f(&tmat);
-        traceBB[2][a][b][i] = tc.real;    // Tr[UU]
-
-        // (Tr[UP] + Tr[PU]) / 2
-        mult_nn_f(&(Ba[0][a][i]), &(Ba[1][b][i]), &tmat);
-        tc = trace_f(&tmat);
-        traceBB[1][a][b][i] = 0.5 * tc.real;
-        mult_nn_f(&(Ba[1][a][i]), &(Ba[0][b][i]), &tmat);
-        tc = trace_f(&tmat);
-        traceBB[1][a][b][i] += 0.5 * tc.real;
+        traceBB[1][a][b][i] = realtrace_nn_f(&(Ba[0][a][i]), &(Ba[1][b][i]));
+        traceBB[1][a][b][i] += realtrace_nn_f(&(Ba[1][a][i]), &(Ba[0][b][i]));
+        traceBB[1][a][b][i] *= 0.5;
       }
     }
   }

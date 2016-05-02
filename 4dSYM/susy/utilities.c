@@ -216,7 +216,7 @@ void Dminus(vector *src[NPLAQ], vector *dest[NUMLINK]) {
   register int i;
   register site *s;
   char **local_pt[2][2];
-  int mu, nu, index, gather, flip = 0, a, b, next;
+  int mu, nu, index, gather, flip = 0, a, b, next, opp_mu;
   vector vtmp, *vec;
   matrix *mat;
   msg_tag *tag0[2], *tag1[2];
@@ -281,6 +281,7 @@ void Dminus(vector *src[NPLAQ], vector *dest[NUMLINK]) {
       }
 
       index = plaq_index[mu][nu];
+      opp_mu = OPP_LDIR(mu);
       wait_gather(tag0[flip]);
       wait_gather(tag1[flip]);
       FORALLSITES(i, s) {
@@ -291,7 +292,7 @@ void Dminus(vector *src[NPLAQ], vector *dest[NUMLINK]) {
         else
           mult_mat_vec_sum(mat, &(src[index][i]), &(dest[nu][i]));
 
-        scalar_mult_dif_vector(vec, s->bc1[OPP_LDIR(mu)], &(dest[nu][i]));
+        scalar_mult_dif_vector(vec, s->bc1[opp_mu], &(dest[nu][i]));
       }
       cleanup_gather(tag0[flip]);
       cleanup_gather(tag1[flip]);
@@ -404,7 +405,7 @@ void DbplusPtoP(vector *src[NPLAQ], vector *dest[NPLAQ]) {
 // Add to dest instead of overwriting; note factor of 1/2
 #ifdef QCLOSED
 void DbminusPtoP(vector *src[NPLAQ], vector *dest[NPLAQ]) {
-  register int i;
+  register int i, opp_a, opp_b, opp_c;
   register site *s;
   char **local_pt[2][4];
   int a, b, c, d, e, j, gather, next, flip = 0, i_ab, i_de;
@@ -466,6 +467,9 @@ void DbminusPtoP(vector *src[NPLAQ], vector *dest[NPLAQ]) {
     tr = 0.5 * perm[a][b][c][d][e];
     i_de = plaq_index[d][e];
 
+    opp_a = OPP_LDIR(a);
+    opp_b = OPP_LDIR(b);
+    opp_c = OPP_LDIR(c);
     wait_gather(tag0[flip]);
     wait_gather(tag1[flip]);
     wait_gather(tag2[flip]);
@@ -476,11 +480,11 @@ void DbminusPtoP(vector *src[NPLAQ], vector *dest[NPLAQ]) {
       vec2 = (vector *)(local_pt[flip][2][i]);
       mat3 = (matrix *)(local_pt[flip][3][i]);
 
-      tr2 = tr * s->bc2[OPP_LDIR(a)][OPP_LDIR(b)];
+      tr2 = tr * s->bc2[opp_a][opp_b];
       mult_vec_adj_mat(vec1, mat0, &vtmp);
       scalar_mult_sum_vector(&vtmp, tr2, &(dest[i_de][i]));
 
-      tr2 = tr * s->bc3[OPP_LDIR(a)][OPP_LDIR(b)][OPP_LDIR(c)];
+      tr2 = tr * s->bc3[opp_a][opp_b][opp_c];
       mult_adj_mat_vec(mat3, vec2, &vtmp);
       scalar_mult_dif_vector(&vtmp, tr2, &(dest[i_de][i]));
     }
@@ -547,12 +551,13 @@ void detStoL(vector *src, vector *dest[NUMLINK]) {
   register int i;
   register site *s;
   int a, b, opp_b, j, next;
-  complex tc, tc2;
-  complex Gc = cmplx(0.0, -1.0 * C2 * G * sqrt((Real)NCOL));
+  complex tc, tc2, localGc;
 #ifdef LINEAR_DET
-  CMULREAL(Gc, 0.5, Gc);                  // Since not squared
+  CMULREAL(Gc, -0.5, localGc);            // Since not squared
+#else
+  CMULREAL(Gc, -1.0, localGc);
 #endif
-  matrix_f tmat, tmat2;
+  matrix_f tmat;
   msg_tag *tag[NUMLINK];
 
   // Save Tr[eta(x)] plaqdet[a][b](x)
@@ -584,7 +589,6 @@ void detStoL(vector *src, vector *dest[NUMLINK]) {
     FORALLDIR(b) {
       if (a == b)
         continue;
-      opp_b = OPP_LDIR(b);
 
       // Start next gather unless we're doing the last (a=4, b=3)
       next = b + 1;
@@ -602,6 +606,7 @@ void detStoL(vector *src, vector *dest[NUMLINK]) {
       }
 
       // Accumulate tempdet[b][a](x) + tempdet[a][b](x - b)
+      opp_b = OPP_LDIR(b);
       wait_gather(tag[b]);
       FORALLSITES(i, s) {
         tc = *((complex *)(gen_pt[b][i]));
@@ -615,10 +620,9 @@ void detStoL(vector *src, vector *dest[NUMLINK]) {
     // Compute Tr[U_a^{-1} Lambda^j] times sum
     FORALLSITES(i, s) {
       invert(&(s->linkf[a]), &tmat);
-      CMUL(tr_dest[i], Gc, tc);
+      CMUL(tr_dest[i], localGc, tc);
       for (j = 0; j < DIMF; j++) {
-        mult_nn_f(&tmat, &(Lambda[j]), &tmat2);
-        tc2 = trace_f(&tmat2);
+        tc2 = complextrace_nn_f(&tmat, &(Lambda[j]));
         dest[a][i].c[j].real += tc.real * tc2.real - tc.imag * tc2.imag;
         dest[a][i].c[j].imag += tc.imag * tc2.real + tc.real * tc2.imag;
       }
@@ -641,7 +645,6 @@ void potStoL(vector *src, vector *dest[NUMLINK]) {
   register site *s;
   Real tr;
   complex tc, tc2;
-  matrix_f tmat;
 
   FORALLSITES(i, s) {
     FORALLDIR(a) {
@@ -649,8 +652,7 @@ void potStoL(vector *src, vector *dest[NUMLINK]) {
       CMULREAL(Bc, tr, tc);
       CMUL(src[i].c[DIMF - 1], tc, tc2);
       for (j = 0; j < DIMF; j++) {
-        mult_na_f(&(Lambda[j]), &(s->linkf[a]), &tmat);
-        tc = trace_f(&tmat);
+        tc = complextrace_na_f(&(Lambda[j]), &(s->linkf[a]));
         dest[a][i].c[j].real += tc.real * tc2.real - tc.imag * tc2.imag;
         dest[a][i].c[j].imag += tc.imag * tc2.real + tc.real * tc2.imag;
       }
@@ -670,7 +672,7 @@ void potStoL(vector *src, vector *dest[NUMLINK]) {
 // Initialize dest; note factor of 1/2
 #ifdef SV
 void DbminusLtoS(vector *src[NUMLINK], vector *dest) {
-  register int i, mu, nu;
+  register int i, mu, nu, opp_mu;
   register site *s;
   msg_tag *tag[NUMLINK];
 
@@ -691,9 +693,10 @@ void DbminusLtoS(vector *src[NUMLINK], vector *dest) {
                                    goffset[nu] + 1, EVENANDODD, gen_pt[nu]);
     }
 
+    opp_mu = OPP_LDIR(mu);
     wait_gather(tag[mu]);
     FORALLSITES(i, s) {
-      scalar_mult_dif_vector((vector *)(gen_pt[mu][i]), s->bc1[OPP_LDIR(mu)],
+      scalar_mult_dif_vector((vector *)(gen_pt[mu][i]), s->bc1[opp_mu],
                              &(dest[i]));
       mult_vec_adj_mat_sum(&(src[mu][i]), &(s->link[mu]), &(dest[i]));
     }
@@ -725,12 +728,11 @@ void detLtoS(vector *src[NUMLINK], vector *dest) {
   register int i;
   register site *s;
   int a, b, j, next;
-  complex tc, tc2;
-  complex Gc = cmplx(0.0, C2 * G * sqrt((Real)NCOL));
+  complex tc, tc2, localGc;
 #ifdef LINEAR_DET
-  CMULREAL(Gc, 0.5, Gc);                  // Since not squared
+  CMULREAL(Gc, 0.5, localGc);                  // Since not squared
 #endif
-  matrix_f tmat, tmat2;
+  matrix_f tmat;
   msg_tag *tag[NUMLINK];
 
   // Prepare Tr[U_a^{-1} psi_a] = sum_j Tr[U_a^{-1} Lambda^j] psi_a^j
@@ -739,15 +741,13 @@ void detLtoS(vector *src[NUMLINK], vector *dest) {
     FORALLSITES(i, s) {
       invert(&(s->linkf[a]), &tmat);
       // Initialize
-      mult_nn_f(&tmat, &(Lambda[0]), &tmat2);
-      tc = trace_f(&tmat2);
+      tc = complextrace_nn_f(&tmat, &(Lambda[0]));
       Tr_Uinv[a][i].real = tc.real * src[a][i].c[0].real
                          - tc.imag * src[a][i].c[0].imag;
       Tr_Uinv[a][i].imag = tc.imag * src[a][i].c[0].real
                          + tc.real * src[a][i].c[0].imag;
       for (j = 1; j < DIMF; j++) {
-        mult_nn_f(&tmat, &(Lambda[j]), &tmat2);
-        tc = trace_f(&tmat2);
+        tc = complextrace_nn_f(&tmat, &(Lambda[j]));
         Tr_Uinv[a][i].real += tc.real * src[a][i].c[j].real
                             - tc.imag * src[a][i].c[j].imag;
         Tr_Uinv[a][i].imag += tc.imag * src[a][i].c[j].real
@@ -791,8 +791,10 @@ void detLtoS(vector *src[NUMLINK], vector *dest) {
 #else
         CMUL(ZWstar[a][b][i], tc2, tc);
 #endif
-        dest[i].c[DIMF - 1].real += tc.real * Gc.real - tc.imag * Gc.imag;
-        dest[i].c[DIMF - 1].imag += tc.imag * Gc.real + tc.real * Gc.imag;
+        dest[i].c[DIMF - 1].real += tc.real * localGc.real
+                                  - tc.imag * localGc.imag;
+        dest[i].c[DIMF - 1].imag += tc.imag * localGc.real
+                                  + tc.real * localGc.imag;
       }
       cleanup_gather(tag[b]);
     }
@@ -814,15 +816,13 @@ void potLtoS(vector *src[NUMLINK], vector *dest) {
   register site *s;
   Real tr;
   complex tc, tc2, tc3;
-  matrix_f tmat;
 
   FORALLSITES(i, s) {
     FORALLDIR(a) {
       tr = one_ov_N * realtrace_f(&(s->linkf[a]), &(s->linkf[a])) - 1.0;
       CMULREAL(Bc, tr, tc2);
       for (j = 0; j < DIMF; j++) {
-        mult_na_f(&(Lambda[j]), &(s->linkf[a]), &tmat);
-        tc = trace_f(&tmat);
+        tc = complextrace_na_f(&(Lambda[j]), &(s->linkf[a]));
         CMUL(tc, src[a][i].c[j], tc3);
         dest[i].c[DIMF - 1].real += tc2.real * tc3.real - tc2.imag * tc3.imag;
         dest[i].c[DIMF - 1].imag += tc2.imag * tc3.real + tc2.real * tc3.imag;

@@ -31,7 +31,7 @@ void ploop_c() {
       continue;
 
     s->ploop_corr = trace_f(&(staple[i]));
-    CDIVREAL((s->ploop_corr), NCOL, (s->ploop_corr));
+    CMULREAL((s->ploop_corr), one_ov_N, (s->ploop_corr));
   }
 #endif
 }

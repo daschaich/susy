@@ -308,12 +308,11 @@ void measure_det() {
 // -----------------------------------------------------------------
 // Divide the determinant out of the matrix in
 void det_project(matrix_f *in, matrix_f *out) {
-  Real frac = -1.0 / (Real)NCOL;
   complex tc, tc2;
 
   tc = find_det(in);
   tc2 = clog(&tc);
-  CMULREAL(tc2, frac, tc);
+  CMULREAL(tc2, -one_ov_N, tc);
   tc2 = cexp(&tc);
   c_scalar_mult_mat_f(in, &tc2, out);
 

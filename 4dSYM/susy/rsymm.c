@@ -185,12 +185,12 @@ void rsymm() {
       invlink[dir_inv] += td;
       invlinkSq += td * td;
     }
-    invlink[dir_inv] /= ((double)volume * NCOL);
+    invlink[dir_inv] *= one_ov_N / ((double)volume);
     g_doublesum(&(invlink[dir_inv]));
     invlink_sum += invlink[dir_inv];
   }
   invlink_sum /= ((double)NUMLINK);
-  invlinkSq /= ((double)volume * NCOL * NCOL * NUMLINK);
+  invlinkSq *= one_ov_N * one_ov_N / ((double)volume * NUMLINK);
   g_doublesum(&(invlinkSq));
 
   node0_printf("INVLINK");

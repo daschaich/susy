@@ -143,7 +143,7 @@ EXTERN matrix_f *site_pmat, *link_pmat[NUMLINK], *plaq_pmat[NPLAQ];
 // For convenience in calculating action and force
 // May be wasteful of space
 EXTERN Real one_ov_N;
-EXTERN complex Bc, minus1;
+EXTERN complex Gc, Bc, minus1;
 EXTERN complex *tr_dest, *Tr_Uinv[NUMLINK], *plaqdet[NUMLINK][NUMLINK];
 EXTERN complex *ZWstar[NUMLINK][NUMLINK], *tempdet[NUMLINK][NUMLINK];
 #ifndef LINEAR_DET

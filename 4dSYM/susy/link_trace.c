@@ -14,7 +14,7 @@ double link_trace(double *linktr, double *width,
   matrix_f tmat;
 
   *det_ave = 0.0;
-  for (dir = XUP; dir < NUMLINK; dir++) {
+  FORALLDIR(dir) {
     linktr[dir] = 0.0;
     link_det[dir] = 0.0;
     FORALLSITES(i, s) {
@@ -24,7 +24,7 @@ double link_trace(double *linktr, double *width,
       linktrSq += tc.real * tc.real;
 
       // Determinant of traceless part
-      tc.real /= (double)NCOL;
+      tc.real *= one_ov_N;
       for (j = 0; j < NCOL; j++)
         tmat.e[j][j].real -= tc.real;
       tc = find_det(&tmat);
@@ -32,7 +32,7 @@ double link_trace(double *linktr, double *width,
       detSq += tc.real * tc.real;
 //      im_check += tc.imag;
     }
-    linktr[dir] /= ((double)volume * NCOL);
+    linktr[dir] *= one_ov_N / ((double)volume);
     g_doublesum(&(linktr[dir]));
     ave += linktr[dir];
 
@@ -41,7 +41,7 @@ double link_trace(double *linktr, double *width,
     *det_ave += link_det[dir];
   }
   ave /= (double)NUMLINK;
-  linktrSq /= ((double)volume * NCOL * NCOL * NUMLINK);
+  linktrSq *= one_ov_N * one_ov_N / ((double)volume * NUMLINK);
   g_doublesum(&linktrSq);
   *width = sqrt(linktrSq - ave * ave);
 

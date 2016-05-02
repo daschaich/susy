@@ -58,7 +58,7 @@ void scalar_eig(int project, double *ave_eigs, double *eig_widths,
         mult_na_f(&(s->linkf[dir]), &(s->linkf[dir]), &USq);
         // Take traceless part
         tc = trace_f(&USq);
-        tr = tc.real / (Real)NCOL;
+        tr = one_ov_N * tc.real;
         for (j = 0; j < NCOL; j++)
           USq.e[j][j].real -= tr;
       }

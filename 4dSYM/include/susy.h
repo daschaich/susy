@@ -86,10 +86,13 @@ void clear_mat_f(matrix_f *c);
 complex trace_f(matrix_f *a);
 
 // In file realtr_f.c
+Real realtrace_nn_f(matrix_f *a, matrix_f *b);
 Real realtrace_f(matrix_f *a, matrix_f *b);
 
 // In file complextr_f.c
-complex complextrace_f(matrix_f *a, matrix_f *b);
+complex complextrace_nn_f(matrix_f *a, matrix_f *b);
+complex complextrace_an_f(matrix_f *a, matrix_f *b);
+complex complextrace_na_f(matrix_f *a, matrix_f *b);
 
 // b <-- a, in file mat_copy_f.c
 void mat_copy_f(matrix_f *a, matrix_f *b);

@@ -129,18 +129,14 @@ double gauge_force(Real eps) {
   // where Y(x) = Tr[U_mu(x) Udag_mu(x)] / N - 1
   // Only compute if B is non-zero
   if (doB) {
-    Real tr, twoBSqOvN = 2.0 * B * B / (Real)NCOL;
+    Real tr, twoBSqOvN = 2.0 * one_ov_N * B * B;
 
     FORALLSITES(i, s) {
       tc = trace_f(&DmuUmu[i]);
-      for (mu = XUP; mu < NUMLINK; mu++) {
-        tr = 1.0 / (Real)NCOL;
-        tr *= realtrace_f(&(s->linkf[mu]), &(s->linkf[mu]));
-        tr -= 1.0;
+      FORALLDIR(mu) {
+        tr = one_ov_N * realtrace_f(&(s->linkf[mu]), &(s->linkf[mu])) - 1.0;
         CMULREAL(tc, twoBSqOvN * tr, tc2);
-
-        adjoint_f(&(s->linkf[mu]), &tmat);
-        c_scalar_mult_sum_mat_f(&tmat, &tc2, &(s->f_U[mu]));
+        c_scalar_mult_sum_mat_adj_f(&(s->linkf[mu]), &tc2, &(s->f_U[mu]));
       }
     }
   }
@@ -239,10 +235,10 @@ double gauge_force(Real eps) {
 
   // Only compute U(1) mass term if non-zero -- note factor of kappa
   if (bmass > IMAG_TOL) {
-    Real tr, dmu = 2.0 * kappa * bmass * bmass / (Real)(NCOL * NCOL);
+    Real tr, dmu = 2.0 * one_ov_N * kappa * bmass * bmass;
     FORALLSITES(i, s) {
       FORALLDIR(mu) {
-        tr = realtrace_f(&(s->linkf[mu]), &(s->linkf[mu])) - (Real)NCOL;
+        tr = one_ov_N * realtrace_f(&(s->linkf[mu]), &(s->linkf[mu])) - 1.0;
         tr *= dmu;
         scalar_mult_sum_adj_matrix_f(&(s->linkf[mu]), tr, &(s->f_U[mu]));
       }
@@ -279,7 +275,7 @@ double gauge_force(Real eps) {
 // First Q-closed piece: chi_ab D_c chi_de epsilon_{abcde}
 // Note factor of -1/2
 void F1Q(matrix_f *plaq_sol[NPLAQ], matrix_f *plaq_psol[NPLAQ]) {
-  register int i;
+  register int i, opp_a, opp_b;
   register site *s;
   char **local_pt[2][4];
   int a, b, c, d, e, j, i_ab, i_de, gather, next, flip = 0;
@@ -346,6 +342,8 @@ void F1Q(matrix_f *plaq_sol[NPLAQ], matrix_f *plaq_psol[NPLAQ]) {
     e = FQ_lookup[j][4];
     permm = perm[d][e][c][a][b];
 
+    opp_a = OPP_LDIR(a);
+    opp_b = OPP_LDIR(b);
     wait_gather(tag0[flip]);
     wait_gather(tag1[flip]);
     wait_gather(tag2[flip]);
@@ -355,7 +353,7 @@ void F1Q(matrix_f *plaq_sol[NPLAQ], matrix_f *plaq_psol[NPLAQ]) {
       scalar_mult_matrix_f((matrix_f *)(local_pt[flip][1][i]), tr, &tmat);
       mult_nn_f((matrix_f *)(local_pt[flip][0][i]), &tmat, &(tempmat[i]));
 
-      tr = -1.0 * permm * (s->bc2[OPP_LDIR(a)][OPP_LDIR(b)]) * (s->bc1[c]);
+      tr = -1.0 * permm * (s->bc2[opp_a][opp_b]) * (s->bc1[c]);
       scalar_mult_matrix_f((matrix_f *)(local_pt[flip][3][i]), tr, &tmat);
       mult_nn_sum_f(&tmat, (matrix_f *)(local_pt[flip][2][i]), &(tempmat[i]));
     }
@@ -377,7 +375,7 @@ void F1Q(matrix_f *plaq_sol[NPLAQ], matrix_f *plaq_psol[NPLAQ]) {
 // Second Q-closed piece
 // Note factor of -1/2
 void F2Q(matrix_f *plaq_sol[NPLAQ], matrix_f *plaq_psol[NPLAQ]) {
-  register int i;
+  register int i, opp_a, opp_b;
   register site *s;
   char **local_pt[2][4];
   int a, b, c, d, e, j, i_ab, i_de, gather, next, flip = 0;
@@ -444,12 +442,14 @@ void F2Q(matrix_f *plaq_sol[NPLAQ], matrix_f *plaq_psol[NPLAQ]) {
     e = FQ_lookup[j][4];
     permm = perm[a][b][c][d][e];
 
+    opp_a = OPP_LDIR(a);
+    opp_b = OPP_LDIR(b);
     wait_gather(tag0[flip]);
     wait_gather(tag1[flip]);
     wait_gather(tag2[flip]);
     wait_gather(tag3[flip]);
     FORALLSITES(i, s) {
-      tr = permm * (s->bc2[OPP_LDIR(a)][OPP_LDIR(b)]) * (s->bc1[c]);
+      tr = permm * (s->bc2[opp_a][opp_b]) * (s->bc1[c]);
       scalar_mult_matrix_f((matrix_f *)(local_pt[flip][1][i]), tr, &tmat);
       mult_nn_f((matrix_f *)(local_pt[flip][0][i]), &tmat, &(tempmat[i]));
 
@@ -483,19 +483,20 @@ void F2Q(matrix_f *plaq_sol[NPLAQ], matrix_f *plaq_psol[NPLAQ]) {
 void detF(vector *eta, vector *psi[NUMLINK], int sign) {
   register int i;
   register site *s;
-  int a, b, j;
-  complex tc, tc2, tc3, Gc = cmplx(0.0, C2 * G * sqrt((Real)NCOL));
+  int a, b, j, opp_b;
+  complex tc, tc2, localGc;
 #ifdef LINEAR_DET
-  CMULREAL(Gc, 0.5, Gc);                  // Since not squared
+  CMULREAL(Gc, 0.5, localGc);             // Since not squared
 #else
   Real tr;
 #endif
   msg_tag *mtag[8];
+  vector tvec;
   matrix_f tmat, tmat2;
 
   // Check sign while giving Gc proper sign
   if (sign == 1) {    // Braces suppress compiler error
-    CNEGATE(Gc, Gc);
+    CNEGATE(localGc, localGc);
   }
   else if (sign != -1) {
     node0_printf("Error: incorrect sign in detF: %d\n", sign);
@@ -513,24 +514,33 @@ void detF(vector *eta, vector *psi[NUMLINK], int sign) {
       adjoint_f(&(s->linkf[a]), &tmat);
       invert(&tmat, &(Udag_inv[a][i]));
 
-      // Initialize accumulators for sum over j
-      Tr_Uinv[a][i] = cmplx(0.0, 0.0);
-      clear_mat_f(&(UpsiU[a][i]));
-      for (j = 0; j < DIMF; j++) {
+      // Accumulate trace and product
+      if (sign == 1) {
+        for (j = 0; j < DIMF; j++)
+          tvec.c[j] = psi[a][i].c[j];
+      }
+      else {
+        for (j = 0; j < DIMF; j++)
+          CONJG(psi[a][i].c[j], tvec.c[j]);
+      }
+
+      mult_nn_f(&(Uinv[a][i]), &(Lambda[0]), &tmat);
+      mult_nn_f(&tmat, &(Uinv[a][i]), &tmat2);
+      tc2 = trace_f(&tmat);
+      Tr_Uinv[a][i].real = tvec.c[0].real * tc2.real
+                         - tvec.c[0].imag * tc2.imag;
+      Tr_Uinv[a][i].imag = tvec.c[0].imag * tc2.real
+                         + tvec.c[0].real * tc2.imag;
+      c_scalar_mult_mat_f(&tmat2, &tvec.c[0], &(UpsiU[a][i]));
+      for (j = 1; j < DIMF; j++) {
         mult_nn_f(&(Uinv[a][i]), &(Lambda[j]), &tmat);
-        if (sign == 1)
-          tc = psi[a][i].c[j];
-        else
-          CONJG(psi[a][i].c[j], tc);
-
-        // Accumulate trace
-        tc2 = trace_f(&tmat);
-        CMUL(tc, tc2, tc3);
-        CSUM(Tr_Uinv[a][i], tc3);
-
-        // Accumulate product
         mult_nn_f(&tmat, &(Uinv[a][i]), &tmat2);
-        c_scalar_mult_sum_mat_f(&tmat2, &tc, &(UpsiU[a][i]));
+        tc2 = trace_f(&tmat);
+        Tr_Uinv[a][i].real += tvec.c[j].real * tc2.real
+                            - tvec.c[j].imag * tc2.imag;
+        Tr_Uinv[a][i].imag += tvec.c[j].imag * tc2.real
+                            + tvec.c[j].real * tc2.imag;
+        c_scalar_mult_sum_mat_f(&tmat2, &tvec.c[j], &(UpsiU[a][i]));
       }
 
       // tempdet holds either eta^D(x) plaqdet[a][b](x) (global)
@@ -610,6 +620,7 @@ void detF(vector *eta, vector *psi[NUMLINK], int sign) {
                                    goffset[b] + 1, EVENANDODD, gen_pt[0]);
 
       // Now accumulate all three terms
+      opp_b = OPP_LDIR(b);
       wait_gather(mtag[1]);         // 1) D[a][b](x - b)
       wait_gather(mtag[2]);         // 2) D[b][a](x - b)
       wait_gather(mtag[3]);         // 5) T[a](x + b)
@@ -623,38 +634,44 @@ void detF(vector *eta, vector *psi[NUMLINK], int sign) {
         // gen_pt[5] is T[b](x + a)
         CMULREAL(*((complex *)(gen_pt[5][i])), s->bc1[a], tc);
         CADD(Tr_Uinv[a][i], tc, tc2);
-        CMUL(tempdet[b][a][i], tc2, tc);
-        CSUM(plaq_term[i], tc);
+        plaq_term[i].real += tempdet[b][a][i].real * tc2.real
+                           - tempdet[b][a][i].imag * tc2.imag;
+        plaq_term[i].imag += tempdet[b][a][i].imag * tc2.real
+                           + tempdet[b][a][i].real * tc2.imag;
 
         // D[a][b](x - b) {T[a](x) + T[b](x - b)}
-        CMULREAL(Tr_Uinv[a][i], s->bc1[OPP_LDIR(b)], tc);
+        CMULREAL(Tr_Uinv[a][i], s->bc1[opp_b], tc);
         // gen_pt[6] is T[b](x - b)
         CADD(tc, *((complex *)(gen_pt[6][i])), tc2);
         // gen_pt[1] is D[a][b](x - b)
-        CMUL(*((complex *)(gen_pt[1][i])), tc2, tc);
-        CSUM(plaq_term[i], tc);
+        tc = *((complex *)(gen_pt[1][i]));
+        plaq_term[i].real += tc.real * tc2.real - tc.imag * tc2.imag;
+        plaq_term[i].imag += tc.imag * tc2.real + tc.real * tc2.imag;
 
         // Accumulate adj_term
         // D[a][b](x) {T[b](x) + T[a](x + b)}
         // gen_pt[3] is T[a](x + b)
         CMULREAL(*((complex *)(gen_pt[3][i])), s->bc1[b], tc);
         CADD(Tr_Uinv[b][i], tc, tc2);
-        CMUL(tempdet[a][b][i], tc2, tc);
-        CSUM(adj_term[i], tc);
+        adj_term[i].real += tempdet[a][b][i].real * tc2.real
+                          - tempdet[a][b][i].imag * tc2.imag;
+        adj_term[i].imag += tempdet[a][b][i].imag * tc2.real
+                          + tempdet[a][b][i].real * tc2.imag;
 
         // D[b][a](x - b) {T[a](x - b) + T[b](x + a - b) bc1[a](x - b)}
         // gen_pt[0] is T[b](x + a - b)
         // gen_pt[4] is T[a](x - b)
         CADD(*((complex *)(gen_pt[0][i])), *((complex *)(gen_pt[4][i])), tc);
         // gen_pt[2] is D[b][a](x - b)
-        CMUL(*((complex *)(gen_pt[2][i])), tc, tc2);
-        CSUM(adj_term[i], tc2);
+        tc2 = *((complex *)(gen_pt[2][i]));
+        adj_term[i].real += tc.real * tc2.real - tc.imag * tc2.imag;
+        adj_term[i].imag += tc.imag * tc2.real + tc.real * tc2.imag;
 
         // Accumulate inv_term = sum_b D[b][a](x) + D[a][b](x - b)
         // gen_pt[1] is D[a][b](x - b)
-        CMULREAL(*((complex *)(gen_pt[1][i])), s->bc1[OPP_LDIR(b)], tc);
-        CSUM(inv_term[i], tc);
-        CSUM(inv_term[i], tempdet[b][a][i]);
+        tc = *((complex *)(gen_pt[1][i]));
+        inv_term[i].real += tempdet[b][a][i].real + s->bc1[opp_b] * tc.real;
+        inv_term[i].imag += tempdet[b][a][i].imag + s->bc1[opp_b] * tc.imag;
       }
       cleanup_gather(mtag[0]);
       cleanup_gather(mtag[1]);
@@ -666,18 +683,18 @@ void detF(vector *eta, vector *psi[NUMLINK], int sign) {
     }
 
     // Now add to force
-    // Include complex coupling Gc before taking adjoint
+    // Include complex coupling localGc before taking adjoint
     FORALLSITES(i, s) {
       // Start with plaq_term hitting U_a(x)^{-1}
-      CMUL(plaq_term[i], Gc, tc);
+      CMUL(plaq_term[i], localGc, tc);
       c_scalar_mult_sum_mat_f(&(Uinv[a][i]), &tc, &(s->f_U[a]));
 
       // Add adj_term hitting Udag_a(x)^{-1} followed by adjoint
-      CMUL(adj_term[i], Gc, tc);
+      CMUL(adj_term[i], localGc, tc);
       c_scalar_mult_sum_adj_mat_f(&(Udag_inv[a][i]), &tc, &(s->f_U[a]));
 
       // Finally subtract inv_term hitting U_a(x)^{-1} psi_a(x) U_a(x)^{-1}
-      CMUL(inv_term[i], Gc, tc);
+      CMUL(inv_term[i], localGc, tc);
       c_scalar_mult_dif_mat_f(&(UpsiU[a][i]), &tc, &(s->f_U[a]));
     }
   }
@@ -692,7 +709,7 @@ void detF(vector *eta, vector *psi[NUMLINK], int sign) {
   complex *dTdU = malloc(sites_on_node * sizeof(*dTdU));
 
   // Set up and store one more ingredient
-  for (a = XUP; a < NUMLINK; a++) {
+  FORALLDIR(a) {
     FORALLSITES(i, s) {
       // Save eta^D(x) ZWstar[a][b](x) in tempZW[a][b](x)
       if (sign == 1) {    // Braces suppress compiler error
@@ -711,7 +728,6 @@ void detF(vector *eta, vector *psi[NUMLINK], int sign) {
   // Now we are ready to gather, accumulate and add to force
   // TODO: Could try to overlap these gathers, but that looks nasty...
   FORALLDIR(a) {
-  for (a = XUP; a < NUMLINK; a++) {
     // Initialize accumulators for sums over b
     FORALLSITES(i, s) {
       dZdU[i] = cmplx(0.0, 0.0);
@@ -765,6 +781,7 @@ void detF(vector *eta, vector *psi[NUMLINK], int sign) {
                                    goffset[b] + 1, EVENANDODD, gen_pt[0]);
 
       // Now accumulate all five terms
+      opp_b = OPP_LDIR(b);
       wait_gather(mtag[1]);       // 1) ZSq[a][b](x - b)
       wait_gather(mtag[2]);       // 2) ZW[a][b](x - b)
       wait_gather(mtag[3]);       // 3) ZW[b][a](x - b)
@@ -777,6 +794,7 @@ void detF(vector *eta, vector *psi[NUMLINK], int sign) {
         // dZdU and dWdUdag have same sums of traces
         // hit by ZW and ZSq, respectively
         // Z(x) {T[a](x) + BC[a](x) T[b](x + a)}
+        // TODO: Can combine CMUL and CSUM below
         tc = *((complex *)(gen_pt[6][i]));    // T[b](x + a)
         CMULREAL(tc, s->bc1[a], tc);
         CADD(Tr_Uinv[a][i], tc, tc2);
@@ -787,7 +805,7 @@ void detF(vector *eta, vector *psi[NUMLINK], int sign) {
 
         // Z(x - b) {T[b](x - b) + BC[-b](x) T[a](x)}
         tc = *((complex *)(gen_pt[7][i]));    // T[b](x - b)
-        CMULREAL(Tr_Uinv[a][i], s->bc1[OPP_LDIR(b)], tc2);
+        CMULREAL(Tr_Uinv[a][i], s->bc1[opp_b], tc2);
         CADD(tc, tc2, tc3);
         tc = *((complex *)(gen_pt[2][i]));    // ZW[a][b](x - b)
         CMUL(tc, tc3, tc2);
@@ -820,7 +838,7 @@ void detF(vector *eta, vector *psi[NUMLINK], int sign) {
 
         // Finally dTdU accumulates ZW[b][a](x) + BC[-b](x) ZW[a][b](x - b)
         tc = *((complex *)(gen_pt[2][i]));    // ZW[a][b](x - b)
-        CMULREAL(tc, s->bc1[OPP_LDIR(b)], tc);
+        CMULREAL(tc, s->bc1[opp_b], tc);
         CADD(tempZW[b][a][i], tc, tc2);
         CSUM(dTdU[i], tc2);
       }
@@ -835,20 +853,20 @@ void detF(vector *eta, vector *psi[NUMLINK], int sign) {
     }
 
     // Now add to force
-    // Include complex coupling Gc before taking adjoint
+    // Include complex coupling localGc before taking adjoint
     FORALLSITES(i, s) {
       // Start with dZdU and dWdU hitting U_a(x)^{-1}
       CADD(dZdU[i], dWdU[i], tc);
-      CMUL(tc, Gc, tc2);
+      CMUL(tc, localGc, tc2);
       c_scalar_mult_sum_mat_f(&(Uinv[a][i]), &tc2, &(s->f_U[a]));
 
       // Add dZdUdag and dWdUdag hitting Udag_a(x)^{-1} followed by adjoint
       CADD(dZdUdag[i], dWdUdag[i], tc);
-      CMUL(tc, Gc, tc2);
+      CMUL(tc, localGc, tc2);
       c_scalar_mult_sum_adj_mat_f(&(Udag_inv[a][i]), &tc2, &(s->f_U[a]));
 
       // Finally subtract dTdU hitting U_a(x)^{-1} psi_a(x) U_a(x)^{-1}
-      CMUL(dTdU[i], Gc, tc);
+      CMUL(dTdU[i], localGc, tc);
       c_scalar_mult_dif_mat_f(&(UpsiU[a][i]), &tc, &(s->f_U[a]));
     }
   }
@@ -873,7 +891,8 @@ void pot_force(vector *eta, vector *psi[NUMLINK], int sign) {
   register site *s;
   int a, j;
   Real tr;
-  complex tc, tc2, tc3, localBc;
+  complex tc, tc2, localBc;
+  vector tvec;
   matrix_f tmat;
 
   // Check sign while giving Bc proper sign
@@ -892,23 +911,29 @@ void pot_force(vector *eta, vector *psi[NUMLINK], int sign) {
     // Save sum_j psi_a^j(x) Tr[Lambda^j Udag_a(x)] in tr_dest
     // Save sum_j psi_a^j(x) Lambda^j in tempmat
     FORALLSITES(i, s) {
-      // Initialize accumulators for sum over j
-      clear_mat_f(&(tempmat[i]));
-      tr_dest[i] = cmplx(0.0, 0.0);
-      for (j = 0; j < DIMF; j++) {
-        mult_na_f(&(Lambda[j]), &(s->linkf[a]), &tmat);
-        if (sign == 1)
-          tc = psi[a][i].c[j];
-        else
-          CONJG(psi[a][i].c[j], tc);
+      // Accumulate trace and psi
+      if (sign == 1) {
+        for (j = 0; j < DIMF; j++)
+          tvec.c[j] = psi[a][i].c[j];
+      }
+      else {
+        for (j = 0; j < DIMF; j++)
+          CONJG(psi[a][i].c[j], tvec.c[j]);
+      }
 
-        // Accumulate trace
-        tc2 = trace_f(&tmat);
-        CMUL(tc, tc2, tc3);
-        CSUM(tr_dest[i], tc3);
-
-        // Accumulate psi itself
-        c_scalar_mult_sum_mat_f(&(Lambda[j]), &tc, &(tempmat[i]));
+      tc2 = complextrace_na_f(&(Lambda[0]), &(s->linkf[a]));
+      tr_dest[i].real = tvec.c[0].real * tc2.real
+                      - tvec.c[0].imag * tc2.imag;
+      tr_dest[i].imag = tvec.c[0].imag * tc2.real
+                      + tvec.c[0].real * tc2.imag;
+      c_scalar_mult_mat_f(&(Lambda[0]), &tvec.c[0], &(tempmat[i]));
+      for (j = 1; j < DIMF; j++) {
+        tc2 = complextrace_na_f(&(Lambda[j]), &(s->linkf[a]));
+        tr_dest[i].real += tvec.c[j].real * tc2.real
+                         - tvec.c[j].imag * tc2.imag;
+        tr_dest[i].imag += tvec.c[j].imag * tc2.real
+                         + tvec.c[j].real * tc2.imag;
+        c_scalar_mult_sum_mat_f(&(Lambda[j]), &tvec.c[j], &(tempmat[i]));
       }
 
       // Hit both with eta^{D*} and divide trace by N
@@ -919,7 +944,7 @@ void pot_force(vector *eta, vector *psi[NUMLINK], int sign) {
         tc = eta[i].c[DIMF - 1];
 
       CMUL(tc, tr_dest[i], tc2);
-      CDIVREAL(tc2, (Real)NCOL, tr_dest[i]);
+      CMULREAL(tc2, one_ov_N, tr_dest[i]);
       mat_copy_f(&(tempmat[i]), &tmat);
       c_scalar_mult_mat_f(&tmat, &tc, &(tempmat[i]));
 

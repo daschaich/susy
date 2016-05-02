@@ -30,11 +30,11 @@ void d_linktrsum(double_complex *linktrsum) {
       a = &s->linkf[dir];
       CSUM(*linktrsum, a->e[0][0]);
       CSUM(*linktrsum, a->e[1][1]);
-#if (NCOL>2)
+#if (NCOL > 2)
       CSUM(*linktrsum, a->e[2][2]);
-#if (NCOL>3)
+#if (NCOL > 3)
       CSUM(*linktrsum, a->e[3][3]);
-#if (NCOL>4)
+#if (NCOL > 4)
       int j;
       for (j = 4; j < NCOL; j++)
         CSUM(*linktrsum, a->e[j][j]);
