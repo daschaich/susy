@@ -185,11 +185,14 @@ double bmass_action() {
   register int i, a;
   register site *s;
   double sum = 0.0, tr;
+  matrix_f tmat;
 
   FORALLSITES(i, s) {
     FORALLDIR(a) {
-      tr = one_ov_N * realtrace_f(&(s->linkf[a]), &(s->linkf[a])) - 1.0;
-      sum += kappa * bmass * bmass * tr * tr;
+      mult_na_f(&(s->linkf[a]), &(s->linkf[a])), &tmat); 
+      dif_matrix_f(&unit, &tmat); 
+      tc = trace_f(&tmat); 
+      sum += kappa * bmass * bmass * tc.real * tc.real;
     }
   }
   g_doublesum(&sum);
