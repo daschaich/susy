@@ -184,12 +184,13 @@ double gauge_action(int do_det) {
 double bmass_action() {
   register int i, a;
   register site *s;
-  double sum = 0.0, tr;
+  double sum = 0.0;
+  complex tc; 
   matrix_f tmat;
 
   FORALLSITES(i, s) {
     FORALLDIR(a) {
-      mult_na_f(&(s->linkf[a]), &(s->linkf[a])), &tmat); 
+      mult_na_f(&(s->linkf[a]), &(s->linkf[a]), &tmat); 
       dif_matrix_f(&unit, &tmat); 
       tc = trace_f(&tmat); 
       sum += kappa * bmass * bmass * tc.real * tc.real;
