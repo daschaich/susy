@@ -238,9 +238,10 @@ double gauge_force(Real eps) {
     Real tr, dmu = 2.0 * one_ov_N * kappa * bmass * bmass;
     FORALLSITES(i, s) {
       FORALLDIR(mu) {
-        tr = one_ov_N * realtrace_f(&(s->linkf[mu]), &(s->linkf[mu])) - 1.0;
-        tr *= dmu;
-        scalar_mult_sum_adj_matrix_f(&(s->linkf[mu]), tr, &(s->f_U[mu]));
+        mult_na_f(&(s->linkf[mu]), &(s->linkf[mu])), &tmat); 
+        dif_matrix_f(&unit, &tmat); 
+        tc = trace_f(&tmat); 
+        scalar_mult_sum_adj_matrix_f(&(s->linkf[mu]), 2*tc.real, &(s->f_U[mu])); 
       }
     }
   }
