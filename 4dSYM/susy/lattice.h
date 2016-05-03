@@ -149,7 +149,7 @@ EXTERN complex *ZWstar[NUMLINK][NUMLINK], *tempdet[NUMLINK][NUMLINK];
 #ifndef LINEAR_DET
 EXTERN complex *tempZW[NUMLINK][NUMLINK];
 #endif
-EXTERN matrix_f *DmuUmu, *Fmunu[NPLAQ];
+EXTERN matrix_f *DmuUmu, *Fmunu[NPLAQ], unit;
 EXTERN matrix_f *Uinv[NUMLINK], *Udag_inv[NUMLINK], *UpsiU[NUMLINK];
 
 // Temporary vectors, matrices and Twist_Fermion
