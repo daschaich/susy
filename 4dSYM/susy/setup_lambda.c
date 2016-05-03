@@ -28,7 +28,10 @@ void setup_lambda() {
   // Sign in second chosen to match previous values
   count = 0;
   for (i = 0; i < NCOL; i++) {
+    unit.e[i][i]=cmplx(1.0,0.0);
     for (j = i + 1; j < NCOL; j++) {
+      unit.e[i][j]=cmplx(0.0,0.0);
+      unit.e[j][i]=cmplx(0.0,0.0);
       for (k = 0; k < NCOL; k++) {
         for (l = 0; l < NCOL; l++) {
           if (k == i && l == j) {
