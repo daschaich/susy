@@ -13,8 +13,7 @@
 // Each dimension must be divisible by a suitable factor,
 // such that the product of the four factors is the number of nodes
 
-/*
-   setup_layout() does any initial setup.  When it is called the
+/* setup_layout() does any initial setup.  When it is called the
      lattice dimensions nx and nt have been set.
      This routine sets the global variables "sites_on_node",
      "even_sites_on_node" and "odd_sites_on_node".
@@ -120,7 +119,7 @@ void setup_layout() {
   // Number of sites on node
   sites_on_node = squaresize[XUP] * squaresize[TUP];
   /* Need even number of sites per hypercube */
-  if (mynode()==0) {
+  if (mynode() == 0) {
     if (sites_on_node %2 != 0) {
       printf("SORRY, CAN'T LAY OUT THIS LATTICE\n");
       terminate(0);

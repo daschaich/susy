@@ -3,25 +3,27 @@
 // c <-- adag * b
 #include "../include/config.h"
 #include "../include/complex.h"
-#include "../include/su3.h"
+#include "../include/susy.h"
 
 #ifndef FAST
-void mult_adj_su3_mat_vec(su3_matrix *a, su3_vector *b, su3_vector *c) {
+void mult_adj_mat_vec(matrix *a, vector *b, vector *c) {
   register int i, j;
-  register complex x, y, z;
   for (i = 0; i < DIMF; i++) {
-    x.real = 0.0;
-    x.imag = 0.0;
-    for (j = 0; j < DIMF; j++) {
-      CONJG(a->e[j][i], z);
-      CMUL(z, b->c[j], y);
-      CSUM(x, y);
+    // Initialize
+    c->c[i].real = a->e[0][i].real * b->c[0].real
+                 + a->e[0][i].imag * b->c[0].imag;
+    c->c[i].imag = a->e[0][i].real * b->c[0].imag
+                 - a->e[0][i].imag * b->c[0].real;
+    for (j = 1; j < DIMF; j++) {
+      c->c[i].real += a->e[j][i].real * b->c[j].real
+                    + a->e[j][i].imag * b->c[j].imag;
+      c->c[i].imag += a->e[j][i].real * b->c[j].imag
+                    - a->e[j][i].imag * b->c[j].real;
     }
-    c->c[i] = x;
   }
 }
 #else   // FAST version for DIMF=3 only
-void mult_adj_su3_mat_vec(su3_matrix *a, su3_vector *b, su3_vector *c) {
+void mult_adj_mat_vec(matrix *a, vector *b, vector *c) {
   int i;
   register Real t, ar, ai, br, bi, cr, ci;
   for (i = 0; i < 3; i++) {

@@ -1,50 +1,37 @@
 // -----------------------------------------------------------------
-// Based on ploop2.c
+// Compute Polyakov loop at each spatial site, for correlator
+// Use tempmat, tempmat2 and staple for temporary storage
 #include "susy_includes.h"
-// -----------------------------------------------------------------
 
-
-
-// -----------------------------------------------------------------
 void ploop_c() {
 #ifdef PL_CORR
-  register int i, t;
+  register int i;
   register site *s;
-  msg_tag *tag = NULL;
+  int t;
 
   FORALLSITES(i, s)
-    lattice[i].tempmat2 = lattice[i].linkf[TUP];
+    mat_copy_f(&(s->linkf[TUP]), &(tempmat[i]));
 
   for (t = 1; t < nt; t++) {
-    tag = start_gather_site(F_OFFSET(tempmat2), sizeof(su3_matrix_f),
-                            TUP, EVENANDODD, gen_pt[0] );
-    wait_gather(tag);
+    shiftmat(tempmat, tempmat2, goffset[TUP]);
     FORALLSITES(i, s) {
+      mat_copy_f(&(tempmat2[i]), &(tempmat[i]));
       if (s->t != 0)
         continue;
       if (t == 1)
-          mult_su3_nn_f(&(s->linkf[TUP]), (su3_matrix_f *)gen_pt[0][i],
-                        &(s->staple));
+        mult_nn_f(&(s->linkf[TUP]), (matrix_f *)gen_pt[0][i], &(staple[i]));
       else {
-        mult_su3_nn_f(&(s->staple), (su3_matrix_f *)gen_pt[0][i],
-                      &(s->tempmat2));
-        lattice[i].staple = lattice[i].tempmat2;
+        mult_nn_f(&(staple[i]), (matrix_f *)gen_pt[0][i], &(tempmat[i]));
+        mat_copy_f(&(tempmat[i]), &(staple[i]));
       }
     }
-
-    // Need both of these here -- very strange
-    FORALLSITES(i, s)
-      s->tempmat1 = *(su3_matrix_f *)(gen_pt[0][i]);
-    FORALLSITES(i, s)
-      s->tempmat2 = s->tempmat1;
-    cleanup_gather(tag);
   }
   FORALLSITES(i, s) {
     if (s->t != 0)
       continue;
 
-    s->ploop_corr = trace_su3_f(&(s->staple));
-    CDIVREAL((s->ploop_corr), NCOL, (s->ploop_corr));
+    s->ploop_corr = trace_f(&(staple[i]));
+    CMULREAL((s->ploop_corr), one_ov_N, (s->ploop_corr));
   }
 #endif
 }

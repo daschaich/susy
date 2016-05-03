@@ -1,28 +1,46 @@
 // -----------------------------------------------------------------
 // Fundamental matrix multiplication with adjoint of second matrix
+// c <-- c + a * bdag
 // c <-- a * bdag
 #include "../include/config.h"
 #include "../include/complex.h"
-#include "../include/su3.h"
+#include "../include/susy.h"
 
-#ifndef FAST
-void mult_su3_na_f(su3_matrix_f *a, su3_matrix_f *b, su3_matrix_f *c) {
+void mult_na_sum_f(matrix_f *a, matrix_f *b, matrix_f *c) {
   register int i, j, k;
-  register complex x, y;
   for (i = 0; i < NCOL; i++) {
     for (j = 0; j < NCOL; j++) {
-      x.real = 0.0;
-      x.imag = 0.0;
       for (k = 0; k < NCOL; k++) {
-        CMUL_J(a->e[i][k], b->e[j][k], y);
-        CSUM(x, y);
+        c->e[i][j].real += a->e[i][k].real * b->e[j][k].real
+                         + a->e[i][k].imag * b->e[j][k].imag;
+        c->e[i][j].imag += a->e[i][k].imag * b->e[j][k].real
+                         - a->e[i][k].real * b->e[j][k].imag;
       }
-      c->e[i][j] = x;
+    }
+  }
+}
+
+#ifndef FAST
+void mult_na_f(matrix_f *a, matrix_f *b, matrix_f *c) {
+  register int i, j, k;
+  for (i = 0; i < NCOL; i++) {
+    for (j = 0; j < NCOL; j++) {
+      // Initialize
+      c->e[i][j].real = a->e[i][0].real * b->e[j][0].real
+                      + a->e[i][0].imag * b->e[j][0].imag;
+      c->e[i][j].imag = a->e[i][0].imag * b->e[j][0].real
+                      - a->e[i][0].real * b->e[j][0].imag;
+      for (k = 1; k < NCOL; k++) {
+        c->e[i][j].real += a->e[i][k].real * b->e[j][k].real
+                         + a->e[i][k].imag * b->e[j][k].imag;
+        c->e[i][j].imag += a->e[i][k].imag * b->e[j][k].real
+                         - a->e[i][k].real * b->e[j][k].imag;
+      }
     }
   }
 }
 #else   // FAST version for NCOL=3 only
-void mult_su3_na(su3_matrix_f *a, su3_matrix_f *b, su3_matrix_f *c) {
+void mult_na(matrix_f *a, matrix_f *b, matrix_f *c) {
   int i,j;
   register Real t, ar, ai, br, bi, cr, ci;
   for (i = 0; i < 3; i++) {

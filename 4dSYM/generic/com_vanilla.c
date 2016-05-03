@@ -45,27 +45,27 @@
    declare_gather_field() Create a message tag that defines specific
                             details of a gather from field to be used later
    prepare_gather()       Optional call that allocates buffers for a previously
-                           declared gather.  Will automatically be called from
-                           do_gather() if not done before.
-   do_gather()           executes a previously declared gather
-   wait_gather()         waits for receives to finish, insuring that the
-                           data has actually arrived.
-   cleanup_gather()      frees all the buffers that were allocated, WHICH
-                           MEANS THAT THE GATHERED DATA MAY SOON DISAPPEAR.
-   accumulate_gather()   combines gathers into single message tag
-   declare_accumulate_gather_site()  does declare_gather_site() and
-                            accumulate_gather() in single step.
-   declare_accumulate_gather_field()  does declare_gather_field() and
-                                           accumulate_gather() in single step.
-   start_gather_site()        older function which does declare/prepare/do_gather
+                            declared gather.  Will automatically be called from
+                            do_gather() if not done before
+   do_gather()            Execute a previously declared gather
+   wait_gather()          Wait for receives to finish, insuring that the
+                            data has actually arrived
+   cleanup_gather()       Free all the buffers that were allocated, WHICH
+                            MEANS THAT THE GATHERED DATA MAY SOON DISAPPEAR
+   accumulate_gather()    Combine gathers into single message tag
+   declare_accumulate_gather_site()   Do declare_gather_site() and
+                                      accumulate_gather() in single step
+   declare_accumulate_gather_field()  Do declare_gather_field() and
+                                      accumulate_gather() in single step
+   start_gather_site()    Older function which does declare/prepare/do_gather
                            in a single step
-   start_gather_field()  older function which does
-                               declare_gather_field/prepare_gather/do_gather
+   start_gather_field()   Older function which does
+                               declare/prepare/do_gather_field
    start_general_gather_site()  starts asynchronous sends and receives required
                              to gather fields at arbitrary displacement.
    start_general_gather_field() starts asynchronous sends and receives
-                             required to gather neighbors from a temporary
-           array of fields
+                             required to gather neighbors from an
+                                array of fields
    wait_general_gather()   waits for receives to finish, insuring that the
                              data has actually arrived, and sets pointers to
            received data.
@@ -178,7 +178,7 @@ void g_floatsum(Real *fpt) {
 }
 
 // Sum a vector of Reals over all nodes
-void g_vecfloatsum(Real *fpt, int nReals) {
+void g_vecfloatsum(Real *fpt, int length) {
 }
 
 // Sum double over all nodes
@@ -294,8 +294,8 @@ double dclock_cpu() {
 #include <sys/time.h>
 double dclock() {
   struct timeval tp;
-  gettimeofday(&tp,NULL);
-  return ((double) tp.tv_sec + (double) tp.tv_usec * 1.e-6);
+  gettimeofday(&tp, NULL);
+  return ((double)tp.tv_sec + (double)tp.tv_usec * 1.e-6);
 }
 #else
 double dclock() {
@@ -328,18 +328,19 @@ void sort_eight_gathers(int index) {
     memcpy(&tt[i], &gather_array[index + i], sizeof(gather_t));
   for (i = XUP; i <= TUP; i++) {
     memcpy(&gather_array[index + i], &tt[2 * i], sizeof(gather_t));
-    memcpy(&gather_array[index + OPP_DIR(i)], &tt[2 * i + 1], sizeof(gather_t));
+    memcpy(&gather_array[index + OPP_DIR(i)],
+           &tt[2 * i + 1], sizeof(gather_t));
   }
 }
 
-// Utility function for finding coordinates of neighbor
+// Find coordinates of neighbor
 // Used by make_gather for nearest neighbor gathers
 static void neighbor_coords_special(
-  int x, int y, int z, int t,       /* coordinates of site */
-  int *dirpt,                       /* direction (eg XUP) */
-  int fb,                           /* "forwards/backwards"  */
+  int x, int y, int z, int t,       // Coordinates of site
+  int *dirpt,                       // Direction (eg XUP)
+  int fb,                           // Forwards/backwards
   int *x2p, int *y2p, int *z2p, int *t2p)
-                                    /* pointers to coordinates of neighbor */
+                                    // Pointers to coordinates of neighbor
 {
   int dir;
 
@@ -374,7 +375,7 @@ void make_nn_gathers() {
   gather_array_len = 8;
   gather_array = malloc(gather_array_len * sizeof(*gather_array));
   if (gather_array == NULL) {
-    printf("error: not enough room for gather_array in make_nn_gathers\n");
+    printf("make_nn_gathers: node%d can't malloc gather_array\n", this_node);
     terminate(1);
   }
 
@@ -440,7 +441,7 @@ int make_gather(
   if (inverse == WANT_INVERSE) {
     dir = n_gathers - 2;  // Index of gather we are working on
     gather_array[dir].neighbor = malloc(sites_on_node * sizeof(int));
-    if (gather_array[dir].neighbor==NULL) {
+    if (gather_array[dir].neighbor == NULL) {
       printf("make_gather: node%d no room for neighbor vector\n", this_node);
       terminate(1);
     }
@@ -483,7 +484,7 @@ int make_gather(
         else if (send_subl[r_subl] != s_subl) {
           printf("Gather mixes up sublattices: %d vs %d\n",
                  send_subl[r_subl], s_subl);
-          printf("on mapping %i %i %i %i -> %i %i %i %i\n",
+          printf("on mapping %d %d %d %d -> %d %d %d %d\n",
                  s->x, s->y, s->z, s->t, x, y, z, t);
           terminate(1);
         }
@@ -572,7 +573,7 @@ int make_gather(
 
    example:
   msg_tag *tag;
-  tag = declare_gather_site(F_OFFSET(phi), sizeof(su3_vector), XUP,
+  tag = declare_gather_site(F_OFFSET(phi), sizeof(vector), XUP,
                         EVEN, gen_pt[0]);
         prepare_gather(tag);  ** this step is optional **
         do_gather(tag);
@@ -599,7 +600,7 @@ int make_gather(
 msg_tag* declare_strided_gather(
   void *field,          /* source buffer aligned to desired field */
   int stride,           /* bytes between fields in source buffer */
-  int size,   /* size in bytes of the field (eg sizeof(su3_vector))*/
+  int size,   /* size in bytes of the field (eg sizeof(vector))*/
   int index,    /* direction to gather from. eg XUP - index into
          neighbor tables */
   int subl,   /* subl of sites whose neighbors we gather.
@@ -621,9 +622,10 @@ msg_tag* declare_strided_gather(
     }
   }
   else {
-    FORSOMEPARITY(i,s,subl) { if (gt->neighbor[i] != NOWHERE) {
-      dest[i] = (char *)field + gt->neighbor[i]*stride;
-    }}
+    FORSOMEPARITY(i, s, subl) {
+      if (gt->neighbor[i] != NOWHERE)
+        dest[i] = (char *)field + gt->neighbor[i] * stride;
+    }
   }
   return NULL;
 }
@@ -652,7 +654,7 @@ void cleanup_gather(msg_tag *mtag) {
 // Declare gather with a field offset
 msg_tag* declare_gather_site(
   field_offset field, /* which field? Some member of structure "site" */
-  int size,   /* size in bytes of the field (eg sizeof(su3_vector))*/
+  int size,   /* size in bytes of the field (eg sizeof(vector))*/
   int index,    /* direction to gather from. eg XUP - index into
          neighbor tables */
   int parity,   /* parity of sites whose neighbors we gather.
@@ -663,10 +665,10 @@ msg_tag* declare_gather_site(
          index, parity, dest);
 }
 
-// Old style gather routine which declares and starts in one call
+// Old style gather routine: declare and start in one call
 msg_tag* start_gather_site(
   field_offset field, /* which field? Some member of structure "site" */
-  int size,   /* size in bytes of the field (eg sizeof(su3_vector))*/
+  int size,   /* size in bytes of the field (eg sizeof(vector))*/
   int index,    /* direction to gather from. eg XUP - index into
          neighbor tables */
   int parity,   /* parity of sites whose neighbors we gather.
@@ -688,10 +690,10 @@ msg_tag* start_gather_site(
 
 // -----------------------------------------------------------------
 // Gather routines from an array of fields
-// Declares a gather from an array of fields
+// Declare a gather from an array of fields
 msg_tag* declare_gather_field(
   void *field,   /* which field? Pointer returned by malloc() */
-  int size,   /* size in bytes of the field (eg sizeof(su3_vector))*/
+  int size,   /* size in bytes of the field (eg sizeof(vector))*/
   int index,    /* direction to gather from. eg XUP - index into
          neighbor tables */
   int parity,   /* parity of sites whose neighbors we gather.
@@ -701,10 +703,10 @@ msg_tag* declare_gather_field(
   return declare_strided_gather(field, size, size, index, parity, dest);
 }
 
-// Old style gather routine which declares and starts in one call
+// Old style gather routine: declare and start in one call
 msg_tag* start_gather_field(
   void *field,   /* which field? Pointer returned by malloc() */
-  int size,   /* size in bytes of the field (eg sizeof(su3_vector))*/
+  int size,   /* size in bytes of the field (eg sizeof(vector))*/
   int index,    /* direction to gather from. eg XUP - index into
          neighbor tables */
   int parity,   /* parity of sites whose neighbors we gather.
@@ -736,9 +738,9 @@ msg_tag* start_gather_field(
 
    msg_tag *tag1, *tag2, *mtag;
 
-   tag1 = declare_gather_site(F_OFFSET(phi), sizeof(su3_vector), XUP,
+   tag1 = declare_gather_site(F_OFFSET(phi), sizeof(vector), XUP,
                     EVEN, gen_pt1);
-   tag2 = declare_gather_site(F_OFFSET(phi), sizeof(su3_vector), XDOWN,
+   tag2 = declare_gather_site(F_OFFSET(phi), sizeof(vector), XDOWN,
                     EVEN, gen_pt2);
    mtag = NULL;
    accumulate_gather(&mtag, tag1);
@@ -762,10 +764,10 @@ msg_tag* start_gather_field(
    msg_tag *mtag;
 
    mtag = NULL;
-   declare_accumulate_gather_site(&mtag, F_OFFSET(phi), sizeof(su3_vector),
-                              XUP, EVEN, gen_pt1);
-   declare_accumulate_gather_site(&mtag, F_OFFSET(phi), sizeof(su3_vector),
-                              XDOWN, EVEN, gen_pt2);
+   declare_accumulate_gather_site(&mtag, F_OFFSET(phi), sizeof(vector),
+                                  XUP, EVEN, gen_pt1);
+   declare_accumulate_gather_site(&mtag, F_OFFSET(phi), sizeof(vector),
+                                  XDOWN, EVEN, gen_pt2);
    prepare_gather(mtag);  ** optional **
    do_gather(mtag);
    wait_gather(mtag);
@@ -774,12 +776,12 @@ msg_tag* start_gather_field(
    wait_gather(mtag);
    cleanup_gather(mtag);
 
- one coule also replace
+ one could also replace
    mtag = NULL;
-   declare_accumulate_gather_site(&mtag, F_OFFSET(phi), sizeof(su3_vector),
-                              XUP,EVEN, gen_pt1);
+   declare_accumulate_gather_site(&mtag, F_OFFSET(phi), sizeof(vector),
+                                  XUP, EVEN, gen_pt1);
  with
-   mtag = declare_gather_site(F_OFFSET(phi), sizeof(su3_vector), XUP,
+   mtag = declare_gather_site(F_OFFSET(phi), sizeof(vector), XUP,
                     EVEN, gen_pt1);
  since they do the same thing, however the first form is a bit more uniform
  in the given example.
@@ -789,13 +791,12 @@ msg_tag* start_gather_field(
 void accumulate_gather(msg_tag **mmtag, msg_tag *mtag) {
 }
 
-// Declare and merge gather
-// Handle both the site structure and an array of fields
+// Declare and merge gather, handling both site structure and array of fields
 static void declare_accumulate_strided_gather(
   msg_tag **mmtag,      /* tag to accumulate gather into */
   void *field,          /* which field? Some member of structure "site" */
   int stride,           /* bytes between fields in source buffer */
-  int size,   /* size in bytes of the field (eg sizeof(su3_vector))*/
+  int size,   /* size in bytes of the field (eg sizeof(vector))*/
   int index,    /* direction to gather from. eg XUP - index into
          neighbor tables */
   int parity,   /* parity of sites whose neighbors we gather.
@@ -817,7 +818,7 @@ static void declare_accumulate_strided_gather(
 void declare_accumulate_gather_site(
   msg_tag **mmtag,
   field_offset field, /* which field? Some member of structure "site" */
-  int size,   /* size in bytes of the field (eg sizeof(su3_vector))*/
+  int size,   /* size in bytes of the field (eg sizeof(vector))*/
   int index,    /* direction to gather from. eg XUP - index into
          neighbor tables */
   int parity,   /* parity of sites whose neighbors we gather.
@@ -832,7 +833,7 @@ void declare_accumulate_gather_site(
 void declare_accumulate_gather_field(
   msg_tag **mmtag,
   void *field,   /* which field? Pointer returned by malloc() */
-  int size,   /* size in bytes of the field (eg sizeof(su3_vector))*/
+  int size,   /* size in bytes of the field (eg sizeof(vector))*/
   int index,    /* direction to gather from. eg XUP - index into
          neighbor tables */
   int parity,   /* parity of sites whose neighbors we gather.
@@ -854,12 +855,8 @@ void declare_accumulate_gather_field(
 // Usage: tag = start_general_gather_site(src, size, disp, parity, dest)
 // Example:
 //  msg_tag *tag;
-//  int disp[4];    // Displacement
-//  disp[XUP] = 1;
-//  disp[YUP] = -1;
-//  disp[ZUP] = 0;
-//  disp[TUP] = 0;
-//  tag = start_general_gather_site(F_OFFSET(phi), sizeof(su3_vector), disp,
+//  int disp[4] = {1, -1, 0, 0};    // Displacement
+//  tag = start_general_gather_site(F_OFFSET(phi), sizeof(vector), disp,
 //                                  EVEN, gen_pt[0]);
 //
 //  // Can do other stuff that doesn't depend on phi
@@ -876,7 +873,7 @@ static int g_gather_flag = 0; /* flag to tell if general gather in progress */
 msg_tag* start_general_strided_gather(
   char *field,          /* source buffer aligned to desired field */
   int stride,           /* bytes between fields in source buffer */
-  int size,   /* size in bytes of the field (eg sizeof(su3_vector))*/
+  int size,   /* size in bytes of the field (eg sizeof(vector))*/
   int *displacement,  /* displacement to gather from. four components */
   int subl,   /* subl of sites whose neighbors we gather.
          It is EVENANDODD, if all sublattices are done. */
@@ -945,7 +942,7 @@ msg_tag* start_general_strided_gather(
 
 msg_tag* start_general_gather_site(
   field_offset field, /* which field? Some member of structure "site" */
-  int size,   /* size in bytes of the field (eg sizeof(su3_vector))*/
+  int size,   /* size in bytes of the field (eg sizeof(vector))*/
   int *displacement,  /* displacement to gather from. four components */
   int parity,   /* parity of sites to which we gather.
          one of EVEN, ODD or EVENANDODD. */
@@ -957,7 +954,7 @@ msg_tag* start_general_gather_site(
 
 msg_tag* start_general_gather_field(
   void *field,         /* which field? Pointer returned by malloc() */
-  int size,   /* size in bytes of the field (eg sizeof(su3_vector))*/
+  int size,   /* size in bytes of the field (eg sizeof(vector))*/
   int *displacement,  /* displacement to gather from. four components */
   int parity,   /* parity of sites to which we gather.
          one of EVEN, ODD or EVENANDODD. */

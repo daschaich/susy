@@ -2,7 +2,7 @@
 // label[k] labels the offset of the kth connection between psibar and psi
 // by an integer 1 to 2
 // The separation of the paths is in New York metric
-// It corresponds to our labeling of rho and lambda, lambda_1 = lambda(1, 0)
+// It corresponds to our labeling lambda_1 = lambda(1, 0)
 // offset[k] is the actual offset of the kth connection
 // This program only generates the positive offsets
 // The others can be found by using adjoints of these paths
@@ -84,7 +84,7 @@ void setup_offset() {
   // The first four elements of gather_array are
   //   XUP, TUP, TDOWN, XDOWN
   // in that order!
-  // In order to use XDOWN = XUP + 1, etc., we make the next eight elements
+  // In order to use XDOWN = XUP + 1, etc., we make the next four elements
   //   XUP, XDOWN, TUP, TDOWN
   // Then goffset[0]=4 and goffset[1]=6
   // But we can't use these in EVEN or ODD gathers!
@@ -93,19 +93,19 @@ void setup_offset() {
                              WANT_INVERSE, NO_EVEN_ODD, SCRAMBLE_PARITY);
 
 #ifdef DEBUG_CHECK
-    int mu;
+    int dir;
     node0_printf("  %d ahead:", i);
-    for (mu = 0; mu < NDIMS; mu++)
-      node0_printf(" %d", offset[i][mu]);
+    for (dir = XUP; dir <= TUP; dir++)
+      node0_printf(" %d", offset[i][dir]);
 
     node0_printf(" (offset %d)\n", goffset[i]);
 #endif
   }
 
   // Make boundary condition tables
-  if (PBC > 0.0)
+  if (PBC >= 0)
     node0_printf("Periodic temporal boundary conditions\n");
-  if (PBC < 0.0)
+  if (PBC < 0)
     node0_printf("Antiperiodic temporal boundary conditions\n");
   setup_bc();
 }

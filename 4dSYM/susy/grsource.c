@@ -1,8 +1,42 @@
 // -----------------------------------------------------------------
+// Routines for filling fields (momenta and pseudofermions)
+// with gaussian random numbers
+#include "susy_includes.h"
+// -----------------------------------------------------------------
+
+
+
+// -----------------------------------------------------------------
+// Construct gaussian random momentum matrices
+// as sum of U(N) generators with gaussian random coefficients
+void ranmom() {
+  register int i, j, mu;
+  register site *s;
+  complex grn;
+
+  FORALLSITES(i, s) {
+    FORALLDIR(mu) {
+      clear_mat_f(&(s->mom[mu]));
+      for (j = 0; j < DIMF; j++) {
+#ifdef SITERAND
+        grn.real = gaussian_rand_no(&(s->site_prn));
+        grn.imag = gaussian_rand_no(&(s->site_prn));
+#else
+        grn.real = gaussian_rand_no(&(s->node_prn));
+        grn.imag = gaussian_rand_no(&(s->node_prn));
+#endif
+        c_scalar_mult_sum_mat_f(&(Lambda[j]), &grn, &(s->mom[mu]));
+      }
+    }
+  }
+}
+// -----------------------------------------------------------------
+
+
+
+// -----------------------------------------------------------------
 // Construct a gaussian random vector R, return src = (Mdag M)^{1 / 8} R
 // Need to invert despite the positive power, since it is fractional
-#include "susy_includes.h"
-
 // Return the number of iterations from the inversion
 int grsource(Twist_Fermion *src) {
   register int i, j, mu;
@@ -97,7 +131,7 @@ int grsource(Twist_Fermion *src) {
   FORALLSITES(i, s) {
     scalar_mult_TF(&(src[i]), ampdeg8, &(src[i]));
     for (j = 0; j < Norder; j++)
-      scalar_mult_add_TF(&(src[i]), &(psim[j][i]), amp8[j], &(src[i]));
+      scalar_mult_sum_TF(&(psim[j][i]), amp8[j], &(src[i]));
   }
 
   for (i = 0; i < Norder; i++)

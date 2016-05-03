@@ -1,85 +1,75 @@
 // -----------------------------------------------------------------
 // Evaluate the plaquette after block RG blocking steps
-// Use general_gathers; lattice must be divisible by 2^block in all dirs
+// Also print blocked det and widths sqrt(<P^2> - <P>^2) of distributions
+// Allow sanity check of reproducing plaquette() with block <= 0
+// Use tempmat, tempmat2 and Fmunu for temporary storage
 #include "susy_includes.h"
 
-void blocked_plaq(int Nstout, int block) {
+void blocked_plaq(int Nsmear, int block) {
   register int i, dir, dir2;
   register site *s;
-  register su3_matrix_f *m1, *m4;
-  int j, bl = 2, d1[4] = {0, 0, 0, 0}, d2[4] = {0, 0, 0, 0};
-  double ss_sum = 0.0, st_sum = 0.0, tr;
-  msg_tag *mtag;
-  su3_matrix_f tmat;
-  su3_matrix_f *su3mat = malloc(sites_on_node * sizeof(*su3mat));
+  int j, stride = 1;
+  double plaq = 0.0, plaqSq = 0.0, re = 0.0, reSq = 0.0, im = 0.0, imSq = 0.0;
+  double ss_sum = 0.0, st_sum = 0.0, norm = 10.0 * volume, tr;
+  complex det = cmplx(0.0, 0.0), tc;
+  matrix_f tmat, tmat2, tmat3;
 
-  if (su3mat == NULL) {
-    printf("blocked_plaq: can't malloc su3mat\n");
-    fflush(stdout);
-    terminate(1);
-  }
+  // Set number of links to stride, 2^block
+  for (j = 0; j < block; j++)
+    stride *= 2;
 
-  // Set number of links to stride, bl = 2^block
-  // Allow sanity check of reproducing ploop() with this routine
-  for (j = 1; j < block; j++)
-    bl *= 2;
-  if (block <= 0)
-    bl = 1;
-
-  // Copy temporal links to tempmat1
-  FORALLSITES(i, s)
-    su3mat_copy_f(&(s->linkf[TUP]), &(s->tempmat1));
-
-  // Compute the bl-strided plaquette, exploiting a symmetry under dir<-->dir2
+  // Compute the strided plaquette, exploiting a symmetry under dir<-->dir2
   for (dir = YUP; dir < NUMLINK; dir++) {
     for (dir2 = XUP; dir2 < dir; dir2++) {
-      for (j = 0; j < NDIMS; j++) {
-        d1[j] = bl * offset[dir][j];
-        d2[j] = bl * offset[dir2][j];
-      }
-      // Can only have one general gather at once...
-      mtag = start_general_gather_site(F_OFFSET(linkf[dir2]),
-                                        sizeof(su3_matrix_f), d1,
-                                        EVENANDODD, gen_pt[0]);
-
-      // su3mat = Udag_b(x) U_a(x)
+      // Copy links to tempmat and tempmat2 to be shifted
       FORALLSITES(i, s) {
-        m1 = &(s->linkf[dir]);
-        m4 = &(s->linkf[dir2]);
-        mult_su3_an_f(m4, m1, &su3mat[i]);
+        mat_copy_f(&(s->linkf[dir]), &(tempmat[i]));
+        mat_copy_f(&(s->linkf[dir2]), &(tempmat2[i]));
       }
 
-      // Copy first gather to tempmat1
-      wait_general_gather(mtag);
-      FORALLSITES(i, s)
-        su3mat_copy_f((su3_matrix_f *)(gen_pt[0][i]), &(s->tempmat1));
-      cleanup_general_gather(mtag);
+      // Get mom[dir2] from dir and mom[dir] from dir2, both with stride
+      // This order may be easier on cache
+      for (j = 0; j < stride; j++)
+        shiftmat(tempmat2, Fmunu[2], goffset[dir]);
+      for (j = 0; j < stride; j++)
+        shiftmat(tempmat, Fmunu[1], goffset[dir2]);
 
-      mtag = start_general_gather_site(F_OFFSET(linkf[dir]),
-                                        sizeof(su3_matrix_f), d2,
-                                        EVENANDODD, gen_pt[0]);
-      wait_general_gather(mtag);
+      // Compute tmat  = U_1(x) U_2(x + dir)
+      //     and tmat2 = U_2(x) U_1(x + dir2)
+      // then plaq = realtrace(tmat2, tmat)[ U_1(x) ]
+      //           = tr[Udag_1(x + dir2) Udag_2(x) U_1(x) U_2(x + dir)]
+      FORALLSITES(i, s) {
+        mult_nn_f(&(s->linkf[dir]), &(tempmat2[i]), &tmat);
+        mult_nn_f(&(s->linkf[dir2]), &(tempmat[i]), &tmat2);
+        tr = (double)realtrace_f(&tmat2, &tmat);
+        plaq += tr;
+        plaqSq += tr * tr;
+        if (dir == TUP || dir2 == TUP)
+          st_sum += tr;
+        else
+          ss_sum += tr;
 
-      // Compute tr[Udag_a(x+d2) Udag_b(x) U_a(x) U_b(x+d1)]
-      if (dir == TUP || dir2 == TUP) {
-        FORALLSITES(i, s) {
-          mult_su3_nn_f(&(su3mat[i]), &(s->tempmat1), &tmat);
-          st_sum += (double)realtrace_su3_f((su3_matrix_f *)(gen_pt[0][i]),
-                                            &tmat);
-        }
+        // Also monitor determinant
+        // (na instead of an to match sign conventions)
+        mult_na_f(&tmat2, &tmat, &tmat3);
+        tc = find_det(&tmat3);
+        CSUM(det, tc);
+        re += tc.real;
+        reSq += tc.real * tc.real;
+        im += tc.imag;
+        imSq += tc.imag * tc.imag;
       }
-      else {
-        FORALLSITES(i, s) {
-          mult_su3_nn_f(&(su3mat[i]), &(s->tempmat1), &tmat);
-          ss_sum += (double)realtrace_su3_f((su3_matrix_f *)(gen_pt[0][i]),
-                                            &tmat);
-        }
-      }
-      cleanup_general_gather(mtag);
     }
   }
+  g_doublesum(&plaq);
+  g_doublesum(&plaqSq);
   g_doublesum(&ss_sum);
   g_doublesum(&st_sum);
+  g_complexsum(&det);
+  g_doublesum(&re);
+  g_doublesum(&reSq);
+  g_doublesum(&im);
+  g_doublesum(&imSq);
 
   // Average over four plaquettes that involve the temporal link
   // and six that do not
@@ -87,8 +77,19 @@ void blocked_plaq(int Nstout, int block) {
   st_sum /= ((double)(4.0 * volume));
   tr = (ss_sum + st_sum) / 2.0;
   node0_printf("BPLAQ %d %d %.8g %.8g %.8g\n",
-               Nstout, block, ss_sum, st_sum, tr);
+               Nsmear, block, ss_sum, st_sum, tr);
 
-  free(su3mat);
+  CDIVREAL(det, norm, det);
+  node0_printf("BDET %d %d %.6g %.6g\n", Nsmear, block, det.real, det.imag);
+
+  plaq /= norm;
+  plaqSq /= norm;
+  re /= norm;
+  reSq /= norm;
+  im /= norm;
+  imSq /= norm;
+  node0_printf("BWIDTHS %d %d %.6g %.6g %.6g\n", Nsmear, block,
+               sqrt(plaqSq - plaq * plaq),
+               sqrt(reSq - re * re), sqrt(imSq - im * im));
 }
 // -----------------------------------------------------------------

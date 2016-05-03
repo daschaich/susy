@@ -8,9 +8,11 @@
 
 // -----------------------------------------------------------------
 int main(int argc, char *argv[]) {
-  int prompt;
-  double dssplaq, dstplaq, dtime;
-  complex plp = cmplx(99, 99);
+  int prompt, dir;
+  double ss_plaq, st_plaq, dtime, plpMod = 0.0;
+  double linktr[NUMLINK], linktr_ave, linktr_width;
+  double link_det[NUMLINK], det_ave, det_width;
+  complex plp = cmplx(99.0, 99.0);
   int ivec, total_iters = 0;
 #ifndef EIG
   node0_printf("Don't use control_eig unless compiling with -DEIG!\n");
@@ -31,7 +33,7 @@ int main(int argc, char *argv[]) {
   setup_PtoP();
   setup_FQ();
 
-  // Load input and run (loop removed)
+  // Load input and run
   if (readin(prompt) != 0) {
     node0_printf("ERROR in readin, aborting\n");
     terminate(1);
@@ -39,44 +41,37 @@ int main(int argc, char *argv[]) {
   dtime = -dclock();
 
   // Check: compute initial plaquette and bosonic action
-  d_plaquette(&dssplaq, &dstplaq);
-  node0_printf("START %.8g %.8g %.8g ", dssplaq, dstplaq, dssplaq + dstplaq);
-  dssplaq = d_gauge_action();
-  node0_printf("%.8g\n", dssplaq / (double)volume);
+  plaquette(&ss_plaq, &st_plaq);
+  node0_printf("START %.8g %.8g %.8g ", ss_plaq, st_plaq, ss_plaq + st_plaq);
+  ss_plaq = gauge_action(NODET);
+  node0_printf("%.8g\n", ss_plaq / (double)volume);
 
-  // Do "local" measurements to check evolution
-  // Polyakov loop measurement
-  plp = ploop();
+  // Do "local" measurements to check configuration
+  // Tr[Udag.U] / N
+  linktr_ave = link_trace(linktr, &linktr_width,
+                          link_det, &det_ave, &det_width);
+  node0_printf("FLINK");
+  for (dir = XUP; dir < NUMLINK; dir++)
+    node0_printf(" %.6g", linktr[dir]);
+  node0_printf(" %.6g %.6g\n", linktr_ave, linktr_width);
+  node0_printf("FLINK_DET");
+  for (dir = XUP; dir < NUMLINK; dir++)
+    node0_printf(" %.6g", link_det[dir]);
+  node0_printf(" %.6g %.6g\n", det_ave, det_width);
 
-  // Tr[Udag.U] / N and plaquette measurements
-  d_link();
-  d_plaquette(&dssplaq, &dstplaq);
-
-  // Re(Polyakov) Im(Poyakov) cg_iters ss_plaq st_plaq
+  // Polyakov loop and plaquette measurements
+  // Format: GMES Re(Polyakov) Im(Poyakov) cg_iters ss_plaq st_plaq
+  plp = ploop(TUP, NODET, &plpMod);
+  plaquette(&ss_plaq, &st_plaq);
   node0_printf("GMES %.8g %.8g 0 %.8g %.8g ",
-               plp.real, plp.imag, dssplaq, dstplaq);
+               plp.real, plp.imag, ss_plaq, st_plaq);
 
   // Bosonic action (printed twice by request)
-  dssplaq = d_gauge_action();
-  node0_printf("%.8g\n", dssplaq / (double)volume);
-  node0_printf("BACTION %.8g\n", dssplaq / (double)volume);
-
-#if 0
-  // Optionally fix to Coulomb gauge to check gauge invariance
-  d_plaquette(&dssplaq, &dstplaq);    // To be printed below
-  node0_printf("Fixing to Coulomb gauge...\n");
-  double gtime = -dclock();
-
-  // Gauge fixing arguments explained in generic/gaugefix.c
-  // With first argument outside XUP, ..., TUP,
-  // first four links are included in gauge-fixing condition
-  gaugefix(TUP, 1.5, 5000, GAUGE_FIX_TOL, -1, -1);
-  gtime += dclock();
-  node0_printf("GFIX time = %.4g seconds\n", gtime);
-  node0_printf("BEFORE %.8g %.8g\n", dssplaq, dstplaq);
-  d_plaquette(&dssplaq, &dstplaq);
-  node0_printf("AFTER  %.8g %.8g\n", dssplaq, dstplaq);
-#endif
+  // Might as well spit out volume average of Polyakov loop modulus
+  ss_plaq = gauge_action(NODET) / (double)volume;
+  node0_printf("%.8g ", ss_plaq);
+  node0_printf("%.8g\n", plpMod);
+  node0_printf("BACTION %.8g\n", ss_plaq);
 
   // Main measurement: PRIMME eigenvalues
   // Allocate eigenvectors
@@ -123,6 +118,7 @@ int main(int argc, char *argv[]) {
   for (ivec = 0; ivec < Nvec; ivec++)
     free(eigVec[ivec]);
   free(eigVec);
+  g_sync();         // Needed by at least some clusters
   return 0;
 }
 // -----------------------------------------------------------------

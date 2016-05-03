@@ -5,7 +5,7 @@
 // to return a Real uniformly distributed between zero and one
 #include "../include/config.h"
 #include <math.h>
-#include "../include/su3.h"
+#include "../include/susy.h"
 #include "../include/random.h"
 // -----------------------------------------------------------------
 

@@ -1,13 +1,36 @@
 // -----------------------------------------------------------------
-// Helper functions for NCOLxNCOL determinants, adjugates and inverses
+// Functions for NCOLxNCOL determinants, adjugates and inverses
 #include "susy_includes.h"
 // -----------------------------------------------------------------
 
 
 
 // -----------------------------------------------------------------
+// Use LAPACK for more than 4 colors
+#if (NCOL > 4)
+// Compute LU decomposition of a complex matrix
+// http://www.physics.orst.edu/~rubin/nacphy/lapack/routines/zgetrf.html
+// First and second arguments are the dimensions of the matrix
+// Third argument is the LU-decomposed matrix
+// Fourth argument is the
+// Fifth argument is the LU decomposition pivot matrix
+// Final argument reports success or information about failure
+void zgetrf_(int *N1, int *N2, double *store, int *lda, int *ipiv, int *stat);
+
+// Invert a complex matrix given its LU decomposition
+// http://www.physics.orst.edu/~rubin/nacphy/lapack/routines/zgetri.html
+// First four and last arguments are defined above
+// Fifth argument is real workspace of size given by the sixth argument
+void zgetri_(int *N, double *store, int *lda, int *ipiv,
+             double *work, int *Nwork, int* stat);
+#endif
+// -----------------------------------------------------------------
+
+
+
+// -----------------------------------------------------------------
 // LU decomposition based on Numerical Recipes
-void ludcmp_cx(su3_matrix_f *a, int *indx, Real *d) {
+void ludcmp_cx(matrix_f *a, int *indx, Real *d) {
   int i, imax, j, k;
   Real big, fdum;
   complex sum, dum, ct;
@@ -79,12 +102,9 @@ void ludcmp_cx(su3_matrix_f *a, int *indx, Real *d) {
 // -----------------------------------------------------------------
 // Compute complex determinant of given link,
 // using Numerical Recipes-based LU decomposition above
-complex find_det(su3_matrix_f *Q) {
+complex find_det(matrix_f *Q) {
   complex det;
 
-#if (NCOL == 1)
-  det = Q->e[0][0];
-#endif
 #if (NCOL == 2)
   complex det2;
 
@@ -96,9 +116,9 @@ complex find_det(su3_matrix_f *Q) {
   int i, indx[NCOL];
   Real d;
   complex det2;
-  su3_matrix_f QQ;
+  matrix_f QQ;
 
-  su3mat_copy_f(Q, &QQ);
+  mat_copy_f(Q, &QQ);
   ludcmp_cx(&QQ, indx, &d);
   det = cmplx(d, 0.0);
   for (i = 0; i < NCOL; i++) {
@@ -115,7 +135,7 @@ complex find_det(su3_matrix_f *Q) {
 
 // -----------------------------------------------------------------
 // Cofactor of src matrix omitting given row and column
-complex cofactor(su3_matrix_f *src, int row, int col) {
+complex cofactor(matrix_f *src, int row, int col) {
   int a = 0, b = 0, i, j;
   complex submat[NCOL - 1][NCOL - 1], cof = cmplx(0.0, 0.0);
 
@@ -135,34 +155,34 @@ complex cofactor(su3_matrix_f *src, int row, int col) {
 
 #if (NCOL == 3)
   // Here things are easy
-  complex tc1, tc2;
-  CMUL(submat[0][0], submat[1][1], tc1);
+  complex tc, tc2;
+  CMUL(submat[0][0], submat[1][1], tc);
   CMUL(submat[1][0], submat[0][1], tc2);
-  CSUB(tc1, tc2, cof);
+  CSUB(tc, tc2, cof);
 #endif
 #if (NCOL == 4)
   // Here things are less fun, but still not tough
   // det = 00(11*22 - 21*12) - 01(10*22 - 20*12) + 02(10*21 - 20*11)
-  complex tc1, tc2, tc3, sav;
-  CMUL(submat[1][1], submat[2][2], tc1);
+  complex tc, tc2, tc3, sav;
+  CMUL(submat[1][1], submat[2][2], tc);
   CMUL(submat[2][1], submat[1][2], tc2);
-  CSUB(tc1, tc2, tc3);
+  CSUB(tc, tc2, tc3);
   CMUL(submat[0][0], tc3, cof);
 
-  CMUL(submat[1][0], submat[2][2], tc1);
+  CMUL(submat[1][0], submat[2][2], tc);
   CMUL(submat[2][0], submat[1][2], tc2);
-  CSUB(tc2, tc1, tc3);    // Absorb negative sign
+  CSUB(tc2, tc, tc3);    // Absorb negative sign
   CMUL(submat[0][1], tc3, sav);
   CSUM(cof, sav);
 
-  CMUL(submat[1][0], submat[2][1], tc1);
+  CMUL(submat[1][0], submat[2][1], tc);
   CMUL(submat[2][0], submat[1][1], tc2);
-  CSUB(tc1, tc2, tc3);
+  CSUB(tc, tc2, tc3);
   CMUL(submat[0][2], tc3, sav);
   CSUM(cof, sav);
 #endif
 #if (NCOL > 4)
-  node0_printf("Haven't coded cofactor for more than 4 colors\n");
+  node0_printf("Should not be calling cofactor with more than 4 colors\n");
   terminate(1);
 #endif
   return cof;
@@ -173,10 +193,7 @@ complex cofactor(su3_matrix_f *src, int row, int col) {
 
 // -----------------------------------------------------------------
 // Transpose of the cofactor matrix
-void adjugate(su3_matrix_f *src, su3_matrix_f *dest) {
-#if (NCOL == 1)
-  dest->e[0][0] = cmplx(1.0, 0.0);
-#endif
+void adjugate(matrix_f *src, matrix_f *dest) {
 #if (NCOL == 2)
   dest->e[0][0] = src->e[1][1];
   dest->e[1][1] = src->e[0][0];
@@ -197,7 +214,7 @@ void adjugate(su3_matrix_f *src, su3_matrix_f *dest) {
   }
 #endif
 #if (NCOL > 4)
-  node0_printf("Haven't coded adjugate for more than 4 colors\n");
+  node0_printf("Should not be calling adjugate with more than 4 colors\n");
   exit(1);
 #endif
 }
@@ -208,12 +225,7 @@ void adjugate(su3_matrix_f *src, su3_matrix_f *dest) {
 // -----------------------------------------------------------------
 // Compute link matrix inverse as adjugate matrix
 // normalized by the determinant
-void invert(su3_matrix_f *in, su3_matrix_f *out) {
-#if (NCOL == 1)
-  complex one = cmplx(1.0, 0.0);
-  CDIV(one, in->e[0][0], out->e[0][0]);
-#endif
-
+void invert(matrix_f *in, matrix_f *out) {
 #if (NCOL == 2 || NCOL == 3 || NCOL == 4)
   int i, j;
   complex tc, det = find_det(in);
@@ -226,8 +238,33 @@ void invert(su3_matrix_f *in, su3_matrix_f *out) {
   }
 #endif
 #if (NCOL > 4)
-  node0_printf("Haven't coded invert for more than 4 colors\n");
-  exit(1);
+  // Use LAPACK for more than 4 colors
+  // Checked that this produces the correct results for NCOL <= 4
+  int i, row, col, Npt = NCOL, stat = 0, Nwork = 2 * NCOL;
+
+  // Convert in to column-major double array used by LAPACK
+  for (row = 0; row < NCOL; row++) {
+    for (col = 0; col < NCOL; col++) {
+      i = 2 * (col * NCOL + row);
+      store[i] = in->e[row][col].real;
+      store[i + 1] = in->e[row][col].imag;
+    }
+  }
+
+  // Compute LU decomposition of in
+  zgetrf_(&Npt, &Npt, store, &Npt, ipiv, &stat);
+
+  // Invert in given its LU decomposition
+  zgetri_(&Npt, store, &Npt, ipiv, work, &Nwork, &stat);
+
+  // Move the results into the matrix_f structure for out
+  for (row = 0; row < NCOL; row++) {
+    for (col = 0; col < NCOL; col++) {
+      i = 2 * (col * NCOL + row);
+      out->e[row][col].real = store[i];
+      out->e[row][col].imag = store[i + 1];
+    }
+  }
 #endif
 }
 // -----------------------------------------------------------------
@@ -235,59 +272,57 @@ void invert(su3_matrix_f *in, su3_matrix_f *out) {
 
 
 // -----------------------------------------------------------------
-// Average determinant over lattice volume
+// Average plaquette determinant over lattice volume
+// Assume compute_plaqdet() has already been run
 void measure_det() {
-  register int i, dir, dir2;
+  register int i, a, b;
   register site *s;
-//  Real redet, imdet, replaq, implaq;
-  Real norm = (Real)(NUMLINK * (NUMLINK - 1) / 2 * volume);
-  complex det_link, tot_det_link, tot_det_link_sq;//, plaquette;
-  su3_matrix_f tmat;
-  msg_tag *mtag0, *mtag1;
+  Real norm = (Real)(volume * NUMLINK * (NUMLINK - 1) / 2);
+  double WSq = 0.0;
+  complex tot = cmplx(0.0, 0.0), tot_sq = cmplx(0.0, 0.0), tc;
 
-  tot_det_link = cmplx(0.0, 0.0);
-  tot_det_link_sq = cmplx(0.0, 0.0);
-  for (dir = YUP; dir < NUMLINK; dir++) {
-    for (dir2 = XUP; dir2 < dir; dir2++) {
-      mtag0 = start_gather_site(F_OFFSET(linkf[dir2]), sizeof(su3_matrix_f),
-                                goffset[dir], EVENANDODD, gen_pt[0]);
-      mtag1 = start_gather_site(F_OFFSET(linkf[dir]), sizeof(su3_matrix_f),
-                                goffset[dir2], EVENANDODD, gen_pt[1]);
-
-      FORALLSITES(i, s)
-        mult_su3_an_f(&(s->linkf[dir2]), &(s->linkf[dir]), &(s->tempmat1));
-
-      wait_gather(mtag0);
+  for (a = YUP; a < NUMLINK; a++) {
+    for (b = XUP; b < a; b++) {
       FORALLSITES(i, s) {
-        mult_su3_nn_f(&(s->tempmat1), (su3_matrix_f *)(gen_pt[0][i]),
-                      &(s->staple));
-      }
-      wait_gather(mtag1);
-      FORALLSITES(i, s) {
-        mult_su3_na_f((su3_matrix_f *)(gen_pt[1][i]), &(s->staple), &tmat);
-        det_link = find_det(&tmat);
-//        plaquette = trace_su3_f(&tmat);
-        CSUM(tot_det_link, det_link);
-        tot_det_link_sq.real += det_link.real * det_link.real;
-        tot_det_link_sq.imag += det_link.imag * det_link.imag;
+        CSUM(tot, plaqdet[a][b][i]);
+        tot_sq.real += plaqdet[a][b][i].real * plaqdet[a][b][i].real;
+        tot_sq.imag += plaqdet[a][b][i].imag * plaqdet[a][b][i].imag;
 
-//        redet = det_link.real - 1.0;
-//        imdet = det_link.imag;
-//        replaq = plaquette.real;
-//        implaq = plaquette.imag;
-//        node0_printf("DELIN %.4g %.4g\n", redet * redet + imdet * imdet,
-//                                          replaq * replaq + implaq * implaq);
+        CADD(plaqdet[a][b][i], minus1, tc);
+        WSq += cabs_sq(&tc);
       }
-      cleanup_gather(mtag0);
-      cleanup_gather(mtag1);
     }
   }
+  g_complexsum(&tot);
+  g_complexsum(&tot_sq);
+  g_doublesum(&WSq);
+  CDIVREAL(tot, norm, tot);
+  CDIVREAL(tot_sq, norm, tot_sq);
+  node0_printf("DET %.6g %.6g %.6g %.6g %.6g\n",
+               tot.real, tot.imag, tot_sq.real, tot_sq.imag, WSq / norm);
+}
+// -----------------------------------------------------------------
 
-  g_complexsum(&(tot_det_link));
-  g_complexsum(&(tot_det_link_sq));
-  CDIVREAL(tot_det_link, norm, tot_det_link);
-  CDIVREAL(tot_det_link_sq, norm, tot_det_link_sq);
-  node0_printf("DET %.6g %.6g %.6g %.6g\n", tot_det_link.real,
-               tot_det_link.imag, tot_det_link_sq.real, tot_det_link_sq.imag);
+
+
+// -----------------------------------------------------------------
+// Divide the determinant out of the matrix in
+void det_project(matrix_f *in, matrix_f *out) {
+  complex tc, tc2;
+
+  tc = find_det(in);
+  tc2 = clog(&tc);
+  CMULREAL(tc2, -one_ov_N, tc);
+  tc2 = cexp(&tc);
+  c_scalar_mult_mat_f(in, &tc2, out);
+
+#ifdef DEBUG_CHECK
+  // Sanity check
+  tc = find_det(out);
+  if (fabs(tc.imag) > IMAG_TOL || fabs(1.0 - tc.real) > IMAG_TOL) {
+    printf("node%d WARNING: det = (%.4g, %.4g) after projection...\n",
+           this_node, tc.real, tc.imag);
+  }
+#endif
 }
 // -----------------------------------------------------------------

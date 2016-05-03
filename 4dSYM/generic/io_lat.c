@@ -64,7 +64,7 @@
 
 // -----------------------------------------------------------------
 // Copy NUMLINK single precision fundamental matrices to generic precision
-void f2d_mat(fsu3_matrix_f *a, su3_matrix_f *b) {
+void f2d_mat(fmatrix_f *a, matrix_f *b) {
   int dir, i, j;
 
   for (dir = 0; dir < NUMLINK; dir++) {
@@ -76,7 +76,7 @@ void f2d_mat(fsu3_matrix_f *a, su3_matrix_f *b) {
 }
 
 // Copy NUMLINK generic precision fundamental matrices to single precision
-void d2f_mat(su3_matrix_f *a, fsu3_matrix_f *b) {
+void d2f_mat(matrix_f *a, fmatrix_f *b) {
   int dir, i, j;
 
   for (dir = 0; dir < NUMLINK; dir++) {
@@ -134,7 +134,7 @@ gauge_file *w_serial_i(char *filename) {
 
 // -----------------------------------------------------------------
 // Flush lbuf to output, resetting buf_length is reset
-static void flush_lbuf_to_file(gauge_file *gf, fsu3_matrix_f *lbuf,
+static void flush_lbuf_to_file(gauge_file *gf, fmatrix_f *lbuf,
                                int *buf_length) {
 
   FILE *fp = gf->fp;
@@ -143,7 +143,7 @@ static void flush_lbuf_to_file(gauge_file *gf, fsu3_matrix_f *lbuf,
   if (*buf_length <= 0)
     return;
 
-  stat = (int)fwrite(lbuf, NUMLINK * sizeof(fsu3_matrix_f), *buf_length, fp);
+  stat = (int)fwrite(lbuf, NUMLINK * sizeof(fmatrix_f), *buf_length, fp);
   if (stat != *buf_length) {
     printf("w_serial: node%d gauge configuration write error %d file %s\n",
            this_node, errno, gf->filename);
@@ -182,17 +182,17 @@ static void accum_cksums(gauge_file *gf, int *rank29, int *rank31,
 // -----------------------------------------------------------------
 // Flush tbuf to lbuf and accumulate checksums without resetting tbuf_length
 static void flush_tbuf_to_lbuf(gauge_file *gf, int *rank29, int *rank31,
-             fsu3_matrix_f *lbuf, int *buf_length,
-             fsu3_matrix_f *tbuf, int tbuf_length) {
+                               fmatrix_f *lbuf, int *buf_length,
+                               fmatrix_f *tbuf, int tbuf_length) {
 
   int nword;
   u_int32type *buf;
 
   if (tbuf_length > 0) {
     memcpy((void *)&lbuf[NUMLINK * (*buf_length)],
-           (void *)tbuf, NUMLINK * tbuf_length * sizeof(fsu3_matrix_f));
+           (void *)tbuf, NUMLINK * tbuf_length * sizeof(fmatrix_f));
 
-    nword = NUMLINK * (int)sizeof(fsu3_matrix_f)
+    nword = NUMLINK * (int)sizeof(fmatrix_f)
                     / (int)sizeof(int32type) * tbuf_length;
     buf = (u_int32type *)&lbuf[NUMLINK * (*buf_length)];
     accum_cksums(gf, rank29, rank31, buf, nword);
@@ -201,16 +201,16 @@ static void flush_tbuf_to_lbuf(gauge_file *gf, int *rank29, int *rank31,
   }
 }
 
-static void send_buf_to_node0(fsu3_matrix_f *tbuf, int tbuf_length,
+static void send_buf_to_node0(fmatrix_f *tbuf, int tbuf_length,
                               int currentnode) {
 
   if (this_node == currentnode) {
     send_field((char *)tbuf,
-               NUMLINK * tbuf_length * sizeof(fsu3_matrix_f), 0);
+               NUMLINK * tbuf_length * sizeof(fmatrix_f), 0);
   }
   else if (this_node == 0) {
     get_field((char *)tbuf,
-              NUMLINK * tbuf_length * sizeof(fsu3_matrix_f), currentnode);
+              NUMLINK * tbuf_length * sizeof(fmatrix_f), currentnode);
   }
 }
 // -----------------------------------------------------------------
@@ -220,29 +220,28 @@ static void send_buf_to_node0(fsu3_matrix_f *tbuf, int tbuf_length,
 // -----------------------------------------------------------------
 // Only node 0 writes the gauge configuration to a binary file gf
 void w_serial(gauge_file *gf) {
+  register int i, j;
+  int rank29, rank31, buf_length, tbuf_length;
+  int x, y, z, t, currentnode, newnode;
   FILE *fp = NULL;
   gauge_header *gh = NULL;
-  int rank29, rank31;
-  fsu3_matrix_f *lbuf = NULL, *tbuf = NULL;
-  int buf_length, tbuf_length;
-  register int i, j;
+  fmatrix_f *lbuf = NULL;
+  fmatrix_f *tbuf = malloc(nx * NUMLINK * sizeof(*tbuf));
   off_t offset;               // File stream pointer
   off_t coord_list_size;      // Size of coordinate list in bytes
   off_t head_size;            // Size of header plus coordinate list
   off_t checksum_offset = 0;  // Location of checksum
   off_t gauge_check_size;     // Size of checksum record
 
-  int currentnode,newnode;
-  int x, y, z, t;
 
   // Allocate message buffer space for one x dimension of the local hypercube
   // The largest possible space we need is nx
-  tbuf = malloc(nx * NUMLINK * sizeof(*tbuf));
   if (tbuf == NULL) {
     printf("w_serial: node%d can't malloc tbuf\n", this_node);
     terminate(1);
   }
 
+  // Only allocate lbuf on node0
   if (this_node == 0) {
     lbuf = malloc(MAX_BUF_LENGTH * NUMLINK * sizeof(*lbuf));
     if (lbuf == NULL) {
@@ -279,9 +278,9 @@ void w_serial(gauge_file *gf) {
   gf->check.sum29 = 0;
   // Count 32-bit words mod 29 and mod 31 in order of appearance on file
   // Here only node 0 uses these values -- both start at 0
-  rank29 = NUMLINK * sizeof(fsu3_matrix_f)
+  rank29 = NUMLINK * sizeof(fmatrix_f)
                    / sizeof(int32type) * sites_on_node * this_node % 29;
-  rank31 = NUMLINK * sizeof(fsu3_matrix_f)
+  rank31 = NUMLINK * sizeof(fmatrix_f)
                    / sizeof(int32type) * sites_on_node * this_node % 31;
 
   g_sync();
@@ -378,7 +377,7 @@ void r_serial(gauge_file *gf) {
   char *filename;
   int byterevflag;
 
-  off_t offset = 0 ;          // File stream pointer
+  off_t offset = 0;           // File stream pointer
   off_t gauge_check_size;     // Size of gauge configuration checksum record
   off_t coord_list_size;      // Size of coordinate list in bytes
   off_t head_size;            // Size of header plus coordinate list
@@ -390,8 +389,8 @@ void r_serial(gauge_file *gf) {
   gauge_check test_gc;
   u_int32type *val;
   int rank29, rank31;
-  fsu3_matrix_f *lbuf = NULL;   // Only allocate on node0
-  fsu3_matrix_f tmpsu3[NUMLINK];
+  fmatrix_f *lbuf = NULL;   // Only allocate on node0
+  fmatrix_f tmat[NUMLINK];
   int idest = 0;
   fp = gf->fp;
   gh = gf->header;
@@ -413,7 +412,7 @@ void r_serial(gauge_file *gf) {
     head_size = checksum_offset + gauge_check_size;
 
     // Allocate single precision read buffer
-    lbuf = malloc(MAX_BUF_LENGTH*NUMLINK*sizeof(fsu3_matrix_f));
+    lbuf = malloc(MAX_BUF_LENGTH * NUMLINK * sizeof(fmatrix_f));
     if (lbuf == NULL) {
       printf("r_serial: node%d can't malloc lbuf\n", this_node);
       fflush(stdout);
@@ -474,9 +473,9 @@ void r_serial(gauge_file *gf) {
           buf_length = MAX_BUF_LENGTH;
         /* then do read */
 
-        stat = (int)fread(lbuf, NUMLINK * sizeof(fsu3_matrix_f), buf_length, fp);
+        stat = (int)fread(lbuf, NUMLINK * sizeof(fmatrix_f), buf_length, fp);
         if (stat != buf_length) {
-          printf("r_serial: node %d gauge configuration read error %d file %s\n",
+          printf("r_serial: node%d gauge configuration read error %d file %s\n",
                  this_node, errno, filename);
           fflush(stdout);
           terminate(1);
@@ -486,13 +485,13 @@ void r_serial(gauge_file *gf) {
 
       if (destnode == 0) {  // Just copy links
         idest = node_index(x, y, z, t);
-        // Save NUMLINK matrices in tmpsu3 for further processing
-        memcpy(tmpsu3, &lbuf[NUMLINK * where_in_buf],
-               NUMLINK * sizeof(fsu3_matrix_f));
+        // Save NUMLINK matrices in tmat for further processing
+        memcpy(tmat, &lbuf[NUMLINK * where_in_buf],
+               NUMLINK * sizeof(fmatrix_f));
       }
       else {                // Send to correct node
         send_field((char *)&lbuf[NUMLINK * where_in_buf],
-                   NUMLINK * sizeof(fsu3_matrix_f), destnode);
+                   NUMLINK * sizeof(fmatrix_f), destnode);
       }
       where_in_buf++;
     }
@@ -502,23 +501,23 @@ void r_serial(gauge_file *gf) {
       if (this_node == destnode) {
         idest = node_index(x, y, z, t);
         // Receive NUMLINK matrices in temporary space for further processing
-        get_field((char *)tmpsu3, NUMLINK * sizeof(fsu3_matrix_f), 0);
+        get_field((char *)tmat, NUMLINK * sizeof(fmatrix_f), 0);
       }
     }
 
     /* The receiving node does the byte reversal and then checksum,
-       if needed.  At this point tmpsu3 contains the input matrices
+       if needed.  At this point tmat contains the input matrices
        and idest points to the destination site structure. */
     if (this_node == destnode) {
       if (byterevflag == 1)
-        byterevn((int32type *)tmpsu3,
-                 NUMLINK * sizeof(fsu3_matrix_f) / sizeof(int32type));
+        byterevn((int32type *)tmat,
+                 NUMLINK * sizeof(fmatrix_f) / sizeof(int32type));
       // Accumulate checksums
-      for (k = 0, val = (u_int32type *)tmpsu3;
-           k < NUMLINK * (int)sizeof(fsu3_matrix_f) / (int)sizeof(int32type);
+      for (k = 0, val = (u_int32type *)tmat;
+           k < NUMLINK * (int)sizeof(fmatrix_f) / (int)sizeof(int32type);
            k++, val++) {
-        test_gc.sum29 ^= (*val)<<rank29 | (*val)>>(32-rank29);
-        test_gc.sum31 ^= (*val)<<rank31 | (*val)>>(32-rank31);
+        test_gc.sum29 ^= (*val)<<rank29 | (*val)>>(32 - rank29);
+        test_gc.sum31 ^= (*val)<<rank31 | (*val)>>(32 - rank31);
         rank29++;
         if (rank29 >= 29)
           rank29 = 0;
@@ -527,11 +526,11 @@ void r_serial(gauge_file *gf) {
           rank31 = 0;
       }
       // Copy NUMLINK matrices to generic-precision lattice[idest]
-      f2d_mat(tmpsu3, &lattice[idest].linkf[0]);
+      f2d_mat(tmat, &lattice[idest].linkf[0]);
     }
     else {
-      rank29 += NUMLINK * sizeof(fsu3_matrix_f) / sizeof(int32type);
-      rank31 += NUMLINK * sizeof(fsu3_matrix_f) / sizeof(int32type);
+      rank29 += NUMLINK * sizeof(fmatrix_f) / sizeof(int32type);
+      rank31 += NUMLINK * sizeof(fmatrix_f) / sizeof(int32type);
       rank29 %= 29;
       rank31 %= 31;
     }
@@ -543,7 +542,7 @@ void r_serial(gauge_file *gf) {
   if (this_node == 0) {
     // Read and verify checksum
     printf("Restored binary gauge configuration serially from file %s\n",
-        filename);
+           filename);
     if (gh->magic_number == GAUGE_VERSION_NUMBER) {
       printf("Time stamp %s\n", gh->time_stamp);
       if (fseeko(fp, checksum_offset, SEEK_SET) < 0) {

@@ -20,11 +20,12 @@ void setup_lambda() {
 
   // Make sure Lambda matrices are initialized
   for (i = 0; i < DIMF; i++)
-    clear_su3mat_f(&(Lambda[i]));
+    clear_mat_f(&(Lambda[i]));
 
   // N * (N - 1) off-diagonal SU(N) generators
   // (T^{ij, +})_{kl} = i * (de_{ki} de_{lj} + de_{kj} de_{li}) / sqrt(2)
-  // (T^{ij, -})_{kl} = (-de_{ki} de_{lj} + de_{kj} de_{ki}) / sqrt(2)
+  // (T^{ij, -})_{kl} = (de_{ki} de_{lj} - de_{kj} de_{ki}) / sqrt(2)
+  // Sign in second chosen to match previous values
   count = 0;
   for (i = 0; i < NCOL; i++) {
     for (j = i + 1; j < NCOL; j++) {
@@ -32,11 +33,11 @@ void setup_lambda() {
         for (l = 0; l < NCOL; l++) {
           if (k == i && l == j) {
             CSUM(Lambda[count].e[k][l], i_inv_sqrt);
-            CDIF(Lambda[count + 1].e[k][l], inv_sqrt);
+            CSUM(Lambda[count + 1].e[k][l], inv_sqrt);
           }
           else if (k == j && l == i) {
             CSUM(Lambda[count].e[k][l], i_inv_sqrt);
-            CSUM(Lambda[count + 1].e[k][l], inv_sqrt);
+            CDIF(Lambda[count + 1].e[k][l], inv_sqrt);
           }
         }
       }
@@ -60,10 +61,10 @@ void setup_lambda() {
     CMULREAL(Lambda[j].e[k][k], -1.0 * k, Lambda[j].e[k][k]);
   }
 
-  // U(1) generator i * I_N / sqrt(2)
+  // U(1) generator i * I_N / sqrt(N)
   if (DIMF == NCOL * NCOL) {    // Allow SU(N) compilation for now
-    i_inv_sqrt = cmplx(0, 1.0 / sqrt(NCOL));
-    clear_su3mat_f(&(Lambda[DIMF - 1]));
+    i_inv_sqrt = cmplx(0.0, 1.0 / sqrt((Real)NCOL));
+    clear_mat_f(&(Lambda[DIMF - 1]));
     for (i = 0; i < NCOL; i++)
       Lambda[DIMF - 1].e[i][i] = i_inv_sqrt;
   }
@@ -88,8 +89,8 @@ void setup_lambda() {
             CMUL(Lambda[a].e[k][l], Lambda[a].e[i][j], tt);
             CSUM(trace, tt);
           }
-          if (cabs_sq(&trace) > 1e-8)
-            node0_printf("Sum_a Lambda^a_{%d%d} Lambda^a_{%d%d} = (%.4g, %.4g)\n",
+          if (cabs_sq(&trace) > IMAG_TOL)
+            node0_printf("Sum_a La^a_{%d%d} La^a_{%d%d} = (%.4g, %.4g)\n",
                          k, j, i, l, trace.real, trace.imag);
         }
       }
@@ -98,16 +99,17 @@ void setup_lambda() {
 #endif
 
   // Test orthogonality and compute products of Lambdas for fermion forces
+#ifdef DEBUG_CHECK
   for (i = 0; i < DIMF; i++) {
     for (j = 0; j < DIMF; j++) {
-      mult_su3_nn_f(&(Lambda[i]), &(Lambda[j]), &(Lambda_prod[i][j]));
-#ifdef DEBUG_CHECK
-      trace = trace_su3_f(&(Lambda_prod[i][j]));
-      if (trace.real * trace.real > 1e-6)
-        node0_printf("Tr[T_%d T_%d] = (%.4g, %.4g)\n", i, j, trace.real, trace.imag);
-#endif
+      mult_nn_f(&(Lambda[i]), &(Lambda[j]), &tmat);
+      trace = trace_f(&tmat);
+      if (trace.real * trace.real > IMAG_TOL)
+        node0_printf("Tr[T_%d T_%d] = (%.4g, %.4g)\n",
+                     i, j, trace.real, trace.imag);
     }
   }
+#endif
 }
 // -----------------------------------------------------------------
 
@@ -291,44 +293,5 @@ void setup_FQ() {
     node0_printf("ERROR: Too many terms in FQ_lookup\n");
     terminate(1);
   }
-}
-// -----------------------------------------------------------------
-
-
-
-// -----------------------------------------------------------------
-// Set up submatrix to convert from 5- to 4-component notation
-//  P[NDIMS][NUMLINK] = {{t2, -t2, 0.0, 0.0, 0.0},
-//                       {t6, t6, -2.0 * t6, 0.0, 0.0},
-//                       {t12, t12, t12, -3.0 * t12, 0.0},
-//                       {t20, t20, t20, t20, -4.0 * t20}};
-// Fifth row is just all 1 / sqrt(5)
-void setup_P() {
-  Real t2 = 1.0 / sqrt(2),    t6 = 1.0 / sqrt(6);
-  Real t12 = 1.0 / sqrt(12),  t20 = 1.0 / sqrt(20);
-
-  P[0][0] = t2;
-  P[0][1] = -t2;
-  P[0][2] = 0.0;
-  P[0][3] = 0.0;
-  P[0][4] = 0.0;
-
-  P[1][0] = t6;
-  P[1][1] = t6;
-  P[1][2] = -2.0 * t6;
-  P[1][3] = 0.0;
-  P[1][4] = 0.0;
-
-  P[2][0] = t12;
-  P[2][1] = t12;
-  P[2][2] = t12;
-  P[2][3] = -3.0 * t12;
-  P[2][4] = 0.0;
-
-  P[3][0] = t20;
-  P[3][1] = t20;
-  P[3][2] = t20;
-  P[3][3] = t20;
-  P[3][4] = -4.0 * t20;
 }
 // -----------------------------------------------------------------

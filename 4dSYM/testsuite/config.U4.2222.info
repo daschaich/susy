@@ -1,7 +1,10 @@
 magic_number = 20103
-time_stamp = "Thu Jul 10 00:38:30 2014"
-checksums = "2c83a5a6 bd84bf2f"
+time_stamp = "Sat Apr 18 00:54:46 2015"
+checksums = "6a228cad c758b8a0"
 nx = 2
 ny = 2
 nz = 2
 nt = 2
+gauge.previous.filename = "config.U4.2222"
+gauge.previous.time_stamp = "Fri Apr 17 21:30:42 2015"
+gauge.previous.checksums = "cb06381d 7ce1bb75"

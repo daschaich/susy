@@ -3,18 +3,22 @@
 // c <-- b * a
 #include "../include/config.h"
 #include "../include/complex.h"
-#include "../include/su3.h"
+#include "../include/susy.h"
 
-void mult_su3_vec_mat(su3_vector *b, su3_matrix *a, su3_vector *c) {
+void mult_vec_mat(vector *b, matrix *a, vector *c) {
   register int i, j;
-  register complex x, y;
   for (i = 0; i < DIMF; i++) {
-    CMUL(a->e[0][i], b->c[0], x);
+    // Initialize
+    c->c[i].real = a->e[0][i].real * b->c[0].real
+                 - a->e[0][i].imag * b->c[0].imag;
+    c->c[i].imag = a->e[0][i].imag * b->c[0].real
+                 + a->e[0][i].real * b->c[0].imag;
     for (j = 1; j < DIMF; j++) {
-      CMUL(a->e[j][i], b->c[j], y)
-      CSUM(x, y);
+      c->c[i].real += a->e[j][i].real * b->c[j].real
+                    - a->e[j][i].imag * b->c[j].imag;
+      c->c[i].imag += a->e[j][i].imag * b->c[j].real
+                    + a->e[j][i].real * b->c[j].imag;
     }
-    c->c[i] = x;
   }
 }
 // -----------------------------------------------------------------

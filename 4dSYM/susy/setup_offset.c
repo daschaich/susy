@@ -2,11 +2,11 @@
 // label[k] labels the offset of the kth connection between psibar and psi
 // by an integer 1 to 4
 // The separation of the paths is in New York metric
-// It corresponds to our labeling of rho and lambda, lambda_1 = lambda(1,0,0,0)
+// It corresponds to our labeling lambda_1 = lambda(1, 0, 0, 0)
 // offset[k] is the actual offset of the kth connection
 // This program only generates the positive offsets, 40 of the 80 total
 // The others can be found by using adjoints of these paths
-// (e.g., -1-1-1-1 is the adjoint of 1111)
+// (e.g., (-1, -1, -1, -1) is the adjoint of (1, 1, 1, 1))
 
 #include "susy_includes.h"
 // -----------------------------------------------------------------
@@ -177,19 +177,19 @@ void setup_offset() {
                              WANT_INVERSE, NO_EVEN_ODD, SCRAMBLE_PARITY);
 
 #ifdef DEBUG_CHECK
-    int mu;
+    int dir;
     node0_printf("  %d ahead:", i);
-    for (mu = 0; mu < NDIMS; mu++)
-      node0_printf(" %d", offset[i][mu]);
+    for (dir = XUP; dir <= TUP; dir++)
+      node0_printf(" %d", offset[i][dir]);
 
     node0_printf(" (offset %d)\n", goffset[i]);
 #endif
   }
 
   // Make boundary condition tables
-  if (PBC > 0.0)
+  if (PBC >= 0)
     node0_printf("Periodic temporal boundary conditions\n");
-  if (PBC < 0.0)
+  if (PBC < 0)
     node0_printf("Antiperiodic temporal boundary conditions\n");
   setup_bc();
 }

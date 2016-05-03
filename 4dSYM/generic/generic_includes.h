@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <math.h>
 #include "../include/complex.h"
-#include "../include/su3.h"
+#include "../include/susy.h"
 #include "../include/macros.h"
 #include "../include/comdefs.h"
 #include "../include/generic.h"

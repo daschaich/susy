@@ -3,7 +3,7 @@
 #include "../include/config.h"
 #include <stdio.h>
 #include "../include/complex.h"
-#include "../include/su3.h"
+#include "../include/susy.h"
 
 void dumpsu2(su2_matrix *u) {
   int i, j;

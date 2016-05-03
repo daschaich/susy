@@ -3,9 +3,9 @@
 #include "../include/config.h"
 #include <stdio.h>
 #include "../include/complex.h"
-#include "../include/su3.h"
+#include "../include/susy.h"
 
-void dumpvec(su3_vector *v) {
+void dumpvec(vector *v) {
   int j;
   printf("(%.4g, %.4g)", v->c[0].real, v->c[0].imag);
   for (j = 1; j < DIMF; j++)

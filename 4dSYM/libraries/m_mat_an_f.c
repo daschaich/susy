@@ -3,26 +3,29 @@
 // c <-- adag * b
 #include "../include/config.h"
 #include "../include/complex.h"
-#include "../include/su3.h"
+#include "../include/susy.h"
 
 #ifndef FAST
-void mult_su3_an_f(su3_matrix_f *a, su3_matrix_f *b, su3_matrix_f *c) {
+void mult_an_f(matrix_f *a, matrix_f *b, matrix_f *c) {
   register int i, j, k;
-  register complex x, y;
   for (i = 0; i < NCOL; i++) {
     for (j = 0; j < NCOL; j++) {
-      x.real = 0.0;
-      x.imag = 0.0;
-      for (k = 0; k < NCOL; k++) {
-        CMULJ_(a->e[k][i], b->e[k][j], y);
-        CSUM(x, y);
+      // Initialize
+      c->e[i][j].real = a->e[0][i].real * b->e[0][j].real
+                      + a->e[0][i].imag * b->e[0][j].imag;
+      c->e[i][j].imag = a->e[0][i].real * b->e[0][j].imag
+                      - a->e[0][i].imag * b->e[0][j].real;
+      for (k = 1; k < NCOL; k++) {
+        c->e[i][j].real += a->e[k][i].real * b->e[k][j].real
+                         + a->e[k][i].imag * b->e[k][j].imag;
+        c->e[i][j].imag += a->e[k][i].real * b->e[k][j].imag
+                         - a->e[k][i].imag * b->e[k][j].real;
       }
-      c->e[i][j] = x;
     }
   }
 }
 #else   // FAST version for NCOL=3 only
-void mult_su3_an(su3_matrix_f *a, su3_matrix_f *b, su3_matrix_f *c) {
+void mult_an_f(matrix_f *a, matrix_f *b, matrix_f *c) {
   int j;
   register Real a0r, a0i, a1r, a1i, a2r, a2i;
   register Real b0r, b0i, b1r, b1i, b2r, b2i;

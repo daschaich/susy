@@ -1,49 +1,43 @@
 // -----------------------------------------------------------------
 // Update the momenta with the determinant force
+// Use tempmat and staple for temporary storage
 #include "susy_includes.h"
-// -----------------------------------------------------------------
 
-
-
-// -----------------------------------------------------------------
 double det_force(Real eps) {
-  register int i, dir1, dir2;
+  register int i, dir, dir2;
   register site *s;
   double returnit = 0;
-  complex staple_det, linkf_det, prod_det, minus1, tforce, *force;
-  su3_matrix_f tmat, dlink;
+  complex staple_det, linkf_det, prod_det, tforce;
+  complex *force = malloc(sites_on_node * sizeof(*force));
+  matrix_f tmat, dlink, *mat0, *mat2;
   msg_tag *tag0 = NULL, *tag1 = NULL, *tag2 = NULL;
 
-  force = malloc(sites_on_node * sizeof(*force));
-  minus1 = cmplx(-1.0, 0.0);
-
-  // Loop over directions, update mom[dir1]
-  for (dir1 = 0; dir1 < NUMLINK; dir1++) {
+  // Loop over directions, update mom[dir]
+  FORALLDIR(dir) {
     FORALLSITES(i, s)
       force[i] = cmplx(0.0, 0.0);
 
     // Loop over other directions,
-    // computing force from plaquettes in the dir1, dir2 plane
-    for (dir2 = 0; dir2 < NUMLINK; dir2++) {
-      if (dir2 != dir1) {
-        // Get linkf[dir2] from direction dir1
-        tag0 = start_gather_site(F_OFFSET(linkf[dir2]), sizeof(su3_matrix_f),
-                                 goffset[dir1], EVENANDODD, gen_pt[0]);
+    // computing force from plaquettes in the dir, dir2 plane
+    FORALLDIR(dir2) {
+      if (dir2 != dir) {
+        // Get linkf[dir2] from direction dir
+        tag0 = start_gather_site(F_OFFSET(linkf[dir2]), sizeof(matrix_f),
+                                 goffset[dir], EVENANDODD, gen_pt[0]);
 
         // Start gather for the upper staple
-        tag2 = start_gather_site(F_OFFSET(linkf[dir1]), sizeof(su3_matrix_f),
+        tag2 = start_gather_site(F_OFFSET(linkf[dir]), sizeof(matrix_f),
                                  goffset[dir2], EVENANDODD, gen_pt[2]);
 
         // Begin the computation at the dir2DOWN point
         wait_gather(tag0);
         FORALLSITES(i, s) {
-          mult_su3_an_f(&(s->linkf[dir2]), &(s->linkf[dir1]), &tmat);
-          mult_su3_nn_f(&tmat, (su3_matrix_f *)gen_pt[0][i],
-                        &(s->tempmat1));
+          mult_an_f(&(s->linkf[dir2]), &(s->linkf[dir]), &tmat);
+          mult_nn_f(&tmat, (matrix_f *)gen_pt[0][i], &(tempmat[i]));
         }
         // Gather this intermediate result up to home site
-        tag1 = start_gather_site(F_OFFSET(tempmat1), sizeof(su3_matrix_f),
-                                 goffset[dir2] + 1, EVENANDODD, gen_pt[1]);
+        tag1 = start_gather_field(tempmat, sizeof(matrix_f),
+                                  goffset[dir2] + 1, EVENANDODD, gen_pt[1]);
 
         // Begin the computation of the upper staple
         // One of the links has already been gathered
@@ -51,15 +45,17 @@ double det_force(Real eps) {
         // The plaquette is staple*U^dag due to the orientation of the gathers
         wait_gather(tag2);
         FORALLSITES(i, s) {
-          mult_su3_nn_f(&(s->linkf[dir2]), (su3_matrix_f *)gen_pt[2][i],
-                        &tmat);
-          mult_su3_na_f(&tmat, (su3_matrix_f *)gen_pt[0][i], &(s->staple));
+          mat0 = (matrix_f *)gen_pt[0][i];
+          mat2 = (matrix_f *)gen_pt[2][i];
+          mult_nn_f(&(s->linkf[dir2]), mat2, &tmat);
+          mult_na_f(&tmat, mat0, &(staple[i]));
 
           // Now we have the upper staple -- compute its force
           // S = (det[staple U^dag] - 1) * (det[staple^dag U] - 1)
-          // --> F = (det[staple U^dag] -1) * det[staple]^* * d(det U)/dU
-          staple_det = find_det(&(s->staple));
-          linkf_det = find_det(&(s->linkf[dir1]));
+          // --> F = (det[staple U^dag] - 1) * det[staple]^* * d(det U)/dU
+          //       = prod_det * staple_det^* * dlink
+          staple_det = find_det(&(staple[i]));
+          linkf_det = find_det(&(s->linkf[dir]));
 
           // prod_det = kappa_u1 * (staple_det * linkf_det^* - 1)
           CMUL_J(staple_det, linkf_det, prod_det);
@@ -74,8 +70,8 @@ double det_force(Real eps) {
         // We have gathered up the lower staple -- compute its force
         wait_gather(tag1);
         FORALLSITES(i,s) {
-          staple_det = find_det((su3_matrix_f *)gen_pt[1][i]);
-          linkf_det = find_det(&(s->linkf[dir1]));
+          staple_det = find_det((matrix_f *)gen_pt[1][i]);
+          linkf_det = find_det(&(s->linkf[dir]));
 
           // prod_det = kappa_u1 * (staple_det * linkf_det^* - 1)
           CMUL_J(staple_det, linkf_det, prod_det);
@@ -94,20 +90,27 @@ double det_force(Real eps) {
 
     // Now update momenta
     FORALLSITES(i, s) {
-      adjugate(&(s->linkf[dir1]), &dlink);
-      c_scalar_mult_su3mat_f(&dlink, &(force[i]), &tmat);
-      su3_adjoint_f(&tmat, &(s->f_U[dir1]));
+#if (NCOL == 2 || NCOL == 3 || NCOL == 4)
+      adjugate(&(s->linkf[dir]), &dlink);
+#endif
+#if (NCOL > 4)
+      // Determine adjugate as determinant times inverse
+      // Checked that this produces the correct results for NCOL <= 4
+      invert(&(s->linkf[dir]), &tmat);
+      linkf_det = find_det(&(s->linkf[dir]));
+      c_scalar_mult_mat_f(&tmat, &linkf_det, &dlink);
+#endif
+      c_scalar_mult_mat_f(&dlink, &(force[i]), &(s->f_U[dir]));
       /* and update the momentum from the gauge force --
-         sub because I computed dS/dU and the adjoint because of the way it is */
-      scalar_mult_sub_su3_matrix_f(&(s->mom[dir1]), &(s->f_U[dir1]), eps,
-                                   &(s->mom[dir1]));
+         dif because I computed dS/dU and the adjoint because of the way it is */
+      scalar_mult_dif_adj_matrix_f(&(s->f_U[dir]), eps, &(s->mom[dir]));
     }
   }
 
   // Compute average gauge force
-  for (dir1 = 0; dir1 < NUMLINK; dir1++) {
-    FORALLSITES(i, s)
-      returnit += realtrace_su3_f(&(s->f_U[dir1]), &(s->f_U[dir1]));
+  FORALLSITES(i, s) {
+    FORALLDIR(dir)
+      returnit += realtrace_f(&(s->f_U[dir]), &(s->f_U[dir]));
   }
   g_doublesum(&returnit);
 

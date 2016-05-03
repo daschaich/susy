@@ -7,8 +7,8 @@
 double_complex dcexp(double_complex *a) {
   double_complex c;
   double mag = (double)exp((double)(*a).real);
-  c.real = mag*(double)cos((double)(*a).imag);
-  c.imag = mag*(double)sin((double)(*a).imag);
+  c.real = mag * (double)cos((double)(*a).imag);
+  c.imag = mag * (double)sin((double)(*a).imag);
   return c;
 }
 // -----------------------------------------------------------------

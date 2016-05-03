@@ -1,6 +1,8 @@
 // -----------------------------------------------------------------
 // Eigenvalue computation and helper functions
+// !!!Path to primme.h may need local customization
 #include "susy_includes.h"
+#include "../PRIMME/PRIMMESRC/COMMONSRC/primme.h"
 // -----------------------------------------------------------------
 
 
@@ -30,7 +32,7 @@ void rand_TFsource(Twist_Fermion *src) {
         src[i].Flink[mu].c[j].imag = gaussian_rand_no(&node_prn);
 #endif
       }
-      for (mu = 0; mu < NPLAQ; mu++) {        // Plaquettefermions
+      for (mu = 0; mu < NPLAQ; mu++) {        // Plaquette fermions
 #ifdef SITERAND
         src[i].Fplaq[mu].c[j].real = gaussian_rand_no(&(s->site_prn));
         src[i].Fplaq[mu].c[j].imag = gaussian_rand_no(&(s->site_prn));
@@ -51,7 +53,6 @@ void rand_TFsource(Twist_Fermion *src) {
 void av_ov (void *x, void *y, int *Nvec, primme_params *primme) {
   int i, j, mu, iter, ivec, Ndat = 16 * DIMF;
   Complex_Z *xx;
-  Twist_Fermion src[sites_on_node], res[sites_on_node];
 
   for (ivec = 0; ivec < *Nvec; ivec++) {
     // Copy double precision complex vector x
@@ -101,7 +102,7 @@ void av_ov (void *x, void *y, int *Nvec, primme_params *primme) {
     dump_TF(&(src[0]));
 #endif
 
-    hdelta0_field(src, res);    // D^2 + fmass^2
+    DSq(src, res);    // D^2 + fmass^2
 
     // Copy the resulting Twist_Fermion res back to complex vector y
     // Each Twist_Fermion has Ndat=16DIMF non-trivial complex components
@@ -247,9 +248,11 @@ int make_evs(int Nvec, Twist_Fermion **eigVec, double *eigVal, int flag) {
 
   // Call the actual EV finder and check return value
   ret = zprimme(eigVal, workVecs, rnorms, &primme);
-  if (ret != 0) {
-    node0_printf("PRIMME failed with return value %d\n", ret);
-    terminate(1);
+  while (ret != 0) {
+    // Try again with looser residual
+    primme.eps *= 10;
+    node0_printf("Loosening stopping condition to %.4g\n", primme.eps);
+    ret = zprimme(eigVal, workVecs, rnorms, &primme);
   }
 
   // Copy double-precision temporary fields back into output
@@ -282,7 +285,7 @@ int make_evs(int Nvec, Twist_Fermion **eigVec, double *eigVal, int flag) {
   // Print results and check |D^dag D phi - lambda phi|^2
   for (ivec = 0; ivec < Nvec; ivec++) {
     check = 0.0;
-    hdelta0_field(eigVec[ivec], tmpTF);
+    DSq(eigVec[ivec], tmpTF);
     FORALLSITES(i, s) {
       // tTF = tmpTF - eigVal[ivec] * eigVec[ivec]
       scalar_mult_add_TF(&(tmpTF[i]), &(eigVec[ivec][i]),

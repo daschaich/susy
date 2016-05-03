@@ -16,22 +16,13 @@
 #define LAMBDA 0.193
 #define TWO_LAMBDA 0.386
 #define LAMBDA_MID 0.614
-
-// RHMC degree -- copied to Norder, which can be reset (e.g., to 1)
-#define DEGREE 15
-// -----------------------------------------------------------------
-
-
-
-// -----------------------------------------------------------------
-// Temporal boundary condition: 1.0 for PBC, -1.0 for APBC
-#define PBC -1.0
 // -----------------------------------------------------------------
 
 
 
 // -----------------------------------------------------------------
 // Susy stuff
+#define LINEAR_DET          // det-1 rather than |det-1|^2
 #define SV                  // Site/vector terms in action
 #define VP                  // Vector/plaquette terms in action
 #define QCLOSED             // Q-closed terms in action
@@ -42,6 +33,10 @@
 
 // Tunable parameter in gauge action
 #define C2 1.0
+
+// Whether or not to project determinant out of given observable
+#define NODET 0
+#define YESDET 1
 // -----------------------------------------------------------------
 
 
@@ -50,7 +45,8 @@
 // Measurement stuff
 // Threshold to print warning about non-zero imaginary components
 // of quantities expected to be real
-#define IMAG_TOL 1e-12
+#define IMAG_TOL 1.0e-8
+#define SQ_TOL 1.0e-16
 
 // Maximum time value and spatial distance for Wilson loops
 #define MAX_T (nt / 2)

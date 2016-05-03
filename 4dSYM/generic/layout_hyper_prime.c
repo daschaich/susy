@@ -14,13 +14,13 @@
 // such that the product of the four factors is the number of nodes
 
 /* setup_layout() does any initial setup.  When it is called the
-     lattice dimensions nx,ny,nz and nt have been set.
+     lattice dimensions nx, ny, nz and nt have been set.
      This routine sets the global variables "sites_on_node",
      "even_sites_on_node" and "odd_sites_on_node".
    num_sites(node) returns the number of sites on a node
-   node_number(x,y,z,t) returns the node number on which a site lives.
-   node_index(x,y,z,t) returns the index of the site on the node - ie the
-     site is lattice[node_index(x,y,z,t)].
+   node_number(x, y, z, t) returns the node number on which a site lives.
+   node_index(x, y, z, t) returns the index of the site on the node - ie the
+     site is lattice[node_index(x, y, z, t)].
    get_logical_dimensions() returns the machine dimensions
    get_logical_coordinates() returns the mesh coordinates of this node
    These routines will change as we change our minds about how to distribute
@@ -89,7 +89,7 @@ static void setup_hyper_prime() {
           break;
       }
     }
-    /* This can fail if I run out of prime factors in the dimensions */
+    // This can fail if I run out of prime factors in the dimensions
     if (dir > TUP) {
       node0_printf("LAYOUT: Can't lay out this lattice, ");
       node0_printf("not enough factors of %d\n", prime[k]);
@@ -129,7 +129,7 @@ void setup_layout() {
                 * squaresize[ZUP] * squaresize[TUP];
   /* Need even number of sites per hypercube */
   if (mynode() == 0) {
-    if (sites_on_node %2 != 0) {
+    if (sites_on_node % 2 != 0) {
       printf("SORRY, CAN'T LAY OUT THIS LATTICE\n");
       terminate(0);
     }
@@ -145,10 +145,12 @@ void setup_layout() {
 
 int node_number(int x, int y, int z, int t) {
 register int i;
-    x /= squaresize[XUP]; y /= squaresize[YUP];
-    z /= squaresize[ZUP]; t /= squaresize[TUP];
-    i = x + nsquares[XUP]*( y + nsquares[YUP]*( z + nsquares[ZUP]*( t )));
-    return( i );
+    x /= squaresize[XUP];
+    y /= squaresize[YUP];
+    z /= squaresize[ZUP];
+    t /= squaresize[TUP];
+    i = x + nsquares[XUP] * (y + nsquares[YUP] * (z + nsquares[ZUP] * t));
+    return i;
 }
 
 int node_index(int x, int y, int z, int t) {

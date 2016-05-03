@@ -2,9 +2,9 @@ N=(2, 2) SYM, Nc = 2, DIMF = 4, fermion rep = adjoint
 Microcanonical simulation with refreshing
 Machine = Scalar processor, with 1 nodes
 Phi algorithm
-start: Wed Dec 17 11:49:07 2014
+start: Tue Oct  6 20:55:32 2015
 
-type 0 for no prompts  or 1 for prompts
+type 0 for no prompts or 1 for prompts
 nx 4
 nt 4
 iseed 41
@@ -38,7 +38,7 @@ C2=1
 Restored binary gauge configuration serially from file config.U2.44
 Time stamp Thu Sep 18 12:14:36 2014
 Checksums f9e60ebe bd800057 OK
-Time to reload gauge configuration = 3.290176e-05
+Time to reload gauge configuration = 3.004074e-05
 CHECK PLAQ: 2.1794273481525339e+00
 CHECK NERSC LINKTR: 7.9940621144487523e-02 CKSUM: 0
 START 2.1794273 5.7208028
@@ -93,7 +93,7 @@ PLOLAR_LOOP 0 1 2
 PLOLAR_LOOP 1 1 1.98468
 Fixing to Coulomb gauge...
 GFIX ended at step 12. Ave gf action 0.641508, delta 1.34e-08
-GFIX time = 9.799e-05 seconds
+GFIX time = 7.701e-05 seconds
 BEFORE 2.1959329
 AFTER  2.1959329
 hvy_pot: MAX_T = 1, MAX_X = 1
@@ -108,4 +108,4 @@ RUNNING COMPLETED
 CG iters for measurements: 147
 total_iters = 147
 
-Time = 0.006797 seconds
+Time = 0.006749 seconds

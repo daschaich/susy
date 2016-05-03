@@ -14,77 +14,59 @@
 
 
 // -----------------------------------------------------------------
-void ranmom() {
-  register int i, j, mu;
-  register site *s;
-  complex grn;
-
-  FORALLSITES(i, s) {
-    for (mu = 0; mu < NUMLINK; mu++) {
-      clear_su3mat_f(&(s->mom[mu]));
-      for (j = 0; j < DIMF; j++) {
-#ifdef SITERAND
-        grn.real = gaussian_rand_no(&(s->site_prn));
-        grn.imag = gaussian_rand_no(&(s->site_prn));
-#else
-        grn.real = gaussian_rand_no(&(s->node_prn));
-        grn.imag = gaussian_rand_no(&(s->node_prn));
-#endif
-        c_scalar_mult_add_su3mat_f(&(s->mom[mu]), &(Lambda[j]), &grn,
-                                   &(s->mom[mu]));
-      }
-    }
-  }
-}
-// -----------------------------------------------------------------
-
-
-
-// -----------------------------------------------------------------
 void update_uu(Real eps) {
   register int i, mu;
   register site *s;
 
-  for (mu = 0; mu < NUMLINK; mu++) {
+  FORALLDIR(mu) {
     FORALLSITES(i, s)
-      scalar_mult_add_su3_matrix_f(&(s->linkf[mu]), &(s->mom[mu]), eps,
-                                   &(s->linkf[mu]));
+      scalar_mult_sum_matrix_f(&(s->mom[mu]), eps, &(s->linkf[mu]));
   }
+
+  // Update plaquette determinants, DmuUmu and Fmunu with new links
+  // (Needs to be done before calling gauge_force)
+  compute_plaqdet();
+  compute_DmuUmu();
+  compute_Fmunu();
 }
 // -----------------------------------------------------------------
 
 
 
 // -----------------------------------------------------------------
-int update_step(Real *old_cg_time, Real *cg_time, Real *next_cg_time,
-                double *fnorm, double *gnorm,
-                Twist_Fermion *src, Twist_Fermion **psim) {
+int update_step(double *fnorm, double *gnorm,
+                Twist_Fermion **src, Twist_Fermion ***psim) {
 
-  int step, iters = 0;
+  int step, iters = 0, n;
   Real final_rsq, eps = traj_length / (Real)nsteps[0], tr;
   node0_printf("eps %.4g\n", eps);
 
+  // First u(t/2)
+  update_uu(0.5 * eps);
+
   for (step = 0; step < nsteps[0]; step++) {
-    // One step u(t/2) p(t) u(t/2)
-    update_uu(0.5 * eps);
-#ifndef PUREGAUGE
-    fermion_rep();
-#endif
-    tr = update_gauge_step(g_eps);
+    // Inner steps p(t) u(t)
+    tr = gauge_force(eps);
     *gnorm += tr;
     if (tr > max_gf)
       max_gf = tr;
 
 #ifndef PUREGAUGE
-    // Do conjugate gradient to get (Mdag M)^(-1 / 4) chi
-    iters += congrad_multi_field(src, psim, niter, rsqmin, &final_rsq);
+    for (n = 0; n < Nroot; n++) {
+      // Do conjugate gradient to get (Mdag M)^(-1 / 4) chi
+      iters += congrad_multi_field(src[n], psim[n], niter, rsqmin, &final_rsq);
+      tr = fermion_force(eps, src[n], psim[n]);
+      fnorm[n] += tr;
+      if (tr > max_ff[n])
+        max_ff[n] = tr;
+    }
+#endif
 
-    tr = fermion_force(f_eps * LAMBDA_MID, src, psim);
-    fnorm[0] += tr;
-    if (tr > max_ff[0])
-      max_ff[0] = tr;
-
-    update_uu(0.5 * eps);
+    if (step < nsteps[0] - 1)
+      update_uu(eps);
+    else                // Final u(t/2)
+      update_uu(0.5 * eps);
+#ifndef PUREGAUGE
     fermion_rep();
 #endif
   }
@@ -96,16 +78,18 @@ int update_step(Real *old_cg_time, Real *cg_time, Real *next_cg_time,
 
 // -----------------------------------------------------------------
 int update() {
-  int i, iters = 0;
-  Real final_rsq, cg_time[2], old_cg_time[2], next_cg_time[2];
-  double gnorm = 0.0, fnorm[2] = {0.0, 0.0};
-  double startaction = 0.0, endaction, change;
-  Twist_Fermion *src, **psim;
+  int j, n, iters = 0;
+  Real final_rsq;
+  double startaction, endaction, change;
+  Twist_Fermion **src = malloc(Nroot * sizeof(**src));
+  Twist_Fermion ***psim = malloc(Nroot * sizeof(***psim));
 
-  src = malloc(sites_on_node * sizeof(*src));
-  psim = malloc(Norder * sizeof(*psim));
-  for (i = 0; i < Norder; i++)
-    psim[i] = malloc(sites_on_node * sizeof(Twist_Fermion));
+  for (n = 0; n < Nroot; n++) {
+    src[n] = malloc(sites_on_node * sizeof(Twist_Fermion));
+    psim[n] = malloc(Norder * sizeof(Twist_Fermion*));
+    for (j = 0; j < Norder; j++)
+      psim[n][j] = malloc(sites_on_node * sizeof(Twist_Fermion));
+  }
 
   // Refresh the momenta
   // Higher rep code using fermion_rep:
@@ -115,22 +99,29 @@ int update() {
   // Set up the fermion variables, if needed
 #ifndef PUREGAUGE
   // Compute g and src = (Mdag M)^(1 / 8) g
-  iters += grsource(src);
+  for (n = 0; n < Nroot; n++)
+    iters += grsource(src[n]);
 
   // Do a CG to get psim,
   // rational approximation to (Mdag M)^(-1 / 4) src = (Mdag M)^(-1 / 8) g
-  for (i = 0; i < Norder; i++)
-    shift[i] = shift4[i];
+  for (j = 0; j < Norder; j++)
+    shift[j] = shift4[j];
 #ifdef UPDATE_DEBUG
   node0_printf("Calling CG in update_leapfrog -- original action\n");
 #endif
-  iters += congrad_multi_field(src, psim, niter, rsqmin, &final_rsq);
+  // congrad_multi_field initializes psim
+  for (n = 0; n < Nroot; n++)
+    iters += congrad_multi_field(src[n], psim[n], niter, rsqmin, &final_rsq);
 #endif // ifndef PUREGAUGE
 
   // Find initial action
-  startaction = d_action(src, psim);
+  startaction = action(src, psim);
+  gnorm = 0.0;
   max_gf = 0.0;
-  max_ff[0] = 0.0;
+  for (n = 0; n < Nroot; n++) {
+    fnorm[n] = 0.0;
+    max_ff[n] = 0.0;
+  }
 
 #ifdef HMC_ALGORITHM
   Real xrandom;   // For accept/reject test
@@ -138,8 +129,7 @@ int update() {
   gauge_field_copy_f(F_OFFSET(linkf[0]), F_OFFSET(old_linkf[0]));
 #endif
   // Do microcanonical updating
-  iters += update_step(old_cg_time, cg_time, next_cg_time,
-                       fnorm, &gnorm, src, psim);
+  iters += update_step(fnorm, &gnorm, src, psim);
 
   // Find ending action
   // Since update_step ended on a gauge update,
@@ -147,9 +137,9 @@ int update() {
 #ifdef UPDATE_DEBUG
   node0_printf("Calling CG in update_leapfrog -- new action\n");
 #endif
-  fermion_rep();
-  iters += congrad_multi_field(src, psim, niter, rsqmin, &final_rsq);
-  endaction = d_action(src, psim);
+  for (n = 0; n < Nroot; n++)
+    iters += congrad_multi_field(src[n], psim[n], niter, rsqmin, &final_rsq);
+  endaction = action(src, psim);
   change = endaction - startaction;
 #ifdef HMC_ALGORITHM
   // Reject configurations giving overflow
@@ -171,6 +161,9 @@ int update() {
   if (exp(-change) < (double)xrandom) {
     if (traj_length > 0.0) {
       gauge_field_copy_f(F_OFFSET(old_linkf[0]), F_OFFSET(linkf[0]));
+      compute_plaqdet();
+      compute_DmuUmu();
+      compute_Fmunu();
       fermion_rep();
     }
     node0_printf("REJECT: delta S = %.4g start S = %.12g end S = %.12g\n",
@@ -185,20 +178,26 @@ int update() {
   node0_printf("CHECK: delta S = %.4g\n", (double)(change));
 #endif // ifdef HMC
 
+  for (n = 0; n < Nroot; n++) {
+    free(src[n]);
+    for (j = 0; j < Norder; j++)
+      free(psim[n][j]);
+    free(psim[n]);
+  }
+  free(src);
+  free(psim);
+
   if (traj_length > 0) {
     node0_printf("IT_PER_TRAJ %d\n", iters);
     node0_printf("MONITOR_FORCE_GAUGE    %.4g %.4g\n",
                  gnorm / (double)(2 * nsteps[0]), max_gf);
-    node0_printf("MONITOR_FORCE_FERMION0 %.4g %.4g\n",
-                 fnorm[0] / (double)(2 * nsteps[0]), max_ff[0]);
+    for (n = 0; n < Nroot; n++) {
+      node0_printf("MONITOR_FORCE_FERMION%d %.4g %.4g\n",
+                   n, fnorm[n] / (double)(2 * nsteps[0]), max_ff[n]);
+    }
     return iters;
   }
   else
     return -99;
-
-  free(src);
-  for (i = 0; i < Norder; i++)
-    free(psim[i]);
-  free(psim);
 }
 // -----------------------------------------------------------------

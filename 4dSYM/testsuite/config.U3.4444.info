@@ -1,1 +1,10 @@
-Copied from /nfs/beowulf02/schaich/SYM/APBC/Nc3_4nt4/l1.0_b1.0_f0.0_k1.0/Configs/gauge.5000 (time stamp Tue Feb 11 07:46:13 2014)
+magic_number = 20103
+time_stamp = "Sat Apr 18 19:25:25 2015"
+checksums = "e828858e fed7af9c"
+nx = 4
+ny = 4
+nz = 4
+nt = 4
+gauge.previous.filename = "config.U3.4444"
+gauge.previous.time_stamp = "Sat Apr 18 17:07:30 2015"
+gauge.previous.checksums = "4397b16 a9b70b9b"

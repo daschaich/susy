@@ -52,14 +52,14 @@ char *create_QCDML() {
   char end[] = "</usqcdInfo>";
   Real myssplaq = g_ssplaq;                         // Precision conversion
   Real mystplaq = g_stplaq;                         // Precision conversion
-  Real nersc_linktr = linktrsum.real / (Real)NCOL;  // Convention and precision
+  Real nersc_linktr = linktrsum.real * one_ov_N;    // Convention and precision
   char sums[20];
 
   snprintf(info + bytes, max - bytes, "%s", begin);
   bytes = strlen(info);
 
   snprintf(info + bytes, max - bytes, "<plaq>%e</plaq>",
-           (myssplaq + mystplaq) / 6.0);
+           (myssplaq + mystplaq) / 10.0);
   bytes = strlen(info);
 
   bytes = strlen(info);
