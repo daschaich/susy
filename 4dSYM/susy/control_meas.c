@@ -144,6 +144,7 @@ int main(int argc, char *argv[]) {
 
   // Update plaquette determinants, DmuUmu and Fmunu with smeared links
   compute_plaqdet();
+  compute_Uinv();
   compute_DmuUmu();
   compute_Fmunu();
 #endif

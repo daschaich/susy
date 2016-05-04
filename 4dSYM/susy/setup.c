@@ -101,10 +101,11 @@ void make_fields() {
 #else
   node0_printf("Supersymmetric constraint on |det[plaq] - 1|^2\n");
 #endif
-  double size = (double)(sizeof(complex));
+  double size = (double)(2.0 * sizeof(complex));
   size += (double)(2.0 * (1 + NUMLINK + NPLAQ)) * sizeof(vector);
   FIELD_ALLOC(site_src, vector);
   FIELD_ALLOC(site_dest, vector);
+  FIELD_ALLOC(tr_eta, complex);
   FIELD_ALLOC(tr_dest, complex);
   FIELD_ALLOC_VEC(link_src, vector, NUMLINK);
   FIELD_ALLOC_VEC(link_dest, vector, NUMLINK);
@@ -442,6 +443,7 @@ int readin(int prompt) {
 
   // Compute initial plaqdet, DmuUmu and Fmunu
   compute_plaqdet();
+  compute_Uinv();
   compute_DmuUmu();
   compute_Fmunu();
 

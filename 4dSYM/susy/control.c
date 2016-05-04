@@ -161,10 +161,10 @@ int main(int argc, char *argv[]) {
       node0_printf(" %.8g %.8g %.8g\n", ss_plaq, st_plaq, max_plaq);
 
       // Overwrite s->linkf
-      // Save unsmeared links in Uinv (mom and f_U both already used)
+      // Save unsmeared links in Udag_inv (mom and f_U both already used)
       FORALLDIR(dir) {
         FORALLSITES(i, s)
-          mat_copy_f(&(s->linkf[dir]), &(Uinv[dir][i]));
+          mat_copy_f(&(s->linkf[dir]), &(Udag_inv[dir][i]));
       }
       if (smearflag == STOUT_SMEAR)
         stout_smear(Nsmear, alpha);
@@ -176,6 +176,7 @@ int main(int argc, char *argv[]) {
 
       // Update plaquette determinants, DmuUmu and Fmunu with smeared links
       compute_plaqdet();
+      compute_Uinv();
       compute_DmuUmu();
       compute_Fmunu();
 #endif
@@ -281,10 +282,10 @@ int main(int argc, char *argv[]) {
 #endif
 
 #ifdef SMEAR
-      // Restore unsmeared links from Uinv
+      // Restore unsmeared links from Udag_inv
       FORALLDIR(dir) {
         FORALLSITES(i, s)
-          mat_copy_f(&(Uinv[dir][i]), &(s->linkf[dir]));
+          mat_copy_f(&(Udag_inv[dir][i]), &(s->linkf[dir]));
       }
 #endif
     }

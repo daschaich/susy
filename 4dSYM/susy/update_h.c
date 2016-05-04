@@ -20,8 +20,8 @@ double gauge_force(Real eps) {
   int a, b, gather, flip = 0, index, next;
   double returnit = 0.0;
   complex tc, tc2;
-  msg_tag *tag[NUMLINK], *tag0[2], *tag1[2];
   matrix_f tmat, tmat2, *mat[2];
+  msg_tag *tag[NUMLINK], *tag0[2], *tag1[2];
 
   // Three contributions from d^2 term
   // All three terms need a factor of C2
@@ -37,9 +37,9 @@ double gauge_force(Real eps) {
 
     wait_gather(tag[mu]);
     FORALLSITES(i, s) {
-      mult_an_f(&(s->linkf[mu]), &(DmuUmu[i]), &tmat);
-      mult_na_f((matrix_f *)(gen_pt[mu][i]), &(s->linkf[mu]), &tmat2);
-      sub_matrix_f(&tmat, &tmat2, &(s->f_U[mu]));   // Initialize
+      mult_an_f(&(s->linkf[mu]), &(DmuUmu[i]), &(s->f_U[mu]));   // Initialize
+      mult_na_dif_f((matrix_f *)(gen_pt[mu][i]), &(s->linkf[mu]),
+                    &(s->f_U[mu]));
     }
     cleanup_gather(tag[mu]);
   }
@@ -113,13 +113,12 @@ double gauge_force(Real eps) {
 
       // Now add to force
       FORALLSITES(i, s) {
-        invert(&(s->linkf[mu]), &tmat);
 #ifdef LINEAR_DET
         CMULREAL(tr_dest[i], G, tc);
 #else
         CMULREAL(tr_dest[i], 2.0 * G, tc);
 #endif
-        c_scalar_mult_sum_mat_f(&tmat, &tc, &(s->f_U[mu]));
+        c_scalar_mult_sum_mat_f(&(Uinv[mu][i]), &tc, &(s->f_U[mu]));
       }
     }
   }
@@ -506,11 +505,11 @@ void detF(vector *eta, vector *psi[NUMLINK], int sign) {
   // Set up and store some basic ingredients
   // Need all five directions for upcoming sums
   FORALLDIR(a) {
-    // Save U_a(x)^{-1} in Uinv[a] and Udag_a(x)^{-1} in Udag_inv[a]
+    // Save Udag_a(x)^{-1} in Udag_inv[a]
+    // U_a(x)^{-1} persistently stays in Uinv[a] for the CG
     // Save sum_j Tr[U_a(x)^{-1} Lambda^j] psi_a^j(x) in Tr_Uinv[a]
     // Save sum_j U_a(x)^{-1} Lambda^j psi_a^j(x) U_a(x)^{-1} in UpsiU[a]
     FORALLSITES(i, s) {
-      invert(&(s->linkf[a]), &(Uinv[a][i]));
       adjoint_f(&(s->linkf[a]), &tmat);
       invert(&tmat, &(Udag_inv[a][i]));
 
@@ -883,7 +882,7 @@ void detF(vector *eta, vector *psi[NUMLINK], int sign) {
 
 // -----------------------------------------------------------------
 // Scalar potential contributions to the fermion force
-// Use tempmat and Tr_Uinv for temporary storage
+// Use tempmat for temporary storage
 // If sign = 1 then take adjoint of eta
 // If sign = -1 then take adjoint of psi
 void pot_force(vector *eta, vector *psi[NUMLINK], int sign) {
@@ -973,7 +972,7 @@ void pot_force(vector *eta, vector *psi[NUMLINK], int sign) {
 //   f_U = Adj(Ms).D_U M(U, Ub).s - Adj[Adj(Ms).D_Ub M(U, Ub).s]
 // "s" is sol while "Ms" is psol
 // Copy these into persistent vectors for easier gathering
-// Use tempmat, tempmat2, Uinv, Tr_Uinv,
+// Use tempmat, tempmat2, Udag_inv, Tr_Uinv,
 // tr_dest and Ddet[012] for temporary storage
 // (many through calls to detF)
 void assemble_fermion_force(Twist_Fermion *sol, Twist_Fermion *psol) {
@@ -1020,7 +1019,7 @@ void assemble_fermion_force(Twist_Fermion *sol, Twist_Fermion *psol) {
   }
 
 #ifdef SV
-  // Accumulate both terms in Uinv[mu], use to initialize f_U[mu]
+  // Accumulate both terms in Udag_inv[mu], use to initialize f_U[mu]
   // First calculate DUbar on eta Dbar_mu psi_mu (LtoS)
   mtag[0] = start_gather_field(site_pmat, sizeof(matrix_f),
                                goffset[0], EVENANDODD, gen_pt[0]);
@@ -1033,8 +1032,8 @@ void assemble_fermion_force(Twist_Fermion *sol, Twist_Fermion *psol) {
     wait_gather(mtag[mu]);
     FORALLSITES(i, s) {
       scalar_mult_matrix_f((matrix_f *)(gen_pt[mu][i]), s->bc1[mu], &tmat);
-      mult_nn_f(&(link_mat[mu][i]), &tmat, &(Uinv[mu][i]));   // Initialize
-      mult_nn_dif_f(&(site_pmat[i]), &(link_mat[mu][i]), &(Uinv[mu][i]));
+      mult_nn_f(&(link_mat[mu][i]), &tmat, &(Udag_inv[mu][i]));   // Initialize
+      mult_nn_dif_f(&(site_pmat[i]), &(link_mat[mu][i]), &(Udag_inv[mu][i]));
     }
     cleanup_gather(mtag[mu]);
   }
@@ -1051,11 +1050,11 @@ void assemble_fermion_force(Twist_Fermion *sol, Twist_Fermion *psol) {
     wait_gather(mtag[mu]);
     FORALLSITES(i, s) {
       scalar_mult_matrix_f((matrix_f *)(gen_pt[mu][i]), s->bc1[mu], &tmat);
-      mult_nn_dif_f(&(link_pmat[mu][i]), &tmat, &(Uinv[mu][i]));
-      mult_nn_sum_f(&(site_mat[i]), &(link_pmat[mu][i]), &(Uinv[mu][i]));
+      mult_nn_dif_f(&(link_pmat[mu][i]), &tmat, &(Udag_inv[mu][i]));
+      mult_nn_sum_f(&(site_mat[i]), &(link_pmat[mu][i]), &(Udag_inv[mu][i]));
 
-      // Initialize the force collectors -- done with Uinv[mu]
-      scalar_mult_adj_matrix_f(&(Uinv[mu][i]), 0.5, &(s->f_U[mu]));
+      // Initialize the force collectors -- done with Udag_inv[mu]
+      scalar_mult_adj_matrix_f(&(Udag_inv[mu][i]), 0.5, &(s->f_U[mu]));
     }
     cleanup_gather(mtag[mu]);
   }

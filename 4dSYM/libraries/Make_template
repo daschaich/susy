@@ -62,7 +62,7 @@ SU3OBJS1 = addvec.1o cmp_ahmat.1o dumpmat.1o dump_ahmat.1o \
            addmat_f.1o addamat_f.1o  submat_f.1o subamat_f.1o \
            clearvec_f.1o r_su2_hit_a_f.1o l_su2_hit_n_f.1o \
            s_m_mat_f.1o s_m_amat_f.1o s_a_d_mat_f.1o cs_a_d_mat_f.1o \
-           complextr_f.1o cs_m_mat_f.1o \
+           complextr_f.1o s_m_mat_nn_f.1o s_m_mat_na_f.1o cs_m_mat_f.1o \
            cs_m_a_mat_f.1o cs_m_a_amat_f.1o cs_m_a_mata_f.1o cs_m_s_mat_f.1o
 
 SU3OBJS2 = addvec.2o cmp_ahmat.2o dumpmat.2o dump_ahmat.2o \
@@ -80,7 +80,7 @@ SU3OBJS2 = addvec.2o cmp_ahmat.2o dumpmat.2o dump_ahmat.2o \
            addmat_f.2o addamat_f.2o submat_f.2o subamat_f.2o \
            clearvec_f.2o r_su2_hit_a_f.2o l_su2_hit_n_f.2o \
            s_m_mat_f.2o s_m_amat_f.2o s_a_d_mat_f.2o cs_a_d_mat_f.2o \
-           complextr_f.2o cs_m_mat_f.2o \
+           complextr_f.2o s_m_mat_nn_f.2o s_m_mat_na_f.2o cs_m_mat_f.2o \
            cs_m_a_mat_f.2o cs_m_a_amat_f.2o cs_m_a_mata_f.2o cs_m_s_mat_f.2o
 
 # Special header dependencies

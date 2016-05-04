@@ -26,6 +26,7 @@ void update_uu(Real eps) {
   // Update plaquette determinants, DmuUmu and Fmunu with new links
   // (Needs to be done before calling gauge_force)
   compute_plaqdet();
+  compute_Uinv();
   compute_DmuUmu();
   compute_Fmunu();
 }
@@ -162,6 +163,7 @@ int update() {
     if (traj_length > 0.0) {
       gauge_field_copy_f(F_OFFSET(old_linkf[0]), F_OFFSET(linkf[0]));
       compute_plaqdet();
+      compute_Uinv();
       compute_DmuUmu();
       compute_Fmunu();
       fermion_rep();

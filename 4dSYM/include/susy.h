@@ -164,11 +164,28 @@ void mult_nn_f(matrix_f *a, matrix_f *b, matrix_f *c);
 
 // In file m_mat_na_f.c
 void mult_na_sum_f(matrix_f *a, matrix_f *b, matrix_f *c);
+void mult_na_dif_f(matrix_f *a, matrix_f *b, matrix_f *c);
 void mult_na_f(matrix_f *a, matrix_f *b, matrix_f *c);
 
 // In file m_mat_an_f.c
+void mult_an_sum_f(matrix_f *a, matrix_f *b, matrix_f *c);
+void mult_an_dif_f(matrix_f *a, matrix_f *b, matrix_f *c);
 void mult_an_f(matrix_f *a, matrix_f *b, matrix_f *c);
 
+// c <-- s * a * b, in file s_m_mat_nn_f.c
+void scalar_mult_nn_sum_f(matrix_f *a, matrix_f *b, Real s, matrix_f *c);
+void scalar_mult_nn_dif_f(matrix_f *a, matrix_f *b, Real s, matrix_f *c);
+void scalar_mult_nn_f(matrix_f *a, matrix_f *b, Real s, matrix_f *c);
+
+// c <-- s * a * bdag, in file s_m_mat_na_f.c
+void scalar_mult_na_sum_f(matrix_f *a, matrix_f *b, Real s, matrix_f *c);
+void scalar_mult_na_dif_f(matrix_f *a, matrix_f *b, Real s, matrix_f *c);
+void scalar_mult_na_f(matrix_f *a, matrix_f *b, Real s, matrix_f *c);
+// -----------------------------------------------------------------
+
+
+
+// -----------------------------------------------------------------
 // Relate fundamental matrices and anti-hermitian matrices
 // In file make_ahmat.c
 void make_anti_hermitian(matrix_f *m, anti_hermitmat *ah);
