@@ -181,6 +181,11 @@ void scalar_mult_nn_f(matrix_f *a, matrix_f *b, Real s, matrix_f *c);
 void scalar_mult_na_sum_f(matrix_f *a, matrix_f *b, Real s, matrix_f *c);
 void scalar_mult_na_dif_f(matrix_f *a, matrix_f *b, Real s, matrix_f *c);
 void scalar_mult_na_f(matrix_f *a, matrix_f *b, Real s, matrix_f *c);
+
+// c <-- s * adag * b, in file s_m_mat_an_f.c
+void scalar_mult_an_sum_f(matrix_f *a, matrix_f *b, Real s, matrix_f *c);
+void scalar_mult_an_dif_f(matrix_f *a, matrix_f *b, Real s, matrix_f *c);
+void scalar_mult_an_f(matrix_f *a, matrix_f *b, Real s, matrix_f *c);
 // -----------------------------------------------------------------
 
 
