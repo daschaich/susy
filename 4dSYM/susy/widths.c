@@ -17,21 +17,21 @@ void widths() {
   double re = 0.0, reSq = 0.0, im = 0.0, imSq = 0.0;
   complex tc;
   msg_tag *mtag0 = NULL, *mtag1 = NULL;
-  matrix_f tmat, *mat;
+  matrix tmat, *mat;
 
   for (a = XUP; a < NUMLINK; a++) {
     for (b = a + 1; b < NUMLINK; b++) {
       // gen_pt[0] is U_b(x+a), gen_pt[1] is U_a(x+b)
-      mtag0 = start_gather_site(F_OFFSET(linkf[b]), sizeof(matrix_f),
+      mtag0 = start_gather_site(F_OFFSET(link[b]), sizeof(matrix),
                                 goffset[a], EVENANDODD, gen_pt[0]);
-      mtag1 = start_gather_site(F_OFFSET(linkf[a]), sizeof(matrix_f),
+      mtag1 = start_gather_site(F_OFFSET(link[a]), sizeof(matrix),
                                 goffset[b], EVENANDODD, gen_pt[1]);
 
       // tempmat = Udag_b(x+a) Udag_a(x) = [U_a(x) U_b(x+a)]^dag
       wait_gather(mtag0);
       FORALLSITES(i, s) {
-        mat = (matrix_f *)(gen_pt[0][i]);
-        mult_nn_f(&(s->linkf[a]), mat, &tmat);
+        mat = (matrix *)(gen_pt[0][i]);
+        mult_nn(&(s->link[a]), mat, &tmat);
         adjoint_f(&tmat, &(tempmat[i]));
       }
       cleanup_gather(mtag0);
@@ -40,9 +40,9 @@ void widths() {
       // tmat = U_b(x) U_a(x+b) Udag_b(x+a) Udag_a(x) = P_ab
       wait_gather(mtag1);
       FORALLSITES(i, s) {
-        mat = (matrix_f *)(gen_pt[1][i]);
-        mult_nn_f(mat, &(tempmat[i]), &(staple[i]));
-        mult_nn_f(&(s->linkf[b]), &(staple[i]), &tmat);
+        mat = (matrix *)(gen_pt[1][i]);
+        mult_nn(mat, &(tempmat[i]), &(staple[i]));
+        mult_nn(&(s->link[b]), &(staple[i]), &tmat);
 
         tc = trace_f(&tmat);
         plaq += tc.real;

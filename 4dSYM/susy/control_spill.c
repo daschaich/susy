@@ -43,8 +43,8 @@ int main(int argc, char *argv[]) {
           for (mu = 0; mu < NUMLINK; mu++) {
             for (i = 0; i < NCOL; i++) {
               for (j = 0; j < NCOL; j++) {
-                re = lattice[s].linkf[mu].e[i][j].real;
-                im = lattice[s].linkf[mu].e[i][j].imag;
+                re = lattice[s].link[mu].e[i][j].real;
+                im = lattice[s].link[mu].e[i][j].imag;
                 printf("%g\t%g\t", re, im);
               }
             }

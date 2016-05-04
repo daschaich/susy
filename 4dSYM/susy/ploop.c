@@ -11,15 +11,15 @@ complex ploop(int dir, int project, double *plpMod) {
   int j, t, len = nt;
   double norm = 0.0;
   complex sum  = cmplx(0.0, 0.0), plp;
-  matrix_f tmat, tmat2;
+  matrix tmat, tmat2;
 
   // Optionally consider polar-projected links,
   // saving original values in Udag_inv[0] to be reset at end
   if (project == 1) {
     FORALLSITES(i, s) {
-      mat_copy_f(&(s->linkf[dir]), &(Udag_inv[0][i]));
-      polar(&(s->linkf[dir]), &tmat, &tmat2);
-      mat_copy_f(&tmat, &(s->linkf[dir]));
+      mat_copy_f(&(s->link[dir]), &(Udag_inv[0][i]));
+      polar(&(s->link[dir]), &tmat, &tmat2);
+      mat_copy_f(&tmat, &(s->link[dir]));
     }
   }
 
@@ -54,7 +54,7 @@ complex ploop(int dir, int project, double *plpMod) {
   if (len == 1) {
     *plpMod = 0.0;
     FORALLSITES(i, s) {
-      plp = trace_f(&(s->linkf[dir]));
+      plp = trace_f(&(s->link[dir]));
       CSUM(sum, plp);
       *plpMod += cabs(&plp);
     }
@@ -65,7 +65,7 @@ complex ploop(int dir, int project, double *plpMod) {
 
     if (project == 1) {       // Reset original links
       FORALLSITES(i, s)
-        mat_copy_f(&(Udag_inv[0][i]), &(s->linkf[dir]));
+        mat_copy_f(&(Udag_inv[0][i]), &(s->link[dir]));
     }
 
     return sum;
@@ -73,7 +73,7 @@ complex ploop(int dir, int project, double *plpMod) {
 
   // Compute line by steadily shifting links to hyperplane 0
   FORALLSITES(i, s)
-    mat_copy_f(&(s->linkf[dir]), &(tempmat[i]));
+    mat_copy_f(&(s->link[dir]), &(tempmat[i]));
 
   for (t = 1; t < len; t++) {
     shiftmat(tempmat, tempmat2, goffset[dir]);
@@ -89,9 +89,9 @@ complex ploop(int dir, int project, double *plpMod) {
         continue;
 
       if (t == 1)
-        mult_nn_f(&(s->linkf[dir]), &(tempmat[i]), &(staple[i]));
+        mult_nn(&(s->link[dir]), &(tempmat[i]), &(staple[i]));
       else {
-        mult_nn_f(&(staple[i]), &(tempmat[i]), &(tempmat2[i]));
+        mult_nn(&(staple[i]), &(tempmat[i]), &(tempmat2[i]));
         mat_copy_f(&(tempmat2[i]), &(staple[i]));
       }
     }
@@ -120,7 +120,7 @@ complex ploop(int dir, int project, double *plpMod) {
 
   if (project == 1) {       // Reset original links
     FORALLSITES(i, s)
-      mat_copy_f(&(Udag_inv[0][i]), &(s->linkf[dir]));
+      mat_copy_f(&(Udag_inv[0][i]), &(s->link[dir]));
   }
 
   return sum;

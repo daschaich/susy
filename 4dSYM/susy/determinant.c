@@ -30,7 +30,7 @@ void zgetri_(int *N, double *store, int *lda, int *ipiv,
 
 // -----------------------------------------------------------------
 // LU decomposition based on Numerical Recipes
-void ludcmp_cx(matrix_f *a, int *indx, Real *d) {
+void ludcmp_cx(matrix *a, int *indx, Real *d) {
   int i, imax, j, k;
   Real big, fdum;
   complex sum, dum, ct;
@@ -47,7 +47,7 @@ void ludcmp_cx(matrix_f *a, int *indx, Real *d) {
     }
     if (big == 0.0) {
       node0_printf("Singular matrix in routine LUDCMP:\n");
-      dumpmat_f(a);
+      dumpmat(a);
       terminate(1);
     }
     vv[i] = 1.0 / sqrt(big);
@@ -102,7 +102,7 @@ void ludcmp_cx(matrix_f *a, int *indx, Real *d) {
 // -----------------------------------------------------------------
 // Compute complex determinant of given link,
 // using Numerical Recipes-based LU decomposition above
-complex find_det(matrix_f *Q) {
+complex find_det(matrix *Q) {
   complex det;
 
 #if (NCOL == 2)
@@ -116,7 +116,7 @@ complex find_det(matrix_f *Q) {
   int i, indx[NCOL];
   Real d;
   complex det2;
-  matrix_f QQ;
+  matrix QQ;
 
   mat_copy_f(Q, &QQ);
   ludcmp_cx(&QQ, indx, &d);
@@ -135,7 +135,7 @@ complex find_det(matrix_f *Q) {
 
 // -----------------------------------------------------------------
 // Cofactor of src matrix omitting given row and column
-complex cofactor(matrix_f *src, int row, int col) {
+complex cofactor(matrix *src, int row, int col) {
   int a = 0, b = 0, i, j;
   complex submat[NCOL - 1][NCOL - 1], cof = cmplx(0.0, 0.0);
 
@@ -193,7 +193,7 @@ complex cofactor(matrix_f *src, int row, int col) {
 
 // -----------------------------------------------------------------
 // Transpose of the cofactor matrix
-void adjugate(matrix_f *src, matrix_f *dest) {
+void adjugate(matrix *src, matrix *dest) {
 #if (NCOL == 2)
   dest->e[0][0] = src->e[1][1];
   dest->e[1][1] = src->e[0][0];
@@ -225,7 +225,7 @@ void adjugate(matrix_f *src, matrix_f *dest) {
 // -----------------------------------------------------------------
 // Compute link matrix inverse as adjugate matrix
 // normalized by the determinant
-void invert(matrix_f *in, matrix_f *out) {
+void invert(matrix *in, matrix *out) {
 #if (NCOL == 2 || NCOL == 3 || NCOL == 4)
   int i, j;
   complex tc, det = find_det(in);
@@ -257,7 +257,7 @@ void invert(matrix_f *in, matrix_f *out) {
   // Invert in given its LU decomposition
   zgetri_(&Npt, store, &Npt, ipiv, work, &Nwork, &stat);
 
-  // Move the results into the matrix_f structure for out
+  // Move the results into the matrix structure for out
   for (row = 0; row < NCOL; row++) {
     for (col = 0; col < NCOL; col++) {
       i = 2 * (col * NCOL + row);
@@ -307,14 +307,14 @@ void measure_det() {
 
 // -----------------------------------------------------------------
 // Divide the determinant out of the matrix in
-void det_project(matrix_f *in, matrix_f *out) {
+void det_project(matrix *in, matrix *out) {
   complex tc, tc2;
 
   tc = find_det(in);
   tc2 = clog(&tc);
   CMULREAL(tc2, -one_ov_N, tc);
   tc2 = cexp(&tc);
-  c_scalar_mult_mat_f(in, &tc2, out);
+  c_scalar_mult_mat(in, &tc2, out);
 
 #ifdef DEBUG_CHECK
   // Sanity check

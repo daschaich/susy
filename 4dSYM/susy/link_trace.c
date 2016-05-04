@@ -11,14 +11,14 @@ double link_trace(double *linktr, double *width,
   register site *s;
   double ave = 0.0, linktrSq = 0.0, td, detSq = 0.0;//, im_check = 0.0;
   complex tc;
-  matrix_f tmat;
+  matrix tmat;
 
   *det_ave = 0.0;
   FORALLDIR(dir) {
     linktr[dir] = 0.0;
     link_det[dir] = 0.0;
     FORALLSITES(i, s) {
-      mult_na_f(&(s->linkf[dir]), &(s->linkf[dir]), &tmat);
+      mult_na(&(s->link[dir]), &(s->link[dir]), &tmat);
       tc = trace_f(&tmat);
       linktr[dir] += tc.real;
       linktrSq += tc.real * tc.real;

@@ -51,30 +51,30 @@ SU3OBJS1 = addvec.1o cmp_ahmat.1o dump_ahmat.1o dumpvec.1o clearvec.1o \
            make_ahmat.1o s_m_a_vec.1o s_m_s_vec.1o s_m_vec.1o dot.1o rdot.1o \
            vec_copy.1o subvec.1o uncmp_ahmat.1o msq_vec.1o dumpsu2.1o \
            m_su2_mat_vec_n.1o m_su2_mat_vec_a.1o gaussrand.1o byterevn.1o \
-           m_mat_an_f.1o m_mat_na_f.1o m_mat_nn_f.1o realtr_f.1o \
-           s_m_a_mat_f.1o s_m_a_amat_f.1o s_m_s_mat_f.1o s_m_s_amat_f.1o\
-           adjoint_f.1o mat_copy_f.1o trace_f.1o complextr_f.1o \
-           dumpmat_f.1o dump_ahmat_f.1o clear_mat_f.1o \
-           addmat_f.1o addamat_f.1o  submat_f.1o subamat_f.1o \
-           clearvec_f.1o r_su2_hit_a_f.1o l_su2_hit_n_f.1o \
-           s_m_mat_f.1o s_m_amat_f.1o s_a_d_mat_f.1o cs_a_d_mat_f.1o \
-           s_m_mat_nn_f.1o s_m_mat_na_f.1o s_m_mat_an_f.1o cs_m_mat_f.1o \
-           cs_m_a_mat_f.1o cs_m_a_amat_f.1o cs_m_a_mata_f.1o cs_m_s_mat_f.1o
+           m_mat_an.1o m_mat_na.1o m_mat_nn.1o realtr.1o \
+           s_m_a_mat.1o s_m_a_amat.1o s_m_s_mat.1o s_m_s_amat.1o\
+           adjoint.1o mat_copy.1o trace.1o complextr.1o \
+           dumpmat.1o dump_ahmat.1o clear_mat.1o \
+           addmat.1o addamat.1o  submat.1o subamat.1o \
+           clearvec_f.1o r_su2_hit_a.1o l_su2_hit_n.1o \
+           s_m_mat.1o s_m_amat.1o s_a_d_mat.1o cs_a_d_mat.1o \
+           s_m_mat_nn.1o s_m_mat_na.1o s_m_mat_an.1o cs_m_mat.1o \
+           cs_m_a_mat.1o cs_m_a_amat.1o cs_m_a_mata.1o cs_m_s_mat.1o
 
 SU3OBJS2 = addvec.2o cmp_ahmat.2o dump_ahmat.2o \
            dumpvec.2o clearvec.2o make_ahmat.2o \
            s_m_a_vec.2o s_m_s_vec.2o s_m_vec.2o dot.2o rdot.2o \
            vec_copy.2o subvec.2o uncmp_ahmat.2o msq_vec.2o dumpsu2.2o \
            m_su2_mat_vec_n.2o m_su2_mat_vec_a.2o gaussrand.2o byterevn.2o \
-           m_mat_an_f.2o m_mat_na_f.2o m_mat_nn_f.2o realtr_f.2o \
-           s_m_a_mat_f.2o s_m_a_amat_f.2o s_m_s_mat_f.2o s_m_s_amat_f.2o \
-           adjoint_f.2o mat_copy_f.2o trace_f.2o complextr_f.2o \
-           clear_mat_f.2o dumpmat_f.2o dump_ahmat_f.2o \
-           addmat_f.2o addamat_f.2o submat_f.2o subamat_f.2o \
-           clearvec_f.2o r_su2_hit_a_f.2o l_su2_hit_n_f.2o \
-           s_m_mat_f.2o s_m_amat_f.2o s_a_d_mat_f.2o cs_a_d_mat_f.2o \
-           s_m_mat_nn_f.2o s_m_mat_na_f.2o s_m_mat_an_f.2o cs_m_mat_f.2o \
-           cs_m_a_mat_f.2o cs_m_a_amat_f.2o cs_m_a_mata_f.2o cs_m_s_mat_f.2o
+           m_mat_an.2o m_mat_na.2o m_mat_nn.2o realtr.2o \
+           s_m_a_mat.2o s_m_a_amat.2o s_m_s_mat.2o s_m_s_amat.2o \
+           adjoint.2o mat_copy.2o trace.2o complextr.2o \
+           clear_mat.2o dumpmat.2o dump_ahmat.2o \
+           addmat.2o addamat.2o submat.2o subamat.2o \
+           clearvec_f.2o r_su2_hit_a.2o l_su2_hit_n.2o \
+           s_m_mat.2o s_m_amat.2o s_a_d_mat.2o cs_a_d_mat.2o \
+           s_m_mat_nn.2o s_m_mat_na.2o s_m_mat_an.2o cs_m_mat.2o \
+           cs_m_a_mat.2o cs_m_a_amat.2o cs_m_a_mata.2o cs_m_s_mat.2o
 
 # Special header dependencies
 byterevn.o : ../include/int32type.h

@@ -165,7 +165,7 @@ int main(int argc, char *argv[]) {
   // Use f_U -- mom is used for temporary storage by the smearing routine
   FORALLSITES(i, s) {
     FORALLDIR(dir)
-      mat_copy_f(&(s->linkf[dir]), &(s->f_U[dir]));
+      mat_copy_f(&(s->link[dir]), &(s->f_U[dir]));
   }
 
   // Smear (after blocking) in increments of smear_step up to Nsmear
@@ -184,7 +184,7 @@ int main(int argc, char *argv[]) {
     node0_printf("BEFORE ");
     blocked_local_plaq(ismear, 0);    // Prints out MIN_PLAQ
 
-    // Overwrite s->linkf
+    // Overwrite s->link
     if (smearflag == STOUT_SMEAR)
       blocked_stout(smear_step, alpha, 0);
     else if (smearflag == APE_SMEAR)
@@ -233,7 +233,7 @@ int main(int argc, char *argv[]) {
   // Restore unsmeared unblocked links from f_U
   FORALLSITES(i, s) {
     FORALLDIR(dir)
-      mat_copy_f(&(s->f_U[dir]), &(s->linkf[dir]));
+      mat_copy_f(&(s->f_U[dir]), &(s->link[dir]));
   }
   // ---------------------------------------------------------------
 
@@ -290,7 +290,7 @@ int main(int argc, char *argv[]) {
     // Use f_U -- mom is used for temporary storage by the blocking routine
     FORALLSITES(i, s) {
       FORALLDIR(dir)
-        mat_copy_f(&(s->linkf[dir]), &(s->f_U[dir]));
+        mat_copy_f(&(s->link[dir]), &(s->f_U[dir]));
     }
 
     // Smear (after blocking) in increments of smear_step up to Nsmear
@@ -309,7 +309,7 @@ int main(int argc, char *argv[]) {
       node0_printf("BEFORE ");
       blocked_local_plaq(ismear, bl);     // Prints out MIN_PLAQ
 
-      // Overwrites s->linkf
+      // Overwrites s->link
       if (smearflag == STOUT_SMEAR)
         blocked_stout(smear_step, alpha, bl);
       else if (smearflag == APE_SMEAR)
@@ -358,7 +358,7 @@ int main(int argc, char *argv[]) {
     // Restore unsmeared blocked links from f_U
     FORALLSITES(i, s) {
       FORALLDIR(dir)
-        mat_copy_f(&(s->f_U[dir]), &(s->linkf[dir]));
+        mat_copy_f(&(s->f_U[dir]), &(s->link[dir]));
     }
   }
   // ---------------------------------------------------------------

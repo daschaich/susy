@@ -133,7 +133,7 @@ int main(int argc, char *argv[]) {
   max_plaq = local_plaquette(&ss_plaq, &st_plaq);     // Prints out MIN_PLAQ
   node0_printf(" %.8g %.8g %.8g\n", ss_plaq, st_plaq, max_plaq);
 
-  // Overwrite s->linkf
+  // Overwrite s->link
   if (smearflag == STOUT_SMEAR)
     stout_smear(Nsmear, alpha);
   else if (smearflag == APE_SMEAR)
@@ -234,10 +234,10 @@ int main(int argc, char *argv[]) {
 
   // Save and restore links overwritten by polar projection
   FORALLSITES(i, s)
-    mat_copy_f(&(s->linkf[TUP]), &(s->mom[TUP]));
+    mat_copy_f(&(s->link[TUP]), &(s->mom[TUP]));
   hvy_pot_polar();
   FORALLSITES(i, s)
-    mat_copy_f(&(s->mom[TUP]), &(s->linkf[TUP]));
+    mat_copy_f(&(s->mom[TUP]), &(s->link[TUP]));
 #endif
 
   node0_printf("RUNNING COMPLETED\n");

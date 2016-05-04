@@ -17,7 +17,7 @@ void hvy_pot_loop(int do_det) {
   int dir[2 * (MAX_T + MAX_X)], sign[2 * (MAX_T + MAX_X)];
   double wloop;
   complex tc;
-  matrix_f tmat;
+  matrix tmat;
 
   node0_printf("hvy_pot_loop: MAX_T = %d, MAX_X = %d\n", MAX_T, MAX_X);
 

@@ -31,7 +31,7 @@ void monopole() {
   // First extract the U(1) part of the link
   for (dir = XUP; dir <= TUP; dir++) {
     FORALLSITES(i, s) {
-      det_link = find_det(&(s->linkf[dir]));
+      det_link = find_det(&(s->link[dir]));
       phase[dir][i] = atan2(det_link.imag, det_link.real);
 //      printf("XXX (%d, %d, %d, %d)[%d] %.6g %.6g %.6g\n",
 //             s->x, s->y, s->z, s->t, dir,

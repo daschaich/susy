@@ -7,9 +7,9 @@ double det_force(Real eps) {
   register int i, dir, dir2;
   register site *s;
   double returnit = 0;
-  complex staple_det, linkf_det, prod_det, tforce;
+  complex staple_det, link_det, prod_det, tforce;
   complex *force = malloc(sites_on_node * sizeof(*force));
-  matrix_f tmat, dlink, *mat0, *mat2;
+  matrix tmat, dlink, *mat0, *mat2;
   msg_tag *tag0 = NULL, *tag1 = NULL, *tag2 = NULL;
 
   // Loop over directions, update mom[dir]
@@ -21,22 +21,22 @@ double det_force(Real eps) {
     // computing force from plaquettes in the dir, dir2 plane
     FORALLDIR(dir2) {
       if (dir2 != dir) {
-        // Get linkf[dir2] from direction dir
-        tag0 = start_gather_site(F_OFFSET(linkf[dir2]), sizeof(matrix_f),
+        // Get link[dir2] from direction dir
+        tag0 = start_gather_site(F_OFFSET(link[dir2]), sizeof(matrix),
                                  goffset[dir], EVENANDODD, gen_pt[0]);
 
         // Start gather for the upper staple
-        tag2 = start_gather_site(F_OFFSET(linkf[dir]), sizeof(matrix_f),
+        tag2 = start_gather_site(F_OFFSET(link[dir]), sizeof(matrix),
                                  goffset[dir2], EVENANDODD, gen_pt[2]);
 
         // Begin the computation at the dir2DOWN point
         wait_gather(tag0);
         FORALLSITES(i, s) {
-          mult_an_f(&(s->linkf[dir2]), &(s->linkf[dir]), &tmat);
-          mult_nn_f(&tmat, (matrix_f *)gen_pt[0][i], &(tempmat[i]));
+          mult_an(&(s->link[dir2]), &(s->link[dir]), &tmat);
+          mult_nn(&tmat, (matrix *)gen_pt[0][i], &(tempmat[i]));
         }
         // Gather this intermediate result up to home site
-        tag1 = start_gather_field(tempmat, sizeof(matrix_f),
+        tag1 = start_gather_field(tempmat, sizeof(matrix),
                                   goffset[dir2] + 1, EVENANDODD, gen_pt[1]);
 
         // Begin the computation of the upper staple
@@ -45,20 +45,20 @@ double det_force(Real eps) {
         // The plaquette is staple*U^dag due to the orientation of the gathers
         wait_gather(tag2);
         FORALLSITES(i, s) {
-          mat0 = (matrix_f *)gen_pt[0][i];
-          mat2 = (matrix_f *)gen_pt[2][i];
-          mult_nn_f(&(s->linkf[dir2]), mat2, &tmat);
-          mult_na_f(&tmat, mat0, &(staple[i]));
+          mat0 = (matrix *)gen_pt[0][i];
+          mat2 = (matrix *)gen_pt[2][i];
+          mult_nn(&(s->link[dir2]), mat2, &tmat);
+          mult_na(&tmat, mat0, &(staple[i]));
 
           // Now we have the upper staple -- compute its force
           // S = (det[staple U^dag] - 1) * (det[staple^dag U] - 1)
           // --> F = (det[staple U^dag] - 1) * det[staple]^* * d(det U)/dU
           //       = prod_det * staple_det^* * dlink
           staple_det = find_det(&(staple[i]));
-          linkf_det = find_det(&(s->linkf[dir]));
+          link_det = find_det(&(s->link[dir]));
 
-          // prod_det = kappa_u1 * (staple_det * linkf_det^* - 1)
-          CMUL_J(staple_det, linkf_det, prod_det);
+          // prod_det = kappa_u1 * (staple_det * link_det^* - 1)
+          CMUL_J(staple_det, link_det, prod_det);
           CSUM(prod_det, minus1);
           CMULREAL(prod_det, kappa_u1, prod_det);
 
@@ -70,11 +70,11 @@ double det_force(Real eps) {
         // We have gathered up the lower staple -- compute its force
         wait_gather(tag1);
         FORALLSITES(i,s) {
-          staple_det = find_det((matrix_f *)gen_pt[1][i]);
-          linkf_det = find_det(&(s->linkf[dir]));
+          staple_det = find_det((matrix *)gen_pt[1][i]);
+          link_det = find_det(&(s->link[dir]));
 
-          // prod_det = kappa_u1 * (staple_det * linkf_det^* - 1)
-          CMUL_J(staple_det, linkf_det, prod_det);
+          // prod_det = kappa_u1 * (staple_det * link_det^* - 1)
+          CMUL_J(staple_det, link_det, prod_det);
           CSUM(prod_det, minus1);
           CMULREAL(prod_det, kappa_u1, prod_det);
 
@@ -91,26 +91,26 @@ double det_force(Real eps) {
     // Now update momenta
     FORALLSITES(i, s) {
 #if (NCOL == 2 || NCOL == 3 || NCOL == 4)
-      adjugate(&(s->linkf[dir]), &dlink);
+      adjugate(&(s->link[dir]), &dlink);
 #endif
 #if (NCOL > 4)
       // Determine adjugate as determinant times inverse
       // Checked that this produces the correct results for NCOL <= 4
-      invert(&(s->linkf[dir]), &tmat);
-      linkf_det = find_det(&(s->linkf[dir]));
-      c_scalar_mult_mat_f(&tmat, &linkf_det, &dlink);
+      invert(&(s->link[dir]), &tmat);
+      link_det = find_det(&(s->link[dir]));
+      c_scalar_mult_mat(&tmat, &link_det, &dlink);
 #endif
-      c_scalar_mult_mat_f(&dlink, &(force[i]), &(s->f_U[dir]));
+      c_scalar_mult_mat(&dlink, &(force[i]), &(s->f_U[dir]));
       /* and update the momentum from the gauge force --
          dif because I computed dS/dU and the adjoint because of the way it is */
-      scalar_mult_dif_adj_matrix_f(&(s->f_U[dir]), eps, &(s->mom[dir]));
+      scalar_mult_dif_adj_matrix(&(s->f_U[dir]), eps, &(s->mom[dir]));
     }
   }
 
   // Compute average gauge force
   FORALLSITES(i, s) {
     FORALLDIR(dir)
-      returnit += realtrace_f(&(s->f_U[dir]), &(s->f_U[dir]));
+      returnit += realtrace(&(s->f_U[dir]), &(s->f_U[dir]));
   }
   g_doublesum(&returnit);
 

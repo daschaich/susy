@@ -16,7 +16,7 @@ void blocked_local_plaq(int Nsmear, int block) {
 #ifdef MIN_PLAQ
   double min_plaq = 200.0 * NCOL, max_plaq = -200.0 * NCOL;
 #endif
-  matrix_f tmat, tmat2;
+  matrix tmat, tmat2;
 
   // Set number of links to stride, bl = 2^block
   for (j = 0; j < block; j++)
@@ -27,8 +27,8 @@ void blocked_local_plaq(int Nsmear, int block) {
     for (dir2 = XUP; dir2 < dir; dir2++) {
       // Copy links to tempmat and tempmat2 to be shifted
       FORALLSITES(i, s) {
-        mat_copy_f(&(s->linkf[dir]), &(tempmat[i]));
-        mat_copy_f(&(s->linkf[dir2]), &(tempmat2[i]));
+        mat_copy_f(&(s->link[dir]), &(tempmat[i]));
+        mat_copy_f(&(s->link[dir2]), &(tempmat2[i]));
       }
 
       // Get mom[dir2] from dir and mom[dir] from dir2, both with stride
@@ -43,9 +43,9 @@ void blocked_local_plaq(int Nsmear, int block) {
       // then plaq = realtrace(tmat2, tmat)[ U_1(x) ]
       //           = tr[Udag_1(x + dir2) Udag_2(x) U_1(x) U_2(x + dir)]
       FORALLSITES(i, s) {
-        mult_nn_f(&(s->linkf[dir]), &(tempmat2[i]), &tmat);
-        mult_nn_f(&(s->linkf[dir2]), &(tempmat[i]), &tmat2);
-        tr = (double)realtrace_f(&tmat2, &tmat);
+        mult_nn(&(s->link[dir]), &(tempmat2[i]), &tmat);
+        mult_nn(&(s->link[dir2]), &(tempmat[i]), &tmat2);
+        tr = (double)realtrace(&tmat2, &tmat);
 #ifdef MIN_PLAQ
         if (tr < min_plaq)
           min_plaq = tr;

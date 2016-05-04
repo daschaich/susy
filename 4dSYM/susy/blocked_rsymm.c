@@ -13,61 +13,61 @@
 // sign is the corresponding list of which way to go in the given dir
 // That is, the negative sign means take the adjoint
 // bl = 2^block is number of links to stride
-// Use tempmat to accumulate linkf product along path
+// Use tempmat to accumulate link product along path
 void blocked_path(int *dir, int *sign, int length, int bl) {
   register int i;
   register site *s;
   int j, k, d[4];
   msg_tag *tag;
-  matrix_f *mat;
+  matrix *mat;
 
   // Initialize tempmat with first link in path
   if (sign[0] > 0) {    // Gather from site - bl * dir[0], no adjoint
     for (k = 0; k < NDIMS; k++)
       d[k] = -bl * offset[dir[0]][k];
-    tag = start_general_gather_site(F_OFFSET(linkf[dir[0]]), sizeof(matrix_f),
+    tag = start_general_gather_site(F_OFFSET(link[dir[0]]), sizeof(matrix),
                                     d, EVENANDODD, gen_pt[0]);
 
     wait_general_gather(tag);
     FORALLSITES(i, s)
-      mat_copy_f((matrix_f *)(gen_pt[0][i]), &(tempmat[i]));
+      mat_copy_f((matrix *)(gen_pt[0][i]), &(tempmat[i]));
 
     cleanup_general_gather(tag);
   }
 
   if (sign[0] < 0) {    // Take adjoint, no gather
     FORALLSITES(i, s)
-      adjoint_f(&(s->linkf[dir[0]]), &(tempmat[i]));
+      adjoint_f(&(s->link[dir[0]]), &(tempmat[i]));
   }
 
   // Accumulate subsequent links in product in tempmat
   for (j = 1; j < length; j++) {
-    if (sign[j] > 0) {    // mult_nn_f then gather from site - bl * dir[j]
+    if (sign[j] > 0) {    // mult_nn then gather from site - bl * dir[j]
       FORALLSITES(i, s)
-        mult_nn_f(&(tempmat[i]), &(s->linkf[dir[j]]), &(tempmat2[i]));
+        mult_nn(&(tempmat[i]), &(s->link[dir[j]]), &(tempmat2[i]));
 
       for (k = 0; k < NDIMS; k++)
         d[k] = -bl * offset[dir[j]][k];
-      tag = start_general_gather_field(tempmat2, sizeof(matrix_f),
+      tag = start_general_gather_field(tempmat2, sizeof(matrix),
                                        d, EVENANDODD, gen_pt[0]);
 
       wait_general_gather(tag);
       FORALLSITES(i, s)
-        mat_copy_f((matrix_f *)(gen_pt[0][i]), &(tempmat[i]));
+        mat_copy_f((matrix *)(gen_pt[0][i]), &(tempmat[i]));
 
       cleanup_general_gather(tag);
     }
 
-    if (sign[j] < 0) {    // Gather from site + bl * dir[j] then mult_na_f
+    if (sign[j] < 0) {    // Gather from site + bl * dir[j] then mult_na
       for (k = 0; k < NDIMS; k++)
         d[k] = bl * offset[dir[j]][k];
-      tag = start_general_gather_field(tempmat, sizeof(matrix_f),
+      tag = start_general_gather_field(tempmat, sizeof(matrix),
                                        d, EVENANDODD, gen_pt[1]);
 
       wait_general_gather(tag);
       FORALLSITES(i, s) {
-        mat = (matrix_f *)(gen_pt[1][i]);
-        mult_na_f(mat, &(s->linkf[dir[j]]), &(tempmat2[i]));
+        mat = (matrix *)(gen_pt[1][i]);
+        mult_na(mat, &(s->link[dir[j]]), &(tempmat2[i]));
       }
       FORALLSITES(i, s)   // Don't want to overwrite tempmat too soon
         mat_copy_f(&(tempmat2[i]), &(tempmat[i]));
@@ -84,29 +84,29 @@ void blocked_path(int *dir, int *sign, int length, int bl) {
 // Walk around strided path of links specified by dir, sign and kind
 // dir lists the directions in the path
 // sign lists whether to go forward (1) or backwards (-1)
-// kind tells us whether to use linkf (1) or mom = (linkf^{-1})^dag (-1)
+// kind tells us whether to use link (1) or mom = (link^{-1})^dag (-1)
 // length is the length of the path, and of each array
 // bl = 2^block is number of links to stride
-// Use tempmat to accumulate linkf product along path
+// Use tempmat to accumulate link product along path
 void blocked_rsymm_path(int *dir, int *sign, int *kind, int length, int bl) {
   register int i;
   register site *s;
   int j, k, d[4] = {0, 0, 0, 0};
   msg_tag *tag = NULL;
-  matrix_f *mat;
+  matrix *mat;
 
   // Initialize tempmat with first link in path
   if (sign[0] > 0) {    // Gather from site - bl * dir[0], no adjoint
     for (k = 0; k < NDIMS; k++)
       d[k] = -bl * offset[dir[0]][k];
     if (kind[0] > 0) {
-      tag = start_general_gather_site(F_OFFSET(linkf[dir[0]]),
-                                      sizeof(matrix_f), d,
+      tag = start_general_gather_site(F_OFFSET(link[dir[0]]),
+                                      sizeof(matrix), d,
                                       EVENANDODD, gen_pt[0]);
     }
     else if (kind[0] < 0) {
       tag = start_general_gather_site(F_OFFSET(mom[dir[0]]),
-                                      sizeof(matrix_f), d,
+                                      sizeof(matrix), d,
                                       EVENANDODD, gen_pt[0]);
     }
     else {
@@ -117,14 +117,14 @@ void blocked_rsymm_path(int *dir, int *sign, int *kind, int length, int bl) {
 
     wait_general_gather(tag);
     FORALLSITES(i, s)
-      mat_copy_f((matrix_f *)(gen_pt[0][i]), &(tempmat[i]));
+      mat_copy_f((matrix *)(gen_pt[0][i]), &(tempmat[i]));
     cleanup_general_gather(tag);
   }
 
   else if (sign[0] < 0) {    // Take adjoint, no gather
     FORALLSITES(i, s) {
       if (kind[0] > 0)
-        adjoint_f(&(s->linkf[dir[0]]), &(tempmat[i]));
+        adjoint_f(&(s->link[dir[0]]), &(tempmat[i]));
       else if (kind[0] < 0)
         adjoint_f(&(s->mom[dir[0]]), &(tempmat[i]));
       else {
@@ -141,12 +141,12 @@ void blocked_rsymm_path(int *dir, int *sign, int *kind, int length, int bl) {
 
   // Accumulate subsequent links in product in tempmat
   for (j = 1; j < length; j++) {
-    if (sign[j] > 0) {    // mult_nn_f then gather from site - bl * dir[j]
+    if (sign[j] > 0) {    // mult_nn then gather from site - bl * dir[j]
       FORALLSITES(i, s) {
         if (kind[j] > 0)
-          mult_nn_f(&(tempmat[i]), &(s->linkf[dir[j]]), &(tempmat2[i]));
+          mult_nn(&(tempmat[i]), &(s->link[dir[j]]), &(tempmat2[i]));
         else if (kind[j] < 0)
-          mult_nn_f(&(tempmat[i]), &(s->mom[dir[j]]), &(tempmat2[i]));
+          mult_nn(&(tempmat[i]), &(s->mom[dir[j]]), &(tempmat2[i]));
         else {
           node0_printf("blocked_rsymm_path: unrecognized kind[%d] = %d\n",
                        j, kind[j]);
@@ -155,31 +155,31 @@ void blocked_rsymm_path(int *dir, int *sign, int *kind, int length, int bl) {
       }
       for (k = 0; k < NDIMS; k++)
         d[k] = -bl * offset[dir[j]][k];
-      tag = start_general_gather_field(tempmat2, sizeof(matrix_f),
+      tag = start_general_gather_field(tempmat2, sizeof(matrix),
                                        d, EVENANDODD, gen_pt[0]);
 
       wait_general_gather(tag);
       FORALLSITES(i, s)
-        mat_copy_f((matrix_f *)(gen_pt[0][i]), &(tempmat[i]));
+        mat_copy_f((matrix *)(gen_pt[0][i]), &(tempmat[i]));
       cleanup_general_gather(tag);
     }
 
-    // Gather from site + bl * dir[j] then mult_na_f
+    // Gather from site + bl * dir[j] then mult_na
     else if (sign[j] < 0) {
       for (k = 0; k < NDIMS; k++)
         d[k] = bl * offset[dir[j]][k];
-      tag = start_general_gather_field(tempmat, sizeof(matrix_f),
+      tag = start_general_gather_field(tempmat, sizeof(matrix),
                                        d, EVENANDODD, gen_pt[1]);
 
       wait_general_gather(tag);
       FORALLSITES(i, s) {
         if (kind[j] > 0) {
-          mat = (matrix_f *)(gen_pt[1][i]);
-          mult_na_f(mat, &(s->linkf[dir[j]]), &(tempmat2[i]));
+          mat = (matrix *)(gen_pt[1][i]);
+          mult_na(mat, &(s->link[dir[j]]), &(tempmat2[i]));
         }
         else if (kind[j] < 0) {
-          mat = (matrix_f *)(gen_pt[1][i]);
-          mult_na_f(mat, &(s->mom[dir[j]]), &(tempmat2[i]));
+          mat = (matrix *)(gen_pt[1][i]);
+          mult_na(mat, &(s->mom[dir[j]]), &(tempmat2[i]));
         }
         else {
           node0_printf("blocked_rsymm_path: unrecognized kind[%d] = %d\n",
@@ -211,7 +211,7 @@ void blocked_rsymm(int Nsmear, int block) {
   double rsymm_loop, wloop, invlink[NUMLINK], invlink_sum = 0.0, td;
   double invlinkSq = 0.0;
   complex tc;
-  matrix_f tmat;
+  matrix tmat;
 
   // Set number of links to stride, bl = 2^block
   // Allow sanity check of reproducing rsymm() with this routine
@@ -229,7 +229,7 @@ void blocked_rsymm(int Nsmear, int block) {
   // since it transforms like the original link
   FORALLDIR(mu) {
     FORALLSITES(i, s) {
-      invert(&(s->linkf[mu]), &tmat);
+      invert(&(s->link[mu]), &tmat);
       adjoint_f(&tmat, &(s->mom[mu]));
 
 #ifdef DEBUG_CHECK
@@ -237,34 +237,34 @@ void blocked_rsymm(int Nsmear, int block) {
 #define INV_TOL_SQ 1e-24
       // Check inversion -- tmat should be unit matrix
       int j, k;
-      mult_nn_f(&(s->mom[dir]), &(s->linkf[dir]), &tmat);
+      mult_nn(&(s->mom[dir]), &(s->link[dir]), &tmat);
       for (j = 0; j < NCOL; j++) {
         if (fabs(1 - tmat.e[j][j].real) > INV_TOL
             || fabs(tmat.e[j][j].imag) > INV_TOL) {
           printf("Link inversion fails on node%d:\n", this_node);
-          dumpmat_f(&tmat);
+          dumpmat(&tmat);
         }
         for (k = j + 1; k < NCOL; k++) {
           if (cabs_sq(&(tmat.e[j][k])) > INV_TOL_SQ
               || cabs_sq(&(tmat.e[k][j])) > INV_TOL_SQ) {
             printf("Link inversion fails on node%d:\n", this_node);
-            dumpmat_f(&tmat);
+            dumpmat(&tmat);
           }
         }
       }
       // Check left multiplication in addition to right multiplication
-      mult_nn_f(&(s->linkf[dir]), &(s->mom[dir]), &tmat);
+      mult_nn(&(s->link[dir]), &(s->mom[dir]), &tmat);
       for (j = 0; j < NCOL; j++) {
         if (fabs(1 - tmat.e[j][j].real) > INV_TOL
             || fabs(tmat.e[j][j].imag) > INV_TOL) {
           printf("Link inversion fails on node%d:\n", this_node);
-          dumpmat_f(&tmat);
+          dumpmat(&tmat);
         }
         for (k = j + 1; k < NCOL; k++) {
           if (cabs_sq(&(tmat.e[j][k])) > INV_TOL_SQ
               || cabs_sq(&(tmat.e[k][j])) > INV_TOL_SQ) {
             printf("Link inversion fails on node%d:\n", this_node);
-            dumpmat_f(&tmat);
+            dumpmat(&tmat);
           }
         }
       }
@@ -274,11 +274,11 @@ void blocked_rsymm(int Nsmear, int block) {
 
   // First check average value of the inverted link
   // Tr[U^{-1} (U^{-1})^dag] / N and corresponding width
-  // Just like link_trace() but use s->mom instead of s->linkf
+  // Just like link_trace() but use s->mom instead of s->link
   for (dir_inv = XUP; dir_inv < NUMLINK; dir_inv++) {
     invlink[dir_inv] = 0.0;
     FORALLSITES(i, s) {
-      td = realtrace_f(&(s->mom[dir_inv]), &(s->mom[dir_inv]));
+      td = realtrace(&(s->mom[dir_inv]), &(s->mom[dir_inv]));
       invlink[dir_inv] += td;
       invlinkSq += td * td;
     }

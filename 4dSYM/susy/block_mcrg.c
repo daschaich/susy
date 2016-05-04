@@ -18,19 +18,19 @@ void block_mcrg(int block) {
     for (j = 0; j < NDIMS; j++)
       disp[j] = bl * offset[dir][j];
 
-    tag = start_general_gather_site(F_OFFSET(linkf[dir]), sizeof(matrix_f),
+    tag = start_general_gather_site(F_OFFSET(link[dir]), sizeof(matrix),
                                     disp, EVENANDODD, gen_pt[0]);
     wait_general_gather(tag);
 
     FORALLSITES(i, s)
-      mult_nn_f(&(s->linkf[dir]), (matrix_f *)(gen_pt[0][i]), &(s->mom[dir]));
+      mult_nn(&(s->link[dir]), (matrix *)(gen_pt[0][i]), &(s->mom[dir]));
     cleanup_general_gather(tag);
   }
 
   // Overwrite original links
   FORALLSITES(i, s) {
     FORALLDIR(dir)
-      mat_copy_f(&(s->mom[dir]), &(s->linkf[dir]));
+      mat_copy_f(&(s->mom[dir]), &(s->link[dir]));
   }
 }
 // -----------------------------------------------------------------

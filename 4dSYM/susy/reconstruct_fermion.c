@@ -6,7 +6,7 @@
   #error "Fermion reconstruction only for adjoint rep!"
 #endif
 
-void reconstruct(vector *in, matrix_f *out) {
+void reconstruct(vector *in, matrix *out) {
   register int a, i, j;
 
   // Overwrite out
@@ -31,7 +31,7 @@ void reconstruct(vector *in, matrix_f *out) {
 }
 
 // Negate imaginary parts of in-->in^*
-void reconstruct_star(vector *in, matrix_f *out) {
+void reconstruct_star(vector *in, matrix *out) {
   register int a, i, j;
 
   // Overwrite out

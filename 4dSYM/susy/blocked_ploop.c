@@ -10,7 +10,7 @@ void blocked_ploop(int Nsmear, int block) {
   int j, bl = 2, d[4] = {0, 0, 0, 0};
   complex sum = cmplx(0.0, 0.0), plp;
   msg_tag *tag;
-  matrix_f *mat;
+  matrix *mat;
 
   // Allow sanity check of reproducing ploop() with this routine
   if (block <= 0)
@@ -22,13 +22,13 @@ void blocked_ploop(int Nsmear, int block) {
 
   // Copy temporal links to tempmat
   FORALLSITES(i, s)
-    mat_copy_f(&(s->linkf[TUP]), &(tempmat[i]));
+    mat_copy_f(&(s->link[TUP]), &(tempmat[i]));
 
   // Compute the bl-strided Polyakov loop "at" ALL the sites
   // on the first bl = 2^block timeslices
   for (j = bl; j < nt; j += bl) {
     d[TUP] = j;               // Path from which to gather
-    tag = start_general_gather_field(tempmat, sizeof(matrix_f),
+    tag = start_general_gather_field(tempmat, sizeof(matrix),
                                      d, EVENANDODD, gen_pt[0]);
     wait_general_gather(tag);
 
@@ -37,8 +37,8 @@ void blocked_ploop(int Nsmear, int block) {
     FORALLSITES(i, s) {
       if (s->t >= bl)
         continue;
-      mat = (matrix_f *)gen_pt[0][i];
-      mult_nn_f(&(tempmat[i]), mat, &(tempmat2[i]));
+      mat = (matrix *)gen_pt[0][i];
+      mult_nn(&(tempmat[i]), mat, &(tempmat2[i]));
       mat_copy_f(&(tempmat2[i]), &(tempmat[i]));
     }
     cleanup_general_gather(tag);

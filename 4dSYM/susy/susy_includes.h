@@ -40,9 +40,9 @@ void setup_qclosed_offset();
 void setup_rhmc();
 
 // Reconstruct NxN fermion matrices from N^2 vectors
-void reconstruct(vector *in, matrix_f *out);
-void reconstruct_star(vector *in, matrix_f *out);
-void deconstruct(matrix_f *in, vector *out);
+void reconstruct(vector *in, matrix *out);
+void reconstruct_star(vector *in, matrix *out);
+void deconstruct(matrix *in, vector *out);
 
 // Helper routines for action and force computations
 void compute_plaqdet();
@@ -103,7 +103,7 @@ void scalar_mult_TF(Twist_Fermion *src, Real s, Twist_Fermion *dest);
 
 // Other routines in library_util.c that loop over all sites
 void gauge_field_copy_f(field_offset src, field_offset dest);
-void shiftmat(matrix_f *dat, matrix_f *temp, int dir);
+void shiftmat(matrix *dat, matrix *temp, int dir);
 
 // Random gauge transformation for testing gauge invariance
 void random_gauge_trans(Twist_Fermion *TF);
@@ -111,14 +111,14 @@ void random_gauge_trans(Twist_Fermion *TF);
 // Determinant-related routines
 void measure_det();
 void widths();        // Widths of plaquette and det distributions
-complex find_det(matrix_f *Q);
-void det_project(matrix_f *in, matrix_f *out);
+complex find_det(matrix *Q);
+void det_project(matrix *in, matrix *out);
 
 // Adjugate matrix needed by det_force
-void adjugate(matrix_f *in, matrix_f *out);
+void adjugate(matrix *in, matrix *out);
 
 // Matrix inverse is just adjugate divided by determinant
-void invert(matrix_f *in, matrix_f *out);
+void invert(matrix *in, matrix *out);
 
 // Modified Wilson loops use invert and path
 void path(int *dir, int *sign, int length);
@@ -176,8 +176,8 @@ void hvy_pot_polar_loop();
 // Final argument reports success or information about failure
 void zheev_(char *doV, char *uplo, int *N1, double *store, int *N2,
             double *eigs, double *work, int *Nwork, double *Rwork, int *stat);
-void polar(matrix_f *in, matrix_f *u, matrix_f *P);
-void matrix_log(matrix_f *in, matrix_f *out);
+void polar(matrix *in, matrix *u, matrix *P);
+void matrix_log(matrix *in, matrix *out);
 
 // Monopole computation uses find_det
 void monopole();

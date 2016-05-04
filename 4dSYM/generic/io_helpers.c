@@ -49,7 +49,7 @@ gauge_file *save_lattice(int flag, char *filename) {
 
 
 // -----------------------------------------------------------------
-// Set linkf to unit matrices
+// Set link to unit matrices
 void coldlat() {
   register int i, j, k, dir;
   register site *s;
@@ -59,9 +59,9 @@ void coldlat() {
       for (j = 0; j < NCOL; j++) {
         for (k = 0; k < NCOL; k++) {
           if (j != k)
-            s->linkf[dir].e[j][k] = cmplx(0.0, 0.0);
+            s->link[dir].e[j][k] = cmplx(0.0, 0.0);
           else
-            s->linkf[dir].e[j][k] = cmplx(1.0, 0.0);
+            s->link[dir].e[j][k] = cmplx(1.0, 0.0);
         }
       }
     }
@@ -73,17 +73,17 @@ void coldlat() {
 
 
 // -----------------------------------------------------------------
-// Set linkf to funny matrices for debugging
+// Set link to funny matrices for debugging
 void funnylat() {
   register int i, j, k, dir;
   register site *s;
 
   FORALLSITES(i, s) {
     for (dir = XUP; dir <= TUP; dir++) {
-      s->linkf[dir].e[0][0] = cmplx((double)dir, (double)dir);
+      s->link[dir].e[0][0] = cmplx((double)dir, (double)dir);
       for (j = 1; j < NCOL; ++j) {
         for (k = 1; k < NCOL; ++k)
-          s->linkf[dir].e[j][k] = cmplx(10.0 * j * s->x, 10.0 * k * s->z);
+          s->link[dir].e[j][k] = cmplx(10.0 * j * s->x, 10.0 * k * s->z);
       }
     }
   }

@@ -160,11 +160,11 @@ int main(int argc, char *argv[]) {
       max_plaq = local_plaquette(&ss_plaq, &st_plaq);   // Prints out MIN_PLAQ
       node0_printf(" %.8g %.8g %.8g\n", ss_plaq, st_plaq, max_plaq);
 
-      // Overwrite s->linkf
+      // Overwrite s->link
       // Save unsmeared links in Udag_inv (mom and f_U both already used)
       FORALLDIR(dir) {
         FORALLSITES(i, s)
-          mat_copy_f(&(s->linkf[dir]), &(Udag_inv[dir][i]));
+          mat_copy_f(&(s->link[dir]), &(Udag_inv[dir][i]));
       }
       if (smearflag == STOUT_SMEAR)
         stout_smear(Nsmear, alpha);
@@ -237,7 +237,7 @@ int main(int argc, char *argv[]) {
         plaquette(&ss_plaq, &st_plaq);    // To be printed below
         FORALLSITES(i, s) {
           FORALLDIR(dir)
-            mat_copy_f(&(s->linkf[dir]), &(s->mom[dir]));
+            mat_copy_f(&(s->link[dir]), &(s->mom[dir]));
         }
 
         node0_printf("Fixing to Coulomb gauge...\n");
@@ -267,16 +267,16 @@ int main(int argc, char *argv[]) {
       // Save and restore links overwritten by polar projection
       // Don't use mom[TUP], which is already storing the un-fixed links
       FORALLSITES(i, s)
-        mat_copy_f(&(s->linkf[TUP]), &(s->f_U[TUP]));
+        mat_copy_f(&(s->link[TUP]), &(s->f_U[TUP]));
       hvy_pot_polar();
       FORALLSITES(i, s)
-        mat_copy_f(&(s->f_U[TUP]), &(s->linkf[TUP]));
+        mat_copy_f(&(s->f_U[TUP]), &(s->link[TUP]));
 
       // Restore the un-fixed links to be written to disk if requested
       if (fixflag == COULOMB_GAUGE_FIX) {
         FORALLSITES(i, s) {
           FORALLDIR(dir)
-            mat_copy_f(&(s->mom[dir]), &(s->linkf[dir]));
+            mat_copy_f(&(s->mom[dir]), &(s->link[dir]));
         }
       }
 #endif
@@ -285,7 +285,7 @@ int main(int argc, char *argv[]) {
       // Restore unsmeared links from Udag_inv
       FORALLDIR(dir) {
         FORALLSITES(i, s)
-          mat_copy_f(&(Udag_inv[dir][i]), &(s->linkf[dir]));
+          mat_copy_f(&(Udag_inv[dir][i]), &(s->link[dir]));
       }
 #endif
     }

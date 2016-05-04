@@ -20,7 +20,7 @@ void update_uu(Real eps) {
 
   FORALLDIR(mu) {
     FORALLSITES(i, s)
-      scalar_mult_sum_matrix_f(&(s->mom[mu]), eps, &(s->linkf[mu]));
+      scalar_mult_sum_matrix(&(s->mom[mu]), eps, &(s->link[mu]));
   }
 
   // Update plaquette determinants, DmuUmu and Fmunu with new links
@@ -122,7 +122,7 @@ int update() {
 #ifdef HMC_ALGORITHM
   Real xrandom;   // For accept/reject test
   // Copy link field to old_link
-  gauge_field_copy_f(F_OFFSET(linkf[0]), F_OFFSET(old_linkf[0]));
+  gauge_field_copy_f(F_OFFSET(link[0]), F_OFFSET(old_link[0]));
 #endif
   // Do microcanonical updating
   iters += update_step(fnorm, &gnorm, src, psim);
@@ -156,7 +156,7 @@ int update() {
   broadcast_float(&xrandom);
   if (exp(-change) < (double)xrandom) {
     if (traj_length > 0.0) {
-      gauge_field_copy_f(F_OFFSET(old_linkf[0]), F_OFFSET(linkf[0]));
+      gauge_field_copy_f(F_OFFSET(old_link[0]), F_OFFSET(link[0]));
       compute_plaqdet();
       compute_Uinv();
       compute_DmuUmu();

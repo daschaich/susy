@@ -12,7 +12,7 @@ void blocked_plaq(int Nsmear, int block) {
   double plaq = 0.0, plaqSq = 0.0, re = 0.0, reSq = 0.0, im = 0.0, imSq = 0.0;
   double ss_sum = 0.0, st_sum = 0.0, norm = 10.0 * volume, tr;
   complex det = cmplx(0.0, 0.0), tc;
-  matrix_f tmat, tmat2, tmat3;
+  matrix tmat, tmat2, tmat3;
 
   // Set number of links to stride, 2^block
   for (j = 0; j < block; j++)
@@ -23,8 +23,8 @@ void blocked_plaq(int Nsmear, int block) {
     for (dir2 = XUP; dir2 < dir; dir2++) {
       // Copy links to tempmat and tempmat2 to be shifted
       FORALLSITES(i, s) {
-        mat_copy_f(&(s->linkf[dir]), &(tempmat[i]));
-        mat_copy_f(&(s->linkf[dir2]), &(tempmat2[i]));
+        mat_copy_f(&(s->link[dir]), &(tempmat[i]));
+        mat_copy_f(&(s->link[dir2]), &(tempmat2[i]));
       }
 
       // Get mom[dir2] from dir and mom[dir] from dir2, both with stride
@@ -39,9 +39,9 @@ void blocked_plaq(int Nsmear, int block) {
       // then plaq = realtrace(tmat2, tmat)[ U_1(x) ]
       //           = tr[Udag_1(x + dir2) Udag_2(x) U_1(x) U_2(x + dir)]
       FORALLSITES(i, s) {
-        mult_nn_f(&(s->linkf[dir]), &(tempmat2[i]), &tmat);
-        mult_nn_f(&(s->linkf[dir2]), &(tempmat[i]), &tmat2);
-        tr = (double)realtrace_f(&tmat2, &tmat);
+        mult_nn(&(s->link[dir]), &(tempmat2[i]), &tmat);
+        mult_nn(&(s->link[dir2]), &(tempmat[i]), &tmat2);
+        tr = (double)realtrace(&tmat2, &tmat);
         plaq += tr;
         plaqSq += tr * tr;
         if (dir == TUP || dir2 == TUP)
@@ -51,7 +51,7 @@ void blocked_plaq(int Nsmear, int block) {
 
         // Also monitor determinant
         // (na instead of an to match sign conventions)
-        mult_na_f(&tmat2, &tmat, &tmat3);
+        mult_na(&tmat2, &tmat, &tmat3);
         tc = find_det(&tmat3);
         CSUM(det, tc);
         re += tc.real;

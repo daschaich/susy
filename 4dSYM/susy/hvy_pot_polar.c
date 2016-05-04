@@ -21,7 +21,7 @@ void hvy_pot_polar() {
   int count[MAX_pts], this_r, total_r = 0;
   Real MAX_r = 100.0 * MAX_X, tr, lookup[MAX_pts], W[MAX_pts];
   double wloop;
-  matrix_f tmat, tmat2, *mat;
+  matrix tmat, tmat2, *mat;
   msg_tag *mtag = NULL;
 
   // Initialize Wilson loop accumulators
@@ -45,23 +45,23 @@ void hvy_pot_polar() {
    // Polar projection of gauge-fixed links
    // To be multiplied together after projecting
    // !!! Overwrites links
-   polar(&(s->linkf[TUP]), &tmat, &tmat2);
-   mat_copy_f(&tmat, &(s->linkf[TUP]));
+   polar(&(s->link[TUP]), &tmat, &tmat2);
+   mat_copy_f(&tmat, &(s->link[TUP]));
   }
 
   // Use staple to hold product of t_dist links at each (x, y, z)
   for (t_dist = 1; t_dist <= MAX_T; t_dist++) {
     if (t_dist == 1) {
       FORALLSITES(i, s)
-        mat_copy_f(&(s->linkf[TUP]), &(staple[i]));
+        mat_copy_f(&(s->link[TUP]), &(staple[i]));
     }
     else {
-      mtag = start_gather_field(staple, sizeof(matrix_f),
+      mtag = start_gather_field(staple, sizeof(matrix),
                                 goffset[TUP], EVENANDODD, gen_pt[0]);
       wait_gather(mtag);
       FORALLSITES(i, s) {
-        mat = (matrix_f *)gen_pt[0][i];
-        mult_nn_f(&(s->linkf[TUP]), mat, &(tempmat2[i]));
+        mat = (matrix *)gen_pt[0][i];
+        mult_nn(&(s->link[TUP]), mat, &(tempmat2[i]));
       }
       cleanup_gather(mtag);
       FORALLSITES(i, s)
@@ -134,7 +134,7 @@ void hvy_pot_polar() {
           // Evaluate potential at this separation
           wloop = 0.0;
           FORALLSITES(i, s)
-            wloop += (double)realtrace_f(&(staple[i]), &(tempmat[i]));
+            wloop += (double)realtrace(&(staple[i]), &(tempmat[i]));
           g_doublesum(&wloop);
           W[this_r] += wloop;
 #ifdef CHECK_ROT

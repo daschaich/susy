@@ -31,24 +31,24 @@ void compute_DmuUmu() {
 
   FORALLDIR(mu) {
     FORALLSITES(i, s) {
-      mult_na_f(&(s->linkf[mu]), &(s->linkf[mu]), &(tempmat[i]));
-      mult_an_f(&(s->linkf[mu]), &(s->linkf[mu]), &(tempmat2[i]));
+      mult_na(&(s->link[mu]), &(s->link[mu]), &(tempmat[i]));
+      mult_an(&(s->link[mu]), &(s->link[mu]), &(tempmat2[i]));
     }
 
     // Gather tempmat2 from below
-    mtag0 = start_gather_field(tempmat2, sizeof(matrix_f),
+    mtag0 = start_gather_field(tempmat2, sizeof(matrix),
                                goffset[mu] + 1, EVENANDODD, gen_pt[0]);
     wait_gather(mtag0);
     if (mu == 0) {
       FORALLSITES(i, s) {
-        sub_matrix_f(&(tempmat[i]), (matrix_f *)(gen_pt[0][i]),
+        sub_matrix(&(tempmat[i]), (matrix *)(gen_pt[0][i]),
                      &(DmuUmu[i]));   // Initialize
       }
     }
     else {
       FORALLSITES(i, s) {
-        sum_matrix_f(&(tempmat[i]), &(DmuUmu[i]));
-        dif_matrix_f((matrix_f *)(gen_pt[0][i]), &(DmuUmu[i]));
+        sum_matrix(&(tempmat[i]), &(DmuUmu[i]));
+        dif_matrix((matrix *)(gen_pt[0][i]), &(DmuUmu[i]));
       }
     }
     cleanup_gather(mtag0);
@@ -82,7 +82,7 @@ void compute_DmuUmu() {
   if (doB) {
     FORALLSITES(i, s) {
       FORALLDIR(mu) {
-        tr = one_ov_N * realtrace_f(&(s->linkf[mu]), &(s->linkf[mu])) - 1.0;
+        tr = one_ov_N * realtrace(&(s->link[mu]), &(s->link[mu])) - 1.0;
         for (j = 0; j < NCOL; j++)
           DmuUmu[i].e[j][j].real += B * B * tr * tr;
 #ifdef TR_DIST
@@ -105,24 +105,24 @@ void compute_Fmunu() {
   register int i;
   register site *s;
   int mu, nu, index;
-  matrix_f *mat0, *mat1;
+  matrix *mat0, *mat1;
   msg_tag *mtag0 = NULL, *mtag1 = NULL;
 
   FORALLDIR(mu) {
     for (nu = mu + 1; nu < NUMLINK; nu++) {
       index = plaq_index[mu][nu];
-      mtag0 = start_gather_site(F_OFFSET(linkf[nu]), sizeof(matrix_f),
+      mtag0 = start_gather_site(F_OFFSET(link[nu]), sizeof(matrix),
                                 goffset[mu], EVENANDODD, gen_pt[0]);
-      mtag1 = start_gather_site(F_OFFSET(linkf[mu]), sizeof(matrix_f),
+      mtag1 = start_gather_site(F_OFFSET(link[mu]), sizeof(matrix),
                                 goffset[nu], EVENANDODD, gen_pt[1]);
       wait_gather(mtag0);
       wait_gather(mtag1);
       FORALLSITES(i, s) {
-        mat0 = (matrix_f *)(gen_pt[0][i]);
-        mat1 = (matrix_f *)(gen_pt[1][i]);
-        mult_nn_f(&(s->linkf[mu]), mat0, &(tempmat[i]));
-        mult_nn_f(&(s->linkf[nu]), mat1, &(tempmat2[i]));
-        sub_matrix_f(&(tempmat[i]), &(tempmat2[i]), &(Fmunu[index][i]));
+        mat0 = (matrix *)(gen_pt[0][i]);
+        mat1 = (matrix *)(gen_pt[1][i]);
+        mult_nn(&(s->link[mu]), mat0, &(tempmat[i]));
+        mult_nn(&(s->link[nu]), mat1, &(tempmat2[i]));
+        sub_matrix(&(tempmat[i]), &(tempmat2[i]), &(Fmunu[index][i]));
       }
       cleanup_gather(mtag0);
       cleanup_gather(mtag1);
@@ -142,19 +142,19 @@ double gauge_action(int do_det) {
   int index;
   double g_action = 0.0, norm = 0.5 * C2;
   complex tc;
-  matrix_f tmat, tmat2;
+  matrix tmat, tmat2;
 
   FORALLSITES(i, s) {
     // d^2 term normalized by C2 / 2
     // DmuUmu includes the plaquette determinant contribution if G is non-zero
     // and the scalar potential contribution if B is non-zero
-    mult_nn_f(&(DmuUmu[i]), &(DmuUmu[i]), &tmat);
-    scalar_mult_matrix_f(&tmat, norm, &tmat);
+    mult_nn(&(DmuUmu[i]), &(DmuUmu[i]), &tmat);
+    scalar_mult_matrix(&tmat, norm, &tmat);
 
     // F^2 term
     for (index = 0; index < NPLAQ; index++) {
-      mult_an_f(&(Fmunu[index][i]), &(Fmunu[index][i]), &tmat2);
-      scalar_mult_sum_matrix_f(&tmat2, 2.0, &tmat);
+      mult_an(&(Fmunu[index][i]), &(Fmunu[index][i]), &tmat2);
+      scalar_mult_sum_matrix(&tmat2, 2.0, &tmat);
     }
 
     if (do_det == 1) {
@@ -188,7 +188,7 @@ double bmass_action() {
 
   FORALLSITES(i, s) {
     FORALLDIR(a) {
-      tr = one_ov_N * realtrace_f(&(s->linkf[a]), &(s->linkf[a])) - 1.0;
+      tr = one_ov_N * realtrace(&(s->link[a]), &(s->link[a])) - 1.0;
       sum += kappa * bmass * bmass * tr * tr;
     }
   }
@@ -272,7 +272,7 @@ double mom_action() {
 
   FORALLSITES(i, s) {
     FORALLDIR(mu)
-      sum += (double)realtrace_f(&(s->mom[mu]), &(s->mom[mu]));
+      sum += (double)realtrace(&(s->mom[mu]), &(s->mom[mu]));
   }
   g_doublesum(&sum);
   return sum;

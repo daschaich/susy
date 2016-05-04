@@ -129,9 +129,9 @@ void gauge_field_copy_f(field_offset src, field_offset dest) {
     src2 = src;
     dest2 = dest;
     FORALLDIR(dir) {
-      mat_copy_f((matrix_f *)F_PT(s, src2), (matrix_f *)F_PT(s, dest2));
-      src2 += sizeof(matrix_f);
-      dest2 += sizeof(matrix_f);
+      mat_copy_f((matrix *)F_PT(s, src2), (matrix *)F_PT(s, dest2));
+      src2 += sizeof(matrix);
+      dest2 += sizeof(matrix);
     }
   }
 }
@@ -142,16 +142,16 @@ void gauge_field_copy_f(field_offset src, field_offset dest) {
 // -----------------------------------------------------------------
 // Shift a matrix without parallel transport
 // The dir should come from goffset
-void shiftmat(matrix_f *dat, matrix_f *temp, int dir) {
+void shiftmat(matrix *dat, matrix *temp, int dir) {
   register int i;
   register site *s;
   msg_tag *mtag;
 
-  mtag = start_gather_field(dat, sizeof(matrix_f),
+  mtag = start_gather_field(dat, sizeof(matrix),
                             dir, EVENANDODD, gen_pt[0]);
   wait_gather(mtag);
   FORALLSITES(i, s)
-    mat_copy_f((matrix_f *)gen_pt[0][i], &(temp[i]));
+    mat_copy_f((matrix *)gen_pt[0][i], &(temp[i]));
   cleanup_gather(mtag);
   FORALLSITES(i, s)
     mat_copy_f(&(temp[i]), &(dat[i]));

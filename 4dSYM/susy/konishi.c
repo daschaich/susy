@@ -17,17 +17,17 @@ void compute_Ba() {
   int a, b, j, k;
   Real tr;
   complex tc;
-  matrix_f tmat;
+  matrix tmat;
 
   FORALLSITES(i, s) {
     // Construct scalar fields
     FORALLDIR(a) {
       // Log of hermitian part of polar decomposition
-      polar(&(s->linkf[a]), &(Ba[0][a][i]), &tmat);
+      polar(&(s->link[a]), &(Ba[0][a][i]), &tmat);
       matrix_log(&tmat, &(Ba[0][a][i]));
 
       // Traceless part of U.Udag (hermitian so trace is real)
-      mult_na_f(&(s->linkf[a]), &(s->linkf[a]), &(Ba[1][a][i]));
+      mult_na(&(s->link[a]), &(s->link[a]), &(Ba[1][a][i]));
       tc = trace_f(&(Ba[1][a][i]));
       tr = one_ov_N * tc.real;
       for (k = 0; k < NCOL; k++)

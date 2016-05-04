@@ -16,7 +16,7 @@ void ranmom() {
 
   FORALLSITES(i, s) {
     FORALLDIR(mu) {
-      clear_mat_f(&(s->mom[mu]));
+      clear_mat(&(s->mom[mu]));
       for (j = 0; j < DIMF; j++) {
 #ifdef SITERAND
         grn.real = gaussian_rand_no(&(s->site_prn));
@@ -25,7 +25,7 @@ void ranmom() {
         grn.real = gaussian_rand_no(&(s->node_prn));
         grn.imag = gaussian_rand_no(&(s->node_prn));
 #endif
-        c_scalar_mult_sum_mat_f(&(Lambda[j]), &grn, &(s->mom[mu]));
+        c_scalar_mult_sum_mat(&(Lambda[j]), &grn, &(s->mom[mu]));
       }
     }
   }

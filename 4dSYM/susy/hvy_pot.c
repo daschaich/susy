@@ -64,7 +64,7 @@ void hvy_pot(int do_det) {
   Real MAX_r = 100.0 * MAX_X, tr, lookup[MAX_pts], W[MAX_pts];
   double wloop;
   complex tc;
-  matrix_f tmat, tmat2, *mat;
+  matrix tmat, tmat2, *mat;
   msg_tag *mtag = NULL;
 
   // Initialize Wilson loop accumulators
@@ -88,15 +88,15 @@ void hvy_pot(int do_det) {
   for (t_dist = 1; t_dist <= MAX_T; t_dist++) {
     if (t_dist == 1) {
       FORALLSITES(i, s)
-        mat_copy_f(&(s->linkf[TUP]), &(staple[i]));
+        mat_copy_f(&(s->link[TUP]), &(staple[i]));
     }
     else {
-      mtag = start_gather_field(staple, sizeof(matrix_f),
+      mtag = start_gather_field(staple, sizeof(matrix),
                                 goffset[TUP], EVENANDODD, gen_pt[0]);
       wait_gather(mtag);
       FORALLSITES(i, s) {
-        mat = (matrix_f *)gen_pt[0][i];
-        mult_nn_f(&(s->linkf[TUP]), mat, &(tempmat2[i]));
+        mat = (matrix *)gen_pt[0][i];
+        mult_nn(&(s->link[TUP]), mat, &(tempmat2[i]));
       }
       cleanup_gather(mtag);
       FORALLSITES(i, s)
@@ -170,7 +170,7 @@ void hvy_pot(int do_det) {
           wloop = 0.0;
           FORALLSITES(i, s) {
             // Compute the actual Coulomb gauge Wilson loop product
-            mult_na_f(&(staple[i]), &(tempmat[i]), &tmat);
+            mult_na(&(staple[i]), &(tempmat[i]), &tmat);
 
             if (do_det == 1)
               det_project(&tmat, &tmat2);

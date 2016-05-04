@@ -18,7 +18,7 @@ void blocked_staple(int stride, int dir, int dir2) {
   register int i;
   register site *s;
   int j;
-  matrix_f tmat, tmat2;
+  matrix tmat, tmat2;
 
   // Copy links to tempmat and tempmat2 to be shifted
   FORALLSITES(i, s) {
@@ -37,17 +37,17 @@ void blocked_staple(int stride, int dir, int dir2) {
   // and gather it to x, again with stride
   // then gathered to x
   FORALLSITES(i, s) {
-    mult_an_f(&(s->mom[dir2]), &(s->mom[dir]), &tmat);
-    mult_nn_f(&tmat, &(tempmat2[i]), &(Udag_inv[0][i]));
+    mult_an(&(s->mom[dir2]), &(s->mom[dir]), &tmat);
+    mult_nn(&tmat, &(tempmat2[i]), &(Udag_inv[0][i]));
   }
   for (j = 0; j < stride; j++)
     shiftmat(Udag_inv[0], Udag_inv[3], goffset[dir2] + 1);
 
   // Calculate upper staple, add both staples to sum
   FORALLSITES(i, s) {
-    mult_nn_f(&(s->mom[dir2]), &(tempmat[i]), &tmat);
-    mult_na_sum_f(&tmat, &(tempmat2[i]), &(staple[i]));
-    sum_matrix_f(&(Udag_inv[0][i]), &(staple[i]));
+    mult_nn(&(s->mom[dir2]), &(tempmat[i]), &tmat);
+    mult_na_sum(&tmat, &(tempmat2[i]), &(staple[i]));
+    sum_matrix(&(Udag_inv[0][i]), &(staple[i]));
   }
 }
 // -----------------------------------------------------------------
@@ -55,14 +55,14 @@ void blocked_staple(int stride, int dir, int dir2) {
 
 
 // -----------------------------------------------------------------
-// Nsmear steps of stout smearing, overwriting s->linkf
+// Nsmear steps of stout smearing, overwriting s->link
 // Use staple, s->mom and Q for temporary storage
 // bl <= 0 (stride = 1) allows sanity check of reproducing stout_smear()
 void blocked_stout(int Nsmear, double alpha, int bl) {
   register int i, n, dir, dir2;
   register site *s;
   int j, stride = 1;
-  matrix_f tmat;
+  matrix tmat;
 
   // Set number of links to stride, 2^bl
   for (j = 0; j < bl; j++)
@@ -72,12 +72,12 @@ void blocked_stout(int Nsmear, double alpha, int bl) {
     FORALLSITES(i, s) {
       // Unmodified links -- no projection or determinant division
       for (dir = XUP; dir < NUMLINK; dir++)
-        mat_copy_f(&(s->linkf[dir]), &(s->mom[dir]));
+        mat_copy_f(&(s->link[dir]), &(s->mom[dir]));
     }
 
     for (dir = XUP; dir < NUMLINK; dir++) {
       FORALLSITES(i, s)
-        clear_mat_f(&(staple[i]));     // Initialize staple sum
+        clear_mat(&(staple[i]));     // Initialize staple sum
 
       // Accumulate staple sum in staple
       for (dir2 = XUP; dir2 < NUMLINK; dir2++) {
@@ -87,14 +87,14 @@ void blocked_stout(int Nsmear, double alpha, int bl) {
 
       // Multiply by alpha Udag, take traceless anti-hermitian part
       FORALLSITES(i, s) {
-        mult_na_f(&(staple[i]), &(s->linkf[dir]), &tmat);  // C.Udag
-        scalar_mult_matrix_f(&tmat, alpha, &(staple[i]));
+        mult_na(&(staple[i]), &(s->link[dir]), &tmat);  // C.Udag
+        scalar_mult_matrix(&tmat, alpha, &(staple[i]));
         make_anti_hermitian(&(staple[i]), &(Q[dir][i]));
       }
     }
 
     // Do all exponentiations at once to reuse divisions
-    // Overwrites s->linkf
+    // Overwrites s->link
     exp_mult();
   }
 }
@@ -103,7 +103,7 @@ void blocked_stout(int Nsmear, double alpha, int bl) {
 
 
 // -----------------------------------------------------------------
-// Nsmear steps of APE smearing without unitarization, overwriting s->linkf
+// Nsmear steps of APE smearing without unitarization, overwriting s->link
 // Optionally project unsmeared links and / or staple sums
 // bl <= 0 (stride = 1) allows sanity check of reproducing APE_smear()
 void blocked_APE(int Nsmear, double alpha, int project, int bl) {
@@ -111,7 +111,7 @@ void blocked_APE(int Nsmear, double alpha, int project, int bl) {
   register site *s;
   int j, stride = 1;
   Real tr, tr2;
-  matrix_f tmat, tmat2;
+  matrix tmat, tmat2;
 
   tr = alpha / (8.0 * (1.0 - alpha));
   tr2 = 1.0 - alpha;
@@ -126,17 +126,17 @@ void blocked_APE(int Nsmear, double alpha, int project, int bl) {
         // Decide what to do with links before smearing
         // Polar project, divide out determinant, or nothing
         if (project == 1) {
-//          det_project(&(s->linkf[dir]), &(s->mom[dir]));
-          polar(&(s->linkf[dir]), &(s->mom[dir]), &tmat);
+//          det_project(&(s->link[dir]), &(s->mom[dir]));
+          polar(&(s->link[dir]), &(s->mom[dir]), &tmat);
         }
         else
-          mat_copy_f(&(s->linkf[dir]), &(s->mom[dir]));
+          mat_copy_f(&(s->link[dir]), &(s->mom[dir]));
       }
     }
 
     for (dir = XUP; dir < NUMLINK; dir++) {
       FORALLSITES(i, s)
-        clear_mat_f(&(staple[i]));     // Initialize staple sum
+        clear_mat(&(staple[i]));     // Initialize staple sum
 
       // Accumulate staple sum in staple
       for (dir2 = XUP; dir2 < NUMLINK; dir2++) {
@@ -152,8 +152,8 @@ void blocked_APE(int Nsmear, double alpha, int project, int bl) {
 //        else
           mat_copy_f(&(staple[i]), &tmat2);
 
-        scalar_mult_add_matrix_f(&(s->linkf[dir]), &tmat2, tr, &tmat);
-        scalar_mult_matrix_f(&tmat, tr2, &(s->linkf[dir]));
+        scalar_mult_add_matrix(&(s->link[dir]), &tmat2, tr, &tmat);
+        scalar_mult_matrix(&tmat, tr2, &(s->link[dir]));
       }
     }
   }

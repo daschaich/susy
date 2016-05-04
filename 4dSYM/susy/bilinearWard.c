@@ -106,7 +106,7 @@ int bilinearWard() {
   Real size_r, norm;
   double sum = 0.0;
   double_complex tc, StoL, LtoS, ave = cmplx(0.0, 0.0);
-  matrix_f tmat, tmat2;
+  matrix tmat, tmat2;
   Twist_Fermion *g_rand, *src, **psim;
 
   g_rand = malloc(sites_on_node * sizeof(*g_rand));
@@ -141,9 +141,9 @@ int bilinearWard() {
     FORALLSITES(i, s) {
       FORALLDIR(mu) {
         reconstruct(&(psim[0][i].Flink[mu]), &tmat);
-        mult_na_f(&tmat, &(s->linkf[mu]), &tmat2);
+        mult_na(&tmat, &(s->link[mu]), &tmat2);
         reconstruct(&(g_rand[i].Fsite), &tmat);
-        tc = complextrace_an_f(&tmat, &tmat2);
+        tc = complextrace_an(&tmat, &tmat2);
 #ifdef DEBUG_CHECK
         printf("StoL[%d](%d) %d (%.4g, %.4g)\n",
                i, mu, isrc, tc.real, tc.imag);
@@ -151,9 +151,9 @@ int bilinearWard() {
         CDIF(StoL, tc);
 
         reconstruct(&(psim[0][i].Fsite), &tmat);
-        mult_an_f(&(s->linkf[mu]), &tmat, &tmat2);
+        mult_an(&(s->link[mu]), &tmat, &tmat2);
         reconstruct(&(g_rand[i].Flink[mu]), &tmat);
-        tc = complextrace_an_f(&tmat, &tmat2);
+        tc = complextrace_an(&tmat, &tmat2);
 #ifdef DEBUG_CHECK
         printf("LtoS[%d](%d) %d (%.4g, %.4g)\n",
                i, mu, isrc, tc.real, tc.imag);
@@ -179,10 +179,10 @@ int bilinearWard() {
   // Accumulate sum_a U_a Udag_a in tmat
   // Multiply by DmuUmu into tmat and trace
   FORALLSITES(i, s) {
-    mult_na_f(&(s->linkf[0]), &(s->linkf[0]), &tmat);   // Initialize
+    mult_na(&(s->link[0]), &(s->link[0]), &tmat);   // Initialize
     for (mu = 1; mu < NUMLINK; mu++)
-      mult_na_sum_f(&(s->linkf[mu]), &(s->linkf[mu]), &tmat);
-    tc = complextrace_nn_f(&(DmuUmu[i]), &tmat);
+      mult_na_sum(&(s->link[mu]), &(s->link[mu]), &tmat);
+    tc = complextrace_nn(&(DmuUmu[i]), &tmat);
     // Make sure trace really is real
     if (fabs(tc.imag) > IMAG_TOL) {
       printf("node%d WARNING: Im(sum[%d]) = %.4g > %.4g\n",
