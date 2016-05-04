@@ -562,14 +562,13 @@ void DbplusStoL(matrix_f *src, matrix_f *dest[NUMLINK]) {
 void detStoL(matrix_f *dest[NUMLINK]) {
   register int i;
   register site *s;
-  int a, b, opp_b, j, next;
-  complex tc, tc2, localGc;
+  int a, b, opp_b, next;
+  complex tc, localGc;
 #ifdef LINEAR_DET
   CMULREAL(Gc, -0.5, localGc);            // Since not squared
 #else
   CMULREAL(Gc, -1.0, localGc);
 #endif
-  matrix_f tmat;
   msg_tag *tag[NUMLINK];
 
   // Save Tr[eta(x)] plaqdet[a][b](x)
@@ -647,8 +646,8 @@ void detStoL(matrix_f *dest[NUMLINK]) {
 // Add negative to dest instead of overwriting
 // Negative sign is due to anti-commuting eta past psi
 #ifdef SV
-void potStoL(vector *dest[NUMLINK]) {
-  register int i, a, j;
+void potStoL(matrix_f *dest[NUMLINK]) {
+  register int i, a;
   register site *s;
   Real tr;
   complex tc;
@@ -735,7 +734,6 @@ void detLtoS(vector *src[NUMLINK], vector *dest) {
 #ifdef LINEAR_DET
   CMULREAL(Gc, 0.5, localGc);                  // Since not squared
 #endif
-  matrix_f tmat;
   msg_tag *tag[NUMLINK];
 
   // Prepare Tr[U_a^{-1} psi_a] = sum_j Tr[U_a^{-1} Lambda^j] psi_a^j

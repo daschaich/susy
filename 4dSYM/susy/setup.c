@@ -441,6 +441,14 @@ int readin(int prompt) {
   // Do whatever is needed to get lattice
   startlat_p = reload_lattice(startflag, startfile);
 
+#if (NCOL > 4)
+  // Allocate arrays to be used by LAPACK in determinant.c
+  // Needs to be above compute_Uinv()
+  ipiv = malloc(NCOL * sizeof(*ipiv));
+  store = malloc(2 * NCOL * NCOL * sizeof(*store));
+  work = malloc(4 * NCOL * sizeof(*work));
+#endif
+
   // Compute initial plaqdet, DmuUmu and Fmunu
   compute_plaqdet();
   compute_Uinv();
@@ -449,13 +457,6 @@ int readin(int prompt) {
 
   // Generate the adjoint links
   fermion_rep();
-
-#if (NCOL > 4)
-  // Allocate arrays to be used by LAPACK in determinant.c
-  ipiv = malloc(NCOL * sizeof(*ipiv));
-  store = malloc(2 * NCOL * NCOL * sizeof(*store));
-  work = malloc(4 * NCOL * sizeof(*work));
-#endif
 
   return 0;
 }
