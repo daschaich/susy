@@ -26,7 +26,7 @@ void path(int *dir, int *sign, int length) {
 
   if (sign[0] < 0) {    // Take adjoint, no gather
     FORALLSITES(i, s)
-      adjoint_f(&(s->link[dir[0]]), &(tempmat[i]));
+      adjoint(&(s->link[dir[0]]), &(tempmat[i]));
   }
 
   // Accumulate subsequent links in product in tempmat

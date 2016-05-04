@@ -151,7 +151,7 @@ void polar(matrix *in, matrix *u, matrix *P) {
   }
 
   // Check hermiticity of P
-  adjoint_f(P, &tmat);
+  adjoint(P, &tmat);
   sub_matrix(P, &tmat, &PSq);
   for (row = 0; row < NCOL; row++) {
     for (col = 0; col < NCOL; col++) {

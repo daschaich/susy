@@ -37,7 +37,7 @@ void blocked_path(int *dir, int *sign, int length, int bl) {
 
   if (sign[0] < 0) {    // Take adjoint, no gather
     FORALLSITES(i, s)
-      adjoint_f(&(s->link[dir[0]]), &(tempmat[i]));
+      adjoint(&(s->link[dir[0]]), &(tempmat[i]));
   }
 
   // Accumulate subsequent links in product in tempmat
@@ -124,9 +124,9 @@ void blocked_rsymm_path(int *dir, int *sign, int *kind, int length, int bl) {
   else if (sign[0] < 0) {    // Take adjoint, no gather
     FORALLSITES(i, s) {
       if (kind[0] > 0)
-        adjoint_f(&(s->link[dir[0]]), &(tempmat[i]));
+        adjoint(&(s->link[dir[0]]), &(tempmat[i]));
       else if (kind[0] < 0)
-        adjoint_f(&(s->mom[dir[0]]), &(tempmat[i]));
+        adjoint(&(s->mom[dir[0]]), &(tempmat[i]));
       else {
         node0_printf("blocked_rsymm_path: unrecognized kind[0] = %d\n",
                      kind[0]);
@@ -230,7 +230,7 @@ void blocked_rsymm(int Nsmear, int block) {
   FORALLDIR(mu) {
     FORALLSITES(i, s) {
       invert(&(s->link[mu]), &tmat);
-      adjoint_f(&tmat, &(s->mom[mu]));
+      adjoint(&tmat, &(s->mom[mu]));
 
 #ifdef DEBUG_CHECK
 #define INV_TOL 1e-12

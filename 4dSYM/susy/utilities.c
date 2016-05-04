@@ -115,14 +115,17 @@ void compute_plaqdet() {
 
 
 // -----------------------------------------------------------------
-// Save U_a^{-1} at each site
+// Save U_a^{-1} and Udag_a^{-1} = (U_a^{-1})^dag at each site
 void compute_Uinv() {
   register int i, mu;
   register site *s;
+  matrix tmat;
 
   FORALLSITES(i, s) {
-    FORALLDIR(mu)
+    FORALLDIR(mu) {
       invert(&(s->link[mu]), &(Uinv[mu][i]));
+      adjoint(&(Uinv[mu][i]), &(Udag_inv[mu][i]));
+    }
   }
 }
 // -----------------------------------------------------------------

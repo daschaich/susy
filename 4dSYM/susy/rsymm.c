@@ -46,9 +46,9 @@ void rsymm_path(int *dir, int *sign, int *kind, int length) {
   else if (sign[0] < 0) {    // Take adjoint, no gather
     FORALLSITES(i, s) {
       if (kind[0] > 0)
-        adjoint_f(&(s->link[dir[0]]), &(tempmat[i]));
+        adjoint(&(s->link[dir[0]]), &(tempmat[i]));
       else if (kind[0] < 0)
-        adjoint_f(&(s->mom[dir[0]]), &(tempmat[i]));
+        adjoint(&(s->mom[dir[0]]), &(tempmat[i]));
       else {
         node0_printf("rsymm_path: unrecognized kind[0] = %d\n", kind[0]);
         terminate(1);
@@ -133,7 +133,7 @@ void rsymm() {
   for (mu = XUP; mu < NUMLINK; mu++) {
     FORALLSITES(i, s) {
       invert(&(s->link[mu]), &tmat);
-      adjoint_f(&tmat, &(s->mom[mu]));
+      adjoint(&tmat, &(s->mom[mu]));
 
 #ifdef DEBUG_CHECK
 #define INV_TOL 1e-12

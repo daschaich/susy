@@ -93,8 +93,8 @@ complex complextrace_na(matrix *a, matrix *b);
 // b <-- a, in file mat_copy_f.c
 void mat_copy_f(matrix *a, matrix *b);
 
-// b <-- adag, in file adjoint_f.c
-void adjoint_f(matrix *a, matrix *b);
+// b <-- adag, in file adjoint.c
+void adjoint(matrix *a, matrix *b);
 
 // In file addmat_f.c
 void sum_matrix(matrix *b, matrix *c);

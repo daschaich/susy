@@ -161,10 +161,10 @@ int main(int argc, char *argv[]) {
       node0_printf(" %.8g %.8g %.8g\n", ss_plaq, st_plaq, max_plaq);
 
       // Overwrite s->link
-      // Save unsmeared links in Udag_inv (mom and f_U both already used)
+      // Save unsmeared links in UpsiU (mom and f_U both already used)
       FORALLDIR(dir) {
         FORALLSITES(i, s)
-          mat_copy_f(&(s->link[dir]), &(Udag_inv[dir][i]));
+          mat_copy_f(&(s->link[dir]), &(UpsiU[dir][i]));
       }
       if (smearflag == STOUT_SMEAR)
         stout_smear(Nsmear, alpha);
@@ -282,10 +282,10 @@ int main(int argc, char *argv[]) {
 #endif
 
 #ifdef SMEAR
-      // Restore unsmeared links from Udag_inv
+      // Restore unsmeared links from UpsiU
       FORALLDIR(dir) {
         FORALLSITES(i, s)
-          mat_copy_f(&(Udag_inv[dir][i]), &(s->link[dir]));
+          mat_copy_f(&(UpsiU[dir][i]), &(s->link[dir]));
       }
 #endif
     }

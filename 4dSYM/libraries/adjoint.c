@@ -5,7 +5,7 @@
 #include "../include/complex.h"
 #include "../include/susy.h"
 
-void adjoint_f(matrix *a, matrix *b) {
+void adjoint(matrix *a, matrix *b) {
   register int i, j;
   for (i = 0; i < NCOL; i++) {
     for (j = 0; j < NCOL; j++)

@@ -505,14 +505,10 @@ void detF(vector *eta, vector *psi[NUMLINK], int sign) {
   // Set up and store some basic ingredients
   // Need all five directions for upcoming sums
   FORALLDIR(a) {
-    // Save Udag_a(x)^{-1} in Udag_inv[a]
-    // U_a(x)^{-1} persistently stays in Uinv[a] for the CG
+    // U_a(x)^{-1} and Udag_a(x)^{-1} are already in Uinv[a] and Udag_inv[a]
     // Save sum_j Tr[U_a(x)^{-1} Lambda^j] psi_a^j(x) in Tr_Uinv[a]
     // Save sum_j U_a(x)^{-1} Lambda^j psi_a^j(x) U_a(x)^{-1} in UpsiU[a]
     FORALLSITES(i, s) {
-      adjoint_f(&(s->link[a]), &tmat);
-      invert(&tmat, &(Udag_inv[a][i]));
-
       // Accumulate trace and product
       if (sign == 1) {
         for (j = 0; j < DIMF; j++)
@@ -972,7 +968,7 @@ void pot_force(vector *eta, vector *psi[NUMLINK], int sign) {
 //   f_U = Adj(Ms).D_U M(U, Ub).s - Adj[Adj(Ms).D_Ub M(U, Ub).s]
 // "s" is sol while "Ms" is psol
 // Copy these into persistent vectors for easier gathering
-// Use tempmat, tempmat2, Udag_inv, Tr_Uinv,
+// Use tempmat, tempmat2, UpsiU, Tr_Uinv,
 // tr_dest and Ddet[012] for temporary storage
 // (many through calls to detF)
 void assemble_fermion_force(Twist_Fermion *sol, Twist_Fermion *psol) {
@@ -1019,7 +1015,7 @@ void assemble_fermion_force(Twist_Fermion *sol, Twist_Fermion *psol) {
   }
 
 #ifdef SV
-  // Accumulate both terms in Udag_inv[mu], use to initialize f_U[mu]
+  // Accumulate both terms in UpsiU[mu], use to initialize f_U[mu]
   // First calculate DUbar on eta Dbar_mu psi_mu (LtoS)
   mtag[0] = start_gather_field(site_pmat, sizeof(matrix),
                                goffset[0], EVENANDODD, gen_pt[0]);
@@ -1032,8 +1028,8 @@ void assemble_fermion_force(Twist_Fermion *sol, Twist_Fermion *psol) {
     wait_gather(mtag[mu]);
     FORALLSITES(i, s) {
       scalar_mult_matrix((matrix *)(gen_pt[mu][i]), s->bc1[mu], &tmat);
-      mult_nn(&(link_mat[mu][i]), &tmat, &(Udag_inv[mu][i]));   // Initialize
-      mult_nn_dif(&(site_pmat[i]), &(link_mat[mu][i]), &(Udag_inv[mu][i]));
+      mult_nn(&(link_mat[mu][i]), &tmat, &(UpsiU[mu][i]));   // Initialize
+      mult_nn_dif(&(site_pmat[i]), &(link_mat[mu][i]), &(UpsiU[mu][i]));
     }
     cleanup_gather(mtag[mu]);
   }
@@ -1050,11 +1046,11 @@ void assemble_fermion_force(Twist_Fermion *sol, Twist_Fermion *psol) {
     wait_gather(mtag[mu]);
     FORALLSITES(i, s) {
       scalar_mult_matrix((matrix *)(gen_pt[mu][i]), s->bc1[mu], &tmat);
-      mult_nn_dif(&(link_pmat[mu][i]), &tmat, &(Udag_inv[mu][i]));
-      mult_nn_sum(&(site_mat[i]), &(link_pmat[mu][i]), &(Udag_inv[mu][i]));
+      mult_nn_dif(&(link_pmat[mu][i]), &tmat, &(UpsiU[mu][i]));
+      mult_nn_sum(&(site_mat[i]), &(link_pmat[mu][i]), &(UpsiU[mu][i]));
 
-      // Initialize the force collectors -- done with Udag_inv[mu]
-      scalar_mult_adj_matrix(&(Udag_inv[mu][i]), 0.5, &(s->f_U[mu]));
+      // Initialize the force collectors -- done with UpsiU[mu]
+      scalar_mult_adj_matrix(&(UpsiU[mu][i]), 0.5, &(s->f_U[mu]));
     }
     cleanup_gather(mtag[mu]);
   }
@@ -1117,11 +1113,11 @@ void assemble_fermion_force(Twist_Fermion *sol, Twist_Fermion *psol) {
       FORALLSITES(i, s) {
         if (mu > nu) {    // plaq_psol is anti-symmetric under mu <--> nu
           scalar_mult_matrix((matrix *)(local_pt[flip][0][i]),
-                               s->bc1[mu], &tmat);
+                             s->bc1[mu], &tmat);
         }                 // Suppress compiler error
         else
           scalar_mult_matrix((matrix *)(local_pt[flip][0][i]),
-                               -1.0 * s->bc1[mu], &tmat);
+                             -1.0 * s->bc1[mu], &tmat);
 
         mult_nn_sum(&tmat, &(plaq_pmat[index][i]), &(s->f_U[mu]));
         sum_matrix((matrix *)(local_pt[flip][1][i]), &(s->f_U[mu]));
@@ -1270,7 +1266,7 @@ double fermion_force(Real eps, Twist_Fermion *src, Twist_Fermion **sol) {
   assemble_fermion_force(sol[0], tempTF);
   FORALLDIR(mu) {
     FORALLSITES(i, s)
-      adjoint_f(&(s->f_U[mu]), &(fullforce[mu][i]));
+      adjoint(&(s->f_U[mu]), &(fullforce[mu][i]));
   }
   for (n = 1; n < Norder; n++) {
     fermion_op(sol[n], tempTF, PLUS);

@@ -32,7 +32,7 @@ void widths() {
       FORALLSITES(i, s) {
         mat = (matrix *)(gen_pt[0][i]);
         mult_nn(&(s->link[a]), mat, &tmat);
-        adjoint_f(&tmat, &(tempmat[i]));
+        adjoint(&tmat, &(tempmat[i]));
       }
       cleanup_gather(mtag0);
 
