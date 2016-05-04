@@ -106,8 +106,7 @@ int bilinearWard() {
   Real size_r, norm;
   double sum = 0.0;
   double_complex tc, StoL, LtoS, ave = cmplx(0.0, 0.0);
-  vector tvec;
-  matrix_f tmat;
+  matrix_f tmat, tmat2;
   Twist_Fermion *g_rand, *src, **psim;
 
   g_rand = malloc(sites_on_node * sizeof(*g_rand));
@@ -136,61 +135,30 @@ int bilinearWard() {
 
     // Now construct bilinear sum_a psi_a Udag_a eta
     // All fields are on the same site, no gathers
+    // Negative sign from generator normalization
     StoL = cmplx(0.0, 0.0);
     LtoS = cmplx(0.0, 0.0);
     FORALLSITES(i, s) {
       FORALLDIR(mu) {
-        mult_vec_adj_mat(&(psim[0][i].Flink[mu]), &(s->link[mu]), &tvec);
-        tc = dot(&(g_rand[i].Fsite), &tvec);
+        reconstruct(&(psim[0][i].Flink[mu]), &tmat);
+        mult_na_f(&tmat, &(s->linkf[mu]), &tmat2);
+        reconstruct(&(g_rand[i].Fsite), &tmat);
+        tc = complextrace_an_f(&tmat, &tmat2);
 #ifdef DEBUG_CHECK
         printf("StoL[%d](%d) %d (%.4g, %.4g)\n",
                i, mu, isrc, tc.real, tc.imag);
 #endif
-        CSUM(StoL, tc);
+        CDIF(StoL, tc);
 
-        mult_adj_mat_vec(&(s->link[mu]), &(psim[0][i].Fsite), &tvec);
-        tc = dot(&(g_rand[i].Flink[mu]), &tvec);
+        reconstruct(&(psim[0][i].Fsite), &tmat);
+        mult_an_f(&(s->linkf[mu]), &tmat, &tmat2);
+        reconstruct(&(g_rand[i].Flink[mu]), &tmat);
+        tc = complextrace_an_f(&tmat, &tmat2);
 #ifdef DEBUG_CHECK
         printf("LtoS[%d](%d) %d (%.4g, %.4g)\n",
                i, mu, isrc, tc.real, tc.imag);
 #endif
-        CSUM(LtoS, tc);
-
-#if 0
-        // Explicitly write out matrix multiplications including adjoints
-        int a, b;
-        double_complex tc2;
-        matrix tmat2;
-        for (a = 0; a < DIMF; a++) {
-          for (b = 0; b < DIMF; b++) {
-            // First site-to-link
-            // tr[gdag^B (M_mu^{-1})^A La^A Udag_mu La^B]
-            mult_an_f(&(s->linkf[mu]), &(Lambda[b]), &tmat);
-            mult_nn_f(&(Lambda[a]), &tmat, &tmat2);
-            tc = trace_f(&tmat2);
-            CMUL(psim[0][i].Flink[mu].c[a], tc, tc2);
-            CMULJ_(g_rand[i].Fsite.c[b], tc2, tc);
-#ifdef DEBUG_CHECK
-            printf("StoL[%d](%d) %d (%.4g, %.4g)\n",
-                   i, mu, isrc, tc.real, tc.imag);
-#endif
-            CSUM(StoL, tc);
-
-            // Now link-to-site
-            // tr[gdag_mu^B (M^{-1})^A La^A La^B Udag_mu]
-            mult_na_f(&(Lambda[b]), &(s->linkf[mu]), &tmat);
-            mult_nn_f(&(Lambda[a]), &tmat, &tmat2);
-            tc = trace_f(&tmat2);
-            CMUL(psim[0][i].Fsite.c[a], tc, tc2);
-            CMULJ_(g_rand[i].Flink[mu].c[b], tc2, tc);
-#ifdef DEBUG_CHECK
-            printf("LtoS[%d](%d) %d (%.4g, %.4g)\n",
-                   i, mu, isrc, tc.real, tc.imag);
-#endif
-            CSUM(LtoS, tc);
-          }
-        }
-#endif
+        CDIF(LtoS, tc);
       }
     }
     g_dcomplexsum(&StoL);

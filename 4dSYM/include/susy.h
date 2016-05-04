@@ -250,57 +250,7 @@ void scalar_mult_dif_vector(vector *b, Real s, vector *c);
 
 
 // -----------------------------------------------------------------
-// Fermion rep matrix operations, most involving vectors as well
-// In file dumpmat.c
-void dumpmat(matrix *m);
-
-// c <-- a * b, in file m_matvec.c
-void mult_mat_vec(matrix *a, vector *b, vector *c);
-
-// c <-- c + a * b, in file m_matvec_s.c
-void mult_mat_vec_sum(matrix *a, vector *b, vector *c);
-
-// c <-- c - a * b, in file m_matvec_ns.c
-void mult_mat_vec_dif(matrix *a, vector *b, vector *c);
-
-// c <-- adag * b, in file m_amatvec.c
-void mult_adj_mat_vec(matrix *a, vector *b, vector *c);
-
-// c <-- c + adag * b, in file m_amatvec_s.c
-void mult_adj_mat_vec_sum(matrix *a, vector *b, vector *c);
-
-// c <-- c - adag * b, in file m_amatvec_ns.c
-void mult_adj_mat_vec_dif(matrix *a, vector *b, vector *c);
-
-// c <-- b * a, in file m_vecmat.c
-void mult_vec_mat(vector *b, matrix *a, vector *c);
-
-// c <-- c + b * a, in file m_vecmat_s.c
-void mult_vec_mat_sum(vector *b, matrix *a, vector *c);
-
-// c <-- c - b * a, in file m_vecmat_ns.c
-void mult_vec_mat_dif(vector *b, matrix *a, vector *c);
-
-// c <-- b * adag, in file m_vecamat.c
-void mult_vec_adj_mat(vector *b, matrix *a, vector *c);
-
-// c <-- c + b * adag, in file m_vecamat_s.c
-void mult_vec_adj_mat_sum(vector *b, matrix *a, vector *c);
-
-// c <-- c - b * adag, in file m_vecamat_ns.c
-void mult_vec_adj_mat_dif(vector *b, matrix *a, vector *c);
-// -----------------------------------------------------------------
-
-
-
-// -----------------------------------------------------------------
 // Routines mixing SU(2) and U(N)
-// In file l_su2_hit_n.c
-void left_su2_hit_n(su2_matrix *u, int p, int q, matrix *link);
-
-// In file r_su2_hit_a.c
-void right_su2_hit_a(su2_matrix *u, int p, int q, matrix *link);
-
 // In file l_su2_hit_n_f.c
 void left_su2_hit_n_f(su2_matrix *u, int p, int q, matrix_f *link);
 

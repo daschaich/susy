@@ -145,7 +145,6 @@ void make_fields() {
   FIELD_ALLOC(tempmat2, matrix_f);
   FIELD_ALLOC(staple, matrix_f);
   FIELD_ALLOC(tempTF, Twist_Fermion);
-  FIELD_ALLOC_VEC(tempvec, vector, NUMLINK);
 
 #ifdef CORR
   int j;

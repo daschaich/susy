@@ -153,7 +153,6 @@ EXTERN matrix_f *DmuUmu, *Fmunu[NPLAQ];
 EXTERN matrix_f *Uinv[NUMLINK], *Udag_inv[NUMLINK], *UpsiU[NUMLINK];
 
 // Temporary vectors, matrices and Twist_Fermion
-EXTERN vector *tempvec[NUMLINK], *tempvec2;
 EXTERN matrix_f *tempmat, *tempmat2, *staple;
 EXTERN Twist_Fermion *tempTF;
 
