@@ -4,7 +4,7 @@
 #include "../include/complex.h"
 #include "../include/susy.h"
 
-complex trace_f(matrix *a) {
+complex trace(matrix *a) {
   register complex tc;
   CADD(a->e[0][0], a->e[1][1], tc);
 #if (NCOL > 2)

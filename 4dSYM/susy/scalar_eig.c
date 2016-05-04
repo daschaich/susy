@@ -57,7 +57,7 @@ void scalar_eig(int project, double *ave_eigs, double *eig_widths,
       else {                // Consider U.Ubar scalar fields
         mult_na(&(s->link[dir]), &(s->link[dir]), &USq);
         // Take traceless part
-        tc = trace_f(&USq);
+        tc = trace(&USq);
         tr = one_ov_N * tc.real;
         for (j = 0; j < NCOL; j++)
           USq.e[j][j].real -= tr;

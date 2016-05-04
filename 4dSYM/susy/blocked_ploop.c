@@ -46,7 +46,7 @@ void blocked_ploop(int Nsmear, int block) {
   FORALLSITES(i, s) {
     if (s->t >= bl)
       continue;
-    plp = trace_f(&(tempmat[i]));
+    plp = trace(&(tempmat[i]));
     CSUM(sum, plp);
   }
 

@@ -53,7 +53,7 @@ double gauge_force(Real eps) {
   // Use tr_dest for temporary storage
   if (doG) {
     FORALLSITES(i, s) {
-      tc = trace_f(&DmuUmu[i]);
+      tc = trace(&DmuUmu[i]);
       FORALLDIR(mu) {
         for (nu = mu + 1; nu < NUMLINK; nu++) {
 #ifdef LINEAR_DET
@@ -131,7 +131,7 @@ double gauge_force(Real eps) {
     Real tr, twoBSqOvN = 2.0 * one_ov_N * B * B;
 
     FORALLSITES(i, s) {
-      tc = trace_f(&DmuUmu[i]);
+      tc = trace(&DmuUmu[i]);
       FORALLDIR(mu) {
         tr = one_ov_N * realtrace(&(s->link[mu]), &(s->link[mu])) - 1.0;
         CMULREAL(tc, twoBSqOvN * tr, tc2);
@@ -476,83 +476,51 @@ void F2Q(matrix *plaq_sol[NPLAQ], matrix *plaq_psol[NPLAQ]) {
 // Also use tempdet and (if global det) tempZW for temporary storage
 // The accumulator names refer to the corresponding derivatives
 // Assume compute_plaqdet() has already been run
-// If sign = 1 then take adjoint of eta
-// If sign = -1 then take adjoint of psi
+// Appropriate adjoints set up in assemble_fermion_force
 // A bit more code reuse may be possible
-void detF(vector *eta, vector *psi[NUMLINK], int sign) {
+void detF(matrix *eta, matrix *psi[NUMLINK], int sign) {
   register int i;
   register site *s;
-  int a, b, j, opp_b;
-  complex tc, tc2, localGc;
+  int a, b, opp_b;
+  complex tc, tc2;
 #ifdef LINEAR_DET
-  CMULREAL(Gc, 0.5, localGc);             // Since not squared
+  Real localG = 0.5 * C2 * G;            // Since not squared
 #else
-  Real tr;
+  Real tr, localG = C2 * G;
 #endif
   msg_tag *mtag[8];
-  vector tvec;
-  matrix tmat, tmat2;
+  matrix tmat;
 
-  // Check sign while giving Gc proper sign
-  if (sign == 1) {    // Braces suppress compiler error
-    CNEGATE(localGc, localGc);
-  }
+  // Check sign while giving G proper sign
+  if (sign == 1)
+    localG *= -1.0;
   else if (sign != -1) {
     node0_printf("Error: incorrect sign in detF: %d\n", sign);
     terminate(1);
   }
 
   // Set up and store some basic ingredients
+  FORALLSITES(i, s)
+    tr_eta[i] = trace(&(eta[i]));
   // Need all five directions for upcoming sums
   FORALLDIR(a) {
     // U_a(x)^{-1} and Udag_a(x)^{-1} are already in Uinv[a] and Udag_inv[a]
-    // Save sum_j Tr[U_a(x)^{-1} Lambda^j] psi_a^j(x) in Tr_Uinv[a]
-    // Save sum_j U_a(x)^{-1} Lambda^j psi_a^j(x) U_a(x)^{-1} in UpsiU[a]
+    // Save Tr[U_a(x)^{-1} psi_a(x) in Tr_Uinv[a]
+    // Save U_a(x)^{-1} psi_a(x) U_a(x)^{-1} in UpsiU[a]
     FORALLSITES(i, s) {
-      // Accumulate trace and product
-      if (sign == 1) {
-        for (j = 0; j < DIMF; j++)
-          tvec.c[j] = psi[a][i].c[j];
-      }
-      else {
-        for (j = 0; j < DIMF; j++)
-          CONJG(psi[a][i].c[j], tvec.c[j]);
-      }
+      mult_nn(&(Uinv[a][i]), &(psi[a][i]), &tmat);
+      mult_nn(&tmat, &(Uinv[a][i]), &(UpsiU[a][i]));
+      Tr_Uinv[a][i] = trace(&tmat);
 
-      mult_nn(&(Uinv[a][i]), &(Lambda[0]), &tmat);
-      mult_nn(&tmat, &(Uinv[a][i]), &tmat2);
-      tc2 = trace_f(&tmat);
-      Tr_Uinv[a][i].real = tvec.c[0].real * tc2.real
-                         - tvec.c[0].imag * tc2.imag;
-      Tr_Uinv[a][i].imag = tvec.c[0].imag * tc2.real
-                         + tvec.c[0].real * tc2.imag;
-      c_scalar_mult_mat(&tmat2, &tvec.c[0], &(UpsiU[a][i]));
-      for (j = 1; j < DIMF; j++) {
-        mult_nn(&(Uinv[a][i]), &(Lambda[j]), &tmat);
-        mult_nn(&tmat, &(Uinv[a][i]), &tmat2);
-        tc2 = trace_f(&tmat);
-        Tr_Uinv[a][i].real += tvec.c[j].real * tc2.real
-                            - tvec.c[j].imag * tc2.imag;
-        Tr_Uinv[a][i].imag += tvec.c[j].imag * tc2.real
-                            + tvec.c[j].real * tc2.imag;
-        c_scalar_mult_sum_mat(&tmat2, &tvec.c[j], &(UpsiU[a][i]));
-      }
-
-      // tempdet holds either eta^D(x) plaqdet[a][b](x) (global)
-      //                   or eta^D(x) |plaqdet[a][b](x)|^2 (local)
-      if (sign == 1) {    // Braces suppress compiler error
-        CONJG(eta[i].c[DIMF - 1], tc);
-      }
-      else
-        tc = eta[i].c[DIMF - 1];
-
+      // tempdet holds either Tr[eta(x)] plaqdet[a][b](x) (global)
+      //                   or Tr[eta(x)] |plaqdet[a][b](x)|^2 (local)
       for (b = a + 1; b < NUMLINK; b++) {
 #ifdef LINEAR_DET
-        CMUL(tc, plaqdet[a][b][i], tempdet[a][b][i]);
-        CMUL(tc, plaqdet[b][a][i], tempdet[b][a][i]);
+        CMUL(tr_eta[i], plaqdet[a][b][i], tempdet[a][b][i]);
+        CMUL(tr_eta[i], plaqdet[b][a][i], tempdet[b][a][i]);
 #else
         tr = cabs_sq(&(plaqdet[a][b][i]));
-        CMULREAL(tc, tr, tempdet[a][b][i]);
+        CMULREAL(tr_eta[i], tr, tempdet[a][b][i]);
         // Square is symmetric under a<-->b
         tempdet[b][a][i] = tempdet[a][b][i];
 #endif
@@ -627,17 +595,19 @@ void detF(vector *eta, vector *psi[NUMLINK], int sign) {
         // Accumulate plaq_term
         // D[b][a](x) {T[a](x) + T[b](x + a)}
         // gen_pt[5] is T[b](x + a)
-        CMULREAL(*((complex *)(gen_pt[5][i])), s->bc1[a], tc);
-        CADD(Tr_Uinv[a][i], tc, tc2);
+        tc = *((complex *)(gen_pt[5][i]));
+        tc2.real = Tr_Uinv[a][i].real + s->bc1[a] * tc.real;
+        tc2.imag = Tr_Uinv[a][i].imag + s->bc1[a] * tc.imag;
         plaq_term[i].real += tempdet[b][a][i].real * tc2.real
                            - tempdet[b][a][i].imag * tc2.imag;
         plaq_term[i].imag += tempdet[b][a][i].imag * tc2.real
                            + tempdet[b][a][i].real * tc2.imag;
 
         // D[a][b](x - b) {T[a](x) + T[b](x - b)}
-        CMULREAL(Tr_Uinv[a][i], s->bc1[opp_b], tc);
         // gen_pt[6] is T[b](x - b)
-        CADD(tc, *((complex *)(gen_pt[6][i])), tc2);
+        tc = *((complex *)(gen_pt[6][i]));
+        tc2.real = tc.real + s->bc1[opp_b] * Tr_Uinv[a][i].real;
+        tc2.imag = tc.imag + s->bc1[opp_b] * Tr_Uinv[a][i].imag;
         // gen_pt[1] is D[a][b](x - b)
         tc = *((complex *)(gen_pt[1][i]));
         plaq_term[i].real += tc.real * tc2.real - tc.imag * tc2.imag;
@@ -646,8 +616,9 @@ void detF(vector *eta, vector *psi[NUMLINK], int sign) {
         // Accumulate adj_term
         // D[a][b](x) {T[b](x) + T[a](x + b)}
         // gen_pt[3] is T[a](x + b)
-        CMULREAL(*((complex *)(gen_pt[3][i])), s->bc1[b], tc);
-        CADD(Tr_Uinv[b][i], tc, tc2);
+        tc = *((complex *)(gen_pt[3][i]));
+        tc2.real = Tr_Uinv[b][i].real + s->bc1[b] * tc.real;
+        tc2.imag = Tr_Uinv[b][i].imag + s->bc1[b] * tc.imag;
         adj_term[i].real += tempdet[a][b][i].real * tc2.real
                           - tempdet[a][b][i].imag * tc2.imag;
         adj_term[i].imag += tempdet[a][b][i].imag * tc2.real
@@ -678,18 +649,17 @@ void detF(vector *eta, vector *psi[NUMLINK], int sign) {
     }
 
     // Now add to force
-    // Include complex coupling localGc before taking adjoint
     FORALLSITES(i, s) {
       // Start with plaq_term hitting U_a(x)^{-1}
-      CMUL(plaq_term[i], localGc, tc);
+      CMULREAL(plaq_term[i], localG, tc);
       c_scalar_mult_sum_mat(&(Uinv[a][i]), &tc, &(s->f_U[a]));
 
       // Add adj_term hitting Udag_a(x)^{-1} followed by adjoint
-      CMUL(adj_term[i], localGc, tc);
+      CMULREAL(adj_term[i], localG, tc);
       c_scalar_mult_sum_adj_mat(&(Udag_inv[a][i]), &tc, &(s->f_U[a]));
 
       // Finally subtract inv_term hitting U_a(x)^{-1} psi_a(x) U_a(x)^{-1}
-      CMUL(inv_term[i], localGc, tc);
+      CMULREAL(inv_term[i], localG, tc);
       c_scalar_mult_dif_mat(&(UpsiU[a][i]), &tc, &(s->f_U[a]));
     }
   }
@@ -706,16 +676,10 @@ void detF(vector *eta, vector *psi[NUMLINK], int sign) {
   // Set up and store one more ingredient
   FORALLDIR(a) {
     FORALLSITES(i, s) {
-      // Save eta^D(x) ZWstar[a][b](x) in tempZW[a][b](x)
-      if (sign == 1) {    // Braces suppress compiler error
-        CONJG(eta[i].c[DIMF - 1], tc);
-      }
-      else
-        tc = eta[i].c[DIMF - 1];
-
+      // Save Tr[eta(x)] ZWstar[a][b](x) in tempZW[a][b](x)
       for (b = a + 1; b < NUMLINK; b++) {
-        CMUL(tc, ZWstar[a][b][i], tempZW[a][b][i]);
-        CMUL(tc, ZWstar[b][a][i], tempZW[b][a][i]);
+        CMUL(tr_eta[i], ZWstar[a][b][i], tempZW[a][b][i]);
+        CMUL(tr_eta[i], ZWstar[b][a][i], tempZW[b][a][i]);
       }
     }
   }
@@ -767,10 +731,8 @@ void detF(vector *eta, vector *psi[NUMLINK], int sign) {
       // Step two of Tr_Uinv[b](x - b + a) gather, including BC
       // Use tr_dest for temporary storage
       wait_gather(mtag[0]);
-      FORALLSITES(i, s) {
-        tc = *((complex *)(gen_pt[0][i]));
-        CMULREAL(tc, s->bc1[a], tr_dest[i]);
-      }
+      FORALLSITES(i, s)
+        CMULREAL(*((complex *)(gen_pt[0][i]));, s->bc1[a], tr_dest[i]);
       cleanup_gather(mtag[0]);
       mtag[0] = start_gather_field(tr_dest, sizeof(complex),
                                    goffset[b] + 1, EVENANDODD, gen_pt[0]);
@@ -848,20 +810,19 @@ void detF(vector *eta, vector *psi[NUMLINK], int sign) {
     }
 
     // Now add to force
-    // Include complex coupling localGc before taking adjoint
     FORALLSITES(i, s) {
       // Start with dZdU and dWdU hitting U_a(x)^{-1}
       CADD(dZdU[i], dWdU[i], tc);
-      CMUL(tc, localGc, tc2);
-      c_scalar_mult_sum_mat(&(Uinv[a][i]), &tc2, &(s->f_U[a]));
+      CMULREAL(tc, localG, tc);
+      c_scalar_mult_sum_mat(&(Uinv[a][i]), &tc, &(s->f_U[a]));
 
       // Add dZdUdag and dWdUdag hitting Udag_a(x)^{-1} followed by adjoint
       CADD(dZdUdag[i], dWdUdag[i], tc);
-      CMUL(tc, localGc, tc2);
-      c_scalar_mult_sum_adj_mat(&(Udag_inv[a][i]), &tc2, &(s->f_U[a]));
+      CMULREAL(tc, localG, tc);
+      c_scalar_mult_sum_adj_mat(&(Udag_inv[a][i]), &tc, &(s->f_U[a]));
 
       // Finally subtract dTdU hitting U_a(x)^{-1} psi_a(x) U_a(x)^{-1}
-      CMUL(dTdU[i], localGc, tc);
+      CMULREAL(dTdU[i], localG, tc);
       c_scalar_mult_dif_mat(&(UpsiU[a][i]), &tc, &(s->f_U[a]));
     }
   }
@@ -879,83 +840,48 @@ void detF(vector *eta, vector *psi[NUMLINK], int sign) {
 // -----------------------------------------------------------------
 // Scalar potential contributions to the fermion force
 // Use tempmat for temporary storage
-// If sign = 1 then take adjoint of eta
-// If sign = -1 then take adjoint of psi
-void pot_force(vector *eta, vector *psi[NUMLINK], int sign) {
-  register int i;
+// Appropriate adjoints set up in assemble_fermion_force
+void pot_force(matrix *eta, matrix *psi[NUMLINK], int sign) {
+  register int i, a;
   register site *s;
-  int a, j;
-  Real tr;
-  complex tc, tc2, localBc;
-  vector tvec;
+  Real tr, localB = one_ov_N * C2 * B * B;
+  complex tc;
   matrix tmat;
 
-  // Check sign while giving Bc proper sign
-  if (sign == 1) {    // Braces suppress compiler error
-    CNEGATE(Bc, localBc);
-  }
-  else if (sign == -1) {
-    set_complex_equal(&Bc, &localBc);
-  }
-  else {
+  // Check sign while giving B proper sign
+  if (sign == 1)
+    localB *= -1.0;
+  else if (sign != -1) {
     node0_printf("Error: incorrect sign in detF: %d\n", sign);
     terminate(1);
   }
 
+  FORALLSITES(i, s)
+    tr_eta[i] = trace(&(eta[i]));
+
   FORALLDIR(a) {
-    // Save sum_j psi_a^j(x) Tr[Lambda^j Udag_a(x)] in tr_dest
-    // Save sum_j psi_a^j(x) Lambda^j in tempmat
+    // Save Tr[psi_a(x) Udag_a(x)] in tr_dest
     FORALLSITES(i, s) {
-      // Accumulate trace and psi
-      if (sign == 1) {
-        for (j = 0; j < DIMF; j++)
-          tvec.c[j] = psi[a][i].c[j];
-      }
-      else {
-        for (j = 0; j < DIMF; j++)
-          CONJG(psi[a][i].c[j], tvec.c[j]);
-      }
+      tr_dest[i] = complextrace_na(&(psi[a][i]), &(s->link[a]));
 
-      tc2 = complextrace_na(&(Lambda[0]), &(s->link[a]));
-      tr_dest[i].real = tvec.c[0].real * tc2.real
-                      - tvec.c[0].imag * tc2.imag;
-      tr_dest[i].imag = tvec.c[0].imag * tc2.real
-                      + tvec.c[0].real * tc2.imag;
-      c_scalar_mult_mat(&(Lambda[0]), &tvec.c[0], &(tempmat[i]));
-      for (j = 1; j < DIMF; j++) {
-        tc2 = complextrace_na(&(Lambda[j]), &(s->link[a]));
-        tr_dest[i].real += tvec.c[j].real * tc2.real
-                         - tvec.c[j].imag * tc2.imag;
-        tr_dest[i].imag += tvec.c[j].imag * tc2.real
-                         + tvec.c[j].real * tc2.imag;
-        c_scalar_mult_sum_mat(&(Lambda[j]), &tvec.c[j], &(tempmat[i]));
-      }
-
-      // Hit both with eta^{D*} and divide trace by N
-      if (sign == 1) {    // Braces suppress compiler error
-        CONJG(eta[i].c[DIMF - 1], tc);
-      }
-      else
-        tc = eta[i].c[DIMF - 1];
-
-      CMUL(tc, tr_dest[i], tc2);
-      CMULREAL(tc2, one_ov_N, tr_dest[i]);
-      mat_copy_f(&(tempmat[i]), &tmat);
-      c_scalar_mult_mat(&tmat, &tc, &(tempmat[i]));
+      // Hit tr_dest and psi_a(x) itself with eta^{D*}, dividing former by N
+      CMUL(tr_eta[i], tr_dest[i], tc);
+      CMULREAL(tc, one_ov_N, tr_dest[i]);
+      c_scalar_mult_mat(&(psi[a][i]), &(tr_eta[i]), &(tempmat[i]));
 
       // Compute Y(x) = Tr[U_a(x) Udag_a(x)] / N - 1
       tr = one_ov_N * realtrace(&(s->link[a]), &(s->link[a])) - 1.0;
 
       // We're already ready to add to force
       // Start with eta Tr / N hitting Udag_a(x)
-      CMUL(localBc, tr_dest[i], tc);
+      CMULREAL(tr_dest[i], localB, tc);
       c_scalar_mult_sum_mat_adj(&(s->link[a]), &tc, &(s->f_U[a]));
 
       // Add eta Tr / N hitting U_a(x) and eta Y hitting psi_a(x)
       // and take the adjoint of the sum
       c_scalar_mult_mat(&(s->link[a]), &(tr_dest[i]), &tmat);
       scalar_mult_sum_matrix(&(tempmat[i]), tr, &tmat);
-      c_scalar_mult_sum_adj_mat(&tmat, &localBc, &(s->f_U[a]));
+      scalar_mult_sum_adj_matrix(&tmat, localB, &(s->f_U[a]));
     }
   }
 }
@@ -987,67 +913,56 @@ void assemble_fermion_force(Twist_Fermion *sol, Twist_Fermion *psol) {
   mat[1] = tempmat2;
 
   // For gathering it is convenient to copy the input Twist_Fermions
-  // into persistent site and link vectors
-  // We can reuse "src" and "dest" vectors for this storage,
-  // calling them "sol" and "psol" for clarity
-  // Also convert into NxN fermion matrices "mat" and "pmat"
-  vector *site_sol = site_src, *site_psol = site_dest;
-  vector *link_sol[NUMLINK], *link_psol[NUMLINK];
-  FORALLDIR(mu) {
-    link_sol[mu] = link_src[mu];
-    link_psol[mu] = link_dest[mu];
-  }
+  // into persistent site, link and plaq fermions
+  // We can reuse "src" and "dest" for this storage,
+  // corresponding to "sol" and "psol", respectively
   FORALLSITES(i, s) {
-    vec_copy(&(sol[i].Fsite), &(site_sol[i]));
-    vec_copy(&(psol[i].Fsite), &(site_psol[i]));
-    reconstruct(&(sol[i].Fsite), &(site_mat[i]));
-    reconstruct_star(&(psol[i].Fsite), &(site_pmat[i]));
+    reconstruct(&(sol[i].Fsite), &(site_src[i]));
+    reconstruct_star(&(psol[i].Fsite), &(site_dest[i]));
     FORALLDIR(mu) {
-      vec_copy(&(sol[i].Flink[mu]), &(link_sol[mu][i]));
-      vec_copy(&(psol[i].Flink[mu]), &(link_psol[mu][i]));
-      reconstruct(&(sol[i].Flink[mu]), &(link_mat[mu][i]));
-      reconstruct_star(&(psol[i].Flink[mu]), &(link_pmat[mu][i]));
+      reconstruct(&(sol[i].Flink[mu]), &(link_src[mu][i]));
+      reconstruct_star(&(psol[i].Flink[mu]), &(link_dest[mu][i]));
     }
     for (mu = 0; mu < NPLAQ; mu++) {
-      reconstruct(&(sol[i].Fplaq[mu]), &(plaq_mat[mu][i]));
-      reconstruct_star(&(psol[i].Fplaq[mu]), &(plaq_pmat[mu][i]));
+      reconstruct(&(sol[i].Fplaq[mu]), &(plaq_src[mu][i]));
+      reconstruct_star(&(psol[i].Fplaq[mu]), &(plaq_dest[mu][i]));
     }
   }
 
 #ifdef SV
   // Accumulate both terms in UpsiU[mu], use to initialize f_U[mu]
   // First calculate DUbar on eta Dbar_mu psi_mu (LtoS)
-  mtag[0] = start_gather_field(site_pmat, sizeof(matrix),
+  mtag[0] = start_gather_field(site_dest, sizeof(matrix),
                                goffset[0], EVENANDODD, gen_pt[0]);
   FORALLDIR(mu) {
     if (mu < NUMLINK - 1) {
-      mtag[mu + 1] = start_gather_field(site_pmat, sizeof(matrix),
+      mtag[mu + 1] = start_gather_field(site_dest, sizeof(matrix),
                                         goffset[mu + 1], EVENANDODD,
                                         gen_pt[mu + 1]);
     }
     wait_gather(mtag[mu]);
     FORALLSITES(i, s) {
       scalar_mult_matrix((matrix *)(gen_pt[mu][i]), s->bc1[mu], &tmat);
-      mult_nn(&(link_mat[mu][i]), &tmat, &(UpsiU[mu][i]));   // Initialize
-      mult_nn_dif(&(site_pmat[i]), &(link_mat[mu][i]), &(UpsiU[mu][i]));
+      mult_nn(&(link_src[mu][i]), &tmat, &(UpsiU[mu][i]));   // Initialize
+      mult_nn_dif(&(site_dest[i]), &(link_src[mu][i]), &(UpsiU[mu][i]));
     }
     cleanup_gather(mtag[mu]);
   }
 
   // 2nd term, DUbar on psi_mu Dbar_mu eta (StoL)
-  mtag[0] = start_gather_field(site_mat, sizeof(matrix),
+  mtag[0] = start_gather_field(site_src, sizeof(matrix),
                                goffset[0], EVENANDODD, gen_pt[0]);
   FORALLDIR(mu) {
     if (mu < NUMLINK - 1) {
-      mtag[mu + 1] = start_gather_field(site_mat, sizeof(matrix),
+      mtag[mu + 1] = start_gather_field(site_src, sizeof(matrix),
                                         goffset[mu + 1], EVENANDODD,
                                         gen_pt[mu + 1]);
     }
     wait_gather(mtag[mu]);
     FORALLSITES(i, s) {
       scalar_mult_matrix((matrix *)(gen_pt[mu][i]), s->bc1[mu], &tmat);
-      mult_nn_dif(&(link_pmat[mu][i]), &tmat, &(UpsiU[mu][i]));
-      mult_nn_sum(&(site_mat[i]), &(link_pmat[mu][i]), &(UpsiU[mu][i]));
+      mult_nn_dif(&(link_dest[mu][i]), &tmat, &(UpsiU[mu][i]));
+      mult_nn_sum(&(site_src[i]), &(link_dest[mu][i]), &(UpsiU[mu][i]));
 
       // Initialize the force collectors -- done with UpsiU[mu]
       scalar_mult_adj_matrix(&(UpsiU[mu][i]), 0.5, &(s->f_U[mu]));
@@ -1058,13 +973,13 @@ void assemble_fermion_force(Twist_Fermion *sol, Twist_Fermion *psol) {
 #ifdef VP
   // Now calculate DU on chi_{munu} D_mu(U) psi_nu
   // Start first set of gathers (mu = 0 and nu = 1)
-  tag0[0] = start_gather_field(link_mat[1], sizeof(matrix),
+  tag0[0] = start_gather_field(link_src[1], sizeof(matrix),
                                goffset[0], EVENANDODD, local_pt[0][0]);
 
   // Prepare and gather other term in tempmat*
   index = plaq_index[0][1];
   FORALLSITES(i, s)     // mu = 0 < nu = 1
-    mult_nn(&(plaq_pmat[index][i]), &(link_mat[1][i]), &(mat[0][i]));
+    mult_nn(&(plaq_dest[index][i]), &(link_src[1][i]), &(mat[0][i]));
   tag1[0] = start_gather_field(mat[0], sizeof(matrix),
                                goffset[1] + 1, EVENANDODD, local_pt[0][1]);
 
@@ -1088,19 +1003,19 @@ void assemble_fermion_force(Twist_Fermion *sol, Twist_Fermion *psol) {
           a = mu;
           b = nu + 1;
         }
-        tag0[gather] = start_gather_field(link_mat[b], sizeof(matrix),
+        tag0[gather] = start_gather_field(link_src[b], sizeof(matrix),
                                           goffset[a], EVENANDODD,
                                           local_pt[gather][0]);
 
         // Prepare and gather other term in tempmat*
         next = plaq_index[a][b];
         FORALLSITES(i, s) {
-          if (a > b) {      // plaq_pmat is anti-symmetric under a <--> b
-            scalar_mult_matrix(&(plaq_pmat[next][i]), -1.0, &tmat);
+          if (a > b) {      // plaq_dest is anti-symmetric under a <--> b
+            scalar_mult_matrix(&(plaq_dest[next][i]), -1.0, &tmat);
           }                 // Suppress compiler error
           else
-            mat_copy_f(&(plaq_pmat[next][i]), &tmat);
-          mult_nn(&tmat, &(link_mat[b][i]), &(mat[gather][i]));
+            mat_copy_f(&(plaq_dest[next][i]), &tmat);
+          mult_nn(&tmat, &(link_src[b][i]), &(mat[gather][i]));
         }
         tag1[gather] = start_gather_field(mat[gather], sizeof(matrix),
                                           goffset[b] + 1, EVENANDODD,
@@ -1119,7 +1034,7 @@ void assemble_fermion_force(Twist_Fermion *sol, Twist_Fermion *psol) {
           scalar_mult_matrix((matrix *)(local_pt[flip][0][i]),
                              -1.0 * s->bc1[mu], &tmat);
 
-        mult_nn_sum(&tmat, &(plaq_pmat[index][i]), &(s->f_U[mu]));
+        mult_nn_sum(&tmat, &(plaq_dest[index][i]), &(s->f_U[mu]));
         sum_matrix((matrix *)(local_pt[flip][1][i]), &(s->f_U[mu]));
       }
       cleanup_gather(tag0[flip]);
@@ -1130,13 +1045,13 @@ void assemble_fermion_force(Twist_Fermion *sol, Twist_Fermion *psol) {
 
   // 2nd term
   // Start first set of gathers (mu = 0 and nu = 1)
-  tag0[0] = start_gather_field(link_pmat[1], sizeof(matrix),
+  tag0[0] = start_gather_field(link_dest[1], sizeof(matrix),
                                goffset[0], EVENANDODD, local_pt[0][0]);
 
   // Prepare and gather other term in tempmat*
   index = plaq_index[0][1];
   FORALLSITES(i, s)     // mu = 0 < nu = 1
-    mult_nn(&(plaq_mat[index][i]), &(link_pmat[1][i]), &(mat[0][i]));
+    mult_nn(&(plaq_src[index][i]), &(link_dest[1][i]), &(mat[0][i]));
   tag1[0] = start_gather_field(mat[0], sizeof(matrix),
                                goffset[1] + 1, EVENANDODD, local_pt[0][1]);
 
@@ -1160,19 +1075,19 @@ void assemble_fermion_force(Twist_Fermion *sol, Twist_Fermion *psol) {
           a = mu;
           b = nu + 1;
         }
-        tag0[gather] = start_gather_field(link_pmat[b], sizeof(matrix),
+        tag0[gather] = start_gather_field(link_dest[b], sizeof(matrix),
                                           goffset[a], EVENANDODD,
                                           local_pt[gather][0]);
 
         // Prepare and gather other term in tempmat*
         next = plaq_index[a][b];
         FORALLSITES(i, s) {
-          if (a > b) {      // plaq_mat is anti-symmetric under a <--> b
-            scalar_mult_matrix(&(plaq_mat[next][i]), -1.0, &tmat);
+          if (a > b) {      // plaq_src is anti-symmetric under a <--> b
+            scalar_mult_matrix(&(plaq_src[next][i]), -1.0, &tmat);
           }                 // Suppress compiler error
           else
-            mat_copy_f(&(plaq_mat[next][i]), &tmat);
-          mult_nn(&tmat, &(link_pmat[b][i]), &(mat[gather][i]));
+            mat_copy_f(&(plaq_src[next][i]), &tmat);
+          mult_nn(&tmat, &(link_dest[b][i]), &(mat[gather][i]));
         }
         tag1[gather] = start_gather_field(mat[gather], sizeof(matrix),
                                           goffset[b] + 1, EVENANDODD,
@@ -1183,14 +1098,13 @@ void assemble_fermion_force(Twist_Fermion *sol, Twist_Fermion *psol) {
       wait_gather(tag0[flip]);
       wait_gather(tag1[flip]);
       FORALLSITES(i, s) {
-        if (mu > nu) {    // plaq_mat is anti-symmetric under mu <--> nu
-          scalar_mult_matrix(&(plaq_mat[index][i]), -1.0 * s->bc1[mu], &tmat);
+        if (mu > nu) {    // plaq_src is anti-symmetric under mu <--> nu
+          scalar_mult_matrix(&(plaq_src[index][i]), -1.0 * s->bc1[mu], &tmat);
         }                 // Suppress compiler error
         else
-          scalar_mult_matrix(&(plaq_mat[index][i]), s->bc1[mu], &tmat);
+          scalar_mult_matrix(&(plaq_src[index][i]), s->bc1[mu], &tmat);
 
-        mult_nn_sum((matrix *)(local_pt[flip][0][i]), &tmat,
-                      &(s->f_U[mu]));
+        mult_nn_sum((matrix *)(local_pt[flip][0][i]), &tmat, &(s->f_U[mu]));
         dif_matrix((matrix *)(local_pt[flip][1][i]), &(s->f_U[mu]));
       }
       cleanup_gather(tag0[flip]);
@@ -1203,20 +1117,20 @@ void assemble_fermion_force(Twist_Fermion *sol, Twist_Fermion *psol) {
   // Plaquette determinant contributions if G is non-zero
   if (doG) {
     // First connect link_sol with site_psol[DIMF - 1]^dag (LtoS)
-    detF(site_psol, link_sol, PLUS);
+    detF(site_dest, link_src, PLUS);
 
     // Second connect site_sol[DIMF - 1] with link_psol^dag (StoL)
-    detF(site_sol, link_psol, MINUS);
+    detF(site_src, link_dest, MINUS);
   }
 
   // Scalar potential contributions if B is non-zero
   // Use tempmat and Tr_Uinv for temporary storage
   if (doB) {
     // First connect link_sol with site_psol[DIMF - 1]^dag (LtoS)
-    pot_force(site_psol, link_sol, PLUS);
+    pot_force(site_dest, link_src, PLUS);
 
     // Second connect site_sol[DIMF - 1] with link_psol^dag (StoL)
-    pot_force(site_sol, link_psol, MINUS);
+    pot_force(site_src, link_dest, MINUS);
   }
 
 #ifdef QCLOSED
@@ -1224,8 +1138,8 @@ void assemble_fermion_force(Twist_Fermion *sol, Twist_Fermion *psol) {
     node0_printf("ERROR: NUMLINK IS %d != 5\n", NUMLINK);
     terminate(1);
   }
-  F1Q(plaq_mat, plaq_pmat);
-  F2Q(plaq_mat, plaq_pmat);
+  F1Q(plaq_src, plaq_dest);
+  F2Q(plaq_src, plaq_dest);
 #endif
 }
 // -----------------------------------------------------------------

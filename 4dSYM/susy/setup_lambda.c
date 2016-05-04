@@ -63,7 +63,7 @@ void setup_lambda() {
 
   // U(1) generator i * I_N / sqrt(N)
   if (DIMF == NCOL * NCOL) {    // Allow SU(N) compilation for now
-    i_inv_sqrt = cmplx(0.0, 1.0 / sqrt((Real)NCOL));
+    i_inv_sqrt = cmplx(0.0, sqrt(one_ov_N));
     clear_mat(&(Lambda[DIMF - 1]));
     for (i = 0; i < NCOL; i++)
       Lambda[DIMF - 1].e[i][i] = i_inv_sqrt;
@@ -103,7 +103,7 @@ void setup_lambda() {
   for (i = 0; i < DIMF; i++) {
     for (j = 0; j < DIMF; j++) {
       mult_nn(&(Lambda[i]), &(Lambda[j]), &tmat);
-      trace = trace_f(&tmat);
+      trace = trace(&tmat);
       if (trace.real * trace.real > IMAG_TOL)
         node0_printf("Tr[T_%d T_%d] = (%.4g, %.4g)\n",
                      i, j, trace.real, trace.imag);

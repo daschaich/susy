@@ -159,10 +159,10 @@ double gauge_action(int do_det) {
 
     if (do_det == 1) {
       det_project(&tmat, &tmat2);
-      tc = trace_f(&tmat2);
+      tc = trace(&tmat2);
     }
     else
-      tc = trace_f(&tmat);
+      tc = trace(&tmat);
 
     g_action += tc.real;
 #ifdef DEBUG_CHECK

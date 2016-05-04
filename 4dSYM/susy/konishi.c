@@ -28,14 +28,14 @@ void compute_Ba() {
 
       // Traceless part of U.Udag (hermitian so trace is real)
       mult_na(&(s->link[a]), &(s->link[a]), &(Ba[1][a][i]));
-      tc = trace_f(&(Ba[1][a][i]));
+      tc = trace(&(Ba[1][a][i]));
       tr = one_ov_N * tc.real;
       for (k = 0; k < NCOL; k++)
         Ba[1][a][i].e[k][k].real -= tr;
 
       // Check reality of resulting scalar fields
       for (j = 0; j < N_B; j++){
-        tc = trace_f(&(Ba[j][a][i]));
+        tc = trace(&(Ba[j][a][i]));
         if (fabs(tc.imag) > IMAG_TOL) {
           printf("WARNING: Tr[Ba[%d][%d][%d]] = (%.4g, %.4g) is not real\n",
                  j, a, i, tc.real, tc.imag);

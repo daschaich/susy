@@ -30,7 +30,7 @@ void ploop_c() {
     if (s->t != 0)
       continue;
 
-    s->ploop_corr = trace_f(&(staple[i]));
+    s->ploop_corr = trace(&(staple[i]));
     CMULREAL((s->ploop_corr), one_ov_N, (s->ploop_corr));
   }
 #endif

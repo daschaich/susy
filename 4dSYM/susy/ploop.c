@@ -54,7 +54,7 @@ complex ploop(int dir, int project, double *plpMod) {
   if (len == 1) {
     *plpMod = 0.0;
     FORALLSITES(i, s) {
-      plp = trace_f(&(s->link[dir]));
+      plp = trace(&(s->link[dir]));
       CSUM(sum, plp);
       *plpMod += cabs(&plp);
     }
@@ -109,7 +109,7 @@ complex ploop(int dir, int project, double *plpMod) {
     if (j != 0)
       continue;
 
-    plp = trace_f(&(staple[i]));
+    plp = trace(&(staple[i]));
     CSUM(sum, plp);
     *plpMod += cabs(&plp);
   }

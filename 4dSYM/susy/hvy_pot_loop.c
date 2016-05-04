@@ -62,7 +62,7 @@ void hvy_pot_loop(int do_det) {
           else
             mat_copy_f(&(tempmat[i]), &tmat);
 
-          tc = trace_f(&tmat);
+          tc = trace(&tmat);
           wloop += tc.real;
         }
         g_doublesum(&wloop);

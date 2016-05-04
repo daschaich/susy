@@ -84,6 +84,7 @@ int initial_set() {
 
   this_node = mynode();
   number_of_nodes = numnodes();
+  one_ov_N = 1.0 / (Real)NCOL;
   volume = nx * ny * nz * nt;
   total_iters = 0;
   minus1 = cmplx(-1.0, 0.0);
@@ -102,23 +103,16 @@ void make_fields() {
   node0_printf("Supersymmetric constraint on |det[plaq] - 1|^2\n");
 #endif
   double size = (double)(2.0 * sizeof(complex));
-  size += (double)(2.0 * (1 + NUMLINK + NPLAQ)) * sizeof(vector);
-  FIELD_ALLOC(site_src, vector);
-  FIELD_ALLOC(site_dest, vector);
   FIELD_ALLOC(tr_eta, complex);
   FIELD_ALLOC(tr_dest, complex);
-  FIELD_ALLOC_VEC(link_src, vector, NUMLINK);
-  FIELD_ALLOC_VEC(link_dest, vector, NUMLINK);
-  FIELD_ALLOC_VEC(plaq_src, vector, NPLAQ);
-  FIELD_ALLOC_VEC(plaq_dest, vector, NPLAQ);
 
   size += (double)(2.0 * (1 + NUMLINK + NPLAQ)) * sizeof(matrix);
-  FIELD_ALLOC(site_mat, matrix);
-  FIELD_ALLOC(site_pmat, matrix);
-  FIELD_ALLOC_VEC(link_mat, matrix, NUMLINK);
-  FIELD_ALLOC_VEC(link_pmat, matrix, NUMLINK);
-  FIELD_ALLOC_VEC(plaq_mat, matrix, NPLAQ);
-  FIELD_ALLOC_VEC(plaq_pmat, matrix, NPLAQ);
+  FIELD_ALLOC(site_src, matrix);
+  FIELD_ALLOC(site_dest, matrix);
+  FIELD_ALLOC_VEC(link_src, matrix, NUMLINK);
+  FIELD_ALLOC_VEC(link_dest, matrix, NUMLINK);
+  FIELD_ALLOC_VEC(plaq_src, matrix, NPLAQ);
+  FIELD_ALLOC_VEC(plaq_dest, matrix, NPLAQ);
 
   // For convenience in calculating action and force
   size += (double)(1.0 + NPLAQ + 3.0 * NUMLINK) * sizeof(matrix);
@@ -382,16 +376,13 @@ int readin(int prompt) {
     doG = 1;
   else
     doG = 0;
-  Gc = cmplx(0.0, C2 * G * sqrt((Real)NCOL));
 
   B = par_buf.B;
   if (B > IMAG_TOL)
     doB = 1;
   else
     doB = 0;
-  Bc = cmplx(0.0, C2 * B * B / sqrt((Real)NCOL));
 
-  one_ov_N = 1.0 / (Real)NCOL;
   kappa = (Real)NCOL * 0.5 / lambda;
   node0_printf("lambda=%.4g --> kappa=Nc/(2lambda)=%.4g\n",
                lambda, kappa);

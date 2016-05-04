@@ -44,7 +44,7 @@ void widths() {
         mult_nn(mat, &(tempmat[i]), &(staple[i]));
         mult_nn(&(s->link[b]), &(staple[i]), &tmat);
 
-        tc = trace_f(&tmat);
+        tc = trace(&tmat);
         plaq += tc.real;
         plaqSq += tc.real * tc.real;
 

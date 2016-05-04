@@ -67,7 +67,7 @@ void hvy_pot_polar_loop() {
         path(dir, sign, length);
         polarloop = 0.0;
         FORALLSITES(i, s) {
-          c_loop = trace_f(&(tempmat[i]));
+          c_loop = trace(&(tempmat[i]));
           polarloop += c_loop.real;
         }
         g_doublesum(&polarloop);

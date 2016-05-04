@@ -52,7 +52,7 @@ void random_gauge_trans(Twist_Fermion *TF) {
   // Project out eta^j = -Tr[Lambda^j G eta]
   for (j = 0; j < DIMF; j++) {
     mult_nn(&(Lambda[j]), &etamat, &tmat);
-    tc = trace_f(&tmat);
+    tc = trace(&tmat);
     CNEGATE(tc, TF[s].Fsite.c[j]);
   }
 
@@ -67,7 +67,7 @@ void random_gauge_trans(Twist_Fermion *TF) {
   // Project out eta^j = -Tr[eta Gdag Lambda^j]
   for (j = 0; j < DIMF; j++) {
     mult_nn(&etamat, &(Lambda[j]), &tmat);
-    tc = trace_f(&tmat);
+    tc = trace(&tmat);
     CNEGATE(tc, TF[s].Fsite.c[j]);
   }
 
@@ -84,7 +84,7 @@ void random_gauge_trans(Twist_Fermion *TF) {
     }
     for (j = 0; j < DIMF; j++) {
       mult_nn(&(Lambda[j]), &(psimat[a]), &tmat);
-      tc = trace_f(&tmat);
+      tc = trace(&tmat);
       CNEGATE(tc, TF[s].Flink[a].c[j]);
     }
 
@@ -98,7 +98,7 @@ void random_gauge_trans(Twist_Fermion *TF) {
       }
       for (j = 0; j < DIMF; j++) {
         mult_nn(&(chimat[i]), &(Lambda[j]), &tmat);
-        tc = trace_f(&tmat);
+        tc = trace(&tmat);
         CNEGATE(tc, TF[s].Fplaq[i].c[j]);
       }
     }
@@ -117,7 +117,7 @@ void random_gauge_trans(Twist_Fermion *TF) {
   }
   for (j = 0; j < DIMF; j++) {
     mult_nn(&(psimat[0]), &(Lambda[j]), &tmat);
-    tc = trace_f(&tmat);
+    tc = trace(&tmat);
     CNEGATE(tc, TF[s].Flink[0].c[j]);
   }
 
@@ -132,7 +132,7 @@ void random_gauge_trans(Twist_Fermion *TF) {
   }
   for (j = 0; j < DIMF; j++) {
     mult_nn(&(psimat[1]), &(Lambda[j]), &tmat);
-    tc = trace_f(&tmat);
+    tc = trace(&tmat);
     CNEGATE(tc, TF[s].Flink[1].c[j]);
   }
 
@@ -147,7 +147,7 @@ void random_gauge_trans(Twist_Fermion *TF) {
   }
   for (j = 0; j < DIMF; j++) {
     mult_nn(&(psimat[2]), &(Lambda[j]), &tmat);
-    tc = trace_f(&tmat);
+    tc = trace(&tmat);
     CNEGATE(tc, TF[s].Flink[2].c[j]);
   }
 
@@ -162,7 +162,7 @@ void random_gauge_trans(Twist_Fermion *TF) {
   }
   for (j = 0; j < DIMF; j++) {
     mult_nn(&(psimat[3]), &(Lambda[j]), &tmat);
-    tc = trace_f(&tmat);
+    tc = trace(&tmat);
     CNEGATE(tc, TF[s].Flink[3].c[j]);
   }
 
@@ -177,7 +177,7 @@ void random_gauge_trans(Twist_Fermion *TF) {
   }
   for (j = 0; j < DIMF; j++) {
     mult_nn(&(psimat[4]), &(Lambda[j]), &tmat);
-    tc = trace_f(&tmat);
+    tc = trace(&tmat);
     CNEGATE(tc, TF[s].Flink[4].c[j]);
   }
 
@@ -192,7 +192,7 @@ void random_gauge_trans(Twist_Fermion *TF) {
   }
   for (j = 0; j < DIMF; j++) {
     mult_nn(&(Lambda[j]), &(chimat[i]), &tmat);
-    tc = trace_f(&tmat);
+    tc = trace(&tmat);
     CNEGATE(tc, TF[s].Fplaq[i].c[j]);
   }
 
@@ -206,7 +206,7 @@ void random_gauge_trans(Twist_Fermion *TF) {
   }
   for (j = 0; j < DIMF; j++) {
     mult_nn(&(Lambda[j]), &(chimat[i]), &tmat);
-    tc = trace_f(&tmat);
+    tc = trace(&tmat);
     CNEGATE(tc, TF[s].Fplaq[i].c[j]);
   }
 
@@ -220,7 +220,7 @@ void random_gauge_trans(Twist_Fermion *TF) {
   }
   for (j = 0; j < DIMF; j++) {
     mult_nn(&(Lambda[j]), &(chimat[i]), &tmat);
-    tc = trace_f(&tmat);
+    tc = trace(&tmat);
     CNEGATE(tc, TF[s].Fplaq[i].c[j]);
   }
 
@@ -234,7 +234,7 @@ void random_gauge_trans(Twist_Fermion *TF) {
   }
   for (j = 0; j < DIMF; j++) {
     mult_nn(&(Lambda[j]), &(chimat[i]), &tmat);
-    tc = trace_f(&tmat);
+    tc = trace(&tmat);
     CNEGATE(tc, TF[s].Fplaq[i].c[j]);
   }
 
@@ -248,7 +248,7 @@ void random_gauge_trans(Twist_Fermion *TF) {
   }
   for (j = 0; j < DIMF; j++) {
     mult_nn(&(Lambda[j]), &(chimat[i]), &tmat);
-    tc = trace_f(&tmat);
+    tc = trace(&tmat);
     CNEGATE(tc, TF[s].Fplaq[i].c[j]);
   }
 
@@ -262,7 +262,7 @@ void random_gauge_trans(Twist_Fermion *TF) {
   }
   for (j = 0; j < DIMF; j++) {
     mult_nn(&(Lambda[j]), &(chimat[i]), &tmat);
-    tc = trace_f(&tmat);
+    tc = trace(&tmat);
     CNEGATE(tc, TF[s].Fplaq[i].c[j]);
   }
 
@@ -276,7 +276,7 @@ void random_gauge_trans(Twist_Fermion *TF) {
   }
   for (j = 0; j < DIMF; j++) {
     mult_nn(&(Lambda[j]), &(chimat[i]), &tmat);
-    tc = trace_f(&tmat);
+    tc = trace(&tmat);
     CNEGATE(tc, TF[s].Fplaq[i].c[j]);
   }
 
@@ -290,7 +290,7 @@ void random_gauge_trans(Twist_Fermion *TF) {
   }
   for (j = 0; j < DIMF; j++) {
     mult_nn(&(Lambda[j]), &(chimat[i]), &tmat);
-    tc = trace_f(&tmat);
+    tc = trace(&tmat);
     CNEGATE(tc, TF[s].Fplaq[i].c[j]);
   }
 
@@ -304,7 +304,7 @@ void random_gauge_trans(Twist_Fermion *TF) {
   }
   for (j = 0; j < DIMF; j++) {
     mult_nn(&(Lambda[j]), &(chimat[i]), &tmat);
-    tc = trace_f(&tmat);
+    tc = trace(&tmat);
     CNEGATE(tc, TF[s].Fplaq[i].c[j]);
   }
 
@@ -318,7 +318,7 @@ void random_gauge_trans(Twist_Fermion *TF) {
   }
   for (j = 0; j < DIMF; j++) {
     mult_nn(&(Lambda[j]), &(chimat[i]), &tmat);
-    tc = trace_f(&tmat);
+    tc = trace(&tmat);
     CNEGATE(tc, TF[s].Fplaq[i].c[j]);
   }
 }

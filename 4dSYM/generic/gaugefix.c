@@ -230,20 +230,16 @@ void do_hit(int gauge_dir, int parity, int p, int q, Real relax_boost) {
 double get_gauge_fix_action(int gauge_dir, int parity) {
   register int dir, i, ndir;
   register site *s;
-  register matrix *m1, *m2;
   double gauge_fix_action = 0.0;
-  complex trace;
+  complex tc;
 
   FORSOMEPARITY(i, s, parity) {
     FORALLUPDIRBUT(gauge_dir, dir) {
-      m1 = &(s->link[dir]);
-      m2 = (matrix *)gen_pt[dir][i];
+      tc = trace(&(s->link[dir]));
+      gauge_fix_action += (double)tc.real;
 
-      trace = trace_f(m1);
-      gauge_fix_action += (double)trace.real;
-
-      trace = trace_f(m2);
-      gauge_fix_action += (double)trace.real;
+      tc = trace((matrix *)gen_pt[dir][i]);
+      gauge_fix_action += (double)tc.real;
     }
   }
 

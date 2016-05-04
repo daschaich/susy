@@ -243,7 +243,7 @@ void rsymm() {
           path(dir, sign, length);
           wloop = 0.0;
           FORALLSITES(i, s) {
-            tc = trace_f(&(tempmat[i]));
+            tc = trace(&(tempmat[i]));
             wloop += tc.real;
           }
           g_doublesum(&wloop);
@@ -251,7 +251,7 @@ void rsymm() {
           rsymm_path(dir, sign, kind, length);
           rsymm_loop = 0.0;
           FORALLSITES(i, s) {
-            tc = trace_f(&(tempmat[i]));
+            tc = trace(&(tempmat[i]));
             rsymm_loop += tc.real;
           }
           g_doublesum(&rsymm_loop);

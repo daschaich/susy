@@ -23,6 +23,7 @@
 // -----------------------------------------------------------------
 // Susy stuff
 #define LINEAR_DET          // det-1 rather than |det-1|^2
+                            // |det-1|^2 is not actively tested!!!
 #define SV                  // Site/vector terms in action
 #define VP                  // Vector/plaquette terms in action
 #define QCLOSED             // Q-closed terms in action

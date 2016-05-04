@@ -119,7 +119,6 @@ void compute_plaqdet() {
 void compute_Uinv() {
   register int i, mu;
   register site *s;
-  matrix tmat;
 
   FORALLSITES(i, s) {
     FORALLDIR(mu) {
@@ -199,18 +198,18 @@ void Dplus(matrix *src[NUMLINK], matrix *dest[NPLAQ]) {
         // Initialize dest[index][i]
         scalar_mult_nn(&(s->link[mu]),
                          (matrix *)(local_pt[flip][0][i]),
-                         s->bc1[mu], &(plaq_pmat[index][i]));
+                         s->bc1[mu], &(plaq_dest[index][i]));
 
         // Add or subtract the other three terms
         mult_nn_dif(&(src[nu][i]), (matrix *)(local_pt[flip][1][i]),
-                      &(plaq_pmat[index][i]));
+                      &(plaq_dest[index][i]));
 
         scalar_mult_nn_dif(&(s->link[nu]),
                              (matrix *)(local_pt[flip][2][i]),
-                             s->bc1[nu], &(plaq_pmat[index][i]));
+                             s->bc1[nu], &(plaq_dest[index][i]));
 
         mult_nn_sum(&(src[mu][i]), (matrix *)(local_pt[flip][3][i]),
-                      &(plaq_pmat[index][i]));
+                      &(plaq_dest[index][i]));
       }
       cleanup_gather(tag0[flip]);
       cleanup_gather(tag1[flip]);
@@ -552,11 +551,10 @@ void detStoL(matrix *dest[NUMLINK]) {
   register int i;
   register site *s;
   int a, b, opp_b, next;
-  complex tc, localGc;
+  Real localG = -1.0 * C2 * G;
+  complex tc;
 #ifdef LINEAR_DET
-  CMULREAL(Gc, -0.5, localGc);            // Since not squared
-#else
-  CMULREAL(Gc, -1.0, localGc);
+  localG *= 0.5;                          // Since not squared
 #endif
   msg_tag *tag[NUMLINK];
 
@@ -619,7 +617,7 @@ void detStoL(matrix *dest[NUMLINK]) {
 
     // Multiply U_a^{-1} by sum, add to dest[a][i]
     FORALLSITES(i, s) {
-      CMUL(tr_dest[i], localGc, tc);
+      CMULREAL(tr_dest[i], localG, tc);
       c_scalar_mult_sum_mat(&(Uinv[a][i]), &tc, &(dest[a][i]));
     }
   }
@@ -638,14 +636,13 @@ void detStoL(matrix *dest[NUMLINK]) {
 void potStoL(matrix *dest[NUMLINK]) {
   register int i, a;
   register site *s;
-  Real tr;
+  Real tr, localB = one_ov_N * C2 * B * B;
   complex tc;
 
   FORALLSITES(i, s) {
     FORALLDIR(a) {
       tr = 1.0 - one_ov_N * realtrace(&(s->link[a]), &(s->link[a]));
-      CMUL(tr_eta[i], Bc, tc);
-      CMULREAL(tc, tr, tc);
+      CMULREAL(tr_eta[i], tr * localB, tc);
       c_scalar_mult_sum_mat_adj(&(s->link[a]), &tc, &(dest[a][i]));
     }
   }
@@ -725,9 +722,10 @@ void detLtoS(matrix *src[NUMLINK], matrix *dest) {
   register int i;
   register site *s;
   int a, b, next;
-  complex tc, tc2, localGc;
+  Real localG = C2 * G * sqrt((Real)NCOL);
+  complex tc, tc2;
 #ifdef LINEAR_DET
-  CMULREAL(Gc, 0.5, localGc);                  // Since not squared
+  localG *= 0.5;
 #endif
   msg_tag *tag[NUMLINK];
 
@@ -774,8 +772,9 @@ void detLtoS(matrix *src[NUMLINK], matrix *dest) {
 #else
         CMUL(ZWstar[a][b][i], tc2, tc);
 #endif
-        tr_dest[i].real += tc.real * localGc.real - tc.imag * localGc.imag;
-        tr_dest[i].imag += tc.imag * localGc.real + tc.real * localGc.imag;
+        // localG is purely imaginary...
+        tr_dest[i].real -= tc.imag * localG;
+        tr_dest[i].imag += tc.real * localG;
       }
       cleanup_gather(tag[b]);
     }
@@ -801,7 +800,7 @@ void potLtoS(matrix *src[NUMLINK], matrix *dest) {
   register int i, a;
   register site *s;
   Real tr;
-  complex tc;
+  complex tc, localB = cmplx(0.0, sqrt(one_ov_N) * C2 * B * B);
 
   FORALLSITES(i, s) {
     // Initialize tr_dest
@@ -816,7 +815,7 @@ void potLtoS(matrix *src[NUMLINK], matrix *dest) {
     }
 
     // Add to dest (negative comes from generator normalization)
-    CMUL(tr_dest[i], Bc, tc);
+    CMUL(tr_dest[i], localB, tc);
     c_scalar_mult_dif_mat(&(Lambda[DIMF - 1]), &tc, &(dest[i]));
   }
 }
@@ -829,128 +828,92 @@ void potLtoS(matrix *src[NUMLINK], matrix *dest) {
 // Twist_Fermion matrix--vector operation
 // Applies either the operator (sign = 1) or its adjoint (sign = -1)
 void fermion_op(Twist_Fermion *src, Twist_Fermion *dest, int sign) {
-  register int i, j, mu, nu, index;
+  register int i, mu;
   register site *s;
+  matrix tmat;
 
   // Copy src TwistFermion into fieldwise site, link and plaq fermions
-  // All of the latter are overwritten -- don't need to clear explicitly
+  // Overwrite all of the latter
   if (sign == 1) {
     FORALLSITES(i, s) {
-      reconstruct(&(src[i].Fsite), &(site_mat[i]));
-      tr_eta[i] = src[i].Fsite.c[DIMF - 1];
-      for (j = 0; j < DIMF; j++)
-        site_src[i].c[j] = src[i].Fsite.c[j];
-      FORALLDIR(mu) {
-        reconstruct(&(src[i].Flink[mu]), &(link_mat[mu][i]));
-        for (j = 0; j < DIMF; j++)
-          link_src[mu][i].c[j] = src[i].Flink[mu].c[j];
-      }
-      for (mu = 0; mu < NPLAQ; mu++) {
-        reconstruct(&(src[i].Fplaq[mu]), &(plaq_mat[mu][i]));
-        for (j = 0; j < DIMF; j++)
-          plaq_src[mu][i].c[j] = src[i].Fplaq[mu].c[j];
-      }
+      reconstruct(&(src[i].Fsite), &(site_src[i]));
+      FORALLDIR(mu)
+        reconstruct(&(src[i].Flink[mu]), &(link_src[mu][i]));
+      for (mu = 0; mu < NPLAQ; mu++)
+        reconstruct(&(src[i].Fplaq[mu]), &(plaq_src[mu][i]));
     }
   }
   else if (sign == -1) {
     FORALLSITES(i, s) {
-      reconstruct_star(&(src[i].Fsite), &(site_mat[i]));
-      CONJG(src[i].Fsite.c[DIMF - 1], tr_eta[i]);
-      for (j = 0; j < DIMF; j++)
-        CONJG(src[i].Fsite.c[j], site_src[i].c[j]);
-      FORALLDIR(mu) {
-        reconstruct_star(&(src[i].Flink[mu]), &(link_mat[mu][i]));
-        for (j = 0; j < DIMF; j++)
-          CONJG(src[i].Flink[mu].c[j], link_src[mu][i].c[j]);
-      }
-      for (mu = 0; mu < NPLAQ; mu++) {
-        reconstruct_star(&(src[i].Fplaq[mu]), &(plaq_mat[mu][i]));
-        for (j = 0; j < DIMF; j++)
-          CONJG(src[i].Fplaq[mu].c[j], plaq_src[mu][i].c[j]);
-      }
+      reconstruct_star(&(src[i].Fsite), &(site_src[i]));
+      FORALLDIR(mu)
+        reconstruct_star(&(src[i].Flink[mu]), &(link_src[mu][i]));
+      for (mu = 0; mu < NPLAQ; mu++)
+        reconstruct_star(&(src[i].Fplaq[mu]), &(plaq_src[mu][i]));
     }
   }
   else {
     node0_printf("Error: incorrect sign in fermion_op: %d\n", sign);
     terminate(1);
   }
+  FORALLSITES(i, s)
+    tr_eta[i] = trace(&(site_src[i]));
 
   // Assemble separate routines for each term in the fermion operator
 #ifdef VP
-  Dplus(link_mat, plaq_pmat);             // Initializes plaq_pmat
-  Dminus(plaq_mat, link_pmat);            // Initializes link_pmat
+  Dplus(link_src, plaq_dest);             // Initializes plaq_dest
+  Dminus(plaq_src, link_dest);            // Initializes link_dest
 #endif
 
 #ifdef SV
-  DbplusStoL(site_mat, link_pmat);        // Adds to link_pmat
+  DbplusStoL(site_src, link_dest);        // Adds to link_dest
 
   // Site-to-link plaquette determinant contribution if G is non-zero
   // Only depends on Tr[eta(x)]
   if (doG)
-    detStoL(link_pmat);                   // Adds to link_pmat
+    detStoL(link_dest);                   // Adds to link_dest
 
   // Site-to-link scalar potential contribution if B is non-zero
   // Only depends on Tr[eta(x)]
   if (doB)
-    potStoL(link_pmat);                   // Adds to link_pmat
+    potStoL(link_dest);                   // Adds to link_dest
 
-  DbminusLtoS(link_mat, site_pmat);       // Initializes site_pmat
+  DbminusLtoS(link_src, site_dest);       // Initializes site_dest
 
   // Link-to-site plaquette determinant contribution if G is non-zero
   if (doG)
-    detLtoS(link_mat, site_pmat);         // Adds to site_dest
+    detLtoS(link_src, site_dest);         // Adds to site_dest
 
   // Link-to-site scalar potential contribution if B is non-zero
   if (doB)
-    potLtoS(link_mat, site_pmat);         // Adds to site_dest
+    potLtoS(link_src, site_dest);         // Adds to site_dest
 #endif
 
 #ifdef QCLOSED
-  DbminusPtoP(plaq_mat, plaq_pmat);       // Adds to plaq_dest
-  DbplusPtoP(plaq_mat, plaq_pmat);        // Adds to plaq_dest
+  DbminusPtoP(plaq_src, plaq_dest);       // Adds to plaq_dest
+  DbplusPtoP(plaq_src, plaq_dest);        // Adds to plaq_dest
 #endif
-  FORALLSITES(i, s) {
-    deconstruct(&(site_pmat[i]), &(site_dest[i]));
-    FORALLDIR(mu) {
-      deconstruct(&(link_pmat[mu][i]), &(link_dest[mu][i]));
-      for (nu = mu + 1; nu < NUMLINK; nu++) {
-        index = plaq_index[mu][nu];
-        deconstruct(&(plaq_pmat[index][i]), &(plaq_dest[index][i]));
-      }
-    }
-  }
+
   // Copy local plaquette, link and site fermions into dest TwistFermion
   if (sign == 1) {
     FORALLSITES(i, s) {
-      for (j = 0; j < DIMF; j++)
-        dest[i].Fsite.c[j] = site_dest[i].c[j];
-      FORALLDIR(mu) {
-        for (j = 0; j < DIMF; j++)
-          dest[i].Flink[mu].c[j] = link_dest[mu][i].c[j];
-      }
-      for (mu = 0; mu < NPLAQ; mu++) {
-        for (j = 0; j < DIMF; j++)
-          dest[i].Fplaq[mu].c[j] = plaq_dest[mu][i].c[j];
-      }
+      deconstruct(&(site_dest[i]), &(dest[i].Fsite));
+      FORALLDIR(mu)
+        deconstruct(&(link_dest[mu][i]), &(dest[i].Flink[mu]));
+      for (mu = 0; mu < NPLAQ; mu++)
+        deconstruct(&(plaq_dest[mu][i]), &(dest[i].Fplaq[mu]));
     }
   }
   else if (sign == -1) {    // Both negate and conjugate
     FORALLSITES(i, s) {
-      for (j = 0; j < DIMF; j++) {
-        dest[i].Fsite.c[j].real = -site_dest[i].c[j].real;
-        dest[i].Fsite.c[j].imag = site_dest[i].c[j].imag;
-      }
+      deconstruct_star(&(site_dest[i]), &(dest[i].Fsite));
       FORALLDIR(mu) {
-        for (j = 0; j < DIMF; j++) {
-          dest[i].Flink[mu].c[j].real = -link_dest[mu][i].c[j].real;
-          dest[i].Flink[mu].c[j].imag = link_dest[mu][i].c[j].imag;
-        }
+        adjoint(&(link_dest[mu][i]), &tmat);
+        deconstruct(&tmat, &(dest[i].Flink[mu]));
       }
       for (mu = 0; mu < NPLAQ; mu++) {
-        for (j = 0; j < DIMF; j++) {
-          dest[i].Fplaq[mu].c[j].real = -plaq_dest[mu][i].c[j].real;
-          dest[i].Fplaq[mu].c[j].imag = plaq_dest[mu][i].c[j].imag;
-        }
+        adjoint(&(plaq_dest[mu][i]), &tmat);
+        deconstruct(&tmat, &(dest[i].Fplaq[mu]));
       }
     }
   }

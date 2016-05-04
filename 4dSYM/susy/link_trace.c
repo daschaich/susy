@@ -19,7 +19,7 @@ double link_trace(double *linktr, double *width,
     link_det[dir] = 0.0;
     FORALLSITES(i, s) {
       mult_na(&(s->link[dir]), &(s->link[dir]), &tmat);
-      tc = trace_f(&tmat);
+      tc = trace(&tmat);
       linktr[dir] += tc.real;
       linktrSq += tc.real * tc.real;
 

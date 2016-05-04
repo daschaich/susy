@@ -341,7 +341,7 @@ void blocked_rsymm(int Nsmear, int block) {
           blocked_path(dir, sign, length, bl);
           wloop = 0.0;
           FORALLSITES(i, s) {
-            tc = trace_f(&(tempmat[i]));
+            tc = trace(&(tempmat[i]));
             wloop += tc.real;
           }
           g_doublesum(&wloop);
@@ -349,7 +349,7 @@ void blocked_rsymm(int Nsmear, int block) {
           blocked_rsymm_path(dir, sign, kind, length, bl);
           rsymm_loop = 0.0;
           FORALLSITES(i, s) {
-            tc = trace_f(&(tempmat[i]));
+            tc = trace(&(tempmat[i]));
             rsymm_loop += tc.real;
           }
           g_doublesum(&rsymm_loop);

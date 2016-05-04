@@ -134,15 +134,13 @@ EXTERN int FQ_lookup[NTERMS][NUMLINK];
 
 // Persistent site, link and plaq fermions for matrix--vector operation
 // Used in fermion_op and assemble_fermion_force
-EXTERN vector *site_src, *link_src[NUMLINK], *plaq_src[NPLAQ];
-EXTERN vector *site_dest, *link_dest[NUMLINK], *plaq_dest[NPLAQ];
-EXTERN matrix *site_mat, *link_mat[NUMLINK], *plaq_mat[NPLAQ];
-EXTERN matrix *site_pmat, *link_pmat[NUMLINK], *plaq_pmat[NPLAQ];
+EXTERN matrix *site_src, *link_src[NUMLINK], *plaq_src[NPLAQ];
+EXTERN matrix *site_dest, *link_dest[NUMLINK], *plaq_dest[NPLAQ];
 
 // For convenience in calculating action and force
 // May be wasteful of space
 EXTERN Real one_ov_N;
-EXTERN complex Gc, Bc, minus1, *tr_eta;
+EXTERN complex minus1, *tr_eta;
 EXTERN complex *tr_dest, *Tr_Uinv[NUMLINK], *plaqdet[NUMLINK][NUMLINK];
 EXTERN complex *ZWstar[NUMLINK][NUMLINK], *tempdet[NUMLINK][NUMLINK];
 #ifndef LINEAR_DET
