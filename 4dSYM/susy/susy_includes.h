@@ -38,7 +38,6 @@ void setup_FQ();
 void setup_offset();
 void setup_qclosed_offset();
 void setup_rhmc();
-void fermion_rep();
 
 // Reconstruct NxN fermion matrices from N^2 vectors
 void reconstruct(vector *in, matrix_f *out);

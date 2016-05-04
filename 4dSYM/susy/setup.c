@@ -453,10 +453,6 @@ int readin(int prompt) {
   compute_Uinv();
   compute_DmuUmu();
   compute_Fmunu();
-
-  // Generate the adjoint links
-  fermion_rep();
-
   return 0;
 }
 // -----------------------------------------------------------------

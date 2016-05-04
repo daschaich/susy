@@ -25,7 +25,6 @@
 #endif
 
 typedef struct { fcomplex e[NCOL][NCOL]; } fmatrix_f;
-typedef struct { fcomplex e[DIMF][DIMF]; } fmatrix;
 typedef struct { fcomplex c[NCOL]; } fvector_f;
 typedef struct { fcomplex c[DIMF]; } fvector;
 
@@ -36,7 +35,6 @@ typedef struct {
 } fanti_hermitmat;
 
 typedef struct { dcomplex e[NCOL][NCOL]; } dmatrix_f;
-typedef struct { dcomplex e[DIMF][DIMF]; } dmatrix;
 typedef struct { dcomplex c[NCOL]; } dvector_f;
 typedef struct { dcomplex c[DIMF]; } dvector;
 typedef struct {
@@ -46,13 +44,11 @@ typedef struct {
 
 #if (PRECISION == 1)
 #define matrix_f    fmatrix_f
-#define matrix      fmatrix
 #define vector_f    fvector_f
 #define vector      fvector
 #define anti_hermitmat  fanti_hermitmat
 #else
 #define matrix_f    dmatrix_f
-#define matrix      dmatrix
 #define vector_f    dvector_f
 #define vector      dvector
 #define anti_hermitmat  danti_hermitmat

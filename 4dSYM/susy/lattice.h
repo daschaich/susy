@@ -37,7 +37,6 @@ typedef struct {
 #endif
 
   matrix_f linkf[NUMLINK];    // Gauge links
-  matrix link[NUMLINK];       // Adjoint links
 
 #ifdef HMC_ALGORITHM
   matrix_f old_linkf[NUMLINK];  // For accept/reject

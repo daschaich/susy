@@ -54,7 +54,6 @@ MY_OBJECTS = setup.o               \
              widths.o              \
              determinant.o         \
              grsource.o            \
-             fermion_rep.o         \
              reconstruct_fermion.o \
              deconstruct_fermion.o \
              utilities.o           \

@@ -67,9 +67,6 @@ int update_step(double *fnorm, double *gnorm,
       update_uu(eps);
     else                // Final u(t/2)
       update_uu(0.5 * eps);
-#ifndef PUREGAUGE
-    fermion_rep();
-#endif
   }
   return iters;
 }
@@ -93,8 +90,6 @@ int update() {
   }
 
   // Refresh the momenta
-  // Higher rep code using fermion_rep:
-  //   DIMFxDIMF link created from NCOLxNCOL linkf after each update
   ranmom();
 
   // Set up the fermion variables, if needed
@@ -166,7 +161,6 @@ int update() {
       compute_Uinv();
       compute_DmuUmu();
       compute_Fmunu();
-      fermion_rep();
     }
     node0_printf("REJECT: delta S = %.4g start S = %.12g end S = %.12g\n",
                  change, startaction, endaction);

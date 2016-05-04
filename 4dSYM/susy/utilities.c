@@ -274,7 +274,7 @@ void Dminus(matrix_f *src[NPLAQ], matrix_f *dest[NUMLINK]) {
           b = nu;
         }
         next = plaq_index[a][b];
-        tag0[gather] = start_gather_site(F_OFFSET(linkf[a]), sizeof(matrix),
+        tag0[gather] = start_gather_site(F_OFFSET(linkf[a]), sizeof(matrix_f),
                                          goffset[b], EVENANDODD,
                                          local_pt[gather][0]);
 
