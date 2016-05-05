@@ -234,12 +234,24 @@ double gauge_force(Real eps) {
 
   // Only compute U(1) mass term if non-zero -- note factor of kappa
   if (bmass > IMAG_TOL) {
-    Real tr, dmu = 2.0 * one_ov_N * kappa * bmass * bmass;
+    Real dmu;
+#ifdef EIG_POT
+    dmu = 2.0 * kappa * bmass * bmass;
+    matrix tmat;
+#else
+    Real tr;
+    dmu = 2.0 * one_ov_N * kappa * bmass * bmass;
+#endif
     FORALLSITES(i, s) {
       FORALLDIR(mu) {
+#ifdef EIG_POT
+        mult_na(&(s->link[mu]), &(s->link[mu]), &tmat);
+        scalar_add_diag(&tmat, -1.0);
+        scalar_mult_an_sum(&(s->link[mu]), &tmat, dmu, &(s->f_U[mu]));
+#else
         tr = one_ov_N * realtrace(&(s->link[mu]), &(s->link[mu])) - 1.0;
-        tr *= dmu;
         scalar_mult_sum_adj_matrix(&(s->link[mu]), tr, &(s->f_U[mu]));
+#endif
       }
     }
   }

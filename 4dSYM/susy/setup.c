@@ -97,6 +97,11 @@ int initial_set() {
 // -----------------------------------------------------------------
 // Allocate space for fields
 void make_fields() {
+#ifdef EIG_POT
+  node0_printf("Single-trace scalar potential with bmass coefficient\n");
+#else
+  node0_printf("Double-trace scalar potential with bmass coefficient\n");
+#endif
 #ifdef LINEAR_DET
   node0_printf("Supersymmetric constraint on (det[plaq] - 1)\n");
 #else

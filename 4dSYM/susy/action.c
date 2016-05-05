@@ -184,12 +184,23 @@ double gauge_action(int do_det) {
 double bmass_action() {
   register int i, a;
   register site *s;
-  double sum = 0.0, tr;
+  double sum = 0.0, kappa_muSq = kappa * bmass * bmass;
+#ifdef EIG_POT
+  matrix tmat;
+#else
+  Real tr;
+#endif
 
   FORALLSITES(i, s) {
     FORALLDIR(a) {
+#ifdef EIG_POT
+      mult_na(&(s->link[a]), &(s->link[a]), &tmat);
+      scalar_add_diag(&tmat, -1.0);
+      sum += kappa_muSq * realtrace(&tmat, &tmat);
+#else
       tr = one_ov_N * realtrace(&(s->link[a]), &(s->link[a])) - 1.0;
-      sum += kappa * bmass * bmass * tr * tr;
+      sum += kappa_muSq * tr * tr;
+#endif
     }
   }
   g_doublesum(&sum);
