@@ -98,9 +98,9 @@ int initial_set() {
 // Allocate space for fields
 void make_fields() {
 #ifdef EIG_POT
-  node0_printf("Single-trace scalar potential with bmass coefficient\n");
+  node0_printf("Single-trace scalar potential\n");
 #else
-  node0_printf("Double-trace scalar potential with bmass coefficient\n");
+  node0_printf("Double-trace scalar potential\n");
 #endif
 #ifdef LINEAR_DET
   node0_printf("Supersymmetric constraint on (det[plaq] - 1)\n");
@@ -296,6 +296,8 @@ int readin(int prompt) {
     // Konishi vacuum subtractions
     for (j = 0; j < N_K; j++)
       IF_OK status += get_f(stdin, prompt, "vevK", &par_buf.vevK[j]);
+    for (j = 0; j < N_K; j++)
+      IF_OK status += get_f(stdin, prompt, "vevS", &par_buf.vevS[j]);
 #endif
 
     // Maximum conjugate gradient iterations
@@ -412,6 +414,7 @@ int readin(int prompt) {
 #ifdef CORR
   for (j = 0; j < N_K; j++) {
     vevK[j] = par_buf.vevK[j];
+    vevS[j] = par_buf.vevS[j];
     // Will check positivity of volK to make sure it has been set
     volK[j] = -1.0;
   }

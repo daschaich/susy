@@ -35,7 +35,7 @@ typedef struct {
   char startfile[MAXFILENAME], savefile[MAXFILENAME];
 
 #ifdef CORR
-  double vevK[N_K];             // Konishi vacuum subtractions
+  double vevK[N_K], vevS[N_K];  // Konishi and SUGRA vacuum subtractions
 #endif
 
 #ifdef BILIN

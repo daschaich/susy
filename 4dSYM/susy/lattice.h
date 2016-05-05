@@ -179,7 +179,7 @@ EXTERN matrix *Ba[N_B][NUMLINK];
 EXTERN double *traceBB[N_K][NUMLINK][NUMLINK];
 
 // Ensemble averages and volume averages for subtracting
-EXTERN double vevK[N_K], volS[N_K], volK[N_K];
+EXTERN double vevK[N_K], vevS[N_K], volK[N_K], volS[N_K];
 
 // Structs for operators and correlators with either subtraction
 typedef struct {

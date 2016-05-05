@@ -90,12 +90,12 @@ void konishi() {
   // Now form the zero momentum projected operators (summing across nodes)
   FORALLSITES(i, s) {
     t = s->t;
-    for (a = XUP; a < NUMLINK; a++) {
+    FORALLDIR(a) {
       for (j = 0; j < N_K; j++) {
         OK[j][t] += traceBB[j][a][a][i];    // Konishi
 
         // Now SUGRA, averaged over 20 off-diagonal components
-        for (b = XUP; b < NUMLINK; b++) {
+        FORALLDIR(b) {
           if (a == b)
             continue;
           OS[j][t] += 0.05 * traceBB[j][a][b][i];
@@ -135,9 +135,9 @@ void konishi() {
                    OK[j][t] - vevK[j], OK[j][t] - volK[j]);
   }
   for (t = 0; t < nt; t++) {
-    for (j = 0; j < N_K; j++)     // Assume vanishing vev
+    for (j = 0; j < N_K; j++)
       node0_printf("SUGRA %d %d %.16g %.16g\n", t, j,
-                   OS[j][t], OS[j][t] - volS[j]);
+                   OS[j][t] - vevS[j], OS[j][t] - volS[j]);
   }
 
   for (j = 0; j < N_K; j++) {

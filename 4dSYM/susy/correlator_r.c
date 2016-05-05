@@ -145,7 +145,7 @@ void shift_ops(Kops *dat, Kops *temp, int dir) {
 // -----------------------------------------------------------------
 // Both Konishi and SUGRA correlators as functions of r
 // For gathering, all operators live in array of len = 4N_K
-// vevK[N_K] are Konishi ensemble averages; assume these vanish for SUGRA
+// vevK[N_K] and vevS[N_K] are Konishi and SUGRA ensemble averages
 // volK[N_K] and volS[N_K] are Konishi and SUGRA volume averages
 // Check to make sure the latter have been set by konishi()
 void correlator_r() {
@@ -202,7 +202,7 @@ void correlator_r() {
     for (j = 0; j < N_K; j++) {
       ops[i].OK[j][0] = -1.0 * vevK[j];
       ops[i].OK[j][1] = -1.0 * volK[j];
-      ops[i].OS[j][0] =  0.0;   // Assume vanishing SUGRA vevs
+      ops[i].OS[j][0] = -1.0 * vevS[j];
       ops[i].OS[j][1] = -1.0 * volS[j];
     }
   }
@@ -222,14 +222,14 @@ void correlator_r() {
 
   // Construct the operators for all definitions and subtractions
   FORALLSITES(i, s) {
-    for (a = XUP; a < NUMLINK; a++) {
+    FORALLDIR(a) {
       for (j = 0; j < N_K; j++) {
         for (sub = 0; sub < 2; sub++) {
           // First Konishi
           ops[i].OK[j][sub] += traceBB[j][a][a][i];
 
           // Now SUGRA, averaged over 20 off-diagonal components
-          for (b = XUP; b < NUMLINK; b++) {
+          FORALLDIR(b) {
             if (a == b)
               continue;
             ops[i].OS[j][sub] += 0.05 * traceBB[j][a][b][i];
