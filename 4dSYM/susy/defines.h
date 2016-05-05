@@ -22,15 +22,17 @@
 
 // -----------------------------------------------------------------
 // Susy stuff
-#define LINEAR_DET          // det-1 rather than |det-1|^2
-                            // |det-1|^2 is not actively tested!!!
-#define SV                  // Site/vector terms in action
-#define VP                  // Vector/plaquette terms in action
-#define QCLOSED             // Q-closed terms in action
-//#define DEBUG_CHECK         // Print lambdas, offsets, etc.
+//#define EIG_POT           // Single rather than double-trace scalar potential
+                          // Single-trace case is not actively tested!!!
+#define LINEAR_DET        // det-1 rather than |det-1|^2
+                          // |det-1|^2 is not actively tested!!!
+#define SV                // Site/vector terms in action
+#define VP                // Vector/plaquette terms in action
+#define QCLOSED           // Q-closed terms in action
+//#define DEBUG_CHECK       // Print lambdas, offsets, etc.
 
-#define NQLINK 28           // Number of offsets for Q-closed terms
-#define NTERMS 30           // Number of DbmP, DbpP F1Q and F2Q terms
+#define NQLINK 28         // Number of offsets for Q-closed terms
+#define NTERMS 30         // Number of DbmP, DbpP F1Q and F2Q terms
 
 // Tunable parameter in gauge action
 #define C2 1.0
