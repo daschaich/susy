@@ -39,11 +39,6 @@ void setup_offset();
 void setup_qclosed_offset();
 void setup_rhmc();
 
-// Reconstruct NxN fermion matrices from N^2 vectors
-void reconstruct(vector *in, matrix *out);
-void reconstruct_star(vector *in, matrix *out);
-void deconstruct(matrix *in, vector *out);
-
 // Helper routines for action and force computations
 void compute_plaqdet();
 void compute_Uinv();
@@ -91,10 +86,10 @@ void epsilon();
 
 // Basic Twist_Fermion and gauge field manipulations
 // May eventually move to libraries
-void dump_TF(Twist_Fermion *vec);
+void dump_TF(Twist_Fermion *in);
 void copy_TF(Twist_Fermion *src, Twist_Fermion *dest);
 void clear_TF(Twist_Fermion *dest);
-Real magsq_TF(Twist_Fermion *vec);
+Real magsq_TF(Twist_Fermion *in);
 complex TF_dot(Twist_Fermion *a, Twist_Fermion *b);
 void scalar_mult_sum_TF(Twist_Fermion *b, Real s, Twist_Fermion *c);
 void scalar_mult_add_TF(Twist_Fermion *a, Twist_Fermion *b, Real s,
@@ -102,7 +97,7 @@ void scalar_mult_add_TF(Twist_Fermion *a, Twist_Fermion *b, Real s,
 void scalar_mult_TF(Twist_Fermion *src, Real s, Twist_Fermion *dest);
 
 // Other routines in library_util.c that loop over all sites
-void gauge_field_copy_f(field_offset src, field_offset dest);
+void gauge_field_copy(field_offset src, field_offset dest);
 void shiftmat(matrix *dat, matrix *temp, int dir);
 
 // Random gauge transformation for testing gauge invariance

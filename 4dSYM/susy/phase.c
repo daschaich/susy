@@ -36,49 +36,64 @@ void matvec(complex *in, complex *out) {
   register site *s;
   int i, j, iter;
   msg_tag *mtag0 = NULL, *mtag1 = NULL, *mtag2;
-  vector *plaq23, *plaq13, *plaq12;
+  matrix *plaq23, *plaq13, *plaq12;
 
   // Copy complex vector into Twist_Fermion src
   // Each Twist_Fermion has Ndat = 16DIMF non-trivial complex components
   // !!! Need to gather & cycle over fields to ensure non-zero Q[i + 1] M Q[i]
+  // TODO: Can we rearrange this to avoid all the matrix manipulation?
   iter = 0;
   FORALLSITES(i, s) {
+    clear_TF(&(src[i]));
+    clear_mat(&(plaq_src[7][i]));
+    clear_mat(&(plaq_src[5][i]));
+    clear_mat(&(plaq_src[4][i]));
     for (j = 0; j < DIMF; j++) {
-      set_complex_equal(&(in[iter]), &(src[i].Fsite.c[j]));
+      c_scalar_mult_sum_mat(&(Lambda[j]), &(in[iter]), &(src[i].Fsite));
       iter++;
-      set_complex_equal(&(in[iter]), &(src[i].Flink[4].c[j]));
-      iter++;
-
-      set_complex_equal(&(in[iter]), &(src[i].Flink[0].c[j]));
-      iter++;
-      set_complex_equal(&(in[iter]), &(src[i].Fplaq[3].c[j]));  // 0, 4 --> 3
-      iter++;
-      set_complex_equal(&(in[iter]), &(src[i].Flink[1].c[j]));
-      iter++;
-      set_complex_equal(&(in[iter]), &(src[i].Fplaq[6].c[j]));  // 1, 4 --> 6
-      iter++;
-      set_complex_equal(&(in[iter]), &(src[i].Flink[2].c[j]));
-      iter++;
-      set_complex_equal(&(in[iter]), &(src[i].Fplaq[8].c[j]));  // 2, 4 --> 8
-      iter++;
-      set_complex_equal(&(in[iter]), &(src[i].Flink[3].c[j]));
-      iter++;
-      set_complex_equal(&(in[iter]), &(src[i].Fplaq[9].c[j]));  // 3, 4 --> 9
+      c_scalar_mult_sum_mat(&(Lambda[j]), &(in[iter]), &(src[i].Flink[4]));
       iter++;
 
-      set_complex_equal(&(in[iter]), &(src[i].Fplaq[0].c[j]));  // 0, 1 --> 0
+      c_scalar_mult_sum_mat(&(Lambda[j]), &(in[iter]), &(src[i].Flink[0]));
       iter++;
-      set_complex_equal(&(in[iter]), &(plaq_src[7][i].c[j]));   // 2, 3 --> 7
+      // 0, 4 --> 3
+      c_scalar_mult_sum_mat(&(Lambda[j]), &(in[iter]), &(src[i].Fplaq[3]));
+      iter++;
+      c_scalar_mult_sum_mat(&(Lambda[j]), &(in[iter]), &(src[i].Flink[1]));
+      iter++;
+      // 1, 4 --> 6
+      c_scalar_mult_sum_mat(&(Lambda[j]), &(in[iter]), &(src[i].Fplaq[6]));
+      iter++;
+      c_scalar_mult_sum_mat(&(Lambda[j]), &(in[iter]), &(src[i].Flink[2]));
+      iter++;
+      // 2, 4 --> 8
+      c_scalar_mult_sum_mat(&(Lambda[j]), &(in[iter]), &(src[i].Fplaq[8]));
+      iter++;
+      c_scalar_mult_sum_mat(&(Lambda[j]), &(in[iter]), &(src[i].Flink[3]));
+      iter++;
+      // 3, 4 --> 9
+      c_scalar_mult_sum_mat(&(Lambda[j]), &(in[iter]), &(src[i].Fplaq[9]));
       iter++;
 
-      set_complex_equal(&(in[iter]), &(src[i].Fplaq[1].c[j]));  // 0, 2 --> 1
+      // 0, 1 --> 0
+      c_scalar_mult_sum_mat(&(Lambda[j]), &(in[iter]), &(src[i].Fplaq[0]));
       iter++;
-      set_complex_equal(&(in[iter]), &(plaq_src[5][i].c[j]));   // 1, 3 --> 5
+      // 2, 3 --> 7
+      c_scalar_mult_sum_mat(&(Lambda[j]), &(in[iter]), &(plaq_src[7][i]));
       iter++;
 
-      set_complex_equal(&(in[iter]), &(src[i].Fplaq[2].c[j]));  // 0, 3 --> 2
+      // 0, 2 --> 1
+      c_scalar_mult_sum_mat(&(Lambda[j]), &(in[iter]), &(src[i].Fplaq[1]));
       iter++;
-      set_complex_equal(&(in[iter]), &(plaq_src[4][i].c[j]));   // 1, 2 --> 4
+      // 1, 3 --> 5
+      c_scalar_mult_sum_mat(&(Lambda[j]), &(in[iter]), &(plaq_src[5][i]));
+      iter++;
+
+      // 0, 3 --> 2
+      c_scalar_mult_sum_mat(&(Lambda[j]), &(in[iter]), &(src[i].Fplaq[2]));
+      iter++;
+      // 1, 2 --> 4
+      c_scalar_mult_sum_mat(&(Lambda[j]), &(in[iter]), &(plaq_src[4][i]));
       iter++;
     }
   }
@@ -86,20 +101,20 @@ void matvec(complex *in, complex *out) {
   // Gather plaq_src[7] (2, 3) from x - 0 - 1 (gather path 23),
   // plaq_src[5] (1, 3) from x - 0 - 2 (gather path 31)
   // and plaq_src[4] (1, 2) from x - 0 - 3 (gather path 35)
-  mtag0 = start_gather_field(plaq_src[7], sizeof(vector),
+  mtag0 = start_gather_field(plaq_src[7], sizeof(matrix),
                              23, EVENANDODD, gen_pt[0]);
-  mtag1 = start_gather_field(plaq_src[5], sizeof(vector),
+  mtag1 = start_gather_field(plaq_src[5], sizeof(matrix),
                              31, EVENANDODD, gen_pt[1]);
-  mtag2 = start_gather_field(plaq_src[4], sizeof(vector),
+  mtag2 = start_gather_field(plaq_src[4], sizeof(matrix),
                              35, EVENANDODD, gen_pt[2]);
 
   wait_gather(mtag0);
   wait_gather(mtag1);
   wait_gather(mtag2);
   FORALLSITES(i, s) {
-    vec_copy((vector *)(gen_pt[0][i]), &(src[i].Fplaq[7]));  // 2, 3
-    vec_copy((vector *)(gen_pt[1][i]), &(src[i].Fplaq[5]));  // 1, 3
-    vec_copy((vector *)(gen_pt[2][i]), &(src[i].Fplaq[4]));  // 1, 2
+    mat_copy((matrix *)(gen_pt[0][i]), &(src[i].Fplaq[7]));  // 2, 3
+    mat_copy((matrix *)(gen_pt[1][i]), &(src[i].Fplaq[5]));  // 1, 3
+    mat_copy((matrix *)(gen_pt[2][i]), &(src[i].Fplaq[4]));  // 1, 2
   }
   cleanup_gather(mtag0);
   cleanup_gather(mtag1);
@@ -124,15 +139,15 @@ void matvec(complex *in, complex *out) {
   // plaq_src[5] (1, 3) from x + 0 + 2 (gather path 30)
   // and plaq_src[4] (1, 2) from x + 0 + 3 (gather path 34)
   FORALLSITES(i, s) {
-    vec_copy(&(res[i].Fplaq[7]), &(plaq_src[7][i]));
-    vec_copy(&(res[i].Fplaq[5]), &(plaq_src[5][i]));
-    vec_copy(&(res[i].Fplaq[4]), &(plaq_src[4][i]));
+    mat_copy(&(res[i].Fplaq[7]), &(plaq_src[7][i]));
+    mat_copy(&(res[i].Fplaq[5]), &(plaq_src[5][i]));
+    mat_copy(&(res[i].Fplaq[4]), &(plaq_src[4][i]));
   }
-  mtag0 = start_gather_field(plaq_src[7], sizeof(vector),
+  mtag0 = start_gather_field(plaq_src[7], sizeof(matrix),
                              22, EVENANDODD, gen_pt[0]);
-  mtag1 = start_gather_field(plaq_src[5], sizeof(vector),
+  mtag1 = start_gather_field(plaq_src[5], sizeof(matrix),
                              30, EVENANDODD, gen_pt[1]);
-  mtag2 = start_gather_field(plaq_src[4], sizeof(vector),
+  mtag2 = start_gather_field(plaq_src[4], sizeof(matrix),
                              34, EVENANDODD, gen_pt[2]);
 
   wait_gather(mtag0);
@@ -140,45 +155,52 @@ void matvec(complex *in, complex *out) {
   wait_gather(mtag2);
   iter = 0;
   FORALLSITES(i, s) {
-    plaq23 = (vector *)(gen_pt[0][i]);
-    plaq13 = (vector *)(gen_pt[1][i]);
-    plaq12 = (vector *)(gen_pt[2][i]);
+    plaq23 = (matrix *)(gen_pt[0][i]);
+    plaq13 = (matrix *)(gen_pt[1][i]);
+    plaq12 = (matrix *)(gen_pt[2][i]);
     for (j = 0; j < DIMF; j++) {
-      set_complex_equal(&(res[i].Fsite.c[j]), &(out[iter]));
+      out[iter] = complextrace_nn(&(res[i].Fsite), &(Lambda[j]));
       iter++;
-      set_complex_equal(&(res[i].Flink[4].c[j]), &(out[iter]));
-      iter++;
-
-      set_complex_equal(&(res[i].Flink[0].c[j]), &(out[iter]));
-      iter++;
-      set_complex_equal(&(res[i].Fplaq[3].c[j]), &(out[iter])); // 0, 4 --> 3
-      iter++;
-      set_complex_equal(&(res[i].Flink[1].c[j]), &(out[iter]));
-      iter++;
-      set_complex_equal(&(res[i].Fplaq[6].c[j]), &(out[iter])); // 1, 4 --> 6
-      iter++;
-      set_complex_equal(&(res[i].Flink[2].c[j]), &(out[iter]));
-      iter++;
-      set_complex_equal(&(res[i].Fplaq[8].c[j]), &(out[iter])); // 2, 4 --> 8
-      iter++;
-      set_complex_equal(&(res[i].Flink[3].c[j]), &(out[iter]));
-      iter++;
-      set_complex_equal(&(res[i].Fplaq[9].c[j]), &(out[iter])); // 3, 4 --> 9
+      out[iter] = complextrace_nn(&(res[i].Flink[4]), &(Lambda[j]));
       iter++;
 
-      set_complex_equal(&(res[i].Fplaq[0].c[j]), &(out[iter])); // 0, 1 --> 0
+      out[iter] = complextrace_nn(&(res[i].Flink[0]), &(Lambda[j]));
       iter++;
-      set_complex_equal(&(plaq23->c[j]), &(out[iter]));
+      // 0, 4 --> 3
+      out[iter] = complextrace_nn(&(res[i].Fplaq[3]), &(Lambda[j]));
+      iter++;
+      out[iter] = complextrace_nn(&(res[i].Flink[1]), &(Lambda[j]));
+      iter++;
+      // 1, 4 --> 6
+      out[iter] = complextrace_nn(&(res[i].Fplaq[6]), &(Lambda[j]));
+      iter++;
+      out[iter] = complextrace_nn(&(res[i].Flink[2]), &(Lambda[j]));
+      iter++;
+      // 2, 4 --> 8
+      out[iter] = complextrace_nn(&(res[i].Fplaq[8]), &(Lambda[j]));
+      iter++;
+      out[iter] = complextrace_nn(&(res[i].Flink[3]), &(Lambda[j]));
+      iter++;
+      // 3, 4 --> 9
+      out[iter] = complextrace_nn(&(res[i].Fplaq[9]), &(Lambda[j]));
       iter++;
 
-      set_complex_equal(&(res[i].Fplaq[1].c[j]), &(out[iter])); // 0, 2 --> 1
+      // 0, 1 --> 0
+      out[iter] = complextrace_nn(&(res[i].Fplaq[0]), &(Lambda[j]));
       iter++;
-      set_complex_equal(&(plaq13->c[j]), &(out[iter]));
+      out[iter] = complextrace_nn(plaq23, &(Lambda[j]));
       iter++;
 
-      set_complex_equal(&(res[i].Fplaq[2].c[j]), &(out[iter])); // 0, 3 --> 2
+      // 0, 2 --> 1
+      out[iter] = complextrace_nn(&(res[i].Fplaq[1]), &(Lambda[j]));
       iter++;
-      set_complex_equal(&(plaq12->c[j]), &(out[iter]));
+      out[iter] = complextrace_nn(plaq13, &(Lambda[j]));
+      iter++;
+
+      // 0, 3 --> 2
+      out[iter] = complextrace_nn(&(res[i].Fplaq[2]), &(Lambda[j]));
+      iter++;
+      out[iter] = complextrace_nn(plaq12, &(Lambda[j]));
       iter++;
     }
   }

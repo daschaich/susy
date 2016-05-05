@@ -16,9 +16,9 @@
 // -----------------------------------------------------------------
 // Twist_Fermion struct
 typedef struct {
-  vector Fsite;
-  vector Flink[NUMLINK];
-  vector Fplaq[NPLAQ];
+  matrix Fsite;
+  matrix Flink[NUMLINK];
+  matrix Fplaq[NPLAQ];
 } Twist_Fermion;
 // -----------------------------------------------------------------
 
@@ -44,8 +44,7 @@ typedef struct {
 
   // Momentum matrices in each direction are just U(N) matrices
   // as opposed to anti-hermitian matrices
-  matrix mom[NUMLINK];
-  matrix f_U[NUMLINK];        // Force matrices
+  matrix mom[NUMLINK], f_U[NUMLINK];        // Force matrices
 
   // Boundary conditions -- many unused
   Real bc1[2 * NUMLINK], bc2[2 * NUMLINK][2 * NUMLINK];
@@ -149,7 +148,7 @@ EXTERN complex *tempZW[NUMLINK][NUMLINK];
 EXTERN matrix *DmuUmu, *Fmunu[NPLAQ];
 EXTERN matrix *Uinv[NUMLINK], *Udag_inv[NUMLINK], *UpsiU[NUMLINK];
 
-// Temporary vectors, matrices and Twist_Fermion
+// Temporary matrices and Twist_Fermion
 EXTERN matrix *tempmat, *tempmat2, *staple;
 EXTERN Twist_Fermion *tempTF;
 

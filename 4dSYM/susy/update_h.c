@@ -893,7 +893,7 @@ void pot_force(matrix *eta, matrix *psi[NUMLINK], int sign) {
 // Assemble fermion contributions to gauge link force,
 //   f_U = Adj(Ms).D_U M(U, Ub).s - Adj[Adj(Ms).D_Ub M(U, Ub).s]
 // "s" is sol while "Ms" is psol
-// Copy these into persistent vectors for easier gathering
+// Copy these into persistent matrices for easier gathering
 // Use tempmat, tempmat2, UpsiU, Tr_Uinv,
 // tr_dest and Ddet[012] for temporary storage
 // (many through calls to detF)
@@ -917,15 +917,15 @@ void assemble_fermion_force(Twist_Fermion *sol, Twist_Fermion *psol) {
   // We can reuse "src" and "dest" for this storage,
   // corresponding to "sol" and "psol", respectively
   FORALLSITES(i, s) {
-    reconstruct(&(sol[i].Fsite), &(site_src[i]));
-    reconstruct_star(&(psol[i].Fsite), &(site_dest[i]));
+    mat_copy(&(sol[i].Fsite), &(site_src[i]));
+    adjoint(&(psol[i].Fsite), &(site_dest[i]));
     FORALLDIR(mu) {
-      reconstruct(&(sol[i].Flink[mu]), &(link_src[mu][i]));
-      reconstruct_star(&(psol[i].Flink[mu]), &(link_dest[mu][i]));
+      mat_copy(&(sol[i].Flink[mu]), &(link_src[mu][i]));
+      adjoint(&(psol[i].Flink[mu]), &(link_dest[mu][i]));
     }
     for (mu = 0; mu < NPLAQ; mu++) {
-      reconstruct(&(sol[i].Fplaq[mu]), &(plaq_src[mu][i]));
-      reconstruct_star(&(psol[i].Fplaq[mu]), &(plaq_dest[mu][i]));
+      mat_copy(&(sol[i].Fplaq[mu]), &(plaq_src[mu][i]));
+      adjoint(&(psol[i].Fplaq[mu]), &(plaq_dest[mu][i]));
     }
   }
 
@@ -1014,7 +1014,7 @@ void assemble_fermion_force(Twist_Fermion *sol, Twist_Fermion *psol) {
             scalar_mult_matrix(&(plaq_dest[next][i]), -1.0, &tmat);
           }                 // Suppress compiler error
           else
-            mat_copy_f(&(plaq_dest[next][i]), &tmat);
+            mat_copy(&(plaq_dest[next][i]), &tmat);
           mult_nn(&tmat, &(link_src[b][i]), &(mat[gather][i]));
         }
         tag1[gather] = start_gather_field(mat[gather], sizeof(matrix),
@@ -1086,7 +1086,7 @@ void assemble_fermion_force(Twist_Fermion *sol, Twist_Fermion *psol) {
             scalar_mult_matrix(&(plaq_src[next][i]), -1.0, &tmat);
           }                 // Suppress compiler error
           else
-            mat_copy_f(&(plaq_src[next][i]), &tmat);
+            mat_copy(&(plaq_src[next][i]), &tmat);
           mult_nn(&tmat, &(link_dest[b][i]), &(mat[gather][i]));
         }
         tag1[gather] = start_gather_field(mat[gather], sizeof(matrix),
@@ -1150,7 +1150,7 @@ void assemble_fermion_force(Twist_Fermion *sol, Twist_Fermion *psol) {
 // -----------------------------------------------------------------
 // Update the momenta with the fermion force
 // Assume that the multiCG has been run (updating the adjoint links),
-// with the solution vectors in sol[j]
+// with the solution in sol[j]
 // Accumulate f_U for each pole into fullforce, add to momenta
 // Use fullforce-->Fmunu and tempTF for temporary storage
 // (Calls assemble_fermion_force, which uses many more temporaries)
@@ -1196,7 +1196,7 @@ double fermion_force(Real eps, Twist_Fermion *src, Twist_Fermion **sol) {
       FORALLSITES(i, s) {
         // Take adjoint but don't negate yet...
         add_adj_matrix(&(fullforce[mu][i]), &(s->f_U[mu]),
-                             &(fullforce[mu][i]));
+                       &(fullforce[mu][i]));
 #ifdef FORCE_DEBUG
 //      if (s->x == 0 && s->y == 0 && s->z == 0 && s->t == 0 && mu == 3) {
 //        printf("Fermion force mu=%d on site (%d, %d, %d, %d)\n",

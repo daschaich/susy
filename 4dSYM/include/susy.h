@@ -25,8 +25,7 @@
 #endif
 
 typedef struct { fcomplex e[NCOL][NCOL]; } fmatrix;
-typedef struct { fcomplex c[NCOL]; } fvector_f;
-typedef struct { fcomplex c[DIMF]; } fvector;
+typedef struct { fcomplex c[NCOL]; } fvector;
 
 // Anti-hermitian matrices for general NCOL
 typedef struct {
@@ -35,8 +34,7 @@ typedef struct {
 } fanti_hermitmat;
 
 typedef struct { dcomplex e[NCOL][NCOL]; } dmatrix;
-typedef struct { dcomplex c[NCOL]; } dvector_f;
-typedef struct { dcomplex c[DIMF]; } dvector;
+typedef struct { dcomplex c[NCOL]; } dvector;
 typedef struct {
   dcomplex m[NCOL * (NCOL - 1) / 2];
   double im_diag[NCOL];
@@ -44,13 +42,11 @@ typedef struct {
 
 #if (PRECISION == 1)
 #define matrix    fmatrix
-#define vector_f    fvector_f
-#define vector      fvector
+#define vector    fvector
 #define anti_hermitmat  fanti_hermitmat
 #else
 #define matrix    dmatrix
-#define vector_f    dvector_f
-#define vector      dvector
+#define vector    dvector
 #define anti_hermitmat  danti_hermitmat
 #endif
 
@@ -66,15 +62,18 @@ typedef struct { complex e[2][2]; } su2_matrix;
 
 // -----------------------------------------------------------------
 // Subroutine definitions
-// Fundamental rep vector operations
+// Vector operations
 // In file clearvec.c
-void clearvec_f(vector_f *v);
+void clearvec(vector *v);
 // -----------------------------------------------------------------
 
 
 
 // -----------------------------------------------------------------
-// Fundamental rep matrix operations (including anti-hermitian matrices)
+// Matrix operations
+// In file dumpmat.c
+void dumpmat(matrix *a);
+
 // In file clear_mat.c
 void clear_mat(matrix *c);
 
@@ -82,7 +81,7 @@ void clear_mat(matrix *c);
 complex trace(matrix *a);
 
 // In file realtr.c
-Real realtrace_nn_f(matrix *a, matrix *b);
+Real realtrace_nn(matrix *a, matrix *b);
 Real realtrace(matrix *a, matrix *b);
 
 // In file complextr.c
@@ -91,10 +90,11 @@ complex complextrace_an(matrix *a, matrix *b);
 complex complextrace_na(matrix *a, matrix *b);
 
 // b <-- a, in file mat_copy.c
-void mat_copy_f(matrix *a, matrix *b);
+void mat_copy(matrix *a, matrix *b);
 
-// b <-- adag, in file adjoint.c
+// b <-- (+/-)adag, in file adjoint.c
 void adjoint(matrix *a, matrix *b);
+void neg_adjoint(matrix *a, matrix *b);
 
 // In file addmat.c
 void sum_matrix(matrix *b, matrix *c);
@@ -151,9 +151,6 @@ void c_scalar_mult_sum_mat_adj(matrix *b, complex *s, matrix *c);
 // In file cs_m_s_mat.c
 void c_scalar_mult_dif_mat(matrix *b, complex *s, matrix *c);
 
-// In file dumpmat.c
-void dumpmat(matrix *m);
-
 // In file m_mat_nn.c
 void mult_nn_sum(matrix *a, matrix *b, matrix *c);
 void mult_nn_dif(matrix *a, matrix *b, matrix *c);
@@ -188,7 +185,7 @@ void scalar_mult_an(matrix *a, matrix *b, Real s, matrix *c);
 
 
 // -----------------------------------------------------------------
-// Relate fundamental matrices and anti-hermitian matrices
+// Anti-hermitian matrix routines
 // In file make_ahmat.c
 void make_anti_hermitian(matrix *m, anti_hermitmat *ah);
 
@@ -203,45 +200,6 @@ void compress_anti_hermitian(matrix *m, anti_hermitmat *ah);
 
 // In file dump_ahmat.c
 void dump_ahmat(anti_hermitmat *ahm);
-// -----------------------------------------------------------------
-
-
-
-// -----------------------------------------------------------------
-// Fermion rep vector operations
-// In file dumpvec.c
-void dumpvec(vector *v);
-
-// In file clearvec.c
-void clearvec(vector *v);
-
-// In file msq_vec.c
-Real magsq_vec(vector *v);
-
-// In file vec_copy.c
-void vec_copy(vector *a, vector *b);
-
-// In file rdot.c
-Real rdot(vector *a, vector *b);
-
-// In file dot.c
-complex dot(vector *a, vector *b);
-
-// In file addvec.c
-void add_vector(vector *a, vector *b, vector *c);
-
-// In file subvec.c
-void sub_vector(vector *a, vector *b, vector *c);
-
-// In file s_m_vec.c
-void scalar_mult_vector(vector *src, Real s, vector *c);
-
-// In file s_m_a_vec.c
-void scalar_mult_sum_vector(vector *b, Real s, vector *c);
-void scalar_mult_add_vector(vector *a, vector *b, Real s, vector *c);
-
-// In file s_m_s_vec.c
-void scalar_mult_dif_vector(vector *b, Real s, vector *c);
 // -----------------------------------------------------------------
 
 

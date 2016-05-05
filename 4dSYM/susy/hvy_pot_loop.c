@@ -60,7 +60,7 @@ void hvy_pot_loop(int do_det) {
           if (do_det == 1)
             det_project(&(tempmat[i]), &tmat);
           else
-            mat_copy_f(&(tempmat[i]), &tmat);
+            mat_copy(&(tempmat[i]), &tmat);
 
           tc = trace(&tmat);
           wloop += tc.real;

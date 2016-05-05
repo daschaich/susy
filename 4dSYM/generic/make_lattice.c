@@ -27,7 +27,7 @@ void make_lattice() {
   for (i = 0; i < N_POINTERS; i++) {
     gen_pt[i] = malloc(sites_on_node * sizeof(char *));
     if (gen_pt[i] == NULL) {
-      printf("node%d: no room for pointer vector\n", this_node);
+      printf("node%d: no room for pointer array\n", this_node);
       terminate(1);
     }
   }

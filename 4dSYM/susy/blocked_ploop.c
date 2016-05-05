@@ -22,7 +22,7 @@ void blocked_ploop(int Nsmear, int block) {
 
   // Copy temporal links to tempmat
   FORALLSITES(i, s)
-    mat_copy_f(&(s->link[TUP]), &(tempmat[i]));
+    mat_copy(&(s->link[TUP]), &(tempmat[i]));
 
   // Compute the bl-strided Polyakov loop "at" ALL the sites
   // on the first bl = 2^block timeslices
@@ -39,7 +39,7 @@ void blocked_ploop(int Nsmear, int block) {
         continue;
       mat = (matrix *)gen_pt[0][i];
       mult_nn(&(tempmat[i]), mat, &(tempmat2[i]));
-      mat_copy_f(&(tempmat2[i]), &(tempmat[i]));
+      mat_copy(&(tempmat2[i]), &(tempmat[i]));
     }
     cleanup_general_gather(tag);
   }

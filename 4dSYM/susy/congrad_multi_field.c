@@ -2,10 +2,10 @@
 // Multi-mass conjugate gradient algorithm a la B. Jegerlehner
 // The number of masses is runtime input Norder
 // shift[Norder] is the array of mass values, set up in setup_rhmc.c
-// BEWARE: The temporary vector pm[0] is never malloced or used
+// BEWARE: The temporary TF pm[0] is never malloced or used
 
 // At least for now we hard-code a zero initial guess
-// We check all vectors for convergence and quit doing the converged ones
+// We check all psi for convergence and quit doing the converged ones
 
 // In this version of the code, all the scalars are real because M = Ddag D
 //#define CG_DEBUG
@@ -17,7 +17,7 @@
 // -----------------------------------------------------------------
 // Return number of iterations
 // src is where the source is created
-// psim[Norder] are working vectors for the conjugate gradient
+// psim[Norder] are working TFs for the conjugate gradient
 // MaxCG is the maximum number of iterations per restart
 // RsdCG is the target residual, normalized as sqrt(r * r) / sqrt(src * src)
 // size_r is the final obtained residual, rsq < rsqmin * source_norm
@@ -177,7 +177,7 @@ int congrad_multi_field(Twist_Fermion *src, Twist_Fermion **psim,
         if (rsqj <= rsqstop) {
           converged[j] = 1;
 #ifdef CG_DEBUG
-          node0_printf(" vector %d converged in %d steps, rsq = %.4g\n",
+          node0_printf(" psi%d converged in %d steps, rsq = %.4g\n",
                        j, N_iter, rsqj);
 #endif
         }

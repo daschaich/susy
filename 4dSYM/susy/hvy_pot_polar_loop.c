@@ -25,7 +25,7 @@ void hvy_pot_polar_loop() {
       // To be multiplied together after projecting
       // !!! Overwrites links
       polar(&(s->link[mu]), &tmat, &tmat2);
-      mat_copy_f(&tmat, &(s->link[mu]));
+      mat_copy(&tmat, &(s->link[mu]));
     }
   }
 

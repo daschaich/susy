@@ -44,7 +44,7 @@ void staple_hyp(int dir, int dir2, matrix *lnk1,
   // Finish lower staple
   FORALLSITES(i, s) {
     mult_nn(&(tempmat[i]), (matrix *)gen_pt[0][i], &tmat1);
-    mat_copy_f(&tmat1, &(tempmat[i]));
+    mat_copy(&tmat1, &(tempmat[i]));
   }
 
   // Gather staple from direction -dir2 to "home" site
@@ -202,7 +202,7 @@ void block_hyp() {
 
   FORALLDIR(dir) {
     FORALLSITES(i, s)
-      mat_copy_f(&(s->link[dir]), &(thin_link[dir][i]));
+      mat_copy(&(s->link[dir]), &(thin_link[dir][i]));
   }
 
   block_hyp1();
@@ -211,7 +211,7 @@ void block_hyp() {
 
   FORALLDIR(dir) {
     FORALLSITES(i, s)
-      mat_copy_f(&(smeared_link[dir][i]), &(s->link[dir]));
+      mat_copy(&(smeared_link[dir][i]), &(s->link[dir]));
   }
 }
 // -----------------------------------------------------------------

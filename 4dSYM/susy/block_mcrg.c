@@ -30,7 +30,7 @@ void block_mcrg(int block) {
   // Overwrite original links
   FORALLSITES(i, s) {
     FORALLDIR(dir)
-      mat_copy_f(&(s->mom[dir]), &(s->link[dir]));
+      mat_copy(&(s->mom[dir]), &(s->link[dir]));
   }
 }
 // -----------------------------------------------------------------

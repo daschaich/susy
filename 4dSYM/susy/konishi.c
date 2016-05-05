@@ -52,11 +52,11 @@ void compute_Ba() {
   FORALLDIR(a) {
     FORALLDIR(b) {
       FORALLSITES(i, s) {
-        traceBB[0][a][b][i] = realtrace_nn_f(&(Ba[0][a][i]), &(Ba[0][b][i]));
-        traceBB[2][a][b][i] = realtrace_nn_f(&(Ba[1][a][i]), &(Ba[1][b][i]));
+        traceBB[0][a][b][i] = realtrace_nn(&(Ba[0][a][i]), &(Ba[0][b][i]));
+        traceBB[2][a][b][i] = realtrace_nn(&(Ba[1][a][i]), &(Ba[1][b][i]));
 
-        traceBB[1][a][b][i] = realtrace_nn_f(&(Ba[0][a][i]), &(Ba[1][b][i]));
-        traceBB[1][a][b][i] += realtrace_nn_f(&(Ba[1][a][i]), &(Ba[0][b][i]));
+        traceBB[1][a][b][i] = realtrace_nn(&(Ba[0][a][i]), &(Ba[1][b][i]));
+        traceBB[1][a][b][i] += realtrace_nn(&(Ba[1][a][i]), &(Ba[0][b][i]));
         traceBB[1][a][b][i] *= 0.5;
       }
     }

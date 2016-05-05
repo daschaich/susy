@@ -830,26 +830,25 @@ void potLtoS(matrix *src[NUMLINK], matrix *dest) {
 void fermion_op(Twist_Fermion *src, Twist_Fermion *dest, int sign) {
   register int i, mu;
   register site *s;
-  matrix tmat;
 
-  // Copy src TwistFermion into fieldwise site, link and plaq fermions
-  // Overwrite all of the latter
+  // Copy src TwistFermion into fieldwise site, link and plaq fermions,
+  // overwriting all of the latter
   if (sign == 1) {
     FORALLSITES(i, s) {
-      reconstruct(&(src[i].Fsite), &(site_src[i]));
+      mat_copy(&(src[i].Fsite), &(site_src[i]));
       FORALLDIR(mu)
-        reconstruct(&(src[i].Flink[mu]), &(link_src[mu][i]));
+        mat_copy(&(src[i].Flink[mu]), &(link_src[mu][i]));
       for (mu = 0; mu < NPLAQ; mu++)
-        reconstruct(&(src[i].Fplaq[mu]), &(plaq_src[mu][i]));
+        mat_copy(&(src[i].Fplaq[mu]), &(plaq_src[mu][i]));
     }
   }
   else if (sign == -1) {
     FORALLSITES(i, s) {
-      reconstruct_star(&(src[i].Fsite), &(site_src[i]));
+      adjoint(&(src[i].Fsite), &(site_src[i]));
       FORALLDIR(mu)
-        reconstruct_star(&(src[i].Flink[mu]), &(link_src[mu][i]));
+        adjoint(&(src[i].Flink[mu]), &(link_src[mu][i]));
       for (mu = 0; mu < NPLAQ; mu++)
-        reconstruct_star(&(src[i].Fplaq[mu]), &(plaq_src[mu][i]));
+        adjoint(&(src[i].Fplaq[mu]), &(plaq_src[mu][i]));
     }
   }
   else {
@@ -861,8 +860,8 @@ void fermion_op(Twist_Fermion *src, Twist_Fermion *dest, int sign) {
 
   // Assemble separate routines for each term in the fermion operator
 #ifdef VP
-  Dplus(link_src, plaq_dest);             // Initializes plaq_dest
-  Dminus(plaq_src, link_dest);            // Initializes link_dest
+  Dplus(link_src, plaq_dest);             // Overwrites plaq_dest
+  Dminus(plaq_src, link_dest);            // Overwrites link_dest
 #endif
 
 #ifdef SV
@@ -878,7 +877,7 @@ void fermion_op(Twist_Fermion *src, Twist_Fermion *dest, int sign) {
   if (doB)
     potStoL(link_dest);                   // Adds to link_dest
 
-  DbminusLtoS(link_src, site_dest);       // Initializes site_dest
+  DbminusLtoS(link_src, site_dest);       // Overwrites site_dest
 
   // Link-to-site plaquette determinant contribution if G is non-zero
   if (doG)
@@ -897,24 +896,20 @@ void fermion_op(Twist_Fermion *src, Twist_Fermion *dest, int sign) {
   // Copy local plaquette, link and site fermions into dest TwistFermion
   if (sign == 1) {
     FORALLSITES(i, s) {
-      deconstruct(&(site_dest[i]), &(dest[i].Fsite));
+      mat_copy(&(site_dest[i]), &(dest[i].Fsite));
       FORALLDIR(mu)
-        deconstruct(&(link_dest[mu][i]), &(dest[i].Flink[mu]));
+        mat_copy(&(link_dest[mu][i]), &(dest[i].Flink[mu]));
       for (mu = 0; mu < NPLAQ; mu++)
-        deconstruct(&(plaq_dest[mu][i]), &(dest[i].Fplaq[mu]));
+        mat_copy(&(plaq_dest[mu][i]), &(dest[i].Fplaq[mu]));
     }
   }
   else if (sign == -1) {    // Both negate and conjugate
     FORALLSITES(i, s) {
-      deconstruct_star(&(site_dest[i]), &(dest[i].Fsite));
-      FORALLDIR(mu) {
-        adjoint(&(link_dest[mu][i]), &tmat);
-        deconstruct(&tmat, &(dest[i].Flink[mu]));
-      }
-      for (mu = 0; mu < NPLAQ; mu++) {
-        adjoint(&(plaq_dest[mu][i]), &tmat);
-        deconstruct(&tmat, &(dest[i].Fplaq[mu]));
-      }
+      neg_adjoint(&(site_dest[i]), &(dest[i].Fsite));
+      FORALLDIR(mu)
+        neg_adjoint(&(link_dest[mu][i]), &(dest[i].Flink[mu]));
+      for (mu = 0; mu < NPLAQ; mu++)
+        neg_adjoint(&(plaq_dest[mu][i]), &(dest[i].Fplaq[mu]));
     }
   }
 }

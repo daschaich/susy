@@ -88,7 +88,7 @@ void hvy_pot(int do_det) {
   for (t_dist = 1; t_dist <= MAX_T; t_dist++) {
     if (t_dist == 1) {
       FORALLSITES(i, s)
-        mat_copy_f(&(s->link[TUP]), &(staple[i]));
+        mat_copy(&(s->link[TUP]), &(staple[i]));
     }
     else {
       mtag = start_gather_field(staple, sizeof(matrix),
@@ -100,7 +100,7 @@ void hvy_pot(int do_det) {
       }
       cleanup_gather(mtag);
       FORALLSITES(i, s)
-        mat_copy_f(&(tempmat2[i]), &(staple[i]));
+        mat_copy(&(tempmat2[i]), &(staple[i]));
     }
 
     for (x_dist = 0; x_dist <= MAX_X; x_dist++) {
@@ -111,7 +111,7 @@ void hvy_pot(int do_det) {
       for (y_dist = y_start; y_dist <= MAX_X; y_dist++) {
         // Gather staple to tempmat along spatial offset, using tempmat2
         FORALLSITES(i, s)
-          mat_copy_f(&(staple[i]), &(tempmat[i]));
+          mat_copy(&(staple[i]), &(tempmat[i]));
         for (j = 0; j < x_dist; j++)
           shiftmat(tempmat, tempmat2, goffset[XUP]);
         for (j = 0; j < y_dist; j++)
@@ -175,7 +175,7 @@ void hvy_pot(int do_det) {
             if (do_det == 1)
               det_project(&tmat, &tmat2);
             else
-              mat_copy_f(&tmat, &tmat2);
+              mat_copy(&tmat, &tmat2);
 
             tc = trace(&tmat2);
             wloop += tc.real;

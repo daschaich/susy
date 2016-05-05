@@ -22,8 +22,8 @@ void blocked_staple(int stride, int dir, int dir2) {
 
   // Copy links to tempmat and tempmat2 to be shifted
   FORALLSITES(i, s) {
-    mat_copy_f(&(s->mom[dir]), &(tempmat[i]));
-    mat_copy_f(&(s->mom[dir2]), &(tempmat2[i]));
+    mat_copy(&(s->mom[dir]), &(tempmat[i]));
+    mat_copy(&(s->mom[dir2]), &(tempmat2[i]));
   }
 
   // Get mom[dir2] from dir and mom[dir] from dir2, both with stride
@@ -72,7 +72,7 @@ void blocked_stout(int Nsmear, double alpha, int bl) {
     FORALLSITES(i, s) {
       // Unmodified links -- no projection or determinant division
       for (dir = XUP; dir < NUMLINK; dir++)
-        mat_copy_f(&(s->link[dir]), &(s->mom[dir]));
+        mat_copy(&(s->link[dir]), &(s->mom[dir]));
     }
 
     for (dir = XUP; dir < NUMLINK; dir++) {
@@ -130,7 +130,7 @@ void blocked_APE(int Nsmear, double alpha, int project, int bl) {
           polar(&(s->link[dir]), &(s->mom[dir]), &tmat);
         }
         else
-          mat_copy_f(&(s->link[dir]), &(s->mom[dir]));
+          mat_copy(&(s->link[dir]), &(s->mom[dir]));
       }
     }
 
@@ -150,7 +150,7 @@ void blocked_APE(int Nsmear, double alpha, int project, int bl) {
 //        if (project == 1)
 //          det_project(&(staple[i]), &tmat2);
 //        else
-          mat_copy_f(&(staple[i]), &tmat2);
+          mat_copy(&(staple[i]), &tmat2);
 
         scalar_mult_add_matrix(&(s->link[dir]), &tmat2, tr, &tmat);
         scalar_mult_matrix(&tmat, tr2, &(s->link[dir]));

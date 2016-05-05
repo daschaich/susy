@@ -39,7 +39,7 @@ void random_gauge_trans(Twist_Fermion *TF) {
   // Confirm unitarity or check invariance when Gmat = I
 //  mult_na(&Gmat, &Gmat, &tmat);
 //  dumpmat(&tmat);
-//  mat_copy_f(&tmat, &Gmat);
+//  mat_copy(&tmat, &Gmat);
 
   // Left side of local eta
   clear_mat(&etamat);
@@ -74,7 +74,7 @@ void random_gauge_trans(Twist_Fermion *TF) {
   // Left side of local links and psis; right side of local chis
   for (a = XUP; a < NUMLINK; a++) {
     mult_nn(&Gmat, &(lattice[s].link[a]), &tmat);
-    mat_copy_f(&tmat, &(lattice[s].link[a]));
+    mat_copy(&tmat, &(lattice[s].link[a]));
 
     clear_mat(&(psimat[a]));
     for (j = 0; j < DIMF; j++) {
@@ -108,7 +108,7 @@ void random_gauge_trans(Twist_Fermion *TF) {
   // TODO: Presumably we can convert this to a loop...
   s = node_index(x - 1, y, z, t);
   mult_na(&(lattice[s].link[0]), &Gmat, &tmat);
-  mat_copy_f(&tmat, &(lattice[s].link[0]));
+  mat_copy(&tmat, &(lattice[s].link[0]));
   clear_mat(&(psimat[0]));
   for (j = 0; j < DIMF; j++) {
     mult_na(&(Lambda[j]), &Gmat, &tmat);
@@ -123,7 +123,7 @@ void random_gauge_trans(Twist_Fermion *TF) {
 
   s = node_index(x, y - 1, z, t);
   mult_na(&(lattice[s].link[1]), &Gmat, &tmat);
-  mat_copy_f(&tmat, &(lattice[s].link[1]));
+  mat_copy(&tmat, &(lattice[s].link[1]));
   clear_mat(&(psimat[1]));
   for (j = 0; j < DIMF; j++) {
     mult_na(&(Lambda[j]), &Gmat, &tmat);
@@ -138,7 +138,7 @@ void random_gauge_trans(Twist_Fermion *TF) {
 
   s = node_index(x, y, z - 1, t);
   mult_na(&(lattice[s].link[2]), &Gmat, &tmat);
-  mat_copy_f(&tmat, &(lattice[s].link[2]));
+  mat_copy(&tmat, &(lattice[s].link[2]));
   clear_mat(&(psimat[2]));
   for (j = 0; j < DIMF; j++) {
     mult_na(&(Lambda[j]), &Gmat, &tmat);
@@ -153,7 +153,7 @@ void random_gauge_trans(Twist_Fermion *TF) {
 
   s = node_index(x, y, z, t - 1);
   mult_na(&(lattice[s].link[3]), &Gmat, &tmat);
-  mat_copy_f(&tmat, &(lattice[s].link[3]));
+  mat_copy(&tmat, &(lattice[s].link[3]));
   clear_mat(&(psimat[3]));
   for (j = 0; j < DIMF; j++) {
     mult_na(&(Lambda[j]), &Gmat, &tmat);
@@ -168,7 +168,7 @@ void random_gauge_trans(Twist_Fermion *TF) {
 
   s = node_index(x + 1, y + 1, z + 1, t + 1);
   mult_na(&(lattice[s].link[4]), &Gmat, &tmat);
-  mat_copy_f(&tmat, &(lattice[s].link[4]));
+  mat_copy(&tmat, &(lattice[s].link[4]));
   clear_mat(&(psimat[4]));
   for (j = 0; j < DIMF; j++) {
     mult_na(&(Lambda[j]), &Gmat, &tmat);

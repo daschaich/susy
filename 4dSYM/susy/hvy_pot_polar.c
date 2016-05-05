@@ -46,14 +46,14 @@ void hvy_pot_polar() {
    // To be multiplied together after projecting
    // !!! Overwrites links
    polar(&(s->link[TUP]), &tmat, &tmat2);
-   mat_copy_f(&tmat, &(s->link[TUP]));
+   mat_copy(&tmat, &(s->link[TUP]));
   }
 
   // Use staple to hold product of t_dist links at each (x, y, z)
   for (t_dist = 1; t_dist <= MAX_T; t_dist++) {
     if (t_dist == 1) {
       FORALLSITES(i, s)
-        mat_copy_f(&(s->link[TUP]), &(staple[i]));
+        mat_copy(&(s->link[TUP]), &(staple[i]));
     }
     else {
       mtag = start_gather_field(staple, sizeof(matrix),
@@ -65,7 +65,7 @@ void hvy_pot_polar() {
       }
       cleanup_gather(mtag);
       FORALLSITES(i, s)
-        mat_copy_f(&(tempmat2[i]), &(staple[i]));
+        mat_copy(&(tempmat2[i]), &(staple[i]));
     }
 
     for (x_dist = 0; x_dist <= MAX_X; x_dist++) {
@@ -76,7 +76,7 @@ void hvy_pot_polar() {
       for (y_dist = y_start; y_dist <= MAX_X; y_dist++) {
         // Gather staple to tempmat along spatial offset, using tempmat2
         FORALLSITES(i, s)
-          mat_copy_f(&(staple[i]), &(tempmat[i]));
+          mat_copy(&(staple[i]), &(tempmat[i]));
         for (j = 0; j < x_dist; j++)
           shiftmat(tempmat, tempmat2, goffset[XUP]);
         for (j = 0; j < y_dist; j++)

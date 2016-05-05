@@ -134,7 +134,7 @@ void stout_smear(int Nsmear, double alpha) {
     FORALLSITES(i, s) {
       // Unmodified links -- no projection or determinant division
       for (dir = XUP; dir < NUMLINK; dir++)
-        mat_copy_f(&(s->link[dir]), &(s->mom[dir]));
+        mat_copy(&(s->link[dir]), &(s->mom[dir]));
     }
 
     for (dir = XUP; dir < NUMLINK; dir++) {
@@ -186,7 +186,7 @@ void APE_smear(int Nsmear, double alpha, int project) {
           polar(&(s->link[dir]), &(s->mom[dir]), &tmat);
         }
         else
-          mat_copy_f(&(s->link[dir]), &(s->mom[dir]));
+          mat_copy(&(s->link[dir]), &(s->mom[dir]));
       }
     }
 
@@ -206,7 +206,7 @@ void APE_smear(int Nsmear, double alpha, int project) {
 //        if (project == 1)
 //          det_project(&(staple[i]), &tmat2);
 //        else
-          mat_copy_f(&(staple[i]), &tmat2);
+          mat_copy(&(staple[i]), &tmat2);
 
         scalar_mult_add_matrix(&(s->link[dir]), &tmat2, tr, &tmat);
         scalar_mult_matrix(&tmat, tr2, &(s->link[dir]));

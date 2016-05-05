@@ -23,8 +23,8 @@ void blocked_plaq(int Nsmear, int block) {
     for (dir2 = XUP; dir2 < dir; dir2++) {
       // Copy links to tempmat and tempmat2 to be shifted
       FORALLSITES(i, s) {
-        mat_copy_f(&(s->link[dir]), &(tempmat[i]));
-        mat_copy_f(&(s->link[dir2]), &(tempmat2[i]));
+        mat_copy(&(s->link[dir]), &(tempmat[i]));
+        mat_copy(&(s->link[dir2]), &(tempmat2[i]));
       }
 
       // Get mom[dir2] from dir and mom[dir] from dir2, both with stride

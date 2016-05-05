@@ -13,6 +13,7 @@
 void bilinear_src(Twist_Fermion *g_rand, Twist_Fermion *src, int N) {
   register int i, j, mu;
   register site *s;
+  complex grn;
 
 #ifdef DEBUG_CHECK  // Test that fermion_op connects proper components
   FORALLSITES(i, s) {
@@ -32,40 +33,44 @@ void bilinear_src(Twist_Fermion *g_rand, Twist_Fermion *src, int N) {
 #endif
 
   FORALLSITES(i, s) {
+    clear_TF(&(g_rand[i]));
     // Source either all or traceless site fermions, depending on N
     // The last Lambda[DIMF - 1] (N = DIMF) is proportional to the identity
     // The others (N = DIMF - 1) are traceless
     for (j = 0; j < N; j++) {                   // Site fermions
 #ifdef SITERAND
-      g_rand[i].Fsite.c[j].real = gaussian_rand_no(&(s->site_prn));
-      g_rand[i].Fsite.c[j].imag = gaussian_rand_no(&(s->site_prn));
+      grn.real = gaussian_rand_no(&(s->site_prn));
+      grn.imag = gaussian_rand_no(&(s->site_prn));
 #else
-      g_rand[i].Fsite.c[j].real = gaussian_rand_no(&node_prn);
-      g_rand[i].Fsite.c[j].imag = gaussian_rand_no(&node_prn);
+      grn.real = gaussian_rand_no(&node_prn);
+      grn.imag = gaussian_rand_no(&node_prn);
 #endif
+      c_scalar_mult_sum_mat(&(Lambda[j]), &grn, &(g_rand[i].Fsite));
     }
 
     // Source all link and plaquette fermions
     FORALLDIR(mu) {                           // Link fermions
       for (j = 0; j < DIMF; j++) {
 #ifdef SITERAND
-        g_rand[i].Flink[mu].c[j].real = gaussian_rand_no(&(s->site_prn));
-        g_rand[i].Flink[mu].c[j].imag = gaussian_rand_no(&(s->site_prn));
+        grn.real = gaussian_rand_no(&(s->site_prn));
+        grn.imag = gaussian_rand_no(&(s->site_prn));
 #else
-        g_rand[i].Flink[mu].c[j].real = gaussian_rand_no(&node_prn);
-        g_rand[i].Flink[mu].c[j].imag = gaussian_rand_no(&node_prn);
+        grn.real = gaussian_rand_no(&node_prn);
+        grn.imag = gaussian_rand_no(&node_prn);
 #endif
+        c_scalar_mult_sum_mat(&(Lambda[j]), &grn, &(g_rand[i].Flink[mu]));
       }
     }
     for (mu = 0; mu < NPLAQ; mu++) {         // Plaquette fermions
       for (j = 0; j < DIMF; j++) {
 #ifdef SITERAND
-        g_rand[i].Fplaq[mu].c[j].real = gaussian_rand_no(&(s->site_prn));
-        g_rand[i].Fplaq[mu].c[j].imag = gaussian_rand_no(&(s->site_prn));
+        grn.real = gaussian_rand_no(&(s->site_prn));
+        grn.imag = gaussian_rand_no(&(s->site_prn));
 #else
-        g_rand[i].Fplaq[mu].c[j].real = gaussian_rand_no(&node_prn);
-        g_rand[i].Fplaq[mu].c[j].imag = gaussian_rand_no(&node_prn);
+        grn.real = gaussian_rand_no(&node_prn);
+        grn.imag = gaussian_rand_no(&node_prn);
 #endif
+        c_scalar_mult_sum_mat(&(Lambda[j]), &grn, &(g_rand[i].Fplaq[mu]));
       }
     }
   }
@@ -106,7 +111,7 @@ int bilinearWard() {
   Real size_r, norm;
   double sum = 0.0;
   double_complex tc, StoL, LtoS, ave = cmplx(0.0, 0.0);
-  matrix tmat, tmat2;
+  matrix tmat;
   Twist_Fermion *g_rand, *src, **psim;
 
   g_rand = malloc(sites_on_node * sizeof(*g_rand));
@@ -140,25 +145,21 @@ int bilinearWard() {
     LtoS = cmplx(0.0, 0.0);
     FORALLSITES(i, s) {
       FORALLDIR(mu) {
-        reconstruct(&(psim[0][i].Flink[mu]), &tmat);
-        mult_na(&tmat, &(s->link[mu]), &tmat2);
-        reconstruct(&(g_rand[i].Fsite), &tmat);
-        tc = complextrace_an(&tmat, &tmat2);
+        mult_na(&(psim[0][i].Flink[mu]), &(s->link[mu]), &tmat);
+        tc = complextrace_an(&(g_rand[i].Fsite), &tmat);
+        CSUM(StoL, tc);
 #ifdef DEBUG_CHECK
         printf("StoL[%d](%d) %d (%.4g, %.4g)\n",
                i, mu, isrc, tc.real, tc.imag);
 #endif
-        CDIF(StoL, tc);
 
-        reconstruct(&(psim[0][i].Fsite), &tmat);
-        mult_an(&(s->link[mu]), &tmat, &tmat2);
-        reconstruct(&(g_rand[i].Flink[mu]), &tmat);
-        tc = complextrace_an(&tmat, &tmat2);
+        mult_an(&(s->link[mu]), &(psim[0][i].Fsite), &tmat);
+        tc = complextrace_an(&(g_rand[i].Flink[mu]), &tmat);
+        CSUM(LtoS, tc);
 #ifdef DEBUG_CHECK
         printf("LtoS[%d](%d) %d (%.4g, %.4g)\n",
                i, mu, isrc, tc.real, tc.imag);
 #endif
-        CDIF(LtoS, tc);
       }
     }
     g_dcomplexsum(&StoL);

@@ -165,7 +165,7 @@ int main(int argc, char *argv[]) {
   // Use f_U -- mom is used for temporary storage by the smearing routine
   FORALLSITES(i, s) {
     FORALLDIR(dir)
-      mat_copy_f(&(s->link[dir]), &(s->f_U[dir]));
+      mat_copy(&(s->link[dir]), &(s->f_U[dir]));
   }
 
   // Smear (after blocking) in increments of smear_step up to Nsmear
@@ -233,7 +233,7 @@ int main(int argc, char *argv[]) {
   // Restore unsmeared unblocked links from f_U
   FORALLSITES(i, s) {
     FORALLDIR(dir)
-      mat_copy_f(&(s->f_U[dir]), &(s->link[dir]));
+      mat_copy(&(s->f_U[dir]), &(s->link[dir]));
   }
   // ---------------------------------------------------------------
 
@@ -290,7 +290,7 @@ int main(int argc, char *argv[]) {
     // Use f_U -- mom is used for temporary storage by the blocking routine
     FORALLSITES(i, s) {
       FORALLDIR(dir)
-        mat_copy_f(&(s->link[dir]), &(s->f_U[dir]));
+        mat_copy(&(s->link[dir]), &(s->f_U[dir]));
     }
 
     // Smear (after blocking) in increments of smear_step up to Nsmear
@@ -358,7 +358,7 @@ int main(int argc, char *argv[]) {
     // Restore unsmeared blocked links from f_U
     FORALLSITES(i, s) {
       FORALLDIR(dir)
-        mat_copy_f(&(s->f_U[dir]), &(s->link[dir]));
+        mat_copy(&(s->f_U[dir]), &(s->link[dir]));
     }
   }
   // ---------------------------------------------------------------

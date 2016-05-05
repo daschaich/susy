@@ -43,6 +43,7 @@ int grsource(Twist_Fermion *src) {
   register site *s;
   int avs_iters;
   Real size_r;
+  complex grn;
   Twist_Fermion **psim = malloc(Norder * sizeof(**psim));
 
   // Allocate psim (will be zeroed in congrad_multi_field)
@@ -54,29 +55,32 @@ int grsource(Twist_Fermion *src) {
     clear_TF(&(src[i]));
     for (j = 0; j < DIMF; j++) {                // Site fermions
 #ifdef SITERAND
-      src[i].Fsite.c[j].real = gaussian_rand_no(&(s->site_prn));
-      src[i].Fsite.c[j].imag = gaussian_rand_no(&(s->site_prn));
+      grn.real = gaussian_rand_no(&(s->site_prn));
+      grn.imag = gaussian_rand_no(&(s->site_prn));
 #else
-      src[i].Fsite.c[j].real = gaussian_rand_no(&node_prn);
-      src[i].Fsite.c[j].imag = gaussian_rand_no(&node_prn);
+      grn.real = gaussian_rand_no(&node_prn);
+      grn.imag = gaussian_rand_no(&node_prn);
 #endif
-      for (mu = 0; mu < NUMLINK; mu++) {        // Link fermions
+      c_scalar_mult_sum_mat(&(Lambda[j]), &grn, &(src[i].Fsite));
+      FORALLDIR(mu) {                           // Link fermions
 #ifdef SITERAND
-        src[i].Flink[mu].c[j].real = gaussian_rand_no(&(s->site_prn));
-        src[i].Flink[mu].c[j].imag = gaussian_rand_no(&(s->site_prn));
+        grn.real = gaussian_rand_no(&(s->site_prn));
+        grn.imag = gaussian_rand_no(&(s->site_prn));
 #else
-        src[i].Flink[mu].c[j].real = gaussian_rand_no(&node_prn);
-        src[i].Flink[mu].c[j].imag = gaussian_rand_no(&node_prn);
+        grn.real = gaussian_rand_no(&node_prn);
+        grn.imag = gaussian_rand_no(&node_prn);
 #endif
+        c_scalar_mult_sum_mat(&(Lambda[j]), &grn, &(src[i].Flink[mu]));
       }
       for (mu = 0; mu < NPLAQ; mu++) {         // Plaquette fermions
 #ifdef SITERAND
-        src[i].Fplaq[mu].c[j].real = gaussian_rand_no(&(s->site_prn));
-        src[i].Fplaq[mu].c[j].imag = gaussian_rand_no(&(s->site_prn));
+        grn.real = gaussian_rand_no(&(s->site_prn));
+        grn.imag = gaussian_rand_no(&(s->site_prn));
 #else
-        src[i].Fplaq[mu].c[j].real = gaussian_rand_no(&node_prn);
-        src[i].Fplaq[mu].c[j].imag = gaussian_rand_no(&node_prn);
+        grn.real = gaussian_rand_no(&node_prn);
+        grn.imag = gaussian_rand_no(&node_prn);
 #endif
+        c_scalar_mult_sum_mat(&(Lambda[j]), &grn, &(src[i].Fplaq[mu]));
       }
     }
   }

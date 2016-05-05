@@ -118,7 +118,7 @@ complex find_det(matrix *Q) {
   complex det2;
   matrix QQ;
 
-  mat_copy_f(Q, &QQ);
+  mat_copy(Q, &QQ);
   ludcmp_cx(&QQ, indx, &d);
   det = cmplx(d, 0.0);
   for (i = 0; i < NCOL; i++) {

@@ -4,7 +4,7 @@
 #include "../include/complex.h"
 #include "../include/susy.h"
 
-void mat_copy_f(matrix *src, matrix *dest) {
+void mat_copy(matrix *src, matrix *dest) {
   *dest = *src;
 }
 // -----------------------------------------------------------------

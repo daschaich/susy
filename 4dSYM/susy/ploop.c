@@ -17,9 +17,9 @@ complex ploop(int dir, int project, double *plpMod) {
   // saving original values in UpsiU[0] to be reset at end
   if (project == 1) {
     FORALLSITES(i, s) {
-      mat_copy_f(&(s->link[dir]), &(UpsiU[0][i]));
+      mat_copy(&(s->link[dir]), &(UpsiU[0][i]));
       polar(&(s->link[dir]), &tmat, &tmat2);
-      mat_copy_f(&tmat, &(s->link[dir]));
+      mat_copy(&tmat, &(s->link[dir]));
     }
   }
 
@@ -65,7 +65,7 @@ complex ploop(int dir, int project, double *plpMod) {
 
     if (project == 1) {       // Reset original links
       FORALLSITES(i, s)
-        mat_copy_f(&(UpsiU[0][i]), &(s->link[dir]));
+        mat_copy(&(UpsiU[0][i]), &(s->link[dir]));
     }
 
     return sum;
@@ -73,7 +73,7 @@ complex ploop(int dir, int project, double *plpMod) {
 
   // Compute line by steadily shifting links to hyperplane 0
   FORALLSITES(i, s)
-    mat_copy_f(&(s->link[dir]), &(tempmat[i]));
+    mat_copy(&(s->link[dir]), &(tempmat[i]));
 
   for (t = 1; t < len; t++) {
     shiftmat(tempmat, tempmat2, goffset[dir]);
@@ -92,7 +92,7 @@ complex ploop(int dir, int project, double *plpMod) {
         mult_nn(&(s->link[dir]), &(tempmat[i]), &(staple[i]));
       else {
         mult_nn(&(staple[i]), &(tempmat[i]), &(tempmat2[i]));
-        mat_copy_f(&(tempmat2[i]), &(staple[i]));
+        mat_copy(&(tempmat2[i]), &(staple[i]));
       }
     }
   }
@@ -120,7 +120,7 @@ complex ploop(int dir, int project, double *plpMod) {
 
   if (project == 1) {       // Reset original links
     FORALLSITES(i, s)
-      mat_copy_f(&(UpsiU[0][i]), &(s->link[dir]));
+      mat_copy(&(UpsiU[0][i]), &(s->link[dir]));
   }
 
   return sum;

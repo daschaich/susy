@@ -4,7 +4,7 @@
 #include "../include/complex.h"
 #include "../include/susy.h"
 
-Real realtrace_nn_f(matrix *a, matrix *b) {
+Real realtrace_nn(matrix *a, matrix *b) {
   register int i, j;
   register Real sum = 0.0;
 

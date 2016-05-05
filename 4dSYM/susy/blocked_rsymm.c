@@ -30,7 +30,7 @@ void blocked_path(int *dir, int *sign, int length, int bl) {
 
     wait_general_gather(tag);
     FORALLSITES(i, s)
-      mat_copy_f((matrix *)(gen_pt[0][i]), &(tempmat[i]));
+      mat_copy((matrix *)(gen_pt[0][i]), &(tempmat[i]));
 
     cleanup_general_gather(tag);
   }
@@ -53,7 +53,7 @@ void blocked_path(int *dir, int *sign, int length, int bl) {
 
       wait_general_gather(tag);
       FORALLSITES(i, s)
-        mat_copy_f((matrix *)(gen_pt[0][i]), &(tempmat[i]));
+        mat_copy((matrix *)(gen_pt[0][i]), &(tempmat[i]));
 
       cleanup_general_gather(tag);
     }
@@ -70,7 +70,7 @@ void blocked_path(int *dir, int *sign, int length, int bl) {
         mult_na(mat, &(s->link[dir[j]]), &(tempmat2[i]));
       }
       FORALLSITES(i, s)   // Don't want to overwrite tempmat too soon
-        mat_copy_f(&(tempmat2[i]), &(tempmat[i]));
+        mat_copy(&(tempmat2[i]), &(tempmat[i]));
 
       cleanup_general_gather(tag);
     }
@@ -117,7 +117,7 @@ void blocked_rsymm_path(int *dir, int *sign, int *kind, int length, int bl) {
 
     wait_general_gather(tag);
     FORALLSITES(i, s)
-      mat_copy_f((matrix *)(gen_pt[0][i]), &(tempmat[i]));
+      mat_copy((matrix *)(gen_pt[0][i]), &(tempmat[i]));
     cleanup_general_gather(tag);
   }
 
@@ -160,7 +160,7 @@ void blocked_rsymm_path(int *dir, int *sign, int *kind, int length, int bl) {
 
       wait_general_gather(tag);
       FORALLSITES(i, s)
-        mat_copy_f((matrix *)(gen_pt[0][i]), &(tempmat[i]));
+        mat_copy((matrix *)(gen_pt[0][i]), &(tempmat[i]));
       cleanup_general_gather(tag);
     }
 
@@ -188,7 +188,7 @@ void blocked_rsymm_path(int *dir, int *sign, int *kind, int length, int bl) {
         }
       }
       FORALLSITES(i, s)   // Don't want to overwrite tempmat too soon
-        mat_copy_f(&(tempmat2[i]), &(tempmat[i]));
+        mat_copy(&(tempmat2[i]), &(tempmat[i]));
       cleanup_general_gather(tag);
     }
     else {

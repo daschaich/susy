@@ -131,10 +131,9 @@ void make_fields() {
   FIELD_ALLOC_MAT_OFFDIAG(tempZW, complex, NUMLINK);
 #endif
 
-  // Temporary vectors, matrices and Twist_Fermion
+  // Temporary matrices and Twist_Fermion
   size += (double)(3.0 * sizeof(matrix));
   size += (double)(sizeof(Twist_Fermion));
-  size += (double)(NUMLINK * sizeof(vector));
   FIELD_ALLOC(tempmat, matrix);
   FIELD_ALLOC(tempmat2, matrix);
   FIELD_ALLOC(staple, matrix);

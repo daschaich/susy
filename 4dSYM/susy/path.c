@@ -20,7 +20,7 @@ void path(int *dir, int *sign, int length) {
 
     wait_gather(mtag);
     FORALLSITES(i, s)
-      mat_copy_f((matrix *)(gen_pt[0][i]), &(tempmat[i]));
+      mat_copy((matrix *)(gen_pt[0][i]), &(tempmat[i]));
     cleanup_gather(mtag);
   }
 
@@ -40,7 +40,7 @@ void path(int *dir, int *sign, int length) {
 
       wait_gather(mtag);
       FORALLSITES(i, s)
-        mat_copy_f((matrix *)(gen_pt[0][i]), &(tempmat[i]));
+        mat_copy((matrix *)(gen_pt[0][i]), &(tempmat[i]));
       cleanup_gather(mtag);
     }
 
@@ -54,7 +54,7 @@ void path(int *dir, int *sign, int length) {
         mult_na(mat, &(s->link[dir[j]]), &(tempmat2[i]));
       }
       FORALLSITES(i, s)   // Don't want to overwrite tempmat too soon
-        mat_copy_f(&(tempmat2[i]), &(tempmat[i]));
+        mat_copy(&(tempmat2[i]), &(tempmat[i]));
       cleanup_gather(mtag);
     }
   }
