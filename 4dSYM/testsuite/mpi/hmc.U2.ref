@@ -3,7 +3,7 @@ Microcanonical simulation with refreshing
 Machine = MPI (portable), with 2 nodes
 Hybrid Monte Carlo algorithm
 Phi algorithm
-start: Sat Apr 30 23:10:43 2016
+start: Wed May  4 18:39:18 2016
 
 type 0 for no prompts or 1 for prompts
 nx 4
@@ -16,10 +16,10 @@ Nroot 1
 Norder 15
 LAYOUT = Hypercubes, options = hyper_prime,
 ON EACH NODE 2 x 4 x 4 x 4
-Mallocing 1.5 MBytes per core for lattice
+Mallocing 1.3 MBytes per core for lattice
 Antiperiodic temporal boundary conditions
 Supersymmetric constraint on (det[plaq] - 1)
-Mallocing 1.1 MBytes per core for fields
+Mallocing 0.8 MBytes per core for fields
 Using Nroot = 1
 RHMC Norder 15 for spectral range [1e-7, 1000]
 
@@ -45,7 +45,7 @@ C2=1
 Restored binary gauge configuration serially from file config.U2.4444
 Time stamp Fri Apr 17 18:03:10 2015
 Checksums 2ffa97f c37b9702 OK
-Time to reload gauge configuration = 1.195908e-03
+Time to reload gauge configuration = 1.224041e-03
 CHECK PLAQ: 1.8931639183150828e+00 1.9392207138255713e+00
 CHECK NERSC LINKTR: 1.7868842204883606e-02 CKSUM: 0
 START 1.8931639 1.9392207 3.8323846 15.877752
@@ -108,6 +108,6 @@ RUNNING COMPLETED
 STOP 2.0472783 2.1099817 4.15726 15.202722
 Average CG iters for steps: 671
 
-Time = 11.86 seconds
+Time = 7.706 seconds
 total_iters = 2013
 

@@ -2,7 +2,7 @@ N=4 SYM, Nc = 4, DIMF = 16, fermion rep = adjoint
 Microcanonical simulation with refreshing
 Machine = Scalar processor, with 1 nodes
 Phi algorithm
-start: Mon May  2 13:47:16 2016
+start: Wed May  4 20:40:12 2016
 
 type 0 for no prompts or 1 for prompts
 nx 4
@@ -15,10 +15,10 @@ Nroot 1
 Norder 15
 LAYOUT = Hypercubes, options = hyper_prime,
 ON EACH NODE 4 x 4 x 4 x 4
-Mallocing 8.5 MBytes per core for lattice
+Mallocing 3.3 MBytes per core for lattice
 Antiperiodic temporal boundary conditions
 Supersymmetric constraint on (det[plaq] - 1)
-Mallocing 8.8 MBytes per core for fields
+Mallocing 6.3 MBytes per core for fields
 
 
 warms 0
@@ -50,7 +50,7 @@ C2=1
 Restored binary gauge configuration serially from file config.U4.4444
 Time stamp Sun Apr 19 21:34:20 2015
 Checksums 9098c02 35224501 OK
-Time to reload gauge configuration = 1.370907e-03
+Time to reload gauge configuration = 1.482010e-03
 CHECK PLAQ: 4.1503788625513707e+00 4.1297157023877400e+00
 CHECK NERSC LINKTR: -3.1120252429257533e-03 CKSUM: 0
 START 4.1503789 4.1297157 8.2800946 78.268997
@@ -152,10 +152,10 @@ CORR_S 2 1.09545 1 2 0.0015102662 -2.2014772e-05
 CORR_S 2 1.09545 2 0 0.00078362333 -5.1858157e-06
 CORR_S 2 1.09545 2 1 0.0014989883 -3.3292616e-05
 CORR_S 2 1.09545 2 2 0.0028051807 -9.6423966e-05
-susy 3.81616 -0.0136597 -3.85318 -0.0280324 ( 1 of 3 ) 66
-susy 3.85143 -0.056432 -3.97545 0.0311037 ( 2 of 3 ) 64
-susy 3.91048 0.0377216 -3.9126 -0.0240342 ( 3 of 3 ) 68
-SUSY 3.88655 -0.00190119 4.3768 0.490251 ( ave over 3 )
+susy 3.80699 -0.0107426 -3.89368 -0.0640968 ( 1 of 3 ) 61
+susy 3.84573 -0.0471803 -3.92522 0.0401964 ( 2 of 3 ) 61
+susy 3.91901 0.0305797 -3.89521 -0.0351109 ( 3 of 3 ) 65
+SUSY 3.88097 0.00527803 4.3768 0.495829 ( ave over 3 )
 rsymm: MAX = 2
 INVLINK 1.20716 1.17581 1.16765 1.18133 1.18024 1.18244 0.157388
 RSYMM 1 [0] 1 [1] 4.4736622 4.6598897
@@ -241,7 +241,7 @@ RSYMM 2 [4] 2 [3] 4.9765772 5.2437152
 MONOPOLE 0 0  0 0  0 0  0 0    0 0
 Fixing to Coulomb gauge...
 GFIX ended at step 90. Ave gf action 0.780106, delta 9.6e-08
-GFIX time = 0.06374 seconds
+GFIX time = 0.06471 seconds
 BEFORE 4.4639193 4.432641
 AFTER  4.4639193 4.432641
 hvy_pot: MAX_T = 2, MAX_X = 1 --> r < 1.41421
@@ -266,7 +266,7 @@ POLAR_LOOP 0 0 2 4
 POLAR_LOOP 1 0.866025 2 2.62873
 POLAR_LOOP 2 1 2 2.41753
 RUNNING COMPLETED
-CG iters for measurements: 198
-total_iters = 198
+CG iters for measurements: 187
+total_iters = 187
 
-Time = 11.04 seconds
+Time = 3.127 seconds
