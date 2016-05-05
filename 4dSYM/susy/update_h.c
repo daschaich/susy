@@ -250,6 +250,7 @@ double gauge_force(Real eps) {
         scalar_mult_an_sum(&(s->link[mu]), &tmat, dmu, &(s->f_U[mu]));
 #else
         tr = one_ov_N * realtrace(&(s->link[mu]), &(s->link[mu])) - 1.0;
+        tr *= dmu;
         scalar_mult_sum_adj_matrix(&(s->link[mu]), tr, &(s->f_U[mu]));
 #endif
       }
