@@ -14,8 +14,8 @@ susy_hmc_pg and susy_phi_pg for testing with gauge fields only (no fermions)
 susy_spill for printing out configuration in format expected by serial C++ code
 
 # Dependences:
-Measurements involving polar-projected matrices (susy_meas and susy_hmc_meas) require LAPACK
-Eigenvalue measurements (susy_eig) require PRIMME (https://github.com/primme/primme) and LAPACK
+LAPACK is now required for all targets
+Eigenvalue measurements (susy_eig) require PRIMME (https://github.com/primme/primme) as well
 
 # Defines for compilation:
 -DPHI_ALGORITHM for the basic phi algorithm (REQUIRED)
@@ -112,11 +112,10 @@ setup_offset.c        -- Set up gathers for terms in the action, especially Qclo
 action.c              -- Compute the action, including related routines also needed by forces
 plaq.c                -- Compute the average plaquette
 ploop.c               -- Compute the average Polyakov loop
-link_trace.c          -- Compute average link, Tr[U_a Ubar] / NCOL
+link_trace.c          -- Compute average link, Tr[U_a Ubar_a] / NCOL
 widths.c              -- Calculate sqrt(<P^2> - <P>^2) for the plaquette and plaquette determinant
-determinant.c         -- Utilities for finding the determinant of NCOL x NCOL link matrices
+determinant.c         -- Utilities for finding the determinant of NCOL x NCOL link matrices, using LAPACK
 grsource.c            -- Generate gaussian random pseudofermions and momenta for the RHMC
-fermion_rep.c         -- Create links in adjoint rep, checking dimensions
 congrad_multi_field.c -- Multi-mass CG inverter
 utilities.c           -- Twist_Fermion matrix--vector operator and related routines also needed by forces
 library_util.c        -- Helper routines, many of which might be better suited to ../libraries/

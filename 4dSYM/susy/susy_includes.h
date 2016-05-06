@@ -109,10 +109,24 @@ void widths();        // Widths of plaquette and det distributions
 complex find_det(matrix *Q);
 void det_project(matrix *in, matrix *out);
 
-// Adjugate matrix needed by det_force
-void adjugate(matrix *in, matrix *out);
+// Use LAPACK in determinant and matrix calculations
+// Compute LU decomposition of a complex matrix
+// http://www.physics.orst.edu/~rubin/nacphy/lapack/routines/zgetrf.html
+// First and second arguments are the dimensions of the matrix
+// Third argument is the LU-decomposed matrix
+// Fourth argument is the
+// Fifth argument is the LU decomposition pivot matrix
+// Final argument reports success or information about failure
+void zgetrf_(int *N1, int *N2, double *store, int *lda, int *ipiv, int *stat);
 
-// Matrix inverse is just adjugate divided by determinant
+// Invert a complex matrix given its LU decomposition
+// http://www.physics.orst.edu/~rubin/nacphy/lapack/routines/zgetri.html
+// First four and last arguments are defined above
+// Fifth argument is real workspace of size given by the sixth argument
+void zgetri_(int *N, double *store, int *lda, int *ipiv,
+             double *work, int *Nwork, int* stat);
+
+// Matrix inverse via LAPACK
 void invert(matrix *in, matrix *out);
 
 // Modified Wilson loops use invert and path

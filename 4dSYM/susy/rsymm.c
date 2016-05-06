@@ -130,7 +130,7 @@ void rsymm() {
   // Compute and optionally check inverse matrices
   // Temporarily store the adjoint of the inverse in momentum matrices,
   // since it transforms like the original link
-  for (mu = XUP; mu < NUMLINK; mu++) {
+  FORALLDIR(mu) {
     FORALLSITES(i, s) {
       invert(&(s->link[mu]), &tmat);
       adjoint(&tmat, &(s->mom[mu]));
@@ -178,7 +178,7 @@ void rsymm() {
   // First check average value of the inverted link
   // Tr[U^{-1} (U^{-1})^dag] / N and corresponding width
   // Just like link_trace() but use s->mom instead of s->link
-  for (dir_inv = XUP; dir_inv < NUMLINK; dir_inv++) {
+  FORALLDIR(dir_inv) {
     invlink[dir_inv] = 0.0;
     FORALLSITES(i, s) {
       td = realtrace(&(s->mom[dir_inv]), &(s->mom[dir_inv]));
@@ -194,7 +194,7 @@ void rsymm() {
   g_doublesum(&(invlinkSq));
 
   node0_printf("INVLINK");
-  for (dir_inv = XUP; dir_inv < NUMLINK; dir_inv++)
+  FORALLDIR(dir_inv)
     node0_printf(" %.6g", invlink[dir_inv]);
   td = sqrt(invlinkSq - invlink_sum * invlink_sum);
   node0_printf(" %.6g %.6g\n", invlink_sum, td);
@@ -202,8 +202,8 @@ void rsymm() {
   // Construct and print all loops up to max x max
   // in all NUMLINK * (NUMLINK - 1) directions
   // Invert all links in the second direction in each loop
-  for (dir_normal = XUP; dir_normal < NUMLINK; dir_normal++) {
-    for (dir_inv = XUP; dir_inv < NUMLINK; dir_inv++) {
+  FORALLDIR(dir_normal) {
+    FORALLDIR(dir_inv) {
       if (dir_inv == dir_normal)
         continue;
 

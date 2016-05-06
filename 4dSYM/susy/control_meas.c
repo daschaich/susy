@@ -205,7 +205,7 @@ int main(int argc, char *argv[]) {
 #endif
 
 #ifdef CORR
-  // R symmetry transformations -- use find_det and adjugate
+  // R symmetry transformations -- uses LAPACK invert
   rsymm();
 
   // Measure density of monopole world lines in non-diagonal cubes

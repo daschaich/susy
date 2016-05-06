@@ -7,9 +7,9 @@ double det_force(Real eps) {
   register int i, dir, dir2;
   register site *s;
   double returnit = 0;
-  complex staple_det, link_det, prod_det, tforce;
+  complex staple_det, link_det, prod_det, tc;
   complex *force = malloc(sites_on_node * sizeof(*force));
-  matrix tmat, dlink, *mat0, *mat2;
+  matrix tmat;
   msg_tag *tag0 = NULL, *tag1 = NULL, *tag2 = NULL;
 
   // Loop over directions, update mom[dir]
@@ -45,10 +45,8 @@ double det_force(Real eps) {
         // The plaquette is staple*U^dag due to the orientation of the gathers
         wait_gather(tag2);
         FORALLSITES(i, s) {
-          mat0 = (matrix *)gen_pt[0][i];
-          mat2 = (matrix *)gen_pt[2][i];
-          mult_nn(&(s->link[dir2]), mat2, &tmat);
-          mult_na(&tmat, mat0, &(staple[i]));
+          mult_nn(&(s->link[dir2]), (matrix *)(gen_pt[2][i]), &tmat);
+          mult_na(&tmat, (matrix *)(gen_pt[0][i]), &(staple[i]));
 
           // Now we have the upper staple -- compute its force
           // S = (det[staple U^dag] - 1) * (det[staple^dag U] - 1)
@@ -58,14 +56,20 @@ double det_force(Real eps) {
           link_det = find_det(&(s->link[dir]));
 
           // prod_det = kappa_u1 * (staple_det * link_det^* - 1)
-          CMUL_J(staple_det, link_det, prod_det);
-          CSUM(prod_det, minus1);
+          prod_det.real = staple_det.real * link_det.real
+                        + staple_det.imag * link_det.imag - 1.0;
+          prod_det.imag = staple_det.imag * link_det.real
+                        - staple_det.real * link_det.imag;
           CMULREAL(prod_det, kappa_u1, prod_det);
 
           // force = (prod_det * staple_det^*) * dlink
-          CMUL_J(prod_det, staple_det, tforce);
-          CSUM(force[i], tforce);
+          force[i].real += prod_det.real * staple_det.real
+                         + prod_det.imag * staple_det.imag;
+          force[i].imag += prod_det.imag * staple_det.real
+                         - prod_det.real * staple_det.imag;
         }
+        cleanup_gather(tag0);
+        cleanup_gather(tag2);
 
         // We have gathered up the lower staple -- compute its force
         wait_gather(tag1);
@@ -74,33 +78,30 @@ double det_force(Real eps) {
           link_det = find_det(&(s->link[dir]));
 
           // prod_det = kappa_u1 * (staple_det * link_det^* - 1)
-          CMUL_J(staple_det, link_det, prod_det);
-          CSUM(prod_det, minus1);
+          prod_det.real = staple_det.real * link_det.real
+                        + staple_det.imag * link_det.imag - 1.0;
+          prod_det.imag = staple_det.imag * link_det.real
+                        - staple_det.real * link_det.imag;
           CMULREAL(prod_det, kappa_u1, prod_det);
 
           // force = (prod_det * staple_det^*) * dlink
-          CMUL_J(prod_det, staple_det, tforce);
-          CSUM(force[i], tforce);
+          force[i].real += prod_det.real * staple_det.real
+                         + prod_det.imag * staple_det.imag;
+          force[i].imag += prod_det.imag * staple_det.real
+                         - prod_det.real * staple_det.imag;
         }
-        cleanup_gather(tag0);
         cleanup_gather(tag1);
-        cleanup_gather(tag2);
       }
     }
 
     // Now update momenta
     FORALLSITES(i, s) {
-#if (NCOL == 2 || NCOL == 3 || NCOL == 4)
-      adjugate(&(s->link[dir]), &dlink);
-#endif
-#if (NCOL > 4)
       // Determine adjugate as determinant times inverse
-      // Checked that this produces the correct results for NCOL <= 4
+      // Checked this against explicit adjugate for NCOL <= 4
       invert(&(s->link[dir]), &tmat);
       link_det = find_det(&(s->link[dir]));
-      c_scalar_mult_mat(&tmat, &link_det, &dlink);
-#endif
-      c_scalar_mult_mat(&dlink, &(force[i]), &(s->f_U[dir]));
+      CMUL(link_det, force[i], tc);
+      c_scalar_mult_mat(&tmat, &tc, &(s->f_U[dir]));
       /* and update the momentum from the gauge force --
          dif because I computed dS/dU and the adjoint because of the way it is */
       scalar_mult_dif_adj_matrix(&(s->f_U[dir]), eps, &(s->mom[dir]));

@@ -9,5 +9,5 @@ libraries -- Single processor linear algebra routines
 susy      -- RHMC and measurements
 
 Dependences:
-Measurements involving polar-projected matrices require LAPACK
-Eigenvalue measurements require PRIMME and LAPACK
+LAPACK is now required for all targets
+Eigenvalue measurements require PRIMME as well
