@@ -67,7 +67,7 @@ void compute_DmuUmu() {
 #ifdef LINEAR_DET
           CMULREAL(tc, G, tc);
           for (j = 0; j < NCOL; j++)
-            CADD(DmuUmu[i].e[j][j], tc, DmuUmu[i].e[j][j]);
+            CSUM(DmuUmu[i].e[j][j], tc);
 #else
           tr = G * cabs_sq(&tc);
           for (j = 0; j < NCOL; j++)

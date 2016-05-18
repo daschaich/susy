@@ -680,6 +680,7 @@ void detF(matrix *eta, matrix *psi[NUMLINK], int sign) {
   free(inv_term);
   free(adj_term);
 #else     // Local case
+  complex tc3;
   complex *dZdU = malloc(sites_on_node * sizeof(*dZdU));
   complex *dWdU = malloc(sites_on_node * sizeof(*dWdU));
   complex *dZdUdag = malloc(sites_on_node * sizeof(*dZdUdag));
@@ -745,7 +746,7 @@ void detF(matrix *eta, matrix *psi[NUMLINK], int sign) {
       // Use tr_dest for temporary storage
       wait_gather(mtag[0]);
       FORALLSITES(i, s)
-        CMULREAL(*((complex *)(gen_pt[0][i]));, s->bc1[a], tr_dest[i]);
+        CMULREAL(*((complex *)(gen_pt[0][i])), s->bc1[a], tr_dest[i]);
       cleanup_gather(mtag[0]);
       mtag[0] = start_gather_field(tr_dest, sizeof(complex),
                                    goffset[b] + 1, EVENANDODD, gen_pt[0]);
@@ -764,53 +765,67 @@ void detF(matrix *eta, matrix *psi[NUMLINK], int sign) {
         // dZdU and dWdUdag have same sums of traces
         // hit by ZW and ZSq, respectively
         // Z(x) {T[a](x) + BC[a](x) T[b](x + a)}
-        // TODO: Can combine CMUL and CSUM below
-        tc = *((complex *)(gen_pt[6][i]));    // T[b](x + a)
-        CMULREAL(tc, s->bc1[a], tc);
-        CADD(Tr_Uinv[a][i], tc, tc2);
-        CMUL(tempZW[b][a][i], tc2, tc);       // dZdU
-        CSUM(dZdU[i], tc);
-        CMUL(tempdet[b][a][i], tc2, tc);      // dWdUdag
-        CSUM(dWdUdag[i], tc);
+        // gen_pt[6] is T[b](x + a)
+        tc = *((complex *)(gen_pt[6][i]));
+        tc2.real = Tr_Uinv[a][i].real + s->bc1[a] * tc.real;
+        tc2.imag = Tr_Uinv[a][i].imag + s->bc1[a] * tc.imag;
+        dZdU[i].real += tempZW[b][a][i].real * tc2.real
+                      - tempZW[b][a][i].imag * tc2.imag;
+        dZdU[i].imag += tempZW[b][a][i].imag * tc2.real
+                      + tempZW[b][a][i].real * tc2.imag;
+        dWdUdag[i].real += tempdet[b][a][i].real * tc2.real
+                         - tempdet[b][a][i].imag * tc2.imag;
+        dWdUdag[i].imag += tempdet[b][a][i].imag * tc2.real
+                         + tempdet[b][a][i].real * tc2.imag;
 
         // Z(x - b) {T[b](x - b) + BC[-b](x) T[a](x)}
-        tc = *((complex *)(gen_pt[7][i]));    // T[b](x - b)
-        CMULREAL(Tr_Uinv[a][i], s->bc1[opp_b], tc2);
-        CADD(tc, tc2, tc3);
-        tc = *((complex *)(gen_pt[2][i]));    // ZW[a][b](x - b)
-        CMUL(tc, tc3, tc2);
-        CSUM(dZdU[i], tc2);
-        tc = *((complex *)(gen_pt[1][i]));    // ZSq[a][b](x - b)
-        CMUL(tc, tc3, tc2);
-        CSUM(dWdUdag[i], tc2);
+        // gen_pt[7] is T[b](x - b)
+        tc = *((complex *)(gen_pt[7][i]));
+        tc2.real = tc.real + s->bc1[opp_b] * Tr_Uinv[a][i].real;
+        tc2.imag = tc.imag + s->bc1[opp_b] * Tr_Uinv[a][i].imag;
+        // gen_pt[2] is ZW[a][b](x - b)
+        tc = *((complex *)(gen_pt[2][i]));
+        dZdU[i].real += tc.real * tc2.real - tc.imag * tc2.imag;
+        dZdU[i].imag += tc.imag * tc2.real + tc.real * tc2.imag;
+        // gen_pt[1] is ZSq[a][b](x - b)
+        tc = *((complex *)(gen_pt[1][i]));
+        dWdUdag[i].real += tc.real * tc2.real - tc.imag * tc2.imag;
+        dWdUdag[i].imag += tc.imag * tc2.real + tc.real * tc2.imag;
 
         // dWdU and dZdUdag have same sums of traces
         // hit by ZSq and ZW, respectively
         // Z(x) {T[b](x) + BC[b](x) T[a](x + b)}
-        tc = *((complex *)(gen_pt[4][i]));    // T[a](x + b)
-        CMULREAL(tc, s->bc1[b], tc);
-        CADD(Tr_Uinv[b][i], tc, tc2);
-        CMUL(tempdet[a][b][i], tc2, tc);      // dWdU
-        CSUM(dWdU[i], tc);
-        CMUL(tempZW[a][b][i], tc2, tc);       // dZdUdag
-        CSUM(dZdUdag[i], tc);
+        // gen_pt[4] is T[a](x + b)
+        tc = *((complex *)(gen_pt[4][i]));
+        tc2.real = Tr_Uinv[b][i].real + s->bc1[b] * tc.real;
+        tc2.imag = Tr_Uinv[b][i].imag + s->bc1[b] * tc.imag;
+        dWdU[i].real += tempdet[a][b][i].real * tc2.real
+                      - tempdet[a][b][i].imag * tc2.imag;
+        dWdU[i].imag += tempdet[a][b][i].imag * tc2.real
+                      + tempdet[a][b][i].real * tc2.imag;
+        dZdUdag[i].real += tempZW[a][b][i].real * tc2.real
+                         - tempZW[a][b][i].imag * tc2.imag;
+        dZdUdag[i].imag += tempZW[a][b][i].imag * tc2.real
+                         + tempZW[a][b][i].real * tc2.imag;
 
         // Z(x - b) {T[a](x - b) + BC[a](x - b) T[b](x - b + a)}
-        tc = *((complex *)(gen_pt[0][i]));    // T[b](x - b + a)
-        tc2 = *((complex *)(gen_pt[5][i]));   // T[a](x - b)
-        CADD(tc2, tc, tc3);
-        tc = *((complex *)(gen_pt[1][i]));    // ZSq[a][b](x - b)
-        CMUL(tc, tc3, tc2);
-        CSUM(dWdU[i], tc2);
-        tc = *((complex *)(gen_pt[3][i]));    // ZW[b][a](x - b)
-        CMUL(tc, tc3, tc2);
-        CSUM(dZdUdag[i], tc2);
+        // gen_pt[0] is T[b](x - b + a)
+        // gen_pt[5] is T[a](x - b)
+        CADD(*((complex *)(gen_pt[5][i])), *((complex *)(gen_pt[0][i])), tc2);
+        // gen_pt[1] is ZSq[a][b](x - b)
+        tc = *((complex *)(gen_pt[1][i]));
+        dWdU[i].real += tc.real * tc2.real - tc.imag * tc2.imag;
+        dWdU[i].imag += tc.imag * tc2.real + tc.real * tc2.imag;
+        // gen_pt[3] is ZW[b][a](x - b)
+        tc = *((complex *)(gen_pt[3][i]));
+        dZdUdag[i].real += tc.real * tc2.real - tc.imag * tc2.imag;
+        dZdUdag[i].imag += tc.imag * tc2.real + tc.real * tc2.imag;
 
-        // Finally dTdU accumulates ZW[b][a](x) + BC[-b](x) ZW[a][b](x - b)
-        tc = *((complex *)(gen_pt[2][i]));    // ZW[a][b](x - b)
-        CMULREAL(tc, s->bc1[opp_b], tc);
-        CADD(tempZW[b][a][i], tc, tc2);
-        CSUM(dTdU[i], tc2);
+        // Accumulates dTdU = ZW[b][a](x) + BC[-b](x) ZW[a][b](x - b)
+        // gen_pt[2] is ZW[a][b](x - b)
+        tc = *((complex *)(gen_pt[2][i]));
+        dTdU[i].real += tempZW[b][a][i].real + s->bc1[opp_b] * tc.real;
+        dTdU[i].imag += tempZW[b][a][i].imag + s->bc1[opp_b] * tc.imag;
       }
       cleanup_gather(mtag[0]);
       cleanup_gather(mtag[1]);
