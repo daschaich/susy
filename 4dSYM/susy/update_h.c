@@ -680,7 +680,6 @@ void detF(matrix *eta, matrix *psi[NUMLINK], int sign) {
   free(inv_term);
   free(adj_term);
 #else     // Local case
-  complex tc3;
   complex *dZdU = malloc(sites_on_node * sizeof(*dZdU));
   complex *dWdU = malloc(sites_on_node * sizeof(*dWdU));
   complex *dZdUdag = malloc(sites_on_node * sizeof(*dZdUdag));
