@@ -4,35 +4,54 @@
 #include "susy_includes.h"
 
 double det_force(Real eps) {
-  register int i, a, b;
+  register int i, a, b, mu, nu;
   register site *s;
   double returnit = 0.0;
-  msg_tag *mtag[8];
+  msg_tag *tag[NUMLINK];
 
-  // Loop over directions, update momenta
+  // Loop over directions, update momenta by accumulating
+  //   ZWstar[b][a](x) + ZWstar[a][b](x - b) in tr_dest(x)
+  // where ZWstar[a][b](x) = plaqdet[a][b](x) [plaqdet[a][b](x) - 1]^*
   FORALLDIR(a) {
     FORALLSITES(i, s)
       tr_dest[i] = cmplx(0.0, 0.0);
 
-    // Loop over other directions,
-    // accumulating ZWstar[b][a](x) + ZWstar[a][b](x - b) in tr_dest(x)
-    // where ZWstar[a][b](x) = plaqdet[a][b](x) [plaqdet[a][b](x) - 1]^*
+    // Start first gather (a = 0 and b = 1), labelled by b
+    // Gather ZWstar[a][b] from x - b
+    tag[1] = start_gather_field(ZWstar[0][1], sizeof(complex),
+                                goffset[1] + 1, EVENANDODD, gen_pt[1]);
+
+    // Main loop
     FORALLDIR(b) {
       if (a == b)
         continue;
 
-      mtag[0] = start_gather_field(ZWstar[a][b], sizeof(complex),
-                                   goffset[b] + 1, EVENANDODD, gen_pt[0]);
+      if (a < NUMLINK - 1 || b < NUMLINK - 2) {     // Start next gather
+        if (b == NUMLINK - 1) {
+          mu = a + 1;
+          nu = 0;
+        }
+        else if (b == a - 1) {
+          mu = a;
+          nu = b + 2;
+        }
+        else {
+          mu = a;
+          nu = b + 1;
+        }
+        tag[nu] = start_gather_field(ZWstar[mu][nu], sizeof(complex),
+                                     goffset[nu] + 1, EVENANDODD, gen_pt[nu]);
+      }
 
       // Add ZWstar[b][a](x) to sum while gather runs
       FORALLSITES(i, s)
         CSUM(tr_dest[i], ZWstar[b][a][i]);
 
-      // Add D[mu][nu](x - nu) to sum
-      wait_gather(mtag[0]);
+      // Add ZWstar[a][b](x - b) to sum
+      wait_gather(tag[b]);
       FORALLSITES(i, s)
-        CSUM(tr_dest[i], *((complex *)(gen_pt[0][i])));
-      cleanup_gather(mtag[0]);
+        CSUM(tr_dest[i], *((complex *)(gen_pt[b][i])));
+      cleanup_gather(tag[b]);
     }
 
     // Now update momenta, overwriting f_U
