@@ -214,8 +214,7 @@ double gauge_force(Real eps) {
           mult_na((matrix *)local_pt[flip][0][i], &tmat, &tmat2);
         }
         else
-          mult_na((matrix *)local_pt[flip][0][i],
-                    &(Fmunu[index][i]), &tmat2);
+          mult_na((matrix *)local_pt[flip][0][i], &(Fmunu[index][i]), &tmat2);
 
         sub_matrix(&tmat2, (matrix *)local_pt[flip][1][i], &tmat);
         scalar_mult_sum_matrix(&tmat, 2.0, &(s->f_U[mu]));

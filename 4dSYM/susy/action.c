@@ -220,7 +220,7 @@ double det_action() {
   double re, im, det_action = 0.0;
 
   FORALLSITES(i, s) {
-    for (a = XUP; a < NUMLINK; a++) {
+    FORALLDIR(a) {
       for (b = a + 1; b < NUMLINK; b++) {
         re = plaqdet[a][b][i].real;
         im = plaqdet[a][b][i].imag;
