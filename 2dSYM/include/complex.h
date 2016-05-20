@@ -74,6 +74,7 @@ complex clog(complex *a);
 complex csqrt(complex *z);
 complex ce_itheta(Real theta);
 
+// Double precision function prototypes for complex numbers
 double_complex dcmplx(double x, double y);
 double_complex dcexp(double_complex *a);
 double_complex dclog(double_complex *a);

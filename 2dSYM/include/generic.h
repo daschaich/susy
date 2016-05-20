@@ -1,15 +1,15 @@
 // -----------------------------------------------------------------
+// Macros and declarations for miscellaneous generic routines
 #ifndef _GENERIC_H
 #define _GENERIC_H
-// Macros and declarations for miscellaneous generic routines
-// This header is for codes that call generic routines
+
 // Other generic directory declarations are elsewhere:
 //   See comdefs.h for communications
 //   See io_lat.h for I/O
 #include <stdio.h>
 #include "../include/int32type.h"
 #include "../include/complex.h"
-#include "../include/su3.h"
+#include "../include/susy.h"
 #include "../include/macros.h"
 #include "../include/random.h"
 #include "../include/file_types.h"
@@ -19,12 +19,6 @@
 
 
 // -----------------------------------------------------------------
-// d_plaq4.c
-void d_plaquette(double *plaq);
-void d_plaquette_frep(double *plaq_frep);
-void d_plaquette_lcl(double *plaq);
-void d_plaquette_frep_lcl(double *plaq_frep);
-
 // gaugefix.c
 void gaugefix(int gauge_dir,Real relax_boost,int max_gauge_iter,
               Real gfix_tol, field_offset diffmat, field_offset sumvec);
@@ -63,9 +57,6 @@ void free_lattice();
 void d_linktrsum(double_complex *linktrsum);
 u_int32type nersc_cksum();
 
-// ploop_dist.c
-complex ploop();
-
 // remap_stdio_from_args.c
 int remap_stdio_from_args(int argc, char *argv[]);
 
@@ -74,19 +65,14 @@ void initialize_prn(double_prn *prn_pt, int seed, int index);
 Real myrand(double_prn *prn_pt);
 
 // restrict_fourier.c
+// src is field to be transformed,
+// which must consist of size/sizeof(complex) consecutive complex numbers
+// space and space2 are working space, same size as src
+// space2 is needed only for non power of 2
+// Finally, isign is 1 for x --> k and -1 for k --> x
 void setup_restrict_fourier(int *key, int *slice);
-void restrict_fourier(
-     field_offset src,   /* src is field to be transformed */
-     field_offset space, /* space is working space, same size as src */
-     field_offset space2,/* space2 is working space, same size as src */
-                         /* space2 is needed only for non power of 2 */
-     int size,     /* Size of field in bytes.  The field must
-          consist of size/sizeof(complex) consecutive
-          complex numbers.  For example, an su3_vector
-          is 3 complex numbers. */
-     int isign);   /* 1 for x -> k, -1 for k -> x */
-
-// stout.c for stout smearing
-void stout_smear(int Nstout, double rho);
+void restrict_fourier(field_offset src,
+                      field_offset space, field_offset space2,
+                      int size, int isign);
 #endif
 // -----------------------------------------------------------------
