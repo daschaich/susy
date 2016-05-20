@@ -21,11 +21,16 @@ fmass 0.0
 G 0.1
 B 1.0
 
+APE_smear
+Nsmear 2
+alpha 0.1
+
+vevK 0.0
+vevK 0.0
+vevK 0.0
+
 max_cg_iterations 500
 error_per_site 1e-5
 
-ckpt_load 0
-ckpt_save 0
-
-reload_serial config.U2.44
+reload_serial config.U4.44
 forget

@@ -1,5 +1,5 @@
 #!/bin/bash
-# This script needs to be run from 4dSYM/testsuite/scalar directory
+# This script needs to be run from the 2dSYM/testsuite/scalar directory
 
 # Allow user to specify particular target
 if [ $# -gt 1 ]; then
@@ -9,8 +9,8 @@ if [ $# -gt 1 ]; then
   # Change N
   cd ../../susy/
   NSq=$[$N*$N]
-  awk -v"X=#define NCOL $N" '{sub(/^#define NCOL .*/,X);print}' ../include/su3.h > TEMP && mv TEMP ../include/su3.h
-  awk -v"X=#define DIMF $NSq" '{sub(/^#define DIMF .*/,X);print}' ../include/su3.h > TEMP && mv TEMP ../include/su3.h
+  awk -v"X=#define NCOL $N" '{sub(/^#define NCOL .*/,X);print}' ../include/susy.h > TEMP && mv TEMP ../include/susy.h
+  awk -v"X=#define DIMF $NSq" '{sub(/^#define DIMF .*/,X);print}' ../include/susy.h > TEMP && mv TEMP ../include/susy.h
 
   # Compile
   echo "Compiling susy_$target..."
@@ -22,8 +22,8 @@ if [ $# -gt 1 ]; then
 
   # Reset to N=2
   cd ../include/
-  awk -v"X=#define NCOL 2" '{sub(/^#define NCOL .*/,X);print}' su3.h > TEMP && mv TEMP su3.h
-  awk -v"X=#define DIMF 4" '{sub(/^#define DIMF .*/,X);print}' su3.h > TEMP && mv TEMP su3.h
+  awk -v"X=#define NCOL 2" '{sub(/^#define NCOL .*/,X);print}' susy.h > TEMP && mv TEMP susy.h
+  awk -v"X=#define DIMF 4" '{sub(/^#define DIMF .*/,X);print}' susy.h > TEMP && mv TEMP susy.h
 
   # Run
   cd ../testsuite/
@@ -52,9 +52,9 @@ for N in 2 3 4 ; do
   cd ../../susy/
   # Change N
   NSq=$[$N*$N]
-  awk -v"X=#define NCOL $N" '{sub(/^#define NCOL .*/,X);print}' ../include/su3.h > TEMP && mv TEMP ../include/su3.h
-  awk -v"X=#define DIMF $NSq" '{sub(/^#define DIMF .*/,X);print}' ../include/su3.h > TEMP && mv TEMP ../include/su3.h
-  for target in hmc meas hmc_meas eig phase ; do
+  awk -v"X=#define NCOL $N" '{sub(/^#define NCOL .*/,X);print}' ../include/susy.h > TEMP && mv TEMP ../include/susy.h
+  awk -v"X=#define DIMF $NSq" '{sub(/^#define DIMF .*/,X);print}' ../include/susy.h > TEMP && mv TEMP ../include/susy.h
+  for target in hmc meas hmc_meas mcrg eig phase ; do
     echo "Compiling susy_$target..."
     if ! make -f Make_scalar susy_$target >& /dev/null ; then
       echo "ERROR: susy_$target compilation failed"
@@ -64,12 +64,12 @@ for N in 2 3 4 ; do
   done
   # Reset to N=2
   cd ../include/
-  awk -v"X=#define NCOL 2" '{sub(/^#define NCOL .*/,X);print}' su3.h > TEMP && mv TEMP su3.h
-  awk -v"X=#define DIMF 4" '{sub(/^#define DIMF .*/,X);print}' su3.h > TEMP && mv TEMP su3.h
+  awk -v"X=#define NCOL 2" '{sub(/^#define NCOL .*/,X);print}' susy.h > TEMP && mv TEMP susy.h
+  awk -v"X=#define DIMF 4" '{sub(/^#define DIMF .*/,X);print}' susy.h > TEMP && mv TEMP susy.h
 
   # Run
   cd ../testsuite/
-  for target in hmc meas hmc_meas eig phase ; do
+  for target in hmc meas hmc_meas mcrg eig phase ; do
     rm -f scalar/$target.U$N.out
     echo "Running susy_$target..."
     ../susy/susy_$target < in.U$N.$target > scalar/$target.U$N.out
@@ -90,7 +90,7 @@ for N in 2 3 4 ; do
 
   # Check
   cd scalar/
-  for target in hmc meas hmc_meas eig phase phase_part1 phase_part2 ; do
+  for target in hmc meas hmc_meas mcrg eig phase phase_part1 phase_part2 ; do
     d="`diff -I'Time' -I'time' -I'seconds' -I'^start' $target.U$N.ref $target.U$N.out`"
     if [ -n "$d" ] ; then   # Non-zero string length
       echo "$target.U$N.ref and $target.U$N.out differ:"

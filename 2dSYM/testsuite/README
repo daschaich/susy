@@ -19,4 +19,4 @@ Alternately, if run_tests is run with no arguments it will test every target for
 
 Current limitations:
 Only anti-periodic temporal boundary conditions for the fermions are tested.
-Only the most conservative (15-pole) rational approximation is tested.
+Only a conservative (15-pole) rational approximation is tested.
