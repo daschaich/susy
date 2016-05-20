@@ -1,16 +1,16 @@
 // -----------------------------------------------------------------
-// Scalar multiplication on matrix
-// b <-- s * a
+// Add result of scalar multiplication on adjoint matrix
+// c <-- c + s * b
 #include "../include/config.h"
 #include "../include/complex.h"
 #include "../include/susy.h"
 
-void scalar_mult_matrix(matrix *a, Real s, matrix *b) {
+void scalar_mult_sum_adj_matrix(matrix *b, Real s, matrix *c) {
   register int i, j;
   for (i = 0; i < NCOL; i++) {
     for (j = 0; j < NCOL; j++) {
-      b->e[i][j].real = s * a->e[i][j].real;
-      b->e[i][j].imag = s * a->e[i][j].imag;
+      c->e[i][j].real += s * b->e[j][i].real;
+      c->e[i][j].imag -= s * b->e[j][i].imag;
     }
   }
 }

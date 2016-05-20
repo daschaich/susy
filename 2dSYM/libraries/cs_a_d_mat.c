@@ -1,15 +1,16 @@
 // -----------------------------------------------------------------
-// Adjoint of a fundamental matrix
-// b <-- adag
+// Add complex scalar to diagonal components of matrix
+// a <-- a + cI
 #include "../include/config.h"
 #include "../include/complex.h"
-#include "../include/su3.h"
+#include "../include/susy.h"
 
-void su3_adjoint_f(su3_matrix_f *a, su3_matrix_f *b) {
-  register int i, j;
+void c_scalar_add_diag(matrix *a, complex *c) {
+  register int i;
+
   for (i = 0; i < NCOL; i++) {
-    for (j = 0; j < NCOL; j++)
-      CONJG(a->e[j][i], b->e[i][j]);
+    a->e[i][i].real += c->real;
+    a->e[i][i].imag += c->imag;
   }
 }
 // -----------------------------------------------------------------

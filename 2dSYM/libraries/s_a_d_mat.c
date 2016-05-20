@@ -1,13 +1,14 @@
 // -----------------------------------------------------------------
-// Subtract two irrep vectors
-// c <-- a - b
+// Add real scalar to diagonal components of matrix
+// a <-- a + cI
 #include "../include/config.h"
 #include "../include/complex.h"
-#include "../include/su3.h"
+#include "../include/susy.h"
 
-void sub_su3_vector(su3_vector *a, su3_vector *b, su3_vector *c) {
+void scalar_add_diag(matrix *a, Real c) {
   register int i;
-  for (i = 0; i < DIMF; i++)
-    CSUB(a->c[i], b->c[i], c->c[i]);
+
+  for (i = 0; i < NCOL; i++)
+    a->e[i][i].real += c;
 }
 // -----------------------------------------------------------------

@@ -3,7 +3,7 @@
 // x <-- x * udag
 #include "../include/config.h"
 #include "../include/complex.h"
-#include "../include/su3.h"
+#include "../include/susy.h"
 
 void mult_su2_mat_vec_elem_a(su2_matrix *u, complex *x0, complex *x1) {
   complex z0, z1, t0 = *x0, t1 = *x1;

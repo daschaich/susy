@@ -1,29 +1,62 @@
 // -----------------------------------------------------------------
-// Irrep matrix multiplication with adjoint of second matrix
+// Matrix multiplication with adjoint of second matrix
+// c <-- c + a * bdag
+// c <-- c - a * bdag
 // c <-- a * bdag
 #include "../include/config.h"
 #include "../include/complex.h"
-#include "../include/su3.h"
+#include "../include/susy.h"
 
-#ifndef FAST
-void mult_su3_na(su3_matrix *a, su3_matrix *b, su3_matrix *c) {
+void mult_na_sum(matrix *a, matrix *b, matrix *c) {
   register int i, j, k;
-  register complex x, y;
-  for (i = 0; i < DIMF; i++) {
-    for (j = 0; j < DIMF; j++) {
-      x.real = 0.0;
-      x.imag = 0.0;
-      for (k = 0; k < DIMF; k++) {
-        CMUL_J(a->e[i][k], b->e[j][k], y);
-        CSUM(x, y);
+  for (i = 0; i < NCOL; i++) {
+    for (j = 0; j < NCOL; j++) {
+      for (k = 0; k < NCOL; k++) {
+        c->e[i][j].real += a->e[i][k].real * b->e[j][k].real
+                         + a->e[i][k].imag * b->e[j][k].imag;
+        c->e[i][j].imag += a->e[i][k].imag * b->e[j][k].real
+                         - a->e[i][k].real * b->e[j][k].imag;
       }
-      c->e[i][j] = x;
     }
   }
 }
-#else   // FAST version for DIMF=3 only
-void mult_su3_na(su3_matrix *a, su3_matrix *b, su3_matrix *c) {
-  int i, j;
+
+void mult_na_dif(matrix *a, matrix *b, matrix *c) {
+  register int i, j, k;
+  for (i = 0; i < NCOL; i++) {
+    for (j = 0; j < NCOL; j++) {
+      for (k = 0; k < NCOL; k++) {
+        c->e[i][j].real -= a->e[i][k].real * b->e[j][k].real
+                         + a->e[i][k].imag * b->e[j][k].imag;
+        c->e[i][j].imag -= a->e[i][k].imag * b->e[j][k].real
+                         - a->e[i][k].real * b->e[j][k].imag;
+      }
+    }
+  }
+}
+
+#ifndef FAST
+void mult_na(matrix *a, matrix *b, matrix *c) {
+  register int i, j, k;
+  for (i = 0; i < NCOL; i++) {
+    for (j = 0; j < NCOL; j++) {
+      // Initialize
+      c->e[i][j].real = a->e[i][0].real * b->e[j][0].real
+                      + a->e[i][0].imag * b->e[j][0].imag;
+      c->e[i][j].imag = a->e[i][0].imag * b->e[j][0].real
+                      - a->e[i][0].real * b->e[j][0].imag;
+      for (k = 1; k < NCOL; k++) {
+        c->e[i][j].real += a->e[i][k].real * b->e[j][k].real
+                         + a->e[i][k].imag * b->e[j][k].imag;
+        c->e[i][j].imag += a->e[i][k].imag * b->e[j][k].real
+                         - a->e[i][k].real * b->e[j][k].imag;
+      }
+    }
+  }
+}
+#else   // FAST version for NCOL=3 only
+void mult_na(matrix *a, matrix *b, matrix *c) {
+  int i,j;
   register Real t, ar, ai, br, bi, cr, ci;
   for (i = 0; i < 3; i++) {
     for (j = 0; j < 3; j++) {

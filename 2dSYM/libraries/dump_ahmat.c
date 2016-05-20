@@ -1,20 +1,22 @@
 // -----------------------------------------------------------------
-// Make a compressed anti-hermitian matrix from a matrix
+// Print the given anti-hermitian matrix
 #include "../include/config.h"
+#include <stdio.h>
 #include "../include/complex.h"
 #include "../include/susy.h"
 
-void compress_anti_hermitian(matrix *src, anti_hermitmat *dest) {
+void dump_ahmat(anti_hermitmat *ahm) {
   int i, j, index = 0;
+  printf("DIAG");
   for (i = 0; i < NCOL; i++)
-    dest->im_diag[i] = src->e[i][i].imag;
-
+    printf(" %.4g", ahm->im_diag[i]);
+  printf("\nOFFDIAG");
   for (i = 0; i < NCOL; i++) {
     for (j = i + 1; j < NCOL; j++) {
-      dest->m[index].real = src->e[i][j].real;
-      dest->m[index].imag = src->e[i][j].imag;
+      printf(" (%.4g, %.4g)", ahm->m[index].real, ahm->m[index].imag);
       index++;
     }
   }
+  printf("\n\n");
 }
 // -----------------------------------------------------------------
