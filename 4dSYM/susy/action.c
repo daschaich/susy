@@ -40,10 +40,8 @@ void compute_DmuUmu() {
                                goffset[mu] + 1, EVENANDODD, gen_pt[0]);
     wait_gather(mtag0);
     if (mu == 0) {
-      FORALLSITES(i, s) {
-        sub_matrix(&(tempmat[i]), (matrix *)(gen_pt[0][i]),
-                     &(DmuUmu[i]));   // Initialize
-      }
+      FORALLSITES(i, s)        // Initialize
+        sub_matrix(&(tempmat[i]), (matrix *)(gen_pt[0][i]), &(DmuUmu[i]));
     }
     else {
       FORALLSITES(i, s) {

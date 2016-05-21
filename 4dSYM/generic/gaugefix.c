@@ -306,7 +306,7 @@ void gaugefixstep(int gauge_dir, double *av_gauge_fix_action,
       FORSOMEPARITY(i, s, parity) {
         if (diffmat_offset >= 0)
           mat_copy((matrix *)(gen_pt[dir][i]),
-                     (matrix *)F_PT(s, diffmat_offset));
+                   (matrix *)F_PT(s, diffmat_offset));
         else
           mat_copy((matrix *)(gen_pt[dir][i]), &diffmatp[i]);
       }

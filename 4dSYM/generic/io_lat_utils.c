@@ -469,7 +469,7 @@ void read_site_list(gauge_file *gf) {
       /* Reads receiving site coordinate if file is not in natural order */
       if ((int)fread(gf->rank2rcv,sizeof(int32type), volume,gf->fp) != volume) {
         printf("read_site_list: Node %d site list read error %d\n",
-            this_node,errno);
+               this_node, errno);
         terminate(1);
       }
 

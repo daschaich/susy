@@ -15,8 +15,8 @@ the script will compile the target susy_$tag for gauge group U($N), run the susy
 
 Currently the MPI tests are customized for the HEP-TH cluster at the University of Colorado.  Adjusting the $makefile and $run variables at the start of mpi/run_tests may suffice to adjust the tests for other systems.
 
-Alternately, if run_tests is run with no arguments it will test every target for every N=2, 3 and 4.  This may take some time to complete!  Typical total serial runtimes are about 5 minutes for N=2, about 45 minutes for N=3 and about 7 hours for N=4, with pfaffian computations dominating costs for N=3 and 4.
+Alternately, if run_tests is run with no arguments it will test every target for every N=2, 3 and 4.  This may take some time to complete!  Typical total serial runtimes are about 2 minutes for N=2, about 14 minutes for N=3 and about 90 minutes for N=4, dominated by pfaffian computations.
 
 Current limitations:
 Only anti-periodic temporal boundary conditions for the fermions are tested.
-Only the most conservative (15-pole) rational approximation is tested.
+Only a conservative 15-pole rational approximation is tested.
