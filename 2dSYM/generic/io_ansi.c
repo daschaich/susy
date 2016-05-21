@@ -1,6 +1,6 @@
 // -----------------------------------------------------------------
-// Wrappers for file access using ANSI standard I/O
-// Patterned after stdio fopen, fseek, fwrite, fread, fclose
+// Wrappers for parallel file access using ANSI standard I/O
+// These are patterned after stdio fopen, fseek, fwrite, fread, fclose
 // Needed in case system doesn't use ANSI standard calls
 #include "generic_includes.h"
 #include <sys/types.h>

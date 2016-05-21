@@ -46,7 +46,7 @@ void loadQ(complex **Q, int ckpt_load) {
   int mynode = 0, destnode = 0, Nlines = 0;
   char infile[80];
   Real re, im;
-  complex **tbuf;   // Only malloc on node0 if numnodes() > 1
+  complex **tbuf = NULL;   // Only malloc on node0 if numnodes() > 1
   FILE *fp = NULL;
 
   // Total length of each column of Q
@@ -125,7 +125,7 @@ void loadQ(complex **Q, int ckpt_load) {
     if (this_node == 0 && mynode != -1) {
       for (i = ckpt_load; i < volume * Ndat; i++) {
         for (j = 0; j < sites_on_node * Ndat; j++)
-          tbuf[i][j] = cmplx(0.0, 0.0);   // Gives ignorable compiler warning
+          tbuf[i][j] = cmplx(0.0, 0.0);
       }
 
       tbuf[savi][savj] = cmplx(re, im);

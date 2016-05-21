@@ -120,7 +120,7 @@ void setup_layout() {
   sites_on_node = squaresize[XUP] * squaresize[TUP];
   /* Need even number of sites per hypercube */
   if (mynode() == 0) {
-    if (sites_on_node %2 != 0) {
+    if (sites_on_node % 2 != 0) {
       printf("SORRY, CAN'T LAY OUT THIS LATTICE\n");
       terminate(0);
     }

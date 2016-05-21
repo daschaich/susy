@@ -1,77 +1,78 @@
 // -----------------------------------------------------------------
 // Communications routines for MPI
-/* Exported functions:
-   initialize_machine()   Do machine dependent setup at the very beginning
-   normal_exit()          Close communications and exit
-   terminate()            Halt program abruptly and exit
-   machine_type()         Return string describing communications architecture
-   mynode()               Return node number of this node
-   numnodes()             Return number of nodes
-   g_sync()               Provide a synchronization point for all nodes
-   g_floatsum()           Sum a Real over all nodes
-   g_vecfloatsum()        Sum a vector of Reals over all nodes
-   g_doublesum()          Sum a double over all nodes
-   g_vecdoublesum()       Sum a vector of doubles over all nodes
-   g_complexsum()         Sum a generic precision complex number over all nodes
-   g_veccomplexsum()      Sum a vector of generic precision complex numbers
-                            over all nodes
-   g_dcomplexsum()        Sum a double precision complex number over all nodes
-   g_vecdcomplexsum()     Sum a vector of double_complex over all nodes
-   g_xor32()              Find global exclusive or of 32-bit word
-   g_floatmax()           Find maximum Real over all nodes
-   g_doublemax()          Find maximum double over all nodes
-   broadcast_float()      Broadcast a generic precision number from
-                            node 0 to all nodes
-   broadcast_double()     Broadcast a double precision number
-   broadcast_complex()    Broadcast a generic precision complex number
-   broadcast_dcomplex()   Broadcast a double precision complex number
-   broadcast_bytes()      Broadcast a number of bytes
-   send_integer()         Send an integer to one other node
-   receive_integer()      Receive an integer
-   send_field()           Send a field to one other node
-   get_field()            Receive a field from some other node
-   dclock()               Return a double precision time, with arbitrary zero
-   time_stamp()           Print wall clock time with message
-   sort_four_gathers()    Sort four contiguous gathers
-                            from XUP, XDOWN, TUP, TDOWN
-                            to XUP, TUP, XDOWN, TDOWN
-   make_nn_gathers()     makes all necessary lists for communications with
-                           nodes containing neighbor sites.
-   make_gather()         calculates and stores necessary communications lists
-                           for a given gather mapping
-   declare_gather_site()      creates a message tag that defines specific details
-                           of a gather to be used later
-   declare_gather_field()  creates a message tag that defines specific
-                               details of a gather from field to be used later
-   prepare_gather()       Optional call that allocates buffers for a previously
-                           declared gather.  Will automatically be called from
-                           do_gather() if not done before.
-   do_gather()           executes a previously declared gather
-   wait_gather()         waits for receives to finish, insuring that the
-                           data has actually arrived.
-   cleanup_gather()      frees all the buffers that were allocated, WHICH
-                           MEANS THAT THE GATHERED DATA MAY SOON DISAPPEAR.
-   accumulate_gather()   combines gathers into single message tag
-   declare_accumulate_gather_site()  does declare_gather_site() and
-                                  accumulate_gather() in single step.
-   declare_accumulate_gather_field()  does declare_gather_field() and
-                                           accumulate_gather() in single step.
-   start_gather_site()        older function which does declare/prepare/do_gather
-                           in a single step
-   start_gather_field()  older function which does
-                               declare/prepare/do_gather_field
-   start_general_gather_site()  starts asynchronous sends and receives required
-                             to gather fields at arbitrary displacement.
-   start_general_gather_field() starts asynchronous sends and receives
-                             required to gather neighbors from an
-           array of fields
-   wait_general_gather()   waits for receives to finish, insuring that the
-                             data has actually arrived, and sets pointers to
-           received data.
-   cleanup_general_gather()  frees all the buffers that were allocated, WHICH
-                               MEANS THAT THE GATHERED DATA MAY SOON DISAPPEAR.
-*/
-
+// Exported functions:
+// initialize_machine()   Do machine dependent setup at the very beginning
+// normal_exit()          Close communications and exit
+// terminate()            Halt program abruptly and exit
+// machine_type()         Return string describing communications architecture
+// mynode()               Return node number of this node
+// numnodes()             Return number of nodes
+// g_sync()               Provide a synchronization point for all nodes
+// g_floatsum()           Sum a Real over all nodes
+// g_vecfloatsum()        Sum a vector of Reals over all nodes
+// g_doublesum()          Sum a double over all nodes
+// g_vecdoublesum()       Sum a vector of doubles over all nodes
+// g_complexsum()         Sum a generic precision complex number over all nodes
+// g_veccomplexsum()      Sum a vector of generic precision complex numbers
+//                          over all nodes
+// g_dcomplexsum()        Sum a double precision complex number over all nodes
+// g_vecdcomplexsum()     Sum a vector of double_complex over all nodes
+// g_xor32()              Find global exclusive or of 32-bit word
+// g_floatmax()           Find maximum Real over all nodes
+// g_doublemax()          Find maximum double over all nodes
+// broadcast_float()      Broadcast a generic precision number from
+//                          node 0 to all nodes
+// broadcast_double()     Broadcast a double precision number
+// broadcast_complex()    Broadcast a generic precision complex number
+// broadcast_dcomplex()   Broadcast a double precision complex number
+// broadcast_bytes()      Broadcast a number of bytes
+// send_integer()         Send an integer to one other node
+// receive_integer()      Receive an integer
+// send_field()           Send a field to one other node
+// get_field()            Receive a field from some other node
+// dclock()               Return a double precision time, with arbitrary zero
+// time_stamp()           Print wall clock time with message
+// sort_four_gathers()    Sort four contiguous gathers
+//                          from XUP, XDOWN, TUP, TDOWN
+//                          to XUP, TUP, XDOWN, TDOWN
+// make_nn_gathers()      Make all necessary lists for communications with
+//                          nodes containing neighbor sites
+// make_gather()          Calculate and store necessary communications lists
+//                          for a given gather mapping
+// declare_gather_site()  Create a message tag that defines specific
+//                          details of a site gather to be used later
+// declare_gather_field() Create a message tag that defines specific
+//                          details of a field gather to be used later
+// prepare_gather()       Allocate buffers for a previously declared gather
+//                          Will automatically be called from do_gather()
+//                          if not done before
+// do_gather()            Execute a previously declared gather
+// wait_gather()          Wait for receives to finish,
+//                          ensuring that the data have actually arrived,
+//                          and set pointers to received data
+// cleanup_gather()       Free all the buffers that were allocated
+//                          NB: The gathered data may soon disappear
+// accumulate_gather()    Combine gathers into single message tag
+// declare_accumulate_gather_site()
+//                        Do declare_gather_site() and accumulate_gather()
+//                          in single step
+// declare_accumulate_gather_field()
+//                        Do declare_gather_field() and accumulate_gather()
+//                          in single step
+// start_gather_site()    Declare/prepare/do site gather in a single step
+// start_gather_field()   Declare/prepare/do field gather in a single step
+// start_general_gather_site()
+//                        Start asynchronous sends and receives required
+//                          to gather site data at arbitrary displacement
+// start_general_gather_field()
+//                        Start asynchronous sends and receives required to
+//                          gather field data at arbitrary displacement
+// wait_general_gather()  Wait for receives to finish, insuring that the
+//                          data have actually arrived,
+//                          and set pointers to received data
+// cleanup_general_gather()
+//                        Free all the buffers that were allocated
+//                          NB: the gathered data may soon disappear
 #include <time.h>
 #include "generic_includes.h"
 #include <mpi.h>
@@ -219,15 +220,15 @@ void initialize_machine(int *argc, char ***argv) {
 
   // Check if 32 bit int is set correctly
 #ifdef SHORT_IS_32BIT
-  if (sizeof(unsigned short)!=4) {
-    printf("node%d: SHORT_IS_32BIT is set but sizeof(unsigned short)=%d\n",
-     mynode(), sizeof(unsigned short));
+  if (sizeof(unsigned short) != 4) {
+    printf("node%i: SHORT_IS_32BIT is set but sizeof(unsigned short) = %i\n",
+           mynode(), sizeof(unsigned short));
     terminate(1);
   }
 #else
-  if (sizeof(unsigned int)!=4) {
-    printf("node%d: SHORT_IS_32BIT is not set but sizeof(unsigned int)=%d\n",
-     mynode(), (int) sizeof(unsigned int));
+  if (sizeof(unsigned int) != 4) {
+    printf("node%i: SHORT_IS_32BIT is not set but sizeof(unsigned int) = %i\n",
+           mynode(), (int)sizeof(unsigned int));
     terminate(1);
   }
 #endif
@@ -326,11 +327,11 @@ void g_floatsum(Real *fpt) {
 
 // Sum a vector of Reals over all nodes
 void g_vecfloatsum(Real *fpt, int length) {
-  Real *work;
   int i;
-  work = (Real *)malloc(length*sizeof(Real));
+  Real *work = malloc(length * sizeof(*work));
   MPI_Allreduce(fpt, work, length, OUR_MPI_REAL, MPI_SUM, MPI_COMM_WORLD);
-  for (i = 0; i<length; i++) fpt[i] = work[i];
+  for (i = 0; i<length; i++)
+    fpt[i] = work[i];
   free(work);
 }
 
@@ -342,29 +343,29 @@ void g_doublesum(double *dpt) {
 }
 
 // Sum a vector of doubles over all nodes
-void g_vecdoublesum(double *dpt, int ndoubles) {
-  double *work;
+void g_vecdoublesum(double *dpt, int length) {
   int i;
-  work = (double *)malloc(ndoubles*sizeof(double));
-  MPI_Allreduce(dpt, work, ndoubles, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-  for (i = 0; i < ndoubles; i++) dpt[i] = work[i];
+  double *work = malloc(length * sizeof(*work));
+  MPI_Allreduce(dpt, work, length, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+  for (i = 0; i < length; i++)
+    dpt[i] = work[i];
   free(work);
 }
 
-// Sum the generic precision complex type over all nodes
+// Sum complex over all nodes
 void g_complexsum(complex *cpt) {
   complex work;
   MPI_Allreduce(cpt, &work, 2, OUR_MPI_REAL, MPI_SUM, MPI_COMM_WORLD);
   *cpt = work;
 }
 
-// Sum a vector of the generic precision complex type over all nodes
-void g_veccomplexsum(complex *cpt, int ncomplex) {
-  complex *work;
+// Sum a vector of complex over all nodes
+void g_veccomplexsum(complex *cpt, int length) {
   int i;
-  work = (complex *)malloc(ncomplex*sizeof(complex));
-  MPI_Allreduce(cpt, work, 2*ncomplex, OUR_MPI_REAL, MPI_SUM, MPI_COMM_WORLD);
-  for (i = 0; i < ncomplex; i++) cpt[i] = work[i];
+  complex *work = malloc(length * sizeof(*work));
+  MPI_Allreduce(cpt, work, 2 * length, OUR_MPI_REAL, MPI_SUM, MPI_COMM_WORLD);
+  for (i = 0; i < length; i++)
+    cpt[i] = work[i];
   free(work);
 }
 
@@ -376,12 +377,12 @@ void g_dcomplexsum(double_complex *cpt) {
 }
 
 // Sum a vector of double_complex over all nodes
-void g_vecdcomplexsum(double_complex *cpt, int ncomplex) {
-  double_complex *work;
+void g_vecdcomplexsum(double_complex *cpt, int length) {
   int i;
-  work = (double_complex *)malloc(ncomplex*sizeof(double_complex));
-  MPI_Allreduce(cpt, work, 2*ncomplex, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-  for (i = 0; i < ncomplex; i++) cpt[i] = work[i];
+  double_complex *work = malloc(length * sizeof(*work));
+  MPI_Allreduce(cpt, work, 2 * length, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+  for (i = 0; i < length; i++)
+    cpt[i] = work[i];
   free(work);
 }
 // -----------------------------------------------------------------
@@ -395,10 +396,10 @@ void g_xor32(u_int32type *pt) {
   u_int32type work;
 #ifdef SHORT_IS_32BIT
   MPI_Allreduce(pt, &work, 1, MPI_UNSIGNED_SHORT,
-     MPI_BXOR, MPI_COMM_WORLD);
+                MPI_BXOR, MPI_COMM_WORLD);
 #else
   MPI_Allreduce(pt, &work, 1, MPI_UNSIGNED,
-     MPI_BXOR, MPI_COMM_WORLD);
+                MPI_BXOR, MPI_COMM_WORLD);
 #endif
   *pt = work;
 }
@@ -543,11 +544,11 @@ void sort_four_gathers(int index) {
 // Find coordinates of neighbor
 // Used by make_gather for nearest neighbor gathers
 static void neighbor_coords_special(
-  int x, int t,       /* coordinates of site */
-  int *dirpt,                       /* direction (eg XUP) */
-  int fb,                           /* "forwards/backwards"  */
+  int x, int t,                     // Coordinates of site
+  int *dirpt,                       // Direction (eg XUP)
+  int fb,                           // Forwards/backwards
   int *x2p, int *t2p)
-                                    /* pointers to coordinates of neighbor */
+                                    // Pointers to coordinates of neighbor
 {
   int dir;
 
@@ -1109,34 +1110,34 @@ int make_gather(
 
    example:
   msg_tag *tag;
-  tag = declare_gather_site(F_OFFSET(phi), sizeof(su3_vector), XUP,
-                        EVEN, gen_pt[0]);
-        prepare_gather(tag);  ** this step is optional **
-        do_gather(tag);
+  tag = declare_gather_site(F_OFFSET(src), sizeof(vector), XUP,
+                            EVEN, gen_pt[0]);
+  prepare_gather(tag);  ** this step is optional **
+  do_gather(tag);
     ** do other stuff, but don't modify tag or gen_pt[0] **
   wait_gather(tag);
-    ** gen_pt[0][i] now contains the address of the phi
+    ** gen_pt[0][i] now contains the address of the src
      vector (or a copy thereof) on the neighbor of site i in the
      XUP direction for all even sites i.
      Do whatever you want with it here, but don't modify tag or
      gen_pt[0].
-     Do modify the source field phi. **
+     Do modify the source field src **
   do_gather(tag);
     ** do other stuff **
   wait_gather(tag);
-    ** gen_pt[0][i] now contains the address of the modified phi.
-     The restart-wait may be repeated as often as desired.  **
+    ** gen_pt[0][i] now contains the address of the modified src.
+     The restart-wait may be repeated as often as desired
   cleanup_gather(tag);
     ** subsequent calls will overwrite the gathered fields. but if you
-     don't clean up, you will eventually run out of space **
+     don't clean up, you will eventually run out of space
 */
 
 // Return msg_tag containing details for specific gather
-// Handle gathers from both site structure and field arrays
+// Handle gathers from both the site structure and an array of fields
 msg_tag* declare_strided_gather(
   void *field,          /* source buffer aligned to desired field */
   int stride,           /* bytes between fields in source buffer */
-  int size,   /* size in bytes of the field (eg sizeof(su3_vector))*/
+  int size,   /* size in bytes of the field (eg sizeof(vector))*/
   int index,    /* direction to gather from. eg XUP - index into
          neighbor tables */
   int subl,   /* subl of sites whose neighbors we gather.
@@ -1272,16 +1273,16 @@ void prepare_gather(msg_tag *mtag) {
   }
 
   nids = mtag->nids;
-  if (nids!=0) {
-    mtag->ids = ids = (int *)malloc(nids*sizeof(int));
-    for (i=0, j=id_offset; i < nids; i++, j=(j+1)%num_gather_ids) {
-      /* find next available type */
-      while (id_array[j]!=0) {
-  j = (j+1)%num_gather_ids;
-  if (j==id_offset) {
-    printf("error: not enough message ids\n");
-    terminate(1);
-  }
+  if (nids != 0) {
+    mtag->ids = ids = malloc(nids * sizeof(*ids));
+    for (i = 0, j = id_offset; i < nids; i++, j = (j + 1) % num_gather_ids) {
+      // Find next available type
+      while (id_array[j] != 0) {
+        j = (j + 1) % num_gather_ids;
+        if (j==id_offset) {
+          printf("error: not enough message ids\n");
+          terminate(1);
+        }
       }
       ids[i] = j;
       id_array[j] = 1;
@@ -1301,28 +1302,28 @@ void prepare_gather(msg_tag *mtag) {
       printf("NO ROOM for msg_buf, node%d\n", mynode());
       terminate(1);
     }
-    /* set pointers in sites to correct location */
+    // Set pointers in sites to correct location
     gmem = mrecv[i].gmem;
     do {
-      for (j=0; j<gmem->num; ++j,tpt+=gmem->size) {
-  ((char **)gmem->mem)[gmem->sitelist[j]] = tpt;
+      for (j = 0; j < gmem->num; ++j,tpt += gmem->size) {
+        ((char **)gmem->mem)[gmem->sitelist[j]] = tpt;
       }
     } while ((gmem=gmem->next) != NULL);
   }
 
   msend = mtag->send_msgs;
-  /* for each node whose neighbors I have */
+  // For each node whose neighbors I have
   for (i = 0; i < mtag->nsends; ++i) {
-    msend[i].msg_buf = (char *)malloc(msend[i].msg_size);
+    msend[i].msg_buf = malloc(msend[i].msg_size);
     if (msend[i].msg_buf == NULL) {
-      printf("NO ROOM for msg_buf, node%d\n",mynode());
+      printf("NO ROOM for msg_buf, node%d\n", mynode());
       terminate(1);
     }
   }
 }
 
-// Actually execute the gather
-void do_gather(msg_tag *mtag) { /* previously returned by start_gather_site */
+// Actually execute the gather using mtag returned by start_gather_site
+void do_gather(msg_tag *mtag) {
   register int i, j;
   register char *tpt; /* scratch pointer in buffers */
   msg_sr_t *mbuf;
@@ -1332,29 +1333,29 @@ void do_gather(msg_tag *mtag) { /* previously returned by start_gather_site */
     prepare_gather(mtag);
 
   mbuf = mtag->recv_msgs;
-  /* for each node which has neighbors of my sites */
+  // For each node which has neighbors of my sites
   for (i = 0; i < mtag->nrecvs; i++) {
-    /* post receive */
+    // Post receive
     MPI_Irecv(mbuf[i].msg_buf, mbuf[i].msg_size, MPI_BYTE, MPI_ANY_SOURCE,
-         GATHER_ID(mtag->ids[mbuf[i].id_offset]), MPI_COMM_WORLD,
-         &mbuf[i].msg_req);
+              GATHER_ID(mtag->ids[mbuf[i].id_offset]), MPI_COMM_WORLD,
+              &mbuf[i].msg_req);
   }
 
   mbuf = mtag->send_msgs;
-  /* for each node whose neighbors I have */
+  // For each node whose neighbors I have
   for (i = 0; i < mtag->nsends; ++i) {
-    /* gather data into the buffer */
+    // Gather data into the buffer
     tpt = mbuf[i].msg_buf;
     gmem = mbuf[i].gmem;
     do {
-      for (j=0; j<gmem->num; ++j,tpt+=gmem->size) {
-  memcpy(tpt, gmem->mem + gmem->sitelist[j]*gmem->stride, gmem->size);
+      for (j = 0; j < gmem->num; ++j, tpt += gmem->size) {
+        memcpy(tpt, gmem->mem + gmem->sitelist[j] * gmem->stride, gmem->size);
       }
-    } while ((gmem=gmem->next) != NULL);
-    /* start the send */
+    } while ((gmem = gmem->next) != NULL);
+    // Start the send
     MPI_Isend(mbuf[i].msg_buf, mbuf[i].msg_size, MPI_BYTE, mbuf[i].msg_node,
-         GATHER_ID(mtag->ids[mbuf[i].id_offset]), MPI_COMM_WORLD,
-         &mbuf[i].msg_req);
+              GATHER_ID(mtag->ids[mbuf[i].id_offset]), MPI_COMM_WORLD,
+              &mbuf[i].msg_req);
   }
 }
 
@@ -1420,7 +1421,7 @@ void cleanup_gather(msg_tag *mtag) {
 // Declare gather with a field offset
 msg_tag* declare_gather_site(
   field_offset field, /* which field? Some member of structure "site" */
-  int size,   /* size in bytes of the field (eg sizeof(su3_vector))*/
+  int size,   /* size in bytes of the field (eg sizeof(vector))*/
   int index,    /* direction to gather from. eg XUP - index into
          neighbor tables */
   int parity,   /* parity of sites whose neighbors we gather.
@@ -1434,7 +1435,7 @@ msg_tag* declare_gather_site(
 // Old style gather routine: declare and start in one call
 msg_tag* start_gather_site(
   field_offset field, /* which field? Some member of structure "site" */
-  int size,   /* size in bytes of the field (eg sizeof(su3_vector))*/
+  int size,   /* size in bytes of the field (eg sizeof(vector))*/
   int index,    /* direction to gather from. eg XUP - index into
          neighbor tables */
   int parity,   /* parity of sites whose neighbors we gather.
@@ -1444,7 +1445,7 @@ msg_tag* start_gather_site(
   msg_tag *mt;
 
   mt = declare_strided_gather((char *)lattice + field, sizeof(site), size,
-             index, parity, dest);
+                              index, parity, dest);
   prepare_gather(mt);
   do_gather(mt);
 
@@ -1455,11 +1456,11 @@ msg_tag* start_gather_site(
 
 
 // -----------------------------------------------------------------
-// Gather routines from arrays of fields
-// Declare a gather from a field
+// Gather routines from an array of fields
+// Declare a gather from an array of fields
 msg_tag* declare_gather_field(
   void *field,   /* which field? Pointer returned by malloc() */
-  int size,   /* size in bytes of the field (eg sizeof(su3_vector))*/
+  int size,   /* size in bytes of the field (eg sizeof(vector))*/
   int index,    /* direction to gather from. eg XUP - index into
          neighbor tables */
   int parity,   /* parity of sites whose neighbors we gather.
@@ -1472,7 +1473,7 @@ msg_tag* declare_gather_field(
 // Old style gather routine: declare and start in one call
 msg_tag* start_gather_field(
   void *field,   /* which field? Pointer returned by malloc() */
-  int size,   /* size in bytes of the field (eg sizeof(su3_vector))*/
+  int size,   /* size in bytes of the field (eg sizeof(vector))*/
   int index,    /* direction to gather from. eg XUP - index into
          neighbor tables */
   int parity,   /* parity of sites whose neighbors we gather.
@@ -1504,10 +1505,10 @@ msg_tag* start_gather_field(
 
    msg_tag *tag1, *tag2, *mtag;
 
-   tag1 = declare_gather_site(F_OFFSET(phi), sizeof(su3_vector), XUP,
-                    EVEN, gen_pt1);
-   tag2 = declare_gather_site(F_OFFSET(phi), sizeof(su3_vector), XDOWN,
-                    EVEN, gen_pt2);
+   tag1 = declare_gather_site(F_OFFSET(phi), sizeof(vector), XUP,
+                              EVEN, gen_pt1);
+   tag2 = declare_gather_site(F_OFFSET(phi), sizeof(vector), XDOWN,
+                              EVEN, gen_pt2);
    mtag = NULL;
    accumulate_gather(&mtag, tag1);
    accumulate_gather(&mtag, tag2);
@@ -1530,10 +1531,10 @@ msg_tag* start_gather_field(
    msg_tag *mtag;
 
    mtag = NULL;
-   declare_accumulate_gather_site(&mtag, F_OFFSET(phi), sizeof(su3_vector), XUP,
-                        EVEN, gen_pt1);
-   declare_accumulate_gather_site(&mtag, F_OFFSET(phi), sizeof(su3_vector), XDOWN,
-                        EVEN, gen_pt2);
+   declare_accumulate_gather_site(&mtag, F_OFFSET(phi), sizeof(vector),
+                                  XUP, EVEN, gen_pt1);
+   declare_accumulate_gather_site(&mtag, F_OFFSET(phi), sizeof(vector),
+                                  XDOWN, EVEN, gen_pt2);
    prepare_gather(mtag);  ** optional **
    do_gather(mtag);
    wait_gather(mtag);
@@ -1542,12 +1543,12 @@ msg_tag* start_gather_field(
    wait_gather(mtag);
    cleanup_gather(mtag);
 
- one coule also replace
+ one could also replace
    mtag = NULL;
-   declare_accumulate_gather_site(&mtag, F_OFFSET(phi), sizeof(su3_vector), XUP,
-                        EVEN, gen_pt1);
+   declare_accumulate_gather_site(&mtag, F_OFFSET(phi), sizeof(vector),
+                                  XUP, EVEN, gen_pt1);
  with
-   mtag = declare_gather_site(F_OFFSET(phi), sizeof(su3_vector), XUP,
+   mtag = declare_gather_site(F_OFFSET(phi), sizeof(vector), XUP,
                     EVEN, gen_pt1);
  since they do the same thing, however the first form is a bit more uniform
  in the given example.
@@ -1646,7 +1647,7 @@ static void declare_accumulate_strided_gather(
   msg_tag **mmtag,      /* tag to accumulate gather into */
   void *field,          /* which field? Some member of structure "site" */
   int stride,           /* bytes between fields in source buffer */
-  int size,   /* size in bytes of the field (eg sizeof(su3_vector))*/
+  int size,   /* size in bytes of the field (eg sizeof(vector))*/
   int index,    /* direction to gather from. eg XUP - index into
          neighbor tables */
   int parity,   /* parity of sites whose neighbors we gather.
@@ -1668,7 +1669,7 @@ static void declare_accumulate_strided_gather(
 void declare_accumulate_gather_site(
   msg_tag **mmtag,
   field_offset field, /* which field? Some member of structure "site" */
-  int size,   /* size in bytes of the field (eg sizeof(su3_vector))*/
+  int size,   /* size in bytes of the field (eg sizeof(vector))*/
   int index,    /* direction to gather from. eg XUP - index into
          neighbor tables */
   int parity,   /* parity of sites whose neighbors we gather.
@@ -1679,11 +1680,11 @@ void declare_accumulate_gather_site(
              sizeof(site), size, index, parity, dest);
 }
 
-// Declare and merge gather from field
+// Declare and merge gather from an array of fields
 void declare_accumulate_gather_field(
   msg_tag **mmtag,
   void *field,   /* which field? Pointer returned by malloc() */
-  int size,   /* size in bytes of the field (eg sizeof(su3_vector))*/
+  int size,   /* size in bytes of the field (eg sizeof(vector))*/
   int index,    /* direction to gather from. eg XUP - index into
          neighbor tables */
   int parity,   /* parity of sites whose neighbors we gather.
@@ -1707,7 +1708,7 @@ void declare_accumulate_gather_field(
    example:
   msg_tag *tag;
   int disp[2] = {1, 0};
-  tag = start_general_gather_site(F_OFFSET(phi), sizeof(su3_vector), disp,
+  tag = start_general_gather_site(F_OFFSET(phi), sizeof(vector), disp,
       EVEN, gen_pt[0]);
     ** do other stuff **
   wait_general_gather(tag);
@@ -1735,7 +1736,7 @@ static char **tdest;     /* tdest is copy of dest */
 msg_tag* start_general_strided_gather(
   char *field,          /* source buffer aligned to desired field */
   int stride,           /* bytes between fields in source buffer */
-  int size,   /* size in bytes of the field (eg sizeof(su3_vector))*/
+  int size,   /* size in bytes of the field (eg sizeof(vector))*/
   int *displacement,  /* displacement to gather from. four components */
   int parity,   /* parity of sites to which we gather.
          one of EVEN, ODD or EVENANDODD. */
@@ -1958,7 +1959,7 @@ msg_tag* start_general_strided_gather(
 
 msg_tag* start_general_gather_site(
   field_offset field, /* which field? Some member of structure "site" */
-  int size,   /* size in bytes of the field (eg sizeof(su3_vector))*/
+  int size,   /* size in bytes of the field (eg sizeof(vector))*/
   int *displacement,  /* displacement to gather from. four components */
   int parity,   /* parity of sites to which we gather.
          one of EVEN, ODD or EVENANDODD. */
@@ -1970,7 +1971,7 @@ msg_tag* start_general_gather_site(
 
 msg_tag* start_general_gather_field(
   void *field,         /* which field? Pointer returned by malloc() */
-  int size,   /* size in bytes of the field (eg sizeof(su3_vector))*/
+  int size,   /* size in bytes of the field (eg sizeof(vector))*/
   int *displacement,  /* displacement to gather from. four components */
   int parity,   /* parity of sites to which we gather.
          one of EVEN, ODD or EVENANDODD. */

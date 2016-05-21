@@ -18,22 +18,27 @@ u_int32type nersc_cksum() {
 
 // -----------------------------------------------------------------
 void d_linktrsum(double_complex *linktrsum) {
-  int i,dir;
+  int i, dir;
   site *s;
-  su3_matrix_f *a;
+  matrix *a;
 
   linktrsum->real = 0.;
   linktrsum->imag = 0.;
 
   FORALLSITES(i, s) {
     FORALLUPDIR(dir) {
-      a = &s->linkf[dir];
+      a = &s->link[dir];
       CSUM(*linktrsum, a->e[0][0]);
       CSUM(*linktrsum, a->e[1][1]);
-#if (NCOL>2)
+#if (NCOL > 2)
       CSUM(*linktrsum, a->e[2][2]);
-#if (NCOL>3)
+#if (NCOL > 3)
       CSUM(*linktrsum, a->e[3][3]);
+#if (NCOL > 4)
+      int j;
+      for (j = 4; j < NCOL; j++)
+        CSUM(*linktrsum, a->e[j][j]);
+#endif
 #endif
 #endif
     }

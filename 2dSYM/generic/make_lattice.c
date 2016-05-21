@@ -13,9 +13,9 @@
 void make_lattice() {
   register int i;
   int x, t;
-  // Allocate space for lattice,
-  // fill in parity, coordinates and index
-  node0_printf("Mallocing %.1f MBytes per node for lattice\n",
+
+  // Allocate space for lattice
+  node0_printf("Mallocing %.1f MBytes per core for lattice\n",
                (double)sites_on_node * sizeof(site) / 1e6);
   lattice = malloc(sites_on_node * sizeof(*lattice));
   if (lattice == NULL) {
@@ -25,13 +25,14 @@ void make_lattice() {
 
   // Allocate address vectors
   for (i = 0; i < N_POINTERS; i++) {
-    gen_pt[i] = malloc(sites_on_node * sizeof(char *) );
+    gen_pt[i] = malloc(sites_on_node * sizeof(char *));
     if (gen_pt[i] == NULL) {
-      printf("node%d: no room for pointer vector\n",this_node);
+      printf("node%d: no room for pointer array\n", this_node);
       terminate(1);
     }
   }
 
+  // Fill in parity, coordinates and index
   for (t = 0; t < nt; t++) {
     for (x = 0; x < nx; x++) {
       if (node_number(x, t) == mynode()) {
@@ -44,7 +45,7 @@ void make_lattice() {
         else
           lattice[i].parity = ODD;
 #ifdef SITERAND
-        initialize_prn(&(lattice[i].site_prn) , iseed, lattice[i].index);
+        initialize_prn(&(lattice[i].site_prn), iseed, lattice[i].index);
 #endif
       }
     }
