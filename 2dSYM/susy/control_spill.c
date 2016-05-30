@@ -1,12 +1,8 @@
 // -----------------------------------------------------------------
-// Main procedure for N=4 SYM lattice printing
+// Main procedure for N=(2,2) SYM lattice printing
 #define CONTROL
 #include "susy_includes.h"
-// -----------------------------------------------------------------
 
-
-
-// -----------------------------------------------------------------
 int main(int argc, char *argv[]) {
   int prompt, s, x, t, mu, i, j;
   Real re, im;
@@ -21,6 +17,8 @@ int main(int argc, char *argv[]) {
   g_sync();
   prompt = setup();
   setup_lambda();
+  setup_PtoP();
+  setup_FQ();
 
   // Load input and run (loop removed)
   if (readin(prompt) != 0) {
@@ -42,8 +40,8 @@ int main(int argc, char *argv[]) {
       for (mu = 0; mu < NUMLINK; mu++) {
         for (i = 0; i < NCOL; i++) {
           for (j = 0; j < NCOL; j++) {
-            re = lattice[s].linkf[mu].e[i][j].real;
-            im = lattice[s].linkf[mu].e[i][j].imag;
+            re = lattice[s].link[mu].e[i][j].real;
+            im = lattice[s].link[mu].e[i][j].imag;
             printf("%g\t%g\t", re, im);
           }
         }

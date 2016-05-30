@@ -38,7 +38,7 @@ endif
 PREC = -DPRECISION=${PRECISION}
 
 # Complete set of compiler flags - do not change
-CFLAGS = ${OPT} ${OCFLAGS} -D${COMMTYPE} ${CODETYPE} ${INLINEOPT} \
+CFLAGS = ${OPT} -D${COMMTYPE} ${CODETYPE} ${INLINEOPT} \
          ${PREC} ${CLFS} -I${MYINCLUDEDIR} ${DEFINES} ${DARCH}
 
 ILIB = ${LIBADD}

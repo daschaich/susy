@@ -1,5 +1,5 @@
 // -----------------------------------------------------------------
-// Main procedure for N=4 SYM measurements on saved configurations,
+// Main procedure for N=(2,2) SYM measurements on saved configurations,
 // including scalar correlators, Wilson loops, Ward identity violations
 // and discrete R symmetry observables
 #define CONTROL
@@ -10,9 +10,12 @@
 
 // -----------------------------------------------------------------
 int main(int argc, char *argv[]) {
-  int prompt, mu;
-  double dplaq, dtime;
-  complex plp = cmplx(99, 99);
+  int prompt, dir, j;
+  double dplaq, dtime, plpMod = 0.0;
+  double linktr[NUMLINK], linktr_ave, linktr_width;
+  double link_det[NUMLINK], det_ave, det_width;
+  double ave_eigs[NCOL], eig_widths[NCOL], min_eigs[NCOL], max_eigs[NCOL];
+  complex plp = cmplx(99.0, 99.0);
 
   // Setup
   setlinebuf(stdout); // DEBUG
@@ -24,114 +27,152 @@ int main(int argc, char *argv[]) {
   g_sync();
   prompt = setup();
   setup_lambda();
+  epsilon();
+  setup_PtoP();
+  setup_FQ();
+
+#ifdef SMEAR
+  double max_plaq = 0.0;
+#endif
 
 #ifdef WLOOP
   register int i;
   register site *s;
 #endif
 
-#ifdef PL_CORR
-  // Set up Fourier transform for Polyakov loop correlator
-  int key[4] = {1, 1, 1, 0};
-  int restrict[4];
-  Real space_vol = (Real)nx;
-  setup_restrict_fourier(key, restrict);
-#endif
-
-  // Load input and run (loop removed)
+  // Load input and run
   if (readin(prompt) != 0) {
     node0_printf("ERROR in readin, aborting\n");
     terminate(1);
   }
   dtime = -dclock();
 
+  // Uncomment this block to print plaquette, determinant & trace distributions
+  // Be sure to uncomment PLAQ_DIST and DET_DIST, and run in serial
+//  local_plaquette(&dplaq);
+//  node0_printf("\n");
+//  if (G < IMAG_TOL)
+//    G = 999;
+//  if (B < IMAG_TOL)
+//    B = 999;
+//  compute_DmuUmu();
+//  dtime += dclock();
+//  node0_printf("\nTime = %.4g seconds\n", dtime);
+//  fflush(stdout);
+//  return 0;
+
   // Check: compute initial plaquette and bosonic action
-  d_plaquette(&dplaq);
+  plaquette(&dplaq);
   node0_printf("START %.8g ", dplaq);
-  dplaq = d_gauge_action();
+  dplaq = gauge_action(NODET);
   node0_printf("%.8g\n", dplaq / (double)volume);
 
-  // Do "local" measurements to check evolution
-  // Polyakov loop measurement
-  plp = ploop();
+  // Do "local" measurements to check configuration
+  // Tr[Udag.U] / N
+  linktr_ave = link_trace(linktr, &linktr_width,
+                          link_det, &det_ave, &det_width);
+  node0_printf("FLINK");
+  for (dir = XUP; dir < NUMLINK; dir++)
+    node0_printf(" %.6g", linktr[dir]);
+  node0_printf(" %.6g %.6g\n", linktr_ave, linktr_width);
+  node0_printf("FLINK_DET");
+  for (dir = XUP; dir < NUMLINK; dir++)
+    node0_printf(" %.6g", link_det[dir]);
+  node0_printf(" %.6g %.6g\n", det_ave, det_width);
 
-  // Tr[Udag.U] / N and plaquette measurements
-  d_link();
-  d_plaquette(&dplaq);
-
-  // Re(Polyakov) Im(Poyakov) cg_iters ss_plaq st_plaq
+  // Polyakov loop and plaquette measurements
+  // Format: GMES Re(Polyakov) Im(Poyakov) cg_iters plaq
+  plp = ploop(TUP, NODET, &plpMod);
+  plaquette(&dplaq);
   node0_printf("GMES %.8g %.8g 0 %.8g ",
                plp.real, plp.imag, dplaq);
 
   // Bosonic action (printed twice by request)
-  dplaq = d_gauge_action();
-  node0_printf("%.8g\n", dplaq / (double)volume);
-  node0_printf("BACTION %.8g\n", dplaq / (double)volume);
+  // Might as well spit out volume average of Polyakov loop modulus
+  dplaq = gauge_action(NODET) / (double)volume;
+  node0_printf("%.8g ", dplaq);
+  node0_printf("%.8g\n", plpMod);
+  node0_printf("BACTION %.8g\n", dplaq);
 
-#ifdef STOUT
-#define MIN_PLAQ
+  // Full and polar-projected Wilson lines in all five basis dirs
+  node0_printf("LINES      ");
+  for (dir = XUP; dir < NUMLINK; dir++) {
+    plp = ploop(dir, NODET, &plpMod);
+    node0_printf(" %.6g %.6g", plp.real, plp.imag);
+  }
+  node0_printf("\nLINES_POLAR");
+  for (dir = XUP; dir < NUMLINK; dir++) {
+    plp = ploop(dir, YESDET, &plpMod);
+    node0_printf(" %.6g %.6g", plp.real, plp.imag);
+  }
+  node0_printf("\n");
+
+#ifdef SMEAR
   // Optionally smear before main measurements
-  node0_printf("Doing %d stout smearing steps with rho=%.4g...\n",
-               Nstout, rho);
+  // NO_SMEAR sets Nsmear = 0
+  if (smearflag == STOUT_SMEAR) {
+    node0_printf("Doing %d stout smearing steps ", Nsmear);
+    node0_printf("with rho=%.4g\n", alpha);
+  }
+  else if (smearflag == APE_SMEAR) {
+    node0_printf("Doing %d polar-projected APE smearing steps ", Nsmear);
+    node0_printf("with alpha=%.4g\n", alpha);
+  }
 
   // Check minimum plaquette in addition to averages
   node0_printf("BEFORE ");
-  d_plaquette_lcl(&dplaq);    // Prints out MIN_PLAQ
-  node0_printf(" %.8g\n", dplaq);
+  max_plaq = local_plaquette(&dplaq);       // Prints out MIN_PLAQ
+  node0_printf(" %.8g %.8g\n", dplaq, max_plaq);
 
-  // Overwrites s->linkf, saves original values in thin_link field
-  stout_smear(Nstout, rho);
+  // Overwrite s->link
+  if (smearflag == STOUT_SMEAR)
+    stout_smear(Nsmear, alpha);
+  else if (smearflag == APE_SMEAR)
+    APE_smear(Nsmear, alpha, YESDET);
   node0_printf("AFTER  ");
-  d_plaquette_lcl(&dplaq);    // Prints out MIN_PLAQ
-  node0_printf(" %.8g\n", dplaq);
+  max_plaq = local_plaquette(&dplaq);      // Prints out MIN_PLAQ
+  node0_printf(" %.8g %.8g\n", dplaq, max_plaq);
+
+  // Update plaquette determinants, DmuUmu and Fmunu with smeared links
+  compute_plaqdet();
+  compute_Uinv();
+  compute_DmuUmu();
+  compute_Fmunu();
 #endif
 
   // Main measurements
   // Plaquette determinant
   measure_det();
 
-#ifdef PL_CORR
-  // Polyakov loop correlator
-  // Compute ploop_corr and take the absolute square of its FFT
-  ploop_c();
-  restrict_fourier(F_OFFSET(ploop_corr),
-                   F_OFFSET(fft1), F_OFFSET(fft2),
-                   sizeof(complex), FORWARDS);
+  // Monitor widths of plaquette and plaquette determinant distributions
+  widths();
 
-  FORALLSITES(i, s)
-    CMULJ_((s->ploop_corr), (s->ploop_corr), (s->print_var));
-
-  // Invert FFT in place
-  restrict_fourier(F_OFFSET(print_var),
-                   F_OFFSET(fft1), F_OFFSET(fft2),
-                   sizeof(complex), BACKWARDS);
-
-  // Divide by volume for correct inverse FFT
-  // Divide by another volume to average convolution
-  FORALLSITES(i, s)
-    CDIVREAL((s->print_var), space_vol * space_vol, (s->print_var));
-
-  print_var3("PLCORR");
-#endif
+  // Monitor scalar eigenvalues
+  // Format: SCALAR_EIG # ave width min max
+  scalar_eig(NODET, ave_eigs, eig_widths, min_eigs, max_eigs);
+  for (j = 0; j < NCOL; j++) {
+    node0_printf("UUBAR_EIG %d %.6g %.6g %.6g %.6g\n",
+                 j, ave_eigs[j], eig_widths[j], min_eigs[j], max_eigs[j]);
+  }
+  scalar_eig(YESDET, ave_eigs, eig_widths, min_eigs, max_eigs);
+  for (j = 0; j < NCOL; j++) {
+    node0_printf("POLAR_EIG %d %.6g %.6g %.6g %.6g\n",
+                 j, ave_eigs[j], eig_widths[j], min_eigs[j], max_eigs[j]);
+  }
 
 #ifdef CORR
   // Konishi and SUGRA correlators
-  d_correlator();
-  d_correlator_r();
+  konishi();
+  correlator_r();
 #endif
 
 #ifdef BILIN
-  // Ward identity violations
-  int avm_iters = d_susyTrans();
-
-  // Don't run d_bilinear() for now
-  // In the future it may be useful
-  // to compare U(1) vs. SU(N) contributions
-//  avm_iters += d_bilinear();
+  // Ward identity involving eta.psi_a fermion bilinear
+  int avm_iters = bilinearWard();
 #endif
 
 #ifdef CORR
-  // R symmetry transformations -- use find_det and adjugate
+  // R symmetry transformations -- uses LAPACK invert
   rsymm();
 
   // Measure density of monopole world lines in non-diagonal cubes
@@ -139,51 +180,31 @@ int main(int argc, char *argv[]) {
 #endif
 
 #ifdef WLOOP
-  // First calculate a few Wilson loops more directly, using explicit paths
-  // Save and restore all links overwritten by polar projection
-  hvy_pot_loop();
-  FORALLSITES(i, s) {
-    for (mu = XUP; mu < NUMLINK; mu++)
-      su3mat_copy_f(&(s->linkf[mu]), &(s->mom[mu]));
-  }
-  hvy_pot_polar_loop();
-  FORALLSITES(i, s) {
-    for (mu = XUP; mu < NUMLINK; mu++)
-      su3mat_copy_f(&(s->mom[mu]), &(s->linkf[mu]));
-  }
-
-  // Now gauge fix to easily access arbitrary displacements
+  // Gauge fix to Coulomb gauge
+  // This lets us easily access arbitrary displacements
+  // Gauge fixing arguments explained in generic/gaugefix.c
+  // With first argument outside XUP or TUP,
+  // both links are included in gauge-fixing condition
   if (fixflag == COULOMB_GAUGE_FIX) {
-    d_plaquette(&dplaq);    // To be printed below
+    plaquette(&dplaq);      // To be printed below
     node0_printf("Fixing to Coulomb gauge...\n");
     double gtime = -dclock();
-
-    // Gauge fixing arguments explained in generic/gaugefix.c
-    // With first argument outside XUP or TUP,
-    // both links are included in gauge-fixing condition
     gaugefix(TUP, 1.5, 5000, GAUGE_FIX_TOL, -1, -1);
     gtime += dclock();
     node0_printf("GFIX time = %.4g seconds\n", gtime);
     node0_printf("BEFORE %.8g\n", dplaq);
-    d_plaquette(&dplaq);
+    plaquette(&dplaq);
     node0_printf("AFTER  %.8g\n", dplaq);
   }
-  else if (fixflag == NO_GAUGE_FIX) { // Braces suppress compiler warning
-    node0_printf("Gauge fixing skipped\n");
-  }
-  else {
-    node0_printf("ERROR: only COULOMB_GAUGE_FIX ");
-    node0_printf("and NO_GAUGE_FIX supported\n");
-    terminate(1);
-  }
-  hvy_pot();
+  hvy_pot(NODET);
+  hvy_pot(YESDET);
 
   // Save and restore links overwritten by polar projection
   FORALLSITES(i, s)
-    su3mat_copy_f(&(s->linkf[TUP]), &(s->mom[TUP]));
+    mat_copy(&(s->link[TUP]), &(s->mom[TUP]));
   hvy_pot_polar();
   FORALLSITES(i, s)
-    su3mat_copy_f(&(s->mom[TUP]), &(s->linkf[TUP]));
+    mat_copy(&(s->mom[TUP]), &(s->link[TUP]));
 #endif
 
   node0_printf("RUNNING COMPLETED\n");
@@ -196,6 +217,7 @@ int main(int argc, char *argv[]) {
   dtime += dclock();
   node0_printf("\nTime = %.4g seconds\n", dtime);
   fflush(stdout);
+  g_sync();         // Needed by at least some clusters
   return 0;
 }
 // -----------------------------------------------------------------

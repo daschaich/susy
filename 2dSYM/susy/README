@@ -14,217 +14,175 @@ susy_hmc_pg and susy_phi_pg for testing with gauge fields only (no fermions)
 susy_spill for printing out configuration in format expected by serial C++ code
 
 # Dependences:
-Measurements involving polar-projected matrices (susy_meas and susy_hmc_meas) require LAPACK
-Eigenvalue measurements (susy_eig) require PRIMME and LAPACK -- PRIMME can be obtained from http://www.cs.wm.edu/~andreas/software/
+LAPACK is now required for all targets
+Eigenvalue measurements (susy_eig) require PRIMME (https://github.com/primme/primme) as well
 
 # Defines for compilation:
 -DPHI_ALGORITHM for the basic phi algorithm (REQUIRED)
 -DHMC_ALGORITHM switches on the accept/reject step
 -DCORR switches on the Konishi and SUGRA correlator calculation
--DSTOUT switches on stout smearing for measurements
+-DSMEAR switches on optional smearing for measurements
 -DWLOOP switches on the gauge-fixed Wilson loop calculation
 -DBILIN switches on the fermion bilinear calculation
 -DEIG switches on the PRIMME eigenvalue calculation
--DPL_CORR switches on the Polyakov loop correlator calculation (NOT CURRENTLY IN USE)
 -DPUREGAUGE switches off the fermions (FOR TESTING)
 
 # Gauge group and fermion rep:
-NCOL and DIMF defined in ../include/su3.h
+NCOL and DIMF defined in ../include/susy.h
 For now we fix U(NCOL) gauge group with DIMF=NCOL*NCOL for adjoint rep
 
 # Boundary conditions for fermions:
-Only supports periodic spatial boundary conditions for now
-PBC = +/-1 chooses periodic or anti-periodic temporal boundary conditions, defined in defines.h
+Only supports periodic spatial boundary conditions (BCs) for now
+Input parameter PBC = +/-1 chooses periodic or anti-periodic temporal BCs
 # ------------------------------------------------------------------
 
 
 
 # ------------------------------------------------------------------
-# Input parameters for the action:
-lambda   -- 't Hooft coupling, used to set kappa=NCOL/(2lambda) in setup.c
-bmass    -- bosonic mass
-fmass    -- fermion mass, the RHMC uses D^dag D + fmass^2
-kappa_u1 -- plaquette determinant coupling
-
 # Sample input file with explanations:
-prompt 0              # 0 (1) to read in parameters without (with) prompts
-nx 6                  # Lattice volume
+prompt 0    # If non-zero, prompt user to manually input each parameter
+nx 6        # Lattice volume is nx*nt
 nt 6
-iseed 41              # Random number generator seed
+PBC -1      # Anti-periodic temporal boundary conditions for the fermions
+iseed 41    # Random number generator seed
 
-warms 0               # Number of trajectories without measurements
-trajecs 10            # Number of trajectories with measurements
+Nroot 1     # Number of quarter-roots to accelerate MD evolution
+Norder 15   # Order of rational approximation for each quarter-root
+
+warms 0               # Number of trajectories without expensive measurements
+trajecs 10            # Number of trajectories with expensive measurements
 traj_length 1         # Trajectory length
 nstep 10              # Fermion steps per trajectory; step_size = traj_length / nstep
 nstep_gauge 10        # Gauge steps per fermion step
-traj_between_meas 1   # How many trajectories to skip between less-frequent measurements
+traj_between_meas 10  # How many trajectories to skip between expensive measurements
 
-lambda 1.5            # 't Hooft coupling
-kappa_u1 0.6          # Plaquette determinant coupling
-bmass 0.2             # Bosonic mass parameter (mu)
-fmass 0.0             # Mass shift in fermion operator
+lambda 1.5      # 't Hooft coupling
+kappa_u1 0.6    # Plaquette determinant coupling
+bmass 0.2       # Scalar potential coupling (bosonic mass mu)
+fmass 0.0       # Mass shift in fermion operator
+G 0.1           # Q-invariant plaquette determinant coupling
+B 1.0           # Q-invariant scalar potential coupling
 
-Nstout 1              # Number of stout smearing steps -- only include with -DSTOUT
-rho 0.1               # Stout smearing parameter -- only include with -DSTOUT
+# The next three lines must only be included when compiling with -DSMEAR
+APE_smear     # Type of smearing: no_smear, stout_smear or APE_smear
+Nsmear 1      # Number of smearing steps
+alpha 0.1     # Smearing parameter (rho for stout, alpha for APE)
 
-max_cg_iterations 500 # Maximum number of CG iterations
-error_per_site 1e-5   # Stopping condition for CG (will be squared)
-nsrc 5                # Number of stochastic sources -- only include with -DBILIN
+max_cg_iterations 500   # Maximum number of CG iterations
+error_per_site 1e-5     # Stopping condition for CG (will be squared)
 
-Nvec 100              # Number of eigenvalues to calculate -- only include with -DEIG
-eig_tol 1e-8          # Eigenvalue convergence criterion -- only include with -DEIG
-maxIter 5000          # Maximum number of eigenvalue iterations -- only include with -DEIG
+# The next line must only be included when compiling with -DBILIN
+nsrc 3                  # Number of stochastic sources for fermion bilinear calculations
 
-                      # Checkpointed pfaffian I/O currently hard-codes the file names to save and load,
-                      # based on the following two parameters
-ckpt_load -1          # If positive, load all subsequent columns of Q from dumped files -- only include with -DPHASE
-ckpt_save -1          # If positive, dump all subsequent columns of Q -- only include with -DPHASE
+# The next three lines must only be included when compiling with -DEIG
+Nvec 100              # Number of eigenvalues to calculate
+eig_tol 1e-8          # Eigenvalue convergence criterion
+maxIter 5000          # Maximum number of eigenvalue iterations
 
-fresh                 # What to do with lattice at start: only fresh, random, continue or reload_serial
-coulomb_gauge_fix     # Only coulomb_gauge_fix and no_gauge_fix supported
-forget                # What to do with lattice at end: only forget or save_serial
+# The next two lines must only be included when compiling with -DPHASE
+ckpt_load -1    # If positive, load checkpointed pfaffian computation
+                # from config.Q$ckpt_load and config.diag$ckpt_load
+ckpt_save -1    # If positive, checkpoint pfaffian computation
+                # to config.Q$ckpt_save and config.diag$ckpt_save
+
+# The next line must only be included when compiling with -DWLOOP
+coulomb_gauge_fix   # Gauge fixing: coulomb_gauge_fix or no_gauge_fix
+
+fresh     # What to do with lattice at start: fresh, continue or reload_serial
+forget    # What to do with lattice at end: forget or save_serial
 # ------------------------------------------------------------------
 
 
 
 # ------------------------------------------------------------------
 # 0) Header files in this directory:
-defines.h       -- Defines Omelyan parameters, RHMC degree, temporal boundary conditions, and numbers of links, generators, offsets and terms in the action
-lattice.h       -- Defines Twist_Fermions, the site struct, global variables and fields
-params.h        -- Defines a struct for reading input parameters
-primme.h        -- Defines for PRIMME eigenvalue calculations
-susy_includes.h -- Defines lots of routines, some of which are discussed below
+defines.h       -- Define Omelyan parameters, numbers of offsets and terms in the action, tunable parameter C2 and some other useful quantities
+lattice.h       -- Define Twist_Fermions, the site struct, global variables and fields
+params.h        -- Define a struct for reading input parameters
+susy_includes.h -- Define lots of routines, some of which are discussed below
 
-# 1) Routines in this directory:
+# 1) Summary of files in this directory:
 # 1a) Files used by all executables
-setup.c               -- Reads in parameters, initializes variables
-setup_lambda.c        -- Sets up U(N) generators, epsilon symbols and lookup tables for nested loops
-setup_offset.c        -- Sets up gathers for terms in the action, including Qclosed terms
-d_action.c            -- Computes action
-congrad_multi_field.c -- Multi-mass CG
-fermion_rep.c         -- Creates links in adjoint rep, checking dimensions
-grsource.c            -- Gaussian random numbers for gauge momenta
-library_util.c        -- Various routines that might be better suited to ../libraries/
-utilities.c           -- Many basic routines associated with parts of the action
-d_link.c              -- Computes average link
-determinant.c         -- Utilities for finding determinants
-gauge_info.c          -- Puts information into configuration files
+setup.c               -- Read in parameters, initialize variables and allocate global fields
+setup_lambda.c        -- Set up U(N) generators, epsilon tensor and lookup tables for nested loops
+setup_offset.c        -- Set up gathers for terms in the action, especially Qclosed terms
+action.c              -- Compute the action, including related routines also needed by forces
+plaq.c                -- Compute the average plaquette
+ploop.c               -- Compute the average Polyakov loop
+link_trace.c          -- Compute average link, Tr[U_a Ubar_a] / NCOL
+widths.c              -- Calculate sqrt(<P^2> - <P>^2) for the plaquette and plaquette determinant
+determinant.c         -- Utilities for finding the determinant of NCOL x NCOL link matrices, using LAPACK
+grsource.c            -- Generate gaussian random pseudofermions and momenta for the RHMC
+congrad_multi_field.c -- Multi-mass CG inverter
+utilities.c           -- Twist_Fermion matrix--vector operator and related routines also needed by forces
+library_util.c        -- Helper routines, many of which might be better suited to ../libraries/
+gauge_info.c          -- Put information into configuration files
 
-# 1b) Evolution-specific files
-control.c     -- Main program for evolution and measurements
+# 1b) Files mainly used by RHMC evolution targets (susy_hmc and susy_hmc_meas)
+control.c     -- Main program for evolution, optionally including additional measurements
+setup_rhmc.c  -- Initializes RHMC poles and residues, values copied from ./remez/ output
+update_o.c    -- Omelyan RHMC evolution
+update_h.c    -- Update gauge momenta with forces from both gauge and fermion fields
 det_force.c   -- Contribution to force from determinant term
-setup_rhmc.c  -- Initializes RHMC shifts and amplitudes, values copied from ./remez-milc output
-update_o.c    -- Omelyan HMC evolution, includes ranmom() routine
-update_h.c    -- Updates gauge momenta
 
-# 1c) Measurement-specific files
+# 1c) Files used mainly by standard measurement targets (susy_meas and susy_hmc_meas)
 control_meas.c        -- Main program for standard measurements only
-control_eig.c         -- Main program for eigenvalues measurements only
-d_bilinear.c          -- Fermion bilinear and susy transformation calculation
-d_correlator.c        -- Konishi and SUGRA correlators C(t) (zero momentum projected)
-d_correlator_r.c      -- Konishi and SUGRA correlators C(r)
-hvy_pot.c             -- Computes correlators of gauge-fixed timelike links
-hvy_pot_polar.c       -- Computes correlators of polar-projected gauge-fixed timelike links
+smear.c               -- A4* lattice smearing routines: stout and APE-like
+                         (NB: Unlike standard APE smearing, we don't project after adding staple sum)
+                         (NB: APE-like smearing currently builds staples from polar-projected links)
+local_plaq.c          -- Calculate the average and minimum plaquettes (to monitor smearing), optionally printing entire distribution
+bilinear_Ward.c       -- Measure Ward identity involving eta.psi_a fermion bilinear
+konishi.c             -- Compute Konishi and SUGRA operators on each time-slice, with both vev and volume-average subtractions
+correlator_r.c        -- Konishi and SUGRA correlators C(r), with both vev and volume-average subtractions
+monopole.c            -- Measure density of U(1) monopole world lines in doubled 4-cells, omitting the fifth link
+hvy_pot.c             -- Compute correlators of gauge-fixed temporal links to determine the static potential
+hvy_pot_polar.c       -- Compute correlators of polar-projected gauge-fixed temporal links
                          (NB: overwrites links, which have to be saved and restored if they will be used further)
-hvy_pot_loop.c        -- Computes more standard Wilson loops
-hvy_pot_polar_loop.c  -- Computes more standard Wilson loops of polar-projected links
+unit.c                -- Polar projection (unitarization) using LAPACK
+hvy_pot_loop.c        -- Compute more standard on-axis Wilson loops to determine the static potential
+hvy_pot_polar_loop.c  -- Compute more standard on-axis Wilson loops of polar-projected links
                          (NB: overwrites links, as above)
 path.c                -- Used to construct Wilson loops for hvy_pot_loop.c and hvy_pot_polar_loop.c
-rsymm.c               -- Modified Wilson loops related to R symmetry transformations
-eig.c                 -- Eigenvalue measurements using PRIMME
-                         Must specify path to libzprimme.a as PLIB in makefile
-                         Also need LAPACK and BLAS in linkable location
-d_phase.c             -- Phase and (log of) magnitude of the pfaffian
+rsymm.c               -- Compute modified Wilson loops related to R symmetry transformations
+
+# 1d) Additional files used only by MCRG target (susy_mcrg)
+control_mcrg.c        -- Main program for RG blocking and blocked measurements
+block_mcrg.c          -- RG blocking function, overwrites links and needs lattice volume divisible by 2^d
+blocked_smear.c       -- Stout and APE-like smearing with strides to accommodate blocked lattices
+blocked_local_plaq.c  -- Calculate the average and minimum plaquettes (to monitor smearing), with strides to accommodate blocked lattices
+blocked_plaq.c        -- Compute the average plaquette, with strides to accommodate blocked lattices
+blocked_ploop.c       -- Compute the average Polyakov loop, with strides to accommodate blocked lattices
+blocked_ops.c         -- Compute Konishi and SUGRA operators summed over the (blocked) lattice volume
+blocked_rsymm.c       -- Compute modified Wilson loops related to R symmetry transformations, with strides to accommodate blocked lattices
+
+# 1e) Additional files used only by fermion eigenvalue target (susy_eig)
+control_eig.c   -- Main program for eigenvalues measurements only
+eig.c           -- Eigenvalue measurements using PRIMME, LAPACK and BLAS
+                   (NB: User may need to modify path to primme.h)
+                   (NB: User may need to modify PLIB in makefile to provide libzprimme.a)
+
+# 1f) Additional files used only by pfaffian target (susy_phase)
+control_phase.c -- Main program for pfaffian measurements only
+phase.c         -- Phase and (log of) magnitude of the pfaffian
 
 # 1d) Files not currently used, retained for potential future testing
-ploop_corr.c      -- Finds Polyakov loop on every site for correlations with FFT done in control.c
-print_var3.c      -- Prints out results on a 3d lattice (used with ploop_corr)
-update_leapfrog.c -- Leapfrog HMC evolution, includes ranmom() routine
+ploop_corr.c      -- Find Polyakov loop on every spatial site to be fed into FFT
+update_leapfrog.c -- Leapfrog RHMC evolution
 
-# 2) Routines in the ../generic directory:
+# 2) Summary of files in the ../generic directory:
 # 2a) Files used by all executables
 com_vanilla.c           -- Serial communications, selected by Makefile
 com_mpi.c               -- Parallel communications, selected by Makefile
-d_plaq4.c               -- Calculates the plaquette (both fundamental and irrep)
-ploop_dist.c            -- Computes average Polyakov loop
 io_lat.c                -- I/O modified to handle five-link lattice
 io_lat_utils.c          -- Lower-level utilities for lattice I/O
-io_helpers.c            -- More I/O, seems to include the interface
+io_helpers.c            -- Higher-level interface for lattice I/O
 make_lattice.c          -- Set up lattice, neighbors, etc.
 nersc_cksum.c           -- Compute link trace sum for lattice I/O (cksum itself set to zero)
 ranstuff.c              -- Random number stuff, both for serial and parallel running
+gaugefix.c              -- Fix to Coulomb gauge, requiring even number of sites in all directions
 remap_stdio_from_args.c -- For reading input parameters
-layout_hyper_prime.c    -- Layout lattice on processors
-stout.c                 -- Stout smearing on A4* lattice
+layout_hyper_prime.c    -- Handle the distribution of lattice sites across processors
 
-# 2b) Measurement-specific files
-gaugefix.c          -- Fixes to Coulomb gauge (requires even number of sites in all directions)
-restrict_fourier.c  -- Fast Fourier transform routine only used with -DPL_CORR
-d_plaq4_lcl.c       -- Calculates the plaquette with options to print more info
-                       Used to monitor minimum plaquette when smearing with -DSTOUT
+# 2b) Additional files used only by pfaffian target (susy_phase)
 io_phase.c          -- Primitive (for now) dump and load routines for checkpointing pfaffian computations
-# ------------------------------------------------------------------
-
-
-
-# ------------------------------------------------------------------
-# Action:
-# According to d_action.c, the bosonic action is g_act + bmass_act + det_act + h_act
-
-# h_act:
-# This is the gauge momenta contribution to the action, from d_hmom_action()
-  double sum = 0;
-  for (mu = 0; mu < NUMLINK; mu++) {
-    FORALLSITES(i, s)
-      sum += (double)realtrace_su3_f(&(s->mom[mu]), &(s->mom[mu]));
-  }
-  g_doublesum(&sum);
-
-# g_act:
-# This is the gauge action itself, from d_gauge_action().  Note the factor of kappa
-# We include a tunable parameter in the DmuUmu^2 term, norm=0.5C_2
-  double g_action = 0;
-  compute_DmuUmu();
-  FORALLSITES(i, s) {
-    mult_su3_nn_f(&(s->DmuUmu), &(s->DmuUmu), &tmpmat);
-    cg_action = trace_su3_f(&tmpmat);
-    g_action += norm * cg_action.real;
-  }
-
-  compute_Fmunu();
-  for (mu = 0; mu < NUMLINK; mu++) {
-    for (nu = mu + 1; nu < NUMLINK; nu++) {
-      FORALLSITES(i, s)
-        g_action += 2 * realtrace_su3_f(&(s->Fmunu[mu][nu]),
-                                        &(s->Fmunu[mu][nu]));
-    }
-  }
-  g_action *= kappa;
-  g_doublesum(&g_action);
-
-# bmass_act:
-# This is the mass term for the U(1) mode, from d_bmass_action().  Note the factor of kappa
-  double sum = 0;
-  for (mu = 0; mu < NUMLINK; mu++) {
-    FORALLSITES(i, s) {
-      dum = (1 / (double)NCOL) * realtrace_su3_f(&(s->linkf[mu]), &(s->linkf[mu])) - 1.0;
-      sum += kappa * bmass * bmass * dum * dum;
-    }
-  }
-  g_doublesum(&sum);
-
-# det_act:
-# This is the squared determinant term, from d_det_action().  Note no factor of kappa
-  double det_action = 0.0;
-  for (dir1 =1; dir1 < NUMLINK; dir1++) {
-    for (dir2 =0; dir2 < dir1; dir2++) {
-      (...omit construction of plaquette in tmat...)
-      FORALLSITES(i, s) {
-        det = find_det(&tmat);
-        det_action += (double)((det.real - 1.0) * (det.real - 1.0) + det.imag * det.imag);
-      }
-    }
-  }
-  det_action *= kappa_u1;
-  g_doublesum(&det_action);
 # ------------------------------------------------------------------

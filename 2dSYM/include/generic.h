@@ -63,16 +63,5 @@ int remap_stdio_from_args(int argc, char *argv[]);
 // ranstuff.c
 void initialize_prn(double_prn *prn_pt, int seed, int index);
 Real myrand(double_prn *prn_pt);
-
-// restrict_fourier.c
-// src is field to be transformed,
-// which must consist of size/sizeof(complex) consecutive complex numbers
-// space and space2 are working space, same size as src
-// space2 is needed only for non power of 2
-// Finally, isign is 1 for x --> k and -1 for k --> x
-void setup_restrict_fourier(int *key, int *slice);
-void restrict_fourier(field_offset src,
-                      field_offset space, field_offset space2,
-                      int size, int isign);
 #endif
 // -----------------------------------------------------------------
