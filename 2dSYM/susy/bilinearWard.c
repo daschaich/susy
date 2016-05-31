@@ -20,12 +20,12 @@ void bilinear_src(Twist_Fermion *g_rand, Twist_Fermion *src, int N) {
     clear_TF(&(g_rand[i]));       // Zero plaquette fermions
     clear_TF(&(src[i]));          // To be safe/explicit
   }
-  int index = node_index(1, 1, 1, 1);
+  int index = node_index(1, 1);
   g_rand[index].Flink[0].c[0].real = 1;
   fermion_op(g_rand, src, PLUS);
   FORALLSITES(i, s) {
     if (magsq_TF(&(src[i])) > IMAG_TOL) {
-      printf("(%d %d %d %d)\n", s->x, s->y, s->z, s->t);
+      printf("(%d %d)\n", s->x, s->t);
       dump_TF(&(src[i]));
     }
   }
@@ -61,16 +61,15 @@ void bilinear_src(Twist_Fermion *g_rand, Twist_Fermion *src, int N) {
         c_scalar_mult_sum_mat(&(Lambda[j]), &grn, &(g_rand[i].Flink[mu]));
       }
     }
-    for (mu = 0; mu < NPLAQ; mu++) {         // Plaquette fermions
-      for (j = 0; j < DIMF; j++) {
+    for (j = 0; j < DIMF; j++) {           // Plaquette fermions
 #ifdef SITERAND
-        grn.real = gaussian_rand_no(&(s->site_prn));
-        grn.imag = gaussian_rand_no(&(s->site_prn));
+      grn.real = gaussian_rand_no(&(s->site_prn));
+      grn.imag = gaussian_rand_no(&(s->site_prn));
 #else
-        grn.real = gaussian_rand_no(&node_prn);
-        grn.imag = gaussian_rand_no(&node_prn);
+      grn.real = gaussian_rand_no(&node_prn);
+      grn.imag = gaussian_rand_no(&node_prn);
 #endif
-        c_scalar_mult_sum_mat(&(Lambda[j]), &grn, &(g_rand[i].Fplaq[mu]));
+      c_scalar_mult_sum_mat(&(Lambda[j]), &grn, &(g_rand[i].Fplaq));
       }
     }
   }
@@ -178,7 +177,7 @@ int bilinearWard() {
 
   // Now add gauge piece, including plaquette determinant term
   // Accumulate sum_a U_a Udag_a in tmat
-  // Multiply by DmuUmu and trace
+  // Multiply by DmuUmu into tmat and trace
   FORALLSITES(i, s) {
     mult_na(&(s->link[0]), &(s->link[0]), &tmat);   // Initialize
     for (mu = 1; mu < NUMLINK; mu++)

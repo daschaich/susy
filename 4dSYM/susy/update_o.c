@@ -46,7 +46,7 @@ double update_gauge_step(Real eps) {
 #ifdef UPDATE_DEBUG
   node0_printf("gauge %d steps %.4g dt\n", nsw, eps);
 #endif
-  norm = gauge_force(eps*LAMBDA);
+  norm = gauge_force(eps * LAMBDA);
   for (isw = 1; isw <= nsw; isw++) {
     update_uu(0.5 * eps);
     norm += gauge_force(eps * LAMBDA_MID);

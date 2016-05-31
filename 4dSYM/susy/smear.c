@@ -133,16 +133,16 @@ void stout_smear(int Nsmear, double alpha) {
   for (n = 0; n < Nsmear; n++) {
     FORALLSITES(i, s) {
       // Unmodified links -- no projection or determinant division
-      for (dir = XUP; dir < NUMLINK; dir++)
+      FORALLDIR(dir)
         mat_copy(&(s->link[dir]), &(s->mom[dir]));
     }
 
-    for (dir = XUP; dir < NUMLINK; dir++) {
+    FORALLDIR(dir) {
       FORALLSITES(i, s)
         clear_mat(&(staple[i]));     // Initialize staple sum
 
       // Accumulate staple sum in staple
-      for (dir2 = XUP; dir2 < NUMLINK; dir2++) {
+      FORALLDIR(dir2) {
         if (dir != dir2)
           directional_staple(dir, dir2);
       }
@@ -178,7 +178,7 @@ void APE_smear(int Nsmear, double alpha, int project) {
 
   for (n = 0; n < Nsmear; n++) {
     FORALLSITES(i, s) {
-      for (dir = XUP; dir < NUMLINK; dir++) {
+      FORALLDIR(dir) {
         // Decide what to do with links before smearing
         // Polar project, divide out determinant, or nothing
         if (project == 1) {
@@ -190,12 +190,12 @@ void APE_smear(int Nsmear, double alpha, int project) {
       }
     }
 
-    for (dir = XUP; dir < NUMLINK; dir++) {
+    FORALLDIR(dir) {
       FORALLSITES(i, s)
         clear_mat(&(staple[i]));     // Initialize staple sum
 
       // Accumulate staple sum in staple
-      for (dir2 = XUP; dir2 < NUMLINK; dir2++) {
+      FORALLDIR(dir2) {
         if (dir != dir2)
           directional_staple(dir, dir2);
       }
