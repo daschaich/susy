@@ -156,6 +156,9 @@ EXTERN Twist_Fermion *tempTF;
 EXTERN int *ipiv;
 EXTERN double *store, *work;
 
+// Allocate some more arrays to be used by LAPACK in unit.c
+EXTERN double *Rwork, *eigs;
+
 EXTERN gauge_file *startlat_p;
 EXTERN gauge_file *savelat_p;
 

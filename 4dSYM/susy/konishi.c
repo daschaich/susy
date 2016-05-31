@@ -26,20 +26,22 @@ void compute_Ba() {
       polar(&(s->link[a]), &(Ba[0][a][i]), &tmat);
       matrix_log(&tmat, &(Ba[0][a][i]));
 
-      // Traceless part of U.Udag (hermitian so trace is real)
+      // U.Udag (hermitian so trace is real)
       mult_na(&(s->link[a]), &(s->link[a]), &(Ba[1][a][i]));
-      tc = trace(&(Ba[1][a][i]));
-      tr = one_ov_N * tc.real;
-      for (k = 0; k < NCOL; k++)
-        Ba[1][a][i].e[k][k].real -= tr;
 
-      // Check reality of resulting scalar fields
-      for (j = 0; j < N_B; j++){
+      // Subtract traces
+      for (j = 0; j < N_B; j++) {
         tc = trace(&(Ba[j][a][i]));
+        tr = one_ov_N * tc.real;
+        for (k = 0; k < NCOL; k++)
+          Ba[j][a][i].e[k][k].real -= tr;
+#ifdef DEBUG_CHECK
+        // Check reality of resulting scalar fields
         if (fabs(tc.imag) > IMAG_TOL) {
           printf("WARNING: Tr[Ba[%d][%d][%d]] = (%.4g, %.4g) is not real\n",
                  j, a, i, tc.real, tc.imag);
         }
+#endif
       }
     }
   }

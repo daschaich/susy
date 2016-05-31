@@ -444,6 +444,10 @@ int readin(int prompt) {
   store = malloc(2 * NCOL * NCOL * sizeof(*store));
   work = malloc(4 * NCOL * sizeof(*work));
 
+  // Allocate some more arrays to be used by LAPACK in unit.c
+  Rwork = malloc((3 * NCOL - 2) * sizeof(*Rwork));
+  eigs = malloc(NCOL * sizeof(*eigs));
+
   // Compute initial plaqdet, DmuUmu and Fmunu
   compute_plaqdet();
   compute_Uinv();
