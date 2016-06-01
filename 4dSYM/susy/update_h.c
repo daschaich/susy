@@ -367,15 +367,14 @@ void F1Q(matrix *plaq_sol[NPLAQ], matrix *plaq_psol[NPLAQ]) {
       tr = -1.0 * permm * (s->bc2[opp_a][opp_b]) * (s->bc1[c]);
       scalar_mult_matrix((matrix *)(local_pt[flip][3][i]), tr, &tmat);
       mult_nn_sum(&tmat, (matrix *)(local_pt[flip][2][i]), &(tempmat[i]));
+
+      scalar_mult_sum_adj_matrix(&(tempmat[i]), -0.5, &(s->f_U[c]));
     }
     cleanup_gather(tag0[flip]);
     cleanup_gather(tag1[flip]);
     cleanup_gather(tag2[flip]);
     cleanup_gather(tag3[flip]);
     flip = (flip + 1) % 2;
-
-    FORALLSITES(i, s)
-      scalar_mult_sum_adj_matrix(&(tempmat[i]), -0.5, &(s->f_U[c]));
   }
 }
 // -----------------------------------------------------------------
@@ -467,15 +466,14 @@ void F2Q(matrix *plaq_sol[NPLAQ], matrix *plaq_psol[NPLAQ]) {
       tr = -1.0 * permm * (s->bc3[a][b][c]) * (s->bc1[c]);
       scalar_mult_matrix((matrix *)(local_pt[flip][3][i]), tr, &tmat);
       mult_nn_sum(&tmat, (matrix *)(local_pt[flip][2][i]), &(tempmat[i]));
+
+      scalar_mult_sum_adj_matrix(&(tempmat[i]), -0.5, &(s->f_U[c]));
     }
     cleanup_gather(tag0[flip]);
     cleanup_gather(tag1[flip]);
     cleanup_gather(tag2[flip]);
     cleanup_gather(tag3[flip]);
     flip = (flip + 1) % 2;
-
-    FORALLSITES(i, s)
-      scalar_mult_sum_adj_matrix(&(tempmat[i]), -0.5, &(s->f_U[c]));
   }
 }
 // -----------------------------------------------------------------

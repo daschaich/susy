@@ -59,7 +59,6 @@ void polar(matrix *in, matrix *u, matrix *P) {
   char V = 'V';     // Ask LAPACK for both eigenvalues and eigenvectors
   char U = 'U';     // Have LAPACK store upper triangle of U.Ubar
   int row, col, Npt = NCOL, stat = 0, Nwork = 2 * NCOL;
-  complex minus1 = cmplx(-1.0, 0.0);
   matrix PSq, Pinv, tmat;
 
   // Convert PSq to column-major double array used by LAPACK
