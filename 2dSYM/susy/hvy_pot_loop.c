@@ -1,27 +1,22 @@
 // -----------------------------------------------------------------
 // Wilson loops for fundamental links (hardwired in path)
-// Evaluate in different spatial dirs to check rotational invariance
 // This version calls path to compute simple rectangular loops
 // so gauge fixing has no effect
+// Use tempmat for temporary storage
 #include "susy_includes.h"
-// -----------------------------------------------------------------
 
-
-
-// -----------------------------------------------------------------
-void hvy_pot_loop() {
+void hvy_pot_loop(int do_det) {
   register int i;
   register site *s;
-  int t_dist, x_dist = 0, length;
+  int t_dist, x_dist, length;
   int dir[2 * (MAX_T + MAX_X)], sign[2 * (MAX_T + MAX_X)];
-  Real frac = -1.0 / (Real)NCOL;
-  double wloop, detloop;
-  complex det_wloop, c_loop, c1, c2, mult;
-  su3_matrix_f tmat;
+  double wloop;
+  complex tc;
+  matrix tmat;
 
   node0_printf("hvy_pot_loop: MAX_T = %d, MAX_X = %d\n", MAX_T, MAX_X);
 
-  // Use tempmat1 to hold loop product at each site
+  // Use tempmat to hold loop product at each site
   for (t_dist = 1; t_dist <= MAX_T; t_dist++) {
     // Set up rectangular path as list of dir * sign
     for (x_dist = 0; x_dist <= MAX_X; x_dist++) {
@@ -49,30 +44,26 @@ void hvy_pot_loop() {
       node0_printf("\n");
 #endif
 
-      // path accumulates the product in tempmat1
+      // path accumulates the product in tempmat
       path(dir, sign, length);
       wloop = 0.0;
-      detloop = 0.0;
       FORALLSITES(i, s) {
-        tmat = s->tempmat1;
-        c_loop = trace_su3_f(&tmat);
-        wloop += c_loop.real;
+        if (do_det == 1)
+          det_project(&(tempmat[i]), &tmat);
+        else
+          mat_copy(&(tempmat[i]), &tmat);
 
-        // Divide out the det raised to fractional power as
-        // x^y = exp[y log x]
-        det_wloop = find_det(&tmat);
-        c1 = clog(&det_wloop);
-        CMULREAL(c1, frac, c2);
-        mult = cexp(&c2);
-        CMUL(c_loop, mult, c1);
-        detloop += c1.real;
+        tc = trace(&tmat);
+        wloop += tc.real;
       }
       g_doublesum(&wloop);
-      g_doublesum(&detloop);
-      node0_printf("PLOT_LOOP %d %d %.6g\n", x_dist, t_dist, wloop / volume);
-      node0_printf("DL_LOOP   %d %d %.6g\n", x_dist, t_dist, detloop / volume);
+      if (do_det == 1) {            // Braces suppress compiler complaint
+        node0_printf("DL_LOOP   ");
+      }
+      else
+        node0_printf("PLOT_LOOP ");
+      node0_printf("%d %d %.6g\n", x_dist, t_dist, wloop / volume);
     } // x_dist
-    x_dist = 0;
   } // t_dist
 }
 // -----------------------------------------------------------------
