@@ -1,4 +1,5 @@
 // -----------------------------------------------------------------
+// Compute and print the Konishi and SUGRA operators on each timeslice
 #include "susy_includes.h"
 // -----------------------------------------------------------------
 
@@ -69,7 +70,7 @@ void compute_Ba() {
 
 
 // -----------------------------------------------------------------
-// Measure and print the Konishi and SUGRA operators on each timeslice
+// Compute and print the Konishi and SUGRA operators on each timeslice
 void konishi() {
   register int i;
   register site *s;

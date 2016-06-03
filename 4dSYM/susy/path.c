@@ -1,16 +1,16 @@
 // -----------------------------------------------------------------
-// Walk around specified path of fundamental links
+// Walk around specified path of links
 // dir is a list of the directions in the path, with the given length
 // sign is the corresponding list of which way to go in the given dir
 // That is, the negative sign means take the adjoint
 // Use tempmat to accumulate link product along path
+// Use tempmat2 for temporary storage
 #include "susy_includes.h"
 
 void path(int *dir, int *sign, int length) {
   register int i;
   register site *s;
   int j;
-  matrix *mat;
   msg_tag *mtag;
 
   // Initialize tempmat with first link in path
@@ -46,16 +46,16 @@ void path(int *dir, int *sign, int length) {
 
     if (sign[j] < 0) {    // Gather from site + dir[j] then mult_na
       mtag = start_gather_field(tempmat, sizeof(matrix),
-                                goffset[dir[j]], EVENANDODD, gen_pt[1]);
+                                goffset[dir[j]], EVENANDODD, gen_pt[0]);
 
+      // On-node gen_pt just point to tempmat,
+      // so don't overwrite it in the mult_na...
       wait_gather(mtag);
-      FORALLSITES(i, s) {
-        mat = (matrix *)(gen_pt[1][i]);
-        mult_na(mat, &(s->link[dir[j]]), &(tempmat2[i]));
-      }
-      FORALLSITES(i, s)   // Don't want to overwrite tempmat too soon
-        mat_copy(&(tempmat2[i]), &(tempmat[i]));
+      FORALLSITES(i, s)
+        mult_na((matrix *)(gen_pt[0][i]), &(s->link[dir[j]]), &(tempmat2[i]));
       cleanup_gather(mtag);
+      FORALLSITES(i, s)
+        mat_copy(&(tempmat2[i]), &(tempmat[i]));
     }
   }
 }

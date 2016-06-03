@@ -76,7 +76,7 @@ void setup_lambda() {
       dumpmat(&(Lambda[i]));
   }
 
-  // Test group theory
+  // Test group theory (useful reference: arXiv:1310.5353)
   node0_printf("Check group theory ");
   node0_printf("Sum_a Lambda^a_{kl} Lambda^a_{ij} = -delta_kj delta_il\n");
   for (i = 0; i < NCOL; i++) {

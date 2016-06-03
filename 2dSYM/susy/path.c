@@ -1,9 +1,10 @@
 // -----------------------------------------------------------------
-// Walk around specified path of fundamental links
+// Walk around specified path of links
 // dir is a list of the directions in the path, with the given length
 // sign is the corresponding list of which way to go in the given dir
 // That is, the negative sign means take the adjoint
-// Uses tempmat1 to accumulate linkf product along path
+// Use tempmat to accumulate link product along path
+// Use tempmat2 for temporary storage
 #include "susy_includes.h"
 
 void path(int *dir, int *sign, int length) {
@@ -12,52 +13,49 @@ void path(int *dir, int *sign, int length) {
   int j;
   msg_tag *mtag;
 
-  // Initialize tempmat1 with first link in path
+  // Initialize tempmat with first link in path
   if (sign[0] > 0) {    // Gather from site - dir[0], no adjoint
-    mtag = start_gather_site(F_OFFSET(linkf[dir[0]]), sizeof(su3_matrix_f),
-                              goffset[dir[0]] + 1, EVENANDODD, gen_pt[0]);
+    mtag = start_gather_site(F_OFFSET(link[dir[0]]), sizeof(matrix),
+                             goffset[dir[0]] + 1, EVENANDODD, gen_pt[0]);
 
     wait_gather(mtag);
     FORALLSITES(i, s)
-      su3mat_copy_f((su3_matrix_f *)(gen_pt[0][i]), &(s->tempmat1));
-
+      mat_copy((matrix *)(gen_pt[0][i]), &(tempmat[i]));
     cleanup_gather(mtag);
   }
 
   if (sign[0] < 0) {    // Take adjoint, no gather
     FORALLSITES(i, s)
-      su3_adjoint_f(&(s->linkf[dir[0]]), &(s->tempmat1));
+      adjoint(&(s->link[dir[0]]), &(tempmat[i]));
   }
 
-  // Accumulate subsequent links in product in tempmat1
+  // Accumulate subsequent links in product in tempmat
   for (j = 1; j < length; j++) {
-    if (sign[j] > 0) {    // mult_su3_nn_f then gather from site - dir[j]
+    if (sign[j] > 0) {    // mult_nn then gather from site - dir[j]
       FORALLSITES(i, s)
-        mult_su3_nn_f(&(s->tempmat1), &(s->linkf[dir[j]]), &(s->tempmat2));
+        mult_nn(&(tempmat[i]), &(s->link[dir[j]]), &(tempmat2[i]));
 
-      mtag = start_gather_site(F_OFFSET(tempmat2), sizeof(su3_matrix_f),
+      mtag = start_gather_field(tempmat2, sizeof(matrix),
                                 goffset[dir[j]] + 1, EVENANDODD, gen_pt[0]);
 
       wait_gather(mtag);
       FORALLSITES(i, s)
-        su3mat_copy_f((su3_matrix_f *)(gen_pt[0][i]), &(s->tempmat1));
-
+        mat_copy((matrix *)(gen_pt[0][i]), &(tempmat[i]));
       cleanup_gather(mtag);
     }
 
-    if (sign[j] < 0) {    // Gather from site + dir[j] then mult_su3_na_f
-      mtag = start_gather_site(F_OFFSET(tempmat1), sizeof(su3_matrix_f),
-                                goffset[dir[j]], EVENANDODD, gen_pt[1]);
+    if (sign[j] < 0) {    // Gather from site + dir[j] then mult_na
+      mtag = start_gather_field(tempmat, sizeof(matrix),
+                                goffset[dir[j]], EVENANDODD, gen_pt[0]);
 
+      // On-node gen_pt just point to tempmat,
+      // so don't overwrite it in the mult_na...
       wait_gather(mtag);
-      FORALLSITES(i, s) {
-        mult_su3_na_f((su3_matrix_f *)(gen_pt[1][i]), &(s->linkf[dir[j]]),
-                      &(s->tempmat2));
-      }
-      FORALLSITES(i, s)   // Don't want to overwrite tempmat1 too soon
-        su3mat_copy_f(&(s->tempmat2), &(s->tempmat1));
-
+      FORALLSITES(i, s)
+        mult_na((matrix *)(gen_pt[0][i]), &(s->link[dir[j]]), &(tempmat2[i]));
       cleanup_gather(mtag);
+      FORALLSITES(i, s)
+        mat_copy(&(tempmat2[i]), &(tempmat[i]));
     }
   }
 }

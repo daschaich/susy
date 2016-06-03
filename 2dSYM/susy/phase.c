@@ -10,14 +10,15 @@
 
 // -----------------------------------------------------------------
 // Return a_i * b_i for two complex vectors (no conjugation!)
-double_complex dot(complex *a, complex *b) {
+double_complex inner(complex *a, complex *b) {
   int i, Ndat = 4 * DIMF;
-  complex tc;
-  double_complex dot = cmplx(0.0, 0.0);
+  double_complex dot;
 
-  for (i = 0; i < sites_on_node * Ndat; i++) {
-    CMUL(a[i], b[i], tc);
-    CSUM(dot, tc);
+  dot.real = a[0].real * b[0].real - a[0].imag * b[0].imag;
+  dot.imag = a[0].imag * b[0].real + a[0].real * b[0].imag;
+  for (i = 1; i < sites_on_node * Ndat; i++) {
+    dot.real += a[i].real * b[i].real - a[i].imag * b[i].imag;
+    dot.imag += a[i].imag * b[i].real + a[i].real * b[i].imag;
   }
   // Accumulate inner product across all nodes
   g_dcomplexsum(&dot);
@@ -37,16 +38,18 @@ void matvec(complex *in, complex *out) {
   // Copy complex vector into Twist_Fermion src
   // Each Twist_Fermion has Ndat = 4DIMF non-trivial complex components
   // !!! Need to cycle over fields to ensure non-zero Q[i + 1] M Q[i]
+  // TODO: Can we rearrange this to avoid all the matrix manipulation?
   iter = 0;
   FORALLSITES(i, s) {
+    clear_TF(&(src[i]));
     for (j = 0; j < DIMF; j++) {
-      set_complex_equal(&(in[iter]), &(src[i].Fsite.c[j]));
+      c_scalar_mult_sum_mat(&(Lambda[j]), &(in[iter]), &(src[i].Fsite));
       iter++;
-      set_complex_equal(&(in[iter]), &(src[i].Flink[0].c[j]));
+      c_scalar_mult_sum_mat(&(Lambda[j]), &(in[iter]), &(src[i].Flink[0]));
       iter++;
-      set_complex_equal(&(in[iter]), &(src[i].Flink[1].c[j]));
+      c_scalar_mult_sum_mat(&(Lambda[j]), &(in[iter]), &(src[i].Flink[1]));
       iter++;
-      set_complex_equal(&(in[iter]), &(src[i].Fplaq.c[j]));
+      c_scalar_mult_sum_mat(&(Lambda[j]), &(in[iter]), &(src[i].Fplaq));
       iter++;
     }
   }
@@ -55,27 +58,27 @@ void matvec(complex *in, complex *out) {
   // Check that we didn't miss any components of the input vector
   int Ndat = 4 * DIMF;
   if (iter != sites_on_node * Ndat) {
-    printf("d_phase: cycled over %d of %d input components\n",
+    printf("phase: cycled over %d of %d input components\n",
            iter, sites_on_node * Ndat);
     terminate(1);
   }
 #endif
 
-  fermion_op(src, res, 1);    // D
-//  fermion_op(src, res, -1);    // Ddag
+  fermion_op(src, res, PLUS);    // D
+//  fermion_op(src, res, MINUS);    // Ddag
   Nmatvecs++;
 
   // Copy the resulting Twist_Fermion res back to complex vector y
   iter = 0;
   FORALLSITES(i, s) {
     for (j = 0; j < DIMF; j++) {
-      set_complex_equal(&(res[i].Fsite.c[j]), &(out[iter]));
+      out[iter] = complextrace_nn(&(res[i].Fsite), &(Lambda[j]));
       iter++;
-      set_complex_equal(&(res[i].Flink[0].c[j]), &(out[iter]));
+      out[iter] = complextrace_nn(&(res[i].Flink[0]), &(Lambda[j]));
       iter++;
-      set_complex_equal(&(res[i].Flink[1].c[j]), &(out[iter]));
+      out[iter] = complextrace_nn(&(res[i].Flink[1]), &(Lambda[j]));
       iter++;
-      set_complex_equal(&(res[i].Fplaq.c[j]), &(out[iter]));
+      out[iter] = complextrace_nn(&(res[i].Fplaq), &(Lambda[j]));
       iter++;
     }
   }
@@ -83,7 +86,7 @@ void matvec(complex *in, complex *out) {
 #ifdef DEBUG_CHECK
   // Check that we didn't miss any components of the output vector
   if (iter != sites_on_node * Ndat) {
-    printf("d_phase: cycled over %d of %d output components\n",
+    printf("phase: cycled over %d of %d output components\n",
            iter, sites_on_node * Ndat);
     terminate(1);
   }
@@ -95,17 +98,17 @@ void matvec(complex *in, complex *out) {
 
 // -----------------------------------------------------------------
 #ifdef PHASE
-void d_phase() {
+void phase() {
   register int i, j, k;
   int Ndat = 4 * DIMF, shift = this_node * sites_on_node * Ndat;
   double phase, log_mag, tr, dtime;
   complex temp, temp2;
   complex *diag = malloc(volume * Ndat * sizeof(*diag));
   complex *MonC = malloc(sites_on_node * Ndat * sizeof(*MonC));
-  complex **Q = malloc(volume * Ndat * sizeof(complex*));
+  complex **Q = malloc(volume * Ndat * sizeof(**Q));
 
   if (Q == NULL) {
-    printf("d_phase: can't malloc Q\n");
+    printf("phase: can't malloc Q\n");
     fflush(stdout);
     terminate(1);
   }
@@ -124,7 +127,7 @@ void d_phase() {
     diag[i] = cmplx(0.0, 0.0);    // Initialize to zero
   }
   if (Q[volume * Ndat - 1] == NULL) {
-    printf("d_phase: can't malloc Q[i]\n");
+    printf("phase: can't malloc Q[i]\n");
     fflush(stdout);
     terminate(1);
   }
@@ -157,10 +160,10 @@ void d_phase() {
     // q_{i + 1} --> q_{i + 1} / <q_{i + 1} | D | q_i>
     // But only if <q_{i + 1} | D | q_i> is non-zero!
     matvec(Q[i], MonC);
-    temp = dot(Q[i + 1], MonC);
+    temp = inner(Q[i + 1], MonC);
     // !!! Must have non-vanishing matrix element!
     if (cabs_sq(&temp) < PFA_TOL) {
-      node0_printf("d_phase: <%d | D | %d> = (%.4g, %.4g) too small\n",
+      node0_printf("phase: <%d | D | %d> = (%.4g, %.4g) too small\n",
                    i + 2, i + 1, temp.real, temp.imag);
       terminate(1);
     }
@@ -184,7 +187,7 @@ void d_phase() {
     for (k = i + 2; k < volume * Ndat; k++) {
       // q_k --> q_k - q_i <q_{i + 1} | D | q_k> - q_{i + 1} <q_i | D | q_k>
       matvec(Q[k], MonC);
-      temp = dot(Q[i + 1], MonC);
+      temp = inner(Q[i + 1], MonC);
       if (i + 1 < sites_on_node * Ndat) {
         for (j = 0; j < i + 2; j++) {
           CMUL(Q[i][j], temp, temp2);
@@ -198,7 +201,7 @@ void d_phase() {
         }
       }
 
-      temp = dot(Q[i], MonC);
+      temp = inner(Q[i], MonC);
       if (i + 1 < sites_on_node * Ndat) {
         for (j = 0; j < i + 2; j++) {
           CMUL(Q[i + 1][j], temp, temp2);
@@ -215,7 +218,7 @@ void d_phase() {
     // Print some timing information
     // and make sure diagonal elements are still sane
     dtime += dclock();
-    node0_printf("%d matvecs in %.4g seconds ", Nmatvecs, dtime);
+    node0_printf("%li matvecs in %.4g seconds ", Nmatvecs, dtime);
 
     // Save diagonal element and free columns i and i+1
     // We use shift to single out the appropriate node, then sum
@@ -267,6 +270,7 @@ void d_phase() {
   }
   node0_printf("PFAFF %.8g %.8g %.8g %.8g\n", -1.0 * log_mag, phase,
                fabs(cos(phase)), fabs(sin(phase)));
+  fflush(stdout);
   free(diag);
 }
 #endif
