@@ -143,9 +143,11 @@ void make_fields() {
 
 #ifdef CORR
   int j;
-  size += (double)(N_B * NUMLINK * sizeof(matrix));
-  size += (double)(N_K * NUMLINK * NUMLINK * sizeof(Real));
+  size += (double)((N_B + 1.0) * NUMLINK * sizeof(matrix));
+  size += (double)((N_K + 1.0) * NUMLINK * NUMLINK * sizeof(Real));
   size += (double)(2.0 * sizeof(Kops));
+  FIELD_ALLOC_VEC(Aa, matrix, NUMLINK);
+  FIELD_ALLOC_MAT(traceAA, double, NUMLINK, NUMLINK);
   for (j = 0; j < N_B; j++)
     FIELD_ALLOC_VEC(Ba[j], matrix, NUMLINK);
   for (j = 0; j < N_K; j++)
@@ -441,6 +443,8 @@ int readin(int prompt) {
   work = malloc(4 * NCOL * sizeof(*work));
 
   // Allocate some more arrays to be used by LAPACK in unit.c
+  Lstore = malloc(2 * NCOL * NCOL * sizeof(*Lstore));
+  Rstore = malloc(2 * NCOL * NCOL * sizeof(*Rstore));
   Rwork = malloc((3 * NCOL - 2) * sizeof(*Rwork));
   eigs = malloc(NCOL * sizeof(*eigs));
 

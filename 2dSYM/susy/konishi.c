@@ -18,19 +18,24 @@ void compute_Ba() {
   int a, b, j, k;
   Real tr;
   complex tc;
-  matrix tmat;
+  matrix tmat, tmat2;
 
   FORALLSITES(i, s) {
     // Construct scalar fields
     FORALLDIR(a) {
       // Log of hermitian part of polar decomposition
-      polar(&(s->link[a]), &(Ba[0][a][i]), &tmat);
-      matrix_log(&tmat, &(Ba[0][a][i]));
+      polar(&(s->link[a]), &tmat, &tmat2);
+      unit_log(&tmat, &(Aa[a][i]));
+      matrix_log(&tmat2, &(Ba[0][a][i]));
 
       // U.Udag (hermitian so trace is real)
       mult_na(&(s->link[a]), &(s->link[a]), &(Ba[1][a][i]));
 
       // Subtract traces
+      tc = trace(&(Aa[a][i]));
+      tr = one_ov_N * tc.real;
+      for (k = 0; k < NCOL; k++)
+        Aa[a][i].e[k][k].real -= tr;
       for (j = 0; j < N_B; j++) {
         tc = trace(&(Ba[j][a][i]));
         tr = one_ov_N * tc.real;
@@ -55,6 +60,8 @@ void compute_Ba() {
   FORALLDIR(a) {
     FORALLDIR(b) {
       FORALLSITES(i, s) {
+        traceAA[a][b][i] = realtrace_nn(&(Aa[a][i]), &(Aa[b][i]));
+
         traceBB[0][a][b][i] = realtrace_nn(&(Ba[0][a][i]), &(Ba[0][b][i]));
         traceBB[2][a][b][i] = realtrace_nn(&(Ba[1][a][i]), &(Ba[1][b][i]));
 
@@ -97,8 +104,13 @@ void konishi() {
       for (j = 0; j < N_K; j++) {
         OK[j][t] += traceBB[j][a][a][i];    // Konishi
 
-        // Now SUGRA, averaged over 20 off-diagonal components
         FORALLDIR(b) {
+          // Add Tr phi_6^2 = (1 / 5) Tr \sum_{a, b} A_a A_b
+          // to cancel SUGRA mixing in log-polar Konishi
+          if (j == 0)
+            OK[j][t] += 0.2 * traceAA[a][b][i];
+
+          // Now SUGRA, averaged over 20 off-diagonal components
           if (a == b)
             continue;
           OS[j][t] += 0.05 * traceBB[j][a][b][i];
