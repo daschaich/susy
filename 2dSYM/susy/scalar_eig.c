@@ -68,17 +68,15 @@ void scalar_eig(int project, double *ave_eigs, double *eig_widths,
       zheev_(&N, &U, &Npt, store, &Npt, eigs, work, &Nwork, Rwork, &stat);
 
       // Make sure eigenvalues are always ordered consistently
-      if (stat != 0) {
-        printf("WARNING: Non-zero return for %d %d %d %d %d\n",
-               s->x, s->y, s->z, s->t, dir);
-      }
+      if (stat != 0)
+        printf("WARNING: Non-zero return for %d %d %d\n", s->x, s->t, dir);
 
 #ifdef SCALAR_EIG_DIST
       if (project == 1)
         printf("POLAR_EIG_DIST ");
       else
         printf("UUBAR_EIG_DIST ");
-      printf("%d %d %d %d %d", s->x, s->y, s->z, s->t, dir);
+      printf("%d %d %d", s->x, s->t, dir);
       for (j = 0; j < NCOL; j++)
         printf(" %.4g", eigs[j]);
       printf("\n");

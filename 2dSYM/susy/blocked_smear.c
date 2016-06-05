@@ -114,7 +114,7 @@ void blocked_APE(int Nsmear, double alpha, int project, int bl) {
   matrix tmat, tmat2;
 
   tr2 = 1.0 - alpha;
-  tr = alpha / (8.0 * tr2);
+  tr = alpha / (2.0 * tr2);
 
   // Set number of links to stride, 2^bl
   for (j = 0; j < bl; j++)

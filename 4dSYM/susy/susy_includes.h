@@ -140,7 +140,6 @@ void rsymm();
 // More measurements
 #ifdef CORR
 // Konishi and SUGRA correlators
-void setup_P();
 void compute_Ba();
 void konishi();       // Operators averaged over each timeslice
 

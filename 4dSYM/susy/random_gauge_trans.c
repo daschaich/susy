@@ -72,7 +72,7 @@ void random_gauge_trans(Twist_Fermion *TF) {
   }
 
   // Left side of local links and psis; right side of local chis
-  for (a = XUP; a < NUMLINK; a++) {
+  FORALLDIR(a) {
     mult_nn(&Gmat, &(lattice[s].link[a]), &tmat);
     mat_copy(&tmat, &(lattice[s].link[a]));
 

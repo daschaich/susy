@@ -7,7 +7,7 @@
 void blocked_ploop(int Nsmear, int block) {
   register int i;
   register site *s;
-  int j, bl = 2, d[NDIMS] = {0, 0, 0, 0};
+  int j, bl = 2, d[NDIMS] = {0, 0};
   complex sum = cmplx(0.0, 0.0), plp;
   msg_tag *tag;
 
@@ -50,8 +50,8 @@ void blocked_ploop(int Nsmear, int block) {
 
   // Average all the loops we just calculated
   g_complexsum(&sum);
-  plp.real = sum.real / ((Real)(nx * ny * nz * bl));
-  plp.imag = sum.imag / ((Real)(nx * ny * nz * bl));
+  plp.real = sum.real / ((Real)(nx * bl));
+  plp.imag = sum.imag / ((Real)(nx * bl));
   node0_printf("BPLOOP %d %d %.8g %.8g\n", Nsmear, block, plp.real, plp.imag);
 }
 // -----------------------------------------------------------------

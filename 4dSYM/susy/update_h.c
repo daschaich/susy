@@ -1173,8 +1173,7 @@ void assemble_fermion_force(Twist_Fermion *sol, Twist_Fermion *psol) {
 
 // -----------------------------------------------------------------
 // Update the momenta with the fermion force
-// Assume that the multiCG has been run (updating the adjoint links),
-// with the solution in sol[j]
+// Assume that the multiCG has been run, with the solution in sol[j]
 // Accumulate f_U for each pole into fullforce, add to momenta
 // Use fullforce-->Fmunu and tempTF for temporary storage
 // (Calls assemble_fermion_force, which uses many more temporaries)
@@ -1238,7 +1237,6 @@ double fermion_force(Real eps, Twist_Fermion *src, Twist_Fermion **sol) {
                  n, eps * sqrt(individ_force) / volume);
 
     // Check that force syncs with fermion action
-    // congrad_multi_field calls fermion_rep()
     old_action = d_fermion_action(src, sol);
     iters += congrad_multi_field(src, sol, niter, rsqmin, &final_rsq);
     new_action = d_fermion_action(src, sol);

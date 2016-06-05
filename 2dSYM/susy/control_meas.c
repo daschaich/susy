@@ -72,11 +72,11 @@ int main(int argc, char *argv[]) {
   linktr_ave = link_trace(linktr, &linktr_width,
                           link_det, &det_ave, &det_width);
   node0_printf("FLINK");
-  for (dir = XUP; dir < NUMLINK; dir++)
+  FORALLDIR(dir)
     node0_printf(" %.6g", linktr[dir]);
   node0_printf(" %.6g %.6g\n", linktr_ave, linktr_width);
   node0_printf("FLINK_DET");
-  for (dir = XUP; dir < NUMLINK; dir++)
+  FORALLDIR(dir)
     node0_printf(" %.6g", link_det[dir]);
   node0_printf(" %.6g %.6g\n", det_ave, det_width);
 
@@ -96,12 +96,12 @@ int main(int argc, char *argv[]) {
 
   // Full and polar-projected Wilson lines in all five basis dirs
   node0_printf("LINES      ");
-  for (dir = XUP; dir < NUMLINK; dir++) {
+  FORALLDIR(dir) {
     plp = ploop(dir, NODET, &plpMod);
     node0_printf(" %.6g %.6g", plp.real, plp.imag);
   }
   node0_printf("\nLINES_POLAR");
-  for (dir = XUP; dir < NUMLINK; dir++) {
+  FORALLDIR(dir) {
     plp = ploop(dir, YESDET, &plpMod);
     node0_printf(" %.6g %.6g", plp.real, plp.imag);
   }

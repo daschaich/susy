@@ -17,9 +17,8 @@
 void blocked_path(int *dir, int *sign, int length, int bl) {
   register int i;
   register site *s;
-  int j, k, d[4];
+  int j, k, d[NDIMS];
   msg_tag *tag;
-  matrix *mat;
 
   // Initialize tempmat with first link in path
   if (sign[0] > 0) {    // Gather from site - bl * dir[0], no adjoint
@@ -54,7 +53,6 @@ void blocked_path(int *dir, int *sign, int length, int bl) {
       wait_general_gather(tag);
       FORALLSITES(i, s)
         mat_copy((matrix *)(gen_pt[0][i]), &(tempmat[i]));
-
       cleanup_general_gather(tag);
     }
 
@@ -64,15 +62,14 @@ void blocked_path(int *dir, int *sign, int length, int bl) {
       tag = start_general_gather_field(tempmat, sizeof(matrix),
                                        d, EVENANDODD, gen_pt[1]);
 
+      // Be careful about overwriting tempmat;
+      // gen_pt may just point to it for on-node "gathers"
       wait_general_gather(tag);
-      FORALLSITES(i, s) {
-        mat = (matrix *)(gen_pt[1][i]);
-        mult_na(mat, &(s->link[dir[j]]), &(tempmat2[i]));
-      }
-      FORALLSITES(i, s)   // Don't want to overwrite tempmat too soon
-        mat_copy(&(tempmat2[i]), &(tempmat[i]));
-
+      FORALLSITES(i, s)
+        mult_na((matrix *)(gen_pt[1][i]), &(s->link[dir[j]]), &(tempmat2[i]));
       cleanup_general_gather(tag);
+      FORALLSITES(i, s)
+        mat_copy(&(tempmat2[i]), &(tempmat[i]));
     }
   }
 }
@@ -91,7 +88,7 @@ void blocked_path(int *dir, int *sign, int length, int bl) {
 void blocked_rsymm_path(int *dir, int *sign, int *kind, int length, int bl) {
   register int i;
   register site *s;
-  int j, k, d[4] = {0, 0, 0, 0};
+  int j, k, d[NDIMS] = {0, 0, 0, 0};
   msg_tag *tag = NULL;
   matrix *mat;
 
@@ -171,25 +168,24 @@ void blocked_rsymm_path(int *dir, int *sign, int *kind, int length, int bl) {
       tag = start_general_gather_field(tempmat, sizeof(matrix),
                                        d, EVENANDODD, gen_pt[1]);
 
+      // Be careful about overwriting tempmat;
+      // gen_pt may just point to it for on-node "gathers"
       wait_general_gather(tag);
       FORALLSITES(i, s) {
-        if (kind[j] > 0) {
-          mat = (matrix *)(gen_pt[1][i]);
+        mat = (matrix *)(gen_pt[1][i]);
+        if (kind[j] > 0)
           mult_na(mat, &(s->link[dir[j]]), &(tempmat2[i]));
-        }
-        else if (kind[j] < 0) {
-          mat = (matrix *)(gen_pt[1][i]);
+        else if (kind[j] < 0)
           mult_na(mat, &(s->mom[dir[j]]), &(tempmat2[i]));
-        }
         else {
           node0_printf("blocked_rsymm_path: unrecognized kind[%d] = %d\n",
                        j, kind[j]);
           terminate(1);
         }
       }
-      FORALLSITES(i, s)   // Don't want to overwrite tempmat too soon
-        mat_copy(&(tempmat2[i]), &(tempmat[i]));
       cleanup_general_gather(tag);
+      FORALLSITES(i, s)
+        mat_copy(&(tempmat2[i]), &(tempmat[i]));
     }
     else {
       node0_printf("blocked_rsymm_path: unrecognized sign[%d] = %d\n",
@@ -275,7 +271,7 @@ void blocked_rsymm(int Nsmear, int block) {
   // First check average value of the inverted link
   // Tr[U^{-1} (U^{-1})^dag] / N and corresponding width
   // Just like link_trace() but use s->mom instead of s->link
-  for (dir_inv = XUP; dir_inv < NUMLINK; dir_inv++) {
+  FORALLDIR(dir_inv) {
     invlink[dir_inv] = 0.0;
     FORALLSITES(i, s) {
       td = realtrace(&(s->mom[dir_inv]), &(s->mom[dir_inv]));
@@ -299,8 +295,8 @@ void blocked_rsymm(int Nsmear, int block) {
   // Construct and print all loops up to max x max
   // in all NUMLINK * (NUMLINK - 1) directions
   // Invert all links in the second direction in each loop
-  for (dir_normal = XUP; dir_normal < NUMLINK; dir_normal++) {
-    for (dir_inv = XUP; dir_inv < NUMLINK; dir_inv++) {
+  FORALLDIR(dir_normal) {
+    FORALLDIR(dir_inv) {
       if (dir_inv == dir_normal)
         continue;
 

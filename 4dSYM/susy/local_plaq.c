@@ -11,7 +11,6 @@
 // #define PLAQ_DIST prints out all plaquettes for plotting distribution
 // CAUTION: Do not run PLAQ_DIST with MPI!
 
-#define MIN_PLAQ
 #ifdef LOCAL_PLAQ
 #define MY_X x
 #define MY_DIR XUP          // Printed out first time the routine is called
@@ -19,14 +18,14 @@
 static int print_dir = 0;   // Controls printing out MY_DIR
 #endif
 
+#define MIN_PLAQ
 //#define PLAQ_DIST
 #include "susy_includes.h"
 
 double local_plaquette(double *ss_plaq, double *st_plaq) {
   register int i, dir, dir2;
   register site *s;
-  double ss_sum = 0.0, st_sum = 0.0, cur_plaq;
-  double max_plaq = 0.0;
+  double ss_sum = 0.0, st_sum = 0.0, cur_plaq, max_plaq = 0.0;
 #ifdef MIN_PLAQ
   double min_plaq = 200.0 * NCOL;
 #endif
@@ -69,11 +68,11 @@ double local_plaquette(double *ss_plaq, double *st_plaq) {
         FORALLSITES(i, s) {
           mult_nn(&(tempmat[i]), (matrix *)(gen_pt[0][i]), &tmat);
           cur_plaq = (double)realtrace((matrix *)(gen_pt[1][i]), &tmat);
+          if (cur_plaq > max_plaq)
+            max_plaq = cur_plaq;
 #ifdef MIN_PLAQ
           if (cur_plaq < min_plaq)
             min_plaq = cur_plaq;
-          if (cur_plaq > max_plaq)
-            max_plaq = cur_plaq;
 #endif
 #ifdef PLAQ_DIST
           printf("PLAQ_DIST %d %d %d %d %d %d %.4g\n",
@@ -92,11 +91,11 @@ double local_plaquette(double *ss_plaq, double *st_plaq) {
         FORALLSITES(i, s) {
           mult_nn(&(tempmat[i]), (matrix *)(gen_pt[0][i]), &tmat);
           cur_plaq = (double)realtrace((matrix *)(gen_pt[1][i]), &tmat);
+          if (cur_plaq > max_plaq)
+            max_plaq = cur_plaq;
 #ifdef MIN_PLAQ
           if (cur_plaq < min_plaq)
             min_plaq = cur_plaq;
-          if (cur_plaq > max_plaq)
-            max_plaq = cur_plaq;
 #endif
 #ifdef PLAQ_DIST
           printf("PLAQ_DIST %d %d %d %d %d %d %.4g\n",
@@ -153,9 +152,9 @@ double local_plaquette(double *ss_plaq, double *st_plaq) {
   free(plaq_prll);
 #endif
 
+  g_doublemax(&max_plaq);
 #ifdef MIN_PLAQ
   // Somewhat hacky since we don't have g_doublemin...
-  g_doublemax(&max_plaq);
   min_plaq = -min_plaq;
   g_doublemax(&min_plaq);
   min_plaq = -min_plaq;

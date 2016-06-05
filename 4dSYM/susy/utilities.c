@@ -131,7 +131,6 @@ void compute_Uinv() {
 
 
 
-
 // -----------------------------------------------------------------
 // Separate routines for each term in the fermion operator
 // All called by fermion_op at the bottom of the file
@@ -196,17 +195,15 @@ void Dplus(matrix *src[NUMLINK], matrix *dest[NPLAQ]) {
       wait_gather(tag3[flip]);
       FORALLSITES(i, s) {
         // Initialize dest[index][i]
-        scalar_mult_nn(&(s->link[mu]),
-                         (matrix *)(local_pt[flip][0][i]),
-                         s->bc1[mu], &(plaq_dest[index][i]));
+        scalar_mult_nn(&(s->link[mu]), (matrix *)(local_pt[flip][0][i]),
+                       s->bc1[mu], &(plaq_dest[index][i]));
 
         // Add or subtract the other three terms
         mult_nn_dif(&(src[nu][i]), (matrix *)(local_pt[flip][1][i]),
-                      &(plaq_dest[index][i]));
+                    &(plaq_dest[index][i]));
 
-        scalar_mult_nn_dif(&(s->link[nu]),
-                             (matrix *)(local_pt[flip][2][i]),
-                             s->bc1[nu], &(plaq_dest[index][i]));
+        scalar_mult_nn_dif(&(s->link[nu]), (matrix *)(local_pt[flip][2][i]),
+                           s->bc1[nu], &(plaq_dest[index][i]));
 
         mult_nn_sum(&(src[mu][i]), (matrix *)(local_pt[flip][3][i]),
                       &(plaq_dest[index][i]));
@@ -283,7 +280,7 @@ void Dminus(matrix *src[NPLAQ], matrix *dest[NUMLINK]) {
         FORALLSITES(i, s) {
           if (a > b) {      // src is anti-symmetric under a <--> b
             scalar_mult_nn(&(src[next][i]), &(s->link[a]), -1.0,
-                             &(mat[gather][i]));
+                           &(mat[gather][i]));
           }
           else {
             mult_nn(&(src[next][i]), &(s->link[a]), &(mat[gather][i]));
@@ -301,10 +298,10 @@ void Dminus(matrix *src[NPLAQ], matrix *dest[NUMLINK]) {
       FORALLSITES(i, s) {
         if (mu > nu)      // src is anti-symmetric under mu <--> nu
           mult_nn_dif((matrix *)(local_pt[flip][0][i]), &(src[index][i]),
-                        &(dest[nu][i]));
+                      &(dest[nu][i]));
         else
           mult_nn_sum((matrix *)(local_pt[flip][0][i]), &(src[index][i]),
-                        &(dest[nu][i]));
+                      &(dest[nu][i]));
 
         scalar_mult_dif_matrix((matrix *)(local_pt[flip][1][i]),
                                s->bc1[opp_mu], &(dest[nu][i]));

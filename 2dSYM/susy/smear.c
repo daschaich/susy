@@ -170,7 +170,7 @@ void APE_smear(int Nsmear, double alpha, int project) {
   matrix tmat, tmat2;
 
   tr2 = 1.0 - alpha;
-  tr = alpha / (8.0 * tr2);
+  tr = alpha / (2.0 * tr2);
 
   for (n = 0; n < Nsmear; n++) {
     FORALLSITES(i, s) {

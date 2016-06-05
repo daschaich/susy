@@ -1,46 +1,121 @@
 // -----------------------------------------------------------------
-// Modified rectangular Wilson loops of fundamental links
+// Modified rectangular Wilson loops after RG blocking
+// Use general_gathers; lattice must be divisible by 2^block in all dirs
 // Evaluate in different spatial dirs to check rotational invariance
-// Checked that results are gauge invariant
 #include "susy_includes.h"
 // -----------------------------------------------------------------
 
 
 
 // -----------------------------------------------------------------
-// Walk around path of fundamental links specified by dir, sign and kind
+// Walk around strided path of links specified by dir, sign and kind
+// dir is a list of the directions in the path, with the given length
+// sign is the corresponding list of which way to go in the given dir
+// That is, the negative sign means take the adjoint
+// bl = 2^block is number of links to stride
+// Use tempmat to accumulate link product along path
+void blocked_path(int *dir, int *sign, int length, int bl) {
+  register int i;
+  register site *s;
+  int j, k, d[NDIMS];
+  msg_tag *tag;
+
+  // Initialize tempmat with first link in path
+  if (sign[0] > 0) {    // Gather from site - bl * dir[0], no adjoint
+    for (k = 0; k < NDIMS; k++)
+      d[k] = -bl * offset[dir[0]][k];
+    tag = start_general_gather_site(F_OFFSET(link[dir[0]]), sizeof(matrix),
+                                    d, EVENANDODD, gen_pt[0]);
+
+    wait_general_gather(tag);
+    FORALLSITES(i, s)
+      mat_copy((matrix *)(gen_pt[0][i]), &(tempmat[i]));
+    cleanup_general_gather(tag);
+  }
+
+  if (sign[0] < 0) {    // Take adjoint, no gather
+    FORALLSITES(i, s)
+      adjoint(&(s->link[dir[0]]), &(tempmat[i]));
+  }
+
+  // Accumulate subsequent links in product in tempmat
+  for (j = 1; j < length; j++) {
+    if (sign[j] > 0) {    // mult_nn then gather from site - bl * dir[j]
+      FORALLSITES(i, s)
+        mult_nn(&(tempmat[i]), &(s->link[dir[j]]), &(tempmat2[i]));
+
+      for (k = 0; k < NDIMS; k++)
+        d[k] = -bl * offset[dir[j]][k];
+      tag = start_general_gather_field(tempmat2, sizeof(matrix),
+                                       d, EVENANDODD, gen_pt[0]);
+
+      wait_general_gather(tag);
+      FORALLSITES(i, s)
+        mat_copy((matrix *)(gen_pt[0][i]), &(tempmat[i]));
+      cleanup_general_gather(tag);
+    }
+
+    if (sign[j] < 0) {    // Gather from site + bl * dir[j] then mult_na
+      for (k = 0; k < NDIMS; k++)
+        d[k] = bl * offset[dir[j]][k];
+      tag = start_general_gather_field(tempmat, sizeof(matrix),
+                                       d, EVENANDODD, gen_pt[1]);
+
+      // Be careful about overwriting tempmat;
+      // gen_pt may just point to it for on-node "gathers"
+      wait_general_gather(tag);
+      FORALLSITES(i, s)
+        mult_na((matrix *)(gen_pt[1][i]), &(s->link[dir[j]]), &(tempmat2[i]));
+      cleanup_general_gather(tag);
+      FORALLSITES(i, s)
+        mat_copy(&(tempmat2[i]), &(tempmat[i]));
+
+    }
+  }
+}
+// -----------------------------------------------------------------
+
+
+
+// -----------------------------------------------------------------
+// Walk around strided path of links specified by dir, sign and kind
 // dir lists the directions in the path
 // sign lists whether to go forward (1) or backwards (-1)
 // kind tells us whether to use link (1) or mom = (link^{-1})^dag (-1)
 // length is the length of the path, and of each array
+// bl = 2^block is number of links to stride
 // Use tempmat to accumulate link product along path
-// Use tempmat2 for temporary storage
-void rsymm_path(int *dir, int *sign, int *kind, int length) {
+void blocked_rsymm_path(int *dir, int *sign, int *kind, int length, int bl) {
   register int i;
   register site *s;
-  int j;
+  int j, k, d[NDIMS] = {0, 0};
+  msg_tag *tag = NULL;
   matrix *mat;
-  msg_tag *mtag = NULL;
 
   // Initialize tempmat with first link in path
-  if (sign[0] > 0) {    // Gather from site - dir[0], no adjoint
+  if (sign[0] > 0) {    // Gather from site - bl * dir[0], no adjoint
+    for (k = 0; k < NDIMS; k++)
+      d[k] = -bl * offset[dir[0]][k];
     if (kind[0] > 0) {
-      mtag = start_gather_site(F_OFFSET(link[dir[0]]), sizeof(matrix),
-                               goffset[dir[0]] + 1, EVENANDODD, gen_pt[0]);
+      tag = start_general_gather_site(F_OFFSET(link[dir[0]]),
+                                      sizeof(matrix), d,
+                                      EVENANDODD, gen_pt[0]);
     }
     else if (kind[0] < 0) {
-      mtag = start_gather_site(F_OFFSET(mom[dir[0]]), sizeof(matrix),
-                               goffset[dir[0]] + 1, EVENANDODD, gen_pt[0]);
+      tag = start_general_gather_site(F_OFFSET(mom[dir[0]]),
+                                      sizeof(matrix), d,
+                                      EVENANDODD, gen_pt[0]);
     }
     else {
-      node0_printf("rsymm_path: unrecognized kind[0] = %d\n", kind[0]);
+      node0_printf("blocked_rsymm_path: unrecognized kind[0] = %d\n",
+                   kind[0]);
       terminate(1);
     }
 
-    wait_gather(mtag);
+    wait_general_gather(tag);
     FORALLSITES(i, s)
       mat_copy((matrix *)(gen_pt[0][i]), &(tempmat[i]));
-    cleanup_gather(mtag);
+    cleanup_general_gather(tag);
   }
 
   else if (sign[0] < 0) {    // Take adjoint, no gather
@@ -50,45 +125,52 @@ void rsymm_path(int *dir, int *sign, int *kind, int length) {
       else if (kind[0] < 0)
         adjoint(&(s->mom[dir[0]]), &(tempmat[i]));
       else {
-        node0_printf("rsymm_path: unrecognized kind[0] = %d\n", kind[0]);
+        node0_printf("blocked_rsymm_path: unrecognized kind[0] = %d\n",
+                     kind[0]);
         terminate(1);
       }
     }
   }
   else {
-    node0_printf("rsymm_path: unrecognized sign[0] = %d\n", sign[0]);
+    node0_printf("blocked_rsymm_path: unrecognized sign[0] = %d\n", sign[0]);
     terminate(1);
   }
 
   // Accumulate subsequent links in product in tempmat
   for (j = 1; j < length; j++) {
-    if (sign[j] > 0) {    // mult_nn then gather from site - dir[j]
+    if (sign[j] > 0) {    // mult_nn then gather from site - bl * dir[j]
       FORALLSITES(i, s) {
         if (kind[j] > 0)
           mult_nn(&(tempmat[i]), &(s->link[dir[j]]), &(tempmat2[i]));
         else if (kind[j] < 0)
           mult_nn(&(tempmat[i]), &(s->mom[dir[j]]), &(tempmat2[i]));
         else {
-          node0_printf("rsymm_path: unrecognized kind[%d] = %d\n", j, kind[j]);
+          node0_printf("blocked_rsymm_path: unrecognized kind[%d] = %d\n",
+                       j, kind[j]);
           terminate(1);
         }
       }
-      mtag = start_gather_field(tempmat2, sizeof(matrix),
-                                goffset[dir[j]] + 1, EVENANDODD, gen_pt[0]);
+      for (k = 0; k < NDIMS; k++)
+        d[k] = -bl * offset[dir[j]][k];
+      tag = start_general_gather_field(tempmat2, sizeof(matrix),
+                                       d, EVENANDODD, gen_pt[0]);
 
-      wait_gather(mtag);
+      wait_general_gather(tag);
       FORALLSITES(i, s)
         mat_copy((matrix *)(gen_pt[0][i]), &(tempmat[i]));
-      cleanup_gather(mtag);
+      cleanup_general_gather(tag);
     }
 
-    else if (sign[j] < 0) {    // Gather from site + dir[j] then mult_na
-      mtag = start_gather_field(tempmat, sizeof(matrix),
-                                goffset[dir[j]], EVENANDODD, gen_pt[1]);
+    // Gather from site + bl * dir[j] then mult_na
+    else if (sign[j] < 0) {
+      for (k = 0; k < NDIMS; k++)
+        d[k] = bl * offset[dir[j]][k];
+      tag = start_general_gather_field(tempmat, sizeof(matrix),
+                                       d, EVENANDODD, gen_pt[1]);
 
       // Be careful about overwriting tempmat;
       // gen_pt may just point to it for on-node "gathers"
-      wait_gather(mtag);
+      wait_general_gather(tag);
       FORALLSITES(i, s) {
         mat = (matrix *)(gen_pt[1][i]);
         if (kind[j] > 0)
@@ -96,16 +178,18 @@ void rsymm_path(int *dir, int *sign, int *kind, int length) {
         else if (kind[j] < 0)
           mult_na(mat, &(s->mom[dir[j]]), &(tempmat2[i]));
         else {
-          node0_printf("rsymm_path: unrecognized kind[%d] = %d\n", j, kind[j]);
+          node0_printf("blocked_rsymm_path: unrecognized kind[%d] = %d\n",
+                       j, kind[j]);
           terminate(1);
         }
       }
-      cleanup_gather(mtag);
+      cleanup_general_gather(tag);
       FORALLSITES(i, s)
         mat_copy(&(tempmat2[i]), &(tempmat[i]));
     }
     else {
-      node0_printf("rsymm_path: unrecognized sign[%d] = %d\n", j, sign[j]);
+      node0_printf("blocked_rsymm_path: unrecognized sign[%d] = %d\n",
+                   j, sign[j]);
       terminate(1);
     }
   }
@@ -116,18 +200,25 @@ void rsymm_path(int *dir, int *sign, int *kind, int length) {
 
 // -----------------------------------------------------------------
 // Print both usual and transformed Wilson loops
-// Use tempmat for temporary storage
-void rsymm() {
+void blocked_rsymm(int Nsmear, int block) {
   register int i;
   register site *s;
-  int dir_normal, dir_inv, dist, dist_inv, mu, length, max = MAX_X + 1;
-  int dir[4 * max], sign[4 * max], kind[4 * max];
+  int j, bl = 2, max, dir_normal, dir_inv, dist, dist_inv, mu, length;
   double rsymm_loop, wloop, invlink[NUMLINK], invlink_sum = 0.0, td;
   double invlinkSq = 0.0;
   complex tc;
   matrix tmat;
 
-  node0_printf("rsymm: MAX = %d\n", max);
+  // Set number of links to stride, bl = 2^block
+  // Allow sanity check of reproducing rsymm() with this routine
+  for (j = 1; j < block; j++)
+    bl *= 2;
+  if (block <= 0)
+    bl = 1;
+
+  max = (MAX_X + 1) / bl;
+  node0_printf("blocked_rsymm: MAX = %d\n", max);
+  int dir[4 * max], sign[4 * max], kind[4 * max];
 
   // Compute and optionally check inverse matrices
   // Temporarily store the adjoint of the inverse in momentum matrices,
@@ -142,7 +233,7 @@ void rsymm() {
 #define INV_TOL_SQ 1e-24
       // Check inversion -- tmat should be unit matrix
       int j, k;
-      mult_nn(&(s->mom[mu]), &(s->link[mu]), &tmat);
+      mult_nn(&(s->mom[dir]), &(s->link[dir]), &tmat);
       for (j = 0; j < NCOL; j++) {
         if (fabs(1 - tmat.e[j][j].real) > INV_TOL
             || fabs(tmat.e[j][j].imag) > INV_TOL) {
@@ -158,7 +249,7 @@ void rsymm() {
         }
       }
       // Check left multiplication in addition to right multiplication
-      mult_nn(&(s->link[mu]), &(s->mom[mu]), &tmat);
+      mult_nn(&(s->link[dir]), &(s->mom[dir]), &tmat);
       for (j = 0; j < NCOL; j++) {
         if (fabs(1 - tmat.e[j][j].real) > INV_TOL
             || fabs(tmat.e[j][j].imag) > INV_TOL) {
@@ -195,8 +286,8 @@ void rsymm() {
   invlinkSq *= one_ov_N * one_ov_N / ((double)volume * NUMLINK);
   g_doublesum(&(invlinkSq));
 
-  node0_printf("INVLINK");
-  FORALLDIR(dir_inv)
+  node0_printf("BINVLINK %d %d", Nsmear, block);
+  for (dir_inv = XUP; dir_inv < NUMLINK; dir_inv++)
     node0_printf(" %.6g", invlink[dir_inv]);
   td = sqrt(invlinkSq - invlink_sum * invlink_sum);
   node0_printf(" %.6g %.6g\n", invlink_sum, td);
@@ -241,8 +332,9 @@ void rsymm() {
           node0_printf("\n");
 #endif
 
-          // path and rsymm_path accumulate the product in tempmat
-          path(dir, sign, length);
+          // blocked_path and blocked_rsymm_path
+          // both accumulate the product in tempmat
+          blocked_path(dir, sign, length, bl);
           wloop = 0.0;
           FORALLSITES(i, s) {
             tc = trace(&(tempmat[i]));
@@ -250,7 +342,7 @@ void rsymm() {
           }
           g_doublesum(&wloop);
 
-          rsymm_path(dir, sign, kind, length);
+          blocked_rsymm_path(dir, sign, kind, length, bl);
           rsymm_loop = 0.0;
           FORALLSITES(i, s) {
             tc = trace(&(tempmat[i]));
@@ -258,8 +350,8 @@ void rsymm() {
           }
           g_doublesum(&rsymm_loop);
           // Format: normal [dir] inverted [dir] usual transformed
-          node0_printf("RSYMM %d [%d] %d [%d] %.8g %.8g\n",
-                       dist, dir_normal, dist_inv, dir_inv,
+          node0_printf("BRSYMM %d %d %d [%d] %d [%d] %.8g %.8g\n",
+                       Nsmear, block, dist, dir_normal, dist_inv, dir_inv,
                        wloop / volume, rsymm_loop / volume);
         } // dist_inv
       } // dist

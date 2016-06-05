@@ -1,7 +1,7 @@
 // -----------------------------------------------------------------
 // Measure plaquettes after block RG blocking steps
 // Allow sanity check of reproducing local_plaquette() with block <= 0
-// Use tempmat and tempmat2 for temporary storage
+// Use tempmat, tempmat2 and Fmunu for temporary storage
 
 // #define MIN_PLAQ turns on measurement of minimum plaquette per config
 // for tuning smearing as in Hasenfratz & Knechtli, hep-lat/0103029
@@ -12,9 +12,9 @@ void blocked_local_plaq(int Nsmear, int block) {
   register int i, dir, dir2;
   register site *s;
   int j, stride = 1;
-  double ss_sum = 0.0, st_sum = 0.0, tr;
+  double ss_sum = 0.0, st_sum = 0.0, tr, max_plaq = -200.0 * NCOL;
 #ifdef MIN_PLAQ
-  double min_plaq = 200.0 * NCOL, max_plaq = -200.0 * NCOL;
+  double min_plaq = 200.0 * NCOL;
 #endif
   matrix tmat, tmat2;
 
@@ -46,11 +46,11 @@ void blocked_local_plaq(int Nsmear, int block) {
         mult_nn(&(s->link[dir]), &(tempmat2[i]), &tmat);
         mult_nn(&(s->link[dir2]), &(tempmat[i]), &tmat2);
         tr = (double)realtrace(&tmat2, &tmat);
+        if (tr > max_plaq)
+          max_plaq = tr;
 #ifdef MIN_PLAQ
         if (tr < min_plaq)
           min_plaq = tr;
-        if (tr > max_plaq)
-          max_plaq = tr;
 #endif
         if (dir == TUP || dir2 == TUP)
           st_sum += tr;
@@ -62,9 +62,9 @@ void blocked_local_plaq(int Nsmear, int block) {
   g_doublesum(&ss_sum);
   g_doublesum(&st_sum);
 
+  g_doublemax(&max_plaq);
 #ifdef MIN_PLAQ
   // Somewhat hacky since we don't have g_doublemin...
-  g_doublemax(&max_plaq);
   min_plaq = -min_plaq;
   g_doublemax(&min_plaq);
   min_plaq = -min_plaq;

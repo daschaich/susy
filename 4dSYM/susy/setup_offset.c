@@ -90,7 +90,7 @@ void setup_bc() {
 //    if (s->x == 1 && s->y == 1 && s->z == 2) {
 //      printf("%d %d %d %d:", s->x, s->y, s->z, s->t);
 //      for (dir1 = 0; dir1 < 2 * NUMLINK; dir1++)
-//        printf("  %4.2f", s->bc1[dir1]);
+//        printf("  %4.2g", s->bc1[dir1]);
 //      printf("\n");
 //    }
 //  }

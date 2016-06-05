@@ -48,8 +48,8 @@ void path(int *dir, int *sign, int length) {
       mtag = start_gather_field(tempmat, sizeof(matrix),
                                 goffset[dir[j]], EVENANDODD, gen_pt[0]);
 
-      // On-node gen_pt just point to tempmat,
-      // so don't overwrite it in the mult_na...
+      // Be careful about overwriting tempmat;
+      // gen_pt may just point to it for on-node "gathers"
       wait_gather(mtag);
       FORALLSITES(i, s)
         mult_na((matrix *)(gen_pt[0][i]), &(s->link[dir[j]]), &(tempmat2[i]));

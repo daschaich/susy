@@ -111,7 +111,6 @@ EXTERN double_prn node_prn;
 // Stuff for derivative and link terms
 EXTERN int offset[NUMLINK][NDIMS];    // Path along each link
 EXTERN int label[NUMLINK];
-EXTERN int q_off_max, q_offset[NQLINK][4];
 
 // Stuff for gathers -- both forwards and backwards
 EXTERN int goffset[2 * NUMLINK];
