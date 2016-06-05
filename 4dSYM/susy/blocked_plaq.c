@@ -10,7 +10,7 @@ void blocked_plaq(int Nsmear, int block) {
   register site *s;
   int j, stride = 1;
   double plaq = 0.0, plaqSq = 0.0, re = 0.0, reSq = 0.0, im = 0.0, imSq = 0.0;
-  double ss_sum = 0.0, st_sum = 0.0, norm = 10.0 * volume, tr;
+  double ss_sum = 0.0, st_sum = 0.0, norm = 0.1 / volume, tr;
   complex det = cmplx(0.0, 0.0), tc;
   matrix tmat, tmat2, tmat3;
 
@@ -79,15 +79,15 @@ void blocked_plaq(int Nsmear, int block) {
   node0_printf("BPLAQ %d %d %.8g %.8g %.8g\n",
                Nsmear, block, ss_sum, st_sum, tr);
 
-  CDIVREAL(det, norm, det);
+  CMULREAL(det, norm, det);
   node0_printf("BDET %d %d %.6g %.6g\n", Nsmear, block, det.real, det.imag);
 
-  plaq /= norm;
-  plaqSq /= norm;
-  re /= norm;
-  reSq /= norm;
-  im /= norm;
-  imSq /= norm;
+  plaq *= norm;
+  plaqSq *= norm;
+  re *= norm;
+  reSq *= norm;
+  im *= norm;
+  imSq *= norm;
   node0_printf("BWIDTHS %d %d %.6g %.6g %.6g\n", Nsmear, block,
                sqrt(plaqSq - plaq * plaq),
                sqrt(reSq - re * re), sqrt(imSq - im * im));

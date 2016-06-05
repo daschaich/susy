@@ -102,31 +102,21 @@ void compute_DmuUmu() {
 void compute_Fmunu() {
   register int i;
   register site *s;
-  int mu, nu, index;
-  matrix *mat0, *mat1;
   msg_tag *mtag0 = NULL, *mtag1 = NULL;
 
-  // TODO: Can simplify this to consider only (mu, nu)=(0, 1)
-  FORALLDIR(mu) {
-    for (nu = mu + 1; nu < NUMLINK; nu++) {
-      index = plaq_index[mu][nu];
-      mtag0 = start_gather_site(F_OFFSET(link[nu]), sizeof(matrix),
-                                goffset[mu], EVENANDODD, gen_pt[0]);
-      mtag1 = start_gather_site(F_OFFSET(link[mu]), sizeof(matrix),
-                                goffset[nu], EVENANDODD, gen_pt[1]);
-      wait_gather(mtag0);
-      wait_gather(mtag1);
-      FORALLSITES(i, s) {
-        mat0 = (matrix *)(gen_pt[0][i]);
-        mat1 = (matrix *)(gen_pt[1][i]);
-        mult_nn(&(s->link[mu]), mat0, &(tempmat[i]));
-        mult_nn(&(s->link[nu]), mat1, &(tempmat2[i]));
-        sub_matrix(&(tempmat[i]), &(tempmat2[i]), &(Fmunu[index][i]));
-      }
-      cleanup_gather(mtag0);
-      cleanup_gather(mtag1);
-    }
+  mtag0 = start_gather_site(F_OFFSET(link[1]), sizeof(matrix),
+                            goffset[0], EVENANDODD, gen_pt[0]);
+  mtag1 = start_gather_site(F_OFFSET(link[0]), sizeof(matrix),
+                            goffset[1], EVENANDODD, gen_pt[1]);
+  wait_gather(mtag0);
+  wait_gather(mtag1);
+  FORALLSITES(i, s) {
+    mult_nn(&(s->link[0]), (matrix *)(gen_pt[0][i]), &(tempmat[i]));
+    mult_nn(&(s->link[1]), (matrix *)(gen_pt[1][i]), &(tempmat2[i]));
+    sub_matrix(&(tempmat[i]), &(tempmat2[i]), &(Fmunu[i]));
   }
+  cleanup_gather(mtag0);
+  cleanup_gather(mtag1);
 }
 // -----------------------------------------------------------------
 

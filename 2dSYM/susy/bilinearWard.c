@@ -70,7 +70,6 @@ void bilinear_src(Twist_Fermion *g_rand, Twist_Fermion *src, int N) {
       grn.imag = gaussian_rand_no(&node_prn);
 #endif
       c_scalar_mult_sum_mat(&(Lambda[j]), &grn, &(g_rand[i].Fplaq));
-      }
     }
   }
 

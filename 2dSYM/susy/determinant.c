@@ -91,31 +91,27 @@ void invert(matrix *in, matrix *out) {
 // Average plaquette determinant over lattice volume
 // Assume compute_plaqdet() has already been run
 void measure_det() {
-  register int i, a, b;
+  register int i;
   register site *s;
-  Real norm = (Real)(volume * NUMLINK * (NUMLINK - 1) / 2);
+  Real norm = 1.0 / ((Real)(volume));
   double WSq = 0.0;
   complex tot = cmplx(0.0, 0.0), tot_sq = cmplx(0.0, 0.0), tc;
 
-  for (a = YUP; a < NUMLINK; a++) {
-    for (b = XUP; b < a; b++) {
-      FORALLSITES(i, s) {
-        CSUM(tot, plaqdet[a][b][i]);
-        tot_sq.real += plaqdet[a][b][i].real * plaqdet[a][b][i].real;
-        tot_sq.imag += plaqdet[a][b][i].imag * plaqdet[a][b][i].imag;
+  FORALLSITES(i, s) {
+    CSUM(tot, plaqdet[1][0][i]);
+    tot_sq.real += plaqdet[1][0][i].real * plaqdet[1][0][i].real;
+    tot_sq.imag += plaqdet[1][0][i].imag * plaqdet[1][0][i].imag;
 
-        CADD(plaqdet[a][b][i], minus1, tc);
-        WSq += cabs_sq(&tc);
-      }
-    }
+    CADD(plaqdet[1][0][i], minus1, tc);
+    WSq += cabs_sq(&tc);
   }
   g_complexsum(&tot);
   g_complexsum(&tot_sq);
   g_doublesum(&WSq);
-  CDIVREAL(tot, norm, tot);
-  CDIVREAL(tot_sq, norm, tot_sq);
+  CMULREAL(tot, norm, tot);
+  CMULREAL(tot_sq, norm, tot_sq);
   node0_printf("DET %.6g %.6g %.6g %.6g %.6g\n",
-               tot.real, tot.imag, tot_sq.real, tot_sq.imag, WSq / norm);
+               tot.real, tot.imag, tot_sq.real, tot_sq.imag, WSq * norm);
 }
 // -----------------------------------------------------------------
 

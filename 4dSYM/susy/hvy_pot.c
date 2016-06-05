@@ -93,11 +93,12 @@ void hvy_pot(int do_det) {
     else {
       mtag = start_gather_field(staple, sizeof(matrix),
                                 goffset[TUP], EVENANDODD, gen_pt[0]);
+
+      // Be careful about overwriting staple;
+      // gen_pt may just point to it for on-node "gathers"
       wait_gather(mtag);
-      FORALLSITES(i, s) {
-        mat = (matrix *)gen_pt[0][i];
-        mult_nn(&(s->link[TUP]), mat, &(tempmat2[i]));
-      }
+      FORALLSITES(i, s)
+        mult_nn(&(s->link[TUP]), (matrix *)gen_pt[0][i], &(tempmat2[i]));
       cleanup_gather(mtag);
       FORALLSITES(i, s)
         mat_copy(&(tempmat2[i]), &(staple[i]));

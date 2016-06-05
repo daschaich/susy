@@ -123,7 +123,6 @@ void compute_Uinv() {
 void Dplus(matrix *src[NUMLINK], matrix *dest) {
   register int i;
   register site *s;
-  int mu, nu;
   msg_tag *tag[4];
 
   // Only have one set of gathers (mu = 0 and nu = 1)
@@ -146,12 +145,12 @@ void Dplus(matrix *src[NUMLINK], matrix *dest) {
   FORALLSITES(i, s) {
     // Initialize dest[i]
     scalar_mult_nn(&(s->link[0]), (matrix *)(gen_pt[0][i]),
-                   s->bc1[0], &(plaq_dest[i]));
+                   s->bc[0], &(plaq_dest[i]));
 
     // Add or subtract the other three terms
     mult_nn_dif(&(src[1][i]), (matrix *)(gen_pt[1][i]), &(plaq_dest[i]));
     scalar_mult_nn_dif(&(s->link[1]), (matrix *)(gen_pt[2][i]),
-                       s->bc1[1], &(plaq_dest[i]));
+                       s->bc[1], &(plaq_dest[i]));
 
     mult_nn_sum(&(src[0][i]), (matrix *)(gen_pt[3][i]), &(plaq_dest[i]));
   }
@@ -172,7 +171,7 @@ void Dminus(matrix *src, matrix *dest[NUMLINK]) {
   register int i;
   register site *s;
   char **local_pt[2][2];
-  int mu, nu, index, gather, flip = 0, a, b, next, opp_mu;
+  int mu, nu, flip = 0, opp_mu;
   msg_tag *tag0[2], *tag1[2];
 
   for (mu = 0; mu < 2; mu++) {
@@ -181,7 +180,6 @@ void Dminus(matrix *src, matrix *dest[NUMLINK]) {
   }
 
   // Start first set of gathers (nu = 0 and mu = 1)
-  index = plaq_index[1][0];
   tag0[0] = start_gather_site(F_OFFSET(link[1]), sizeof(matrix),
                               goffset[0], EVENANDODD, local_pt[0][0]);
 
@@ -204,9 +202,9 @@ void Dminus(matrix *src, matrix *dest[NUMLINK]) {
                                     goffset[1], EVENANDODD, local_pt[1][0]);
 
         FORALLSITES(i, s)   // mu = 0 < nu = 1
-          mult_nn(&(src[i]), &(s->link[a]), &(tempmat2[i]));
+          mult_nn(&(src[i]), &(s->link[0]), &(tempmat2[i]));
         tag1[1] = start_gather_field(tempmat2, sizeof(matrix),
-                                     goffset[a] + 1, EVENANDODD, local_pt[1][1]);
+                                     goffset[0] + 1, EVENANDODD, local_pt[1][1]);
       }
 
       opp_mu = OPP_LDIR(mu);
@@ -214,14 +212,14 @@ void Dminus(matrix *src, matrix *dest[NUMLINK]) {
       wait_gather(tag1[flip]);
       FORALLSITES(i, s) {
         if (mu > nu)      // src is anti-symmetric under mu <--> nu
-          mult_nn_dif((matrix *)(local_pt[flip][0][i]), &(src[index][i]),
+          mult_nn_dif((matrix *)(local_pt[flip][0][i]), &(src[i]),
                       &(dest[nu][i]));
         else
-          mult_nn_sum((matrix *)(local_pt[flip][0][i]), &(src[index][i]),
+          mult_nn_sum((matrix *)(local_pt[flip][0][i]), &(src[i]),
                       &(dest[nu][i]));
 
         scalar_mult_dif_matrix((matrix *)(local_pt[flip][1][i]),
-                               s->bc1[opp_mu], &(dest[nu][i]));
+                               s->bc[opp_mu], &(dest[nu][i]));
       }
       cleanup_gather(tag0[flip]);
       cleanup_gather(tag1[flip]);
@@ -236,7 +234,7 @@ void Dminus(matrix *src, matrix *dest[NUMLINK]) {
 
 // -----------------------------------------------------------------
 // Term in action connecting site fermion to the link fermions
-// bc1[mu](x) on psi_mu(x) eta(x + mu)
+// bc[mu](x) on psi_mu(x) eta(x + mu)
 // Add to dest instead of overwriting; note factor of 1/2
 #ifdef SV
 void DbplusStoL(matrix *src, matrix *dest[NUMLINK]) {
@@ -256,7 +254,7 @@ void DbplusStoL(matrix *src, matrix *dest[NUMLINK]) {
     wait_gather(tag[mu]);
     FORALLSITES(i, s) {
       mult_na((matrix *)(gen_pt[mu][i]), &(s->link[mu]), &tmat);
-      scalar_mult_matrix(&tmat, s->bc1[mu], &tmat);
+      scalar_mult_matrix(&tmat, s->bc[mu], &tmat);
       mult_an_dif(&(s->link[mu]), &(src[i]), &tmat);
       scalar_mult_sum_matrix(&tmat, 0.5, &(dest[mu][i]));
     }
@@ -276,14 +274,14 @@ void DbplusStoL(matrix *src, matrix *dest[NUMLINK]) {
 // In both cases T is Tr[U^{-1} Lambda] and
 // Assume compute_plaqdet() has already been run
 // Use tr_dest and tempdet for temporary storage
-// bc1[b](x - b) = bc1[-b](x) on eta(x - b) psi_a(x)
+// bc[b](x - b) = bc[-b](x) on eta(x - b) psi_a(x)
 // Add negative to dest instead of overwriting
 // Negative sign is due to anti-commuting eta past psi
 #ifdef SV
 void detStoL(matrix *dest[NUMLINK]) {
   register int i;
   register site *s;
-  int a, b, opp_b, next;
+  int a, b, opp_b;
   Real localG = -1.0 * C2 * G;
   complex tc;
 #ifdef LINEAR_DET
@@ -327,8 +325,8 @@ void detStoL(matrix *dest[NUMLINK]) {
       wait_gather(tag[b]);
       FORALLSITES(i, s) {
         tc = *((complex *)(gen_pt[b][i]));
-        tr_dest[i].real += s->bc1[opp_b] * tc.real;
-        tr_dest[i].imag += s->bc1[opp_b] * tc.imag;
+        tr_dest[i].real += s->bc[opp_b] * tc.real;
+        tr_dest[i].imag += s->bc[opp_b] * tc.imag;
         CSUM(tr_dest[i], tempdet[b][a][i]);
       }
       cleanup_gather(tag[b]);
@@ -375,11 +373,11 @@ void potStoL(matrix *dest[NUMLINK]) {
 // Term in action connecting the link fermions to the site fermion
 // Given src psi_a, dest is Dbar_a psi_a (Eq. 63 in the arXiv:1108.1503)
 // Use tempmat and tempmat2 for temporary storage
-// bc1[OPP_LDIR(mu)](x) on eta(x - mu) psi_mu(x - mu)
+// bc[OPP_LDIR(mu)](x) on eta(x - mu) psi_mu(x - mu)
 // Initialize dest; note factor of 1/2
 #ifdef SV
 void DbminusLtoS(matrix *src[NUMLINK], matrix *dest) {
-  register int i, mu, nu, opp_mu;
+  register int i, mu, opp_mu;
   register site *s;
   msg_tag *tag[NUMLINK];
 
@@ -394,14 +392,14 @@ void DbminusLtoS(matrix *src[NUMLINK], matrix *dest) {
     if (mu == 0) {                  // Start other gather
       FORALLSITES(i, s)
         mult_an(&(s->link[1]), &(src[1][i]), &(tempmat2[i]));
-      tag[nu] = start_gather_field(tempmat2, sizeof(matrix),
-                                   goffset[1] + 1, EVENANDODD, gen_pt[1]);
+      tag[1] = start_gather_field(tempmat2, sizeof(matrix),
+                                  goffset[1] + 1, EVENANDODD, gen_pt[1]);
     }
 
     opp_mu = OPP_LDIR(mu);
     wait_gather(tag[mu]);
     FORALLSITES(i, s) {
-      scalar_mult_dif_matrix((matrix *)(gen_pt[mu][i]), s->bc1[opp_mu],
+      scalar_mult_dif_matrix((matrix *)(gen_pt[mu][i]), s->bc[opp_mu],
                              &(dest[i]));
       mult_na_sum(&(src[mu][i]), &(s->link[mu]), &(dest[i]));
     }
@@ -424,7 +422,7 @@ void DbminusLtoS(matrix *src[NUMLINK], matrix *dest) {
 // In the local case D is plaqdet (plaqdet - 1)^*
 // In both cases T is Tr[U^{-1} psi]
 // Assume compute_plaqdet() has already been run
-// bc1[b](x) on eta(x) psi_a(x + b)
+// bc[b](x) on eta(x) psi_a(x + b)
 // Use Tr_Uinv and tr_dest for temporary storage
 // Add to dest instead of overwriting
 // Has same sign as DbminusLtoS (negative comes from generator normalization)
@@ -432,7 +430,7 @@ void DbminusLtoS(matrix *src[NUMLINK], matrix *dest) {
 void detLtoS(matrix *src[NUMLINK], matrix *dest) {
   register int i;
   register site *s;
-  int a, b, next;
+  int a, b;
   Real localG = C2 * G * sqrt((Real)NCOL);
   complex tc, tc2;
 #ifdef LINEAR_DET
@@ -467,8 +465,8 @@ void detLtoS(matrix *src[NUMLINK], matrix *dest) {
       wait_gather(tag[b]);
       FORALLSITES(i, s) {
         tc = *((complex *)(gen_pt[b][i]));
-        tc2.real = Tr_Uinv[b][i].real + s->bc1[b] * tc.real;
-        tc2.imag = Tr_Uinv[b][i].imag + s->bc1[b] * tc.imag;
+        tc2.real = Tr_Uinv[b][i].real + s->bc[b] * tc.real;
+        tc2.imag = Tr_Uinv[b][i].imag + s->bc[b] * tc.imag;
 #ifdef LINEAR_DET
         CMUL(plaqdet[a][b][i], tc2, tc);
 #else

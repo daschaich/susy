@@ -6,11 +6,11 @@
 #include "susy_includes.h"
 
 void blocked_plaq(int Nsmear, int block) {
-  register int i, TUP, XUP;
+  register int i;
   register site *s;
   int j, stride = 1;
   double plaq = 0.0, plaqSq = 0.0, re = 0.0, reSq = 0.0, im = 0.0, imSq = 0.0;
-  double sum = 0.0, norm = 10.0 * volume, tr;
+  double sum = 0.0, norm = 1.0 / volume, tr;
   complex det = cmplx(0.0, 0.0), tc;
   matrix tmat, tmat2, tmat3;
 
@@ -64,19 +64,17 @@ void blocked_plaq(int Nsmear, int block) {
   g_doublesum(&imSq);
 
   // Average over volume
-  sum /= ((double)(volume));
-  tr = (ss_sum + st_sum) / 2.0;
-  node0_printf("BPLAQ %d %d %.8g\n", Nsmear, block, sum);
+  node0_printf("BPLAQ %d %d %.8g\n", Nsmear, block, sum * norm);
 
-  CDIVREAL(det, norm, det);
+  CMULREAL(det, norm, det);
   node0_printf("BDET %d %d %.6g %.6g\n", Nsmear, block, det.real, det.imag);
 
-  plaq /= norm;
-  plaqSq /= norm;
-  re /= norm;
-  reSq /= norm;
-  im /= norm;
-  imSq /= norm;
+  plaq *= norm;
+  plaqSq *= norm;
+  re *= norm;
+  reSq *= norm;
+  im *= norm;
+  imSq *= norm;
   node0_printf("BWIDTHS %d %d %.6g %.6g %.6g\n", Nsmear, block,
                sqrt(plaqSq - plaq * plaq),
                sqrt(reSq - re * re), sqrt(imSq - im * im));

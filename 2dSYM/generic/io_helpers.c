@@ -13,7 +13,7 @@ gauge_file *save_lattice(int flag, char *filename) {
   double dtime;
   gauge_file *gf = NULL;
 
-  plaquette(&g_ssplaq, &g_stplaq);
+  plaquette(&g_plaq);
   d_linktrsum(&linktrsum);
   nersc_checksum = nersc_cksum();
 
@@ -79,12 +79,12 @@ void funnylat() {
   register site *s;
 
   FORALLSITES(i, s) {
-    for (dir = XUP; dir <= TUP; dir++) {
-      s->link[dir].e[0][0] = cmplx((double)dir, (double)dir);
-      for (j = 1; j < NCOL; ++j) {
-        for (k = 1; k < NCOL; ++k)
-          s->link[dir].e[j][k] = cmplx(10.0 * j * s->x, 10.0 * k * s->z);
+    FORALLDIR(dir) {
+      for (j = 0; j < NCOL; ++j) {
+        for (k = 0; k < NCOL; ++k)
+          s->link[dir].e[j][k] = cmplx(10.0 * j * s->x, 10.0 * k * s->t);
       }
+      s->link[dir].e[0][0] = cmplx((double)dir, (double)dir);
     }
   }
 }

@@ -5,7 +5,7 @@
 void monopole() {
   register int i, dir;
   register site *s;
-  int ip2, total_mono_p = 0, total_mono_m = 0, total = 0, total_abs = 0;
+  int total_mono_p = 0, total_mono_m = 0, total = 0, total_abs = 0;
   int *mono = malloc(sites_on_node * sizeof(*mono));
   Real *phase[NDIMS], p2, p3, total_phase;
   double threePI = 3.0 * PI, fivePI = 5.0 * PI, sevenPI = 7.0 * PI;

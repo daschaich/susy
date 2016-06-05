@@ -4,7 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
-#include <string.h>             // For print_var.c, setup.c, gauge_info.c
+#include <string.h>             // For setup.c, gauge_info.c
 #include "../include/complex.h"
 #include "../include/susy.h"
 #include "../include/macros.h"
@@ -138,7 +138,7 @@ void compute_Ba();
 void konishi();       // Operators averaged over each timeslice
 
 // Map (x, t) to scalar displacements r
-Real r_map(int x_in, int y_in, int z_in, int t_in);
+Real r_map(int x_in, int t_in);
 void correlator_r();            // Functions of r
 #endif
 

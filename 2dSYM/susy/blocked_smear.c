@@ -18,7 +18,7 @@ void blocked_staple(int stride, int dir, int dir2) {
   register int i;
   register site *s;
   int j;
-  matrix tmat, tmat2;
+  matrix tmat;
 
   // Copy links to tempmat and tempmat2 to be shifted
   FORALLSITES(i, s) {

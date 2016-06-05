@@ -25,6 +25,9 @@ void hvy_pot(int do_det) {
     else {
       mtag = start_gather_field(staple, sizeof(matrix),
                                 goffset[TUP], EVENANDODD, gen_pt[0]);
+
+      // Be careful about overwriting staple;
+      // gen_pt may just point to it for on-node "gathers"
       wait_gather(mtag);
       FORALLSITES(i, s)
         mult_nn(&(s->link[TUP]), (matrix *)gen_pt[0][i], &(tempmat2[i]));
@@ -33,13 +36,11 @@ void hvy_pot(int do_det) {
         mat_copy(&(tempmat2[i]), &(staple[i]));
     }
 
+    // Copy staple to tempmat
+    // Will shoft at end of loop
+    FORALLSITES(i, s)
+      mat_copy(&(staple[i]), &(tempmat[i]));
     for (x_dist = 0; x_dist <= MAX_X; x_dist++) {
-      // Gather staple to tempmat along spatial offset, using tempmat2
-      FORALLSITES(i, s)
-        mat_copy(&(staple[i]), &(tempmat[i]));
-      for (j = 0; j < x_dist; j++)
-        shiftmat(tempmat, tempmat2, goffset[XUP]);
-
       // Evaluate potential at this separation
       wloop = 0.0;
       FORALLSITES(i, s) {

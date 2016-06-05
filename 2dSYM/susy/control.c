@@ -27,9 +27,6 @@ int main(int argc, char *argv[]) {
   g_sync();
   prompt = setup();
   setup_lambda();
-  epsilon();
-  setup_PtoP();
-  setup_FQ();
   setup_rhmc();
 
 #ifdef SMEAR
