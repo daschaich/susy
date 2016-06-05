@@ -20,7 +20,7 @@ void scalar_eig(int project, double *ave_eigs, double *eig_widths,
   char U = 'U';     // Have LAPACK store upper triangle of U.Ubar
   int row, col, Npt = NCOL, stat = 0, Nwork = 2 * NCOL, j;
   Real tr;
-  double norm = NUMLINK * volume, *sq_eigs = malloc(NCOL * sizeof(*sq_eigs));
+  double norm = NUMLINK * volume, sq_eigs[NCOL];
   complex tc;
   matrix USq, tmat;
 

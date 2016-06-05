@@ -30,7 +30,6 @@ void blocked_path(int *dir, int *sign, int length, int bl) {
     wait_general_gather(tag);
     FORALLSITES(i, s)
       mat_copy((matrix *)(gen_pt[0][i]), &(tempmat[i]));
-
     cleanup_general_gather(tag);
   }
 

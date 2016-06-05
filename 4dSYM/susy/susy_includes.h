@@ -184,8 +184,24 @@ void hvy_pot_polar_loop();
 // Final argument reports success or information about failure
 void zheev_(char *doV, char *uplo, int *N1, double *store, int *N2,
             double *eigs, double *work, int *Nwork, double *Rwork, int *stat);
+
+// For general rather than hermitian matrices, change zheev --> zgeev
+// http://www.physics.orst.edu/~rubin/nacphy/lapack/routines/zheev.html
+// First and second arguments turn on eigenvector computations
+// Third and fifth arguments are the dimensions of the matrix
+// Fourth argument is that matrix, overwritten by the eigenvectors
+// Sixth argument holds the computed eigenvalues
+// Seventh (ninth) arguments are the left (right) eigenvectors
+// Eighth (tenth) arguments are the numbers of eigenvectors
+// Eleventh argument is real workspace of size given by the twelfth argument
+// Thirteenth argument is real workspace of size 3 * NCOL - 2
+// Final argument reports success or information about failure
+void zgeev_(char *doLV, char *doRV, int *N1, double *store, int *N2,
+            double *eigs, double *Lvecs, int *NL, double *Rvecs, int *NR,
+            double *work, int *Nwork, double *Rwork, int *stat);
 void polar(matrix *in, matrix *u, matrix *P);
 void matrix_log(matrix *in, matrix *out);
+void unit_log(matrix *in, matrix *out);
 
 // Monopole computation uses find_det
 void monopole();

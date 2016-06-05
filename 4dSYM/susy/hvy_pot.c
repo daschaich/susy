@@ -64,7 +64,7 @@ void hvy_pot(int do_det) {
   Real MAX_r = 100.0 * MAX_X, tr, lookup[MAX_pts], W[MAX_pts];
   double wloop;
   complex tc;
-  matrix tmat, tmat2, *mat;
+  matrix tmat, tmat2;
   msg_tag *mtag = NULL;
 
   // Initialize Wilson loop accumulators

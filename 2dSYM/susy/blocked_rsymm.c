@@ -69,7 +69,6 @@ void blocked_path(int *dir, int *sign, int length, int bl) {
       cleanup_general_gather(tag);
       FORALLSITES(i, s)
         mat_copy(&(tempmat2[i]), &(tempmat[i]));
-
     }
   }
 }
