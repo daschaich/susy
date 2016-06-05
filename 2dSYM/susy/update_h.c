@@ -841,7 +841,7 @@ void assemble_fermion_force(Twist_Fermion *sol, Twist_Fermion *psol) {
       wait_gather(tag0[flip]);
       wait_gather(tag1[flip]);
       FORALLSITES(i, s) {
-        if (mu > nu) {    // plaq_psol is anti-symmetric under mu <--> nu
+        if (mu > nu) {    // plaq_dest is anti-symmetric under mu <--> nu
           scalar_mult_matrix((matrix *)(local_pt[flip][0][i]),
                              s->bc[mu], &tmat);
         }                 // Suppress compiler error
@@ -928,20 +928,20 @@ void assemble_fermion_force(Twist_Fermion *sol, Twist_Fermion *psol) {
 
   // Plaquette determinant contributions if G is non-zero
   if (doG) {
-    // First connect link_sol with site_psol[DIMF - 1]^dag (LtoS)
+    // First connect link_src with site_dest[DIMF - 1]^dag (LtoS)
     detF(site_dest, link_src, PLUS);
 
-    // Second connect site_sol[DIMF - 1] with link_psol^dag (StoL)
+    // Second connect site_src[DIMF - 1] with link_dest^dag (StoL)
     detF(site_src, link_dest, MINUS);
   }
 
   // Scalar potential contributions if B is non-zero
   // Use tempmat and Tr_Uinv for temporary storage
   if (doB) {
-    // First connect link_sol with site_psol[DIMF - 1]^dag (LtoS)
+    // First connect link_src with site_dest[DIMF - 1]^dag (LtoS)
     pot_force(site_dest, link_src, PLUS);
 
-    // Second connect site_sol[DIMF - 1] with link_psol^dag (StoL)
+    // Second connect site_src[DIMF - 1] with link_dest^dag (StoL)
     pot_force(site_src, link_dest, MINUS);
   }
 }
