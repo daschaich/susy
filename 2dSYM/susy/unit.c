@@ -61,7 +61,7 @@ void unit_log(matrix *in, matrix *out) {
   }
 
   // Compute eigenvalues and eigenvectors of in
-  zgeev_(&V, &V, &Npt, store, &Npt, eigs, Lstore, &Npt, Rstore, &Npt,
+  zgeev_(&V, &V, &Npt, store, &Npt, c_eigs, Lstore, &Npt, Rstore, &Npt,
          work, &Nwork, Rwork, &stat);
 
   if (stat != 0)
@@ -77,7 +77,7 @@ void unit_log(matrix *in, matrix *out) {
       Rvecs.e[row][col].real = Rstore[2 * (col * NCOL + row)];
       Rvecs.e[row][col].imag = Rstore[2 * (col * NCOL + row) + 1];
     }
-    out->e[row][row].real = atan2(eigs[2 * row + 1], eigs[2 * row]);
+    out->e[row][row].real = atan2(c_eigs[2 * row + 1], c_eigs[2 * row]);
   }
   // Inverse of eigenvector matrix is simply adjoint
   mult_na(out, &Rvecs, &tmat);

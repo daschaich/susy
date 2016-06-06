@@ -141,7 +141,7 @@ EXTERN int *ipiv;
 EXTERN double *store, *Lstore, *Rstore, *work;
 
 // Allocate some more arrays to be used by LAPACK in unit.c
-EXTERN double *Rwork, *eigs;
+EXTERN double *Rwork, *eigs, *c_eigs;
 
 EXTERN gauge_file *startlat_p;
 EXTERN gauge_file *savelat_p;

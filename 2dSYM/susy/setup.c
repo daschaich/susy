@@ -447,6 +447,7 @@ int readin(int prompt) {
   Rstore = malloc(2 * NCOL * NCOL * sizeof(*Rstore));
   Rwork = malloc((3 * NCOL - 2) * sizeof(*Rwork));
   eigs = malloc(NCOL * sizeof(*eigs));
+  c_eigs = malloc(2 * NCOL * sizeof(*eigs));
 
   // Compute initial plaqdet, DmuUmu and Fmunu
   compute_plaqdet();
