@@ -67,7 +67,7 @@ void exp_mult() {
 // Must copy or project desired links to s->mom before calling
 // dir is the direction of the original link
 // dir2 is the other direction that defines the staple
-// Use gather offsets to handle all five links!
+// Use gather offsets despite NUMLINK == NDIMS
 // Use tempmat and tempmat2 for temporary storage
 void directional_staple(int dir, int dir2) {
   register int i;
@@ -196,7 +196,7 @@ void APE_smear(int Nsmear, double alpha, int project) {
           directional_staple(dir, dir2);
       }
 
-      // Combine (1 - alpha).link + (alpha / 8).staple
+      // Combine (1 - alpha).link + (alpha / 2).staple
       // optionally projecting the staple, but not the end result
       FORALLSITES(i, s) {
 //        if (project == 1)

@@ -4,15 +4,12 @@
 // Must gauge fix to Coulomb gauge before calling
 // Gauge-fixed links unitarized via polar projection -- overwritten!!!
 // This version computes spatial correlators of temporal products
+// Use tempmat, tempmat2 and staple for temporary storage
 #include "susy_includes.h"
 
 // Define CHECK_ROT to check rotational invariance
 //#define CHECK_ROT
-// -----------------------------------------------------------------
 
-
-
-// -----------------------------------------------------------------
 void hvy_pot_polar() {
   register int i;
   register site *s;

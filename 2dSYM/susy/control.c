@@ -52,11 +52,11 @@ int main(int argc, char *argv[]) {
     linktr_ave = link_trace(linktr, &linktr_width,
                             link_det, &det_ave, &det_width);
     node0_printf("FLINK");
-    for (dir = XUP; dir < NUMLINK; dir++)
+    FORALLDIR(dir)
       node0_printf(" %.6g", linktr[dir]);
     node0_printf(" %.6g %.6g\n", linktr_ave, linktr_width);
     node0_printf("FLINK_DET");
-    for (dir = XUP; dir < NUMLINK; dir++)
+    FORALLDIR(dir)
       node0_printf(" %.6g", link_det[dir]);
     node0_printf(" %.6g %.6g\n", det_ave, det_width);
   }
@@ -80,7 +80,7 @@ int main(int argc, char *argv[]) {
     linktr_ave = link_trace(linktr, &linktr_width,
                             link_det, &det_ave, &det_width);
     node0_printf("FLINK");
-    for (dir = XUP; dir < NUMLINK; dir++)
+    FORALLDIR(dir)
       node0_printf(" %.6g", linktr[dir]);
     node0_printf(" %.6g %.6g\n", linktr_ave, linktr_width);
 
@@ -100,12 +100,12 @@ int main(int argc, char *argv[]) {
 
     // Full and polar-projected Wilson lines
     node0_printf("LINES      ");
-    for (dir = XUP; dir < NUMLINK; dir++) {
+    FORALLDIR(dir) {
       plp = ploop(dir, NODET, &plpMod);
       node0_printf(" %.6g %.6g", plp.real, plp.imag);
     }
     node0_printf("\nLINES_POLAR");
-    for (dir = XUP; dir < NUMLINK; dir++) {
+    FORALLDIR(dir) {
       plp = ploop(dir, YESDET, &plpMod);
       node0_printf(" %.6g %.6g", plp.real, plp.imag);
     }
@@ -151,8 +151,8 @@ int main(int argc, char *argv[]) {
 
       // Overwrite s->link
       // Save unsmeared links in UpsiU (mom and f_U both already used)
-      FORALLDIR(dir) {
-        FORALLSITES(i, s)
+      FORALLSITES(i, s) {
+        FORALLDIR(dir)
           mat_copy(&(s->link[dir]), &(UpsiU[dir][i]));
       }
       if (smearflag == STOUT_SMEAR)
@@ -248,10 +248,16 @@ int main(int argc, char *argv[]) {
 
 #ifdef SMEAR
       // Restore unsmeared links from UpsiU
-      FORALLDIR(dir) {
-        FORALLSITES(i, s)
+      FORALLSITES(i, s) {
+        FORALLDIR(dir)
           mat_copy(&(UpsiU[dir][i]), &(s->link[dir]));
       }
+
+      // Restore unsmeared plaquette determinants, DmuUmu and Fmunu
+      compute_plaqdet();
+      compute_Uinv();
+      compute_DmuUmu();
+      compute_Fmunu();
 #endif
     }
     fflush(stdout);
