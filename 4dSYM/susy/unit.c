@@ -77,7 +77,7 @@ void unit_log(matrix *in, matrix *out) {
       Rvecs.e[row][col].real = Rstore[2 * (col * NCOL + row)];
       Rvecs.e[row][col].imag = Rstore[2 * (col * NCOL + row) + 1];
     }
-    out->e[row][row].imag = atan2(c_eigs[2 * row + 1], c_eigs[2 * row]);
+    out->e[row][row].real = atan2(c_eigs[2 * row + 1], c_eigs[2 * row]);
   }
   // Inverse of eigenvector matrix is simply adjoint
   mult_na(out, &Rvecs, &tmat);
