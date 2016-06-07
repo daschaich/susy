@@ -46,48 +46,6 @@ void matrix_log(matrix *in, matrix *out) {
 
 
 // -----------------------------------------------------------------
-// Take log of unitary part of decomposition to define gauge field
-void unit_log(matrix *in, matrix *out) {
-  char V = 'V';     // Ask LAPACK for both eigenvalues and eigenvectors
-  int row, col, Npt = NCOL, stat = 0, Nwork = 2 * NCOL;
-  matrix Lvecs, Rvecs, tmat;
-
-  // Convert in to column-major double array used by LAPACK
-  for (row = 0; row < NCOL; row++) {
-    for (col = 0; col < NCOL; col++) {
-      store[2 * (col * NCOL + row)] = in->e[row][col].real;
-      store[2 * (col * NCOL + row) + 1] = in->e[row][col].imag;
-    }
-  }
-
-  // Compute eigenvalues and eigenvectors of in
-  zgeev_(&V, &V, &Npt, store, &Npt, c_eigs, Lstore, &Npt, Rstore, &Npt,
-         work, &Nwork, Rwork, &stat);
-
-  if (stat != 0)
-    printf("WARNING: zgeev returned error message %d\n", stat);
-
-  // Move the results back into matrix structures
-  // Use evecs to hold the eigenvectors for projection
-  clear_mat(out);
-  for (row = 0; row < NCOL; row++) {
-    for (col = 0; col < NCOL; col++) {
-      Lvecs.e[row][col].real = Lstore[2 * (col * NCOL + row)];
-      Lvecs.e[row][col].imag = Lstore[2 * (col * NCOL + row) + 1];
-      Rvecs.e[row][col].real = Rstore[2 * (col * NCOL + row)];
-      Rvecs.e[row][col].imag = Rstore[2 * (col * NCOL + row) + 1];
-    }
-    out->e[row][row].real = atan2(c_eigs[2 * row + 1], c_eigs[2 * row]);
-  }
-  // Inverse of eigenvector matrix is simply adjoint
-  mult_na(out, &Rvecs, &tmat);
-  mult_nn(&Lvecs, &tmat, out);
-}
-// -----------------------------------------------------------------
-
-
-
-// -----------------------------------------------------------------
 // Given matrix in = P.u, calculate the unitary matrix u = [1 / P].in
 //   and the positive P = sqrt[in.in^dag]
 // We diagonalize PSq = in.in^dag using LAPACK,

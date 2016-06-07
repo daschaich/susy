@@ -138,10 +138,10 @@ EXTERN Twist_Fermion *tempTF;
 
 // Arrays to be used by LAPACK in determinant.c
 EXTERN int *ipiv;
-EXTERN double *store, *Lstore, *Rstore, *work;
+EXTERN double *store, *work;
 
 // Allocate some more arrays to be used by LAPACK in unit.c
-EXTERN double *Rwork, *eigs, *c_eigs;
+EXTERN double *Rwork, *eigs;
 
 EXTERN gauge_file *startlat_p;
 EXTERN gauge_file *savelat_p;
@@ -160,8 +160,8 @@ EXTERN char **gen_pt[N_POINTERS];
 #define N_B 2
 #define N_K 3    // N_B * (N_B + 1) / 2
 // Multiple scalar fields and their bilinear traces
-EXTERN matrix *Aa[NUMLINK], *Ba[N_B][NUMLINK];
-EXTERN double *traceAA[NUMLINK][NUMLINK], *traceBB[N_K][NUMLINK][NUMLINK];
+EXTERN matrix *Ba[N_B][NUMLINK];
+EXTERN double *traceBB[N_K][NUMLINK][NUMLINK];
 
 // Ensemble averages and volume averages for subtracting
 EXTERN double vevK[N_K], vevS[N_K], volK[N_K], volS[N_K];

@@ -23,13 +23,8 @@ void blocked_ops(int Nsmear, int block) {
       for (j = 0; j < N_K; j++) {
         OK[j] += traceBB[j][a][a][i];   // Konishi
 
+        // Now SUGRA, averaged over 20 off-diagonal components
         FORALLDIR(b) {
-          // Add Tr phi_6^2 = (1 / 5) Tr \sum_{a, b} A_a A_b
-          // to cancel SUGRA mixing in log-polar Konishi
-          if (j == 0)
-            OK[j] += 0.2 * traceAA[a][b][i];
-
-          // Now SUGRA, averaged over 20 off-diagonal components
           if (a == b)
             continue;
           OS[j] += 0.05 * traceBB[j][a][b][i];

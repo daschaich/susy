@@ -107,11 +107,11 @@ void make_fields() {
 #else
   node0_printf("Supersymmetric constraint on |det[plaq] - 1|^2\n");
 #endif
-  double size = (double)(2.0 * sizeof(complex));
+  Real size = (Real)(2.0 * sizeof(complex));
   FIELD_ALLOC(tr_eta, complex);
   FIELD_ALLOC(tr_dest, complex);
 
-  size += (double)(2.0 * (1 + NUMLINK + NPLAQ)) * sizeof(matrix);
+  size += (Real)(2.0 * (1 + NUMLINK + NPLAQ)) * sizeof(matrix);
   FIELD_ALLOC(site_src, matrix);
   FIELD_ALLOC(site_dest, matrix);
   FIELD_ALLOC_VEC(link_src, matrix, NUMLINK);
@@ -120,8 +120,8 @@ void make_fields() {
   FIELD_ALLOC_VEC(plaq_dest, matrix, NPLAQ);
 
   // For convenience in calculating action and force
-  size += (double)(1.0 + NPLAQ + 3.0 * NUMLINK) * sizeof(matrix);
-  size += (double)(NUMLINK + 6.0 * NPLAQ) * sizeof(complex);
+  size += (Real)(1.0 + NPLAQ + 3.0 * NUMLINK) * sizeof(matrix);
+  size += (Real)(NUMLINK + 6.0 * NPLAQ) * sizeof(complex);
   FIELD_ALLOC(DmuUmu, matrix);
   FIELD_ALLOC_VEC(Tr_Uinv, complex, NUMLINK);
   FIELD_ALLOC_VEC(Fmunu, matrix, NPLAQ);
@@ -132,13 +132,13 @@ void make_fields() {
   FIELD_ALLOC_MAT_OFFDIAG(tempdet, complex, NUMLINK);
   FIELD_ALLOC_MAT_OFFDIAG(ZWstar, complex, NUMLINK);
 #ifndef LINEAR_DET
-  size += (double)(2.0 * NPLAQ * sizeof(complex));
+  size += (Real)(2.0 * NPLAQ * sizeof(complex));
   FIELD_ALLOC_MAT_OFFDIAG(tempZW, complex, NUMLINK);
 #endif
 
   // Temporary matrices and Twist_Fermion
-  size += (double)(3.0 * sizeof(matrix));
-  size += (double)(sizeof(Twist_Fermion));
+  size += (Real)(3.0 * sizeof(matrix));
+  size += (Real)(sizeof(Twist_Fermion));
   FIELD_ALLOC(tempmat, matrix);
   FIELD_ALLOC(tempmat2, matrix);
   FIELD_ALLOC(staple, matrix);
@@ -146,27 +146,25 @@ void make_fields() {
 
 #ifdef CORR
   int j;
-  size += (double)((N_B + 1.0) * NUMLINK * sizeof(matrix));
-  size += (double)((N_K + 1.0) * NUMLINK * NUMLINK * sizeof(Real));
-  size += (double)(2.0 * sizeof(Kops));
-  FIELD_ALLOC_VEC(Aa, matrix, NUMLINK);
-  FIELD_ALLOC_MAT(traceAA, double, NUMLINK, NUMLINK);
+  size += (Real)(N_B * NUMLINK * sizeof(matrix));
+  size += (Real)(N_K * NUMLINK * NUMLINK * sizeof(Real));
+  size += (Real)(2.0 * sizeof(Kops));
   for (j = 0; j < N_B; j++)
     FIELD_ALLOC_VEC(Ba[j], matrix, NUMLINK);
   for (j = 0; j < N_K; j++)
-    FIELD_ALLOC_MAT(traceBB[j], double, NUMLINK, NUMLINK);
+    FIELD_ALLOC_MAT(traceBB[j], Real, NUMLINK, NUMLINK);
   FIELD_ALLOC(tempops, Kops);
   FIELD_ALLOC(tempops2, Kops);
 #endif
 
 #ifdef SMEAR
   // Stout smearing stuff needed for `hot-start' random configurations
-  size += (double)(NUMLINK * sizeof(anti_hermitmat));
+  size += (Real)(NUMLINK * sizeof(anti_hermitmat));
   FIELD_ALLOC_VEC(Q, anti_hermitmat, NUMLINK);    // To be exponentiated
 #endif
 
 #if defined(EIG) || defined(PHASE)
-  size += (double)(2.0 * sizeof(Twist_Fermion));
+  size += (Real)(2.0 * sizeof(Twist_Fermion));
   FIELD_ALLOC(src, Twist_Fermion);
   FIELD_ALLOC(res, Twist_Fermion);
 #endif
@@ -178,7 +176,7 @@ void make_fields() {
   Nmatvecs = volume * 16 * DIMF * volume * 4 * DIMF;
 
   // Total size of matrix is (volume * 16 * DIMF) x (sites_on_node * 16 * DIMF)
-  size = (double)(volume * 16.0 * DIMF * 16.0 * DIMF * sizeof(complex));
+  size = (Real)(volume * 16.0 * DIMF * 16.0 * DIMF * sizeof(complex));
   size *= sites_on_node;
   node0_printf("Q has %d columns --> %li matvecs and %.1f MBytes per core...",
                volume * 16 * DIMF, Nmatvecs, size / 1e6);
@@ -447,11 +445,8 @@ int readin(int prompt) {
   work = malloc(4 * NCOL * sizeof(*work));
 
   // Allocate some more arrays to be used by LAPACK in unit.c
-  Lstore = malloc(2 * NCOL * NCOL * sizeof(*Lstore));
-  Rstore = malloc(2 * NCOL * NCOL * sizeof(*Rstore));
   Rwork = malloc((3 * NCOL - 2) * sizeof(*Rwork));
   eigs = malloc(NCOL * sizeof(*eigs));
-  c_eigs = malloc(2 * NCOL * sizeof(*eigs));
 
   // Compute initial plaqdet, DmuUmu and Fmunu
   compute_plaqdet();

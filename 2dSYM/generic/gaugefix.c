@@ -1,5 +1,5 @@
 // -----------------------------------------------------------------
-// Fix Coulomb or Lorentz gauge by doing successive SU(2) gauge hits
+// Fix Coulomb or Lorenz gauge by doing successive SU(2) gauge hits
 // Double-precision global sums, as always
 
 // For NUMLINK susy code: do not reunitarize
@@ -17,10 +17,10 @@
 //          (matrix mp and vector chi)
 // gaugefix(TUP, 1.5, 500, 1.0e-7, F_OFFSET(mp), F_OFFSET(chi));
 //
-// gauge_dir is the "time" direction used to define Coulomb or Lorentz gauge:
+// gauge_dir is the "time" direction used to define Coulomb or Lorenz gauge:
 //   TUP for evaluating propagators in the time-like direction
 //   XUP for screening lengths
-//   8 (or anything except 0, 1) for Lorentz gauge
+//   8 (or anything except 0, 1) for Lorenz gauge
 //   (cf. definition of FORALLUPDIRBUT in ../include/macros.h)
 // relax_boost is the overrelaxation parameter
 // max_gauge_iter is the maximum number of gauge-fixing iterations

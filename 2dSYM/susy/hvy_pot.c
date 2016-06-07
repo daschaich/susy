@@ -8,7 +8,7 @@
 void hvy_pot(int do_det) {
   register int i;
   register site *s;
-  int j, t_dist, x_dist;
+  int t_dist, x_dist;
   double wloop;
   complex tc;
   matrix tmat, tmat2;
