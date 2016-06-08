@@ -22,8 +22,8 @@ void d_linktrsum(double_complex *linktrsum) {
   site *s;
   matrix *a;
 
-  linktrsum->real = 0.;
-  linktrsum->imag = 0.;
+  linktrsum->real = 0.0;
+  linktrsum->imag = 0.0;
 
   FORALLSITES(i, s) {
     FORALLUPDIR(dir) {
@@ -45,6 +45,6 @@ void d_linktrsum(double_complex *linktrsum) {
   }
 
   g_dcomplexsum(linktrsum);
-  CDIVREAL(*linktrsum, (4 * volume), *linktrsum);
+  CDIVREAL(*linktrsum, (NDIMS * volume), *linktrsum);
 }
 // -----------------------------------------------------------------
