@@ -3,7 +3,7 @@ Microcanonical simulation with refreshing
 Machine = Scalar processor, with 1 nodes
 Hybrid Monte Carlo algorithm
 Phi algorithm
-start: Wed May  4 20:38:09 2016
+start: Tue Jun  7 17:50:49 2016
 
 type 0 for no prompts or 1 for prompts
 nx 4
@@ -18,6 +18,7 @@ LAYOUT = Hypercubes, options = hyper_prime,
 ON EACH NODE 4 x 4 x 4 x 4
 Mallocing 3.6 MBytes per core for lattice
 Antiperiodic temporal boundary conditions
+Double-trace scalar potential
 Supersymmetric constraint on (det[plaq] - 1)
 Mallocing 5.3 MBytes per core for fields
 Using Nroot = 1
@@ -45,7 +46,7 @@ C2=1
 Restored binary gauge configuration serially from file config.U4.4444
 Time stamp Sun Apr 19 21:34:20 2015
 Checksums 9098c02 35224501 OK
-Time to reload gauge configuration = 1.441002e-03
+Time to reload gauge configuration = 3.660393e-02
 CHECK PLAQ: 4.1503788625513707e+00 4.1297157023877400e+00
 CHECK NERSC LINKTR: -3.1120252429257533e-03 CKSUM: 0
 START 4.1503789 4.1297157 8.2800946 78.268997
@@ -55,7 +56,7 @@ f_eps 0.09091 g_eps 0.01136
 WARMUPS COMPLETED
 action: gauge 20036.863 bmass 58.461465 det 511.23487 fermion0 65422.641 mom 20486.686 sum 106515.89
 action: gauge 19033.53 bmass 49.751719 det 511.23133 fermion0 65619.514 mom 21302.376 sum 106516.4
-ACCEPT: delta S = 0.5169 start S = 106515.885869 end S = 106516.402757
+ACCEPT: delta S = 0.5169 start S = 106515.88587 end S = 106516.402757
 IT_PER_TRAJ 1737
 MONITOR_FORCE_GAUGE    0.04333 0.04502
 MONITOR_FORCE_FERMION0 0.0467 0.05761
@@ -120,6 +121,6 @@ RUNNING COMPLETED
 STOP 4.0809893 4.0648227 8.145812 71.200623
 Average CG iters for steps: 1750
 
-Time = 122.1 seconds
+Time = 118.1 seconds
 total_iters = 5251
 

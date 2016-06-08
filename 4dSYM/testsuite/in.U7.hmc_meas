@@ -14,7 +14,7 @@ trajecs 3
 traj_length 1
 nstep 15
 nstep_gauge 4
-traj_between_meas 3
+traj_between_meas 2
 
 lambda 1.0
 kappa_u1 1.0
