@@ -21,6 +21,10 @@ typedef struct {
   int index;          // Index in the array
 
   matrix link[NUMLINK];       // Gauge links
+
+#ifdef SMEAR          // For directional staple routine
+  matrix mom[NUMLINK];
+#endif
 } site;
 // -----------------------------------------------------------------
 
@@ -73,8 +77,8 @@ EXTERN site *lattice;
 
 // Vectors for addressing
 // Generic pointers, for gather routines
-// Need two for plaquettes
-#define N_POINTERS 2
+// Need two for plaquettes, three for smearing
+#define N_POINTERS 3
 EXTERN char **gen_pt[N_POINTERS];
 
 // Scalar fields and their bilinear traces

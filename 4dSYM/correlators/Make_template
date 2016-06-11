@@ -39,6 +39,7 @@ MY_OBJECTS = control.o    \
              konishi.o    \
              utilities.o  \
              setup.o      \
+             smear.o      \
              setup_offset.o
 
 # Basic set from generic directory
@@ -80,11 +81,10 @@ ALL_MAKES = Make_template \
 ${OBJECTS} : ${HEADERS} ${LASTMAKE} ${ALL_MAKES}
 
 ##### Targets:
-# lapack and blas needed for polar decomposition (scalar eigenvalues)
-# and also by -DEIG, -DWLOOP, -DSMEAR
+# lapack and blas needed for polar decomposition
 susy_corr::
 	${MAKE} -f ${MAKEFILE} target "MYTARGET= $@" \
-	"DEFINES = ${DEFINES} " \
+	"DEFINES = ${DEFINES} -DSMEAR " \
 	"LAPACK = -llapack -lblas "
 
 clean:
