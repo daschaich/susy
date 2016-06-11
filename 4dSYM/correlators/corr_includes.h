@@ -55,4 +55,12 @@ void zheev_(char *doV, char *uplo, int *N1, double *store, int *N2,
             double *eigs, double *work, int *Nwork, double *Rwork, int *stat);
 void polar(matrix *in, matrix *u, matrix *P);
 void matrix_log(matrix *in, matrix *out);
+
+#ifdef SMEAR
+// Stout and APE-like smearing, the latter with no final SU(N) projections
+// APE-like smearing optionally builds staples from projected links
+void exp_mult();
+void stout_smear(int Nsmear, double alpha);
+void APE_smear(int Nsmear, double alpha, int project);
+#endif
 // -----------------------------------------------------------------
