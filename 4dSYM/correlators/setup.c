@@ -186,6 +186,10 @@ int readin(int prompt) {
       node0_printf("       Recompile with different MAX_CFG for more\n");
       status++;
     }
+    if (par_buf.Nblock < 2) {
+      node0_printf("Error: Need multiple blocks to compute error\n", MAX_CFG);
+      status++;
+    }
 
     // Read in lattice names; will reload all in serial
     for (j = 0; j < par_buf.Nblock * par_buf.Nmeas; j++)

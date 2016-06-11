@@ -113,8 +113,8 @@ void correlator_r() {
   register int i;
   register site *s;
   int a, b, j, x_dist, y_dist, z_dist, t_dist;
-  int y_start, z_start, t_start, this_r = -1, block, meas;
-  Real one_ov_block = 1.0 / (Real)Nblock, blockNorm = 1.0 / (Real)Nmeas;
+  int y_start, z_start, t_start, this_r = -1, block;
+  Real one_ov_block = 1.0 / (Real)Nblock;
   Real std_norm = 1.0 / (Real)(Nblock * (Nblock - 1.0));
   Real ave, err, tr;
   Kcorrs **CK = malloc(Nblock * sizeof(**CK));
@@ -127,9 +127,10 @@ void correlator_r() {
     CS[block] = malloc(total_r * sizeof(*CS));
   }
 
-  // Accumulate correlators within each block
+  // Compute correlators for each block
+  // (since operators already blocked for vev subtraction)
   for (block = 0; block < Nblock; block++) {
-    // Initialize correlators for this block
+    // Initialize this block's correlators
     for (j = 0; j < total_r; j++) {
       for (a = 0; a < N_K; a++) {
         for (b = 0; b < N_K; b++) {
@@ -139,121 +140,119 @@ void correlator_r() {
       }
     }
 
-    // Loop over measurements per block
-    for (meas = 0; meas < Nmeas; meas++) {
-      for (x_dist = 0; x_dist <= MAX_X; x_dist++) {
-        // Don't need negative y_dist when x_dist = 0
-        if (x_dist > 0)
-          y_start = -MAX_X;
+    // Now just need to loop over all displacements
+    for (x_dist = 0; x_dist <= MAX_X; x_dist++) {
+      // Don't need negative y_dist when x_dist = 0
+      if (x_dist > 0)
+        y_start = -MAX_X;
+      else
+        y_start = 0;
+
+      for (y_dist = y_start; y_dist <= MAX_X; y_dist++) {
+        // Don't need negative z_dist when both x, y non-positive
+        if (x_dist > 0 || y_dist > 0)
+          z_start = -MAX_X;
         else
-          y_start = 0;
+          z_start = 0;
 
-        for (y_dist = y_start; y_dist <= MAX_X; y_dist++) {
-          // Don't need negative z_dist when both x, y non-positive
-          if (x_dist > 0 || y_dist > 0)
-            z_start = -MAX_X;
+        for (z_dist = z_start; z_dist <= MAX_X; z_dist++) {
+          // Gather ops to tempops along spatial offset, using tempops2
+          FORALLSITES(i, s)
+            copy_ops(&(ops[block][i]), &(tempops[i]));
+          for (j = 0; j < x_dist; j++)
+            shift_ops(tempops, tempops2, goffset[XUP]);
+          for (j = 0; j < y_dist; j++)
+            shift_ops(tempops, tempops2, goffset[YUP]);
+          for (j = y_dist; j < 0; j++)
+            shift_ops(tempops, tempops2, goffset[YUP] + 1);
+          for (j = 0; j < z_dist; j++)
+            shift_ops(tempops, tempops2, goffset[ZUP]);
+          for (j = z_dist; j < 0; j++)
+            shift_ops(tempops, tempops2, goffset[ZUP] + 1);
+
+          // Don't need negative t_dist when x, y and z are all non-positive
+          // Otherwise we need to start with MAX_X shifts in the -t direction
+          if (x_dist > 0 || y_dist > 0 || z_dist > 0)
+            t_start = -MAX_X;
           else
-            z_start = 0;
+            t_start = 0;
+          for (j = t_start; j < 0; j++)
+            shift_ops(tempops, tempops2, goffset[TUP] + 1);
 
-          for (z_dist = z_start; z_dist <= MAX_X; z_dist++) {
-            // Gather ops to tempops along spatial offset, using tempops2
-            FORALLSITES(i, s)
-              copy_ops(&(ops[block][i]), &(tempops[i]));
-            for (j = 0; j < x_dist; j++)
-              shift_ops(tempops, tempops2, goffset[XUP]);
-            for (j = 0; j < y_dist; j++)
-              shift_ops(tempops, tempops2, goffset[YUP]);
-            for (j = y_dist; j < 0; j++)
-              shift_ops(tempops, tempops2, goffset[YUP] + 1);
-            for (j = 0; j < z_dist; j++)
-              shift_ops(tempops, tempops2, goffset[ZUP]);
-            for (j = z_dist; j < 0; j++)
-              shift_ops(tempops, tempops2, goffset[ZUP] + 1);
-
-            // Don't need negative t_dist when x, y and z are all non-positive
-            // Otherwise we need to start with MAX_X shifts in the -t direction
-            if (x_dist > 0 || y_dist > 0 || z_dist > 0)
-              t_start = -MAX_X;
-            else
-              t_start = 0;
-            for (j = t_start; j < 0; j++)
-              shift_ops(tempops, tempops2, goffset[TUP] + 1);
-
-            // Ignore any t_dist > MAX_X even if t_dist <= MAX_T
-            for (t_dist = t_start; t_dist <= MAX_X; t_dist++) {
-              // Figure out scalar distance
-              tr = A4map(x_dist, y_dist, z_dist, t_dist);
-              if (tr > MAX_r - 1.0e-6) {
-                // Only increment t, but still need to shift in t direction
-                shift_ops(tempops, tempops2, goffset[TUP]);
-                continue;
-              }
-
-              // Combine four-vectors with same scalar distance
-              this_r = -1;
-              for (j = 0; j < total_r; j++) {
-                if (fabs(tr - lookup[j]) < 1.0e-6) {
-                  this_r = j;
-                  break;
-                }
-              }
-              if (this_r < 0) {
-                node0_printf("correlator_r: bad scalar distance %.4g ", tr);
-                node0_printf("from displacement %d %d %d %d\n",
-                             x_dist, y_dist, z_dist, t_dist);
-                terminate(1);
-              }
-
-              // N_K^2 Konishi correlators
-              for (a = 0; a < N_K; a++) {
-                for (b = 0; b < N_K; b++) {
-                  tr = 0.0;
-                  FORALLSITES(i, s)
-                    tr += ops[block][i].OK[a] * tempops[i].OK[b];
-                  g_doublesum(&tr);
-                  CK[block][this_r].C[a][b] += tr;
-                }
-              }
-
-              // N_K^2 SUGRA correlators
-              for (a = 0; a < N_K; a++) {
-                for (b = 0; b < N_K; b++) {
-                  tr = 0.0;
-                  FORALLSITES(i, s)
-                    tr += ops[block][i].OS[a] * tempops[i].OS[b];
-                  g_doublesum(&tr);
-                  CS[block][this_r].C[a][b] += tr;
-                }
-              }
-
-              // As we increment t, shift in t direction
+          // Ignore any t_dist > MAX_X even if t_dist <= MAX_T
+          for (t_dist = t_start; t_dist <= MAX_X; t_dist++) {
+            // Figure out scalar distance
+            tr = A4map(x_dist, y_dist, z_dist, t_dist);
+            if (tr > MAX_r - 1.0e-6) {
+              // Only increment t, but still need to shift in t direction
               shift_ops(tempops, tempops2, goffset[TUP]);
-            } // t_dist
-          } // z_dist
-        } // y dist
-      } // x dist
-    } // Nmeas
+              continue;
+            }
+
+            // Combine four-vectors with same scalar distance
+            this_r = -1;
+            for (j = 0; j < total_r; j++) {
+              if (fabs(tr - lookup[j]) < 1.0e-6) {
+                this_r = j;
+                break;
+              }
+            }
+            if (this_r < 0) {
+              node0_printf("correlator_r: bad scalar distance %.4g ", tr);
+              node0_printf("from displacement %d %d %d %d\n",
+                           x_dist, y_dist, z_dist, t_dist);
+              terminate(1);
+            }
+
+            // N_K^2 Konishi correlators
+            for (a = 0; a < N_K; a++) {
+              for (b = 0; b < N_K; b++) {
+                tr = 0.0;
+                FORALLSITES(i, s)
+                  tr += ops[block][i].OK[a] * tempops[i].OK[b];
+                g_doublesum(&tr);
+                CK[block][this_r].C[a][b] += tr;
+              }
+            }
+
+            // N_K^2 SUGRA correlators
+            for (a = 0; a < N_K; a++) {
+              for (b = 0; b < N_K; b++) {
+                tr = 0.0;
+                FORALLSITES(i, s)
+                  tr += ops[block][i].OS[a] * tempops[i].OS[b];
+                g_doublesum(&tr);
+                CS[block][this_r].C[a][b] += tr;
+              }
+            }
+
+            // As we increment t, shift in t direction
+            shift_ops(tempops, tempops2, goffset[TUP]);
+          } // t_dist
+        } // z_dist
+      } // y dist
+    } // x dist
   } // Nblock
 
   // Now cycle through unique scalar distances
   // Compute and print averages and standard errors
-  // This is also a convenient place to normalize ops by Nmeas per block
+  // This is also a convenient place to normalize ops
   for (j = 0; j < total_r; j++) {
     for (a = 0; a < N_K; a++) {
       for (b = 0; b < N_K; b++) {
-        CK[0][this_r].C[a][b] *= blockNorm;
-        ave = CK[0][this_r].C[a][b];            // Initialize
+        CK[0][j].C[a][b] *= norm[j];
+        ave = CK[0][j].C[a][b];            // Initialize
         for (block = 1; j < Nblock; block++) {
-          CK[block][this_r].C[a][b] *= blockNorm;
-          ave += CK[block][this_r].C[a][b];
+          CK[block][j].C[a][b] *= norm[j];
+          ave += CK[block][j].C[a][b];
         }
         ave *= one_ov_block;
 
         // Now compute variance (square of standard error)
-        tr = CK[0][this_r].C[a][b] - ave;
+        tr = CK[0][j].C[a][b] - ave;
         err = tr * tr;                          // Initialize
         for (block = 1; j < Nblock; block++) {
-          tr = CK[block][this_r].C[a][b] - ave;
+          tr = CK[block][j].C[a][b] - ave;
           err += tr * tr;
         }
         err *= std_norm;
