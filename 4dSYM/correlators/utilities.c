@@ -88,7 +88,7 @@ int count_points(Real MAX_r) {
             this = total;
             total++;
             count[this] = 1;    // Initialize
-            if (total >= MAX_pts) {
+            if (total > MAX_pts) {
               node0_printf("count_points: MAX_pts %d too small\n", MAX_pts);
               terminate(1);
             }

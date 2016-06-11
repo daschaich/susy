@@ -48,7 +48,7 @@ int main(int argc, char *argv[]) {
       }
     }
   }
-  node0_printf("MAX = %d --> r < %.6g\n", MAX_X, MAX_r);
+  node0_printf("MAX = %d --> r < %.6g\n\n", MAX_X, MAX_r);
 
   // Now count number of unique scalar distances r < MAX_r
   // Those scalar distances themselves are recorded in the lookup array
@@ -103,6 +103,7 @@ int main(int argc, char *argv[]) {
 
       // Accumulate Konishi and SUGRA operators within this block
       add_konishi(ops[block]);
+      node0_printf("\n");
       fflush(stdout);
     }
   }
