@@ -187,7 +187,7 @@ int readin(int prompt) {
       status++;
     }
     if (par_buf.Nblock < 2) {
-      node0_printf("Error: Need multiple blocks to compute error\n", MAX_CFG);
+      node0_printf("Error: Need multiple blocks to compute error\n");
       status++;
     }
 
