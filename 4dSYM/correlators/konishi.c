@@ -265,22 +265,22 @@ void correlator_r() {
   }
 
   // Same as above, now for SUGRA
-  for (j = 0; block < total_r; j++) {
+  for (j = 0; j < total_r; j++) {
     for (a = 0; a < N_K; a++) {
       for (b = 0; b < N_K; b++) {
-        CS[0][this_r].C[a][b] *= norm[j];
-        ave = CS[0][this_r].C[a][b];            // Initialize
+        CS[0][j].C[a][b] *= norm[j];
+        ave = CS[0][j].C[a][b];            // Initialize
         for (block = 1; block < Nblock; block++) {
-          CS[block][this_r].C[a][b] *= norm[j];
-          ave += CS[block][this_r].C[a][b];
+          CS[block][j].C[a][b] *= norm[j];
+          ave += CS[block][j].C[a][b];
         }
         ave *= one_ov_block;
 
         // Now compute variance (square of standard error)
-        tr = CS[0][this_r].C[a][b] - ave;
+        tr = CS[0][j].C[a][b] - ave;
         err = tr * tr;                          // Initialize
         for (block = 1; block < Nblock; block++) {
-          tr = CS[block][this_r].C[a][b] - ave;
+          tr = CS[block][j].C[a][b] - ave;
           err += tr * tr;
         }
         err *= std_norm;
