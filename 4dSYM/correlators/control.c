@@ -12,7 +12,7 @@ int main(int argc, char *argv[]) {
   register site *s;
   int prompt, j, block, meas;
   int y_dist, z_dist, t_dist;
-  Real one_ov_block = 1.0 / (Real)Nblock, blockNorm = 1.0 / (Real)Nmeas, tr;
+  Real one_ov_block, blockNorm, tr;
   double ss_plaq, st_plaq, dtime, vevK[N_K], vevS[N_K];
 #ifdef SMEAR
   double max_plaq = 0.0;
@@ -55,6 +55,11 @@ int main(int argc, char *argv[]) {
   // The corresponding normalizations counting the number of distinct
   // four-vectors per scalar distance are recorded in the norm array
   total_r = count_points(MAX_r);
+
+  // We can also set one_ov_block and blockNorm
+  // now that we have read in Nblock and Nmeas
+  one_ov_block = 1.0 / (Real)Nblock;
+  blockNorm = 1.0 / (Real)Nmeas;
 
   // Loop over blocks, number of which is read in
   for (block = 0; block < Nblock; block++) {
