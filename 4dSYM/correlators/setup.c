@@ -213,7 +213,7 @@ int readin(int prompt) {
   for (j = 0; j < Nblock; j++)
     FIELD_ALLOC(ops[j], Kops);
   size = (Real)(Nblock * sizeof(Kops)) * sites_on_node;
-  node0_printf("Mallocing %.1f MBytes per core for operators\n", size / 1e6);
+  node0_printf("\nMallocing %.1f MBytes per core for operators\n", size / 1e6);
 
 #ifdef SMEAR
   smearflag = par_buf.smearflag;
