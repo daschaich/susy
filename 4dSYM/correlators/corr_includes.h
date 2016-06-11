@@ -24,14 +24,22 @@ int setup();
 int readin(int prompt);
 void setup_offset();
 
-void shiftmat(matrix *dat, matrix *temp, int dir);
-
-// Konishi and SUGRA correlators
-void compute_Ba();
+// Basic observables
+void plaquette(double *ss_plaq, double *st_plaq);
+double local_plaquette(double *ss_plaq, double *st_plaq); // Return max plaq
 
 // Map (x, y, z, t) to scalar displacements r
 Real A4map(int x_in, int y_in, int z_in, int t_in);
-void correlator_r();            // Functions of r
+
+// Count and return total number of unique scalar distances
+int count_points(Real MAX_r);
+
+// Accumulate Konishi and SUGRA operators within current block
+void add_konishi();
+
+// Compute correlators C(r) of vacuum-subtracted Konishi and SUGRA operators
+// Print both average and standard error
+void correlator_r();
 
 // Use LAPACK in the polar projection
 // http://www.physics.orst.edu/~rubin/nacphy/lapack/routines/zheev.html

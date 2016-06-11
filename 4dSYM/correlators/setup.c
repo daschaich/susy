@@ -24,7 +24,7 @@ int initial_set() {
     // end kludge
     printf("N=4 SYM, Nc = %d, DIMF = %d, fermion rep = adjoint\n",
            NCOL, DIMF);
-    printf("Konishi and SUGRA analyses\n");
+    printf("Konishi and SUGRA correlator analyses\n");
     printf("Machine = %s, with %d nodes\n", machine_type(), numnodes());
     time_stamp("start");
     status = get_prompt(stdin, &prompt);
@@ -54,7 +54,6 @@ int initial_set() {
   number_of_nodes = numnodes();
   one_ov_N = 1.0 / (Real)NCOL;
   volume = nx * ny * nz * nt;
-  minus1 = cmplx(-1.0, 0.0);
   return prompt;
 }
 // -----------------------------------------------------------------
@@ -73,18 +72,22 @@ void make_fields() {
   FIELD_ALLOC(tempmat2, matrix);
   FIELD_ALLOC(staple, matrix);
 
+  // Scalar fields and their bilinear traces
+  // Just need one set of N_B / N_K for current measurement
   size += (Real)(N_B * NUMLINK * sizeof(matrix));
   size += (Real)(N_K * NUMLINK * NUMLINK * sizeof(Real));
-  size += (Real)(2.0 * sizeof(Kops));
   for (j = 0; j < N_B; j++)
     FIELD_ALLOC_VEC(Ba[j], matrix, NUMLINK);
   for (j = 0; j < N_K; j++)
     FIELD_ALLOC_MAT(traceBB[j], Real, NUMLINK, NUMLINK);
+
+  // For shifting
+  size += (Real)(2.0 * sizeof(Kops));
   FIELD_ALLOC(tempops, Kops);
   FIELD_ALLOC(tempops2, Kops);
 
 #ifdef SMEAR
-  // Stout smearing stuff needed for `hot-start' random configurations
+  // Stout smearing stuff
   size += (Real)(NUMLINK * sizeof(anti_hermitmat));
   FIELD_ALLOC_VEC(Q, anti_hermitmat, NUMLINK);    // To be exponentiated
 #endif
@@ -102,8 +105,6 @@ int setup() {
 
   // Print banner, get volume and seed
   prompt = initial_set();
-  // Initialize the node random number generator
-  initialize_prn(&node_prn, iseed, volume + mynode());
   // Initialize the layout functions, which decide where sites live
   setup_layout();
   // Allocate space for lattice, set up coordinate fields
@@ -162,11 +163,8 @@ int ask_smear_type(FILE *fp, int prompt, int *flag) {
 // Read in parameters for Monte Carlo
 // prompt=1 indicates prompts are to be given for input
 int readin(int prompt) {
-  int status;
-  Real x;
-#ifdef CORR
-  int j;
-#endif
+  int status, j;
+  Real size;
 
   // On node zero, read parameters and send to all other nodes
   if (this_node == 0) {
@@ -180,15 +178,18 @@ int readin(int prompt) {
     IF_OK status += get_f(stdin, prompt, "alpha", &par_buf.alpha);
 #endif
 
-    // Konishi and SUGRA vacuum subtractions
-    for (j = 0; j < N_K; j++)
-      IF_OK status += get_f(stdin, prompt, "vevK", &par_buf.vevK[j]);
-    for (j = 0; j < N_K; j++)
-      IF_OK status += get_f(stdin, prompt, "vevS", &par_buf.vevS[j]);
+    // Find out how many lattices we will analyze
+    IF_OK status += get_i(stdin, prompt, "Nblock", &par_buf.Nblock);
+    IF_OK status += get_i(stdin, prompt, "Nmeas", &par_buf.Nmeas);
+    if (par_buf.Nblock * par_buf.Nmeas > MAX_CFG) {
+      node0_printf("Error: Can only handle up to %d lattices\n", MAX_CFG);
+      node0_printf("       Recompile with different MAX_CFG for more\n");
+      status++;
+    }
 
-    // Find out what kind of starting lattice to use
-    IF_OK status += ask_starting_lattice(stdin, prompt, &par_buf.startflag,
-                                         par_buf.startfile);
+    // Read in lattice names; will reload all in serial
+    for (j = 0; j < par_buf.Nblock * par_buf.Nmeas; j++)
+      IF_OK status += get_s(stdin, prompt, "reload_serial", par_buf.cfg[j]);
 
     if (status > 0)
       par_buf.stopflag = 1;
@@ -201,6 +202,19 @@ int readin(int prompt) {
   if (par_buf.stopflag != 0)
     normal_exit(0);
 
+  Nblock = par_buf.Nblock;
+  Nmeas = par_buf.Nmeas;
+  tot_meas = Nblock * Nmeas;
+  for (j = 0; j < tot_meas; j++)
+    strcpy(cfg[j], par_buf.cfg[j]);
+
+  // Allocate Konishi and SUGRA operators now that we know Nblock
+  ops = malloc(Nblock * sizeof(**ops));
+  for (j = 0; j < Nblock; j++)
+    FIELD_ALLOC(ops[j], Kops);
+  size = (Real)(Nblock * sizeof(Kops)) * sites_on_node;
+  node0_printf("Mallocing %.1f MBytes per core for operators\n", size / 1e6);
+
 #ifdef SMEAR
   smearflag = par_buf.smearflag;
   Nsmear = par_buf.Nsmear;
@@ -211,18 +225,15 @@ int readin(int prompt) {
   }
 #endif
 
-  for (j = 0; j < N_K; j++) {
-    vevK[j] = par_buf.vevK[j];
-    vevS[j] = par_buf.vevS[j];
-    // Will check positivity of volK to make sure it has been set
-    volK[j] = -1.0;
+  // These two arrays only need to be of size total_r <= MAX_pts
+  // but allocate MAX_pts memory for simplicity
+  // Initialize to nonsense; can be used to check that they have been reset
+  lookup = malloc(MAX_pts * sizeof(*lookup));
+  norm = malloc(MAX_pts * sizeof(*norm));
+  for (j = 0; j < MAX_pts; j++) {
+    lookup[j] = -1.0;
+    norm[j] = -1.0;
   }
-
-  startflag = par_buf.startflag;
-  strcpy(startfile, par_buf.startfile);
-
-  // Do whatever is needed to get lattice
-  startlat_p = reload_lattice(startflag, startfile);
 
   // Allocate arrays to be used by LAPACK in unit.c
   ipiv = malloc(NCOL * sizeof(*ipiv));
@@ -232,5 +243,13 @@ int readin(int prompt) {
   eigs = malloc(NCOL * sizeof(*eigs));
 
   return 0;
+}
+// -----------------------------------------------------------------
+
+
+
+// -----------------------------------------------------------------
+// Wanted by ../generic/io_lat_utils.c
+void write_appl_gauge_info(FILE *fp) {
 }
 // -----------------------------------------------------------------

@@ -32,13 +32,13 @@ HEADERS = ${GLOBAL_HEADERS} ${MY_HEADERS}
 
 # All required object files
 # Basic set from current directory
-MY_OBJECTS = action.o     \
-             control.o    \
+MY_OBJECTS = control.o    \
+             local_plaq.o \
              plaq.o       \
-             ploop.o      \
              unit.o       \
              konishi.o    \
-             gauge_info.o \
+             utilities.o  \
+             setup.o      \
              setup_offset.o
 
 # Basic set from generic directory
