@@ -122,9 +122,9 @@ void correlator_r() {
 
   // Set up Nblock Konishi and SUGRA correlators
   // Will be initialized within block loop below
-  for (j = 0; j < Nblock; j++) {
-    CK[j] = malloc(total_r * sizeof(*CK));
-    CS[j] = malloc(total_r * sizeof(*CS));
+  for (block = 0; block < Nblock; block++) {
+    CK[block] = malloc(total_r * sizeof(*CK));
+    CS[block] = malloc(total_r * sizeof(*CS));
   }
 
   // Accumulate correlators within each block
