@@ -6,6 +6,7 @@
 .lastmake*
 gmon.out
 localmake
+susy_corr*
 susy_eig*
 susy_hmc*
 susy_mcrg*

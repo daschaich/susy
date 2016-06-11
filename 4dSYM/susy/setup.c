@@ -158,7 +158,7 @@ void make_fields() {
 #endif
 
 #ifdef SMEAR
-  // Stout smearing stuff needed for `hot-start' random configurations
+  // Stout smearing stuff
   size += (Real)(NUMLINK * sizeof(anti_hermitmat));
   FIELD_ALLOC_VEC(Q, anti_hermitmat, NUMLINK);    // To be exponentiated
 #endif

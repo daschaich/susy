@@ -73,7 +73,7 @@ char *create_QCDML() {
     // To retain some info about the original (or previous) configuration
     bytes = strlen(info);
     sprint_gauge_info_item(info + bytes, max - bytes, "gauge.previous.filename",
-                           "%s", startlat_p->filename,0,0);
+                           "%s", startlat_p->filename, 0, 0);
 
     bytes = strlen(info);
     sprint_gauge_info_item(info + bytes, max - bytes, "gauge.previous.time_stamp",

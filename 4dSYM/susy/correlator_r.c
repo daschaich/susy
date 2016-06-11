@@ -1,7 +1,7 @@
 // -----------------------------------------------------------------
 // Measure the Konishi and SUGRA correlation functions
-// Use general gathers, but combine Konishi and SUGRA into single vector
-// Then only need one general gather per displacement
+// Combine Konishi and SUGRA into single structs
+// Then only need one gather per shift
 #include "susy_includes.h"
 
 // Define CHECK_ROT to check rotational invariance
@@ -144,7 +144,7 @@ void shift_ops(Kops *dat, Kops *temp, int dir) {
 
 // -----------------------------------------------------------------
 // Both Konishi and SUGRA correlators as functions of r
-// For gathering, all operators live in array of len = 4N_K
+// For gathering, all operators live in Kops structs
 // vevK[N_K] and vevS[N_K] are Konishi and SUGRA ensemble averages
 // volK[N_K] and volS[N_K] are Konishi and SUGRA volume averages
 // Check to make sure the latter have been set by konishi()
@@ -240,7 +240,6 @@ void correlator_r() {
   }
 
   // Construct and optionally print correlators
-  // Use general gathers, at least for now
   for (x_dist = 0; x_dist <= MAX_X; x_dist++) {
     // Don't need negative y_dist when x_dist = 0
     if (x_dist > 0)

@@ -29,5 +29,11 @@
 // Maximum time value and spatial distance for Wilson loops
 #define MAX_T (nt / 2)
 #define MAX_X (nx / 2 - 1)
+
+// Enough for 16^4, but would need to be increased for larger L
+#define MAX_pts 48
+
+// Maximum number of lattices we can load
+#define MAX_CFG 512
 #endif
 // -----------------------------------------------------------------

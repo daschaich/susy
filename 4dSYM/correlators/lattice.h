@@ -37,12 +37,14 @@ typedef struct {
 // Global variables
 EXTERN int nx, ny, nz, nt;  // Lattice dimensions
 EXTERN int volume;          // Volume of lattice
+EXTERN int Nblock;          // Number of blocks used in analyses
+EXTERN int Nmeas;           // Number of lattices to load per block
+EXTERN int tot_meas;        // Nblock * Nmeas
 
-EXTERN double g_ssplaq, g_stplaq;   // Global plaqs for I/O
+EXTERN double g_ssplaq, g_stplaq;         // Global plaqs for I/O
 EXTERN double_complex linktrsum;
 EXTERN u_int32type nersc_checksum;
-EXTERN char startfile[MAXFILENAME];
-EXTERN int startflag;     // Beginning lattice: CONTINUE, RELOAD, FRESH
+EXTERN char cfg[MAX_CFG][MAXFILENAME];    // Lattice file names
 
 // Some of these global variables are node dependent
 // They are set in "make_lattice()"
@@ -51,6 +53,10 @@ EXTERN int even_sites_on_node;  // Number of even sites on this node
 EXTERN int odd_sites_on_node;   // Number of odd sites on this node
 EXTERN int number_of_nodes;     // Number of nodes in use
 EXTERN int this_node;           // Node number of this node
+
+// Stuff for gathers -- both forwards and backwards
+EXTERN int offset[NUMLINK][NDIMS];    // Path along each link
+EXTERN int goffset[2 * NUMLINK];
 
 // Temporary matrices
 EXTERN matrix *tempmat, *tempmat2, *staple;
@@ -67,27 +73,34 @@ EXTERN site *lattice;
 
 // Vectors for addressing
 // Generic pointers, for gather routines
-#define N_POINTERS 1
+// Need two for plaquettes
+#define N_POINTERS 2
 EXTERN char **gen_pt[N_POINTERS];
 
-#define N_B 2
-#define N_K 3    // N_B * (N_B + 1) / 2
-// Multiple scalar fields and their bilinear traces
+// Scalar fields and their bilinear traces
+// Just need one set of N_B / N_K for current measurement
+#define N_B 1
+#define N_K 1    // N_B * (N_B + 1) / 2
 EXTERN matrix *Ba[N_B][NUMLINK];
 EXTERN double *traceBB[N_K][NUMLINK][NUMLINK];
+EXTERN Real one_ov_N;                 // For trace subtraction
 
-// Ensemble averages and volume averages for subtracting
-EXTERN double vevK[N_K], vevS[N_K], volK[N_K], volS[N_K];
-
-// Structs for operators and correlators with either subtraction
+// Structs for operators and correlators
+// Will need Nblock of each
 typedef struct {
-  double OK[N_K][2];
-  double OS[N_K][2];
+  double OK[N_K];
+  double OS[N_K];
 } Kops;
 typedef struct {
-  double C[N_K][N_K][2];
+  double C[N_K][N_K];
 } Kcorrs;
-EXTERN Kops *tempops, *tempops2;
+EXTERN Kops *tempops, *tempops2;      // For shifting
+EXTERN Kops **ops;                    // Will be Nblock of these
+
+// Correlator stuff that only depends on volume
+EXTERN Real *lookup;                  // Unsorted list of scalar distances r
+EXTERN Real *norm;                    // By number of four-vectors for each r
+EXTERN Real MAX_r, total_r;
 
 #ifdef SMEAR
 // APE or stout smearing stuff

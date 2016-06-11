@@ -10,15 +10,13 @@ typedef struct {
   // Initialization parameters
   int nx, ny, nz, nt;     // Lattice dimensions
 
-  int startflag;          // What to do for beginning lattice
-  int fixflag;            // Whether to gauge fix to Coulomb gauge
-  char startfile[MAXFILENAME];
-
-  double vevK[N_K], vevS[N_K];  // Konishi and SUGRA vacuum subtractions
+  // Use Nblock blocks each containing Nmeas measurements
+  int Nblock, Nmeas;
+  char cfg[MAX_CFG][MAXFILENAME];   // Lattice file names
 
 #ifdef SMEAR
   // Parameters for APE or stout smearing
-  int smearflag;                // NONE, STOUT, APE
+  int smearflag;                    // NONE, STOUT, APE
   int Nsmear;
   Real alpha;
 #endif

@@ -99,7 +99,7 @@ void polar(matrix *in, matrix *u, matrix *P) {
 #ifdef DEBUG_CHECK
   // Check unitarity of u
   mult_na(u, u, &PSq);
-  c_scalar_add_diag(&PSq, &minus1);
+  scalar_add_diag(&PSq, -1.0);
   for (row = 0; row < NCOL; row++) {
     for (col = 0; col < NCOL; col++) {
       if (cabs_sq(&(PSq.e[row][col])) > SQ_TOL) {
