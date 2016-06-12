@@ -34,8 +34,8 @@ Real A4map(int x_in, int y_in, int z_in, int t_in);
 // Count and return total number of unique scalar distances
 int count_points(Real MAX_r);
 
-// Accumulate Konishi and SUGRA operators within current block
-void add_konishi();
+// Compute Konishi and SUGRA operators
+void konishi();
 
 // Compute correlators C(r) of vacuum-subtracted Konishi and SUGRA operators
 // Print both average and standard error

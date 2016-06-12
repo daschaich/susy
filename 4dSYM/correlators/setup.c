@@ -212,11 +212,11 @@ int readin(int prompt) {
   for (j = 0; j < tot_meas; j++)
     strcpy(cfg[j], par_buf.cfg[j]);
 
-  // Allocate Konishi and SUGRA operators now that we know Nblock
-  ops = malloc(Nblock * sizeof(**ops));
-  for (j = 0; j < Nblock; j++)
+  // Allocate Konishi and SUGRA operators now that we know tot_meas
+  ops = malloc(tot_meas * sizeof(**ops));
+  for (j = 0; j < tot_meas; j++)
     FIELD_ALLOC(ops[j], Kops);
-  size = (Real)(Nblock * sizeof(Kops)) * sites_on_node;
+  size = (Real)(tot_meas * sizeof(Kops)) * sites_on_node;
   node0_printf("\nMallocing %.1f MBytes per core for operators\n", size / 1e6);
 
 #ifdef SMEAR
