@@ -238,25 +238,44 @@ void correlator_r() {
         } // y dist
       } // x dist
     } // Nmeas
+
+    // Print out correlators for this block
+    // Normalize by blockNorm = 1.0 / Nmeas at the same time
+    for (j = 0; j < total_r; j++) {
+      for (a = 0; a < N_K; a++) {
+        for (b = 0; b < N_K; b++) {
+          CK[block][j].C[a][b] *= norm[j] * blockNorm;
+          node0_printf("BLOCK_K %d %d %.6g %d %d %.8g\n",
+                       block, j, lookup[j], a, b, CK[block][j].C[a][b]);
+        }
+      }
+    }
+    // Same as above, now for SUGRA
+    for (j = 0; j < total_r; j++) {
+      for (a = 0; a < N_K; a++) {
+        for (b = 0; b < N_K; b++) {
+          CS[block][j].C[a][b] *= norm[j] * blockNorm;
+          node0_printf("BLOCK_S %d %d %.6g %d %d %.8g\n",
+                       block, j, lookup[j], a, b, CS[block][j].C[a][b]);
+        }
+      }
+    }
   } // Nblock
 
   // Now cycle through unique scalar distances
   // Compute and print averages and standard errors
-  // This is also a convenient place to normalize ops
+  // Each block is already normalized above
   for (j = 0; j < total_r; j++) {
     for (a = 0; a < N_K; a++) {
       for (b = 0; b < N_K; b++) {
-        CK[0][j].C[a][b] *= norm[j] * blockNorm;
-        ave = CK[0][j].C[a][b];            // Initialize
-        for (block = 1; block < Nblock; block++) {
-          CK[block][j].C[a][b] *= norm[j] * blockNorm;
+        ave = CK[0][j].C[a][b];             // Initialize
+        for (block = 1; block < Nblock; block++)
           ave += CK[block][j].C[a][b];
-        }
         ave *= one_ov_block;
 
         // Now compute variance (square of standard error)
         tr = CK[0][j].C[a][b] - ave;
-        err = tr * tr;                          // Initialize
+        err = tr * tr;                      // Initialize
         for (block = 1; block < Nblock; block++) {
           tr = CK[block][j].C[a][b] - ave;
           err += tr * tr;
@@ -274,17 +293,14 @@ void correlator_r() {
   for (j = 0; j < total_r; j++) {
     for (a = 0; a < N_K; a++) {
       for (b = 0; b < N_K; b++) {
-        CS[0][j].C[a][b] *= norm[j] * blockNorm;
-        ave = CS[0][j].C[a][b];            // Initialize
-        for (block = 1; block < Nblock; block++) {
-          CS[block][j].C[a][b] *= norm[j] * blockNorm;
+        ave = CS[0][j].C[a][b];             // Initialize
+        for (block = 1; block < Nblock; block++)
           ave += CS[block][j].C[a][b];
-        }
         ave *= one_ov_block;
 
         // Now compute variance (square of standard error)
         tr = CS[0][j].C[a][b] - ave;
-        err = tr * tr;                          // Initialize
+        err = tr * tr;                      // Initialize
         for (block = 1; block < Nblock; block++) {
           tr = CS[block][j].C[a][b] - ave;
           err += tr * tr;
