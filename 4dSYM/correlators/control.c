@@ -139,10 +139,16 @@ int main(int argc, char *argv[]) {
       }
     }
   }
-  for (j = 0; j < N_K; j++)
+
+  // Sum volume averages across nodes and print
+  for (j = 0; j < N_K; j++) {
+    g_doublesum(&(vevK[j]));
     node0_printf("VEV_K %d %.8g\n", j, vevK[j] / (Real)volume);
-  for (j = 0; j < N_K; j++)
+  }
+  for (j = 0; j < N_K; j++) {
+    g_doublesum(&(vevS[j]));
     node0_printf("VEV_S %d %.8g\n", j, vevS[j] / (Real)volume);
+  }
 
   // Now analyze correlators of vacuum-subtracted operators,
   // including blocked standard error
