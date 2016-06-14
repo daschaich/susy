@@ -292,14 +292,6 @@ int readin(int prompt) {
     IF_OK status += get_f(stdin, prompt, "alpha", &par_buf.alpha);
 #endif
 
-#ifdef CORR
-    // Konishi vacuum subtractions
-    for (j = 0; j < N_K; j++)
-      IF_OK status += get_f(stdin, prompt, "vevK", &par_buf.vevK[j]);
-    for (j = 0; j < N_K; j++)
-      IF_OK status += get_f(stdin, prompt, "vevS", &par_buf.vevS[j]);
-#endif
-
     // Maximum conjugate gradient iterations
     IF_OK status += get_i(stdin, prompt, "max_cg_iterations", &par_buf.niter);
 
@@ -409,14 +401,6 @@ int readin(int prompt) {
   if (smearflag == NO_SMEAR) {
     Nsmear = 0;
     alpha = 0.0;
-  }
-#endif
-#ifdef CORR
-  for (j = 0; j < N_K; j++) {
-    vevK[j] = par_buf.vevK[j];
-    vevS[j] = par_buf.vevS[j];
-    // Will check positivity of volK to make sure it has been set
-    volK[j] = -1.0;
   }
 #endif
 #ifdef PHASE

@@ -119,28 +119,14 @@ void konishi() {
   }
 
   // Print each operator on each time slice
-  // Subtract either ensemble average or volume average (respectively)
-  // Format: TAG  t  a  op[a]  subtracted[a]
-  for (j = 0; j < N_K; j++) {
-    volK[j] = OK[j][0];
-    volS[j] = OS[j][0];
-    for (t = 1; t < nt; t++) {
-      volK[j] += OK[j][t];
-      volS[j] += OS[j][t];
-    }
-    volK[j] /= (double)nt;
-    volS[j] /= (double)nt;
-  }
-
+  // Format: TAG  t  a  op[a]
   for (t = 0; t < nt; t++) {
     for (j = 0; j < N_K; j++)
-      node0_printf("KONISHI %d %d %.16g %.16g\n", t, j,
-                   OK[j][t] - vevK[j], OK[j][t] - volK[j]);
+      node0_printf("KONISHI %d %d %.8g\n", t, j, OK[j][t]);
   }
   for (t = 0; t < nt; t++) {
     for (j = 0; j < N_K; j++)
-      node0_printf("SUGRA %d %d %.16g %.16g\n", t, j,
-                   OS[j][t] - vevS[j], OS[j][t] - volS[j]);
+      node0_printf("SUGRA %d %d %.8g\n", t, j, OS[j][t]);
   }
 
   for (j = 0; j < N_K; j++) {

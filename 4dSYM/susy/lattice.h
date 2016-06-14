@@ -179,16 +179,13 @@ EXTERN char **gen_pt[N_POINTERS];
 EXTERN matrix *Ba[N_B][NUMLINK];
 EXTERN double *traceBB[N_K][NUMLINK][NUMLINK];
 
-// Ensemble averages and volume averages for subtracting
-EXTERN double vevK[N_K], vevS[N_K], volK[N_K], volS[N_K];
-
-// Structs for operators and correlators with either subtraction
+// Structs for operators and correlators
 typedef struct {
-  double OK[N_K][2];
-  double OS[N_K][2];
+  double OK[N_K];
+  double OS[N_K];
 } Kops;
 typedef struct {
-  double C[N_K][N_K][2];
+  double C[N_K][N_K];
 } Kcorrs;
 EXTERN Kops *tempops, *tempops2;
 #endif
