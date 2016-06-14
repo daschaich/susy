@@ -110,12 +110,10 @@ int count_points(Real MAX_r, Real *save, int *count, int MAX_pts) {
 // -----------------------------------------------------------------
 // Simple helper function to copy operators
 void copy_ops(Kops *src, Kops *dest) {
-  int j, sub;
+  int j;
   for (j = 0; j < N_K; j++) {
-    for (sub = 0; sub < 2; sub++) {
-      dest->OK[j][sub] = src->OK[j][sub];
-      dest->OS[j][sub] = src->OS[j][sub];
-    }
+    dest->OK[j] = src->OK[j];
+    dest->OS[j] = src->OS[j];
   }
 }
 // -----------------------------------------------------------------
@@ -145,14 +143,11 @@ void shift_ops(Kops *dat, Kops *temp, int dir) {
 // -----------------------------------------------------------------
 // Both Konishi and SUGRA correlators as functions of r
 // For gathering, all operators live in Kops structs
-// vevK[N_K] and vevS[N_K] are Konishi and SUGRA ensemble averages
-// volK[N_K] and volS[N_K] are Konishi and SUGRA volume averages
-// Check to make sure the latter have been set by konishi()
 void correlator_r() {
   register int i;
   register site *s;
   int a, b, j, x_dist, y_dist, z_dist, t_dist;
-  int y_start, z_start, t_start, sub, this_r, total_r = 0;
+  int y_start, z_start, t_start, this_r, total_r = 0;
   int *count, *temp, MAX_pts = 8 * MAX_X * MAX_X * MAX_X;
   Real MAX_r = 100.0 * MAX_X, tr;   // MAX_r to be overwritten
   Real *lookup, *sav;
@@ -191,28 +186,18 @@ void correlator_r() {
   CK = malloc(total_r * sizeof(*CK));
   CS = malloc(total_r * sizeof(*CS));
 
-  // Subtract either ensemble average or volume average (respectively)
-  // while initializing operators and correlators
-  // Make sure vevK and vevS have been set up properly
-  if (volK[0] < 0.0) {
-    node0_printf("ERROR: Improperly initialized vacuum subtraction\n");
-    terminate(1);
-  }
+  // Initialize operators and correlators
   FORALLSITES(i, s) {
     for (j = 0; j < N_K; j++) {
-      ops[i].OK[j][0] = -1.0 * vevK[j];
-      ops[i].OK[j][1] = -1.0 * volK[j];
-      ops[i].OS[j][0] = -1.0 * vevS[j];
-      ops[i].OS[j][1] = -1.0 * volS[j];
+      ops[i].OK[j] = 0.0;
+      ops[i].OS[j] = 0.0;
     }
   }
   for (j = 0; j < total_r; j++) {
     for (a = 0; a < N_K; a++) {
       for (b = 0; b < N_K; b++) {
-        for (sub = 0; sub < 2; sub++) {
-          CK[j].C[a][b][sub] = 0.0;
-          CS[j].C[a][b][sub] = 0.0;
-        }
+        CK[j].C[a][b] = 0.0;
+        CS[j].C[a][b] = 0.0;
       }
     }
   }
@@ -220,20 +205,18 @@ void correlator_r() {
   // Compute traces of bilinears of scalar field interpolating ops
   compute_Ba();
 
-  // Construct the operators for all definitions and subtractions
+  // Construct the operators for all definitions
   FORALLSITES(i, s) {
     FORALLDIR(a) {
       for (j = 0; j < N_K; j++) {
-        for (sub = 0; sub < 2; sub++) {
-          // First Konishi
-          ops[i].OK[j][sub] += traceBB[j][a][a][i];
+        // First Konishi
+        ops[i].OK[j] += traceBB[j][a][a][i];
 
-          // Now SUGRA, averaged over 20 off-diagonal components
-          FORALLDIR(b) {
-            if (a == b)
-              continue;
-            ops[i].OS[j][sub] += 0.05 * traceBB[j][a][b][i];
-          }
+        // Now SUGRA, averaged over 20 off-diagonal components
+        FORALLDIR(b) {
+          if (a == b)
+            continue;
+          ops[i].OS[j] += 0.05 * traceBB[j][a][b][i];
         }
       }
     }
@@ -308,18 +291,16 @@ void correlator_r() {
           // Potentially useful to check rotational invariance
           node0_printf("ROT_K %d %d %d %d", x_dist, y_dist, z_dist, t_dist);
 #endif
-          for (sub = 0; sub < 2; sub++) {
-            for (a = 0; a < N_K; a++) {
-              for (b = 0; b < N_K; b++) {
-                tr = 0.0;
-                FORALLSITES(i, s)
-                  tr += ops[i].OK[a][sub] * tempops[i].OK[b][sub];
-                g_doublesum(&tr);
-                CK[this_r].C[a][b][sub] += tr;
+          for (a = 0; a < N_K; a++) {
+            for (b = 0; b < N_K; b++) {
+              tr = 0.0;
+              FORALLSITES(i, s)
+                tr += ops[i].OK[a] * tempops[i].OK[b];
+              g_doublesum(&tr);
+              CK[this_r].C[a][b] += tr;
 #ifdef CHECK_ROT
-                node0_printf(" %.6g", tr / (Real)volume);
+              node0_printf(" %.6g", tr / (Real)volume);
 #endif
-              }
             }
           }
 
@@ -328,18 +309,16 @@ void correlator_r() {
           // Potentially useful to check rotational invariance
           node0_printf("\nROT_S %d %d %d %d", x_dist, y_dist, z_dist, t_dist);
 #endif
-          for (sub = 0; sub < 2; sub++) {
-            for (a = 0; a < N_K; a++) {
-              for (b = 0; b < N_K; b++) {
-                tr = 0.0;
-                FORALLSITES(i, s)
-                  tr += ops[i].OS[a][sub] * tempops[i].OS[b][sub];
-                g_doublesum(&tr);
-                CS[this_r].C[a][b][sub] += tr;
+          for (a = 0; a < N_K; a++) {
+            for (b = 0; b < N_K; b++) {
+              tr = 0.0;
+              FORALLSITES(i, s)
+                tr += ops[i].OS[a] * tempops[i].OS[b];
+              g_doublesum(&tr);
+              CS[this_r].C[a][b] += tr;
 #ifdef CHECK_ROT
-                node0_printf(" %.6g", tr / (Real)volume);
+              node0_printf(" %.6g", tr / (Real)volume);
 #endif
-              }
             }
           }
 #ifdef CHECK_ROT
@@ -355,13 +334,13 @@ void correlator_r() {
 
   // Now cycle through unique scalar distances and print results
   // Distances won't be sorted, but this is easy to do offline
-  // Format: CORR_?  tag  r  a  b  corr[a][b]  subtracted[a][b]
+  // Format: CORR_?  tag  r  a  b  corr[a][b]
   for (j = 0; j < total_r; j++) {
     tr = 1.0 / (Real)(count[j] * volume);
     for (a = 0; a < N_K; a++) {
       for (b = 0; b < N_K; b++) {
-        node0_printf("CORR_K %d %.6g %d %d %.8g %.8g\n", j, lookup[j], a, b,
-                     CK[j].C[a][b][0] * tr, CK[j].C[a][b][1] * tr);
+        node0_printf("CORR_K %d %.6g %d %d %.8g\n", j, lookup[j], a, b,
+                     CK[j].C[a][b] * tr);
       }
     }
   }
@@ -369,8 +348,8 @@ void correlator_r() {
     tr = 1.0 / (Real)(count[j] * volume);
     for (a = 0; a < N_K; a++) {
       for (b = 0; b < N_K; b++) {
-        node0_printf("CORR_S %d %.6g %d %d %.8g %.8g\n", j, lookup[j], a, b,
-                     CS[j].C[a][b][0] * tr, CS[j].C[a][b][1] * tr);
+        node0_printf("CORR_S %d %.6g %d %d %.8g\n", j, lookup[j], a, b,
+                     CS[j].C[a][b] * tr);
       }
     }
   }
