@@ -4,8 +4,9 @@ This package evolved from the MILC code, and supersedes the serial C++ code
 presented in arXiv:1108.1503.
 
 See subdirectories for more detailed READMEs:
-2dSYM -- Two-dimensional N=(2,2) supersymmetric Yang--Mills theory
-4dSYM -- Four-dimensional N=4 supersymmetric Yang--Mills theory
+2d_Q04 -- Two-dimensional N=(2,2) supersymmetric Yang--Mills theory
+2d_Q16 -- Two-dimensional N=(8,8) supersymmetric Yang--Mills theory
+4dSYM  -- Four-dimensional N=4 supersymmetric Yang--Mills theory
 
 Feel free to contact David Schaich with any questions, requests for new
 features, or (especially) bug reports:
@@ -15,6 +16,10 @@ Authors:
 David Schaich (Syracuse University)
 Thomas DeGrand (University of Colorado Boulder)
 Raghav Jha (Syracuse University)
+
+Additional contributors:
+Simon Catterall (Syracuse University)
+Joel Giedt (Rensselaer Polytechnic Institute)
 
 Reference:
 A summary of useful information appears in the following paper, which we ask
