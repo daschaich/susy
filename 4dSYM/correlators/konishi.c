@@ -117,7 +117,7 @@ void correlator_r() {
   register int i;
   register site *s;
   int a, b, j, x_dist, y_dist, z_dist, t_dist;
-  int y_start, z_start, t_start, this_r = -1, block, meas;
+  int y_start, z_start, t_start, this_r = -1, block, meas, this_meas;
   Real one_ov_block = 1.0 / (Real)Nblock, blockNorm = 1.0 / (Real)Nmeas;
   Real std_norm = 1.0 / (Real)(Nblock * (Nblock - 1.0));
   Real ave, err, tr;
@@ -145,6 +145,8 @@ void correlator_r() {
 
     // Accumulate within this block
     for (meas = 0; meas < Nmeas; meas++) {
+      this_meas = block * Nmeas + meas;
+
       // Loop over all displacements
       for (x_dist = 0; x_dist <= MAX_X; x_dist++) {
         // Don't need negative y_dist when x_dist = 0
@@ -163,7 +165,7 @@ void correlator_r() {
           for (z_dist = z_start; z_dist <= MAX_X; z_dist++) {
             // Gather ops to tempops along spatial offset, using tempops2
             FORALLSITES(i, s)
-              copy_ops(&(ops[block][i]), &(tempops[i]));
+              copy_ops(&(ops[this_meas][i]), &(tempops[i]));
             for (j = 0; j < x_dist; j++)
               shift_ops(tempops, tempops2, goffset[XUP]);
             for (j = 0; j < y_dist; j++)
@@ -214,7 +216,7 @@ void correlator_r() {
                 for (b = 0; b < N_K; b++) {
                   tr = 0.0;
                   FORALLSITES(i, s)
-                    tr += ops[block][i].OK[a] * tempops[i].OK[b];
+                    tr += ops[this_meas][i].OK[a] * tempops[i].OK[b];
                   g_doublesum(&tr);
                   CK[block][this_r].C[a][b] += tr;
                 }
@@ -225,7 +227,7 @@ void correlator_r() {
                 for (b = 0; b < N_K; b++) {
                   tr = 0.0;
                   FORALLSITES(i, s)
-                    tr += ops[block][i].OS[a] * tempops[i].OS[b];
+                    tr += ops[this_meas][i].OS[a] * tempops[i].OS[b];
                   g_doublesum(&tr);
                   CS[block][this_r].C[a][b] += tr;
                 }
