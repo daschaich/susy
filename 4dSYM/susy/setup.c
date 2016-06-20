@@ -255,9 +255,6 @@ int ask_smear_type(FILE *fp, int prompt, int *flag) {
 int readin(int prompt) {
   int status;
   Real x;
-#ifdef CORR
-  int j;
-#endif
 
   // On node zero, read parameters and send to all other nodes
   if (this_node == 0) {
@@ -298,7 +295,7 @@ int readin(int prompt) {
     // Error per site for conjugate gradient
     IF_OK {
       status += get_f(stdin, prompt, "error_per_site", &x);
-      par_buf.rsqmin = x;
+      par_buf.rsqmin = x * x;
     }
 
 #ifdef BILIN
