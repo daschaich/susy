@@ -57,7 +57,7 @@ void rand_TFsource(Twist_Fermion *src) {
 // Get Nvec vectors (stored consecutively) and hit them by the matrix
 void av_ov (void *x, void *y, int *Nvec, primme_params *primme) {
   register site *s;
-  int i, j, k, mu, iter, ivec, Ndat = 16 * DIMF;
+  int i, j, k, mu, iter, ivec, Ndat = 16 * NCOL * NCOL;
   Complex_Z *xx;
 
   for (ivec = 0; ivec < *Nvec; ivec++) {
@@ -180,7 +180,7 @@ void par_GlobalSumDouble(void *sendBuf, void *recvBuf,
 // If flag==-1 we calculate the largest eigenvalues
 int make_evs(int Nvec, Twist_Fermion **eigVec, double *eigVal, int flag) {
   register site* s;
-  int i, j, k, mu, ivec, iter = 0, ret, Ndat = 16 * DIMF;
+  int i, j, k, mu, ivec, iter = 0, ret, Ndat = 16 * NCOL * NCOL;
   int maxn = sites_on_node * Ndat;
   double check, *rnorms = malloc(Nvec * sizeof(*rnorms));
   Complex_Z *workVecs = malloc(Nvec * maxn * sizeof(*workVecs));
