@@ -20,4 +20,5 @@ Usage: poly < [params_in_file] > [params_rhmc_file]
 
 Where params_in_file contains
   Nroot  MD_order  action_order  eval_min  eval_max precision
-Example: 2  15  15  0.0000001  1500  65
+Example:
+  2      15        15            0.0000001 1500     65
