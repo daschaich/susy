@@ -19,7 +19,8 @@ Real A4map_slice(x_in, y_in, z_in) {
   Real r = 100.0 * MAX_X, tr;
 #ifdef DEBUG_CHECK
   Real invSq2 = 1.0 / sqrt(2.0), invSq6  = 1.0 / sqrt(6.0);
-  Real invSq12 = 1.0 / sqrt(12.0), x_a4, y_a4, z_a4, check;
+  Real invSq12 = 1.0 / sqrt(12.0), invSq20 = 1.0 / sqrt(20.0);
+  Real x_a4, y_a4, z_a4, t_a4, check;
 #endif
 
   for (x = x_in - nx; x <= x_in + nx; x += nx) {
@@ -29,7 +30,7 @@ Real A4map_slice(x_in, y_in, z_in) {
       xy = x * y;
       xpy = x + y;
       for (z = z_in - nz; z <= z_in + nz; z += nz) {
-        tr = sqrt((xSq + ySq + z * z) * 0.75 - (xy + xpy * z) * 0.5);
+        tr = sqrt((xSq + ySq + z * z) * 0.8 - (xy + xpy * z) * 0.4);
         if (tr < r)
           r = tr;
 
@@ -37,7 +38,8 @@ Real A4map_slice(x_in, y_in, z_in) {
         x_a4 = (x - y) * invSq2;
         y_a4 = (x + y - 2.0 * z) * invSq6;
         z_a4 = (x + y + z) * invSq12;
-        check = sqrt(x_a4 * x_a4 + y_a4 * y_a4 + z_a4 * z_a4);
+        t_a4 = (x + y + z) * invSq20;
+        check = sqrt(x_a4 * x_a4 + y_a4 * y_a4 + z_a4 * z_a4 + t_a4 * t_a4);
         if (fabs(tr - check) > IMAG_TOL) {
           node0_printf("ERROR: %4g isn't %.4g for (%d, %d, %d)\n",
                        tr, check, x, y, z);
