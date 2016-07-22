@@ -13,7 +13,7 @@ int main(int argc, char *argv[]) {
   int prompt, j, meas;
   int y_dist, z_dist, t_dist;
   Real one_ov_meas, tr;
-  double ss_plaq, st_plaq, dtime, vevK[N_K], vevS[N_K];
+  double ss_plaq, st_plaq, dtime, vev[N_op];
 #ifdef SMEAR
   double max_plaq = 0.0;
 #endif
@@ -58,10 +58,8 @@ int main(int argc, char *argv[]) {
 
   // Initialize site-by-site ensemble averages
   FORALLSITES(i, s) {
-    for (j = 0; j < N_K; j++) {
-      tempops[i].OK[j] = 0.0;
-      tempops[i].OS[j] = 0.0;
-    }
+    for (j = 0; j < N_op; j++)
+      tempops[i].O[j] = 0.0;
   }
 
   // We can also set one_ov_meas now that we have read in Nblock and Nmeas
@@ -107,10 +105,8 @@ int main(int argc, char *argv[]) {
 
     // Accumulate site-by-site vev in tempops
     FORALLSITES(i, s) {
-      for (j = 0; j < N_K; j++) {
-        tempops[i].OK[j] += ops[meas][i].OK[j];
-        tempops[i].OS[j] += ops[meas][i].OS[j];
-      }
+      for (j = 0; j < N_op; j++)
+        tempops[i].O[j] += ops[meas][i].O[j];
     }
 
     node0_printf("\n");
@@ -118,36 +114,25 @@ int main(int argc, char *argv[]) {
   }
 
   // Normalize site-by-site vevs and print volume averages
-  for (j = 0; j < N_K; j++) {
-    vevK[j] = 0.0;
-    vevS[j] = 0.0;
-  }
+  for (j = 0; j < N_op; j++)
+    vev[j] = 0.0;
   FORALLSITES(i, s) {
-    for (j = 0; j < N_K; j++) {
-      tempops[i].OK[j] *= one_ov_meas;
-      tempops[i].OS[j] *= one_ov_meas;
-
-      vevK[j] += tempops[i].OK[j];
-      vevS[j] += tempops[i].OS[j];
+    for (j = 0; j < N_op; j++) {
+      tempops[i].O[j] *= one_ov_meas;
+      vev[j] += tempops[i].O[j];
     }
 
     // Finally subtract vevs from each measurement
     for (meas = 0; meas < tot_meas; meas++) {
-      for (j = 0; j < N_K; j++) {
-        ops[meas][i].OK[j] -= tempops[i].OK[j];
-        ops[meas][i].OS[j] -= tempops[i].OS[j];
-      }
+      for (j = 0; j < N_op; j++)
+        ops[meas][i].O[j] -= tempops[i].O[j];
     }
   }
 
   // Sum volume averages across nodes and print
-  for (j = 0; j < N_K; j++) {
-    g_doublesum(&(vevK[j]));
-    node0_printf("VEV_K %d %.8g\n", j, vevK[j] / (Real)volume);
-  }
-  for (j = 0; j < N_K; j++) {
-    g_doublesum(&(vevS[j]));
-    node0_printf("VEV_S %d %.8g\n", j, vevS[j] / (Real)volume);
+  for (j = 0; j < N_op; j++) {
+    g_doublesum(&(vev[j]));
+    node0_printf("VEV %d %.8g\n", j, vev[j] / (Real)volume);
   }
 
   // Now analyze correlators of vacuum-subtracted operators,
