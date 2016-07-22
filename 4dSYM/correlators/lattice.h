@@ -84,19 +84,20 @@ EXTERN char **gen_pt[N_POINTERS];
 // Scalar fields and their bilinear traces
 // Just need one set of N_B / N_K for current measurement
 #define N_B 1
-#define N_K 1    // N_B * (N_B + 1) / 2
+#define N_K 1     // N_B * (N_B + 1) / 2
 EXTERN matrix *Ba[N_B][NUMLINK];
 EXTERN double *traceBB[N_K][NUMLINK][NUMLINK];
 EXTERN Real one_ov_N;                 // For trace subtraction
 
 // Structs for operators and correlators
 // Will need Nblock of each
+// Need to correlate every operator with every other
+#define N_op 2    // 2 N_K
 typedef struct {
-  double OK[N_K];
-  double OS[N_K];
+  double O[N_op];
 } Kops;
 typedef struct {
-  double C[N_K][N_K];
+  double C[N_op][N_op];
 } Kcorrs;
 EXTERN Kops *tempops, *tempops2;      // For shifting
 EXTERN Kops **ops;                    // Will be Nblock of these
