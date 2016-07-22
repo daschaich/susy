@@ -124,14 +124,14 @@ void correlator_r() {
   // Set up Nblock Konishi and SUGRA correlators
   // Will be initialized within block loop below
   for (block = 0; block < Nblock; block++)
-    corr[block] = malloc(total_r * sizeof(*corr));
+    corr[block] = malloc(total_r * sizeof(Kcorrs));
 
   // Compute correlators for each block
   for (block = 0; block < Nblock; block++) {
     // Initialize this block's correlators
     for (j = 0; j < total_r; j++) {
-      for (a = 0; a < N_K; a++) {
-        for (b = 0; b < N_K; b++)
+      for (a = 0; a < N_op; a++) {
+        for (b = 0; b < N_op; b++)
           corr[block][j].C[a][b] = 0.0;
       }
     }
