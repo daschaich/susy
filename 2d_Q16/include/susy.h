@@ -16,13 +16,7 @@
 // N=4 SYM fermions always in adjoint rep
 // Gauge group U(NCOL) and size of adjoint rep DIMF = NCOL^2
 #define NCOL 2
-#define DIMF 4
-
-#if (NCOL!=3 || DIMF!=3)
-#ifdef FAST
-  #error "FAST only works if NCOL=DIMF=3!"
-#endif
-#endif
+#define DIMF (NCOL * NCOL)
 
 typedef struct { fcomplex e[NCOL][NCOL]; } fmatrix;
 typedef struct { fcomplex c[NCOL]; } fvector;
