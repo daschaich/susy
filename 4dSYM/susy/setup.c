@@ -314,11 +314,14 @@ int readin(int prompt) {
 #ifdef MODE
     // Which order polynomial to use in step function
     IF_OK status += get_i(stdin, prompt, "order", &par_buf.order);
+    IF_OK status += get_i(stdin, prompt, "Nest", &par_buf.Nest);
 
     // Number of Omegas and the interval between them
-    IF_OK status += get_i(stdin, prompt, "Npts", &par_buf.Npts);
-    IF_OK status += get_f(stdin, prompt, "start_omega", &par_buf.start_omega);
-    IF_OK status += get_f(stdin, prompt, "spacing", &par_buf.spacing);
+    // IF_OK status += get_i(stdin, prompt, "Npts", &par_buf.Npts);
+    //IF_OK status += get_f(stdin, prompt, "start_omega", &par_buf.start_omega);
+    //IF_OK status += get_f(stdin, prompt, "spacing", &par_buf.spacing);
+    IF_OK status += get_f(stdin, prompt, "lambda_min", &par_buf.lambda_min);
+    IF_OK status += get_f(stdin, prompt, "lambda_max", &par_buf.lambda_max);
 #endif
 
 #ifdef PHASE
@@ -409,6 +412,9 @@ int readin(int prompt) {
   Npts = par_buf.Npts;
   M = par_buf.start_omega;
   spacing = par_buf.spacing;
+  Nest=par_buf.Nest;
+  lambda_min=par_buf.lambda_min;
+  lambda_max=par_buf.lambda_max;
 #endif
 
   startflag = par_buf.startflag;

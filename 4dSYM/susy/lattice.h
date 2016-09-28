@@ -223,6 +223,9 @@ EXTERN int ckpt_load, ckpt_save;    // For checkpointing
 EXTERN int Npts;
 EXTERN Real M, spacing;
 EXTERN Twist_Fermion **source;
+EXTERN int Nest;
+EXTERN Real lambda_min;
+EXTERN Real lambda_max;
 
 EXTERN int step_order;  // Selects between options hard-coded in coeffs.c
 EXTERN double eps;

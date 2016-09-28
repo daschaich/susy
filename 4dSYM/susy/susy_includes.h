@@ -254,5 +254,6 @@ void phase();
 #ifdef MODE
 void coefficients();
 void step(Twist_Fermion *src, Twist_Fermion *res);
+void
 #endif
 // -----------------------------------------------------------------

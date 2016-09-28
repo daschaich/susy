@@ -60,6 +60,8 @@ typedef struct {
   // Mode number (and associated step function) parameters
   int order, Npts;
   Real start_omega, spacing;
+  int Nest;
+  Real lambda_min, lambda_max;
 #endif
 } params;
 #endif
