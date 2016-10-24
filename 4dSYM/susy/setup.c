@@ -322,6 +322,12 @@ int readin(int prompt) {
     //IF_OK status += get_f(stdin, prompt, "spacing", &par_buf.spacing);
     IF_OK status += get_f(stdin, prompt, "lambda_min", &par_buf.lambda_min);
     IF_OK status += get_f(stdin, prompt, "lambda_max", &par_buf.lambda_max);
+
+    IF_OK status += get_i(stdin, prompt, "GLNEst", &par_buf.nest_gl);
+    IF_OK status += get_f(stdin, prompt, "GLRescale", &par_buf.rescalefact_gl);
+    IF_OK status += get_f(stdin, prompt, "GLEpsilon", &par_buf.epsilon_gl);
+    IF_OK status += get_f(stdin, prompt, "GLResid", &par_buf.residgoal_gl);
+    IF_OK status += get_i(stdin, prompt, "GLMaxit", &par_buf. maxit_gl);
 #endif
 
 #ifdef PHASE
@@ -415,6 +421,12 @@ int readin(int prompt) {
   Nest=par_buf.Nest;
   lambda_min=par_buf.lambda_min;
   lambda_max=par_buf.lambda_max;
+
+  rescalefact_gl=par_buf.rescalefact_gl;
+  nest_gl=par_buf.nest_gl;
+  epsilon_gl=par_buf.epsilon_gl;
+  residgoal_gl=par_buf.residgoal_gl;
+  maxit_gl=par_buf.maxit_gl;
 #endif
 
   startflag = par_buf.startflag;

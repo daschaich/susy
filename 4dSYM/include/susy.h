@@ -122,6 +122,8 @@ void scalar_mult_adj_matrix(matrix *src, Real s, matrix *c);
 // In file s_m_a_mat.c
 void scalar_mult_sum_matrix(matrix *b, Real s, matrix *c);
 void scalar_mult_add_matrix(matrix *a, matrix *b, Real s, matrix *c);
+void scalar_mult_mult_add_matrix(matrix *a, Real s1, matrix *b, Real s2,
+		matrix *c);
 
 // In file s_m_a_amat.c
 void scalar_mult_sum_adj_matrix(matrix *b, Real s, matrix *c);
@@ -228,7 +230,8 @@ void mult_su2_mat_vec_elem_a(su2_matrix *u, complex *x0, complex *x1);
 // Miscellaneous routines
 // In file gaussrand.c
 Real gaussian_rand_no(double_prn *prn_pt);
-
+// In file z2rand.c
+Real z2_rand_no(double_prn *prn_pt);
 #include "../include/int32type.h"
 void byterevn(int32type w[], int n);
 void byterevn64(int32type w[], int n);

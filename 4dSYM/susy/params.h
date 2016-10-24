@@ -58,11 +58,18 @@ typedef struct {
 
 #ifdef MODE
   // Mode number (and associated step function) parameters
-  int order, Npts;
-  Real start_omega, spacing;
-  int Nest;
-  Real lambda_min, lambda_max;
+	int order, Npts;
+	Real start_omega, spacing;
+	int Nest;
+	Real lambda_min, lambda_max;
+
+	Real rescalefact_gl;
+	int nest_gl;
+	Real epsilon_gl;
+	Real residgoal_gl;
+	int maxit_gl;
 #endif
+
 } params;
 #endif
 // -----------------------------------------------------------------
