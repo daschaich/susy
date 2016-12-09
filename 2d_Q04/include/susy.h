@@ -3,8 +3,8 @@
 // and fermions in the DIMF-dimensional adjoint rep
 // The original names now refer to objects of dimension DIMF or DIMFxDIMF
 // New objects with suffix _f have dimension NCOL or NCOLxNCOL
-#ifndef _SUN_H
-#define _SUN_H
+#ifndef _SUSY_H
+#define _SUSY_H
 
 #include "../include/complex.h"
 #include "../include/random.h"
