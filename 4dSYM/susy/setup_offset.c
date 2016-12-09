@@ -65,23 +65,23 @@ int check_list(int my_offset[4], int *minus) {
 
 // -----------------------------------------------------------------
 void setup_bc() {
-  register int i, dir1, dir2, dir3, tocheck;
+  register int i, dir, dir2, dir3, tocheck;
   register site *s;
 
   // Single-offset terms
-  for (dir1 = 0; dir1 < NUMLINK; dir1++) {
+  FORALLDIR(dir) {
     FORALLSITES(i, s) {
-      s->bc1[dir1] = 1.0;
-      s->bc1[OPP_LDIR(dir1)] = 1.0;
+      s->bc1[dir] = 1.0;
+      s->bc1[OPP_LDIR(dir)] = 1.0;
 
-      if (s->t + offset[dir1][TUP] < 0)
-        s->bc1[dir1] = PBC;
-      else if (s->t + offset[dir1][TUP] > nt - 1)
-        s->bc1[dir1] = PBC;
-      if (s->t - offset[dir1][TUP] < 0)
-        s->bc1[OPP_LDIR(dir1)] = PBC;
-      else if (s->t - offset[dir1][TUP] > nt - 1)
-        s->bc1[OPP_LDIR(dir1)] = PBC;
+      if (s->t + offset[dir][TUP] < 0)
+        s->bc1[dir] = PBC;
+      else if (s->t + offset[dir][TUP] > nt - 1)
+        s->bc1[dir] = PBC;
+      if (s->t - offset[dir][TUP] < 0)
+        s->bc1[OPP_LDIR(dir)] = PBC;
+      else if (s->t - offset[dir][TUP] > nt - 1)
+        s->bc1[OPP_LDIR(dir)] = PBC;
     }
   }
 
@@ -89,55 +89,55 @@ void setup_bc() {
 //  FORALLSITES(i, s) {
 //    if (s->x == 1 && s->y == 1 && s->z == 2) {
 //      printf("%d %d %d %d:", s->x, s->y, s->z, s->t);
-//      for (dir1 = 0; dir1 < 2 * NUMLINK; dir1++)
-//        printf("  %4.2g", s->bc1[dir1]);
+//      for (dir = 0; dir < 2 * NUMLINK; dir++)
+//        printf("  %4.2g", s->bc1[dir]);
 //      printf("\n");
 //    }
 //  }
 
   // Double-offset terms -- don't need mixed -+ and +-
-  for (dir1 = 0; dir1 < NUMLINK; dir1++) {
-    for (dir2 = 0; dir2 < NUMLINK; dir2++) {
+  FORALLDIR(dir) {
+    FORALLDIR(dir2) {
       FORALLSITES(i, s) {
-        s->bc2[dir1][dir2] = 1.0;
-        s->bc2[OPP_LDIR(dir1)][OPP_LDIR(dir2)] = 1.0;
+        s->bc2[dir][dir2] = 1.0;
+        s->bc2[OPP_LDIR(dir)][OPP_LDIR(dir2)] = 1.0;
 
-        tocheck = s->t + offset[dir1][TUP] + offset[dir2][TUP];
+        tocheck = s->t + offset[dir][TUP] + offset[dir2][TUP];
         if (tocheck < 0)
-          s->bc2[dir1][dir2] = PBC;
+          s->bc2[dir][dir2] = PBC;
         else if (tocheck > nt - 1)
-          s->bc2[dir1][dir2] = PBC;
+          s->bc2[dir][dir2] = PBC;
 
-        tocheck = s->t - offset[dir1][TUP] - offset[dir2][TUP];
+        tocheck = s->t - offset[dir][TUP] - offset[dir2][TUP];
         if (tocheck < 0)
-          s->bc2[OPP_LDIR(dir1)][OPP_LDIR(dir2)] = PBC;
+          s->bc2[OPP_LDIR(dir)][OPP_LDIR(dir2)] = PBC;
         else if (tocheck > nt - 1)
-          s->bc2[OPP_LDIR(dir1)][OPP_LDIR(dir2)] = PBC;
+          s->bc2[OPP_LDIR(dir)][OPP_LDIR(dir2)] = PBC;
       }
     }
   }
 
   // Triple-offset terms -- don't need mixed -++, +-+, ++-, --+, -+- or +--
-  for (dir1 = 0; dir1 < NUMLINK; dir1++) {
-    for (dir2 = 0; dir2 < NUMLINK; dir2++) {
-      for (dir3 = 0; dir3 < NUMLINK; dir3++) {
+  FORALLDIR(dir) {
+    FORALLDIR(dir2) {
+      FORALLDIR(dir3) {
         FORALLSITES(i, s) {
-          s->bc3[dir1][dir2][dir3] = 1.0;
-          s->bc3[OPP_LDIR(dir1)][OPP_LDIR(dir2)][OPP_LDIR(dir3)] = 1.0;
+          s->bc3[dir][dir2][dir3] = 1.0;
+          s->bc3[OPP_LDIR(dir)][OPP_LDIR(dir2)][OPP_LDIR(dir3)] = 1.0;
 
-          tocheck = s->t + offset[dir1][TUP] + offset[dir2][TUP]
+          tocheck = s->t + offset[dir][TUP] + offset[dir2][TUP]
                          + offset[dir3][TUP];
           if (tocheck < 0)
-            s->bc3[dir1][dir2][dir3] = PBC;
+            s->bc3[dir][dir2][dir3] = PBC;
           else if (tocheck > nt - 1)
-            s->bc3[dir1][dir2][dir3] = PBC;
+            s->bc3[dir][dir2][dir3] = PBC;
 
-          tocheck = s->t - offset[dir1][TUP] - offset[dir2][TUP]
+          tocheck = s->t - offset[dir][TUP] - offset[dir2][TUP]
                          - offset[dir3][TUP];
           if (tocheck < 0)
-            s->bc3[OPP_LDIR(dir1)][OPP_LDIR(dir2)][OPP_LDIR(dir3)] = PBC;
+            s->bc3[OPP_LDIR(dir)][OPP_LDIR(dir2)][OPP_LDIR(dir3)] = PBC;
           else if (tocheck > nt - 1)
-            s->bc3[OPP_LDIR(dir1)][OPP_LDIR(dir2)][OPP_LDIR(dir3)] = PBC;
+            s->bc3[OPP_LDIR(dir)][OPP_LDIR(dir2)][OPP_LDIR(dir3)] = PBC;
         }
       }
     }
