@@ -158,6 +158,7 @@ susy_mode::
 susy_spill::
 	${MAKE} -f ${MAKEFILE} target "MYTARGET= $@" \
 	"DEFINES = ${DEFINES} -DPHI_ALGORITHM " \
+	"LAPACK = -llapack -lblas " \
 	"EXTRA_OBJECTS = control_spill.o "
 
 # The targets below have not been used/tested recently
