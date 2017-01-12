@@ -66,7 +66,6 @@ typedef struct {
 #define EXTERN extern
 #endif
 
-// Global variables
 EXTERN int nx, ny, nz, nt;  // Lattice dimensions
 EXTERN int PBC;             // Temporal fermion boundary condition
 EXTERN int volume;          // Volume of lattice

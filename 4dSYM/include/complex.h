@@ -21,7 +21,7 @@
 //    carg(*a)        Phase of the complex number *a
 
 // 2) Macro to convert from single to double or double to single:
-//    set_complex_equal(*a, *b)     b = a by components to convert
+//    set_complex_equal(*a, *b)     *b = *a by components to convert
 
 // 3) Macros for fast in-line operations:
 //    (We force use of macros for complex conjugation, addition, subtraction,
@@ -58,7 +58,7 @@
 typedef struct { float real;  float imag;  } fcomplex;
 typedef struct { double real; double imag; } double_complex;
 
-#if (PRECISION==1)
+#if PRECISION == 1
 #define complex fcomplex
 #else
 #define complex dcomplex
@@ -67,7 +67,7 @@ typedef struct { double real; double imag; } double_complex;
 // Alternative name for double complex
 typedef double_complex dcomplex;
 
-// Generic precision function prototypes for complex numbers
+// Generic-precision function prototypes for complex numbers
 complex cmplx(Real x, Real y);
 complex cexp(complex *a);
 complex clog(complex *a);
@@ -91,10 +91,10 @@ double_complex dce_itheta(double theta);
                                   (*b).imag = (*a).imag; }
 
 // sqrt(|*a|^2)
-#define cabs(a) (sqrt( (*a).real * (*a).real + (*a).imag * (*a).imag))
+#define cabs(a) (sqrt((*a).real * (*a).real + (*a).imag * (*a).imag))
 
 // |*a|^2
-#define cabs_sq(a) ( (*a).real * (*a).real + (*a).imag * (*a).imag)
+#define cabs_sq(a) ((*a).real * (*a).real + (*a).imag * (*a).imag)
 
 // phase(*a)
 #define carg(a) (atan2((double)(*a).imag, (double)(*a).real))
@@ -139,7 +139,7 @@ double_complex dce_itheta(double theta);
 
 // c = (a * b)dag
 #define CMULJJ(a, b, c) { \
-  (c).real = (a).real * (b).real - (a).imag * (b).imag; \
+  (c).real =  (a).real * (b).real - (a).imag * (b).imag; \
   (c).imag = -(a).real * (b).imag - (a).imag * (b).real; }
 
 // b = -a

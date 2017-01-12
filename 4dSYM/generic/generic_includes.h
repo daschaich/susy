@@ -1,3 +1,4 @@
+// -----------------------------------------------------------------
 // Header included in all codes in this directory
 #include "../include/config.h"  // Keep this first
 #include <stdio.h>
@@ -14,3 +15,4 @@
 #include <time.h>
 #include <string.h>
 #include "../include/check_malloc.h"
+// -----------------------------------------------------------------

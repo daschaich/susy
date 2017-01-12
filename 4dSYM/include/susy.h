@@ -1,8 +1,6 @@
 // -----------------------------------------------------------------
 // Defines and subroutine declarations for N=4 SYM with gauge group U(NCOL)
 // and fermions in the DIMF-dimensional adjoint rep
-// The original names now refer to objects of dimension DIMF or DIMFxDIMF
-// New objects with suffix _f have dimension NCOL or NCOLxNCOL
 #ifndef _SUSY_H
 #define _SUSY_H
 
@@ -47,8 +45,8 @@ typedef struct {
 // Need SU(2) matrices for any U(N), e.g. for gauge hits when gauge-fixing
 typedef struct { complex e[2][2]; } su2_matrix;
 
-#define GAMMAFIVE -1    // Some integer which is not a direction
-#define PLUS 1          // Flags for selecting M or M_adjoint
+// Flags for selecting M or M_adjoint
+#define PLUS 1
 #define MINUS -1
 // -----------------------------------------------------------------
 
