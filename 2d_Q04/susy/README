@@ -119,53 +119,53 @@ library_util.c        -- Helper routines, many of which might be better suited t
 gauge_info.c          -- Put information into configuration files
 
 # 1b) Files mainly used by RHMC evolution targets (susy_hmc and susy_hmc_meas)
-control.c     -- Main program for evolution, optionally including additional measurements
-setup_rhmc.c  -- Initializes RHMC poles and residues, values copied from ./remez/ output
-update_o.c    -- Omelyan RHMC evolution
-update_h.c    -- Update gauge momenta with forces from both gauge and fermion fields
-det_force.c   -- Contribution to force from determinant term
+control.c    -- Main program for evolution, optionally including additional measurements
+setup_rhmc.c -- Initializes RHMC poles and residues, values copied from ./remez/ output
+update_o.c   -- Omelyan RHMC evolution
+update_h.c   -- Update gauge momenta with forces from both gauge and fermion fields
+det_force.c  -- Contribution to force from determinant term
 
 # 1c) Files used mainly by standard measurement targets (susy_meas and susy_hmc_meas)
-control_meas.c        -- Main program for standard measurements only
-smear.c               -- A4* lattice smearing routines: stout and APE-like
-                         (NB: Unlike standard APE smearing, we don't project after adding staple sum)
-                         (NB: APE-like smearing currently builds staples from polar-projected links)
-local_plaq.c          -- Calculate the average and minimum plaquettes (to monitor smearing), optionally printing entire distribution
-bilinear_Ward.c       -- Measure Ward identity involving eta.psi_a fermion bilinear
-konishi.c             -- Compute Konishi and SUGRA operators on each time-slice, with both vev and volume-average subtractions
-correlator_r.c        -- Konishi and SUGRA correlators C(r), with both vev and volume-average subtractions
-monopole.c            -- Measure density of U(1) monopole world lines in doubled 4-cells, omitting the fifth link
-hvy_pot.c             -- Compute correlators of gauge-fixed temporal links to determine the static potential
-hvy_pot_polar.c       -- Compute correlators of polar-projected gauge-fixed temporal links
-                         (NB: overwrites links, which have to be saved and restored if they will be used further)
-unit.c                -- Polar projection (unitarization) using LAPACK
-hvy_pot_loop.c        -- Compute more standard on-axis Wilson loops to determine the static potential
-hvy_pot_polar_loop.c  -- Compute more standard on-axis Wilson loops of polar-projected links
-                         (NB: overwrites links, as above)
-path.c                -- Used to construct Wilson loops for hvy_pot_loop.c and hvy_pot_polar_loop.c
-rsymm.c               -- Compute modified Wilson loops related to R symmetry transformations
+control_meas.c       -- Main program for standard measurements only
+smear.c              -- A4* lattice smearing routines: stout and APE-like
+                        (NB: Unlike standard APE smearing, we don't project after adding staple sum)
+                        (NB: APE-like smearing currently builds staples from polar-projected links)
+local_plaq.c         -- Calculate the average and minimum plaquettes (to monitor smearing), optionally printing entire distribution
+bilinear_Ward.c      -- Measure Ward identity involving eta.psi_a fermion bilinear
+konishi.c            -- Compute Konishi and SUGRA operators on each time-slice, with both vev and volume-average subtractions
+correlator_r.c       -- Konishi and SUGRA correlators C(r), with both vev and volume-average subtractions
+monopole.c           -- Measure density of U(1) monopole world lines in doubled 4-cells, omitting the fifth link
+hvy_pot.c            -- Compute correlators of gauge-fixed temporal links to determine the static potential
+hvy_pot_polar.c      -- Compute correlators of polar-projected gauge-fixed temporal links
+                        (NB: overwrites links, which have to be saved and restored if they will be used further)
+unit.c               -- Polar projection (unitarization) using LAPACK
+hvy_pot_loop.c       -- Compute more standard on-axis Wilson loops to determine the static potential
+hvy_pot_polar_loop.c -- Compute more standard on-axis Wilson loops of polar-projected links
+                        (NB: overwrites links, as above)
+path.c               -- Used to construct Wilson loops for hvy_pot_loop.c and hvy_pot_polar_loop.c
+rsymm.c              -- Compute modified Wilson loops related to R symmetry transformations
 
 # 1d) Additional files used only by MCRG target (susy_mcrg)
-control_mcrg.c        -- Main program for RG blocking and blocked measurements
-block_mcrg.c          -- RG blocking function, overwrites links and needs lattice volume divisible by 2^d
-blocked_smear.c       -- Stout and APE-like smearing with strides to accommodate blocked lattices
-blocked_local_plaq.c  -- Calculate the average and minimum plaquettes (to monitor smearing), with strides to accommodate blocked lattices
-blocked_plaq.c        -- Compute the average plaquette, with strides to accommodate blocked lattices
-blocked_ploop.c       -- Compute the average Polyakov loop, with strides to accommodate blocked lattices
-blocked_ops.c         -- Compute Konishi and SUGRA operators summed over the (blocked) lattice volume
-blocked_rsymm.c       -- Compute modified Wilson loops related to R symmetry transformations, with strides to accommodate blocked lattices
+control_mcrg.c       -- Main program for RG blocking and blocked measurements
+block_mcrg.c         -- RG blocking function, overwrites links and needs lattice volume divisible by 2^d
+blocked_smear.c      -- Stout and APE-like smearing with strides to accommodate blocked lattices
+blocked_local_plaq.c -- Calculate the average and minimum plaquettes (to monitor smearing), with strides to accommodate blocked lattices
+blocked_plaq.c       -- Compute the average plaquette, with strides to accommodate blocked lattices
+blocked_ploop.c      -- Compute the average Polyakov loop, with strides to accommodate blocked lattices
+blocked_ops.c        -- Compute Konishi and SUGRA operators summed over the (blocked) lattice volume
+blocked_rsymm.c      -- Compute modified Wilson loops related to R symmetry transformations, with strides to accommodate blocked lattices
 
 # 1e) Additional files used only by fermion eigenvalue target (susy_eig)
-control_eig.c   -- Main program for eigenvalues measurements only
-eig.c           -- Eigenvalue measurements using PRIMME, LAPACK and BLAS
-                   (NB: User may need to modify path to primme.h)
-                   (NB: User may need to modify PLIB in makefile to provide libzprimme.a)
+control_eig.c -- Main program for eigenvalues measurements only
+eig.c         -- Eigenvalue measurements using PRIMME, LAPACK and BLAS
+                 (NB: User may need to modify path to primme.h)
+                 (NB: User may need to modify PLIB in makefile to provide libzprimme.a)
 
 # 1f) Additional files used only by pfaffian target (susy_phase)
 control_phase.c -- Main program for pfaffian measurements only
 phase.c         -- Phase and (log of) magnitude of the pfaffian
 
-# 1d) Files not currently used, retained for potential future testing
+# 1g) Files not currently used, retained for potential future testing
 ploop_corr.c      -- Find Polyakov loop on every spatial site to be fed into FFT
 update_leapfrog.c -- Leapfrog RHMC evolution
 
@@ -184,5 +184,5 @@ remap_stdio_from_args.c -- For reading input parameters
 layout_hyper_prime.c    -- Handle the distribution of lattice sites across processors
 
 # 2b) Additional files used only by pfaffian target (susy_phase)
-io_phase.c          -- Primitive (for now) dump and load routines for checkpointing pfaffian computations
+io_phase.c -- Primitive (for now) dump and load routines for checkpointing pfaffian computations
 # ------------------------------------------------------------------
