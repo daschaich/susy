@@ -138,11 +138,10 @@ Real order(int i, int j, int k, int l, int m) {
   return (Real)permutation;
 }
 
-
 // Set up translation of (mu, nu) to linear index of anti-symmetric matrix
 void setup_plaq_index() {
   int mu, nu, index;
-  for (mu = 0; mu < NUMLINK; mu++) {
+  FORALLDIR(mu) {
     plaq_index[mu][mu] = -1;
     for (nu = mu + 1; nu < NUMLINK; nu++) {
       index = mu * (NUMLINK - 1) - mu * (mu + 1) / 2 + nu - 1;
@@ -155,28 +154,28 @@ void setup_plaq_index() {
 void epsilon() {
   int i, j, k, l, m;
   setup_plaq_index();
-  for (i = 0; i < NUMLINK; i++) {
-    for (j = 0; j < NUMLINK; j++) {
-      for (k = 0; k < NUMLINK; k++) {
-        for (l = 0; l < NUMLINK; l++) {
-          for (m = 0; m < NUMLINK; m++)
+  FORALLDIR(i) {
+    FORALLDIR(j) {
+      FORALLDIR(k) {
+        FORALLDIR(l) {
+          FORALLDIR(m)
             perm[i][j][k][l][m] = 0;
         }
       }
     }
   }
 
-  for (i = 0; i < NUMLINK; i++) {
-    for (j = 0; j < NUMLINK; j++) {
+  FORALLDIR(i) {
+    FORALLDIR(j) {
       if (j == i)
         continue;
-      for (k = 0; k < NUMLINK; k++) {
+      FORALLDIR(k) {
         if (k == j || k == i)
           continue;
-        for (l = 0; l < NUMLINK; l++) {
+        FORALLDIR(l) {
           if (l == k || l == j || l == i)
             continue;
-          for (m = 0; m < NUMLINK; m++) {
+          FORALLDIR(m) {
             if (m == l || m == k || m == j || m == i)
               continue;
             perm[i][j][k][l][m] = order(i, j, k, l, m);
@@ -202,12 +201,12 @@ void epsilon() {
 // If counter exceeds NTERMS (amount allocated) we have a problem
 void setup_PtoP() {
   int a, b, c, d, e, counter = 0;
-  for (a = 0; a < NUMLINK; a++) {
+  FORALLDIR(a) {
     for (b = a + 1; b < NUMLINK; b++) {
-      for (c = 0; c < NUMLINK; c++) {
+      FORALLDIR(c) {
         if (c == a || c == b)
           continue;
-        for (d = 0; d < NUMLINK; d++) {
+        FORALLDIR(d) {
           if (d == c || d == a || d == b)
             continue;
           for (e = d + 1; e < NUMLINK; e++) {
@@ -230,12 +229,12 @@ void setup_PtoP() {
   }
 
   counter = 0;
-  for (d = 0; d < NUMLINK; d++) {
+  FORALLDIR(d) {
     for (e = d + 1; e < NUMLINK; e++) {
-      for (c = 0; c < NUMLINK; c++) {
+      FORALLDIR(c) {
         if (c == d || c == e)
           continue;
-        for (a = 0; a < NUMLINK; a++) {
+        FORALLDIR(a) {
           if (a == c || a == d || a == e)
             continue;
           for (b = a + 1; b < NUMLINK; b++) {
@@ -267,14 +266,14 @@ void setup_PtoP() {
 // If counter exceeds NTERMS (amount allocated) we have a problem
 void setup_FQ() {
   int a, b, c, d, e, counter = 0;
-  for (c = 0; c < NUMLINK; c++) {
-    for (d = 0; d < NUMLINK; d++) {
+  FORALLDIR(c) {
+    FORALLDIR(d) {
       if (d == c)
         continue;
       for (e = d + 1; e < NUMLINK; e++) {
         if (e == c)
           continue;
-        for (a = 0; a < NUMLINK; a++) {
+        FORALLDIR(a) {
           if (a == d || a == e || a == c)
             continue;
           for (b = a + 1; b < NUMLINK; b++) {

@@ -28,7 +28,7 @@ int main(int argc, char *argv[]) {
 
   // Serial code!
   if (this_node != 0) {
-    node0_printf("ERROR: run this thing in serial!\n");
+    printf("ERROR: run this thing in serial!\n");
     terminate(1);
   }
 

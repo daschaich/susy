@@ -1,5 +1,5 @@
 // -----------------------------------------------------------------
-// Add two matrices -- unlike CSUM, output is always last
+// Add matrices -- unlike CSUM, output is always last
 // c <-- c + b
 // c <-- a + b
 #include "../include/config.h"
