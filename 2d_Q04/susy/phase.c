@@ -63,7 +63,7 @@ void matvec(complex *in, complex *out) {
   }
 #endif
 
-  fermion_op(src, res, PLUS);    // D
+  fermion_op(src, res, PLUS);     // D
 //  fermion_op(src, res, MINUS);    // Ddag
   Nmatvecs++;
 
@@ -81,7 +81,6 @@ void matvec(complex *in, complex *out) {
       iter++;
     }
   }
-
 #ifdef DEBUG_CHECK
   // Check that we didn't miss any components of the output vector
   if (iter != sites_on_node * Ndat) {
@@ -135,7 +134,7 @@ void phase() {
     load_diag(diag, ckpt_load);   // Overwrite initial zeroes above
     loadQ(Q, ckpt_load);
   }
-  else {                  // Initialize to zero
+  else {                  // Initialize to unit matrix
     for (i = 0; i < volume * Ndat; i++) {
       for (j = 0; j < sites_on_node * Ndat; j++)
         Q[i][j] = cmplx(0.0, 0.0);

@@ -2,7 +2,7 @@
 // Measure the phase of the pfaffian using gaussian elimination
 // This provides a simpler serial check of the parallel computation
 #include "susy_includes.h"
-#define PFA_TOL 1e-12
+#define PFA_TOL 1e-12   // !!! This can cause problems if too small
 // -----------------------------------------------------------------
 
 
@@ -12,7 +12,7 @@
 // 'in' is all zero except for one unit in[iter]
 void matvec(Real *in, complex *out) {
   register site *s;
-  int i, j, mu, iter;
+  int i, j, iter;
 
   // Copy complex vector into Twist_Fermion src
   // Each Twist_Fermion has Ndat = 4DIMF non-trivial complex components
@@ -20,16 +20,16 @@ void matvec(Real *in, complex *out) {
   FORALLSITES(i, s) {
     clear_TF(&(src[i]));
     for (j = 0; j < DIMF; j++) {
-      if (in[iter] > 0.0)
+      if (in[iter] > 0.5)
         sum_matrix(&(Lambda[j]), &(src[i].Fsite));
       iter++;
-      if (in[iter] > 0.0)
+      if (in[iter] > 0.5)
         sum_matrix(&(Lambda[j]), &(src[i].Flink[0]));
       iter++;
-      if (in[iter] > 0.0)
+      if (in[iter] > 0.5)
         sum_matrix(&(Lambda[j]), &(src[i].Flink[1]));
       iter++;
-      if (in[iter] > 0.0)
+      if (in[iter] > 0.5)
         sum_matrix(&(Lambda[j]), &(src[i].Fplaq));
       iter++;
     }
@@ -44,19 +44,18 @@ void matvec(Real *in, complex *out) {
   }
 #endif
 
-  fermion_op(src, res, PLUS);    // D
+  fermion_op(src, res, PLUS);     // D
 
   // Copy the resulting Twist_Fermion res back to complex vector y
-  // Each Twist_Fermion has Ndat = 4DIMF non-trivial complex components
   iter = 0;
   FORALLSITES(i, s) {
     for (j = 0; j < DIMF; j++) {
       out[iter] = complextrace_nn(&(res[i].Fsite), &(Lambda[j]));
       iter++;
-      FORALLDIR(mu) {
-        out[iter] = complextrace_nn(&(res[i].Flink[mu]), &(Lambda[j]));
-        iter++;
-      }
+      out[iter] = complextrace_nn(&(res[i].Flink[0]), &(Lambda[j]));
+      iter++;
+      out[iter] = complextrace_nn(&(res[i].Flink[1]), &(Lambda[j]));
+      iter++;
       out[iter] = complextrace_nn(&(res[i].Fplaq), &(Lambda[j]));
       iter++;
     }
@@ -90,6 +89,10 @@ void phase() {
     terminate(1);
   }
 
+  // Problems may arise if PFA_TOL is too small
+  node0_printf("Running serial pfaffian computation with tolerance %.4g\n",
+               PFA_TOL);
+
   // Make sure col has only one non-zero component
   for (i = 0; i < volume * Ndat; i++)
     col[i] = 0.0;
@@ -108,9 +111,11 @@ void phase() {
   // Check anti-symmetry of D
   int count = 0;
   for (i = 0; i < volume * Ndat; i++) {
+    if (fabs(D[i][i].real) > PFA_TOL || fabs(D[i][i].imag) > PFA_TOL)
+      node0_printf("  (%.4g, %.4g)\n", D[i][i].real, D[i][i].imag);
     for (j = i + 1; j < volume * Ndat; j++) {
-      if (D[i][j].real + D[j][i].real > PFA_TOL
-       || D[i][j].imag + D[j][i].imag > PFA_TOL) {
+      if (fabs(D[i][j].real + D[j][i].real) > PFA_TOL
+       || fabs(D[i][j].imag + D[j][i].imag) > PFA_TOL) {
         printf("phase: D[%d][%d] = (%.4g, %.4g) but ",
                i, j, D[i][j].real, D[i][j].imag);
         printf("D[%d][%d] = (%.4g, %.4g)\n",
@@ -125,7 +130,7 @@ void phase() {
     if (tr < PFA_TOL)
       printf("phase: Column %d vanishes: %.4g\n", i, tr);
 
-    // Count number of non-zero elements in upper triangle
+    // Count number of non-zero elements in lower triangle
     for (j = i; j < volume * Ndat; j++) {
       if (cabs_sq(&(D[i][j])) > PFA_TOL)
         count++;
@@ -175,7 +180,7 @@ void phase() {
       }
     }
     else
-      node0_printf("no need to pivot to obtain ", i + 1, pivot);
+      node0_printf("no need to pivot to obtain ");
     node0_printf("%.16g %.16g\n", D[i][i + 1].real, D[i][i + 1].imag);
 
     // Now that maximum elements are in D[i][i + 1] and D[i + 1][i],
@@ -190,11 +195,14 @@ void phase() {
       // scale = D[i][j] / D[i][i + 1]
       CDIV(D[i][j], D[i][i + 1], scale);
 
-      for (k = 0; k < volume * Ndat; k++) {
-        // D[k][j] -= scale * D[k][i + 1]
-        CMULDIF(scale, D[k][i + 1], D[k][j]);
-        // D[j][k] -= scale * D[i + 1][k]
-        CMULDIF(scale, D[i + 1][k], D[j][k]);
+      // Don't bother adding zero
+      if (cabs_sq(&scale) > PFA_TOL) {
+        for (k = 0; k < volume * Ndat; k++) {
+          // D[k][j] -= scale * D[k][i + 1]
+          CMULDIF(scale, D[k][i + 1], D[k][j]);
+          // D[j][k] -= scale * D[i + 1][k]
+          CMULDIF(scale, D[i + 1][k], D[j][k]);
+        }
       }
     }
     for (j = i + 2; j < volume * Ndat; j++) {
@@ -206,14 +214,16 @@ void phase() {
       }
       CDIV(D[i + 1][j], D[i + 1][i], scale);
 
-      for (k = 0; k < volume * Ndat; k++) {
-        // D[k][j] -= scale * D[k][i]
-        CMULDIF(scale, D[k][i], D[k][j]);
-        // D[j][k] -= scale * D[i][k]
-        CMULDIF(scale, D[i][k], D[j][k]);
+      // Don't bother adding zero
+      if (cabs_sq(&scale) > PFA_TOL) {
+        for (k = 0; k < volume * Ndat; k++) {
+          // D[k][j] -= scale * D[k][i]
+          CMULDIF(scale, D[k][i], D[k][j]);
+          // D[j][k] -= scale * D[i][k]
+          CMULDIF(scale, D[i][k], D[j][k]);
+        }
       }
     }
-
 #ifdef DEBUG_CHECK
     // Make sure every column of D is still non-vanishing
     for (k = 0; k < volume * Ndat; k++) {
@@ -223,23 +233,38 @@ void phase() {
       if (tr < PFA_TOL)
         printf("Column %d vanishes after round %d: %.4g\n", k, i, tr);
     }
-#endif
-  }
 
-#ifdef DEBUG_CHECK
-  // Check that D is still anti-symmetric, and now tridiagonal
-  for (i = 0; i < volume * Ndat; i++) {
-    for (j = i + 1; j < volume * Ndat; j++) {
-      if (D[i][j].real + D[j][i].real > PFA_TOL
-       || D[i][j].imag + D[j][i].imag > PFA_TOL) {
-        printf("phase: D[%d][%d] = (%.4g, %.4g) but ",
-               i, j, D[i][j].real, D[i][j].imag);
-        printf("D[%d][%d] = (%.4g, %.4g)\n",
-               j, i, D[j][i].real, D[j][i].imag);
+    // Check that D is still anti-symmetric
+    for (k = 0; k < volume * Ndat; k++) {
+      if (fabs(D[k][k].real) > PFA_TOL || fabs(D[k][k].imag) > PFA_TOL)
+        node0_printf("  (%.4g, %.4g)\n", D[k][k].real, D[k][k].imag);
+      for (j = k + 1; j < volume * Ndat; j++) {
+        if (fabs(D[k][j].real + D[j][k].real) > PFA_TOL
+         || fabs(D[k][j].imag + D[j][k].imag) > PFA_TOL) {
+          printf("phase: D[%d][%d] = (%.4g, %.4g) but ",
+                 k, j, D[k][j].real, D[k][j].imag);
+          printf("D[%d][%d] = (%.4g, %.4g)\n",
+                 j, k, D[j][k].real, D[j][k].imag);
+          terminate(1);
+        }
+      }
+    }
+#endif
+
+    // !!! Prevent accumulation of roundoff, including in diagonal elements
+    for (k = 0; k < volume * Ndat; k++) {
+      for (j = k; j < volume * Ndat; j++) {
+        if (fabs(D[k][j].real) < PFA_TOL) {
+          D[k][j].real = 0.0;
+          D[j][k].real = 0.0;
+        }
+        if (fabs(D[k][j].imag) < PFA_TOL) {
+          D[k][j].imag = 0.0;
+          D[j][k].imag = 0.0;
+        }
       }
     }
   }
-#endif
 
   // Now we can just compute the pfaffian from D[i][i + 1],
   // accumulating the phase and (the log of) the magnitude
