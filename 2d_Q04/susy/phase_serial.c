@@ -2,7 +2,7 @@
 // Measure the phase of the pfaffian using gaussian elimination
 // This provides a simpler serial check of the parallel computation
 #include "susy_includes.h"
-#define PFA_TOL 1e-12   // !!! This can cause problems if too small
+#define PFA_TOL 1e-12   // !!! The size of this can affect stability
 // -----------------------------------------------------------------
 
 
@@ -89,9 +89,11 @@ void phase() {
     terminate(1);
   }
 
-  // Problems may arise if PFA_TOL is too small
+#ifdef DEBUG_CHECK
+  // In the past the size of PFA_TOL has affected stability
   node0_printf("Running serial pfaffian computation with tolerance %.4g\n",
                PFA_TOL);
+#endif
 
   // Make sure col has only one non-zero component
   for (i = 0; i < volume * Ndat; i++)
@@ -195,14 +197,11 @@ void phase() {
       // scale = D[i][j] / D[i][i + 1]
       CDIV(D[i][j], D[i][i + 1], scale);
 
-      // Don't bother adding zero
-      if (cabs_sq(&scale) > PFA_TOL) {
-        for (k = 0; k < volume * Ndat; k++) {
-          // D[k][j] -= scale * D[k][i + 1]
-          CMULDIF(scale, D[k][i + 1], D[k][j]);
-          // D[j][k] -= scale * D[i + 1][k]
-          CMULDIF(scale, D[i + 1][k], D[j][k]);
-        }
+      for (k = 0; k < volume * Ndat; k++) {
+        // D[k][j] -= scale * D[k][i + 1]
+        CMULDIF(scale, D[k][i + 1], D[k][j]);
+        // D[j][k] -= scale * D[i + 1][k]
+        CMULDIF(scale, D[i + 1][k], D[j][k]);
       }
     }
     for (j = i + 2; j < volume * Ndat; j++) {
@@ -214,14 +213,11 @@ void phase() {
       }
       CDIV(D[i + 1][j], D[i + 1][i], scale);
 
-      // Don't bother adding zero
-      if (cabs_sq(&scale) > PFA_TOL) {
-        for (k = 0; k < volume * Ndat; k++) {
-          // D[k][j] -= scale * D[k][i]
-          CMULDIF(scale, D[k][i], D[k][j]);
-          // D[j][k] -= scale * D[i][k]
-          CMULDIF(scale, D[i][k], D[j][k]);
-        }
+      for (k = 0; k < volume * Ndat; k++) {
+        // D[k][j] -= scale * D[k][i]
+        CMULDIF(scale, D[k][i], D[k][j]);
+        // D[j][k] -= scale * D[i][k]
+        CMULDIF(scale, D[i][k], D[j][k]);
       }
     }
 #ifdef DEBUG_CHECK
@@ -251,17 +247,13 @@ void phase() {
     }
 #endif
 
-    // !!! Prevent accumulation of roundoff, including in diagonal elements
+    // !!! Restore exact anti-symmetry after each round
+    // Improves stability, perhaps related to roundoff accumulation?
     for (k = 0; k < volume * Ndat; k++) {
       for (j = k; j < volume * Ndat; j++) {
-        if (fabs(D[k][j].real) < PFA_TOL) {
-          D[k][j].real = 0.0;
-          D[j][k].real = 0.0;
-        }
-        if (fabs(D[k][j].imag) < PFA_TOL) {
-          D[k][j].imag = 0.0;
-          D[j][k].imag = 0.0;
-        }
+        CDIF(D[k][j], D[j][k]);
+        CMULREAL(D[k][j], 0.5, D[k][j]);
+        CNEGATE(D[k][j], D[j][k]);
       }
     }
   }
