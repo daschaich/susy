@@ -227,7 +227,7 @@ void phase() {
   register int i, j, k;
   int Ndat = 16 * DIMF, shift = this_node * sites_on_node * Ndat;
   double phase, log_mag, tr, dtime;
-  complex temp, temp2;
+  complex tc, tc2;
   complex *diag = malloc(volume * Ndat * sizeof(*diag));
   complex *MonC = malloc(sites_on_node * Ndat * sizeof(*MonC));
   complex **Q = malloc(volume * Ndat * sizeof(**Q));
@@ -285,11 +285,11 @@ void phase() {
     // q_{i + 1} --> q_{i + 1} / <q_{i + 1} | D | q_i>
     // But only if <q_{i + 1} | D | q_i> is non-zero!
     matvec(Q[i], MonC);
-    temp = inner(Q[i + 1], MonC);
+    tc = inner(Q[i + 1], MonC);
     // !!! Must have non-vanishing matrix element!
-    if (cabs_sq(&temp) < PFA_TOL) {
+    if (cabs_sq(&tc) < PFA_TOL) {
       node0_printf("phase: <%d | D | %d> = (%.4g, %.4g) too small\n",
-                   i + 2, i + 1, temp.real, temp.imag);
+                   i + 2, i + 1, tc.real, tc.imag);
       terminate(1);
     }
 
@@ -297,14 +297,14 @@ void phase() {
     // We can shorten many of them since Q is upper-triangular
     if (i + 1 < sites_on_node * Ndat) {
       for (j = 0; j < i + 2; j++) {
-        CDIV(Q[i + 1][j], temp, temp2);
-        set_complex_equal(&temp2, &(Q[i + 1][j]));
+        CDIV(Q[i + 1][j], tc, tc2);
+        set_complex_equal(&tc2, &(Q[i + 1][j]));
       }
     }
     else {
       for (j = 0; j < sites_on_node * Ndat; j++) {
-        CDIV(Q[i + 1][j], temp, temp2);
-        set_complex_equal(&temp2, &(Q[i + 1][j]));
+        CDIV(Q[i + 1][j], tc, tc2);
+        set_complex_equal(&tc2, &(Q[i + 1][j]));
       }
     }
 
@@ -312,32 +312,24 @@ void phase() {
     for (k = i + 2; k < volume * Ndat; k++) {
       // q_k --> q_k - q_i <q_{i + 1} | D | q_k> - q_{i + 1} <q_i | D | q_k>
       matvec(Q[k], MonC);
-      temp = inner(Q[i + 1], MonC);
+      tc = inner(Q[i + 1], MonC);
       if (i + 1 < sites_on_node * Ndat) {
-        for (j = 0; j < i + 2; j++) {
-          CMUL(Q[i][j], temp, temp2);
-          CDIF(Q[k][j], temp2);
-        }
+        for (j = 0; j < i + 2; j++)
+          CMULDIF(Q[i][j], tc, Q[k][j]);
       }
       else {
-        for (j = 0; j < sites_on_node * Ndat; j++) {
-          CMUL(Q[i][j], temp, temp2);
-          CDIF(Q[k][j], temp2);
-        }
+        for (j = 0; j < sites_on_node * Ndat; j++)
+          CMULDIF(Q[i][j], tc, Q[k][j]);
       }
 
-      temp = inner(Q[i], MonC);
+      tc = inner(Q[i], MonC);
       if (i + 1 < sites_on_node * Ndat) {
-        for (j = 0; j < i + 2; j++) {
-          CMUL(Q[i + 1][j], temp, temp2);
-          CSUM(Q[k][j], temp2);
-        }
+        for (j = 0; j < i + 2; j++)
+          CMULSUM(Q[i + 1][j], tc, Q[k][j]);
       }
       else {
-        for (j = 0; j < sites_on_node * Ndat; j++) {
-          CMUL(Q[i + 1][j], temp, temp2);
-          CSUM(Q[k][j], temp2);
-        }
+        for (j = 0; j < sites_on_node * Ndat; j++)
+          CMULSUM(Q[i + 1][j], tc, Q[k][j]);
       }
     }
     // Print some timing information
