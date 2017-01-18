@@ -17,11 +17,6 @@ int initial_set() {
   int prompt = 0, status = 0;
   if (mynode() == 0) {
     // Print banner
-    // stringification kludge from GNU preprocessor manual
-    // http://gcc.gnu.org/onlinedocs/cpp/Stringification.html
-#define XSTR(s) STR(s)
-#define STR(s) #s
-    // end kludge
     printf("N=4 SYM, Nc = %d, DIMF = %d, fermion rep = adjoint\n",
            NCOL, DIMF);
     printf("Microcanonical simulation with refreshing\n");
