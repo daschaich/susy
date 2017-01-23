@@ -158,17 +158,17 @@ void mult_an_sum(matrix *a, matrix *b, matrix *c);
 void mult_an_dif(matrix *a, matrix *b, matrix *c);
 void mult_an(matrix *a, matrix *b, matrix *c);
 
-// c <-- s * a * b, in file s_m_mat_nn.c
+// In file s_m_mat_nn.c
 void scalar_mult_nn_sum(matrix *a, matrix *b, Real s, matrix *c);
 void scalar_mult_nn_dif(matrix *a, matrix *b, Real s, matrix *c);
 void scalar_mult_nn(matrix *a, matrix *b, Real s, matrix *c);
 
-// c <-- s * a * bdag, in file s_m_mat_na.c
+// In file s_m_mat_na.c
 void scalar_mult_na_sum(matrix *a, matrix *b, Real s, matrix *c);
 void scalar_mult_na_dif(matrix *a, matrix *b, Real s, matrix *c);
 void scalar_mult_na(matrix *a, matrix *b, Real s, matrix *c);
 
-// c <-- s * adag * b, in file s_m_mat_an.c
+// In file s_m_mat_an.c
 void scalar_mult_an_sum(matrix *a, matrix *b, Real s, matrix *c);
 void scalar_mult_an_dif(matrix *a, matrix *b, Real s, matrix *c);
 void scalar_mult_an(matrix *a, matrix *b, Real s, matrix *c);

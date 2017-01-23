@@ -7,11 +7,7 @@
 #include <math.h>
 #include "../include/susy.h"
 #include "../include/random.h"
-// -----------------------------------------------------------------
 
-
-
-// -----------------------------------------------------------------
 // prn_pt is a pointer passed to myrand()
 Real gaussian_rand_no(double_prn *prn_pt) {
   static int iset = 0;
