@@ -94,6 +94,8 @@ complex TF_dot(Twist_Fermion *a, Twist_Fermion *b);
 void scalar_mult_sum_TF(Twist_Fermion *b, Real s, Twist_Fermion *c);
 void scalar_mult_add_TF(Twist_Fermion *a, Twist_Fermion *b, Real s,
                         Twist_Fermion *c);
+void scalar_mult_mult_add_TF(Twist_Fermion *a, Real s1, Twist_Fermion *b,
+		Real s2, Twist_Fermion *c);
 void scalar_mult_TF(Twist_Fermion *src, Real s, Twist_Fermion *dest);
 
 // Other routines in library_util.c that loop over all sites
@@ -254,5 +256,12 @@ void phase();
 #ifdef MODE
 void coefficients();
 void step(Twist_Fermion *src, Twist_Fermion *res);
+int calculate_coeff(unsigned int Nest, unsigned int order, Real lambda_min,
+		Real lambda_max,Real** ckcoeff);
+int calculateGLMethod(const unsigned int noshifts, const Real* shiftparam,
+		const Real rescalefact, Real* result, Real* staterr,
+		const unsigned int nest,
+		const unsigned int order, const Real* coeff, const Real epsilon,
+		const Real residgoal, const unsigned int maxit);
 #endif
 // -----------------------------------------------------------------

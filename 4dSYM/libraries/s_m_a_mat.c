@@ -25,4 +25,15 @@ void scalar_mult_add_matrix(matrix *a, matrix *b, Real s, matrix *c) {
     }
   }
 }
+
+void scalar_mult_mult_add_matrix(matrix *a, Real s1, matrix *b, Real s2,
+		matrix *c) {
+	register int i, j;
+	for (i = 0; i < NCOL; i++) {
+		for (j = 0; j < NCOL; j++) {
+			c->e[i][j].real = s1 * a->e[i][j].real + s2 * b->e[i][j].real;
+			c->e[i][j].imag = s1 * a->e[i][j].imag + s2 * b->e[i][j].imag;
+		}
+	}
+}
 // -----------------------------------------------------------------

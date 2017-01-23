@@ -3,8 +3,9 @@ MAKEFILE = Make_mpi
 
 MPP            = true
 PRECISION      = 2
-CC             = /usr/local/mpich2-1.4.1p1/bin/mpicc
+CC             = mpicc.mpich2
 OPT            = -O3 -Wall -fno-strict-aliasing
+#OPT            = -g -Wall -fno-strict-aliasing
 CLFS           = -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE64
                  # Large files gcc only
 MACHINE_DEP_IO = io_ansi.o
@@ -42,6 +43,10 @@ CFLAGS = ${OPT} -D${COMMTYPE} ${CODETYPE} ${INLINEOPT} \
          ${PREC} ${CLFS} -I${MYINCLUDEDIR} ${DEFINES} ${DARCH}
 
 ILIB = ${LIBADD}
+
+#all: susy_hmc susy_meas susy_mode
+
+all: susy_mode
 
 check:
 	make -f Make_test check
