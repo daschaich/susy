@@ -84,7 +84,6 @@ complex TF_dot(Twist_Fermion *a, Twist_Fermion *b) {
 // c <-- c + ReTr[adag.b]
 void TF_rdot_sum(Twist_Fermion *a, Twist_Fermion *b, Real *c) {
   register int i;
-  complex tc;
   *c += realtrace(&(a->Fsite), &(b->Fsite));
   FORALLDIR(i)
     *c += realtrace(&(a->Flink[i]), &(b->Flink[i]));
@@ -106,16 +105,6 @@ void sum_TF(Twist_Fermion *b, Twist_Fermion *c) {
     sum_matrix(&(b->Fplaq[i]), &(c->Fplaq[i]));
 }
 
-// c <-- a - b
-void sub_TF(Twist_Fermion *a, Twist_Fermion *b, Twist_Fermion *c) {
-  register int i;
-  sub_matrix(&(a->Fsite), &(b->Fsite), &(c->Fsite));
-  FORALLDIR(i)
-    sub_matrix(&(a->Flink[i]), &(b->Flink[i]), &(c->Flink[i]));
-  for (i = 0; i < NPLAQ; i++)
-    sub_matrix(&(a->Fplaq[i]), &(b->Fplaq[i]), &(c->Fplaq[i]));
-}
-
 // c <-- c - b
 void dif_TF(Twist_Fermion *b, Twist_Fermion *c) {
   register int i;
@@ -124,6 +113,16 @@ void dif_TF(Twist_Fermion *b, Twist_Fermion *c) {
     dif_matrix(&(b->Flink[i]), &(c->Flink[i]));
   for (i = 0; i < NPLAQ; i++)
     dif_matrix(&(b->Fplaq[i]), &(c->Fplaq[i]));
+}
+
+// c <-- a - b
+void sub_TF(Twist_Fermion *a, Twist_Fermion *b, Twist_Fermion *c) {
+  register int i;
+  sub_matrix(&(a->Fsite), &(b->Fsite), &(c->Fsite));
+  FORALLDIR(i)
+    sub_matrix(&(a->Flink[i]), &(b->Flink[i]), &(c->Flink[i]));
+  for (i = 0; i < NPLAQ; i++)
+    sub_matrix(&(a->Fplaq[i]), &(b->Fplaq[i]), &(c->Fplaq[i]));
 }
 
 // c <-- s * b
