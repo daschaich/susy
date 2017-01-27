@@ -231,20 +231,23 @@ EXTERN Twist_Fermion *z_rand;         // Z2 random Twist_Fermion
 EXTERN int step_order;            // Selects between options in mode_coeffs.c
 EXTERN int numOmega;              // Number of Omega at which to evaluate nu
 EXTERN Real *Omega;               // List of Omega at which to evaluate nu
+EXTERN Real OmStar;               // Scaled Omega / star given to CG
 
 EXTERN Real step_eps;             // Epsilon of step function approximation
 EXTERN Real delta;                // Just recorded in the output
 EXTERN Real starSq, star;         // Ratio (Omega / Omega_*)^2 and its sqrt
 EXTERN double *step_coeff;        // Options hard-coded in mode_coeffs.c
 EXTERN double *mode, *err;        // Results for mode number
-EXTERN Twist_Fermion **source;
+
+// Z2 stochastic sources and temporary storage
+EXTERN Twist_Fermion **source;//, *XPXSq, *hX, *dest;
 #endif
 
 #ifdef PHASE
 // Pfaffian phase stuff
-EXTERN Twist_Fermion *src, *res;    // For fieldwise matvec
 EXTERN long int Nmatvecs;           // For timing/counting
 EXTERN int ckpt_load, ckpt_save;    // For checkpointing
+EXTERN Twist_Fermion *src, *res;    // For fieldwise matvec
 #endif
 
 #endif // _LATTICE_H

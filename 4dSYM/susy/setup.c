@@ -176,6 +176,14 @@ void make_fields() {
   FIELD_ALLOC(z_rand, Twist_Fermion);
 #endif
 
+#ifdef MODE
+  // Temporary TF for stochastic mode number
+//  size += (Real)(3.0 * sizeof(Twist_Fermion));
+//  FIELD_ALLOC(XPXSq, Twist_Fermion);
+//  FIELD_ALLOC(hX, Twist_Fermion);
+//  FIELD_ALLOC(dest, Twist_Fermion);
+#endif
+
   size *= sites_on_node;
   node0_printf("Mallocing %.1f MBytes per core for fields\n", size / 1e6);
 #ifdef PHASE

@@ -3,54 +3,41 @@
 // Adapted from adjoint SU(N) code by Georg Bergner
 #include "susy_includes.h"
 
-//#define DEBUG_TEST_CLENSH
-//#define DEBUG_TEST_PROJ
+// TODO: Is there any way we can use the multi-shift solver
+//       to do the inversions for many Omega simultaneously?
 // -----------------------------------------------------------------
 
 
 
 // -----------------------------------------------------------------
-// X = 1 - 2 OmStar^2 (DDdag + OmStar^2)^(-1)
-// X^2 = 1 - 4 OmStar^2 Inv + 4 OmStar^4 Inv Inv
-// z(X)= 2X / (max - min) - (max + min) / (max - min)
-// This is z(X^2)
-void X(const Real OmStar,
-    Twist_Fermion *src, Twist_Fermion *dest,
-    Twist_Fermion** workv) {
-
+// dest = src - 2Om_*^2 (DDdag + Om_*^2)^(-1) src
+void X(const Real OmStar, Twist_Fermion *src, Twist_Fermion *dest) {
   register int i;
   register site *s;
-  Real OmSq = OmStar * OmStar, rescale = 2.0 / (1.0 - step_eps);
-  Real OmFour = rescale * 4.0 * OmSq * OmSq;
-  Real m4OmSq = -4.0 * rescale * OmSq, size_r;
-  Twist_Fermion *tmpv = workv[3], **psim;
+  Real m2OmSq = -2.0 * OmStar * OmStar, size_r;
+  Twist_Fermion **psim;
 
   // Hack a basic CG out of the multi-mass CG
   Norder = 1;
   psim = malloc(sizeof(**psim));
   psim[0] = malloc(sites_on_node * sizeof(Twist_Fermion));
-  shift[0] = OmSq;
+  shift[0] = OmStar * OmStar;
 
   congrad_multi(src, psim, niter, rsqmin, &size_r);
   FORALLSITES(i, s)
-    copy_TF(&(psim[0][i]), &(tmpv[i]));
-  congrad_multi(tmpv, psim, niter, rsqmin, &size_r);
-  FORALLSITES(i, s)
-    copy_TF(&(psim[0][i]), &(dest[i]));
-  FORALLSITES(i, s) {
-    scalar_mult_TF(&(dest[i]), OmFour, &(dest[i]));
-    scalar_mult_sum_TF(&(tmpv[i]), m4OmSq, &(dest[i]));
-    sum_TF(&(src[i]), &(dest[i]));
-  }
-  /*Out = (rescale * 4.0 * OmStar^4) * Out - (rescale * 4.0 * OmStar^2) * tmp_
-   + In*/
+    scalar_mult_add_TF(&(src[i]), &(psim[0][i]), m2OmSq, &(dest[i]));
 }
 
-// dest = src - (2Om_*^2) (DDdag + Om_*^2)^(-1) src
-void simpleX(const Real OmStar, Twist_Fermion *src, Twist_Fermion *dest) {
+// dest = (2X^2 - 1 - step_eps) src / (1 - step_eps)
+// With = X^2 = 1 - 4 OmStar^2 (DDdag + OmStar^2)^(-1)
+//                + 4 OmStar^4 (DDdag + OmStar^2)^(-2)
+// Uses z_rand for temporary storage (tempTF used by CG!)
+void Z(const Real OmStar, Twist_Fermion *src, Twist_Fermion *dest) {
   register int i;
   register site *s;
-  Real OmSq = OmStar * OmStar, size_r;
+  Real OmSq = OmStar * OmStar, scale = 2.0 / (1.0 - step_eps);
+  Real m4OmSq = -4.0 * scale * OmSq, size_r;
+  Real OmFour = scale * 4.0 * OmSq * OmSq;
   Twist_Fermion **psim;
 
   // Hack a basic CG out of the multi-mass CG
@@ -59,21 +46,38 @@ void simpleX(const Real OmStar, Twist_Fermion *src, Twist_Fermion *dest) {
   psim[0] = malloc(sites_on_node * sizeof(Twist_Fermion));
   shift[0] = OmSq;
 
+  // This is more compact, but the subtraction in X(src)
+  // seems to leave it relatively poorly conditioned,
+  // increasing CG iterations by almost 10% even for a small 4nt4 test
+//  X(OmStar, src, z_rand);
+//  X(OmStar, z_rand, dest);
+//  Real toAdd = (-1.0 - step_eps) / (1.0 - step_eps);
+//  FORALLSITES(i, s) {
+//    scalar_mult_TF(&(dest[i]), scale, &(dest[i]));
+//    scalar_mult_sum_TF(&(src[i]), toAdd, &(dest[i]));
+//  }
+
   congrad_multi(src, psim, niter, rsqmin, &size_r);
   FORALLSITES(i, s)
-    scalar_mult_add_TF(&(src[i]), &(psim[0][i]), -(2.0 * OmSq), &(dest[i]));
-  /*      Out = In - (2.0 * Om_*^2) * tmp_;*/
+    copy_TF(&(psim[0][i]), &(z_rand[i]));
+  congrad_multi(z_rand, psim, niter, rsqmin, &size_r);
+  FORALLSITES(i, s) {
+    scalar_mult_TF(&(psim[0][i]), OmFour, &(dest[i]));
+    scalar_mult_sum_TF(&(z_rand[i]), m4OmSq, &(dest[i]));
+    sum_TF(&(src[i]), &(dest[i]));
+  }
 }
 // -----------------------------------------------------------------
 
 
 
 // -----------------------------------------------------------------
-// P(z(x^2))
-// This uses the Clenshaw-Algorithm: p_n(D) v = sum_n a_n D^n v =(a_0+D(a_1+D(a_2+\ldots(a_{n-2}+D(a_{n-1} +a_{n}D)))))v
-// or: v_0 = a_n v;\; v_1 = Dv_0+a_{n-1}v;\; v_2 = Dv_1+a_{n-2}v;\;\ldots\; v_n = p_n(D)v
+// Clenshaw algorithm:
+// P(X) src = sum_i^n c[i] T[i] src = (b[0] - X b[1]) src,
+// where b[i] = c[i] + 2zb[i + 1] - b[i + 2], b[n] = b[n + 1] = 0
+// Use TODO... for temporary storage (z_rand and tempTF used by Z!)
 // Return number of CG calls
-int clensh(const Real OmStar, Twist_Fermion *src,
+int clenshaw(const Real OmStar, Twist_Fermion *src,
            Twist_Fermion *dest, Twist_Fermion **workv) {
 
   register unsigned int i;
@@ -93,7 +97,7 @@ int clensh(const Real OmStar, Twist_Fermion *src,
       scalar_mult_TF(&(src[i]), step_coeff[0], &(dest[i]));
     return CGcalls;
   }
-  X(OmStar, src, dest, workv);
+  Z(OmStar, src, dest);
   CGcalls += 2;
 
   if (step_order == 2) {
@@ -111,7 +115,7 @@ int clensh(const Real OmStar, Twist_Fermion *src,
     scalar_mult_TF(&(bp2[i]), tr, &(bp2[i]));
     scalar_mult_sum_TF(&(src[i]), step_coeff[step_order - 2], &(bp2[i]));
   }
-  X(OmStar, bp2, bp1, workv);
+  Z(OmStar, bp2, bp1);
   CGcalls += 2;
 
   if (step_order == 3) {
@@ -130,7 +134,7 @@ int clensh(const Real OmStar, Twist_Fermion *src,
   }
 
   if (step_order == 4) {
-    X(OmStar, bp1, bn, workv);
+    Z(OmStar, bp1, bn);
     CGcalls += 2;
     FORALLSITES(i, s) {
       scalar_mult_sum_TF(&(src[i]), step_coeff[0], &(bn[i]));
@@ -140,7 +144,7 @@ int clensh(const Real OmStar, Twist_Fermion *src,
   }
 
   for (k = step_order - 4; k--;) {   // TODO: Relies on unsigned int?
-    X(OmStar, bp1, bn, workv);
+    Z(OmStar, bp1, bn);
     CGcalls += 2;
     FORALLSITES(i, s) {
       scalar_mult_TF(&(bn[i]), 2.0, &(bn[i]));
@@ -152,14 +156,13 @@ int clensh(const Real OmStar, Twist_Fermion *src,
     bp1 = bn;
     bn = tmp;
   }
-  X(OmStar, bp1, bn, workv);
+  Z(OmStar, bp1, bn);
   CGcalls += 2;
 
   FORALLSITES(i, s) {
     scalar_mult_sum_TF(&(src[i]), step_coeff[0], &(bn[i]));
     sub_TF(&(bn[i]), &(bp2[i]), &(dest[i]));
   }
-
   return CGcalls;
 }
 // -----------------------------------------------------------------
@@ -167,12 +170,37 @@ int clensh(const Real OmStar, Twist_Fermion *src,
 
 
 // -----------------------------------------------------------------
+// Wrapper for step function approximated by h(X) = [1 - X p(X)^2] / 2
+// Return number of CG calls
+int step(const Real OmStar, Twist_Fermion *src, Twist_Fermion *dest, Twist_Fermion *XPXSq,
+   Twist_Fermion **workv) {
+  register int i;
+  register site *s;
+  int CGcalls = 0;
+
+  // dest = P(X^2) src temporarily
+  CGcalls = clenshaw(OmStar, src, dest, workv);
+
+  // dest = (src - X P(X^2) src) / 2
+  X(OmStar, dest, XPXSq);
+  CGcalls++;
+  FOREVENSITES(i, s) {
+    sub_TF(&(src[i]), &(XPXSq[i]), &(dest[i]));
+    scalar_mult_TF(&(dest[i]), 0.5, &(dest[i]));
+  }
+  return CGcalls;
+}
+// -----------------------------------------------------------------
+
+
+
+// -----------------------------------------------------------------
+// Use TODO... for temporary storage (z_rand and tempTF used by clenshaw!)
 void compute_mode() {
   register int i;
   register site *s;
   int k, l, CGcalls, sav_iters;
-  Real OmStar, tr, norm = 1.0 / (Real)(16 * DIMF * sites_on_node);
-  double dtime;
+  Real OmStar, dtime, norm = 1.0 / (Real)Nstoch, tr;
   Twist_Fermion *v0 = malloc(sites_on_node * sizeof(Twist_Fermion));
   Twist_Fermion *v1 = malloc(sites_on_node * sizeof(Twist_Fermion));
   Twist_Fermion *v2 = malloc(sites_on_node * sizeof(Twist_Fermion));
@@ -183,43 +211,6 @@ void compute_mode() {
   workv[3] = malloc(sites_on_node * sizeof(Twist_Fermion));
   workv[4] = malloc(sites_on_node * sizeof(Twist_Fermion));
   workv[5] = malloc(sites_on_node * sizeof(Twist_Fermion));
-#ifdef DEBUG_TEST_CLENSH
-  Z2source();
-  clensh(OmStar, v0, v1, workv);
-  tr = 0.0;
-  FORALLSITES(i, s)
-    tr += (double)magsq_TF(&(v1[i]));
-  tr *= 1.0 / (double)(16 * DIMF * sites_on_node);
-  g_doublesum(&tr);
-  node0_printf("TESTMODE Clensh: P^2(z)= %lg\n", tr);
-
-  OmStar = 0.2;
-  simpleX(OmStar, v0, v1);
-  tr = 0.0;
-  FORALLSITES(i, s)
-    tr += (double)magsq_TF(&(v1[i]));
-  tr *= 1.0 / (double)(16 * DIMF * sites_on_node);
-  g_doublesum(&tr);
-  node0_printf("TESTMODE Clensh: xOperator^2(0.2, 0.4)= %lg\n", tr);
-  X(OmStar, v0, v1, workv);
-  tr = 0.0;
-  FORALLSITES(i, s)
-    tr += (double)magsq_TF(&(v1[i]));
-
-  tr *= 1.0 / (double)(16 * DIMF * sites_on_node);
-  g_doublesum(&tr);
-  node0_printf("TESTMODE Clensh: F(z(xOperator(0.2, 0.4)))^2 = %lg\n", tr);
-  free(v0);
-  free(v1);
-  free(v2);
-  free(workv[0]);
-  free(workv[1]);
-  free(workv[2]);
-  free(workv[3]);
-  free(workv[4]);
-  free(workv[5]);
-  return 0;
-#endif
 
   // Set up stochastic Z2 random sources
   for (l = 0; l < Nstoch; l++) {
@@ -239,39 +230,44 @@ void compute_mode() {
       // Setup timing and iteration counts
       dtime = -dclock();
       sav_iters = total_iters;    // total_iters incremented by CG
-      CGcalls = 0;
       FORALLSITES(i, s)
         copy_TF(&(source[l][i]), &(v0[i]));   // TODO: Can replace v0
+
+//      CGcalls = step(OmStar, source[l], v1, z_rand, workv);   // !!! z_rand tmp stor
+//      CGcalls += step(OmStar, v1, v0, z_rand, workv);   // !!! z_rand tmp stor
 
       // h(X) = 0.5 * (1 - X P(Z(X^2)))
       // Z(X) = 2X / (max - min) - (max + min) / (max - min);
       // X = 1 - 2Om_*^2 (DDdag + Om_*^2)^(-1)
       // First step function application
-      CGcalls += clensh(OmStar, v0, v1, workv);
-      simpleX(OmStar, v1, v2);
+      CGcalls = clenshaw(OmStar, v0, v1, workv);
+      X(OmStar, v1, v2);
       CGcalls++;
       FORALLSITES(i, s) {
         sub_TF(&(v0[i]), &(v2[i]), &(v1[i]));
         scalar_mult_TF(&(v1[i]), 0.5, &(v1[i]));
       }
 
-      // Second step function application -- mode number is now just norm
-      clensh(OmStar, v1, v0, workv);
-      simpleX(OmStar, v0, v2);
+      // Second step function application
+      CGcalls += clenshaw(OmStar, v1, v0, workv);
+      X(OmStar, v0, v2);
       CGcalls++;
-      tr = 0.0;
       FORALLSITES(i, s) {
         sub_TF(&(v1[i]), &(v2[i]), &(v0[i]));
         scalar_mult_TF(&(v0[i]), 0.5, &(v0[i]));
-        tr += magsq_TF(&(v0[i]));
       }
+
+      // Mode number is now just magnitude of v0
+      tr = 0.0;
+      FORALLSITES(i, s)
+        tr += magsq_TF(&(v0[i]));
       g_doublesum(&tr);
       mode[k] += tr;
       err[k] += tr * tr;
 
       // Monitor iterations and timing
       dtime += dclock();
-      node0_printf("Stochastic estimator %d of %d for Omega_* = %.4g : ",
+      node0_printf("Stoch est %d of %d for Omega_* = %.4g : ",
                    l, Nstoch, OmStar);
       node0_printf("%d iter from %d CG calls in %.4g seconds\n",
                    total_iters - sav_iters, CGcalls, dtime);
@@ -279,8 +275,8 @@ void compute_mode() {
 
     // Average over volume and stochastic estimators,
     // and estimate standard deviations
-    mode[k] *= norm / (Real)Nstoch;
-    tr = err[k] * norm * norm / (Real)Nstoch;
+    mode[k] *= norm;
+    tr = err[k] * norm;
     err[k] = sqrtN_ov_Nm1 * sqrt((tr - mode[k] * mode[k]));
   }
   free(v0);
