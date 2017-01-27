@@ -120,8 +120,6 @@ void scalar_mult_adj_matrix(matrix *src, Real s, matrix *c);
 // In file s_m_a_mat.c
 void scalar_mult_sum_matrix(matrix *b, Real s, matrix *c);
 void scalar_mult_add_matrix(matrix *a, matrix *b, Real s, matrix *c);
-void scalar_mult_mult_add_matrix(matrix *a, Real s1, matrix *b, Real s2,
-		matrix *c);
 
 // In file s_m_a_amat.c
 void scalar_mult_sum_adj_matrix(matrix *b, Real s, matrix *c);

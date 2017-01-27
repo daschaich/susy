@@ -21,9 +21,8 @@ void X(const Real OmStar,
   register int i;
   register site *s;
   Real OmSq = OmStar * OmStar, rescale = 2.0 / (1.0 - step_eps);
-  Real OmFour = OmSq * OmSq;
-  Real subtract = (1.0 + step_eps) / (1.0 - step_eps);
-  Real idfact = rescale - subtract, size_r;
+  Real OmFour = rescale * 4.0 * OmSq * OmSq;
+  Real m4OmSq = -4.0 * rescale * OmSq, size_r;
   Twist_Fermion *tmpv = workv[3], **psim;
 
   // Hack a basic CG out of the multi-mass CG
@@ -39,12 +38,12 @@ void X(const Real OmStar,
   FORALLSITES(i, s)
     copy_TF(&(psim[0][i]), &(dest[i]));
   FORALLSITES(i, s) {
-    scalar_mult_mult_add_TF(&(dest[i]), (rescale * 4.0 * OmFour), &(tmpv[i]),
-                                       -(rescale * 4.0 * OmSq), &(dest[i]));
-    scalar_mult_sum_TF(&(src[i]), idfact, &(dest[i]));
+    scalar_mult_TF(&(dest[i]), OmFour, &(dest[i]));
+    scalar_mult_sum_TF(&(tmpv[i]), m4OmSq, &(dest[i]));
+    sum_TF(&(src[i]), &(dest[i]));
   }
   /*Out = (rescale * 4.0 * OmStar^4) * Out - (rescale * 4.0 * OmStar^2) * tmp_
-   + idfact * In;*/
+   + In*/
 }
 
 // dest = src - (2Om_*^2) (DDdag + Om_*^2)^(-1) src
@@ -80,52 +79,54 @@ int clensh(const Real OmStar, Twist_Fermion *src,
   register unsigned int i;
   register site* s;
   unsigned int k, CGcalls = 0;
+  Real tr;
   Twist_Fermion *bp2, *bp1, *bn, *tmp;
 
   if (step_order == 0) {
     FORALLSITES(i, s)
       clear_TF(&(dest[i]));
-    return;
+    return CGcalls;
   }
 
   if (step_order == 1) {
     FORALLSITES(i, s)
       scalar_mult_TF(&(src[i]), step_coeff[0], &(dest[i]));
-    return;
+    return CGcalls;
   }
   X(OmStar, src, dest, workv);
   CGcalls += 2;
 
   if (step_order == 2) {
     FORALLSITES(i, s) {
-      scalar_mult_mult_add_TF(&(src[i]), step_coeff[0], &(dest[i]),
-                                         step_coeff[1], &(dest[i]));
+      scalar_mult_TF(&(src[i]), step_coeff[0], &(dest[i]));
+      scalar_mult_sum_TF(&(dest[i]), step_coeff[1], &(dest[i]));
     }
-    return;
+    return CGcalls;
   }
   bp2 = dest;
   bp1 = workv[4];
   bn = workv[5];
+  tr = 2.0 * step_coeff[step_order - 1];    // Remove from site loop
   FORALLSITES(i, s) {
-    scalar_mult_mult_add_TF(&(src[i]), step_coeff[step_order - 2], &(bp2[i]),
-        2.0 * step_coeff[step_order - 1], &(bp2[i]));
+    scalar_mult_TF(&(bp2[i]), tr, &(bp2[i]));
+    scalar_mult_sum_TF(&(src[i]), step_coeff[step_order - 2], &(bp2[i]));
   }
   X(OmStar, bp2, bp1, workv);
   CGcalls += 2;
 
   if (step_order == 3) {
+    tr = step_coeff[step_order - 3] - step_coeff[step_order - 1];
     FORALLSITES(i, s) {
-      scalar_mult_mult_add_TF(&(src[i]),
-          step_coeff[step_order - 3] - step_coeff[step_order - 1], &(bp1[i]), 1.0,
-          &(dest[i]));
+      scalar_mult_TF(&(src[i]), tr, &(dest[i]));
+      sum_TF(&(bp1[i]), &(dest[i]));
     }
-    return;
+    return CGcalls;
   }
 
+  tr = step_coeff[step_order - 3] - step_coeff[step_order - 1];
   FORALLSITES(i, s) {
-    scalar_mult_mult_add_TF(&(src[i]),
-        step_coeff[step_order - 3] - step_coeff[step_order - 1],
-        &(bp1[i]), 2.0, &(bp1[i]));
+    scalar_mult_TF(&(bp1[i]), 2.0, &(bp1[i]));
+    scalar_mult_sum_TF(&(src[i]), tr, &(bp1[i]));
   }
 
   if (step_order == 4) {
@@ -135,15 +136,15 @@ int clensh(const Real OmStar, Twist_Fermion *src,
       scalar_mult_sum_TF(&(src[i]), step_coeff[0], &(bn[i]));
       sub_TF(&(bn[i]), &(bp2[i]), &(dest[i]));
     }
-    return;
+    return CGcalls;
   }
 
   for (k = step_order - 4; k--;) {   // TODO: Relies on unsigned int?
     X(OmStar, bp1, bn, workv);
     CGcalls += 2;
     FORALLSITES(i, s) {
-      scalar_mult_mult_add_TF(&(src[i]), step_coeff[k + 1], &(bn[i]), 2.0,
-          &(bn[i]));
+      scalar_mult_TF(&(bn[i]), 2.0, &(bn[i]));
+      scalar_mult_sum_TF(&(src[i]), step_coeff[k + 1], &(bn[i]));
       dif_TF(&(bp2[i]), &(bn[i]));
     }
     tmp = bp2;
@@ -250,7 +251,8 @@ void compute_mode() {
       simpleX(OmStar, v1, v2);
       CGcalls++;
       FORALLSITES(i, s) {
-        scalar_mult_mult_add_TF(&(v0[i]), 0.5, &(v2[i]), -0.5, &(v1[i]));
+        sub_TF(&(v0[i]), &(v2[i]), &(v1[i]));
+        scalar_mult_TF(&(v1[i]), 0.5, &(v1[i]));
       }
 
       // Second step function application -- mode number is now just norm
@@ -259,7 +261,8 @@ void compute_mode() {
       CGcalls++;
       tr = 0.0;
       FORALLSITES(i, s) {
-        scalar_mult_mult_add_TF(&(v1[i]), 0.5, &(v2[i]), -0.5, &(v0[i]));
+        sub_TF(&(v1[i]), &(v2[i]), &(v0[i]));
+        scalar_mult_TF(&(v0[i]), 0.5, &(v0[i]));
         tr += magsq_TF(&(v0[i]));
       }
       g_doublesum(&tr);
@@ -270,7 +273,7 @@ void compute_mode() {
       dtime += dclock();
       node0_printf("Stochastic estimator %d of %d for Omega_* = %.4g : ",
                    l, Nstoch, OmStar);
-      node0_printf("%d iterations from %d CG calls in %.4g seconds\n",
+      node0_printf("%d iter from %d CG calls in %.4g seconds\n",
                    total_iters - sav_iters, CGcalls, dtime);
     }
 
