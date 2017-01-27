@@ -146,6 +146,9 @@ EXTERN complex *tempZW[NUMLINK][NUMLINK];
 EXTERN matrix *DmuUmu, *Fmunu[NPLAQ];
 EXTERN matrix *Uinv[NUMLINK], *Udag_inv[NUMLINK], *UpsiU[NUMLINK];
 
+// CG Twist_Fermions
+EXTERN Twist_Fermion *mpm, *pm0, *rm;
+
 // Temporary matrices and Twist_Fermion
 EXTERN matrix *tempmat, *tempmat2, *staple;
 EXTERN Twist_Fermion *tempTF;
@@ -188,16 +191,16 @@ typedef struct {
 EXTERN Kops *tempops, *tempops2;
 #endif
 
-#ifdef BILIN
-EXTERN int nsrc;
-#endif
-
 #ifdef SMEAR
 // APE or stout smearing stuff
 EXTERN int smearflag;                 // NONE, STOUT, APE
 EXTERN int Nsmear;
 EXTERN double alpha;
 EXTERN anti_hermitmat *Q[NUMLINK];    // To be exponentiated
+#endif
+
+#ifdef BILIN
+EXTERN int nsrc;
 #endif
 
 #ifdef EIG
@@ -210,33 +213,38 @@ EXTERN Real eig_tol;          // Tolerance for the eigenvalue computation
 EXTERN int maxIter;           // Maximum iterations
 #endif
 
+#ifdef CHEB
+// Chebyshev spectral density stuff
+EXTERN int Nstoch, sqrtN_ov_Nm1;      // Number of stochastic sources
+EXTERN Twist_Fermion *z_rand;         // Z2 random Twist_Fermion
+
+EXTERN int cheb_order;                // Number of coefficients to compute
+EXTERN Real *cheb_coeff, *cheb_err;   // Results for coefficients
+EXTERN Real lambda_min, lambda_max;   // Bounds on spectral range
+#endif
+
+#ifdef MODE
+// Giusti--Luescher mode number and step function stuff
+EXTERN int Nstoch, sqrtN_ov_Nm1;      // Number of stochastic sources
+EXTERN Twist_Fermion *z_rand;         // Z2 random Twist_Fermion
+
+EXTERN int step_order;            // Selects between options in mode_coeffs.c
+EXTERN int numOmega;              // Number of Omega at which to evaluate nu
+EXTERN Real *Omega;               // List of Omega at which to evaluate nu
+
+EXTERN Real step_eps;             // Epsilon of step function approximation
+EXTERN Real delta;                // Just recorded in the output
+EXTERN Real starSq, star;         // Ratio (Omega / Omega_*)^2 and its sqrt
+EXTERN double *step_coeff;        // Options hard-coded in mode_coeffs.c
+EXTERN double *mode, *err;        // Results for mode number
+EXTERN Twist_Fermion **source;
+#endif
+
 #ifdef PHASE
 // Pfaffian phase stuff
 EXTERN Twist_Fermion *src, *res;    // For fieldwise matvec
 EXTERN long int Nmatvecs;           // For timing/counting
 EXTERN int ckpt_load, ckpt_save;    // For checkpointing
-#endif
-
-#ifdef MODE
-// Mode number (and associated step function) stuff
-EXTERN int Npts;
-EXTERN Real M, spacing;
-EXTERN Twist_Fermion **source;
-EXTERN int Nest;
-EXTERN Real lambda_min;
-EXTERN Real lambda_max;
-
-EXTERN int step_order;  // Selects between options hard-coded in coeffs.c
-EXTERN double eps;
-EXTERN double delta;    // Unused, but may be useful to record in the output
-EXTERN double starSq, star;     // Ratio (Omega / Omega_*)^2 and its sqrt
-EXTERN double *coeffs;
-
-EXTERN double rescalefact_gl;
-EXTERN int nest_gl;
-EXTERN double epsilon_gl;
-EXTERN double residgoal_gl;
-EXTERN int maxit_gl;
 #endif
 
 #endif // _LATTICE_H

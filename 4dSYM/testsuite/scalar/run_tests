@@ -54,7 +54,7 @@ for N in 2 3 4 ; do
   NSq=$[$N*$N]
   awk -v"X=#define NCOL $N" '{sub(/^#define NCOL .*/,X);print}' ../include/susy.h > TEMP && mv TEMP ../include/susy.h
   awk -v"X=#define DIMF $NSq" '{sub(/^#define DIMF .*/,X);print}' ../include/susy.h > TEMP && mv TEMP ../include/susy.h
-  for target in hmc meas hmc_meas mcrg eig mode phase ; do
+  for target in hmc meas hmc_meas mcrg eig cheb mode phase ; do
     echo "Compiling susy_$target..."
     if ! make -f Make_scalar susy_$target >& /dev/null ; then
       echo "ERROR: susy_$target compilation failed"
@@ -69,7 +69,7 @@ for N in 2 3 4 ; do
 
   # Run
   cd ../testsuite/
-  for target in hmc meas hmc_meas mcrg eig mode phase ; do
+  for target in hmc meas hmc_meas mcrg eig cheb mode phase ; do
     rm -f scalar/$target.U$N.out
     echo "Running susy_$target..."
     ../susy/susy_$target < in.U$N.$target > scalar/$target.U$N.out
@@ -90,7 +90,7 @@ for N in 2 3 4 ; do
 
   # Check
   cd scalar/
-  for target in hmc meas hmc_meas mcrg eig mode phase phase_part1 phase_part2 ; do
+  for target in hmc meas hmc_meas mcrg eig cheb mode phase phase_part1 phase_part2 ; do
     d="`diff -I'Time' -I'time' -I'seconds' -I'^start' $target.U$N.ref $target.U$N.out`"
     if [ -n "$d" ] ; then   # Non-zero string length
       echo "$target.U$N.ref and $target.U$N.out differ:"

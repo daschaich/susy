@@ -73,8 +73,8 @@ double det_force(Real eps);
 // Fermion matrix--vector operators (D & D^2) and multi-mass CG
 void fermion_op(Twist_Fermion *src, Twist_Fermion *dest, int sign);
 void DSq(Twist_Fermion *src, Twist_Fermion *dest);
-int congrad_multi_field(Twist_Fermion *src, Twist_Fermion **psim,
-                        int MaxCG, Real RsdCG, Real *size_r);
+int congrad_multi(Twist_Fermion *src, Twist_Fermion **psim,
+                  int MaxCG, Real RsdCG, Real *size_r);
 
 // Compute average Tr[Udag U] / N_c
 // Number of blocking steps only affects output formatting
@@ -84,18 +84,22 @@ double link_trace(double *linktr, double *linktr_width,
 Real order(int i, int j, int k, int l, int m);
 void epsilon();
 
-// Basic Twist_Fermion and gauge field manipulations
+// Basic Twist_Fermion utilities
 // May eventually move to libraries
 void dump_TF(Twist_Fermion *in);
 void copy_TF(Twist_Fermion *src, Twist_Fermion *dest);
 void clear_TF(Twist_Fermion *dest);
 Real magsq_TF(Twist_Fermion *in);
 complex TF_dot(Twist_Fermion *a, Twist_Fermion *b);
+void sum_TF(Twist_Fermion *b, Twist_Fermion *c);
+void sub_TF(Twist_Fermion *a, Twist_Fermion *b, Twist_Fermion *c);
+void dif_TF(Twist_Fermion *b, Twist_Fermion *c);
 void scalar_mult_sum_TF(Twist_Fermion *b, Real s, Twist_Fermion *c);
 void scalar_mult_add_TF(Twist_Fermion *a, Twist_Fermion *b, Real s,
                         Twist_Fermion *c);
+// TODO...
 void scalar_mult_mult_add_TF(Twist_Fermion *a, Real s1, Twist_Fermion *b,
-		Real s2, Twist_Fermion *c);
+    Real s2, Twist_Fermion *c);
 void scalar_mult_TF(Twist_Fermion *src, Real s, Twist_Fermion *dest);
 
 // Other routines in library_util.c that loop over all sites
@@ -243,25 +247,29 @@ void zgeev_(char *doL, char *doR, int *N1, double *store, int *N2, double *eigs,
 
 
 // -----------------------------------------------------------------
-// Pfaffian phase
-#ifdef PHASE
-void phase();
+// Chebyshev spectral density routines
+#ifdef CHEB
+void Z2source();
+void chebyshev_coeff();
 #endif
 // -----------------------------------------------------------------
 
 
 
 // -----------------------------------------------------------------
-// Stochastic mode number
+// Giusti--Luescher stochastic mode number routines
 #ifdef MODE
-void coefficients();
-void step(Twist_Fermion *src, Twist_Fermion *res);
-int calculate_coeff(unsigned int Nest, unsigned int order, Real lambda_min,
-		Real lambda_max,Real** ckcoeff);
-int calculateGLMethod(const unsigned int noshifts, const Real* shiftparam,
-		const Real rescalefact, Real* result, Real* staterr,
-		const unsigned int nest,
-		const unsigned int order, const Real* coeff, const Real epsilon,
-		const Real residgoal, const unsigned int maxit);
+void Z2source();
+void coefficients();    // Set up step function approximation
+void compute_mode();
+#endif
+// -----------------------------------------------------------------
+
+
+
+// -----------------------------------------------------------------
+// Pfaffian phase
+#ifdef PHASE
+void phase();
 #endif
 // -----------------------------------------------------------------

@@ -15,14 +15,15 @@
 
 
 // -----------------------------------------------------------------
+// Keep all Norder-dependent mallocs here so that we can change Norder
 // Return number of iterations
 // src is where the source is created
 // psim[Norder] are working TFs for the conjugate gradient
 // MaxCG is the maximum number of iterations per restart
-// RsdCG is the target residual, normalized as sqrt(r * r) / sqrt(src * src)
-// size_r is the final obtained residual, rsq < rsqmin * source_norm
-int congrad_multi_field(Twist_Fermion *src, Twist_Fermion **psim,
-                        int MaxCG, Real RsdCG, Real *size_r) {
+// errormin is the target |r|^2, scaled below by source_norm = |src|^2
+// size_r is the final obtained |r|^2, hopefully < errormin * source_norm
+int congrad_multi(Twist_Fermion *src, Twist_Fermion **psim,
+                  int MaxCG, Real errormin, Real *size_r) {
 
   register int i, j;
   register site *s;
@@ -31,7 +32,7 @@ int congrad_multi_field(Twist_Fermion *src, Twist_Fermion **psim,
   Real floatvar, floatvar2;     // SSE kluge
   Real *floatvarj = malloc(Norder * sizeof(*floatvarj));
   Real *floatvark = malloc(Norder * sizeof(*floatvark));
-  double rsq = 0, rsqnew, source_norm = 0, errormin, rsqstop, c1, c2, cd;
+  double rsq, rsqnew, source_norm = 0.0, rsqstop, c1, c2, cd;
   double *zeta_i   = malloc(Norder * sizeof(*zeta_i));
   double *zeta_im1 = malloc(Norder * sizeof(*zeta_im1));
   double *zeta_ip1 = malloc(Norder * sizeof(*zeta_ip1));
@@ -40,16 +41,12 @@ int congrad_multi_field(Twist_Fermion *src, Twist_Fermion **psim,
   double *alpha    = malloc(Norder * sizeof(*alpha));
   double rsqj;
   complex ctmp;
-  Twist_Fermion *mpm = malloc(sites_on_node * sizeof(*mpm));
-  Twist_Fermion *pm0 = malloc(sites_on_node * sizeof(*pm0));
-  Twist_Fermion *rm  = malloc(sites_on_node * sizeof(*rm));
   Twist_Fermion **pm = malloc(Norder * sizeof(**pm));
   for (i = 1; i < Norder; i++)    // !!!
     pm[i] = malloc(sites_on_node * sizeof(Twist_Fermion));
 
   // Initialize zero initial guess, etc.
   // dest = 0, r = source, pm[j] = r
-  errormin = RsdCG * RsdCG;
   for (i = 0; i < Norder; i++)
     converged[i] = 0;
   FORALLSITES(i, s) {
@@ -64,7 +61,6 @@ int congrad_multi_field(Twist_Fermion *src, Twist_Fermion **psim,
 
   FORALLSITES(i, s)
     source_norm += (double)magsq_TF(&(src[i]));
-
   g_doublesum(&source_norm);
   rsq = source_norm;
   rsqstop = errormin * source_norm;
@@ -230,9 +226,6 @@ int congrad_multi_field(Twist_Fermion *src, Twist_Fermion **psim,
   for (i = 1; i < Norder; i++)
     free(pm[i]);
   free(pm);
-  free(rm);
-  free(mpm);
-  free(pm0);
   free(zeta_i);
   free(zeta_ip1);
   free(zeta_im1);

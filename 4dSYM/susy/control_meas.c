@@ -4,11 +4,7 @@
 // and discrete R symmetry observables
 #define CONTROL
 #include "susy_includes.h"
-// -----------------------------------------------------------------
 
-
-
-// -----------------------------------------------------------------
 int main(int argc, char *argv[]) {
   int prompt, dir, j;
   double ss_plaq, st_plaq, dtime, plpMod = 0.0;

@@ -87,10 +87,10 @@ complex complextrace_nn(matrix *a, matrix *b);
 complex complextrace_an(matrix *a, matrix *b);
 complex complextrace_na(matrix *a, matrix *b);
 
-// b <-- a, in file mat_copy.c
+// In file mat_copy.c
 void mat_copy(matrix *a, matrix *b);
 
-// b <-- (+/-)adag, in file adjoint.c
+// In file adjoint.c
 void adjoint(matrix *a, matrix *b);
 void neg_adjoint(matrix *a, matrix *b);
 
@@ -228,8 +228,11 @@ void mult_su2_mat_vec_elem_a(su2_matrix *u, complex *x0, complex *x1);
 // Miscellaneous routines
 // In file gaussrand.c
 Real gaussian_rand_no(double_prn *prn_pt);
+
 // In file z2rand.c
-Real z2_rand_no(double_prn *prn_pt);
+Real Z2_rand_no(double_prn *prn_pt);
+
+// In file byterevn.c
 #include "../include/int32type.h"
 void byterevn(int32type w[], int n);
 void byterevn64(int32type w[], int n);

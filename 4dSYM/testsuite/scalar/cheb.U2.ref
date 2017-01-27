@@ -1,0 +1,71 @@
+N=4 SYM, Nc = 2, DIMF = 4, fermion rep = adjoint
+Microcanonical simulation with refreshing
+Machine = Scalar processor, with 1 nodes
+Phi algorithm
+start: Thu Jan 26 23:31:43 2017
+
+type 0 for no prompts or 1 for prompts
+nx 4
+ny 4
+nz 4
+nt 4
+PBC -1
+iseed 41
+Nroot 1
+Norder 15
+LAYOUT = Hypercubes, options = hyper_prime,
+ON EACH NODE 4 x 4 x 4 x 4
+Mallocing 2.5 MBytes per core for lattice
+Antiperiodic temporal boundary conditions
+Double-trace scalar potential
+Supersymmetric constraint on (det[plaq] - 1)
+Mallocing 2.6 MBytes per core for fields
+
+
+warms 0
+trajecs 3
+traj_length 1
+nstep 5
+nstep_gauge 4
+traj_between_meas 3
+lambda 1
+kappa_u1 1
+bmass 1
+fmass 0
+G 0.1
+B 1
+max_cg_iterations 5000
+error_per_site 1e-05
+Nstoch 5
+cheb_order 10
+lambda_min -0.02
+lambda_max 25
+reload_serial config.U2.4444
+forget
+lambda=1 --> kappa=Nc/(2lambda)=1
+C2=1
+Restored binary gauge configuration serially from file config.U2.4444
+Time stamp Fri Apr 17 18:03:10 2015
+Checksums 2ffa97f c37b9702 OK
+Time to reload gauge configuration = 1.180172e-04
+CHECK PLAQ: 1.8931639183150830e+00 1.9392207138255673e+00
+CHECK NERSC LINKTR: 1.7868842204883606e-02 CKSUM: 0
+START 1.8931639 1.9392207 3.8323846 15.877752
+FLINK 1.04928 1.04712 1.07092 1.09201 1.07306 1.06648 0.175463
+FLINK_DET -0.151868 -0.176766 -0.197088 -0.191462 -0.180953 -0.179627 0.156754
+GMES -0.74288959 -0.6897311 0 1.8931639 1.9392207 15.877752 1.1794782
+BACTION 15.877752
+CHEBYSHEV c[0] 1 0
+CHEBYSHEV c[1] -0.21610719 0.003494
+CHEBYSHEV c[2] -0.60205279 0.002266
+CHEBYSHEV c[3] 0.23478962 0.005282
+CHEBYSHEV c[4] 0.11852468 0.003246
+CHEBYSHEV c[5] 0.020256447 0.003477
+CHEBYSHEV c[6] -0.04709975 0.002926
+CHEBYSHEV c[7] -0.0053435851 0.006242
+CHEBYSHEV c[8] -0.0006804496 0.003506
+CHEBYSHEV c[9] -0.02473684 0.007805
+RUNNING COMPLETED
+
+Time = 0.3532 seconds
+total_iters = 0

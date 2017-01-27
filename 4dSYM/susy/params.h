@@ -38,12 +38,6 @@ typedef struct {
   int nsrc;                     // Number of stochastic sources
 #endif
 
-#ifdef EIG
-  // Eigenvalue parameters
-  int Nvec, maxIter;
-  Real eig_tol;
-#endif
-
 #ifdef SMEAR
   // Parameters for APE or stout smearing
   int smearflag;                // NONE, STOUT, APE
@@ -51,25 +45,32 @@ typedef struct {
   Real alpha;
 #endif
 
+#ifdef EIG
+  // Eigenvalue parameters
+  int Nvec, maxIter;
+  Real eig_tol;
+#endif
+
+#ifdef CHEB
+  // Chebyshev spectral density stuff
+  int Nstoch;
+  int cheb_order;               // Number of coefficients to compute
+  Real lambda_min, lambda_max;  // Bounds on spectral range
+#endif
+
+#ifdef MODE
+  // Giusti--Luescher stochastic mode number and step function stuff
+#define MAX_OMEGA 100
+  int Nstoch;
+  int step_order;           // Selects between options in mode_coeffs.c
+  int numOmega;             // Number of Omega at which to evaluate nu
+  Real Omega[MAX_OMEGA];    // List of Omega at which to evaluate nu
+#endif
+
 #ifdef PHASE
   // Pfaffian parameters
   int ckpt_load, ckpt_save;
 #endif
-
-#ifdef MODE
-  // Mode number (and associated step function) parameters
-	int order, Npts;
-	Real start_omega, spacing;
-	int Nest;
-	Real lambda_min, lambda_max;
-
-	Real rescalefact_gl;
-	int nest_gl;
-	Real epsilon_gl;
-	Real residgoal_gl;
-	int maxit_gl;
-#endif
-
 } params;
 #endif
 // -----------------------------------------------------------------

@@ -1,19 +1,35 @@
 // -----------------------------------------------------------------
-// Main procedure for N=4 SYM eigenvalues
+// Main procedure for N=4 SYM stochastic mode number calculations
+// Adapted from adjoint SU(N) code by Georg Bergner
+
+// This Giusti--Luescher method (arXiv:0812.3638) needs coefficients for the
+// minmax polynomial approximation to the step function
+// These are computed offline and copied into mode_coeffs.c
+// The serial (GSL-based) code is in the mode_polynomial directory
+//   https://www.gnu.org/software/gsl/
+// It finds the smallest step_order that satisfies the input epsilon and delta
+// It is based on code kindly shared by Agostino Patella
+//   http://inspirehep.net/author/profile/A.Patella.1
 #define CONTROL
 #include "susy_includes.h"
 
+#ifndef MODE
+#error "Don't use control_mode unless compiling with -DMODE!"
+#endif
+#ifdef CHEB
+#error "-DCHEB and -DMODE will clobber each other!"
+#endif
+// -----------------------------------------------------------------
+
+
+
+// -----------------------------------------------------------------
 int main(int argc, char *argv[]) {
-  int prompt, dir;
+  int prompt, dir, k;
   double ss_plaq, st_plaq, dtime, plpMod = 0.0;
   double linktr[NUMLINK], linktr_ave, linktr_width;
   double link_det[NUMLINK], det_ave, det_width;
   complex plp = cmplx(99.0, 99.0);
-  int ivec, total_iters = 0;
-#ifndef EIG
-  node0_printf("Don't use control_eig unless compiling with -DEIG!\n");
-  terminate(1);
-#endif
 
   // Setup
   setlinebuf(stdout); // DEBUG
@@ -47,11 +63,11 @@ int main(int argc, char *argv[]) {
   linktr_ave = link_trace(linktr, &linktr_width,
                           link_det, &det_ave, &det_width);
   node0_printf("FLINK");
-  for (dir = XUP; dir < NUMLINK; dir++)
+  FORALLDIR(dir)
     node0_printf(" %.6g", linktr[dir]);
   node0_printf(" %.6g %.6g\n", linktr_ave, linktr_width);
   node0_printf("FLINK_DET");
-  for (dir = XUP; dir < NUMLINK; dir++)
+  FORALLDIR(dir)
     node0_printf(" %.6g", link_det[dir]);
   node0_printf(" %.6g %.6g\n", det_ave, det_width);
 
@@ -69,39 +85,27 @@ int main(int argc, char *argv[]) {
   node0_printf("%.8g\n", plpMod);
   node0_printf("BACTION %.8g\n", ss_plaq);
 
-  // Main measurement: PRIMME eigenvalues
-  // Calculate and print smallest eigenvalues,
-  // checking |D^dag D phi - lambda phi|^2
-  total_iters = make_evs(Nvec, eigVec, eigVal, 1);
+  // Load coefficients for minmax step function of given order
+  // "star" is actually (Omega / Omega_*)^2, so take the square root
+  coefficients();
+  starSq = star;
+  star = sqrt(starSq);
+  node0_printf("Step function order %d epsilon %.4g delta %.4g star %.4g\n",
+               step_order, step_eps, delta, star);
 
-  // Check matrix elements of D with DDdag eigenmodes
-  // The eigenvalues should be paired, with each pair producing
-  // positive/negative matrix elements
-  // In principle, one could tighten eig_tol until all pairs are found
-  // For now we just print them all out to check offline
-  check_Dmat(Nvec, eigVec);
+  // Run Giusti--Luescher stochastic mode number computation
+  compute_mode();
 
-  // Calculate and print largest eigenvalues, for tuning RHMC
-  // Don't need to compute many here...
-  if (Nvec > 12) {
-    free(eigVal);
-    for (ivec = 0; ivec < Nvec; ivec++)
-      free(eigVec[ivec]);
-    free(eigVec);
-
-    Nvec = 12;
-    eigVal = malloc(Nvec * sizeof(*eigVal));
-    eigVec = malloc(Nvec * sizeof(*eigVec));
-    for (ivec = 0; ivec < Nvec; ivec++)
-      FIELD_ALLOC(eigVec[ivec], Twist_Fermion);
-  }
-  total_iters += make_evs(Nvec, eigVec, eigVal, -1);
+  // Print results
+  for (k = 0; k < numOmega; k++)
+    node0_printf("MODE %.4g %.8g %.4g\n", Omega[k], mode[k], err[k]);
 
   node0_printf("RUNNING COMPLETED\n");
   dtime += dclock();
   node0_printf("\nTime = %.4g seconds\n", dtime);
   node0_printf("total_iters = %d\n", total_iters);
   fflush(stdout);
+
   g_sync();         // Needed by at least some clusters
   return 0;
 }

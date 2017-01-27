@@ -55,7 +55,7 @@ int update_step(double *fnorm, double *gnorm,
 #ifndef PUREGAUGE
     for (n = 0; n < Nroot; n++) {
       // Do conjugate gradient to get (Mdag M)^(-1 / 4) chi
-      iters += congrad_multi_field(src[n], psim[n], niter, rsqmin, &final_rsq);
+      iters += congrad_multi(src[n], psim[n], niter, rsqmin, &final_rsq);
       tr = fermion_force(eps, src[n], psim[n]);
       fnorm[n] += tr;
       if (tr > max_ff[n])
@@ -105,9 +105,9 @@ int update() {
 #ifdef UPDATE_DEBUG
   node0_printf("Calling CG in update_leapfrog -- original action\n");
 #endif
-  // congrad_multi_field initializes psim
+  // congrad_multi initializes psim
   for (n = 0; n < Nroot; n++)
-    iters += congrad_multi_field(src[n], psim[n], niter, rsqmin, &final_rsq);
+    iters += congrad_multi(src[n], psim[n], niter, rsqmin, &final_rsq);
 #endif // ifndef PUREGAUGE
 
   // Find initial action
@@ -134,7 +134,7 @@ int update() {
   node0_printf("Calling CG in update_leapfrog -- new action\n");
 #endif
   for (n = 0; n < Nroot; n++)
-    iters += congrad_multi_field(src[n], psim[n], niter, rsqmin, &final_rsq);
+    iters += congrad_multi(src[n], psim[n], niter, rsqmin, &final_rsq);
   endaction = action(src, psim);
   change = endaction - startaction;
 #ifdef HMC_ALGORITHM

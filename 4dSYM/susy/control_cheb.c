@@ -1,19 +1,31 @@
 // -----------------------------------------------------------------
-// Main procedure for N=4 SYM eigenvalues
+// Main procedure for N=4 SYM Chebyshev spectral density calculations
+// Adapted from adjoint SU(N) code by Georg Bergner
+
+// The Chebyshev expansion method (arXiv:1605.08091)
+// needs input bounds on the extremal eigenvalues
+// Output: Coefficients for a Chebyshev expansion of the spectral density
+// Integrate that expansion to compute the eigenmode number
 #define CONTROL
 #include "susy_includes.h"
 
+#ifndef CHEB
+#error "Don't use control_mode unless compiling with -DMODE!"
+#endif
+#ifdef MODE
+#error "-DCHEB and -DMODE will clobber each other!"
+#endif
+// -----------------------------------------------------------------
+
+
+
+// -----------------------------------------------------------------
 int main(int argc, char *argv[]) {
-  int prompt, dir;
+  int prompt, dir, k;
   double ss_plaq, st_plaq, dtime, plpMod = 0.0;
   double linktr[NUMLINK], linktr_ave, linktr_width;
   double link_det[NUMLINK], det_ave, det_width;
   complex plp = cmplx(99.0, 99.0);
-  int ivec, total_iters = 0;
-#ifndef EIG
-  node0_printf("Don't use control_eig unless compiling with -DEIG!\n");
-  terminate(1);
-#endif
 
   // Setup
   setlinebuf(stdout); // DEBUG
@@ -47,11 +59,11 @@ int main(int argc, char *argv[]) {
   linktr_ave = link_trace(linktr, &linktr_width,
                           link_det, &det_ave, &det_width);
   node0_printf("FLINK");
-  for (dir = XUP; dir < NUMLINK; dir++)
+  FORALLDIR(dir)
     node0_printf(" %.6g", linktr[dir]);
   node0_printf(" %.6g %.6g\n", linktr_ave, linktr_width);
   node0_printf("FLINK_DET");
-  for (dir = XUP; dir < NUMLINK; dir++)
+  FORALLDIR(dir)
     node0_printf(" %.6g", link_det[dir]);
   node0_printf(" %.6g %.6g\n", det_ave, det_width);
 
@@ -69,39 +81,21 @@ int main(int argc, char *argv[]) {
   node0_printf("%.8g\n", plpMod);
   node0_printf("BACTION %.8g\n", ss_plaq);
 
-  // Main measurement: PRIMME eigenvalues
-  // Calculate and print smallest eigenvalues,
-  // checking |D^dag D phi - lambda phi|^2
-  total_iters = make_evs(Nvec, eigVec, eigVal, 1);
+  // Run Chebyshev approximation of spectral density
+  chebyshev_coeff();
 
-  // Check matrix elements of D with DDdag eigenmodes
-  // The eigenvalues should be paired, with each pair producing
-  // positive/negative matrix elements
-  // In principle, one could tighten eig_tol until all pairs are found
-  // For now we just print them all out to check offline
-  check_Dmat(Nvec, eigVec);
-
-  // Calculate and print largest eigenvalues, for tuning RHMC
-  // Don't need to compute many here...
-  if (Nvec > 12) {
-    free(eigVal);
-    for (ivec = 0; ivec < Nvec; ivec++)
-      free(eigVec[ivec]);
-    free(eigVec);
-
-    Nvec = 12;
-    eigVal = malloc(Nvec * sizeof(*eigVal));
-    eigVec = malloc(Nvec * sizeof(*eigVec));
-    for (ivec = 0; ivec < Nvec; ivec++)
-      FIELD_ALLOC(eigVec[ivec], Twist_Fermion);
+  // Print coefficients in Chebyshev approximation to spectral density
+  for (k = 0; k < cheb_order; k++) {
+    node0_printf("CHEBYSHEV c[%d] %.8g %.4g\n",
+                 k, cheb_coeff[k], cheb_err[k]);
   }
-  total_iters += make_evs(Nvec, eigVec, eigVal, -1);
 
   node0_printf("RUNNING COMPLETED\n");
   dtime += dclock();
   node0_printf("\nTime = %.4g seconds\n", dtime);
   node0_printf("total_iters = %d\n", total_iters);
   fflush(stdout);
+
   g_sync();         // Needed by at least some clusters
   return 0;
 }

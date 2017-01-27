@@ -2,11 +2,7 @@
 // Main procedure for N=4 SYM evolution and measurements
 #define CONTROL
 #include "susy_includes.h"
-// -----------------------------------------------------------------
 
-
-
-// -----------------------------------------------------------------
 int main(int argc, char *argv[]) {
   int prompt, dir, j;
   int traj_done, s_iters, avs_iters = 0, avm_iters = 0, Nmeas = 0;

@@ -57,7 +57,7 @@ MY_OBJECTS = setup.o        \
              utilities.o    \
              library_util.o \
              gauge_info.o   \
-             congrad_multi_field.o
+             congrad_multi.o
 
 # Basic set from generic directory
 G_OBJECTS = io_helpers.o   \
@@ -142,17 +142,23 @@ susy_eig::
 	"LAPACK = -llapack -lblas " \
 	"EXTRA_OBJECTS = control_eig.o eig.o "
 
+susy_cheb::
+	${MAKE} -f ${MAKEFILE} target "MYTARGET= $@" \
+	"DEFINES = ${DEFINES} -DPHI_ALGORITHM -DCHEB " \
+	"LAPACK = -llapack -lblas " \
+	"EXTRA_OBJECTS = control_cheb.o chebyshev.o z2source.o "
+
+susy_mode::
+	${MAKE} -f ${MAKEFILE} target "MYTARGET= $@" \
+	"DEFINES = ${DEFINES} -DPHI_ALGORITHM -DMODE " \
+	"LAPACK = -llapack -lblas " \
+	"EXTRA_OBJECTS = control_mode.o modenumber.o mode_coeffs.o z2source.o "
+
 susy_phase::
 	${MAKE} -f ${MAKEFILE} target "MYTARGET= $@" \
 	"DEFINES = ${DEFINES} -DPHI_ALGORITHM -DPHASE " \
 	"LAPACK = -llapack -lblas " \
 	"EXTRA_OBJECTS = control_phase.o phase.o io_phase.o "
-
-susy_mode::
-	${MAKE} -f ${MAKEFILE} target "MYTARGET= $@" \
-	"DEFINES = ${DEFINES} -DPHI_ALGORITHM -DBILIN -DMODE " \
-	"LAPACK = -llapack -lblas " \
-	"EXTRA_OBJECTS = control_modenumber.o chebmode.o "
 
 # Convert configuration into format the serial C++ code can read
 # for testing/debugging
