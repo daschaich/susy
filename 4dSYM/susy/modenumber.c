@@ -75,7 +75,7 @@ void Z(const Real OmStar, Twist_Fermion *src, Twist_Fermion *dest) {
 // Clenshaw algorithm:
 // P(X) src = sum_i^n c[i] T[i] src = (b[0] - X b[1]) src,
 // where b[i] = c[i] + 2zb[i + 1] - b[i + 2], b[n] = b[n + 1] = 0
-// Use TODO... for temporary storage (z_rand and tempTF used by Z!)
+// Use TODO... for temporary storage (z_rand and tempTF in use!)
 // Return number of CG calls
 int clenshaw(const Real OmStar, Twist_Fermion *src,
            Twist_Fermion *dest, Twist_Fermion **workv) {
@@ -86,30 +86,14 @@ int clenshaw(const Real OmStar, Twist_Fermion *src,
   Real tr;
   Twist_Fermion *bp2, *bp1, *bn, *tmp;
 
-  if (step_order == 0) {
-    FORALLSITES(i, s)
-      clear_TF(&(dest[i]));
-    return CGcalls;
-  }
 
-  if (step_order == 1) {
-    FORALLSITES(i, s)
-      scalar_mult_TF(&(src[i]), step_coeff[0], &(dest[i]));
-    return CGcalls;
-  }
   Z(OmStar, src, dest);
   CGcalls += 2;
 
-  if (step_order == 2) {
-    FORALLSITES(i, s) {
-      scalar_mult_TF(&(src[i]), step_coeff[0], &(dest[i]));
-      scalar_mult_sum_TF(&(dest[i]), step_coeff[1], &(dest[i]));
-    }
-    return CGcalls;
-  }
+
   bp2 = dest;
-  bp1 = workv[4];
-  bn = workv[5];
+  bp1 = workv[0];
+  bn = workv[1];
   tr = 2.0 * step_coeff[step_order - 1];    // Remove from site loop
   FORALLSITES(i, s) {
     scalar_mult_TF(&(bp2[i]), tr, &(bp2[i]));
@@ -118,14 +102,7 @@ int clenshaw(const Real OmStar, Twist_Fermion *src,
   Z(OmStar, bp2, bp1);
   CGcalls += 2;
 
-  if (step_order == 3) {
-    tr = step_coeff[step_order - 3] - step_coeff[step_order - 1];
-    FORALLSITES(i, s) {
-      scalar_mult_TF(&(src[i]), tr, &(dest[i]));
-      sum_TF(&(bp1[i]), &(dest[i]));
-    }
-    return CGcalls;
-  }
+
 
   tr = step_coeff[step_order - 3] - step_coeff[step_order - 1];
   FORALLSITES(i, s) {
@@ -133,15 +110,6 @@ int clenshaw(const Real OmStar, Twist_Fermion *src,
     scalar_mult_sum_TF(&(src[i]), tr, &(bp1[i]));
   }
 
-  if (step_order == 4) {
-    Z(OmStar, bp1, bn);
-    CGcalls += 2;
-    FORALLSITES(i, s) {
-      scalar_mult_sum_TF(&(src[i]), step_coeff[0], &(bn[i]));
-      sub_TF(&(bn[i]), &(bp2[i]), &(dest[i]));
-    }
-    return CGcalls;
-  }
 
   for (k = step_order - 4; k--;) {   // TODO: Relies on unsigned int?
     Z(OmStar, bp1, bn);
@@ -171,8 +139,9 @@ int clenshaw(const Real OmStar, Twist_Fermion *src,
 
 // -----------------------------------------------------------------
 // Wrapper for step function approximated by h(X) = [1 - X p(X)^2] / 2
+// Use XPXSq for temporary storage (z_rand and tempTF in use!)
 // Return number of CG calls
-int step(const Real OmStar, Twist_Fermion *src, Twist_Fermion *dest, Twist_Fermion *XPXSq,
+int step(const Real OmStar, Twist_Fermion *src, Twist_Fermion *dest,
    Twist_Fermion **workv) {
   register int i;
   register site *s;
@@ -184,7 +153,7 @@ int step(const Real OmStar, Twist_Fermion *src, Twist_Fermion *dest, Twist_Fermi
   // dest = (src - X P(X^2) src) / 2
   X(OmStar, dest, XPXSq);
   CGcalls++;
-  FOREVENSITES(i, s) {
+  FORALLSITES(i, s) {
     sub_TF(&(src[i]), &(XPXSq[i]), &(dest[i]));
     scalar_mult_TF(&(dest[i]), 0.5, &(dest[i]));
   }
@@ -195,22 +164,15 @@ int step(const Real OmStar, Twist_Fermion *src, Twist_Fermion *dest, Twist_Fermi
 
 
 // -----------------------------------------------------------------
-// Use TODO... for temporary storage (z_rand and tempTF used by clenshaw!)
+// Use hX for temporary storage (XPXSq, z_rand and tempTF in use!)
 void compute_mode() {
   register int i;
   register site *s;
   int k, l, CGcalls, sav_iters;
   Real OmStar, dtime, norm = 1.0 / (Real)Nstoch, tr;
-  Twist_Fermion *v0 = malloc(sites_on_node * sizeof(Twist_Fermion));
-  Twist_Fermion *v1 = malloc(sites_on_node * sizeof(Twist_Fermion));
-  Twist_Fermion *v2 = malloc(sites_on_node * sizeof(Twist_Fermion));
-  Twist_Fermion *workv[6];
+  Twist_Fermion *workv[2];
   workv[0] = malloc(sites_on_node * sizeof(Twist_Fermion));
   workv[1] = malloc(sites_on_node * sizeof(Twist_Fermion));
-  workv[2] = malloc(sites_on_node * sizeof(Twist_Fermion));
-  workv[3] = malloc(sites_on_node * sizeof(Twist_Fermion));
-  workv[4] = malloc(sites_on_node * sizeof(Twist_Fermion));
-  workv[5] = malloc(sites_on_node * sizeof(Twist_Fermion));
 
   // Set up stochastic Z2 random sources
   for (l = 0; l < Nstoch; l++) {
@@ -230,37 +192,15 @@ void compute_mode() {
       // Setup timing and iteration counts
       dtime = -dclock();
       sav_iters = total_iters;    // total_iters incremented by CG
-      FORALLSITES(i, s)
-        copy_TF(&(source[l][i]), &(v0[i]));   // TODO: Can replace v0
 
-//      CGcalls = step(OmStar, source[l], v1, z_rand, workv);   // !!! z_rand tmp stor
-//      CGcalls += step(OmStar, v1, v0, z_rand, workv);   // !!! z_rand tmp stor
+      // Hit gaussian random vector twice with step function
+      CGcalls = step(OmStar, source[l], hX, workv);
+      CGcalls += step(OmStar, hX, dest, workv);
 
-      // h(X) = 0.5 * (1 - X P(Z(X^2)))
-      // Z(X) = 2X / (max - min) - (max + min) / (max - min);
-      // X = 1 - 2Om_*^2 (DDdag + Om_*^2)^(-1)
-      // First step function application
-      CGcalls = clenshaw(OmStar, v0, v1, workv);
-      X(OmStar, v1, v2);
-      CGcalls++;
-      FORALLSITES(i, s) {
-        sub_TF(&(v0[i]), &(v2[i]), &(v1[i]));
-        scalar_mult_TF(&(v1[i]), 0.5, &(v1[i]));
-      }
-
-      // Second step function application
-      CGcalls += clenshaw(OmStar, v1, v0, workv);
-      X(OmStar, v0, v2);
-      CGcalls++;
-      FORALLSITES(i, s) {
-        sub_TF(&(v1[i]), &(v2[i]), &(v0[i]));
-        scalar_mult_TF(&(v0[i]), 0.5, &(v0[i]));
-      }
-
-      // Mode number is now just magnitude of v0
+      // Mode number is now just magnitude of dest
       tr = 0.0;
       FORALLSITES(i, s)
-        tr += magsq_TF(&(v0[i]));
+        tr += magsq_TF(&(dest[i]));
       g_doublesum(&tr);
       mode[k] += tr;
       err[k] += tr * tr;
@@ -279,14 +219,7 @@ void compute_mode() {
     tr = err[k] * norm;
     err[k] = sqrtN_ov_Nm1 * sqrt((tr - mode[k] * mode[k]));
   }
-  free(v0);
-  free(v1);
-  free(v2);
   free(workv[0]);
   free(workv[1]);
-  free(workv[2]);
-  free(workv[3]);
-  free(workv[4]);
-  free(workv[5]);
 }
 // -----------------------------------------------------------------

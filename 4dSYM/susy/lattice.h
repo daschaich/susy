@@ -240,7 +240,7 @@ EXTERN double *step_coeff;        // Options hard-coded in mode_coeffs.c
 EXTERN double *mode, *err;        // Results for mode number
 
 // Z2 stochastic sources and temporary storage
-EXTERN Twist_Fermion **source;//, *XPXSq, *hX, *dest;
+EXTERN Twist_Fermion **source, *XPXSq, *hX, *dest;
 #endif
 
 #ifdef PHASE

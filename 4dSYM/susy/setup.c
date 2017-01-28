@@ -178,10 +178,10 @@ void make_fields() {
 
 #ifdef MODE
   // Temporary TF for stochastic mode number
-//  size += (Real)(3.0 * sizeof(Twist_Fermion));
-//  FIELD_ALLOC(XPXSq, Twist_Fermion);
-//  FIELD_ALLOC(hX, Twist_Fermion);
-//  FIELD_ALLOC(dest, Twist_Fermion);
+  size += (Real)(3.0 * sizeof(Twist_Fermion));
+  FIELD_ALLOC(XPXSq, Twist_Fermion);
+  FIELD_ALLOC(hX, Twist_Fermion);
+  FIELD_ALLOC(dest, Twist_Fermion);
 #endif
 
   size *= sites_on_node;
