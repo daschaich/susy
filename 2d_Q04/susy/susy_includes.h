@@ -70,7 +70,7 @@ double det_force(Real eps);
 // Fermion matrix--vector operators (D & D^2) and multi-mass CG
 void fermion_op(Twist_Fermion *src, Twist_Fermion *dest, int sign);
 void DSq(Twist_Fermion *src, Twist_Fermion *dest);
-int congrad_multi_field(Twist_Fermion *src, Twist_Fermion **psim,
+int congrad_multi(Twist_Fermion *src, Twist_Fermion **psim,
                         int MaxCG, Real RsdCG, Real *size_r);
 
 // Compute average Tr[Udag U] / N_c

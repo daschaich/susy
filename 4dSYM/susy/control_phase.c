@@ -2,11 +2,7 @@
 // Main procedure for N=4 SYM pfaffian phase
 #define CONTROL
 #include "susy_includes.h"
-// -----------------------------------------------------------------
 
-
-
-// -----------------------------------------------------------------
 int main(int argc, char *argv[]) {
   int prompt, dir;
   double ss_plaq, st_plaq, dtime, plpMod = 0.0;

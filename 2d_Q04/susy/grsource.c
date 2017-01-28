@@ -46,7 +46,7 @@ int grsource(Twist_Fermion *src) {
   complex grn;
   Twist_Fermion **psim = malloc(Norder * sizeof(**psim));
 
-  // Allocate psim (will be zeroed in congrad_multi_field)
+  // Allocate psim (will be zeroed in congrad_multi)
   for (i = 0; i < Norder; i++)
     psim[i] = malloc(sites_on_node * sizeof(Twist_Fermion));
 
@@ -126,7 +126,7 @@ int grsource(Twist_Fermion *src) {
   for (i = 0; i < Norder; i++)
     shift[i] = shift8[i];
 
-  avs_iters = congrad_multi_field(src, psim, niter, rsqmin, &size_r);
+  avs_iters = congrad_multi(src, psim, niter, rsqmin, &size_r);
 #ifdef DEBUG_CHECK
   node0_printf("Iters for source %d\n", avs_iters);
 #endif

@@ -92,7 +92,7 @@ int update_step(double *fnorm, double *gnorm,
 #ifndef PUREGAUGE
     for (n = 0; n < Nroot; n++) {
       // Do conjugate gradient to get (Mdag M)^(-1 / 4) chi
-      iters += congrad_multi_field(src[n], psim[n], niter, rsqmin, &final_rsq);
+      iters += congrad_multi(src[n], psim[n], niter, rsqmin, &final_rsq);
       tr = fermion_force(f_eps * LAMBDA_MID, src[n], psim[n]);
       fnorm[n] += tr;
       if (tr > max_ff[n])
@@ -107,7 +107,7 @@ int update_step(double *fnorm, double *gnorm,
 #ifndef PUREGAUGE
     for (n = 0; n < Nroot; n++) {
       // Do conjugate gradient to get (Mdag M)^(-1 / 4) chi
-      iters += congrad_multi_field(src[n], psim[n], niter, rsqmin, &final_rsq);
+      iters += congrad_multi(src[n], psim[n], niter, rsqmin, &final_rsq);
 
       if (i_multi0 < nsteps[0])
         tr = fermion_force(f_eps * TWO_LAMBDA, src[n], psim[n]);
@@ -156,9 +156,9 @@ int update() {
 #ifdef UPDATE_DEBUG
   node0_printf("Calling CG in update_o -- original action\n");
 #endif
-  // congrad_multi_field initializes psim
+  // congrad_multi initializes psim
   for (n = 0; n < Nroot; n++)
-    iters += congrad_multi_field(src[n], psim[n], niter, rsqmin, &final_rsq);
+    iters += congrad_multi(src[n], psim[n], niter, rsqmin, &final_rsq);
 #endif // ifndef PUREGAUGE
 
   // Find initial action
@@ -176,7 +176,7 @@ int update() {
 //  node0_printf("BEFORE GTRANS %.8g\n", startaction);
 //  for (n = 0; n < Nroot; n++) {
 //    random_gauge_trans(src[n]);
-//    congrad_multi_field(src[n], psim[n], niter, rsqmin, &final_rsq);
+//    congrad_multi(src[n], psim[n], niter, rsqmin, &final_rsq);
 //  }
 //  startaction = action(src, psim);
 //  node0_printf("AFTER  GTRANS %.8g\n", startaction);
