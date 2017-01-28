@@ -73,63 +73,48 @@ void Z(const Real OmStar, Twist_Fermion *src, Twist_Fermion *dest) {
 
 // -----------------------------------------------------------------
 // Clenshaw algorithm:
-// P(X) src = sum_i^n c[i] T[i] src = (b[0] - X b[1]) src,
-// where b[i] = c[i] + 2zb[i + 1] - b[i + 2], b[n] = b[n + 1] = 0
-// Use TODO... for temporary storage (z_rand and tempTF in use!)
+// P(X) src = sum_i^n c[i] T[i] src = (b[0] - Z(b[1])) src,
+// where b[i] = c[i] + 2Z(b[i + 1]) - b[i + 2], b[n] = b[n + 1] = 0
+// Use bj and bjp1 for temporary storage (z_rand and tempTF in use!)
+// We also store bjp2 in dest for intermediate steps
 // Return number of CG calls
-int clenshaw(const Real OmStar, Twist_Fermion *src,
-           Twist_Fermion *dest, Twist_Fermion **workv) {
-
+int clenshaw(const Real OmStar, Twist_Fermion *src, Twist_Fermion *dest) {
   register unsigned int i;
   register site* s;
-  unsigned int k, CGcalls = 0;
-  Real tr;
-  Twist_Fermion *bp2, *bp1, *bn, *tmp;
+  int j, CGcalls = 0;
 
-
-  Z(OmStar, src, dest);
-  CGcalls += 2;
-
-
-  bp2 = dest;
-  bp1 = workv[0];
-  bn = workv[1];
-  tr = 2.0 * step_coeff[step_order - 1];    // Remove from site loop
-  FORALLSITES(i, s) {
-    scalar_mult_TF(&(bp2[i]), tr, &(bp2[i]));
-    scalar_mult_sum_TF(&(src[i]), step_coeff[step_order - 2], &(bp2[i]));
-  }
-  Z(OmStar, bp2, bp1);
-  CGcalls += 2;
-
-
-
-  tr = step_coeff[step_order - 3] - step_coeff[step_order - 1];
-  FORALLSITES(i, s) {
-    scalar_mult_TF(&(bp1[i]), 2.0, &(bp1[i]));
-    scalar_mult_sum_TF(&(src[i]), tr, &(bp1[i]));
-  }
-
-
-  for (k = step_order - 4; k--;) {   // TODO: Relies on unsigned int?
-    Z(OmStar, bp1, bn);
-    CGcalls += 2;
-    FORALLSITES(i, s) {
-      scalar_mult_TF(&(bn[i]), 2.0, &(bn[i]));
-      scalar_mult_sum_TF(&(src[i]), step_coeff[k + 1], &(bn[i]));
-      dif_TF(&(bp2[i]), &(bn[i]));
+  for (j = step_order; j >= 0; j--) {
+    // Construct bj src = (cj + 2Z(bjp1) - bjp2) src
+    // bjp1 and bjp2 = dest come from previous iterations (initially zero)
+    // We can overwrite dest with Z.bjp1
+    FORALLSITES(i, s) {                       // Initialize
+      scalar_mult_TF(&(src[i]), step_coeff[j], &(bj[i]));
+      if (j < step_order - 1)                 // Subtract bjp2 src
+        dif_TF(&(dest[i]), &(bj[i]));
     }
-    tmp = bp2;
-    bp2 = bp1;
-    bp1 = bn;
-    bn = tmp;
-  }
-  Z(OmStar, bp1, bn);
-  CGcalls += 2;
 
+    // Add 2Z(bjp1) src
+    if (j < step_order) {
+      Z(OmStar, bjp1, dest);
+      CGcalls += 2;
+      FORALLSITES(i, s)
+        scalar_mult_sum_TF(&(dest[i]), 2.0, &(bj[i]));
+    }
+
+    // Now shift dest = bjp2 <-- bjp1 and bjp1 <-- bj for next iteration
+    if (j > 0) {
+      FORALLSITES(i, s) {
+        copy_TF(&(bjp1[i]), &(dest[i]));
+        copy_TF(&(bj[i]), &(bjp1[i]));
+      }
+    }
+  }
+
+  // We now have bj = b[0] src and dest = bjp2 = Z(b[1]) src
+  // Complete (b[0] - Z(b[1])) src
   FORALLSITES(i, s) {
-    scalar_mult_sum_TF(&(src[i]), step_coeff[0], &(bn[i]));
-    sub_TF(&(bn[i]), &(bp2[i]), &(dest[i]));
+    scalar_mult_TF(&(dest[i]), -1.0, &(dest[i]));
+    sum_TF(&(bj[i]), &(dest[i]));
   }
   return CGcalls;
 }
@@ -141,14 +126,13 @@ int clenshaw(const Real OmStar, Twist_Fermion *src,
 // Wrapper for step function approximated by h(X) = [1 - X p(X)^2] / 2
 // Use XPXSq for temporary storage (z_rand and tempTF in use!)
 // Return number of CG calls
-int step(const Real OmStar, Twist_Fermion *src, Twist_Fermion *dest,
-   Twist_Fermion **workv) {
+int step(const Real OmStar, Twist_Fermion *src, Twist_Fermion *dest) {
   register int i;
   register site *s;
   int CGcalls = 0;
 
   // dest = P(X^2) src temporarily
-  CGcalls = clenshaw(OmStar, src, dest, workv);
+  CGcalls = clenshaw(OmStar, src, dest);
 
   // dest = (src - X P(X^2) src) / 2
   X(OmStar, dest, XPXSq);
@@ -170,9 +154,6 @@ void compute_mode() {
   register site *s;
   int k, l, CGcalls, sav_iters;
   Real OmStar, dtime, norm = 1.0 / (Real)Nstoch, tr;
-  Twist_Fermion *workv[2];
-  workv[0] = malloc(sites_on_node * sizeof(Twist_Fermion));
-  workv[1] = malloc(sites_on_node * sizeof(Twist_Fermion));
 
   // Set up stochastic Z2 random sources
   for (l = 0; l < Nstoch; l++) {
@@ -194,8 +175,8 @@ void compute_mode() {
       sav_iters = total_iters;    // total_iters incremented by CG
 
       // Hit gaussian random vector twice with step function
-      CGcalls = step(OmStar, source[l], hX, workv);
-      CGcalls += step(OmStar, hX, dest, workv);
+      CGcalls = step(OmStar, source[l], hX);
+      CGcalls += step(OmStar, hX, dest);
 
       // Mode number is now just magnitude of dest
       tr = 0.0;
@@ -219,7 +200,5 @@ void compute_mode() {
     tr = err[k] * norm;
     err[k] = sqrtN_ov_Nm1 * sqrt((tr - mode[k] * mode[k]));
   }
-  free(workv[0]);
-  free(workv[1]);
 }
 // -----------------------------------------------------------------

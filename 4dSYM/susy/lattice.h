@@ -241,6 +241,7 @@ EXTERN double *mode, *err;        // Results for mode number
 
 // Z2 stochastic sources and temporary storage
 EXTERN Twist_Fermion **source, *XPXSq, *hX, *dest;
+EXTERN Twist_Fermion *bj, *bjp1;  // More temporaries for Clenshaw algorithm
 #endif
 
 #ifdef PHASE
