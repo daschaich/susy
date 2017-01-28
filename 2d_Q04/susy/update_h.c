@@ -1016,7 +1016,7 @@ double fermion_force(Real eps, Twist_Fermion *src, Twist_Fermion **sol) {
 
     // Check that force syncs with fermion action
     old_action = d_fermion_action(src, sol);
-    iters += congrad_multi_field(src, sol, niter, rsqmin, &final_rsq);
+    iters += congrad_multi(src, sol, niter, rsqmin, &final_rsq);
     new_action = d_fermion_action(src, sol);
     node0_printf("EXITING  %.4g\n", new_action - old_action);
     if (fabs(new_action - old_action) > 1e-3)
@@ -1036,7 +1036,7 @@ double fermion_force(Real eps, Twist_Fermion *src, Twist_Fermion **sol) {
               s->link[mu] = tmat;
               s->link[mu].e[ii][jj].real += 0.001 * (Real)kick;
 
-              iters += congrad_multi_field(src, sol, niter, rsqmin, &final_rsq);
+              iters += congrad_multi(src, sol, niter, rsqmin, &final_rsq);
               if (kick == -1)
                 new_action -= d_fermion_action(src, sol);
               if (kick == 1) {
@@ -1049,7 +1049,7 @@ double fermion_force(Real eps, Twist_Fermion *src, Twist_Fermion **sol) {
               s->link[mu] = tmat;
               s->link[mu].e[ii][jj].imag += 0.001 * (Real)kick;
 
-              iters += congrad_multi_field(src, sol, niter, rsqmin, &final_rsq);
+              iters += congrad_multi(src, sol, niter, rsqmin, &final_rsq);
               if (kick == -1)
                 new_action -= d_fermion_action(src, sol);
               if (kick == 1) {
@@ -1067,7 +1067,7 @@ double fermion_force(Real eps, Twist_Fermion *src, Twist_Fermion **sol) {
         dumpmat(&tprint);
         s->link[mu] = tmat;
 
-        iters += congrad_multi_field(src, sol, niter, rsqmin, &final_rsq);
+        iters += congrad_multi(src, sol, niter, rsqmin, &final_rsq);
       }
     }   // End scan of the fermion action
 #endif

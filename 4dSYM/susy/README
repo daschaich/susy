@@ -6,6 +6,8 @@ susy_hmc for evolution with accept/reject step
 susy_meas for standard measurements on saved configurations
 susy_hmc_meas for evolution along with standard measurements
 susy_eig for eigenvalue measurements on saved configurations
+susy_cheb for spectral density computations on saved configurations
+susy_mode for eigenmode number computations on saved configurations
 susy_phase for pfaffian phase measurements on saved configurations
 
 # Additional targets, not actively maintained or regularly tested
@@ -25,6 +27,8 @@ Eigenvalue measurements (susy_eig) require PRIMME (https://github.com/primme/pri
 -DWLOOP switches on the gauge-fixed Wilson loop calculation
 -DBILIN switches on the fermion bilinear calculation
 -DEIG switches on the PRIMME eigenvalue calculation
+-DCHEB switches on Chebyshev spectral density computations
+-DMODE switches on stochastic eigenmode number computations
 -DPL_CORR switches on the Polyakov loop correlator calculation (NOT CURRENTLY IN USE)
 -DPUREGAUGE switches off the fermions (FOR TESTING)
 
@@ -164,11 +168,21 @@ eig.c         -- Eigenvalue measurements using PRIMME, LAPACK and BLAS
                  (NB: User may need to modify path to primme.h)
                  (NB: User may need to modify PLIB in makefile to provide libzprimme.a)
 
-# 1f) Additional files used only by pfaffian target (susy_phase)
+# 1f) Additional files used only by eigenmode number target (susy_cheb)
+control_cheb.c -- Main program for Chebyshev spectral density computation only
+chebshev.c     -- Compute coefficients in the Chebyshev approximation to the spectral density
+z2source.c     -- Generate Z2 random pseudofermion (also used by susy_mode)
+
+# 1g) Additional files used only by eigenmode number target (susy_mode)
+control_mode.c -- Main program for Giust--Luescher stochastic mode number computation only
+mode_coeffs.c  -- Coefficients in minmax polynomial approximation to the step function,  copied from ./mode_polynomial/ output
+modenumber.c   -- Compute the Giusti--Luescher stochastic mode number
+
+# 1h) Additional files used only by pfaffian target (susy_phase)
 control_phase.c -- Main program for pfaffian measurements only
 phase.c         -- Phase and (log of) magnitude of the pfaffian
 
-# 1g) Files not currently used, retained for potential future testing
+# 1i) Files not currently used, retained for potential future testing
 ploop_corr.c      -- Find Polyakov loop on every spatial site to be fed into FFT
 print_var3.c      -- Print out results for all spatial sites (used with ploop_corr.c)
 update_leapfrog.c -- Leapfrog RHMC evolution

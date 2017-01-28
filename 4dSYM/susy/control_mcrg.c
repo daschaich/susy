@@ -4,11 +4,7 @@
 // Wilson loops and discrete R symmetry observables
 #define CONTROL
 #include "susy_includes.h"
-// -----------------------------------------------------------------
 
-
-
-// -----------------------------------------------------------------
 int main(int argc, char *argv[]) {
   register int i;
   register site *s;

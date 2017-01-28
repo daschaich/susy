@@ -46,6 +46,15 @@
 
 // -----------------------------------------------------------------
 // Measurement stuff
+// Gauge fixing options
+#define NO_GAUGE_FIX 30
+#define COULOMB_GAUGE_FIX 31
+
+// Smearing options
+#define NO_SMEAR 40
+#define STOUT_SMEAR 41
+#define APE_SMEAR 42
+
 // Threshold to print warning about non-zero imaginary components
 // of quantities expected to be real
 #define IMAG_TOL 1.0e-8

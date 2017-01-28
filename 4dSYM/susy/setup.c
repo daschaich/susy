@@ -1,8 +1,8 @@
 // -----------------------------------------------------------------
-// Supersymmetric setup
+// N=4 SYM setup
 #include "susy_includes.h"
 
-#define IF_OK if(status==0)
+#define IF_OK if (status == 0)
 
 // Each node has a params structure for passing simulation parameters
 #include "params.h"
@@ -131,6 +131,12 @@ void make_fields() {
   FIELD_ALLOC_MAT_OFFDIAG(tempZW, complex, NUMLINK);
 #endif
 
+  // CG Twist_Fermions
+  size += (Real)(3.0 * sizeof(Twist_Fermion));
+  FIELD_ALLOC(mpm, Twist_Fermion);
+  FIELD_ALLOC(pm0, Twist_Fermion);
+  FIELD_ALLOC(rm, Twist_Fermion);
+
   // Temporary matrices and Twist_Fermion
   size += (Real)(3.0 * sizeof(matrix));
   size += (Real)(sizeof(Twist_Fermion));
@@ -162,6 +168,22 @@ void make_fields() {
   size += (Real)(2.0 * sizeof(Twist_Fermion));
   FIELD_ALLOC(src, Twist_Fermion);
   FIELD_ALLOC(res, Twist_Fermion);
+#endif
+
+#if defined(CHEB) || defined(MODE)
+  // For Z2 random source
+  size += (Real)(sizeof(Twist_Fermion));
+  FIELD_ALLOC(z_rand, Twist_Fermion);
+#endif
+
+#ifdef MODE
+  // Temporary TF for stochastic mode number
+  size += (Real)(5.0 * sizeof(Twist_Fermion));
+  FIELD_ALLOC(XPXSq, Twist_Fermion);
+  FIELD_ALLOC(hX, Twist_Fermion);
+  FIELD_ALLOC(dest, Twist_Fermion);
+  FIELD_ALLOC(bj, Twist_Fermion);
+  FIELD_ALLOC(bjp1, Twist_Fermion);
 #endif
 
   size *= sites_on_node;
@@ -208,6 +230,7 @@ int setup() {
 
 
 // -----------------------------------------------------------------
+#ifdef SMEAR
 // Find out what smearing to use
 int ask_smear_type(FILE *fp, int prompt, int *flag) {
   int status = 0;
@@ -240,6 +263,7 @@ int ask_smear_type(FILE *fp, int prompt, int *flag) {
   }
   return 0;
 }
+#endif
 // -----------------------------------------------------------------
 
 
@@ -249,6 +273,9 @@ int ask_smear_type(FILE *fp, int prompt, int *flag) {
 // prompt=1 indicates prompts are to be given for input
 int readin(int prompt) {
   int status;
+#if defined(EIG) || defined(MODE)
+  int i;
+#endif
   Real x;
 
   // On node zero, read parameters and send to all other nodes
@@ -306,14 +333,34 @@ int readin(int prompt) {
     IF_OK status += get_i(stdin, prompt, "maxIter", &par_buf.maxIter);
 #endif
 
-#ifdef MODE
-    // Which order polynomial to use in step function
-    IF_OK status += get_i(stdin, prompt, "order", &par_buf.order);
+#ifdef CHEB
+    // Number of stochastic sources
+    IF_OK status += get_i(stdin, prompt, "Nstoch", &par_buf.Nstoch);
 
-    // Number of Omegas and the interval between them
-    IF_OK status += get_i(stdin, prompt, "Npts", &par_buf.Npts);
-    IF_OK status += get_f(stdin, prompt, "start_omega", &par_buf.start_omega);
-    IF_OK status += get_f(stdin, prompt, "spacing", &par_buf.spacing);
+    // How many Chebyshev coefficients to compute
+    IF_OK status += get_i(stdin, prompt, "cheb_order", &par_buf.cheb_order);
+
+    // Bounds on spectral range
+    IF_OK status += get_f(stdin, prompt, "lambda_min", &par_buf.lambda_min);
+    IF_OK status += get_f(stdin, prompt, "lambda_max", &par_buf.lambda_max);
+#endif
+
+#ifdef MODE
+    // Number of stochastic sources
+    IF_OK status += get_i(stdin, prompt, "Nstoch", &par_buf.Nstoch);
+
+    // Which order polynomial to use in step function
+    IF_OK status += get_i(stdin, prompt, "step_order", &par_buf.step_order);
+
+    // A maximum of MAX_OMEGA points at which to evaluate the mode number
+    IF_OK status += get_i(stdin, prompt, "numOmega", &par_buf.numOmega);
+    if (par_buf.numOmega > MAX_OMEGA) {
+      node0_printf("ERROR: Need to recompile for numOmega > %d\n",
+                   MAX_OMEGA);
+      status++;
+    }
+    for (i = 0; i < par_buf.numOmega; i++)
+      IF_OK status += get_f(stdin, prompt, "Omega", &par_buf.Omega[i]);
 #endif
 
 #ifdef PHASE
@@ -378,14 +425,6 @@ int readin(int prompt) {
                lambda, kappa);
   node0_printf("C2=%.4g\n", C2);    // Currently hardwired in defines.h
 
-#ifdef BILIN
-  nsrc = par_buf.nsrc;
-#endif
-#ifdef EIG
-  Nvec = par_buf.Nvec;
-  eig_tol = par_buf.eig_tol;
-  maxIter = par_buf.maxIter;
-#endif
 #ifdef SMEAR
   smearflag = par_buf.smearflag;
   Nsmear = par_buf.Nsmear;
@@ -395,15 +434,68 @@ int readin(int prompt) {
     alpha = 0.0;
   }
 #endif
+
+#ifdef BILIN
+  nsrc = par_buf.nsrc;
+#endif
+
+#ifdef EIG
+  // Include some mallocs here (which is called after make_fields)
+  Nvec = par_buf.Nvec;
+  eigVal = malloc(Nvec * sizeof(*eigVal));
+  eigVec = malloc(Nvec * sizeof(*eigVec));
+  for (i = 0; i < Nvec; i++)
+    FIELD_ALLOC(eigVec[i], Twist_Fermion);
+
+  eig_tol = par_buf.eig_tol;
+  maxIter = par_buf.maxIter;
+#endif
+
+#ifdef CHEB
+  Nstoch = par_buf.Nstoch;
+
+  // Normalization factor for errors from averaging over stochastic sources
+  if (Nstoch > 1)
+    sqrtN_ov_Nm1 = sqrt((Real)Nstoch / ((Real)Nstoch - 1.0));
+  else
+    sqrtN_ov_Nm1 = 0.0;
+
+  cheb_order = par_buf.cheb_order;
+  cheb_coeff = malloc(cheb_order * sizeof(Real));
+  cheb_err = malloc(cheb_order * sizeof(Real));
+
+  lambda_min = par_buf.lambda_min;
+  lambda_max = par_buf.lambda_max;
+#endif
+
+#ifdef MODE
+  Nstoch = par_buf.Nstoch;
+
+  // Normalization factor for errors from averaging over stochastic sources
+  if (Nstoch > 1)
+    sqrtN_ov_Nm1 = sqrt((Real)Nstoch / ((Real)Nstoch - 1.0));
+  else
+    sqrtN_ov_Nm1 = 0.0;
+
+  // Save sources to reuse for each Omega
+  source = malloc(Nstoch * sizeof(*source));
+  for (i = 0; i < Nstoch; i++)
+    FIELD_ALLOC(source[i], Twist_Fermion);
+
+  step_order = par_buf.step_order;
+  step_coeff = malloc((step_order + 1) * sizeof(Real));
+
+  numOmega = par_buf.numOmega;
+  mode = malloc(numOmega * sizeof(Real));
+  err = malloc(numOmega * sizeof(Real));
+  Omega = malloc(numOmega * sizeof(Real));
+  for (i = 0; i < numOmega; i++)
+    Omega[i] = par_buf.Omega[i];
+#endif
+
 #ifdef PHASE
   ckpt_load = par_buf.ckpt_load;
   ckpt_save = par_buf.ckpt_save;
-#endif
-#ifdef MODE
-  step_order = par_buf.order;
-  Npts = par_buf.Npts;
-  M = par_buf.start_omega;
-  spacing = par_buf.spacing;
 #endif
 
   startflag = par_buf.startflag;
