@@ -198,7 +198,7 @@ void compute_mode() {
     // and estimate standard deviations
     mode[k] *= norm;
     tr = err[k] * norm;
-    err[k] = sqrtN_ov_Nm1 * sqrt((tr - mode[k] * mode[k]));
+    err[k] = sqrtN_ov_Nm1 * sqrt(fabs(tr - mode[k] * mode[k]));
   }
 }
 // -----------------------------------------------------------------
