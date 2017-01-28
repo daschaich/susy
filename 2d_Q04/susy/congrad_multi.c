@@ -21,8 +21,8 @@
 // MaxCG is the maximum number of iterations per restart
 // RsdCG is the target residual, normalized as sqrt(r * r) / sqrt(src * src)
 // size_r is the final obtained residual, rsq < rsqmin * source_norm
-int congrad_multi_field(Twist_Fermion *src, Twist_Fermion **psim,
-                        int MaxCG, Real RsdCG, Real *size_r) {
+int congrad_multi(Twist_Fermion *src, Twist_Fermion **psim,
+                  int MaxCG, Real RsdCG, Real *size_r) {
 
   register int i, j;
   register site *s;
