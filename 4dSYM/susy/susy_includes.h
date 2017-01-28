@@ -91,6 +91,7 @@ void copy_TF(Twist_Fermion *src, Twist_Fermion *dest);
 void clear_TF(Twist_Fermion *dest);
 Real magsq_TF(Twist_Fermion *in);
 complex TF_dot(Twist_Fermion *a, Twist_Fermion *b);
+void TF_rdot_sum(Twist_Fermion *a, Twist_Fermion *b, Real *c);
 void sum_TF(Twist_Fermion *b, Twist_Fermion *c);
 void sub_TF(Twist_Fermion *a, Twist_Fermion *b, Twist_Fermion *c);
 void dif_TF(Twist_Fermion *b, Twist_Fermion *c);

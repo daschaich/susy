@@ -11,7 +11,7 @@ void chebyshev_coeff() {
   Real two_ov_diff = 2.0 / diff, four_ov_diff = 4.0 / diff;
   Real msum_ov_diff = -(lambda_max + lambda_min) / diff;
   Real m2sum_ov_diff = 2.0 * msum_ov_diff;
-  Real norm = 1.0 / (Real)(16 * DIMF * sites_on_node);
+  Real norm = 1.0 / (Real)(16 * DIMF * volume);
   // Since we don't call the CG, we can use its vectors
   // Set up pointers to them with more sensible names
   Twist_Fermion *vek = mpm;
@@ -80,7 +80,7 @@ void chebyshev_coeff() {
 #endif
   }
 
-  // Average over volume and stochastic estimators,
+  // Average over (global) volume and stochastic estimators,
   // and estimate standard deviations
   for (j = 0; j < cheb_order; j++) {
     cheb_coeff[j] *= norm / (Real)Nstoch;

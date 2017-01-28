@@ -11,7 +11,7 @@
 
 // -----------------------------------------------------------------
 // dest = src - 2Om_*^2 (DDdag + Om_*^2)^(-1) src
-void X(const Real OmStar, Twist_Fermion *src, Twist_Fermion *dest) {
+void X(Twist_Fermion *src, Twist_Fermion *dest) {
   register int i;
   register site *s;
   Real m2OmSq = -2.0 * OmStar * OmStar, size_r;
@@ -32,7 +32,7 @@ void X(const Real OmStar, Twist_Fermion *src, Twist_Fermion *dest) {
 // With = X^2 = 1 - 4 OmStar^2 (DDdag + OmStar^2)^(-1)
 //                + 4 OmStar^4 (DDdag + OmStar^2)^(-2)
 // Uses z_rand for temporary storage (tempTF used by CG!)
-void Z(const Real OmStar, Twist_Fermion *src, Twist_Fermion *dest) {
+void Z(Twist_Fermion *src, Twist_Fermion *dest) {
   register int i;
   register site *s;
   Real OmSq = OmStar * OmStar, scale = 2.0 / (1.0 - step_eps);
@@ -49,8 +49,8 @@ void Z(const Real OmStar, Twist_Fermion *src, Twist_Fermion *dest) {
   // This is more compact, but the subtraction in X(src)
   // seems to leave it relatively poorly conditioned,
   // increasing CG iterations by almost 10% even for a small 4nt4 test
-//  X(OmStar, src, z_rand);
-//  X(OmStar, z_rand, dest);
+//  X(src, z_rand);
+//  X(z_rand, dest);
 //  Real toAdd = (-1.0 - step_eps) / (1.0 - step_eps);
 //  FORALLSITES(i, s) {
 //    scalar_mult_TF(&(dest[i]), scale, &(dest[i]));
@@ -78,7 +78,7 @@ void Z(const Real OmStar, Twist_Fermion *src, Twist_Fermion *dest) {
 // Use bj and bjp1 for temporary storage (z_rand and tempTF in use!)
 // We also store bjp2 in dest for intermediate steps
 // Return number of CG calls
-int clenshaw(const Real OmStar, Twist_Fermion *src, Twist_Fermion *dest) {
+int clenshaw(Twist_Fermion *src, Twist_Fermion *dest) {
   register unsigned int i;
   register site* s;
   int j, CGcalls = 0;
@@ -95,7 +95,7 @@ int clenshaw(const Real OmStar, Twist_Fermion *src, Twist_Fermion *dest) {
 
     // Add 2Z(bjp1) src
     if (j < step_order) {
-      Z(OmStar, bjp1, dest);
+      Z(bjp1, dest);
       CGcalls += 2;
       FORALLSITES(i, s)
         scalar_mult_sum_TF(&(dest[i]), 2.0, &(bj[i]));
@@ -126,16 +126,16 @@ int clenshaw(const Real OmStar, Twist_Fermion *src, Twist_Fermion *dest) {
 // Wrapper for step function approximated by h(X) = [1 - X p(X)^2] / 2
 // Use XPXSq for temporary storage (z_rand and tempTF in use!)
 // Return number of CG calls
-int step(const Real OmStar, Twist_Fermion *src, Twist_Fermion *dest) {
+int step(Twist_Fermion *src, Twist_Fermion *dest) {
   register int i;
   register site *s;
   int CGcalls = 0;
 
   // dest = P(X^2) src temporarily
-  CGcalls = clenshaw(OmStar, src, dest);
+  CGcalls = clenshaw(src, dest);
 
   // dest = (src - X P(X^2) src) / 2
-  X(OmStar, dest, XPXSq);
+  X(dest, XPXSq);
   CGcalls++;
   FORALLSITES(i, s) {
     sub_TF(&(src[i]), &(XPXSq[i]), &(dest[i]));
@@ -153,7 +153,7 @@ void compute_mode() {
   register int i;
   register site *s;
   int k, l, CGcalls, sav_iters;
-  Real OmStar, dtime, norm = 1.0 / (Real)Nstoch, tr;
+  Real dtime, norm = 1.0 / (Real)Nstoch, tr;
 
   // Set up stochastic Z2 random sources
   for (l = 0; l < Nstoch; l++) {
@@ -175,8 +175,8 @@ void compute_mode() {
       sav_iters = total_iters;    // total_iters incremented by CG
 
       // Hit gaussian random vector twice with step function
-      CGcalls = step(OmStar, source[l], hX);
-      CGcalls += step(OmStar, hX, dest);
+      CGcalls = step(source[l], hX);
+      CGcalls += step(hX, dest);
 
       // Mode number is now just magnitude of dest
       tr = 0.0;
