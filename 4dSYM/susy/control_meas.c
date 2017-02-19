@@ -112,6 +112,9 @@ int main(int argc, char *argv[]) {
   }
   node0_printf("\n");
 
+  // Test polar-projected Polyakov loop eigenvalues
+//  plp = ploop_eig(TUP, YESDET, &plpMod);
+
 #ifdef SMEAR
   // Optionally smear before main measurements
   // NO_SMEAR sets Nsmear = 0

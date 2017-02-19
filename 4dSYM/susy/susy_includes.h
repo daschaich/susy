@@ -54,6 +54,7 @@ int grsource(Twist_Fermion *source);
 void plaquette(double *ss_plaq, double *st_plaq);
 double local_plaquette(double *ss_plaq, double *st_plaq); // Return max plaq
 complex ploop(int dir, int project, double *plpMod);
+//complex ploop_eig(int dir, int project, double *plpMod);
 
 // Scalar eigenvalues: averages, extrema and width
 // #define SCALAR_EIG_DIST to print all eigenvalues in serial
