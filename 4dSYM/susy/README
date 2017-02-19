@@ -115,7 +115,7 @@ setup_lambda.c        -- Set up U(N) generators, epsilon tensor and lookup table
 setup_offset.c        -- Set up gathers for terms in the action, especially Qclosed terms
 action.c              -- Compute the action, including related routines also needed by forces
 plaq.c                -- Compute the average plaquette
-ploop.c               -- Compute the average Polyakov loop
+ploop.c               -- Compute the average Polyakov loop or Wilson lines
 link_trace.c          -- Compute average link, Tr[U_a Ubar_a] / NCOL
 widths.c              -- Calculate sqrt(<P^2> - <P>^2) for the plaquette and plaquette determinant
 determinant.c         -- Utilities for finding the determinant of NCOL x NCOL link matrices, using LAPACK
@@ -151,6 +151,7 @@ hvy_pot_polar_loop.c -- Compute more standard on-axis Wilson loops of polar-proj
                         (NB: overwrites links, as above)
 path.c               -- Used to construct Wilson loops for hvy_pot_loop.c and hvy_pot_polar_loop.c
 rsymm.c              -- Compute modified Wilson loops related to R symmetry transformations
+scalar_eig.c         -- Compute eigenvalues of scalar fields
 
 # 1d) Additional files used only by MCRG target (susy_mcrg)
 control_mcrg.c       -- Main program for RG blocking and blocked measurements
@@ -184,6 +185,7 @@ phase.c         -- Phase and (log of) magnitude of the pfaffian
 
 # 1i) Files not currently used, retained for potential future testing
 ploop_corr.c      -- Find Polyakov loop on every spatial site to be fed into FFT
+ploop_eig.c       -- Compute eigenvalues of Polyakov loops or Wilson lines
 print_var3.c      -- Print out results for all spatial sites (used with ploop_corr.c)
 update_leapfrog.c -- Leapfrog RHMC evolution
 phase_serial.c    -- A serial gaussian elimination pfaffian algorithm, to check the parallel computation
