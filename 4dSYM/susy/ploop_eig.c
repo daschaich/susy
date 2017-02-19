@@ -165,7 +165,10 @@ complex ploop_eig(int dir, int project, double *plpMod) {
 
     // Print resulting phases
     // Include all four coords, even though the one matching dir will be zero
-    printf("LINES_EIG ");
+    if (project == 1)
+      printf("LINES_POLAR_EIG ");
+    else
+      printf("LINES_EIG ");
     printf("%d %d %d %d %d", s->x, s->y, s->z, s->t, dir);
     for (j = 0; j < NCOL; j++)
       printf(" %.4g", phase[j]);
