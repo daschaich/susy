@@ -157,14 +157,15 @@ complex ploop_eig(int dir, int project, double *plpMod) {
       mag = cabs_sq(&tc);
       if (fabs(mag - 1.0) > IMAG_TOL) {
         printf("WARNING: Non-unitary Wilson line eigenvalue: ");
-        printf("%d %d %d %d %.4g %.4g --> %.4g %.4g\n",
-               s->x, s->y, s->z, dir, tc.real, tc.imag, mag, phase[j]);
+        printf("%d %d %d %d %d %.4g %.4g --> %.4g %.4g\n",
+               s->x, s->y, s->z, s->t, dir, tc.real, tc.imag, mag, phase[j]);
       }
     }
 
     // Print resulting phases
+    // Include all four coords, even though the one matching dir will be zero
     printf("LINES_EIG ");
-    printf("%d %d %d %d", s->x, s->y, s->z, dir);
+    printf("%d %d %d %d %d", s->x, s->y, s->z, s->t, dir);
     for (j = 0; j < NCOL; j++)
       printf(" %.4g", phase[j]);
     printf("\n");
