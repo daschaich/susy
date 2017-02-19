@@ -23,7 +23,8 @@ complex ploop_eig(int dir, int project, double *plpMod) {
   char N = 'N';
   int j, k, t, len = nt;
   int size = NCOL, stat = 0, unit = 1, doub = 2 * NCOL;
-  double norm = 0.0, phase[NCOL], mag;
+  double norm = 0.0, mag;
+  double *phase = malloc(NCOL * sizeof(*phase));
   double *eigs = malloc(2 * NCOL * sizeof(*eigs));
   double *dum = malloc(2 * sizeof(*dum));
   complex sum  = cmplx(0.0, 0.0), plp, tc;
@@ -143,14 +144,14 @@ complex ploop_eig(int dir, int project, double *plpMod) {
     zgeev_(&N, &N, &size, store, &size, eigs,
            dum, &unit, dum, &unit, work, &doub, work, &stat);
 
-    // Convert eigenvalues to phases in [0, 2pi)
+    // Convert eigenvalues to phases in [-pi, pi)
     // If the links should be in SU(N), check that eig magnitudes are unity
     for (j = 0; j < NCOL; j++) {
       tc.real = eigs[2 * j];
       tc.imag = eigs[2 * j + 1];
       phase[j] = carg(&tc);
-      if (fmod(phase[j], TWOPI) < 0)
-        phase[j] += TWOPI;
+//      if (fmod(phase[j], TWOPI) < 0)
+//        phase[j] += TWOPI;
     }
 
     if (project == 1) {
