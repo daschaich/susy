@@ -75,12 +75,12 @@ static void setup_hyper_prime() {
     /* if one direction with largest dimension has already been
        divided, divide it again.  Otherwise divide first direction
        with largest dimension. */
-    for (dir = XUP; dir <= TUP; dir++) {
+    FORALLDIR(dir) {
       if (squaresize[dir] == j && nsquares[dir] > 1)
         break;
     }
     if (dir > TUP) {
-      for (dir = XUP; dir <= TUP; dir++) {
+      FORALLDIR(dir) {
         if (squaresize[dir] == j)
           break;
       }
