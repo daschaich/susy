@@ -41,7 +41,7 @@ void matvec(complex *in, complex *out) {
   // Copy complex vector into Twist_Fermion src
   // Each Twist_Fermion has Ndat = 16DIMF non-trivial complex components
   // !!! Need to gather & cycle over fields to ensure non-zero Q[i + 1] M Q[i]
-  // TODO: Can we rearrange this to avoid all the matrix manipulation?
+  // Seem to need to work in terms of generators rather than matrix elements
   iter = 0;
   FORALLSITES(i, s) {
     clear_TF(&(src[i]));
@@ -130,7 +130,7 @@ void matvec(complex *in, complex *out) {
   }
 #endif
 
-  fermion_op(src, res, PLUS);    // D
+  fermion_op(src, res, PLUS);     // D
 //  fermion_op(src, res, MINUS);    // Ddag
   Nmatvecs++;
 
@@ -261,7 +261,7 @@ void phase() {
     load_diag(diag, ckpt_load);   // Overwrite initial zeroes above
     loadQ(Q, ckpt_load);
   }
-  else {                  // Initialize to zero
+  else {                  // Initialize to unit matrix
     for (i = 0; i < volume * Ndat; i++) {
       for (j = 0; j < sites_on_node * Ndat; j++)
         Q[i][j] = cmplx(0.0, 0.0);

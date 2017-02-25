@@ -56,18 +56,18 @@ void konishi(Kops *this_ops) {
   FORALLSITES(i, s) {
     for (j = 0; j < N_K; j++) {
       // Initialize
-      this_ops[i].OK[j] = 0.0;
-      this_ops[i].OS[j] = 0.0;
+      this_ops[i].O[j] = 0.0;
+      this_ops[i].O[N_K + j] = 0.0;
 
       FORALLDIR(a) {
         // First Konishi
-        this_ops[i].OK[j] += traceBB[j][a][a][i];
+        this_ops[i].O[j] += traceBB[j][a][a][i];
 
         // Now SUGRA, averaged over 20 off-diagonal components
         FORALLDIR(b) {
           if (a == b)
             continue;
-          this_ops[i].OS[j] += 0.05 * traceBB[j][a][b][i];
+          this_ops[i].O[N_K + j] += 0.05 * traceBB[j][a][b][i];
         }
       }
     }
@@ -81,10 +81,8 @@ void konishi(Kops *this_ops) {
 // Simple helper function to copy operators
 void copy_ops(Kops *src, Kops *dest) {
   int j;
-  for (j = 0; j < N_K; j++) {
-    dest->OK[j] = src->OK[j];
-    dest->OS[j] = src->OS[j];
-  }
+  for (j = 0; j < N_op; j++)
+    dest->O[j] = src->O[j];
 }
 // -----------------------------------------------------------------
 
@@ -121,25 +119,20 @@ void correlator_r() {
   Real one_ov_block = 1.0 / (Real)Nblock, blockNorm = 1.0 / (Real)Nmeas;
   Real std_norm = 1.0 / (Real)(Nblock * (Nblock - 1.0));
   Real ave, err, tr;
-  Kcorrs **CK = malloc(Nblock * sizeof(**CK));
-  Kcorrs **CS = malloc(Nblock * sizeof(**CS));
+  Kcorrs **corr = malloc(Nblock * sizeof(**corr));
 
   // Set up Nblock Konishi and SUGRA correlators
   // Will be initialized within block loop below
-  for (block = 0; block < Nblock; block++) {
-    CK[block] = malloc(total_r * sizeof(*CK));
-    CS[block] = malloc(total_r * sizeof(*CS));
-  }
+  for (block = 0; block < Nblock; block++)
+    corr[block] = malloc(total_r * sizeof(Kcorrs));
 
   // Compute correlators for each block
   for (block = 0; block < Nblock; block++) {
     // Initialize this block's correlators
     for (j = 0; j < total_r; j++) {
-      for (a = 0; a < N_K; a++) {
-        for (b = 0; b < N_K; b++) {
-          CK[block][j].C[a][b] = 0.0;
-          CS[block][j].C[a][b] = 0.0;
-        }
+      for (a = 0; a < N_op; a++) {
+        for (b = 0; b < N_op; b++)
+          corr[block][j].C[a][b] = 0.0;
       }
     }
 
@@ -211,25 +204,14 @@ void correlator_r() {
                 terminate(1);
               }
 
-              // N_K^2 Konishi correlators
-              for (a = 0; a < N_K; a++) {
-                for (b = 0; b < N_K; b++) {
+              // (N_op)x(N_op) correlators
+              for (a = 0; a < N_op; a++) {
+                for (b = 0; b < N_op; b++) {
                   tr = 0.0;
                   FORALLSITES(i, s)
-                    tr += ops[this_meas][i].OK[a] * tempops[i].OK[b];
+                    tr += ops[this_meas][i].O[a] * tempops[i].O[b];
                   g_doublesum(&tr);
-                  CK[block][this_r].C[a][b] += tr;
-                }
-              }
-
-              // N_K^2 SUGRA correlators
-              for (a = 0; a < N_K; a++) {
-                for (b = 0; b < N_K; b++) {
-                  tr = 0.0;
-                  FORALLSITES(i, s)
-                    tr += ops[this_meas][i].OS[a] * tempops[i].OS[b];
-                  g_doublesum(&tr);
-                  CS[block][this_r].C[a][b] += tr;
+                  corr[block][this_r].C[a][b] += tr;
                 }
               }
 
@@ -244,21 +226,11 @@ void correlator_r() {
     // Print out correlators for this block
     // Normalize by blockNorm = 1.0 / Nmeas at the same time
     for (j = 0; j < total_r; j++) {
-      for (a = 0; a < N_K; a++) {
-        for (b = 0; b < N_K; b++) {
-          CK[block][j].C[a][b] *= norm[j] * blockNorm;
-          node0_printf("BLOCK_K %d %d %.6g %d %d %.8g\n",
-                       block, j, lookup[j], a, b, CK[block][j].C[a][b]);
-        }
-      }
-    }
-    // Same as above, now for SUGRA
-    for (j = 0; j < total_r; j++) {
-      for (a = 0; a < N_K; a++) {
-        for (b = 0; b < N_K; b++) {
-          CS[block][j].C[a][b] *= norm[j] * blockNorm;
-          node0_printf("BLOCK_S %d %d %.6g %d %d %.8g\n",
-                       block, j, lookup[j], a, b, CS[block][j].C[a][b]);
+      for (a = 0; a < N_op; a++) {
+        for (b = 0; b < N_op; b++) {
+          corr[block][j].C[a][b] *= norm[j] * blockNorm;
+          node0_printf("BLOCK %d %d %.6g %d %d %.8g\n",
+                       block, j, lookup[j], a, b, corr[block][j].C[a][b]);
         }
       }
     }
@@ -268,59 +240,31 @@ void correlator_r() {
   // Compute and print averages and standard errors
   // Each block is already normalized above
   for (j = 0; j < total_r; j++) {
-    for (a = 0; a < N_K; a++) {
-      for (b = 0; b < N_K; b++) {
-        ave = CK[0][j].C[a][b];             // Initialize
+    for (a = 0; a < N_op; a++) {
+      for (b = 0; b < N_op; b++) {
+        ave = corr[0][j].C[a][b];             // Initialize
         for (block = 1; block < Nblock; block++)
-          ave += CK[block][j].C[a][b];
+          ave += corr[block][j].C[a][b];
         ave *= one_ov_block;
 
         // Now compute variance (square of standard error)
-        tr = CK[0][j].C[a][b] - ave;
+        tr = corr[0][j].C[a][b] - ave;
         err = tr * tr;                      // Initialize
         for (block = 1; block < Nblock; block++) {
-          tr = CK[block][j].C[a][b] - ave;
+          tr = corr[block][j].C[a][b] - ave;
           err += tr * tr;
         }
         err *= std_norm;
 
         // Finally print
-        node0_printf("CORR_K %d %.6g %d %d %.6g %.4g\n", j, lookup[j], a, b,
+        node0_printf("CORR %d %.6g %d %d %.6g %.4g\n", j, lookup[j], a, b,
                      ave, sqrt(err));
       }
     }
   }
 
-  // Same as above, now for SUGRA
-  for (j = 0; j < total_r; j++) {
-    for (a = 0; a < N_K; a++) {
-      for (b = 0; b < N_K; b++) {
-        ave = CS[0][j].C[a][b];             // Initialize
-        for (block = 1; block < Nblock; block++)
-          ave += CS[block][j].C[a][b];
-        ave *= one_ov_block;
-
-        // Now compute variance (square of standard error)
-        tr = CS[0][j].C[a][b] - ave;
-        err = tr * tr;                      // Initialize
-        for (block = 1; block < Nblock; block++) {
-          tr = CS[block][j].C[a][b] - ave;
-          err += tr * tr;
-        }
-        err *= std_norm;
-
-        // Finally print
-        node0_printf("CORR_S %d %.6g %d %d %.6g %.4g\n", j, lookup[j], a, b,
-                     ave, sqrt(err));
-      }
-    }
-  }
-
-  for (j = 0; j < Nblock; j++) {
-    free(CK[j]);
-    free(CS[j]);
-  }
-  free(CK);
-  free(CS);
+  for (j = 0; j < Nblock; j++)
+    free(corr[j]);
+  free(corr);
 }
 // ----------------------------------------------------------------

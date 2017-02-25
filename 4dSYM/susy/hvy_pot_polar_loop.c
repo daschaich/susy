@@ -1,15 +1,11 @@
 // -----------------------------------------------------------------
-// Wilson loops for fundamental links (hardwired in path)
-// Evaluate in different spatial dirs to check rotational invariance
+// Wilson loops for polar-projected static potential using path
+// Print all permutations to enable tree-level improvement
 // Links unitarized via polar projection -- overwritten!!!
-// This version calls path to compute simple rectangular loops
-// so gauge fixing has no effect
+// This version computes simple rectangular loops so gauge fixing has no effect
+// Use tempmat for temporary storage
 #include "susy_includes.h"
-// -----------------------------------------------------------------
 
-
-
-// -----------------------------------------------------------------
 void hvy_pot_polar_loop() {
   register int i;
   register site *s;
@@ -20,7 +16,7 @@ void hvy_pot_polar_loop() {
   matrix tmat, tmat2;
 
   FORALLSITES(i, s) {
-    for (mu = 0; mu < NUMLINK; mu++) {
+    FORALLDIR(mu) {
       // Polar projection of all links (even the unused diagonal link)
       // To be multiplied together after projecting
       // !!! Overwrites links

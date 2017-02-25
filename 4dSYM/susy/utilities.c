@@ -666,8 +666,8 @@ void DbminusLtoS(matrix *src[NUMLINK], matrix *dest) {
   mat[0] = tempmat;
   mat[1] = tempmat2;
 
-  FORALLSITES(i, s) {         // Set up first gather
-    clear_mat(&(dest[i]));     // Initialize
+  FORALLSITES(i, s) {           // Set up first gather
+    clear_mat(&(dest[i]));      // Initialize
     mult_an(&(s->link[0]), &(src[0][i]), &(mat[0][i]));
   }
   tag[0] = start_gather_field(mat[0], sizeof(matrix),
