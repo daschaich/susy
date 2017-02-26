@@ -17,7 +17,14 @@ void ranmom() {
   FORALLSITES(i, s) {
     FORALLDIR(mu) {
       clear_mat(&(s->mom[mu]));
-      for (j = 0; j < DIMF; j++) {
+           
+#ifdef HYBRID
+        for (j = 0; j < (DIMF - 1); j++) {   // Exclude the last generator  
+#else
+        for (j = 0; j < DIMF; j++) {
+#endif
+     
+      
 #ifdef SITERAND
         grn.real = gaussian_rand_no(&(s->site_prn));
         grn.imag = gaussian_rand_no(&(s->site_prn));
