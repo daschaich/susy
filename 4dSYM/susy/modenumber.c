@@ -190,8 +190,8 @@ void compute_mode() {
       dtime += dclock();
       node0_printf("Stoch est %d of %d for Omega_* = %.4g : ",
                    l, Nstoch, OmStar);
-      node0_printf("%d iter from %d CG calls in %.4g seconds\n",
-                   total_iters - sav_iters, CGcalls, dtime);
+      node0_printf("%.4g from %d iter %d inverts %.4g seconds\n",
+                   tr, total_iters - sav_iters, CGcalls, dtime);
     }
 
     // Average over volume and stochastic estimators,
