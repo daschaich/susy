@@ -22,7 +22,7 @@ int initial_set() {
     printf("Microcanonical simulation with refreshing\n");
     printf("Machine = %s, with %d nodes\n", machine_type(), numnodes());
 #ifdef HYBRID
-    printf("Gauge links in SL(N,C) \n");
+    printf("Gauge links in SL(N,C), running in hybrid mode \n");
 #endif
 #ifdef HMC_ALGORITHM
     printf("Hybrid Monte Carlo algorithm\n");
