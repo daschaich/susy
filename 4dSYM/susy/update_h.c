@@ -255,6 +255,7 @@ double gauge_force(Real eps) {
 #else
     Real tr;
     dmu = 2.0 * one_ov_N * kappa * bmass * bmass;
+    matrix tmat;
 #endif
     FORALLSITES(i, s) {
       FORALLDIR(mu) {
@@ -271,10 +272,20 @@ double gauge_force(Real eps) {
           scalar_mult_an_sum(&(s->link[mu]), &tmat, dmu, &(s->f_U[mu]));
 #endif
           
+          
 #else
+        #ifdef HYBRID 
+        tr = one_ov_N * realtrace(&(s->link[mu]), &(s->link[mu])) - 1.0;
+        tr *= dmu;
+        scalar_mult_adj_matrix(&(s->link[mu]), tr, &tmat);
+        mult_nn_sum(&(s->link[mu]), &tmat, &(s->f_U[mu]));
+        
+        #else
         tr = one_ov_N * realtrace(&(s->link[mu]), &(s->link[mu])) - 1.0;
         tr *= dmu;
         scalar_mult_sum_adj_matrix(&(s->link[mu]), tr, &(s->f_U[mu]));
+        #endif
+          
 #endif
       }
     }
