@@ -86,6 +86,20 @@ Nvec 100              # Number of eigenvalues to calculate
 eig_tol 1e-8          # Eigenvalue convergence criterion
 maxIter 5000          # Maximum number of eigenvalue iterations
 
+# The next four lines must only be included when compiling with -DCHEB
+Nstoch 5              # Number of stochastic sources to use
+cheb_order 10         # Number of Chebyshev coefficients to compute
+lambda_min -0.02      # Should be small and negative
+lambda_max 25         # Should be ~20% larger than largest eigenvalue
+
+# The next 3+N lines must only be included when compiling with -DMODE
+Nstoch 5              # Number of stochastic sources to use
+step_order 32         # Order of minmax polynomial for step function
+numOmega N            # Number of Omega at which to compute mode number
+Omega 0.5             # List of all N values of Omega
+Omega ...             #      at which to compute mode number
+Omega 2.5
+
 # The next two lines must only be included when compiling with -DPHASE
 ckpt_load -1    # If positive, load checkpointed pfaffian computation
                 # from config.Q$ckpt_load and config.diag$ckpt_load
