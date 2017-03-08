@@ -18,6 +18,12 @@ void update_uu(Real eps) {
   register int i, mu;
   register site *s;
 
+#ifdef TRUNCATED
+  node0_printf("ERROR: Truncated action not yet implemented ");
+  node0_printf("in leapfrog integrator, aborting\n");
+  terminate(1);
+#endif
+
   FORALLDIR(mu) {
     FORALLSITES(i, s)
       scalar_mult_sum_matrix(&(s->mom[mu]), eps, &(s->link[mu]));
