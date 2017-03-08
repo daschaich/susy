@@ -22,6 +22,9 @@ Eigenvalue measurements (susy_eig) require PRIMME (https://github.com/primme/pri
 # Defines for compilation:
 -DPHI_ALGORITHM for the basic phi algorithm (REQUIRED)
 -DHMC_ALGORITHM switches on the accept/reject step
+-DTRUNCATED truncates the gauge links to live in SL(N,C) (not actively tested)
+-DEIG_POT switches from a double-trace to a single-trace scalar potential (not actively tested)
+-DLINEAR_DET switches the Q-invariant plaquette determinant deformation from |det-1|^2 (not actively tested) to the usual det-1
 -DCORR switches on the Konishi and SUGRA correlator calculation
 -DSMEAR switches on optional smearing for measurements
 -DWLOOP switches on the gauge-fixed Wilson loop calculation
