@@ -17,6 +17,78 @@
 
 
 // -----------------------------------------------------------------
+#ifdef HYBRID
+
+void update_uu(Real eps) {
+    register int i, mu;
+    register site *s;
+    register Real t2, t3, t4, t5, t6, t7, t8;
+    matrix tmat, tmat2;
+    
+    
+    // -----------------------------------------------------------------
+    // Calculate newU = exp(p).U
+    // Here p is the traceless BUT NOT anti-hermitian lattice field.
+    // Go to eighth order in the exponential:
+    //   exp(p) * U = (1 + p + p^2/2 + p^3/6 ...) * U
+    //              = U + p*(U + (p/2)*(U + (p/3)*( ... )))
+    
+    
+    
+    // Take divisions out of site loop (can't be done by compiler)
+    t2 = eps / 2.0;
+    t3 = eps / 3.0;
+    t4 = eps / 4.0;
+    t5 = eps / 5.0;
+    t6 = eps / 6.0;
+    t7 = eps / 7.0;
+    t8 = eps / 8.0;
+    
+    FORALLSITES(i, s){
+        
+        FORALLDIR(mu) {
+            
+            
+            mult_nn(&(s->mom[mu]),&(s->link[mu]),&tmat);
+            scalar_mult_add_matrix(&(s->link[mu]), &tmat, t8, &tmat2);
+            
+            mult_nn(&(s->mom[mu]),&tmat2,&tmat);
+            scalar_mult_add_matrix(&(s->link[mu]), &tmat, t7, &tmat2);
+            
+            mult_nn(&(s->mom[mu]),&tmat2,&tmat);
+            scalar_mult_add_matrix(&(s->link[mu]), &tmat, t6, &tmat2);
+            
+            mult_nn(&(s->mom[mu]),&tmat2,&tmat);
+            scalar_mult_add_matrix(&(s->link[mu]), &tmat, t5, &tmat2);
+            
+            mult_nn(&(s->mom[mu]),&tmat2,&tmat);
+            scalar_mult_add_matrix(&(s->link[mu]), &tmat, t4, &tmat2);
+            
+            mult_nn(&(s->mom[mu]),&tmat2,&tmat);
+            scalar_mult_add_matrix(&(s->link[mu]), &tmat, t3, &tmat2);
+            
+            mult_nn(&(s->mom[mu]),&tmat2,&tmat);
+            scalar_mult_add_matrix(&(s->link[mu]), &tmat, t2, &tmat2);
+            
+            
+            mult_nn(&(s->mom[mu]),&tmat2,&tmat);
+            scalar_mult_sum_matrix(&tmat, eps, &(s->link[mu]));
+            
+        }
+        
+    }
+    
+    // Update plaquette determinants, DmuUmu and Fmunu with new links
+    // (Needs to be done before calling gauge_force)
+    compute_plaqdet();
+    compute_Uinv();
+    compute_DmuUmu();
+    compute_Fmunu();
+}
+
+
+#else
+
 void update_uu(Real eps) {
   register int i, mu;
   register site *s;
@@ -33,6 +105,9 @@ void update_uu(Real eps) {
   compute_DmuUmu();
   compute_Fmunu();
 }
+
+#endif 
+
 // -----------------------------------------------------------------
 
 
