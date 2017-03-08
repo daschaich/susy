@@ -37,8 +37,17 @@ double gauge_force(Real eps) {
 
     wait_gather(tag[mu]);
     FORALLSITES(i, s) {
-      mult_an(&(s->link[mu]), &(DmuUmu[i]), &(s->f_U[mu]));   // Initialize
-      mult_na_dif((matrix *)(gen_pt[mu][i]), &(s->link[mu]), &(s->f_U[mu]));
+    #ifdef HYBRID
+        mult_an(&(s->link[mu]), &(DmuUmu[i]), &tmat);
+        mult_nn(&(s->link[mu]), &tmat, &(s->f_U[mu]));
+        mult_na((matrix *)(gen_pt[mu][i]), &(s->link[mu]), &tmat);
+        mult_nn_dif(&(s->link[mu]), &tmat, &(s->f_U[mu]));
+        
+    #else
+        mult_an(&(s->link[mu]), &(DmuUmu[i]), &(s->f_U[mu]));   // Initialize
+        mult_na_dif((matrix *)(gen_pt[mu][i]), &(s->link[mu]), &(s->f_U[mu]));
+        
+    #endif
     }
     cleanup_gather(tag[mu]);
   }
@@ -214,9 +223,16 @@ double gauge_force(Real eps) {
         }
         else
           mult_na((matrix *)local_pt[flip][0][i], &(Fmunu[index][i]), &tmat2);
-
-        sub_matrix(&tmat2, (matrix *)local_pt[flip][1][i], &tmat);
-        scalar_mult_sum_matrix(&tmat, 2.0, &(s->f_U[mu]));
+          
+        #ifdef HYBRID
+          sub_matrix(&tmat2, (matrix *)local_pt[flip][1][i], &tmat);
+          mult_nn(&(s->link[mu]), &tmat, &tmat2) ;
+          scalar_mult_sum_matrix(&tmat2, 2.0, &(s->f_U[mu]));
+        #else
+          sub_matrix(&tmat2, (matrix *)local_pt[flip][1][i], &tmat);
+          scalar_mult_sum_matrix(&tmat, 2.0, &(s->f_U[mu]));
+        #endif
+          
       }
       cleanup_gather(tag0[flip]);
       cleanup_gather(tag1[flip]);
@@ -239,17 +255,37 @@ double gauge_force(Real eps) {
 #else
     Real tr;
     dmu = 2.0 * one_ov_N * kappa * bmass * bmass;
+    matrix tmat;
 #endif
     FORALLSITES(i, s) {
       FORALLDIR(mu) {
 #ifdef EIG_POT
-        mult_na(&(s->link[mu]), &(s->link[mu]), &tmat);
-        scalar_add_diag(&tmat, -1.0);
-        scalar_mult_an_sum(&(s->link[mu]), &tmat, dmu, &(s->f_U[mu]));
+          
+#ifdef HYBRID
+          mult_na(&(s->link[mu]), &(s->link[mu]), &tmat);
+          scalar_add_diag(&tmat, -1.0);
+          scalar_mult_an(&(s->link[mu]), &tmat, dmu, &tmat2);
+          mult_nn_sum(&(s->link[mu]), &tmat2, &(s->f_U[mu]));
 #else
+          mult_na(&(s->link[mu]), &(s->link[mu]), &tmat);
+          scalar_add_diag(&tmat, -1.0);
+          scalar_mult_an_sum(&(s->link[mu]), &tmat, dmu, &(s->f_U[mu]));
+#endif
+          
+          
+#else
+        #ifdef HYBRID 
+        tr = one_ov_N * realtrace(&(s->link[mu]), &(s->link[mu])) - 1.0;
+        tr *= dmu;
+        scalar_mult_adj_matrix(&(s->link[mu]), tr, &tmat);
+        mult_nn_sum(&(s->link[mu]), &tmat, &(s->f_U[mu]));
+        
+        #else
         tr = one_ov_N * realtrace(&(s->link[mu]), &(s->link[mu])) - 1.0;
         tr *= dmu;
         scalar_mult_sum_adj_matrix(&(s->link[mu]), tr, &(s->f_U[mu]));
+        #endif
+          
 #endif
       }
     }
@@ -257,10 +293,24 @@ double gauge_force(Real eps) {
 
   // Finally take adjoint and update the momentum
   // Subtract to reproduce -Adj(f_U)
-  FORALLSITES(i, s) {
-    FORALLDIR(mu)
-      scalar_mult_dif_adj_matrix(&(s->f_U[mu]), eps, &(s->mom[mu]));
-  }
+#ifdef HYBRID
+    
+    FORALLSITES(i, s) {
+        FORALLDIR(mu){
+            adjoint(&(s->f_U[mu]),&tmat3);
+            mat_copy(&tmat3,&(s->f_U[mu]));
+            tc = trace(&(s->f_U[mu]));
+            CMULREAL(tc,-1.0*one_ov_N,tc);
+            c_scalar_add_diag(&(s->f_U[mu]), &tc);
+            scalar_mult_dif_matrix(&(s->f_U[mu]), eps, &(s->mom[mu]));
+        }
+    }
+#else
+    FORALLSITES(i, s) {
+        FORALLDIR(mu)
+        scalar_mult_dif_adj_matrix(&(s->f_U[mu]), eps, &(s->mom[mu]));
+    }
+#endif
 
   // Compute average gauge force
   FORALLSITES(i, s) {
@@ -364,10 +414,18 @@ void F1Q(matrix *plaq_sol[NPLAQ], matrix *plaq_psol[NPLAQ]) {
       mult_nn((matrix *)(local_pt[flip][0][i]), &tmat, &(tempmat[i]));
 
       tr = -1.0 * permm * (s->bc2[opp_a][opp_b]) * (s->bc1[c]);
-      scalar_mult_matrix((matrix *)(local_pt[flip][3][i]), tr, &tmat);
-      mult_nn_sum(&tmat, (matrix *)(local_pt[flip][2][i]), &(tempmat[i]));
-
-      scalar_mult_sum_adj_matrix(&(tempmat[i]), -0.5, &(s->f_U[c]));
+        
+    #ifdef HYBRID
+        scalar_mult_matrix((matrix *)(local_pt[flip][3][i]), tr, &tmat);
+        mult_nn_sum(&tmat, (matrix *)(local_pt[flip][2][i]), &(tempmat[i]));
+        mult_na(&tempmat[i], &(s->link[c]), &tmat);
+        scalar_mult_sum_adj_matrix(&tmat, -0.5, &(s->f_U[c]));
+    #else
+        scalar_mult_matrix((matrix *)(local_pt[flip][3][i]), tr, &tmat);
+        mult_nn_sum(&tmat, (matrix *)(local_pt[flip][2][i]), &(tempmat[i]));
+        
+        scalar_mult_sum_adj_matrix(&(tempmat[i]), -0.5, &(s->f_U[c]));
+    #endif
     }
     cleanup_gather(tag0[flip]);
     cleanup_gather(tag1[flip]);
@@ -463,10 +521,18 @@ void F2Q(matrix *plaq_sol[NPLAQ], matrix *plaq_psol[NPLAQ]) {
       mult_nn((matrix *)(local_pt[flip][0][i]), &tmat, &(tempmat[i]));
 
       tr = -1.0 * permm * (s->bc3[a][b][c]) * (s->bc1[c]);
-      scalar_mult_matrix((matrix *)(local_pt[flip][3][i]), tr, &tmat);
-      mult_nn_sum(&tmat, (matrix *)(local_pt[flip][2][i]), &(tempmat[i]));
-
-      scalar_mult_sum_adj_matrix(&(tempmat[i]), -0.5, &(s->f_U[c]));
+        
+    #ifdef HYBRID
+        scalar_mult_matrix((matrix *)(local_pt[flip][3][i]), tr, &tmat);
+        mult_nn_sum(&tmat, (matrix *)(local_pt[flip][2][i]), &(tempmat[i]));
+        mult_na(&tempmat[i], &(s->link[c]), &tmat);
+        scalar_mult_sum_adj_matrix(&tmat, -0.5, &(s->f_U[c]));
+    #else
+        scalar_mult_matrix((matrix *)(local_pt[flip][3][i]), tr, &tmat);
+        mult_nn_sum(&tmat, (matrix *)(local_pt[flip][2][i]), &(tempmat[i]));
+        
+        scalar_mult_sum_adj_matrix(&(tempmat[i]), -0.5, &(s->f_U[c]));
+    #endif
     }
     cleanup_gather(tag0[flip]);
     cleanup_gather(tag1[flip]);
@@ -965,9 +1031,21 @@ void assemble_fermion_force(Twist_Fermion *sol, Twist_Fermion *psol) {
     }
     wait_gather(mtag[mu]);
     FORALLSITES(i, s) {
-      scalar_mult_matrix((matrix *)(gen_pt[mu][i]), s->bc1[mu], &tmat);
-      mult_nn(&(link_src[mu][i]), &tmat, &(UpsiU[mu][i]));   // Initialize
-      mult_nn_dif(&(site_dest[i]), &(link_src[mu][i]), &(UpsiU[mu][i]));
+        
+    #ifdef HYBRID
+        mult_na((matrix *)(gen_pt[mu][i]), &(s->link[mu]), &tmat2);
+        scalar_mult_matrix(&tmat2, s->bc1[mu], &tmat);
+        mult_nn(&(link_src[mu][i]), &tmat, &(UpsiU[mu][i]));   // Initialize
+        mult_nn(&(site_dest[i]), &(link_src[mu][i]), &tmat);
+        mult_na_dif(&tmat, &(s->link[mu]), &(UpsiU[mu][i]));
+        scalar_mult_adj_matrix(&(UpsiU[mu][i]), 0.5, &(s->f_U[mu]));
+    #else
+        scalar_mult_matrix((matrix *)(gen_pt[mu][i]), s->bc1[mu], &tmat);
+        mult_nn(&(link_src[mu][i]), &tmat, &(UpsiU[mu][i]));   // Initialize
+        mult_nn_dif(&(site_dest[i]), &(link_src[mu][i]), &(UpsiU[mu][i]));
+        scalar_mult_adj_matrix(&(UpsiU[mu][i]), 0.5, &(s->f_U[mu]));
+    #endif
+        
     }
     cleanup_gather(mtag[mu]);
   }
@@ -983,12 +1061,23 @@ void assemble_fermion_force(Twist_Fermion *sol, Twist_Fermion *psol) {
     }
     wait_gather(mtag[mu]);
     FORALLSITES(i, s) {
-      scalar_mult_matrix((matrix *)(gen_pt[mu][i]), s->bc1[mu], &tmat);
-      mult_nn_dif(&(link_dest[mu][i]), &tmat, &(UpsiU[mu][i]));
-      mult_nn_sum(&(site_src[i]), &(link_dest[mu][i]), &(UpsiU[mu][i]));
-
-      // Initialize the force collectors -- done with UpsiU[mu]
-      scalar_mult_adj_matrix(&(UpsiU[mu][i]), 0.5, &(s->f_U[mu]));
+        
+    #ifdef HYBRID
+        mult_na(&(link_dest[mu][i]), &(s->link[mu]), &tmat);
+        mult_nn(&(site_src[i]), &tmat, &(UpsiU[mu][i]));
+        scalar_mult_matrix((matrix *)(gen_pt[mu][i]), s->bc1[mu], &tmat);
+        mult_nn(&(link_dest[mu][i]), &tmat, &tmat2);
+        mult_na_dif(&tmat2, &(s->link[mu]), &(UpsiU[mu][i]));
+        scalar_mult_sum_adj_matrix(&(UpsiU[mu][i]), 0.5, &(s->f_U[mu]));
+    #else
+        scalar_mult_matrix((matrix *)(gen_pt[mu][i]), s->bc1[mu], &tmat);
+        mult_nn(&(site_src[i]), &(link_dest[mu][i]), &(UpsiU[mu][i]));
+        mult_nn_dif(&(link_dest[mu][i]), &tmat, &(UpsiU[mu][i]));
+        
+        // Initialize the force collectors (again) with UpsiU[mu]
+        scalar_mult_sum_adj_matrix(&(UpsiU[mu][i]), 0.5, &(s->f_U[mu]));
+    #endif
+        
     }
     cleanup_gather(mtag[mu]);
   }
@@ -1057,8 +1146,16 @@ void assemble_fermion_force(Twist_Fermion *sol, Twist_Fermion *psol) {
           scalar_mult_matrix((matrix *)(local_pt[flip][0][i]),
                              -1.0 * s->bc1[mu], &tmat);
 
-        mult_nn_sum(&tmat, &(plaq_dest[index][i]), &(s->f_U[mu]));
-        sum_matrix((matrix *)(local_pt[flip][1][i]), &(s->f_U[mu]));
+    #ifdef HYBRID
+          mult_nn(&(s->link[mu]), &tmat, &tmat2);
+          mult_nn_sum(&tmat2, &(plaq_dest[index][i]), &(s->f_U[mu]));
+          mult_nn_sum(&(s->link[mu]), (matrix *)(local_pt[flip][1][i]),
+                      &(s->f_U[mu]));
+    #else
+          mult_nn_sum(&tmat, &(plaq_dest[index][i]), &(s->f_U[mu]));
+          sum_matrix((matrix *)(local_pt[flip][1][i]), &(s->f_U[mu]));
+    #endif
+          
       }
       cleanup_gather(tag0[flip]);
       cleanup_gather(tag1[flip]);
@@ -1127,8 +1224,15 @@ void assemble_fermion_force(Twist_Fermion *sol, Twist_Fermion *psol) {
         else
           scalar_mult_matrix(&(plaq_src[index][i]), s->bc1[mu], &tmat);
 
-        mult_nn_sum((matrix *)(local_pt[flip][0][i]), &tmat, &(s->f_U[mu]));
-        dif_matrix((matrix *)(local_pt[flip][1][i]), &(s->f_U[mu]));
+    #ifdef HYBRID
+          mult_nn((matrix *)(local_pt[flip][0][i]), &tmat, &tmat2);
+          mult_nn_sum(&(s->link[mu]), &tmat2, &(s->f_U[mu]));
+          mult_nn_dif(&(s->link[mu]), (matrix *)(local_pt[flip][1][i]), &(s->f_U[mu]));
+    #else
+          mult_nn_sum((matrix *)(local_pt[flip][0][i]), &tmat, &(s->f_U[mu]));
+          dif_matrix((matrix *)(local_pt[flip][1][i]), &(s->f_U[mu]));
+    #endif
+          
       }
       cleanup_gather(tag0[flip]);
       cleanup_gather(tag1[flip]);
@@ -1301,12 +1405,24 @@ double fermion_force(Real eps, Twist_Fermion *src, Twist_Fermion **sol) {
   // Opposite sign as to gauge force,
   // because dS_G / dU = 2F_g while ds_F / dU = -2F_f
   // Move negation here as well, though adjoint remains above
-  FORALLSITES(i, s) {
-    FORALLDIR(mu) {
-      scalar_mult_dif_matrix(&(fullforce[mu][i]), eps, &(s->mom[mu]));
-      returnit += realtrace(&(fullforce[mu][i]), &(fullforce[mu][i]));
+#ifdef HYBRID
+    FORALLSITES(i, s) {
+        FORALLDIR(mu)   {
+            tc = trace(&(fullforce[mu][i]));
+            CMULREAL(tc,-1*one_ov_N,tc);
+            c_scalar_add_diag(&(fullforce[mu][i]), &tc);
+            scalar_mult_dif_matrix(&(fullforce[mu][i]), eps, &(s->mom[mu]));
+            returnit += realtrace(&(fullforce[mu][i]), &(fullforce[mu][i]));
+        }
     }
-  }
+#else
+    FORALLSITES(i, s) {
+        FORALLDIR(mu) {
+            scalar_mult_dif_matrix(&(fullforce[mu][i]), eps, &(s->mom[mu]));
+            returnit += realtrace(&(fullforce[mu][i]), &(fullforce[mu][i]));
+        }
+    }
+#endif
   g_doublesum(&returnit);
 
   free(fullforce);
