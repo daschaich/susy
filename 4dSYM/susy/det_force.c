@@ -9,6 +9,12 @@ double det_force(Real eps) {
   double returnit = 0.0;
   msg_tag *tag[NUMLINK];
 
+#ifdef TRUNCATED
+  node0_printf("ERROR: Do not use non-zero kappa_u1 ");
+  node0_printf("with truncated action... aborting\n");
+  terminate(1);
+#endif
+
   // Loop over directions, update momenta by accumulating
   //   ZWstar[b][a](x) + ZWstar[a][b](x - b) in tr_dest(x)
   // where ZWstar[a][b](x) = plaqdet[a][b](x) [plaqdet[a][b](x) - 1]^*

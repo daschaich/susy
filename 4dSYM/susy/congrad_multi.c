@@ -19,7 +19,7 @@
 // Return number of iterations
 // src is where the source is created
 // psim[Norder] are working TFs for the conjugate gradient
-// MaxCG is the maximum number of iterations per restart
+// MaxCG is the maximum number of iterations per solve
 // errormin is the target |r|^2, scaled below by source_norm = |src|^2
 // size_r is the final obtained |r|^2, hopefully < errormin * source_norm
 int congrad_multi(Twist_Fermion *src, Twist_Fermion **psim,

@@ -92,6 +92,9 @@ int initial_set() {
 // -----------------------------------------------------------------
 // Allocate space for fields
 void make_fields() {
+#ifdef TRUNCATED
+  node0_printf("Gauge links truncated to SL(N,C)\n");
+#endif
 #ifdef EIG_POT
   node0_printf("Single-trace scalar potential\n");
 #else

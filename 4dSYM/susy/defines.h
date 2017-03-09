@@ -22,6 +22,8 @@
 
 // -----------------------------------------------------------------
 // Susy stuff
+//#define TRUNCATED         // Truncate the gauge links to live in SL(N,C)
+                          // Truncated case is not actively tested!!!
 //#define EIG_POT           // Single rather than double-trace scalar potential
                           // Single-trace case is not actively tested!!!
 #define LINEAR_DET        // det-1 rather than |det-1|^2

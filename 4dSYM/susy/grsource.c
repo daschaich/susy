@@ -10,14 +10,21 @@
 // Construct gaussian random momentum matrices
 // as sum of U(N) generators with gaussian random coefficients
 void ranmom() {
-  register int i, j, mu;
+  register int i, j, mu, numgen;
   register site *s;
   complex grn;
+
+#ifdef TRUNCATED
+  // Truncation involves excluding the last generator
+  numgen = DIMF - 1;
+#else
+  numgen = DIMF;
+#endif
 
   FORALLSITES(i, s) {
     FORALLDIR(mu) {
       clear_mat(&(s->mom[mu]));
-      for (j = 0; j < DIMF; j++) {
+      for (j = 0; j < numgen; j++) {
 #ifdef SITERAND
         grn.real = gaussian_rand_no(&(s->site_prn));
         grn.imag = gaussian_rand_no(&(s->site_prn));

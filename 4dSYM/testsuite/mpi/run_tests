@@ -12,9 +12,7 @@ if [ $# -gt 1 ]; then
 
   # Change N
   cd ../../susy/
-  NSq=$[$N*$N]
   awk -v"X=#define NCOL $N" '{sub(/^#define NCOL .*/,X);print}' ../include/susy.h > TEMP && mv TEMP ../include/susy.h
-  awk -v"X=#define DIMF $NSq" '{sub(/^#define DIMF .*/,X);print}' ../include/susy.h > TEMP && mv TEMP ../include/susy.h
 
   # Compile
   echo "Compiling susy_$target..."
@@ -27,7 +25,6 @@ if [ $# -gt 1 ]; then
   # Reset to N=2
   cd ../include/
   awk -v"X=#define NCOL 2" '{sub(/^#define NCOL .*/,X);print}' susy.h > TEMP && mv TEMP susy.h
-  awk -v"X=#define DIMF 4" '{sub(/^#define DIMF .*/,X);print}' susy.h > TEMP && mv TEMP susy.h
 
   # Run
   cd ../testsuite/
@@ -55,9 +52,7 @@ for N in 2 3 4 ; do
   # Compile
   cd ../../susy/
   # Change N
-  NSq=$[$N*$N]
   awk -v"X=#define NCOL $N" '{sub(/^#define NCOL .*/,X);print}' ../include/susy.h > TEMP && mv TEMP ../include/susy.h
-  awk -v"X=#define DIMF $NSq" '{sub(/^#define DIMF .*/,X);print}' ../include/susy.h > TEMP && mv TEMP ../include/susy.h
   for target in hmc meas hmc_meas mcrg eig cheb mode phase ; do
     echo "Compiling susy_$target..."
     if ! make -f $makefile susy_$target >& /dev/null ; then
@@ -69,7 +64,6 @@ for N in 2 3 4 ; do
   # Reset to N=2
   cd ../include/
   awk -v"X=#define NCOL 2" '{sub(/^#define NCOL .*/,X);print}' susy.h > TEMP && mv TEMP susy.h
-  awk -v"X=#define DIMF 4" '{sub(/^#define DIMF .*/,X);print}' susy.h > TEMP && mv TEMP susy.h
 
   # Run
   cd ../testsuite/

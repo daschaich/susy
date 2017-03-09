@@ -1,15 +1,10 @@
 // -----------------------------------------------------------------
-// Wilson loops for fundamental links (hardwired in path)
-// Evaluate in different spatial dirs to check rotational invariance
-// This version calls path to compute simple rectangular loops
-// so gauge fixing has no effect
-#include "susy_includes.h"
-// -----------------------------------------------------------------
-
-
-
-// -----------------------------------------------------------------
+// Wilson loops for static potential using path
+// Print all permutations to enable tree-level improvement
+// This version computes simple rectangular loops so gauge fixing has no effect
 // Use tempmat for temporary storage
+#include "susy_includes.h"
+
 void hvy_pot_loop(int do_det) {
   register int i;
   register site *s;

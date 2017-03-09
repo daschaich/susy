@@ -1,0 +1,116 @@
+#!/bin/bash
+# This script needs to be run from the 2dSYM/testsuite/scalar directory
+
+# Allow user to specify particular target
+if [ $# -gt 1 ]; then
+  N=$1
+  target=$2
+
+  # Change N
+  cd ../../susy/
+  awk -v"X=#define NCOL $N" '{sub(/^#define NCOL .*/,X);print}' ../include/susy.h > TEMP && mv TEMP ../include/susy.h
+
+  # Compile
+  echo "Compiling susy_$target..."
+  if ! make -f Make_scalar susy_$target >& /dev/null ; then
+    echo "ERROR: susy_$target compilation failed"
+    make -f Make_scalar susy_$target
+    exit
+  fi
+
+  # Reset to N=2
+  cd ../include/
+  awk -v"X=#define NCOL 2" '{sub(/^#define NCOL .*/,X);print}' susy.h > TEMP && mv TEMP susy.h
+
+  # Run
+  cd ../testsuite/
+  rm -f scalar/$target.U$N.out
+  echo "Running susy_$target..."
+  ../susy/susy_$target < in.U$N.$target > scalar/$target.U$N.out
+
+  # Check
+  cd scalar/
+  d="`diff -I'Time' -I'time' -I'seconds' -I'^start' $target.U$N.ref $target.U$N.out`"
+  if [ -n "$d" ] ; then   # Non-zero string length
+    echo "$target.U$N.ref and $target.U$N.out differ:"
+    echo "$d"
+  else
+    echo "PASS: susy_$target reproduces reference output"
+  fi
+  exit
+fi
+
+# Otherwise consider all active targets
+# This can take a while!
+for N in 2 3 4 ; do
+  echo "N=$N"
+
+  # Compile
+  cd ../../susy/
+  # Change N
+  awk -v"X=#define NCOL $N" '{sub(/^#define NCOL .*/,X);print}' ../include/susy.h > TEMP && mv TEMP ../include/susy.h
+  for target in hmc meas hmc_meas mcrg eig phase ; do
+    echo "Compiling susy_$target..."
+    if ! make -f Make_scalar susy_$target >& /dev/null ; then
+      echo "ERROR: susy_$target compilation failed"
+      make -f Make_scalar susy_$target
+      exit
+    fi
+  done
+  # Reset to N=2
+  cd ../include/
+  awk -v"X=#define NCOL 2" '{sub(/^#define NCOL .*/,X);print}' susy.h > TEMP && mv TEMP susy.h
+
+  # Run
+  cd ../testsuite/
+  for target in hmc meas hmc_meas mcrg eig phase ; do
+    rm -f scalar/$target.U$N.out
+    echo "Running susy_$target..."
+    ../susy/susy_$target < in.U$N.$target > scalar/$target.U$N.out
+  done
+
+  # Checkpointed pfaffian computation
+  rm -f scalar/phase_part1.U$N.out scalar/phase_part2.U$N.out
+  cp in.U$N.phase SAV
+  awk -v"X=ckpt_save 100" '{sub(/ckpt_save 0/,X);print}' in.U$N.phase > TEMP && mv TEMP in.U$N.phase
+  echo "Running checkpointed susy_phase part 1 of 2..."
+  ../susy/susy_phase < in.U$N.phase > scalar/phase_part1.U$N.out
+  cp SAV in.U$N.phase
+  awk -v"X=ckpt_load 100" '{sub(/ckpt_load 0/,X);print}' in.U$N.phase > TEMP && mv TEMP in.U$N.phase
+  echo "Running checkpointed susy_phase part 2 of 2..."
+  ../susy/susy_phase < in.U$N.phase > scalar/phase_part2.U$N.out
+  mv SAV in.U$N.phase
+  rm -f config.U$N.44.diag100 config.U$N.44.Q100
+
+  # Check
+  cd scalar/
+  for target in hmc meas hmc_meas mcrg eig phase phase_part1 phase_part2 ; do
+    d="`diff -I'Time' -I'time' -I'seconds' -I'^start' $target.U$N.ref $target.U$N.out`"
+    if [ -n "$d" ] ; then   # Non-zero string length
+      echo "$target.U$N.ref and $target.U$N.out differ:"
+      echo "$d"
+      echo
+    else
+      echo "PASS: susy_$target reproduces reference output"
+    fi
+  done
+done
+
+# This can be useful to check whether intermediate steps of the pfaffian computation have changed
+exit 0  # For now it is not included in the standard checks
+for N in 2 3 4 ; do
+  for target in phase phase_part1 phase_part2 ; do
+    grep Column $target.U$N.out | awk '{print $10}' > TEMP.out
+    grep Column $target.U$N.ref | awk '{print $10}' > TEMP.ref
+    paste TEMP.out TEMP.ref > TEMP
+    d="`awk '{if(($1-$2)^2>1e-12)print $1, $2}' TEMP`"
+    if [ -n "$d" ] ; then   # Non-zero string length
+      echo "$target.U$N.ref and $target.U$N.out differ:"
+      echo "$d"
+      echo
+    else
+      echo "PASS: susy_$target reproduces reference output"
+    fi
+    rm -f TEMP TEMP.out TEMP.ref
+  done
+done

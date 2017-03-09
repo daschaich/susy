@@ -179,7 +179,7 @@ void setup_offset() {
 #ifdef DEBUG_CHECK
     int dir;
     node0_printf("  %d ahead:", i);
-    for (dir = XUP; dir <= TUP; dir++)
+    FORALLUPDIR(dir)
       node0_printf(" %d", offset[i][dir]);
 
     node0_printf(" (offset %d)\n", goffset[i]);
