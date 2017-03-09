@@ -287,7 +287,7 @@ double gauge_force(Real eps) {
   // Subtract to reproduce -Adj(f_U)
   FORALLSITES(i, s) {
     FORALLDIR(mu) {
-#ifdef TRUNCATE
+#ifdef TRUNCATED
       // Subtract trace after taking adjoint
       adjoint(&(s->f_U[mu]), &tmat);
       tc = trace(&tmat);
@@ -1223,7 +1223,8 @@ void assemble_fermion_force(Twist_Fermion *sol, Twist_Fermion *psol) {
   // Plaquette determinant contributions if G is non-zero
   if (doG) {
 #ifdef TRUNCATED
-    node0_printf("ERROR: Do not use non-zero G with truncated action\n");
+    node0_printf("ERROR: Do not use non-zero G ");
+    node0_printf("with truncated action... aborting\n");
     terminate(1);
 #endif
 
