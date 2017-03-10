@@ -285,6 +285,7 @@ double gauge_force(Real eps) {
 
   // Finally take adjoint and update the momentum
   // Subtract to reproduce -Adj(f_U)
+  // Compute average gauge force in same loop
   FORALLSITES(i, s) {
     FORALLDIR(mu) {
 #ifdef TRUNCATED
@@ -294,16 +295,12 @@ double gauge_force(Real eps) {
       CMULREAL(tc, -1.0 * one_ov_N, tc);
       c_scalar_add_diag(&tmat, &tc);
       scalar_mult_dif_matrix(&tmat, eps, &(s->mom[mu]));
+      returnit += realtrace(&tmat, &tmat);
 #else
       scalar_mult_dif_adj_matrix(&(s->f_U[mu]), eps, &(s->mom[mu]));
+      returnit += realtrace(&(s->f_U[mu]), &(s->f_U[mu]));
 #endif
     }
-  }
-
-  // Compute average gauge force
-  FORALLSITES(i, s) {
-    FORALLDIR(mu)
-      returnit += realtrace(&(s->f_U[mu]), &(s->f_U[mu]));
   }
   g_doublesum(&returnit);
 

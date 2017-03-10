@@ -67,8 +67,8 @@ void update_uu(Real eps) {
   }
 #else
   // U <-- p + U
-  FORALLDIR(mu) {
-    FORALLSITES(i, s)
+  FORALLSITES(i, s) {
+    FORALLDIR(mu)
       scalar_mult_sum_matrix(&(s->mom[mu]), eps, &(s->link[mu]));
   }
 #endif
