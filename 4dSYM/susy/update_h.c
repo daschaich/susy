@@ -945,13 +945,27 @@ void pot_force(matrix *eta, matrix *psi[NUMLINK], int sign) {
       // We're already ready to add to force
       // Start with eta Tr / N hitting Udag_a(x)
       CMULREAL(tr_dest[i], localB, tc);
+#ifdef TRUNCATED
+      // U_a(x) [...]
+      mult_na(&(s->link[a]), &(s->link[a]), &tmat);
+      c_scalar_mult_sum_mat(&tmat, &tc, &(s->f_U[a]));
+#else
+      // Just [...]
       c_scalar_mult_sum_mat_adj(&(s->link[a]), &tc, &(s->f_U[a]));
+#endif
 
       // Add eta Tr / N hitting U_a(x) and eta Y hitting psi_a(x)
       // and take the adjoint of the sum
       c_scalar_mult_mat(&(s->link[a]), &(tr_dest[i]), &tmat);
       scalar_mult_sum_matrix(&(tempmat[i]), tr, &tmat);
+#ifdef TRUNCATED
+      // U_a(x) [...]; we can overwrite tempmat[i]
+      mult_na(&(s->link[a]), &tmat, &(tempmat[i]));
+      scalar_mult_sum_matrix(&(tempmat[i]), localB, &(s->f_U[a]));
+#else
+      // Just [...]
       scalar_mult_sum_adj_matrix(&tmat, localB, &(s->f_U[a]));
+#endif
     }
   }
 }
@@ -1235,12 +1249,6 @@ void assemble_fermion_force(Twist_Fermion *sol, Twist_Fermion *psol) {
   // Scalar potential contributions if B is non-zero
   // Use tempmat and Tr_Uinv for temporary storage
   if (doB) {
-#ifdef TRUNCATED
-    node0_printf("ERROR: Truncated action not yet implemented ");
-    node0_printf("in Q-invariant scalar potential, aborting\n");
-    terminate(1);
-#endif
-
     // First connect link_src with site_dest[DIMF - 1]^dag (LtoS)
     pot_force(site_dest, link_src, PLUS);
 
