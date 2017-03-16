@@ -336,10 +336,12 @@ int readin(int prompt) {
     IF_OK status += get_i(stdin, prompt, "maxIter", &par_buf.maxIter);
 #endif
 
-#ifdef CHEB
+#if defined(CHEB) || defined(MODE)
     // Number of stochastic sources
     IF_OK status += get_i(stdin, prompt, "Nstoch", &par_buf.Nstoch);
+#endif
 
+#ifdef CHEB
     // How many Chebyshev coefficients to compute
     IF_OK status += get_i(stdin, prompt, "cheb_order", &par_buf.cheb_order);
 
@@ -349,9 +351,6 @@ int readin(int prompt) {
 #endif
 
 #ifdef MODE
-    // Number of stochastic sources
-    IF_OK status += get_i(stdin, prompt, "Nstoch", &par_buf.Nstoch);
-
     // Which order polynomial to use in step function
     IF_OK status += get_i(stdin, prompt, "step_order", &par_buf.step_order);
 
@@ -454,15 +453,17 @@ int readin(int prompt) {
   maxIter = par_buf.maxIter;
 #endif
 
-#ifdef CHEB
+#if defined(CHEB) || defined(MODE)
   Nstoch = par_buf.Nstoch;
 
   // Normalization factor for errors from averaging over stochastic sources
   if (Nstoch > 1)
-    sqrtN_ov_Nm1 = sqrt((Real)Nstoch / ((Real)Nstoch - 1.0));
+    sqrt1_ov_Nm1 = 1.0 / sqrt((Real)Nstoch - 1.0);
   else
-    sqrtN_ov_Nm1 = 0.0;
+    sqrt1_ov_Nm1 = 0.0;
+#endif
 
+#ifdef CHEB
   cheb_order = par_buf.cheb_order;
   cheb_coeff = malloc(cheb_order * sizeof(Real));
   cheb_err = malloc(cheb_order * sizeof(Real));
@@ -472,14 +473,6 @@ int readin(int prompt) {
 #endif
 
 #ifdef MODE
-  Nstoch = par_buf.Nstoch;
-
-  // Normalization factor for errors from averaging over stochastic sources
-  if (Nstoch > 1)
-    sqrtN_ov_Nm1 = sqrt((Real)Nstoch / ((Real)Nstoch - 1.0));
-  else
-    sqrtN_ov_Nm1 = 0.0;
-
   // Save sources to reuse for each Omega
   source = malloc(Nstoch * sizeof(*source));
   for (i = 0; i < Nstoch; i++)
