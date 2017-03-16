@@ -213,11 +213,16 @@ EXTERN Real eig_tol;          // Tolerance for the eigenvalue computation
 EXTERN int maxIter;           // Maximum iterations
 #endif
 
+#if defined(CHEB) || defined(MODE)
+// Z2 random source and stochastic source stuff for both
+// Chebyshev spectral density and Giusti--Luescher mode number
+EXTERN int Nstoch;                    // Number of stochastic sources
+EXTERN Real sqrt1_ov_Nm1;             // 1 / sqrt(N - 1) for averaging
+EXTERN Twist_Fermion *z_rand;         // Z2 random Twist_Fermion
+#endif
+
 #ifdef CHEB
 // Chebyshev spectral density stuff
-EXTERN int Nstoch, sqrtN_ov_Nm1;      // Number of stochastic sources
-EXTERN Twist_Fermion *z_rand;         // Z2 random Twist_Fermion
-
 EXTERN int cheb_order;                // Number of coefficients to compute
 EXTERN Real *cheb_coeff, *cheb_err;   // Results for coefficients
 EXTERN Real lambda_min, lambda_max;   // Bounds on spectral range
@@ -225,9 +230,6 @@ EXTERN Real lambda_min, lambda_max;   // Bounds on spectral range
 
 #ifdef MODE
 // Giusti--Luescher mode number and step function stuff
-EXTERN int Nstoch, sqrtN_ov_Nm1;      // Number of stochastic sources
-EXTERN Twist_Fermion *z_rand;         // Z2 random Twist_Fermion
-
 EXTERN int step_order;            // Selects between options in mode_coeffs.c
 EXTERN int numOmega;              // Number of Omega at which to evaluate nu
 EXTERN Real *Omega;               // List of Omega at which to evaluate nu
