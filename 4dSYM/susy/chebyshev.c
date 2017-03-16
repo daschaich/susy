@@ -85,7 +85,8 @@ void chebyshev_coeff() {
   for (j = 0; j < cheb_order; j++) {
     cheb_coeff[j] *= norm / (Real)Nstoch;
     tr = cheb_err[j] * norm * norm / (Real)Nstoch;
-    cheb_err[j] = sqrtN_ov_Nm1 * sqrt(fabs(tr - cheb_coeff[j] * cheb_coeff[j]));
+    cheb_err[j] = sqrt(fabs(tr - cheb_coeff[j] * cheb_coeff[j]));
+    cheb_err[j] *= sqrt1_ov_Nm1;
   }
 }
 // -----------------------------------------------------------------
