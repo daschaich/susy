@@ -1,0 +1,10 @@
+magic_number = 20103
+time_stamp = "Thu Apr 20 07:45:11 2017"
+checksums = "6080cdd4 da593e7b"
+nx = 4
+ny = 4
+nz = 4
+nt = 4
+gauge.previous.filename = "config.SU2.4444"
+gauge.previous.time_stamp = "Thu Apr 20 06:48:18 2017"
+gauge.previous.checksums = "6dbf4919 d0a5cd72"
