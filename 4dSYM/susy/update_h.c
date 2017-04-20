@@ -56,6 +56,12 @@ double gauge_force(Real eps) {
   // Only compute if G is non-zero
   // Use tr_dest for temporary storage
   if (doG) {
+#ifdef TRUNCATED
+    node0_printf("ERROR: Do not use non-zero G ");
+    node0_printf("with truncated action... aborting\n");
+    terminate(1);
+#endif
+
     FORALLSITES(i, s) {
       tc = trace(&DmuUmu[i]);
       FORALLDIR(mu) {
@@ -128,7 +134,7 @@ double gauge_force(Real eps) {
   }
 
   // Third we have the scalar potential derivative contribution
-  //   Udag_mu(x) 2B^2/N Tr[DmuUmu](x) Y(x)
+  //   [...] = Udag_mu(x) 2B^2/N Tr[DmuUmu](x) Y(x)
   // where Y(x) = Tr[U_mu(x) Udag_mu(x)] / N - 1
   // Only compute if B is non-zero
   if (doB) {
@@ -139,7 +145,14 @@ double gauge_force(Real eps) {
       FORALLDIR(mu) {
         tr = one_ov_N * realtrace(&(s->link[mu]), &(s->link[mu])) - 1.0;
         CMULREAL(tc, twoBSqOvN * tr, tc2);
+#ifdef TRUNCATED
+        // U_mu(x) [...]
+        mult_na(&(s->link[mu]), &(s->link[mu]), &tmat);
+        c_scalar_mult_sum_mat(&tmat, &tc2, &(s->f_U[mu]));
+#else
+        // Just [...]
         c_scalar_mult_sum_mat_adj(&(s->link[mu]), &tc2, &(s->f_U[mu]));
+#endif
       }
     }
   }
@@ -305,8 +318,14 @@ double gauge_force(Real eps) {
   g_doublesum(&returnit);
 
   // Add in force from separate determinant term if kappa_u1 non-zero
-  if (kappa_u1 > IMAG_TOL)
+  if (kappa_u1 > IMAG_TOL) {
+#ifdef TRUNCATED
+    node0_printf("ERROR: Do not use non-zero kappa_u1 ");
+    node0_printf("with truncated action... aborting\n");
+    terminate(1);
+#endif
     returnit += det_force(eps);
+  }
 
   return (eps * sqrt(returnit) / volume);
 }
@@ -946,11 +965,11 @@ void pot_force(matrix *eta, matrix *psi[NUMLINK], int sign) {
       // Start with eta Tr / N hitting Udag_a(x)
       CMULREAL(tr_dest[i], localB, tc);
 #ifdef TRUNCATED
-      // U_a(x) [...]
+      // U_a(x) Udag_a(x)
       mult_na(&(s->link[a]), &(s->link[a]), &tmat);
       c_scalar_mult_sum_mat(&tmat, &tc, &(s->f_U[a]));
 #else
-      // Just [...]
+      // Just Udag_a(x)
       c_scalar_mult_sum_mat_adj(&(s->link[a]), &tc, &(s->f_U[a]));
 #endif
 
