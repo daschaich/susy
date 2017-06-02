@@ -23,7 +23,7 @@ complex ploop_eig(int dir, int project, double *plpMod) {
   char N = 'N';
   int j, k, t, len = nt;
   int size = NCOL, stat = 0, unit = 1, doub = 2 * NCOL;
-  double norm = 0.0, mag;
+  double norm = 0.0, mag, ave_phase, diff, back;
   double *phase = malloc(NCOL * sizeof(*phase));
   double *eigs = malloc(2 * NCOL * sizeof(*eigs));
   double *dum = malloc(2 * sizeof(*dum));
@@ -145,33 +145,50 @@ complex ploop_eig(int dir, int project, double *plpMod) {
            dum, &unit, dum, &unit, work, &doub, work, &stat);
 
     // Convert eigenvalues to phases in [-pi, pi)
+    // Accumulate real and imaginary parts to compute average phase:
+    // http://en.wikipedia.org/wiki/Mean_of_circular_quantities
     // If the links should be in SU(N), check that eig magnitudes are unity
+    sum = cmplx(0.0, 0.0);
     for (j = 0; j < NCOL; j++) {
       tc.real = eigs[2 * j];
       tc.imag = eigs[2 * j + 1];
-      phase[j] = carg(&tc);
-//      if (fmod(phase[j], TWOPI) < 0)
-//        phase[j] += TWOPI;
-    }
-
-    if (project == 1) {
-      mag = cabs_sq(&tc);
-      if (fabs(mag - 1.0) > IMAG_TOL) {
-        printf("WARNING: Non-unitary Wilson line eigenvalue: ");
-        printf("%d %d %d %d %d %.4g %.4g --> %.4g %.4g\n",
-               s->x, s->y, s->z, s->t, dir, tc.real, tc.imag, mag, phase[j]);
+      if (project == 1) {
+        mag = cabs_sq(&tc);
+        if (fabs(mag - 1.0) > IMAG_TOL) {
+          printf("WARNING: Non-unitary Wilson line eigenvalue: ");
+          printf("%d %d %d %d %d %.4g %.4g --> %.4g %.4g\n",
+                 s->x, s->y, s->z, s->t, dir, tc.real, tc.imag, mag, phase[j]);
+        }
       }
+      CSUM(sum, tc);
+      phase[j] = carg(&tc);       // Produces result in [-pi, pi)
+    }
+    ave_phase = carg(&sum);
+
+    // Make sure phases haven't all canceled out
+    mag = cabs_sq(&sum);
+    if (mag < IMAG_TOL) {
+      printf("ERROR: phases cancelled out, can't average\n");
+      fflush(stdout);
+      terminate(1);
     }
 
-    // Print resulting phases
+    // Print resulting phases as fluctuations about average
     // Include all four coords, even though the one matching dir will be zero
     if (project == 1)
       printf("LINES_POLAR_EIG ");
     else
       printf("LINES_EIG ");
     printf("%d %d %d %d %d", s->x, s->y, s->z, s->t, dir);
-    for (j = 0; j < NCOL; j++)
-      printf(" %.4g", phase[j]);
+    for (j = 0; j < NCOL; j++) {
+      // Make sure the fluctuation remains in [-pi, pi)
+      diff = phase[j] - ave_phase;
+      back = TWOPI - fabs(diff);
+      if (fabs(diff) < fabs(back))
+        printf(" %.4g", diff);
+      else
+        printf(" %.4g", back);
+    }
     printf("\n");
 
     plp = trace(&(staple[i]));
