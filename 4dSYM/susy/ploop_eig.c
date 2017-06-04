@@ -21,7 +21,7 @@ complex ploop_eig(int dir, int project, double *plpMod) {
   register int i;
   register site *s;
   char N = 'N';
-  int j, k, t, len = nt;
+  int j, k, t, len = nt, near_zero;
   int size = NCOL, stat = 0, unit = 1, doub = 2 * NCOL;
   double norm = 0.0, mag, ave_phase, diff, back;
   double *phase = malloc(NCOL * sizeof(*phase));
@@ -144,11 +144,12 @@ complex ploop_eig(int dir, int project, double *plpMod) {
     zgeev_(&N, &N, &size, store, &size, eigs,
            dum, &unit, dum, &unit, work, &doub, work, &stat);
 
-    // Convert eigenvalues to phases in [-pi, pi)
+    // Convert eigenvalues to phases
     // Accumulate real and imaginary parts to compute average phase:
     // http://en.wikipedia.org/wiki/Mean_of_circular_quantities
     // If the links should be in SU(N), check that eig magnitudes are unity
     sum = cmplx(0.0, 0.0);
+    near_zero = 0;
     for (j = 0; j < NCOL; j++) {
       tc.real = eigs[2 * j];
       tc.imag = eigs[2 * j + 1];
@@ -162,8 +163,23 @@ complex ploop_eig(int dir, int project, double *plpMod) {
       }
       CSUM(sum, tc);
       phase[j] = carg(&tc);       // Produces result in [-pi, pi)
+
+      // Monitor whether the phase is closer to 0 or closer to pi
+      if (fabs(phase[j]) < 0.5 * PI)
+        near_zero++;
     }
     ave_phase = carg(&sum);
+
+    // Check which domain we should use, [-pi, pi) or [0, 2pi)
+    // Switch if minority of phases are near 0
+    if (near_zero < 0.5 * (Real)NCOL) {
+      for (j = 0; j < NCOL; j++) {
+        if (phase[j] < 0)
+          phase[j] += TWOPI;
+      }
+      if (ave_phase < 0)
+        ave_phase += TWOPI;
+    }
 
     // Make sure phases haven't all canceled out
     mag = cabs_sq(&sum);
