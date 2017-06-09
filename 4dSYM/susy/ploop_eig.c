@@ -21,13 +21,13 @@ complex ploop_eig(int dir, int project, double *plpMod) {
   register int i;
   register site *s;
   char N = 'N';
-  int j, k, t, len = nt, near_zero;
+  int j, k, t, len = nt;
   int size = NCOL, stat = 0, unit = 1, doub = 2 * NCOL;
-  double norm = 0.0, mag, ave_phase, diff, back;
-  double *phase = malloc(NCOL * sizeof(*phase));
+  double norm = 0.0, mag;
   double *eigs = malloc(2 * NCOL * sizeof(*eigs));
   double *dum = malloc(2 * sizeof(*dum));
-  complex sum  = cmplx(0.0, 0.0), plp, tc;
+  complex ave, sum = cmplx(0.0, 0.0), plp, tc;
+  complex *ceigs = malloc(NCOL * sizeof(*ceigs));
   matrix tmat, tmat2;
 
   if (this_node != 0) {
@@ -144,52 +144,40 @@ complex ploop_eig(int dir, int project, double *plpMod) {
     zgeev_(&N, &N, &size, store, &size, eigs,
            dum, &unit, dum, &unit, work, &doub, work, &stat);
 
-    // Convert eigenvalues to phases
+    // Extract eigenvalues from LAPACK output
     // Accumulate real and imaginary parts to compute average phase:
-    // http://en.wikipedia.org/wiki/Mean_of_circular_quantities
+    // https://en.wikipedia.org/wiki/Mean_of_circular_quantities
     // If the links should be in SU(N), check that eig magnitudes are unity
-    sum = cmplx(0.0, 0.0);
-    near_zero = 0;
+    ave = cmplx(0.0, 0.0);
     for (j = 0; j < NCOL; j++) {
-      tc.real = eigs[2 * j];
-      tc.imag = eigs[2 * j + 1];
+      ceigs[j].real = eigs[2 * j];
+      ceigs[j].imag = eigs[2 * j + 1];
+      mag = cabs(&(ceigs[j]));
       if (project == 1) {
-        mag = cabs_sq(&tc);
         if (fabs(mag - 1.0) > IMAG_TOL) {
           printf("WARNING: Non-unitary Wilson line eigenvalue: ");
           printf("%d %d %d %d %d %.4g %.4g --> %.4g %.4g\n",
-                 s->x, s->y, s->z, s->t, dir, tc.real, tc.imag, mag, phase[j]);
+                 s->x, s->y, s->z, s->t, dir,
+                 ceigs[j].real, ceigs[j].imag, mag, carg(&(ceigs[j])));
         }
       }
-      CSUM(sum, tc);
-      phase[j] = carg(&tc);       // Produces result in [-pi, pi)
-
-      // Monitor whether the phase is closer to 0 or closer to pi
-      if (fabs(phase[j]) < 0.5 * PI)
-        near_zero++;
-    }
-    ave_phase = carg(&sum);
-
-    // Check which domain we should use, [-pi, pi) or [0, 2pi)
-    // Switch if minority of phases are near 0
-    if (near_zero < 0.5 * (Real)NCOL) {
-      for (j = 0; j < NCOL; j++) {
-        if (phase[j] < 0)
-          phase[j] += TWOPI;
-      }
-      if (ave_phase < 0)
-        ave_phase += TWOPI;
+      else      // Scale eigenvalue to unit circle before accumulating
+        CDIVREAL(ceigs[j], mag, ceigs[j]);
+      CSUM(ave, ceigs[j]);
     }
 
     // Make sure phases haven't all canceled out
-    mag = cabs_sq(&sum);
-    if (mag < IMAG_TOL) {
+    // Might as well move ave back onto unit circle if possible
+    // (No need to average ave by NCOL---doesn't affect phase)
+    mag = cabs(&ave);
+    if (fabs(mag) < IMAG_TOL) {
       printf("ERROR: phases cancelled out, can't average\n");
       fflush(stdout);
       terminate(1);
     }
+    CDIVREAL(ave, mag, ave);
 
-    // Print resulting phases as fluctuations about average
+    // Divide each eigenvalue by ave to extract relative phase, and print
     // Include all four coords, even though the one matching dir will be zero
     if (project == 1)
       printf("LINES_POLAR_EIG ");
@@ -197,16 +185,12 @@ complex ploop_eig(int dir, int project, double *plpMod) {
       printf("LINES_EIG ");
     printf("%d %d %d %d %d", s->x, s->y, s->z, s->t, dir);
     for (j = 0; j < NCOL; j++) {
-      // Make sure the fluctuation remains in [-pi, pi)
-      diff = phase[j] - ave_phase;
-      back = TWOPI - fabs(diff);
-      if (fabs(diff) < fabs(back))
-        printf(" %.4g", diff);
-      else
-        printf(" %.4g", back);
+      CDIV(ceigs[j], ave, tc);
+      printf(" %.4g", carg(&tc));     // Produces result in [-pi, pi)
     }
     printf("\n");
 
+    // Don't forget about the Polyakov loop itself
     plp = trace(&(staple[i]));
     CSUM(sum, plp);
     *plpMod += cabs(&plp);
@@ -223,6 +207,7 @@ complex ploop_eig(int dir, int project, double *plpMod) {
 
   free(eigs);
   free(dum);
+  free(ceigs);
   return sum;
 }
 // -----------------------------------------------------------------
