@@ -190,10 +190,17 @@ complex ploop_eig(int dir, int project, double *plpMod) {
     }
     printf("\n");
 
-    // Don't forget about the Polyakov loop itself
+    // Don't forget about the Wilson line (trace) itself
+    // Might as well print this out as well
     plp = trace(&(staple[i]));
     CSUM(sum, plp);
     *plpMod += cabs(&plp);
+    if (project == 1)
+      printf("LINES_POLAR_TR  ");
+    else
+      printf("LINES_TR  ");
+    printf("%d %d %d %d %d %.4g %.4g\n",
+           s->x, s->y, s->z, s->t, dir, plp.real, plp.imag);
   }
   g_complexsum(&sum);
   g_doublesum(plpMod);
