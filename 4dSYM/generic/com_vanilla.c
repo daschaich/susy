@@ -114,13 +114,13 @@ void initialize_machine(int *argc, char ***argv) {
   // Check if 32-bit int is set correctly
 #ifdef SHORT_IS_32BIT
   if (sizeof(unsigned short) != 4) {
-    printf("node%i: SHORT_IS_32BIT is set but sizeof(unsigned short) = %i\n",
+    printf("node%d: SHORT_IS_32BIT is set but sizeof(unsigned short) = %d\n",
            mynode(), sizeof(unsigned short));
     terminate(1);
   }
 #else
   if (sizeof(unsigned int) != 4) {
-    printf("node%i: SHORT_IS_32BIT is not set but sizeof(unsigned int) = %i\n",
+    printf("node%d: SHORT_IS_32BIT is not set but sizeof(unsigned int) = %d\n",
            mynode(), (int)sizeof(unsigned int));
     terminate(1);
   }
@@ -230,11 +230,11 @@ void broadcast_float(Real *fpt) {
 void broadcast_double(double *dpt) {
 }
 
-// Broadcast generic precision complex number from node zero
+// Broadcast generic-precision complex number from node zero
 void broadcast_complex(complex *cpt) {
 }
 
-// Broadcast double precision complex number from node zero
+// Broadcast double-precision complex number from node zero
 void broadcast_dcomplex(double_complex *cpt) {
 }
 
@@ -326,7 +326,7 @@ void sort_eight_gathers(int index) {
 
   for (i = 0; i < 8; i++)
     memcpy(&tt[i], &gather_array[index + i], sizeof(gather_t));
-  for (i = XUP; i <= TUP; i++) {
+  FORALLUPDIR(i) {
     memcpy(&gather_array[index + i], &tt[2 * i], sizeof(gather_t));
     memcpy(&gather_array[index + OPP_DIR(i)],
            &tt[2 * i + 1], sizeof(gather_t));
@@ -350,14 +350,14 @@ static void neighbor_coords_special(
   *z2p = z;
   *t2p = t;
   switch(dir) {
-    case XUP   : *x2p = (x + 1) % nx;       break;
-    case XDOWN : *x2p = (x + nx - 1) % nx;  break;
-    case YUP   : *y2p = (y + 1) % ny;       break;
-    case YDOWN : *y2p = (y + ny - 1) % ny;  break;
-    case ZUP   : *z2p = (z + 1) % nz;       break;
-    case ZDOWN : *z2p = (z + nz - 1) % nz;  break;
-    case TUP   : *t2p = (t + 1) % nt;       break;
-    case TDOWN : *t2p = (t + nt - 1) % nt;  break;
+    case XUP   : *x2p = (x + 1) % nx;      break;
+    case XDOWN : *x2p = (x + nx - 1) % nx; break;
+    case YUP   : *y2p = (y + 1) % ny;      break;
+    case YDOWN : *y2p = (y + ny - 1) % ny; break;
+    case ZUP   : *z2p = (z + 1) % nz;      break;
+    case ZDOWN : *z2p = (z + nz - 1) % nz; break;
+    case TUP   : *t2p = (t + 1) % nt;      break;
+    case TDOWN : *t2p = (t + nt - 1) % nt; break;
     default: printf("BOTCH: bad direction\n"); terminate(1);
   }
 }
@@ -384,9 +384,10 @@ void make_nn_gathers() {
   else
     gather_parity = SWITCH_PARITY;
 
-  for (i = XUP; i <= TUP; i++)
+  FORALLUPDIR(i) {
     make_gather(neighbor_coords_special, &i, WANT_INVERSE,
                 ALLOW_EVEN_ODD, gather_parity);
+  }
 
   /* Sort into the order we want for nearest neighbor gathers,
      so you can use XUP, XDOWN, etc. as argument in calling them. */
@@ -739,9 +740,9 @@ msg_tag* start_gather_field(
    msg_tag *tag1, *tag2, *mtag;
 
    tag1 = declare_gather_site(F_OFFSET(phi), sizeof(vector), XUP,
-                    EVEN, gen_pt1);
+                              EVEN, gen_pt1);
    tag2 = declare_gather_site(F_OFFSET(phi), sizeof(vector), XDOWN,
-                    EVEN, gen_pt2);
+                              EVEN, gen_pt2);
    mtag = NULL;
    accumulate_gather(&mtag, tag1);
    accumulate_gather(&mtag, tag2);
@@ -782,7 +783,7 @@ msg_tag* start_gather_field(
                                   XUP, EVEN, gen_pt1);
  with
    mtag = declare_gather_site(F_OFFSET(phi), sizeof(vector), XUP,
-                    EVEN, gen_pt1);
+                              EVEN, gen_pt1);
  since they do the same thing, however the first form is a bit more uniform
  in the given example.
 */
@@ -885,7 +886,8 @@ msg_tag* start_general_strided_gather(
 
   // Check for gather already in progress
   if (g_gather_flag != 0) {
-    fprintf(stderr, "ERROR: node%d, two general_gathers() at once!\n", mynode());
+    fprintf(stderr, "ERROR: node%d, two general_gathers() at once!\n",
+            mynode());
     exit(1);
   }
 
