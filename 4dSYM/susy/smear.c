@@ -121,6 +121,7 @@ void directional_staple(int dir, int dir2) {
 // -----------------------------------------------------------------
 // Nsmear steps of stout smearing, overwriting s->link
 // Use staple, s->mom and Q for temporary storage
+// tempmat and tempmat2 also used through directional_staple
 void stout_smear(int Nsmear, double alpha) {
   register int i, n, dir, dir2;
   register site *s;
