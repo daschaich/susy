@@ -15,7 +15,7 @@ void ranmom() {
   complex grn;
 
 #ifdef TRUNCATED
-  // Truncation involves excluding the last generator
+  // Truncation involves excluding the last [U(1)] generator
   numgen = DIMF - 1;
 #else
   numgen = DIMF;
