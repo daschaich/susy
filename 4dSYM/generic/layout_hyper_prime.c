@@ -38,7 +38,7 @@ static int nsquares[4];             // Number of hypercubes in each direction
 static int machine_coordinates[4];  // Logical machine coordinates
 
 int prime[] = {2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53};
-# define MAXPRIMES ( sizeof(prime) / sizeof(int) )
+# define MAXPRIMES (sizeof(prime) / sizeof(int))
 // -----------------------------------------------------------------
 
 
@@ -47,10 +47,7 @@ int prime[] = {2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53};
 static void setup_hyper_prime() {
   int i, j, k, dir;
 
-  if (mynode()==0) {
-    printf("hyper_prime,");
-    printf("\n");
-  }
+  node0_printf("hyper_prime,\n");
 
   // Figure out dimensions of rectangle
   squaresize[XUP] = nx;
@@ -159,7 +156,8 @@ int node_index(int x, int y, int z, int t) {
   yr = y % squaresize[YUP];
   zr = z % squaresize[ZUP];
   tr = t % squaresize[TUP];
-  i = xr + squaresize[XUP] * (yr + squaresize[YUP] * (zr + squaresize[ZUP] * tr));
+  i = xr;
+  i += squaresize[XUP] * (yr + squaresize[YUP] * (zr + squaresize[ZUP] * tr));
   if ((x + y + z + t) % 2 == 0)   // Even site
     return (i / 2);
   else
