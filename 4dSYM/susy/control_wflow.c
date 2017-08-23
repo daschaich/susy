@@ -1,7 +1,7 @@
 // -----------------------------------------------------------------
 // Main procedure for N=4 SYM Wilson flow 
-// #define CONTROL
-// #include "susy_includes.h"
+#define CONTROL
+#include "susy_includes.h"
 
 int main(int argc, char *argv[]) {
 
@@ -66,14 +66,12 @@ int main(int argc, char *argv[]) {
 
   // Main Wilson flow routine : 
   
+  wflow();  
   
-  
-  
-  
-  
-  
-  
-  
-  
+  node0_printf("RUNNING COMPLETED\n");
+  dtime += dclock();
+  node0_printf("\nTime = %.4g seconds\n", dtime);
+  fflush(stdout);
+  g_sync();         // Needed by at least some clusters
   return 0; 
 }
