@@ -182,7 +182,7 @@ double gauge_action(int do_det) {
 double bmass_action() {
   register int i, a;
   register site *s;
-  double sum = 0.0, kappa_muSq = kappa * bmass * bmass;
+  double sum = 0.0;
 #ifdef EIG_POT
   matrix tmat;
 #else
@@ -197,10 +197,11 @@ double bmass_action() {
       sum += kappa_muSq * realtrace(&tmat, &tmat);
 #else
       tr = one_ov_N * realtrace(&(s->link[a]), &(s->link[a])) - 1.0;
-      sum += kappa_muSq * tr * tr;
+      sum += tr * tr;
 #endif
     }
   }
+  sum *= kappa * bmass * bmass;
   g_doublesum(&sum);
   return sum;
 }
