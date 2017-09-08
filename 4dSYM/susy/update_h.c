@@ -133,7 +133,7 @@ double gauge_force(Real eps) {
     }
   }
 
-  // Third we have the scalar potential derivative contribution
+  // Third we have the Q-exact scalar potential derivative contribution
   //   [...] = Udag_mu(x) 2B^2/N Tr[DmuUmu](x) Y(x)
   // where Y(x) = Tr[U_mu(x) Udag_mu(x)] / N - 1
   // Only compute if B is non-zero
@@ -256,7 +256,8 @@ double gauge_force(Real eps) {
       scalar_mult_matrix(&(s->f_U[mu]), kappa, &(s->f_U[mu]));
   }
 
-  // Only compute U(1) mass term if non-zero -- note factor of kappa
+  // Only compute susy-breaking scalar potential term if bmass non-zero
+  // Note factor of kappa
   if (bmass > IMAG_TOL) {
     Real dmu;
 #ifdef EIG_POT
