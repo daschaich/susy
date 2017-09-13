@@ -95,7 +95,7 @@ void blocked_stout(int Nsmear, double alpha, int bl) {
 
     // Do all exponentiations at once to reuse divisions
     // Overwrites s->link
-    exp_mult();
+    exp_mult(1.0);
   }
 }
 // -----------------------------------------------------------------

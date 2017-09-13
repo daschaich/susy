@@ -72,13 +72,41 @@ void stout_step_rk() {
 }
 // -----------------------------------------------------------------
 
-void wflow(){
-
-
-
-
-
-
+void wflow() {
+  register int i, dir;
+  register site *s;
+  
+  int j, istep;
+  double t = 0.0, E, tSqE, old_tSqE, der_tSqE;
+  double ssplaq, stplaq, plaq, check;
+  
+  // Go
+  for (istep = 0; fabs(t) <  fabs(tmax) - 0.5 * fabs(epsilon); istep++) {
+    stout_step_rk();
+    t += epsilon;
+    
+    // Find 8F_munu = sum_{clover} (U - Udag)
+    // Subtract the (lattice artifact?) trace at each lattice site
+    make_field_strength();
+    
+    // Compute t^2 E and its slope
+    E = 0.0;
+    FORALLSITES(i, s) {
+      for (dir = 0; dir < 10; dir++)
+        E -= (double)realtrace_nn(&(FS[dir]), &(FS[dir])); // Why minus sign? Why no FS dagger?
+    }
+    g_doublesum(&E);
+    E /= (volume * 64.0); // Normalization factor of 1/8 for each F_munu
+    tSqE = t * t * E;
+    der_tSqE = fabs(t) * (tSqE - old_tSqE) / fabs(epsilon);
+    // Any negative signs in t and epsilon should cancel out anyway...
+    
+    // Check with plaquette
+    plaquette(&ssplaq, &stplaq);
+    plaq = 0.5 * (ssplaq + stplaq);
+    check = 20.0 * t * t * ((double)NCOL - plaq); // This is a guess to numerical factor
+    
+    node0_printf("WFLOW %g %g %g %g %g %g \n",
+                 t, plaq, E, tSqE, der_tSqE, check);
+  }
 }
-
-

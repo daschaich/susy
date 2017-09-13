@@ -12,20 +12,20 @@
 // Go to eighth order in the exponential:
 //   exp(Q) * U = (1 + Q + Q^2/2 + Q^3/6 ...) * U
 //              = U + Q*(U + (Q/2)*(U + (Q/3)*( ... )))
-void exp_mult() {
+void exp_mult(double eps) {
   register int i, dir;
   register site *s;
   register Real t2, t3, t4, t5, t6, t7, t8;
   matrix *link, tmat, tmat2, htemp;
 
   // Take divisions out of site loop (can't be done by compiler)
-  t2 = 1.0 / 2.0;
-  t3 = 1.0 / 3.0;
-  t4 = 1.0 / 4.0;
-  t5 = 1.0 / 5.0;
-  t6 = 1.0 / 6.0;
-  t7 = 1.0 / 7.0;
-  t8 = 1.0 / 8.0;
+  t2 = eps / 2.0;
+  t3 = eps / 3.0;
+  t4 = eps / 4.0;
+  t5 = eps / 5.0;
+  t6 = eps / 6.0;
+  t7 = eps / 7.0;
+  t8 = eps / 8.0;
 
   FORALLDIR(dir) {
     FORALLSITES(i, s) {
@@ -54,7 +54,8 @@ void exp_mult() {
       scalar_mult_add_matrix(link, &tmat, t2, &tmat2);
 
       mult_nn(&htemp, &tmat2, &tmat);
-      add_matrix(link, &tmat, &(s->link[dir]));
+      scalar_mult_add_matrix(link, &tmat, eps, &(s->link[dir]));
+      
     }
   }
 }
@@ -154,7 +155,7 @@ void stout_smear(int Nsmear, double alpha) {
 
     // Do all exponentiations at once to reuse divisions
     // Overwrites s->link
-    exp_mult();
+    exp_mult(1.0);
   }
 }
 // -----------------------------------------------------------------
