@@ -38,6 +38,10 @@ typedef struct {
   int nsrc;                     // Number of stochastic sources
 #endif
 
+#ifdef WFLOW
+  Real epsilon, tmax; // Wilson flow step size and maximum t
+#endif
+  
 #ifdef SMEAR
   // Parameters for APE or stout smearing
   int smearflag;                // NONE, STOUT, APE

@@ -163,7 +163,13 @@ void make_fields() {
   size += (Real)(NUMLINK * sizeof(anti_hermitmat));
   FIELD_ALLOC_VEC(Q, anti_hermitmat, NUMLINK);    // To be exponentiated
 #endif
-
+  
+#ifdef WFLOW
+  FIELD_ALLOC_VEC(FS, matrix, NPLAQ);
+  FIELD_ALLOC_VEC(A, anti_hermitmat, NUMLINK);
+  FIELD_ALLOC_VEC(S, matrix, NUMLINK);
+#endif
+  
 #if defined(EIG) || defined(PHASE)
   size += (Real)(2.0 * sizeof(Twist_Fermion));
   FIELD_ALLOC(src, Twist_Fermion);
@@ -319,7 +325,13 @@ int readin(int prompt) {
       status += get_f(stdin, prompt, "error_per_site", &x);
       par_buf.rsqmin = x * x;
     }
-
+    
+#ifdef WFLOW
+    IF_OK status += get_f(stdin, prompt, "epsilon", &par_buf.epsilon);
+    IF_OK status += get_f(stdin, prompt, "tmax", &par_buf.tmax);
+#endif
+    
+    
 #ifdef BILIN
     // Number of stochastic sources for fermion bilinear and susy trans
     // Also used for stochastic mode number computation
@@ -436,6 +448,11 @@ int readin(int prompt) {
 
 #ifdef BILIN
   nsrc = par_buf.nsrc;
+#endif
+  
+#ifdef WFLOW
+  wflow_eps = par_buf.epsilon;
+  tmax = par_buf.tmax;
 #endif
 
 #ifdef EIG

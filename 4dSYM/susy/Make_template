@@ -10,6 +10,7 @@
 #   susy_meas measures Wilson loops, scalar correlators and fermion bilinear
 #             with optional APE smearing
 #   susy_mcrg calculates observables after RG blocking (UNDER DEVELOPMENT)
+#   susy_wflow runs the Wilson flow
 #   susy_mode stochastically calculates eigenmode number (UNDER DEVELOPMENT)
 #   susy_eig calculates eigenvalues using PRIMME
 #   susy_phase calculates the pfaffian phase
@@ -134,6 +135,13 @@ susy_mcrg::
 	                 blocked_ops.o blocked_ploop.o blocked_rsymm.o path.o \
 	                 blocked_smear.o blocked_local_plaq.o konishi.o \
 	                 smear.o local_plaq.o "
+
+susy_wflow::
+	${MAKE} -f ${MAKEFILE} target "MYTARGET= $@" \
+	"DEFINES = ${DEFINES} -DPHI_ALGORITHM -DWFLOW " \
+	"LAPACK = -llapack -lblas " \
+	"EXTRA_OBJECTS = control_wflow.o wflow.o field_strength.o "
+
 
 susy_eig::
 	${MAKE} -f ${MAKEFILE} target "MYTARGET= $@" \

@@ -4,7 +4,12 @@
 #include "susy_includes.h"
 
 int main(int argc, char *argv[]) {
-
+  int prompt, dir;
+  double ss_plaq, st_plaq, dtime, plpMod = 0.0;
+  double linktr[NUMLINK], linktr_ave, linktr_width;
+  double link_det[NUMLINK], det_ave, det_width;
+  complex plp = cmplx(99.0, 99.0);
+  
 #ifndef WFLOW
   node0_printf("Don't use control_wflow unless compiling with -DWFLOW!\n");
   terminate(1);

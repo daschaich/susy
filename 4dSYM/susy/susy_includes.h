@@ -203,6 +203,10 @@ void stout_smear(int Nsmear, double alpha);
 void APE_smear(int Nsmear, double alpha, int project);
 #endif
 
+#if defined(SMEAR) || defined(WFLOW)
+void directional_staple(int dir, int dir2);
+#endif
+
 #ifdef MCRG
 void block_mcrg(int bl);
 void blocked_plaq(int Nsmear, int bl);    // Also monitors det and widths

@@ -7,14 +7,14 @@
 
 // -----------------------------------------------------------------
 // Sum staples for direction dir over all other directions
-void staple(matrix *staple[NDIMS]) {
+void compute_staple(matrix *staple[NDIMS]) {
   register int i;
   register site *s;
   int dir, dir2;
 
   FORALLUPDIR(dir) {
     FORALLSITES(i, s)
-      clear_mat(&(stp[dir][i]));
+      clear_mat(&(staple[dir][i]));
 
     FORALLUPDIR(dir2) {
       if (dir == dir2)
@@ -39,7 +39,7 @@ void update_flow(double f1, double f2) {
   matrix tmat;
   anti_hermitmat tmat_ah;
 
-  staple(S);
+  compute_staple(S);
 
   FORALLUPDIR(dir) { 
     FORALLSITES(i, s) {
@@ -66,9 +66,9 @@ void stout_step_rk() {
     clear_mat(&A[dir][i]);
   }
 
-  update_flow(17.0 * epsilon / 36.0, -9.0 / 17.0);
-  update_flow(-8.0 * epsilon / 9.0, 1.0);
-  update_flow(3.0 * epsilon / 4.0, -1.0);
+  update_flow(17.0 * wflow_eps / 36.0, -9.0 / 17.0);
+  update_flow(-8.0 * wflow_eps / 9.0, 1.0);
+  update_flow(3.0 * wflow_eps / 4.0, -1.0);
 }
 // -----------------------------------------------------------------
 
@@ -81,9 +81,9 @@ void wflow() {
   double ssplaq, stplaq, plaq, check;
   
   // Go
-  for (istep = 0; fabs(t) <  fabs(tmax) - 0.5 * fabs(epsilon); istep++) {
+  for (istep = 0; fabs(t) <  fabs(tmax) - 0.5 * fabs(wflow_eps); istep++) {
     stout_step_rk();
-    t += epsilon;
+    t += wflow_eps;
     
     // Find 8F_munu = sum_{clover} (U - Udag)
     // Subtract the (lattice artifact?) trace at each lattice site
@@ -98,8 +98,8 @@ void wflow() {
     g_doublesum(&E);
     E /= (volume * 64.0); // Normalization factor of 1/8 for each F_munu
     tSqE = t * t * E;
-    der_tSqE = fabs(t) * (tSqE - old_tSqE) / fabs(epsilon);
-    // Any negative signs in t and epsilon should cancel out anyway...
+    der_tSqE = fabs(t) * (tSqE - old_tSqE) / fabs(wflow_eps);
+    // Any negative signs in t and wflow_eps should cancel out anyway...
     
     // Check with plaquette
     plaquette(&ssplaq, &stplaq);

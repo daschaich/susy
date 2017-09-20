@@ -203,6 +203,12 @@ EXTERN anti_hermitmat *Q[NUMLINK];    // To be exponentiated
 EXTERN int nsrc;
 #endif
 
+#ifdef WFLOW
+EXTERN Real wflow_eps, tmax;
+EXTERN matrix *FS[NPLAQ], *S[NUMLINK];
+EXTERN anti_hermitmat *A[NUMLINK];
+#endif
+
 #ifdef EIG
 // Eigenvalue stuff
 EXTERN int Nvec;
