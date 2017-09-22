@@ -9,10 +9,11 @@
 #   susy_hmc uses hybrid Monte Carlo algorithm, i.e., phi + accept/reject
 #   susy_meas measures Wilson loops, scalar correlators and fermion bilinear
 #             with optional APE smearing
-#   susy_mcrg calculates observables after RG blocking (UNDER DEVELOPMENT)
+#   susy_mcrg calculates observables after RG blocking
 #   susy_wflow runs the Wilson flow
-#   susy_mode stochastically calculates eigenmode number (UNDER DEVELOPMENT)
 #   susy_eig calculates eigenvalues using PRIMME
+#   susy_cheb computes spectral density Chebyshev approximation
+#   susy_mode stochastically calculates eigenmode number
 #   susy_phase calculates the pfaffian phase
 # Edit the Makefiles to change this.
 
@@ -141,7 +142,6 @@ susy_wflow::
 	"DEFINES = ${DEFINES} -DPHI_ALGORITHM -DWFLOW " \
 	"LAPACK = -llapack -lblas " \
 	"EXTRA_OBJECTS = control_wflow.o wflow.o field_strength.o "
-
 
 susy_eig::
 	${MAKE} -f ${MAKEFILE} target "MYTARGET= $@" \

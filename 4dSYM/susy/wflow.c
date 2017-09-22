@@ -1,9 +1,11 @@
 // -----------------------------------------------------------------
-// // Run Wilson flow 
-// // Based on the method adopted in 1203.4469
-// // Runge--Kutta coefficients computed from Eq. 2.4 of arXiv:1203.4469
-// // !!! arXiv 1006.4518 provides useful details 
+// Run Wilson flow
+// Runge--Kutta coefficients computed from Eq. 2.4 of arXiv:1203.4469
+// !!! arXiv 1006.4518 provides useful details
 #include "susy_includes.h"
+// -----------------------------------------------------------------
+
+
 
 // -----------------------------------------------------------------
 // Sum staples for direction dir over all other directions
@@ -12,11 +14,11 @@ void compute_staple(matrix *staple[NDIMS]) {
   register site *s;
   int dir, dir2;
 
-  FORALLUPDIR(dir) {
+  FORALLDIR(dir) {
     FORALLSITES(i, s)
       clear_mat(&(staple[dir][i]));
 
-    FORALLUPDIR(dir2) {
+    FORALLDIR(dir2) {
       if (dir == dir2)
         continue;
       directional_staple(dir, dir2);
@@ -25,9 +27,7 @@ void compute_staple(matrix *staple[NDIMS]) {
 }
 // -----------------------------------------------------------------
 
-// Make anti_hermitian : libraries/make_ahmat.c
-// Scalar multiply and sum : libraries/s_m_a_mat.c
-// Clear matrix : libraries/clear_mat.c
+
 
 // -----------------------------------------------------------------
 // Calculate A = A + f1 * Project_antihermitian_traceless(U.Sdag)
@@ -41,14 +41,14 @@ void update_flow(double f1, double f2) {
 
   compute_staple(S);
 
-  FORALLUPDIR(dir) { 
+  FORALLDIR(dir) {
     FORALLSITES(i, s) {
-    mult_na(&(s->link[dir]), &(S[dir][i]), &tmat);
-    make_anti_hermitian(&tmat, &tmat_ah);
-    // A += f1 * U.S
-    scalar_mult_sum(&tmat_ah, (Real)f1, &(A[dir][i]));
+      mult_na(&(s->link[dir]), &(S[dir][i]), &tmat);
+      make_anti_hermitian(&tmat, &tmat_ah);
+      // A += f1 * U.S
+      scalar_mult_sum_antiH(&tmat_ah, (Real)f1, &(A[dir][i]));
     }
-   exp_mult(f2); // U = exp(f2 * A).U
+    exp_mult(f2); // U = exp(f2 * A).U
   }
 }
 // -----------------------------------------------------------------
@@ -62,8 +62,8 @@ void stout_step_rk() {
 
   // Clear A, just in case
   FORALLSITES(i, s) {
-    FORALLUPDIR(dir)
-    clear_mat(&A[dir][i]);
+    FORALLDIR(dir)
+      clear_ahmat(&(A[dir][i]));
   }
 
   update_flow(17.0 * wflow_eps / 36.0, -9.0 / 17.0);
@@ -72,41 +72,44 @@ void stout_step_rk() {
 }
 // -----------------------------------------------------------------
 
+
+
+// -----------------------------------------------------------------
 void wflow() {
   register int i, dir;
   register site *s;
-  
-  int j, istep;
-  double t = 0.0, E, tSqE, old_tSqE, der_tSqE;
+  int istep;
+  double t = 0.0, E, tSqE, old_tSqE = 0.0, der_tSqE;
   double ssplaq, stplaq, plaq, check;
-  
+
   // Go
   for (istep = 0; fabs(t) <  fabs(tmax) - 0.5 * fabs(wflow_eps); istep++) {
     stout_step_rk();
     t += wflow_eps;
-    
+
     // Find 8F_munu = sum_{clover} (U - Udag)
     // Subtract the (lattice artifact?) trace at each lattice site
     make_field_strength();
-    
+
     // Compute t^2 E and its slope
     E = 0.0;
     FORALLSITES(i, s) {
       for (dir = 0; dir < 10; dir++)
-        E -= (double)realtrace_nn(&(FS[dir]), &(FS[dir])); // Why minus sign? Why no FS dagger?
+        E -= (double)realtrace_nn(&(FS[dir][i]), &(FS[dir][i])); // TODO: Check minus sign, no FS dagger
     }
     g_doublesum(&E);
     E /= (volume * 64.0); // Normalization factor of 1/8 for each F_munu
     tSqE = t * t * E;
     der_tSqE = fabs(t) * (tSqE - old_tSqE) / fabs(wflow_eps);
     // Any negative signs in t and wflow_eps should cancel out anyway...
-    
+
     // Check with plaquette
     plaquette(&ssplaq, &stplaq);
     plaq = 0.5 * (ssplaq + stplaq);
-    check = 20.0 * t * t * ((double)NCOL - plaq); // This is a guess to numerical factor
-    
+    check = 20.0 * t * t * ((double)NCOL - plaq); // TODO: Guessing numerical factor
+
     node0_printf("WFLOW %g %g %g %g %g %g \n",
                  t, plaq, E, tSqE, der_tSqE, check);
   }
 }
+// -----------------------------------------------------------------

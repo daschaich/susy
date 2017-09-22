@@ -47,11 +47,11 @@ int main(int argc, char *argv[]) {
   linktr_ave = link_trace(linktr, &linktr_width,
                           link_det, &det_ave, &det_width);
   node0_printf("FLINK");
-  for (dir = XUP; dir < NUMLINK; dir++)
+  FORALLDIR(dir)
     node0_printf(" %.6g", linktr[dir]);
   node0_printf(" %.6g %.6g\n", linktr_ave, linktr_width);
   node0_printf("FLINK_DET");
-  for (dir = XUP; dir < NUMLINK; dir++)
+  FORALLDIR(dir)
     node0_printf(" %.6g", link_det[dir]);
   node0_printf(" %.6g %.6g\n", det_ave, det_width);
 

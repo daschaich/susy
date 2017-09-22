@@ -198,13 +198,17 @@ void monopole();
 #ifdef SMEAR
 // Stout and APE-like smearing, the latter with no final SU(N) projections
 // APE-like smearing optionally builds staples from projected links
-void exp_mult(double eps);
 void stout_smear(int Nsmear, double alpha);
 void APE_smear(int Nsmear, double alpha, int project);
 #endif
 
 #if defined(SMEAR) || defined(WFLOW)
+// Wilson flow reuses a couple of routines from smear.c
+void exp_mult(double eps);
 void directional_staple(int dir, int dir2);
+#endif
+#ifdef WFLOW
+void wflow();
 #endif
 
 #ifdef MCRG

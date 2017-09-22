@@ -30,21 +30,21 @@ typedef struct {
   Real G, B;              // Q-invariant plaq. det. coupling and bosonic mass
 
   // Inversion parameters
-  int niter;                    // Maximum number of CG iterations
-  Real rsqmin;                  // For deciding on convergence
+  int niter;              // Maximum number of CG iterations
+  Real rsqmin;            // For deciding on convergence
   char startfile[MAXFILENAME], savefile[MAXFILENAME];
 
 #ifdef BILIN
-  int nsrc;                     // Number of stochastic sources
+  int nsrc;               // Number of stochastic sources
 #endif
 
 #ifdef WFLOW
-  Real epsilon, tmax; // Wilson flow step size and maximum t
+  Real wflow_eps, tmax;   // Wilson flow step size and maximum t
 #endif
-  
+
 #ifdef SMEAR
   // Parameters for APE or stout smearing
-  int smearflag;                // NONE, STOUT, APE
+  int smearflag;          // NONE, STOUT, APE
   int Nsmear;
   Real alpha;
 #endif

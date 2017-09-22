@@ -191,7 +191,7 @@ void uncompress_anti_hermitian(anti_hermitmat *ah, matrix *m);
 void compress_anti_hermitian(matrix *m, anti_hermitmat *ah);
 
 // In file dump_ahmat.c
-void dump_ahmat(anti_hermitmat *ahm);
+void dump_ahmat(anti_hermitmat *ah);
 // -----------------------------------------------------------------
 
 
