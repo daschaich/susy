@@ -9,6 +9,7 @@ localmake
 susy_hmc*
 susy_meas
 susy_mcrg
+susy_wflow
 susy_eig
 susy_cheb
 susy_mode

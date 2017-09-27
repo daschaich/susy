@@ -139,9 +139,9 @@ susy_mcrg::
 
 susy_wflow::
 	${MAKE} -f ${MAKEFILE} target "MYTARGET= $@" \
-	"DEFINES = ${DEFINES} -DPHI_ALGORITHM -DWFLOW " \
+	"DEFINES = ${DEFINES} -DPHI_ALGORITHM -DSMEAR -DWFLOW " \
 	"LAPACK = -llapack -lblas " \
-	"EXTRA_OBJECTS = control_wflow.o wflow.o field_strength.o "
+	"EXTRA_OBJECTS = control_wflow.o wflow.o field_strength.o smear.o "
 
 susy_eig::
 	${MAKE} -f ${MAKEFILE} target "MYTARGET= $@" \

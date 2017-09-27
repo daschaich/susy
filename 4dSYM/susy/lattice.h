@@ -206,7 +206,6 @@ EXTERN int nsrc;
 #ifdef WFLOW
 EXTERN Real wflow_eps, tmax;
 EXTERN matrix *FS[NPLAQ], *S[NUMLINK];
-EXTERN anti_hermitmat *A[NUMLINK];
 #endif
 
 #ifdef EIG

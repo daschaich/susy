@@ -165,8 +165,8 @@ void make_fields() {
 #endif
 
 #ifdef WFLOW
+  size += (Real)((NUMLINK + NPLAQ) * sizeof(matrix));
   FIELD_ALLOC_VEC(FS, matrix, NPLAQ);
-  FIELD_ALLOC_VEC(A, anti_hermitmat, NUMLINK);
   FIELD_ALLOC_VEC(S, matrix, NUMLINK);
 #endif
 

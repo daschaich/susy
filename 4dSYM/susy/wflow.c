@@ -6,6 +6,30 @@
 // -----------------------------------------------------------------
 
 
+// Clear A
+void clear_antiH(anti_hermitmat *a) {
+  int i;
+  
+  for(i=0; i<NCOL; i++)
+    a->im_diag[i] = 0.0;
+  
+  for(i=0; i<NCOL * (NCOL - 1) / 2; i++)
+    a->m[i] = cmplx(0,0);
+}
+
+// c <-- c + s * b (output is always last)
+void scalar_mult_sum_antiH(anti_hermitmat *b, Real s, anti_hermitmat *c) {
+  int i;
+  
+  for(i=0; i<NCOL; i++)
+    c->im_diag[i] += s * b->im_diag[i];
+  
+  for(i=0; i<NCOL * (NCOL - 1) / 2; i++)
+  {
+    c->m[i].real += s * b->m[i].real;
+    c->m[i].imag += s * b->m[i].imag;
+  }
+}
 
 // -----------------------------------------------------------------
 // Sum staples for direction dir over all other directions
@@ -46,7 +70,7 @@ void update_flow(double f1, double f2) {
       mult_na(&(s->link[dir]), &(S[dir][i]), &tmat);
       make_anti_hermitian(&tmat, &tmat_ah);
       // A += f1 * U.S
-      scalar_mult_sum_antiH(&tmat_ah, (Real)f1, &(A[dir][i]));
+      scalar_mult_sum_antiH(&tmat_ah, (Real)f1, &(Q[dir][i]));
     }
     exp_mult(f2); // U = exp(f2 * A).U
   }
@@ -63,7 +87,7 @@ void stout_step_rk() {
   // Clear A, just in case
   FORALLSITES(i, s) {
     FORALLDIR(dir)
-      clear_ahmat(&(A[dir][i]));
+      clear_antiH(&(Q[dir][i]));
   }
 
   update_flow(17.0 * wflow_eps / 36.0, -9.0 / 17.0);
