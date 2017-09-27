@@ -152,13 +152,13 @@ void setup_offset() {
   int i, k;
 
   // Construct the link paths: one in each direction plus back-diagonal
-  for (i = 0; i < NUMLINK - 1; i++) {
+  FORALLUPDIR(i) {
     for (k = 0; k < NDIMS; k++)
       offset[i][k] = 0;
 
     offset[i][i] = 1;
   }
-  for (k = 0; k < NDIMS; k++)
+  FORALLUPDIR(k)    // Will always have NDIMS up-directions
     offset[DIR_5][k] = -1;
 
 #ifdef DEBUG_CHECK
@@ -172,7 +172,7 @@ void setup_offset() {
   //   XUP, XDOWN, YUP, YDOWN, ZUP, ZDOWN, TUP, TDOWN, DIR_5, -DIR_5
   // Then goffset[0]=8, goffset[1]=10, ..., goffset[4]=16
   // But we can't use these in EVEN or ODD gathers!
-  for (i = 0; i < NUMLINK; i++) {
+  FORALLDIR(i) {
     goffset[i] = make_gather(cubic_neighbor, offset[i],
                              WANT_INVERSE, NO_EVEN_ODD, SCRAMBLE_PARITY);
 
@@ -233,7 +233,7 @@ void setup_qclosed_offset() {
                 flag = 1;
             }
             if (flag == 0) {
-              for (mu = 0; mu < NDIMS; mu++)
+              FORALLUPDIR(mu)
                 q_offset[q_off_max][mu] = n[mu];
 
               q_off_max++;
@@ -263,13 +263,13 @@ void setup_qclosed_offset() {
 
   // Set up gathers for DbminusPtoP terms
   DbmP = 0;
-  for (d = 0; d < NUMLINK; d++) {
+  FORALLDIR(d) {
     for (e = d + 1; e < NUMLINK; e++) {
-      for (c = 0; c < NUMLINK; c++) {
+      FORALLDIR(c) {
         if (c == d || c == e)
           continue;
 
-        for (a = 0; a < NUMLINK; a++) {
+        FORALLDIR(a) {
           if (a == c || a == d || a == e)
             continue;
 
@@ -279,7 +279,7 @@ void setup_qclosed_offset() {
 
             // General gathers d1 = -e_a - e_b - e_c
             //                 d2 = -e_a - e_b
-            for (i = 0; i < NDIMS; i++) {
+            FORALLUPDIR(i) {
               d2[i] = -mu_vec[a][i] - mu_vec[b][i];
               d1[i] = d2[i] - mu_vec[c][i];
             }
@@ -318,12 +318,12 @@ void setup_qclosed_offset() {
 
   // Set up gathers for DbplusPtoP terms
   DbpP = 0;
-  for (a = 0; a < NUMLINK; a++) {
+  FORALLDIR(a) {
     for (b = a + 1; b < NUMLINK; b++) {
-      for (c = 0;c<NUMLINK;c++) {
+      FORALLDIR(c) {
         if (c == a || c == b)
           continue;
-        for (d = 0; d < NUMLINK; d++) {
+        FORALLDIR(d) {
           if (d == c || d == a || d == b)
             continue;
           for (e = d + 1; e < NUMLINK; e++) {
@@ -331,7 +331,7 @@ void setup_qclosed_offset() {
               continue;
             // General gathers d1 = e_a + e_b
             //                 d2 = e_a + e_b + e_c
-            for (i = 0; i < NDIMS; i++) {
+            FORALLUPDIR(i) {
               d1[i] = mu_vec[a][i] + mu_vec[b][i];
               d2[i] = d1[i] + mu_vec[c][i];
             }
@@ -370,14 +370,14 @@ void setup_qclosed_offset() {
 
   // Set up gathers for first Q-closed force piece
   F1Q = 0;
-  for (c = 0; c < NUMLINK; c++) {
-    for (d = 0; d < NUMLINK; d++) {
+  FORALLDIR(c) {
+    FORALLDIR(d) {
       if (d == c)
         continue;
       for (e = d + 1; e < NUMLINK; e++) {
         if (e == c)
           continue;
-        for (a = 0; a < NUMLINK; a++) {
+        FORALLDIR(a) {
           if (a == d || a == e || a == c)
             continue;
           for (b = a + 1; b < NUMLINK; b++) {
@@ -386,7 +386,7 @@ void setup_qclosed_offset() {
             // General gathers d3 = e_a + e_b
             //                 d2 = e_a + e_b + e_c
             // Also gather d1 = -e_a - e_b
-            for (i = 0; i < NDIMS; i++) {
+            FORALLUPDIR(i) {
               d3[i] = mu_vec[a][i] + mu_vec[b][i];
               d2[i] = d3[i] + mu_vec[c][i];
               d1[i] = -d3[i];
@@ -426,14 +426,14 @@ void setup_qclosed_offset() {
 
   // Set up gathers for second Q-closed force piece
   F2Q = 0;
-  for (c = 0; c < NUMLINK; c++) {
-    for (d = 0; d < NUMLINK; d++) {
+  FORALLDIR(c) {
+    FORALLDIR(d) {
       if (d == c)
         continue;
       for (e = d + 1; e < NUMLINK; e++) {
         if (e == c)
           continue;
-        for (a = 0; a < NUMLINK; a++) {
+        FORALLDIR(a) {
           if (a == d || a == e || a == c)
             continue;
           for (b = a + 1; b < NUMLINK; b++) {
@@ -443,7 +443,7 @@ void setup_qclosed_offset() {
             // General gathers d3 = e_a + e_b
             //                 d2 = e_a + e_b + e_c
             // Also gather d1 = -e_a - e_b
-            for (i = 0; i < NDIMS; i++) {
+            FORALLUPDIR(i) {
               d3[i] = mu_vec[a][i] + mu_vec[b][i];
               d2[i] = d3[i] + mu_vec[c][i];
               d1[i] = -d3[i];
