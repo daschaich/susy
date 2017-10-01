@@ -3,7 +3,8 @@
 // Loop over directions up to NUMLINK and do not reunitarize
 #include "generic_includes.h"
 #include "../include/io_lat.h"
-#include "../susy/susy_includes.h"    // For plaquette
+
+void plaquette(double *plaq);
 // -----------------------------------------------------------------
 
 

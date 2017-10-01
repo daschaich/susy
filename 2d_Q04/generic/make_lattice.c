@@ -4,12 +4,8 @@
 // Allocate gen_pt pointers for gather results
 // Initialize site-based random number generator if SITERAND defined
 #include "generic_includes.h"
-#include <defines.h>                 // For SITERAND
-// -----------------------------------------------------------------
+#include <defines.h>                  // For SITERAND
 
-
-
-// -----------------------------------------------------------------
 void make_lattice() {
   register int i;
   int x, t;
