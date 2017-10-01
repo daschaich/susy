@@ -299,7 +299,7 @@ double gauge_force(Real eps) {
 #ifdef DIMREDUCE
   // Center-breaking term that protects the single-link 'Wilson line'
   // in reduced direction(s)
-  // No factor of two---presumably related to ReTr in action
+  // No factor of two---presumably related to 2ReTr ~ x + x^* in action
   if (cWline > IMAG_TOL) {
     Real dcW = kappa * cWline * cWline;
     FORALLUPDIR(mu) {
@@ -311,11 +311,9 @@ double gauge_force(Real eps) {
           dif_matrix(&(s->link[mu]), &tmat);    // -U + U^(-1)
           scalar_mult_sum_matrix(&tmat, dcW, &(s->f_U[mu]));
   #else
-          // TODO: To be tested
-          // Just I - U^(-2), and can absorb overall negative sign
-          invert(&(s->link[mu]), &tmat);
-          mult_nn(&tmat, &tmat, &tmat2);
-          scalar_add_diag(&tmat2, -1.0);        // -I + U^(-2)
+          // Just I plus overall negative sign
+          clear_mat(&tmat);
+          scalar_add_diag(&tmat, -1.0);        // -I
           scalar_mult_sum_matrix(&tmat, dcW, &(s->f_U[mu]));
   #endif
         }
