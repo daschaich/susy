@@ -72,23 +72,25 @@ int initial_set() {
   length[1] = ny;
   length[2] = nz;
   length[3] = nt;
-  FORALLUPDIR(dir) {
-    if (length[dir] < 1) {
-      node0_printf("{nx, ny, nz, nt} must all be positive\n");
-      exit(1);
+  if (mynode() == 0) {
+    FORALLUPDIR(dir) {
+      if (length[dir] < 1) {
+        printf("{nx, ny, nz, nt} must all be positive\n");
+        exit(1);
+      }
     }
-  }
 #ifdef DIMREDUCE
-  if (nx > 1 && ny > 1 && nz > 1 && nt > 1) {
-    node0_printf("WARNING: Compiled with dimensional reduction ");
-    node0_printf("         but running without any reduced dims\n");
-  }
+    if (nx > 1 && ny > 1 && nz > 1 && nt > 1) {
+      printf("WARNING: Compiled with dimensional reduction ");
+      printf("but running without any reduced dims\n");
+    }
 #else
-  if (nx == 1 || ny == 1 || nz == 1 || nt == 1) {
-    node0_printf("WARNING: Running with reduced dim(s) ");
-    node0_printf("         but didn't compile with -DDIMREDUCE\n");
-  }
+    if (nx == 1 || ny == 1 || nz == 1 || nt == 1) {
+      printf("WARNING: Running with reduced dim(s) ");
+      printf("but didn't compile with -DDIMREDUCE\n");
+    }
 #endif
+  }
 
   // Set up stuff for RHMC and multi-mass CG
   Nroot = par_buf.Nroot;
