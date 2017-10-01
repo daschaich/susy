@@ -266,7 +266,6 @@ double gauge_force(Real eps) {
     Real tr;
     dmu = 2.0 * one_ov_N * kappa * bmass * bmass;
 #endif
-    matrix tmat;
 
     FORALLSITES(i, s) {
       FORALLDIR(mu) {
@@ -297,6 +296,7 @@ double gauge_force(Real eps) {
     }
   }
 
+#ifdef DIMREDUCE
   // Center-breaking term that protects the single-link 'Wilson line'
   // in reduced direction(s)
   // No factor of two---presumably related to ReTr in action
@@ -305,23 +305,24 @@ double gauge_force(Real eps) {
     FORALLUPDIR(mu) {
       if (length[mu] == 1) {
         FORALLSITES(i, s) {
-#ifdef TRUNCATED
+  #ifdef TRUNCATED
           // Just U - U^(-1), and can absorb overall negative sign
           invert(&(s->link[mu]), &tmat);
           dif_matrix(&(s->link[mu]), &tmat);    // -U + U^(-1)
           scalar_mult_sum_matrix(&tmat, dcW, &(s->f_U[mu]));
-#else
+  #else
           // TODO: To be tested
           // Just I - U^(-2), and can absorb overall negative sign
           invert(&(s->link[mu]), &tmat);
           mult_nn(&tmat, &tmat, &tmat2);
           scalar_add_diag(&tmat2, -1.0);        // -I + U^(-2)
           scalar_mult_sum_matrix(&tmat, dcW, &(s->f_U[mu]));
-#endif
+  #endif
         }
       }
     }
   }
+#endif
 
   // Finally take adjoint and update the momentum
   // Subtract to reproduce -Adj(f_U)
