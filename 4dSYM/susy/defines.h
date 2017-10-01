@@ -31,6 +31,7 @@
 #define SV                // Site/vector terms in action
 #define VP                // Vector/plaquette terms in action
 #define QCLOSED           // Q-closed terms in action
+//#define DIMREDUCE         // Consider dimensionally reduced systems
 //#define DEBUG_CHECK       // Print lambdas, offsets, etc.
 
 #define NQLINK 28         // Number of offsets for Q-closed terms

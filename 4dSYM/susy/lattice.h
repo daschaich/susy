@@ -67,7 +67,8 @@ typedef struct {
 #endif
 
 EXTERN int nx, ny, nz, nt;  // Lattice dimensions
-EXTERN int PBC;             // Temporal fermion boundary condition
+EXTERN int length[4];       // Duplicate lattice dimensions for loops
+EXTERN int PBC;             // Temporal fermion boundary condition flag
 EXTERN int volume;          // Volume of lattice
 EXTERN int iseed;           // Random number seed
 EXTERN int warms, trajecs, niter, propinterval;
@@ -81,6 +82,10 @@ EXTERN Real perm[NUMLINK][NUMLINK][NUMLINK][NUMLINK][NUMLINK];
 EXTERN int plaq_index[NUMLINK][NUMLINK];
 
 EXTERN Real rsqmin, lambda, kappa, bmass, fmass, kappa_u1, G, B;
+#ifdef DIMREDUCE
+EXTERN Real cWline;       // Coefficient of center-breaking term protecting
+                          // single-link 'Wilson line' in reduced dir(s)
+#endif
 EXTERN int doG, doB;
 EXTERN double g_ssplaq, g_stplaq;   // Global plaqs for I/O
 EXTERN double_complex linktrsum;
