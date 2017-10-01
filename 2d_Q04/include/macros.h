@@ -50,12 +50,11 @@ typedef int field_offset;
 
 // -----------------------------------------------------------------
 // Macros for looping over directions
+// Here NUMLINK = NDIMS, so we don't need to distinguish DIR vs. UPDIR
 #define FORALLDIR(dir) for (dir = XUP; dir < NUMLINK; dir++)
 
-#define FORALLUPDIR(dir) for (dir = XUP; dir <= TUP; dir++)
-
-#define FORALLUPDIRBUT(direction, dir) \
-   for (dir = XUP; dir <= TUP; dir++) if (dir != direction)
+#define FORALLDIRBUT(direction, dir) \
+   for (dir = XUP; dir < NUMLINK; dir++) if (dir != direction)
 
 // Switches EVEN and ODD, nulls EVENANDODD
 #define OPP_PAR(parity) (0x03 ^ parity)

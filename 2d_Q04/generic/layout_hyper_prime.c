@@ -47,10 +47,7 @@ int prime[] = {2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53};
 static void setup_hyper_prime() {
   int i, j, k, dir;
 
-  if (mynode()==0) {
-    printf("hyper_prime,");
-    printf("\n");
-  }
+  node0_printf("hyper_prime,\n");
 
   // Figure out dimensions of rectangle
   squaresize[XUP] = nx;

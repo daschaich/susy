@@ -65,9 +65,9 @@ typedef struct {
 #define EXTERN extern
 #endif
 
-// Global variables
 EXTERN int nx, nt;          // Lattice dimensions
-EXTERN int PBC;             // Temporal fermion boundary condition
+EXTERN int length[2];       // Duplicate lattice dimensions for loops
+EXTERN int PBC;             // Temporal fermion boundary condition flag
 EXTERN int volume;          // Volume of lattice
 EXTERN int iseed;           // Random number seed
 EXTERN int warms, trajecs, niter, propinterval;
@@ -77,6 +77,10 @@ EXTERN Real traj_length;
 EXTERN matrix Lambda[DIMF];
 
 EXTERN Real rsqmin, lambda, kappa, bmass, fmass, kappa_u1, G, B;
+#ifdef DIMREDUCE
+EXTERN Real cWline;       // Coefficient of center-breaking term protecting
+                          // single-link 'Wilson line' in reduced dir(s)
+#endif
 EXTERN int doG, doB;
 EXTERN double g_plaq;     // Global plaq for I/O
 EXTERN double_complex linktrsum;
@@ -131,6 +135,9 @@ EXTERN complex *tempZW[NUMLINK][NUMLINK];
 EXTERN matrix *DmuUmu, *Fmunu;
 EXTERN matrix *Uinv[NUMLINK], *Udag_inv[NUMLINK], *UpsiU[NUMLINK];
 
+// CG Twist_Fermions
+EXTERN Twist_Fermion *mpm, *pm0, *rm;
+
 // Temporary matrices and Twist_Fermion
 EXTERN matrix *tempmat, *tempmat2, *staple;
 EXTERN Twist_Fermion *tempTF;
@@ -162,22 +169,15 @@ EXTERN char **gen_pt[N_POINTERS];
 EXTERN matrix *Ba[N_B][NUMLINK];
 EXTERN double *traceBB[N_K][NUMLINK][NUMLINK];
 
-// Ensemble averages and volume averages for subtracting
-EXTERN double vevK[N_K], vevS[N_K], volK[N_K], volS[N_K];
-
-// Structs for operators and correlators with either subtraction
+// Structs for operators and correlators
 typedef struct {
-  double OK[N_K][2];
-  double OS[N_K][2];
+  double OK[N_K];
+  double OS[N_K];
 } Kops;
 typedef struct {
-  double C[N_K][N_K][2];
+  double C[N_K][N_K];
 } Kcorrs;
 EXTERN Kops *tempops, *tempops2;
-#endif
-
-#ifdef BILIN
-EXTERN int nsrc;
 #endif
 
 #ifdef SMEAR
@@ -186,6 +186,10 @@ EXTERN int smearflag;                 // NONE, STOUT, APE
 EXTERN int Nsmear;
 EXTERN double alpha;
 EXTERN anti_hermitmat *Q[NUMLINK];    // To be exponentiated
+#endif
+
+#ifdef BILIN
+EXTERN int nsrc;
 #endif
 
 #ifdef EIG
@@ -200,22 +204,9 @@ EXTERN int maxIter;           // Maximum iterations
 
 #ifdef PHASE
 // Pfaffian phase stuff
-EXTERN Twist_Fermion *src, *res;    // For fieldwise matvec
 EXTERN long int Nmatvecs;           // For timing/counting
 EXTERN int ckpt_load, ckpt_save;    // For checkpointing
-#endif
-
-#ifdef MODE
-// Mode number (and associated step function) stuff
-EXTERN int Npts;
-EXTERN Real M, spacing;
-EXTERN Twist_Fermion **source;
-
-EXTERN int step_order;  // Selects between options hard-coded in coeffs.c
-EXTERN double eps;
-EXTERN double delta;    // Unused, but may be useful to record in the output
-EXTERN double starSq, star;     // Ratio (Omega / Omega_*)^2 and its sqrt
-EXTERN double *coeffs;
+EXTERN Twist_Fermion *src, *res;    // For fieldwise matvec
 #endif
 
 #endif // _LATTICE_H

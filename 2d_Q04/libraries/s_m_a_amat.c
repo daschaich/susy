@@ -1,6 +1,6 @@
 // -----------------------------------------------------------------
 // Add result of scalar multiplication on adjoint matrix
-// c <-- c + s * b
+// c <-- c + s * bdag
 #include "../include/config.h"
 #include "../include/complex.h"
 #include "../include/susy.h"

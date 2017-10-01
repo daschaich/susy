@@ -1,8 +1,8 @@
 // -----------------------------------------------------------------
-// Supersymmetric setup
+// N=(2,2) setup
 #include "susy_includes.h"
 
-#define IF_OK if(status==0)
+#define IF_OK if (status == 0)
 
 // Each node has a params structure for passing simulation parameters
 #include "params.h"
@@ -14,15 +14,10 @@ params par_buf;
 // -----------------------------------------------------------------
 // On node zero, read lattice size and seed, and send to others
 int initial_set() {
-  int prompt = 0, status = 0;
+  int prompt = 0, status = 0, dir;
   if (mynode() == 0) {
     // Print banner
-    // stringification kludge from GNU preprocessor manual
-    // http://gcc.gnu.org/onlinedocs/cpp/Stringification.html
-#define XSTR(s) STR(s)
-#define STR(s) #s
-    // end kludge
-    printf("N=(2, 2) SYM, Nc = %d, DIMF = %d, fermion rep = adjoint\n",
+    printf("N=(2,2) SYM, Nc = %d, DIMF = %d, fermion rep = adjoint\n",
            NCOL, DIMF);
     printf("Microcanonical simulation with refreshing\n");
     printf("Machine = %s, with %d nodes\n", machine_type(), numnodes());
@@ -34,6 +29,9 @@ int initial_set() {
 #else   // Quit!
     printf("Only works for phi algorithm\n");
     exit(1);
+#endif
+#ifdef DIMREDUCE
+    printf("Dimensionally reduced calculation\n");
 #endif
     time_stamp("start");
     status = get_prompt(stdin, &prompt);
@@ -64,6 +62,29 @@ int initial_set() {
   nt = par_buf.nt;
   PBC = par_buf.PBC;
   iseed = par_buf.iseed;
+
+  // Lattice volume sanity checks, including dimensional reduction
+  length[0] = nx;
+  length[1] = nt;
+  if (mynode() == 0) {
+    FORALLDIR(dir) {
+      if (length[dir] < 1) {
+        printf("nx and nt must both be positive\n");
+        exit(1);
+      }
+    }
+#ifdef DIMREDUCE
+    if (nx > 1 && nt > 1) {
+      printf("WARNING: Compiled with dimensional reduction ");
+      printf("but running without any reduced dims\n");
+    }
+#else
+    if (nx == 1 || nt == 1) {
+      printf("WARNING: Running with reduced dim(s) ");
+      printf("but didn't compile with -DDIMREDUCE\n");
+    }
+#endif
+  }
 
   // Set up stuff for RHMC and multi-mass CG
   Nroot = par_buf.Nroot;
@@ -133,6 +154,12 @@ void make_fields() {
   FIELD_ALLOC_MAT_OFFDIAG(tempZW, complex, NUMLINK);
 #endif
 
+  // CG Twist_Fermions
+  size += (Real)(3.0 * sizeof(Twist_Fermion));
+  FIELD_ALLOC(mpm, Twist_Fermion);
+  FIELD_ALLOC(pm0, Twist_Fermion);
+  FIELD_ALLOC(rm, Twist_Fermion);
+
   // Temporary matrices and Twist_Fermion
   size += (Real)(3.0 * sizeof(matrix));
   size += (Real)(sizeof(Twist_Fermion));
@@ -155,7 +182,7 @@ void make_fields() {
 #endif
 
 #ifdef SMEAR
-  // Stout smearing stuff needed for `hot-start' random configurations
+  // Stout smearing stuff
   size += (Real)(NUMLINK * sizeof(anti_hermitmat));
   FIELD_ALLOC_VEC(Q, anti_hermitmat, NUMLINK);    // To be exponentiated
 #endif
@@ -209,6 +236,7 @@ int setup() {
 
 
 // -----------------------------------------------------------------
+#ifdef SMEAR
 // Find out what smearing to use
 int ask_smear_type(FILE *fp, int prompt, int *flag) {
   int status = 0;
@@ -241,6 +269,7 @@ int ask_smear_type(FILE *fp, int prompt, int *flag) {
   }
   return 0;
 }
+#endif
 // -----------------------------------------------------------------
 
 
@@ -250,10 +279,10 @@ int ask_smear_type(FILE *fp, int prompt, int *flag) {
 // prompt=1 indicates prompts are to be given for input
 int readin(int prompt) {
   int status;
-  Real x;
-#ifdef CORR
-  int j;
+#ifdef EIG
+  int i;
 #endif
+  Real x;
 
   // On node zero, read parameters and send to all other nodes
   if (this_node == 0) {
@@ -280,6 +309,9 @@ int readin(int prompt) {
     IF_OK status += get_f(stdin, prompt, "fmass", &par_buf.fmass);
     IF_OK status += get_f(stdin, prompt, "G", &par_buf.G);
     IF_OK status += get_f(stdin, prompt, "B", &par_buf.B);
+#ifdef DIMREDUCE
+    IF_OK status += get_f(stdin, prompt, "cWline", &par_buf.cWline);
+#endif
 
 #ifdef SMEAR
     // Smearing stuff -- passed to either APE or stout routines by application
@@ -288,21 +320,13 @@ int readin(int prompt) {
     IF_OK status += get_f(stdin, prompt, "alpha", &par_buf.alpha);
 #endif
 
-#ifdef CORR
-    // Konishi vacuum subtractions
-    for (j = 0; j < N_K; j++)
-      IF_OK status += get_f(stdin, prompt, "vevK", &par_buf.vevK[j]);
-    for (j = 0; j < N_K; j++)
-      IF_OK status += get_f(stdin, prompt, "vevS", &par_buf.vevS[j]);
-#endif
-
     // Maximum conjugate gradient iterations
     IF_OK status += get_i(stdin, prompt, "max_cg_iterations", &par_buf.niter);
 
     // Error per site for conjugate gradient
     IF_OK {
       status += get_f(stdin, prompt, "error_per_site", &x);
-      par_buf.rsqmin = x;
+      par_buf.rsqmin = x * x;
     }
 
 #ifdef BILIN
@@ -316,16 +340,6 @@ int readin(int prompt) {
     IF_OK status += get_i(stdin, prompt, "Nvec", &par_buf.Nvec);
     IF_OK status += get_f(stdin, prompt, "eig_tol", &par_buf.eig_tol);
     IF_OK status += get_i(stdin, prompt, "maxIter", &par_buf.maxIter);
-#endif
-
-#ifdef MODE
-    // Which order polynomial to use in step function
-    IF_OK status += get_i(stdin, prompt, "order", &par_buf.order);
-
-    // Number of Omegas and the interval between them
-    IF_OK status += get_i(stdin, prompt, "Npts", &par_buf.Npts);
-    IF_OK status += get_f(stdin, prompt, "start_omega", &par_buf.start_omega);
-    IF_OK status += get_f(stdin, prompt, "spacing", &par_buf.spacing);
 #endif
 
 #ifdef PHASE
@@ -385,19 +399,15 @@ int readin(int prompt) {
   else
     doB = 0;
 
+#ifdef DIMREDUCE
+  cWline = par_buf.cWline;
+#endif
+
   kappa = (Real)NCOL * 0.5 / lambda;
   node0_printf("lambda=%.4g --> kappa=Nc/(2lambda)=%.4g\n",
                lambda, kappa);
   node0_printf("C2=%.4g\n", C2);    // Currently hardwired in defines.h
 
-#ifdef BILIN
-  nsrc = par_buf.nsrc;
-#endif
-#ifdef EIG
-  Nvec = par_buf.Nvec;
-  eig_tol = par_buf.eig_tol;
-  maxIter = par_buf.maxIter;
-#endif
 #ifdef SMEAR
   smearflag = par_buf.smearflag;
   Nsmear = par_buf.Nsmear;
@@ -407,23 +417,27 @@ int readin(int prompt) {
     alpha = 0.0;
   }
 #endif
-#ifdef CORR
-  for (j = 0; j < N_K; j++) {
-    vevK[j] = par_buf.vevK[j];
-    vevS[j] = par_buf.vevS[j];
-    // Will check positivity of volK to make sure it has been set
-    volK[j] = -1.0;
-  }
+
+#ifdef BILIN
+  nsrc = par_buf.nsrc;
 #endif
+
+#ifdef EIG
+  // Include some mallocs here (make_fields has already been called)
+  // (This memory usage will not be reported to the user)
+  Nvec = par_buf.Nvec;
+  eigVal = malloc(Nvec * sizeof(*eigVal));
+  eigVec = malloc(Nvec * sizeof(*eigVec));
+  for (i = 0; i < Nvec; i++)
+    FIELD_ALLOC(eigVec[i], Twist_Fermion);
+
+  eig_tol = par_buf.eig_tol;
+  maxIter = par_buf.maxIter;
+#endif
+
 #ifdef PHASE
   ckpt_load = par_buf.ckpt_load;
   ckpt_save = par_buf.ckpt_save;
-#endif
-#ifdef MODE
-  step_order = par_buf.order;
-  Npts = par_buf.Npts;
-  M = par_buf.start_omega;
-  spacing = par_buf.spacing;
 #endif
 
   startflag = par_buf.startflag;
