@@ -215,25 +215,18 @@ double bmass_action() {
 // Comes with factors of kappa and -2
 #ifdef DIMREDUCE
 double cWline_action() {
-  register int i, a;
+  register int i, mu;
   register site *s;
   double sum = 0.0;
-#ifdef EIG_POT
   matrix tmat;
-#else
-  Real tr;
-#endif
 
-  FORALLUPDIR(a) {
-    FORALLSITES(i, s) {
-#ifdef EIG_POT
-      mult_na(&(s->link[a]), &(s->link[a]), &tmat);
-      scalar_add_diag(&tmat, -1.0);
-      sum += realtrace(&tmat, &tmat);
-#else
-      tr = one_ov_N * realtrace(&(s->link[a]), &(s->link[a])) - 1.0;
-      sum += tr * tr;
-#endif
+  FORALLUPDIR(mu) {
+    if (length[mu] == 1) {
+      FORALLSITES(i, s) {
+        invert(&(s->link[mu]), &tmat);
+        sum_matrix(&(s->link[mu]), &tmat);    // U + U^(-1)
+        sum += trace(&tmat).real;
+      }
     }
   }
   sum *= -2.0 * kappa * cWline * cWline;

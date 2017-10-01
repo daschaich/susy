@@ -14,7 +14,7 @@ params par_buf;
 // -----------------------------------------------------------------
 // On node zero, read lattice size and seed, and send to others
 int initial_set() {
-  int prompt = 0, status = 0;
+  int prompt = 0, status = 0, dir;
   if (mynode() == 0) {
     // Print banner
     printf("N=4 SYM, Nc = %d, DIMF = %d, fermion rep = adjoint\n",
@@ -29,6 +29,9 @@ int initial_set() {
 #else   // Quit!
     printf("Only works for phi algorithm\n");
     exit(1);
+#endif
+#ifdef DIMREDUCE
+    printf("Dimensionally reduced calculation\n");
 #endif
     time_stamp("start");
     status = get_prompt(stdin, &prompt);
@@ -63,6 +66,29 @@ int initial_set() {
   nt = par_buf.nt;
   PBC = par_buf.PBC;
   iseed = par_buf.iseed;
+
+  // Lattice volume sanity checks, including dimensional reduction
+  length[0] = nx;
+  length[1] = ny;
+  length[2] = nz;
+  length[3] = nt;
+  FORALLUPDIR(dir) {
+    if (length[dir] < 1) {
+      node0_printf("{nx, ny, nz, nt} must all be positive\n");
+      exit(1);
+    }
+  }
+#ifdef DIMREDUCE
+  if (nx > 1 && ny > 1 && nz > 1 && nt > 1) {
+    node0_printf("WARNING: Compiled with dimensional reduction ");
+    node0_printf("         but running without any reduced dims\n");
+  }
+#else
+  if (nx == 1 || ny == 1 || nz == 1 || nt == 1) {
+    node0_printf("WARNING: Running with reduced dim(s) ");
+    node0_printf("         but didn't compile with -DDIMREDUCE\n");
+  }
+#endif
 
   // Set up stuff for RHMC and multi-mass CG
   Nroot = par_buf.Nroot;
@@ -306,6 +332,9 @@ int readin(int prompt) {
     IF_OK status += get_f(stdin, prompt, "fmass", &par_buf.fmass);
     IF_OK status += get_f(stdin, prompt, "G", &par_buf.G);
     IF_OK status += get_f(stdin, prompt, "B", &par_buf.B);
+#ifdef DIMREDUCE
+    IF_OK status += get_f(stdin, prompt, "cWline", &par_buf.cWline);
+#endif
 
 #ifdef SMEAR
     // Smearing stuff -- passed to either APE or stout routines by application
@@ -421,6 +450,10 @@ int readin(int prompt) {
     doB = 1;
   else
     doB = 0;
+
+#ifdef DIMREDUCE
+  cWline = par_buf.cWline;
+#endif
 
   kappa = (Real)NCOL * 0.5 / lambda;
   node0_printf("lambda=%.4g --> kappa=Nc/(2lambda)=%.4g\n",
