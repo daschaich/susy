@@ -137,7 +137,7 @@ void make_fields() {
   FIELD_ALLOC(tr_eta, complex);
   FIELD_ALLOC(tr_dest, complex);
 
-  size += (Real)(2.0 * (1 + NUMLINK + NPLAQ)) * sizeof(matrix);
+  size += (Real)(2.0 * (1.0 + NUMLINK + NPLAQ)) * sizeof(matrix);
   FIELD_ALLOC(site_src, matrix);
   FIELD_ALLOC(site_dest, matrix);
   FIELD_ALLOC_VEC(link_src, matrix, NUMLINK);
@@ -149,11 +149,11 @@ void make_fields() {
   size += (Real)(1.0 + NPLAQ + 3.0 * NUMLINK) * sizeof(matrix);
   size += (Real)(NUMLINK + 6.0 * NPLAQ) * sizeof(complex);
   FIELD_ALLOC(DmuUmu, matrix);
-  FIELD_ALLOC_VEC(Tr_Uinv, complex, NUMLINK);
   FIELD_ALLOC_VEC(Fmunu, matrix, NPLAQ);
   FIELD_ALLOC_VEC(Uinv, matrix, NUMLINK);
   FIELD_ALLOC_VEC(Udag_inv, matrix, NUMLINK);
   FIELD_ALLOC_VEC(UpsiU, matrix, NUMLINK);
+  FIELD_ALLOC_VEC(Tr_Uinv, complex, NUMLINK);
   FIELD_ALLOC_MAT_OFFDIAG(plaqdet, complex, NUMLINK);
   FIELD_ALLOC_MAT_OFFDIAG(tempdet, complex, NUMLINK);
   FIELD_ALLOC_MAT_OFFDIAG(ZWstar, complex, NUMLINK);
@@ -477,7 +477,8 @@ int readin(int prompt) {
 #endif
 
 #ifdef EIG
-  // Include some mallocs here (which is called after make_fields)
+  // Include some mallocs here (make_fields has already been called)
+  // (This memory usage will not be reported to the user)
   Nvec = par_buf.Nvec;
   eigVal = malloc(Nvec * sizeof(*eigVal));
   eigVec = malloc(Nvec * sizeof(*eigVec));

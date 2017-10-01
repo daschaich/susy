@@ -218,14 +218,20 @@ double cWline_action() {
   register int i, mu;
   register site *s;
   double sum = 0.0;
+#ifdef TRUNCATED
   matrix tmat;
+#endif
 
   FORALLUPDIR(mu) {
     if (length[mu] == 1) {
       FORALLSITES(i, s) {
+#ifdef TRUNCATED
         invert(&(s->link[mu]), &tmat);
         sum_matrix(&(s->link[mu]), &tmat);    // U + U^(-1)
         sum += trace(&tmat).real;
+#else
+        sum += trace(&(s->link[mu])).real;
+#endif
       }
     }
   }
