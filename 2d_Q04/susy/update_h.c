@@ -18,7 +18,7 @@ double gauge_force(Real eps) {
   register site *s;
   char **local_pt[2][2];
   int a, b, gather, flip = 0;
-  double returnit = 0.0;
+  double returnit = 0.0, tr;
   complex tc, tc2;
   matrix tmat, tmat2, *mat[2];
   msg_tag *tag[NUMLINK], *tag0[2], *tag1[2];
@@ -122,7 +122,7 @@ double gauge_force(Real eps) {
     }
   }
 
-  // Third we have the scalar potential derivative contribution
+  // Third we have the Q-exact scalar potential derivative contribution
   //   Udag_mu(x) 2B^2/N Tr[DmuUmu](x) Y(x)
   // where Y(x) = Tr[U_mu(x) Udag_mu(x)] / N - 1
   // Only compute if B is non-zero
@@ -221,22 +221,16 @@ double gauge_force(Real eps) {
     }
   }
 
-  // Factor of kappa = N / (2lambda) on both d^2 and F^2 terms
-  FORALLSITES(i, s) {
-    FORALLDIR(mu)
-      scalar_mult_matrix(&(s->f_U[mu]), kappa, &(s->f_U[mu]));
-  }
-
-  // Only compute U(1) mass term if non-zero -- note factor of kappa
+  // Only compute susy-breaking scalar potential term if bmass non-zero
   if (bmass > IMAG_TOL) {
     Real dmu;
 #ifdef EIG_POT
-    dmu = 2.0 * kappa * bmass * bmass;
-    matrix tmat;
+    dmu = 2.0 * bmass * bmass;
 #else
     Real tr;
-    dmu = 2.0 * one_ov_N * kappa * bmass * bmass;
+    dmu = 2.0 * one_ov_N * bmass * bmass;
 #endif
+
     FORALLSITES(i, s) {
       FORALLDIR(mu) {
 #ifdef EIG_POT
@@ -253,16 +247,15 @@ double gauge_force(Real eps) {
   }
 
   // Finally take adjoint and update the momentum
+  // Include overall factor of kappa = N / (2lambda)
   // Subtract to reproduce -Adj(f_U)
+  // Compute average gauge force in same loop
+  tr = kappa * eps;
   FORALLSITES(i, s) {
-    FORALLDIR(mu)
-      scalar_mult_dif_adj_matrix(&(s->f_U[mu]), eps, &(s->mom[mu]));
-  }
-
-  // Compute average gauge force
-  FORALLSITES(i, s) {
-    FORALLDIR(mu)
+    FORALLDIR(mu) {
+      scalar_mult_dif_adj_matrix(&(s->f_U[mu]), tr, &(s->mom[mu]));
       returnit += realtrace(&(s->f_U[mu]), &(s->f_U[mu]));
+    }
   }
   g_doublesum(&returnit);
 
@@ -672,7 +665,7 @@ void pot_force(matrix *eta, matrix *psi[NUMLINK], int sign) {
   if (sign == 1)
     localB *= -1.0;
   else if (sign != -1) {
-    node0_printf("Error: incorrect sign in detF: %d\n", sign);
+    node0_printf("Error: incorrect sign in pot_force: %d\n", sign);
     terminate(1);
   }
 
@@ -954,14 +947,14 @@ void assemble_fermion_force(Twist_Fermion *sol, Twist_Fermion *psol) {
 // Update the momenta with the fermion force
 // Assume that the multiCG has been run, with the solution in sol[j]
 // Accumulate f_U for each pole into fullforce, add to momenta
-// Allocate fullforce while using tempTF for temporary storage
+// Use fullforce-->DmuUmu, Fmunu and tempTF for temporary storage
 // (Calls assemble_fermion_force, which uses many more temporaries)
 double fermion_force(Real eps, Twist_Fermion *src, Twist_Fermion **sol) {
   register int i;
   register site *s;
   int mu, n;
   double returnit = 0.0;
-  matrix *fullforce[NUMLINK];
+  matrix **fullforce = malloc(NUMLINK * sizeof(**fullforce));
 
 #ifdef FORCE_DEBUG
   int kick, ii, jj, iters = 0;
@@ -972,8 +965,9 @@ double fermion_force(Real eps, Twist_Fermion *src, Twist_Fermion **sol) {
   clear_mat(&tmat);
 #endif
 
-  FORALLDIR(mu)
-    fullforce[mu] = malloc(sites_on_node * sizeof(matrix));
+  // Use DmuUmu and Fmunu for temporary storage
+  fullforce[0] = DmuUmu;
+  fullforce[1] = Fmunu;
 
   // Initialize fullforce[mu]
   fermion_op(sol[0], tempTF, PLUS);
@@ -1086,10 +1080,10 @@ double fermion_force(Real eps, Twist_Fermion *src, Twist_Fermion **sol) {
   }
   g_doublesum(&returnit);
 
-  FORALLDIR(mu)
-    free(fullforce[mu]);
+  free(fullforce);
 
-  // Reset Fmunu
+  // Reset DmuUmu and Fmunu
+  compute_DmuUmu();
   compute_Fmunu();
   return (eps * sqrt(returnit) / volume);
 }
