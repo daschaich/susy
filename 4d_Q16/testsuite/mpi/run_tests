@@ -1,5 +1,5 @@
 #!/bin/bash
-# This script needs to be run from the 4dSYM/testsuite/mpi directory
+# This script needs to be run from the 4d_Q16/testsuite/mpi directory
 
 # Customization for the HET cluster at the University of Colorado
 makefile=Make_mpi
@@ -118,7 +118,7 @@ for N in 2 3 4 ; do
   echo "Running checkpointed susy_phase part 2 of 2..."
   $run ../susy/susy_phase < in.U$N.phase > mpi/phase_part2.U$N.out
   sed -i -E "s/(ckpt_load) 256/\1 0/" in.U$N.phase
-  rm -f config.U$N.2222.diag256 config.U$N.2222.Q256
+  rm -f config*diag* config*Q*
 
   # Check
   cd mpi/

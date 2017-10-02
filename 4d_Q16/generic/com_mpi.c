@@ -534,7 +534,7 @@ void sort_eight_gathers(int index) {
 
   for (i = 0; i < 8; i++)
     memcpy(&tt[i], &gather_array[index + i], sizeof(gather_t));
-  for (i = XUP; i <= TUP; i++) {
+  FORALLUPDIR(i) {
     memcpy(&gather_array[index + i], &tt[2 * i], sizeof(gather_t));
     memcpy(&gather_array[index + OPP_DIR(i)],
            &tt[2 * i + 1], sizeof(gather_t));
@@ -592,9 +592,10 @@ void make_nn_gathers() {
   else
     gather_parity = SWITCH_PARITY;
 
-  for (i = XUP; i <= TUP; i++)
+  FORALLUPDIR(i) {
     make_gather(neighbor_coords_special, &i, WANT_INVERSE,
                 ALLOW_EVEN_ODD, gather_parity);
+  }
 
   /* Sort into the order we want for nearest neighbor gathers,
      so you can use XUP, XDOWN, etc. as argument in calling them. */
@@ -829,13 +830,10 @@ static id_list_t* make_id_list(
   int n_recv,          /* number of receives */
   comlink *send)       /* neighborlist_send */
 {
-  int i, *buf;
+  int i, *buf = malloc(n_recv * sizeof(*buf));
   id_list_t *tol_top, *tol, **tol_next;
-  MPI_Request *req, sreq;
+  MPI_Request sreq, *req = malloc(n_recv * sizeof(*req));
   MPI_Status stat;
-
-  buf = (int *)malloc(n_recv*sizeof(int));
-  req = (MPI_Request *)malloc(n_recv*sizeof(MPI_Request));
 
   for (i = 0; recv != NULL; ++i, recv=recv->nextcomlink) {
     buf[i] = i;

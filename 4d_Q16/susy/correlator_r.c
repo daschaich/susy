@@ -13,7 +13,7 @@
 // -----------------------------------------------------------------
 // Map (x, y, z, t) to r on Nx x Ny x Nz x Nt A4* lattice
 // Check all possible periodic shifts to find true r
-Real A4map(x_in, y_in, z_in, t_in) {
+Real A4map(int x_in, int y_in, int z_in, int t_in) {
   int x, y, z, t, xSq, ySq, zSq, xy, xpy, xpyz, xpypz;
   Real r = 100.0 * MAX_X, tr;   // r to be overwritten
 
