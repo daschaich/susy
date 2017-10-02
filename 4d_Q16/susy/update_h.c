@@ -251,7 +251,6 @@ double gauge_force(Real eps) {
   }
 
   // Only compute susy-breaking scalar potential term if bmass non-zero
-  // Note factor of kappa
   if (bmass > IMAG_TOL) {
     Real dmu;
 #ifdef EIG_POT

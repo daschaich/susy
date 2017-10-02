@@ -18,15 +18,6 @@
 
 // ASCII string length for all file names
 #define MAXFILENAME 256
-
-// Gauge fixing options
-#define NO_GAUGE_FIX 30
-#define COULOMB_GAUGE_FIX 31
-
-// Smearing options
-#define NO_SMEAR 40
-#define STOUT_SMEAR 41
-#define APE_SMEAR 42
 // -----------------------------------------------------------------
 
 

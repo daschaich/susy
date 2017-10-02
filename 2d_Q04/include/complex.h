@@ -144,7 +144,7 @@ double_complex dce_itheta(double theta);
   (c).real =  (a).real * (b).real - (a).imag * (b).imag; \
   (c).imag = -(a).real * (b).imag - (a).imag * (b).real; }
 
-// c -= a * b
+// c += a * b
 #define CMULSUM(a, b, c) { \
   (c).real += (a).real * (b).real - (a).imag * (b).imag; \
   (c).imag += (a).real * (b).imag + (a).imag * (b).real; }
