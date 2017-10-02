@@ -18,7 +18,7 @@ double gauge_force(Real eps) {
   register site *s;
   char **local_pt[2][2];
   int a, b, gather, flip = 0, index, next;
-  double returnit = 0.0;
+  double returnit = 0.0, tr;
   complex tc, tc2;
   matrix tmat, tmat2, *mat[2];
   msg_tag *tag[NUMLINK], *tag0[2], *tag1[2];
@@ -250,21 +250,15 @@ double gauge_force(Real eps) {
     }
   }
 
-  // Factor of kappa = N / (2lambda) on both d^2 and F^2 terms
-  FORALLSITES(i, s) {
-    FORALLDIR(mu)
-      scalar_mult_matrix(&(s->f_U[mu]), kappa, &(s->f_U[mu]));
-  }
-
   // Only compute susy-breaking scalar potential term if bmass non-zero
   // Note factor of kappa
   if (bmass > IMAG_TOL) {
     Real dmu;
 #ifdef EIG_POT
-    dmu = 2.0 * kappa * bmass * bmass;
+    dmu = 2.0 * bmass * bmass;
 #else
     Real tr;
-    dmu = 2.0 * one_ov_N * kappa * bmass * bmass;
+    dmu = 2.0 * one_ov_N * bmass * bmass;
 #endif
 
     FORALLSITES(i, s) {
@@ -301,7 +295,7 @@ double gauge_force(Real eps) {
   // in reduced direction(s)
   // No factor of two---presumably related to 2ReTr ~ x + x^* in action
   if (cWline > IMAG_TOL) {
-    Real dcW = kappa * cWline * cWline;
+    Real dcW = cWline * cWline;
     FORALLUPDIR(mu) {
       if (length[mu] == 1) {
         FORALLSITES(i, s) {
@@ -323,8 +317,10 @@ double gauge_force(Real eps) {
 #endif
 
   // Finally take adjoint and update the momentum
+  // Include overall factor of kappa = N / (2lambda)
   // Subtract to reproduce -Adj(f_U)
   // Compute average gauge force in same loop
+  tr = kappa * eps;
   FORALLSITES(i, s) {
     FORALLDIR(mu) {
 #ifdef TRUNCATED
@@ -333,10 +329,10 @@ double gauge_force(Real eps) {
       tc = trace(&tmat);
       CMULREAL(tc, -1.0 * one_ov_N, tc);
       c_scalar_add_diag(&tmat, &tc);
-      scalar_mult_dif_matrix(&tmat, eps, &(s->mom[mu]));
+      scalar_mult_dif_matrix(&tmat, tr, &(s->mom[mu]));
       returnit += realtrace(&tmat, &tmat);
 #else
-      scalar_mult_dif_adj_matrix(&(s->f_U[mu]), eps, &(s->mom[mu]));
+      scalar_mult_dif_adj_matrix(&(s->f_U[mu]), tr, &(s->mom[mu]));
       returnit += realtrace(&(s->f_U[mu]), &(s->f_U[mu]));
 #endif
     }
