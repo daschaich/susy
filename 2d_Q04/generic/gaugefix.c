@@ -63,7 +63,7 @@ void accum_gauge_hit(int gauge_dir, int parity) {
 
   // Subtract upward link contributions
   FORSOMEPARITY(i, s, parity) {
-    FORALLDIRBUT(gauge_dir, dir) {
+    FORALLUPDIRBUT(gauge_dir, dir) {
       // Upward link matrix
       m1 = &(s->link[dir]);
       if (diffmat_offset >= 0)
@@ -84,7 +84,7 @@ void accum_gauge_hit(int gauge_dir, int parity) {
 
   // Add downward link contributions
   FORSOMEPARITY(i, s, parity) {
-    FORALLDIRBUT(gauge_dir, dir) {
+    FORALLUPDIRBUT(gauge_dir, dir) {
       // Downward link matrix -- gathered in gaugefixstep()
       m2 = (matrix *)gen_pt[dir][i];
 
@@ -209,7 +209,7 @@ double get_gauge_fix_action(int gauge_dir, int parity) {
   complex tc;
 
   FORSOMEPARITY(i, s, parity) {
-    FORALLDIRBUT(gauge_dir, dir) {
+    FORALLUPDIRBUT(gauge_dir, dir) {
       tc = trace(&(s->link[dir]));
       gauge_fix_action += (double)tc.real;
 
@@ -219,7 +219,7 @@ double get_gauge_fix_action(int gauge_dir, int parity) {
   }
 
   // Count number of terms to average
-  FORALLDIRBUT(gauge_dir, dir)
+  FORALLUPDIRBUT(gauge_dir, dir)
     ndir++;
 
   // Sum over all sites of this parity

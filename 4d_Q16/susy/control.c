@@ -167,7 +167,7 @@ int main(int argc, char *argv[]) {
       else if (smearflag == APE_SMEAR)
         APE_smear(Nsmear, alpha, YESDET);
       node0_printf("AFTER  ");
-      max_plaq = local_plaquette(&ss_plaq, &st_plaq);      // Prints out MIN_PLAQ
+      max_plaq = local_plaquette(&ss_plaq, &st_plaq);   // Prints out MIN_PLAQ
       node0_printf(" %.8g %.8g %.8g\n", ss_plaq, st_plaq, max_plaq);
 
       // Update plaqdet, Uinv, DmuUmu and Fmunu with smeared links

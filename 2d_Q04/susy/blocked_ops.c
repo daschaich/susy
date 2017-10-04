@@ -39,7 +39,7 @@ void blocked_ops(int Nsmear, int block) {
 
   // Print each operator summed over volume
   // Have to divide by number of blocked lattices: 2^(4block) = bl^4
-  // Format: TAG  smearing  block  a  op[a]  subtracted[a]
+  // Format: TAG  smearing  block  a  op[a]
   for (j = 1; j < block; j++)
     bl *= 2;
   if (block <= 0)

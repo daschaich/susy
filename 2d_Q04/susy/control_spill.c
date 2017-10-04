@@ -28,16 +28,17 @@ int main(int argc, char *argv[]) {
 
   // Serial code!
   if (this_node != 0) {
-    node0_printf("ERROR: run this thing in serial!\n");
+    printf("ERROR: run this thing in serial!\n");
     terminate(1);
   }
 
   // Spill lattice in format expected by serial code
   // (cf. read_in.cpp, loop_over_lattice and << overloading for Umatrix
+  // Also need to add first line: nx\t nt\t kappa\t f_eps\t N
   for (t = 0; t < nt; t++) {
     for (x = 0; x < nx; x++) {
       s = node_index(x, t);
-      for (mu = 0; mu < NUMLINK; mu++) {
+      FORALLDIR(mu) {
         for (i = 0; i < NCOL; i++) {
           for (j = 0; j < NCOL; j++) {
             re = lattice[s].link[mu].e[i][j].real;

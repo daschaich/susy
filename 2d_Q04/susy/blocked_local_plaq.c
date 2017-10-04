@@ -22,7 +22,7 @@ void blocked_local_plaq(int Nsmear, int block) {
   for (j = 0; j < block; j++)
     stride *= 2;
 
-  // Compute the bl-strided plaquette
+  // Compute the bl-strided plaquette, exploiting a symmetry under TUP<-->XUP
   // Copy links to tempmat and tempmat2 to be shifted
   FORALLSITES(i, s) {
     mat_copy(&(s->link[TUP]), &(tempmat[i]));

@@ -286,7 +286,7 @@ void correlator_r() {
             terminate(1);
           }
 
-          // 2 * N_K^2 Konishi correlators
+          // N_K^2 Konishi correlators
 #ifdef CHECK_ROT
           // Potentially useful to check rotational invariance
           node0_printf("ROT_K %d %d %d %d", x_dist, y_dist, z_dist, t_dist);
@@ -304,7 +304,7 @@ void correlator_r() {
             }
           }
 
-          // 2 * N_K^2 SUGRA correlators
+          // N_K^2 SUGRA correlators
 #ifdef CHECK_ROT
           // Potentially useful to check rotational invariance
           node0_printf("\nROT_S %d %d %d %d", x_dist, y_dist, z_dist, t_dist);
