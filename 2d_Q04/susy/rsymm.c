@@ -86,8 +86,6 @@ void rsymm_path(int *dir, int *sign, int *kind, int length) {
       mtag = start_gather_field(tempmat, sizeof(matrix),
                                 goffset[dir[j]], EVENANDODD, gen_pt[1]);
 
-      // Be careful about overwriting tempmat;
-      // gen_pt may just point to it for on-node "gathers"
       wait_gather(mtag);
       FORALLSITES(i, s) {
         mat = (matrix *)(gen_pt[1][i]);
@@ -100,9 +98,9 @@ void rsymm_path(int *dir, int *sign, int *kind, int length) {
           terminate(1);
         }
       }
-      cleanup_gather(mtag);
-      FORALLSITES(i, s)
+      FORALLSITES(i, s)   // Don't want to overwrite tempmat too soon
         mat_copy(&(tempmat2[i]), &(tempmat[i]));
+      cleanup_gather(mtag);
     }
     else {
       node0_printf("rsymm_path: unrecognized sign[%d] = %d\n", j, sign[j]);

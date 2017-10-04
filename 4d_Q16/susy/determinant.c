@@ -97,7 +97,7 @@ void measure_det() {
 #endif
   register int i, a, b;
   register site *s;
-  Real norm = (Real)(volume * NUMLINK * (NUMLINK - 1) / 2);
+  Real norm = 1.0 / ((Real)(volume * NUMLINK * (NUMLINK - 1) / 2));
   double WSq = 0.0;
   complex tot = cmplx(0.0, 0.0), tot_sq = cmplx(0.0, 0.0), tc;
 
@@ -116,10 +116,10 @@ void measure_det() {
   g_complexsum(&tot);
   g_complexsum(&tot_sq);
   g_doublesum(&WSq);
-  CDIVREAL(tot, norm, tot);
-  CDIVREAL(tot_sq, norm, tot_sq);
+  CMULREAL(tot, norm, tot);
+  CMULREAL(tot_sq, norm, tot_sq);
   node0_printf("DET %.6g %.6g %.6g %.6g %.6g\n",
-               tot.real, tot.imag, tot_sq.real, tot_sq.imag, WSq / norm);
+               tot.real, tot.imag, tot_sq.real, tot_sq.imag, WSq * norm);
 }
 // -----------------------------------------------------------------
 

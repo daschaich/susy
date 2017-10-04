@@ -40,7 +40,7 @@ int main(int argc, char *argv[]) {
       for (y = 0; y < ny; y++) {
         for (x = 0; x < nx; x++) {
           s = node_index(x, y, z, t);
-          for (mu = 0; mu < NUMLINK; mu++) {
+          FORALLDIR(mu) {
             for (i = 0; i < NCOL; i++) {
               for (j = 0; j < NCOL; j++) {
                 re = lattice[s].link[mu].e[i][j].real;

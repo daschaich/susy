@@ -170,7 +170,7 @@ double gauge_action(int do_det) {
 double bmass_action() {
   register int i, a;
   register site *s;
-  double sum = 0.0, kappa_muSq = kappa * bmass * bmass;
+  double sum = 0.0;
 #ifdef EIG_POT
   matrix tmat;
 #else
@@ -182,16 +182,46 @@ double bmass_action() {
 #ifdef EIG_POT
       mult_na(&(s->link[a]), &(s->link[a]), &tmat);
       scalar_add_diag(&tmat, -1.0);
-      sum += kappa_muSq * realtrace(&tmat, &tmat);
+      sum += realtrace(&tmat, &tmat);
 #else
       tr = one_ov_N * realtrace(&(s->link[a]), &(s->link[a])) - 1.0;
-      sum += kappa_muSq * tr * tr;
+      sum += tr * tr;
 #endif
     }
   }
+  sum *= kappa * bmass * bmass;
   g_doublesum(&sum);
   return sum;
 }
+// -----------------------------------------------------------------
+
+
+
+// -----------------------------------------------------------------
+// Center-breaking term that protects the single-link 'Wilson line'
+// in reduced direction(s)
+// Comes with factors of kappa and -2
+#ifdef DIMREDUCE
+double cWline_action() {
+  register int i, mu;
+  register site *s;
+  double sum = 0.0;
+  matrix tmat;
+
+  FORALLUPDIR(mu) {
+    if (length[mu] == 1) {
+      FORALLSITES(i, s) {
+        invert(&(s->link[mu]), &tmat);
+        sum_matrix(&(s->link[mu]), &tmat);    // U + U^(-1)
+        sum += trace(&tmat).real;
+      }
+    }
+  }
+  sum *= -2.0 * kappa * cWline * cWline;
+  g_doublesum(&sum);
+  return sum;
+}
+#endif
 // -----------------------------------------------------------------
 
 
@@ -282,7 +312,7 @@ double mom_action() {
 // Print out zeros for pieces of the action that aren't included
 double action(Twist_Fermion **src, Twist_Fermion ***sol) {
   double g_act, bmass_act = 0.0, p_act, f_act, det_act = 0.0;
-  double total;
+  double cWline_act = 0.0, total;
 
   g_act = gauge_action(NODET);
   if (bmass > IMAG_TOL)
@@ -294,7 +324,13 @@ double action(Twist_Fermion **src, Twist_Fermion ***sol) {
   node0_printf("gauge %.8g bmass %.8g ", g_act, bmass_act);
   node0_printf("det %.8g ", det_act);
 
-  total = g_act + bmass_act + det_act;
+#ifdef DIMREDUCE
+  if (cWline > IMAG_TOL)
+    cWline_act = cWline_action();
+  node0_printf("cWline %.8g ", cWline_act);
+#endif
+
+  total = g_act + bmass_act + det_act + cWline_act;
 #ifndef PUREGAUGE
   int n;
   for (n = 0; n < Nroot; n++) {
