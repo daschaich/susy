@@ -6,47 +6,57 @@
 // -----------------------------------------------------------------
 
 
+
+// -----------------------------------------------------------------
 // Clear A
 void clear_antiH(anti_hermitmat *a) {
   int i;
-  
-  for(i=0; i<NCOL; i++)
+  for (i = 0; i < NCOL; i++)
     a->im_diag[i] = 0.0;
-  
-  for(i=0; i<NCOL * (NCOL - 1) / 2; i++)
-    a->m[i] = cmplx(0,0);
+
+  for (i = 0; i < NCOL * (NCOL - 1) / 2; i++)
+    a->m[i] = cmplx(0.0, 0.0);
 }
 
 // c <-- c + s * b (output is always last)
 void scalar_mult_sum_antiH(anti_hermitmat *b, Real s, anti_hermitmat *c) {
   int i;
-  
-  for(i=0; i<NCOL; i++)
+  for (i = 0; i < NCOL; i++)
     c->im_diag[i] += s * b->im_diag[i];
-  
-  for(i=0; i<NCOL * (NCOL - 1) / 2; i++)
-  {
+
+  for (i = 0; i < NCOL * (NCOL - 1) / 2; i++) {
     c->m[i].real += s * b->m[i].real;
     c->m[i].imag += s * b->m[i].imag;
   }
 }
+// -----------------------------------------------------------------
+
+
 
 // -----------------------------------------------------------------
 // Sum staples for direction dir over all other directions
-void compute_staple(matrix *staple[NDIMS]) {
+void compute_staple() {
   register int i;
   register site *s;
   int dir, dir2;
 
+  FORALLSITES(i, s)
+    FORALLDIR(dir) {
+      mat_copy(&(s->link[dir]), &(s->mom[dir]));
+  }
+
   FORALLDIR(dir) {
     FORALLSITES(i, s)
-      clear_mat(&(staple[dir][i]));
+      clear_mat(&(staple[i]));
 
     FORALLDIR(dir2) {
       if (dir == dir2)
         continue;
       directional_staple(dir, dir2);
     }
+
+    FORALLSITES(i, s)
+      mat_copy(&(staple[i]), &(S[dir][i]));
   }
 }
 // -----------------------------------------------------------------
@@ -54,26 +64,27 @@ void compute_staple(matrix *staple[NDIMS]) {
 
 
 // -----------------------------------------------------------------
-// Calculate A = A + f1 * Project_antihermitian_traceless(U.Sdag)
-//           U = exp(f2 * A).U
+// Calculate Q = Q + f1 * Project_antihermitian_traceless(U.Sdag)
+//           U = exp(f2 * Q).U
 // S is the Lie derivative of the action being used to flow
-void update_flow(double f1, double f2) {
+void update_flow(Real f1, Real f2) {
   register int i, dir;
   register site *s;
   matrix tmat;
   anti_hermitmat tmat_ah;
 
-  compute_staple(S);
+  // This is where we can change the 'flow action'
+  compute_staple();
 
   FORALLDIR(dir) {
     FORALLSITES(i, s) {
       mult_na(&(s->link[dir]), &(S[dir][i]), &tmat);
       make_anti_hermitian(&tmat, &tmat_ah);
       // A += f1 * U.S
-      scalar_mult_sum_antiH(&tmat_ah, (Real)f1, &(Q[dir][i]));
+      scalar_mult_sum_antiH(&tmat_ah, f1, &(Q[dir][i]));
     }
-    exp_mult(f2); // U = exp(f2 * A).U
   }
+  exp_mult(f2);             // U = exp(f2 * Q).U
 }
 // -----------------------------------------------------------------
 
@@ -130,9 +141,10 @@ void wflow() {
     // Check with plaquette
     plaquette(&ssplaq, &stplaq);
     plaq = 0.5 * (ssplaq + stplaq);
-    check = 20.0 * t * t * ((double)NCOL - plaq); // TODO: Guessing numerical factor
+    // TODO: Guessing numerical factor
+    check = 20.0 * t * t * fabs((double)NCOL - plaq);
 
-    node0_printf("WFLOW %g %g %g %g %g %g \n",
+    node0_printf("WFLOW %g %g %g %g %g %g\n",
                  t, plaq, E, tSqE, der_tSqE, check);
   }
 }

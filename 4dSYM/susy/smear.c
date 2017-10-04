@@ -7,12 +7,12 @@
 
 
 // -----------------------------------------------------------------
-// Calculate newU = exp(Q).U, overwriting s->link
+// Calculate newU = exp(eps * Q).U, overwriting s->link
 // Here Q is the traceless anti-hermitian lattice field from stout_smear
 // Go to eighth order in the exponential:
-//   exp(Q) * U = (1 + Q + Q^2/2 + Q^3/6 ...) * U
-//              = U + Q*(U + (Q/2)*(U + (Q/3)*( ... )))
-void exp_mult(double eps) {
+//   exp(x) * U = (1 + x + x^2/2 + x^3/6 ...) * U
+//              = U + x*(U + (x/2)*(U + (x/3)*( ... )))
+void exp_mult(Real eps) {
   register int i, dir;
   register site *s;
   register Real t2, t3, t4, t5, t6, t7, t8;
@@ -54,8 +54,7 @@ void exp_mult(double eps) {
       scalar_mult_add_matrix(link, &tmat, t2, &tmat2);
 
       mult_nn(&htemp, &tmat2, &tmat);
-      scalar_mult_add_matrix(link, &tmat, eps, &(s->link[dir]));
-      
+      scalar_mult_sum_matrix(&tmat, eps, link);
     }
   }
 }

@@ -201,7 +201,7 @@ void monopole();
 void stout_smear(int Nsmear, double alpha);
 void APE_smear(int Nsmear, double alpha, int project);
 // Wilson flow reuses a couple of routines from smear.c
-void exp_mult(double eps);
+void exp_mult(Real eps);
 void directional_staple(int dir, int dir2);
 #endif
 
