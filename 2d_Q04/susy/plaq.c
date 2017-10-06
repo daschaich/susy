@@ -10,6 +10,7 @@ void plaquette(double *plaq) {
   msg_tag *mtag0, *mtag1;
   matrix tmat;
 
+  // We can exploit a symmetry under TUP<-->XUP
   // gen_pt[0] is U_b(x+a), gen_pt[1] is U_a(x+b)
   mtag0 = start_gather_site(F_OFFSET(link[XUP]), sizeof(matrix),
                             goffset[TUP], EVENANDODD, gen_pt[0]);

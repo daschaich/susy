@@ -7,7 +7,7 @@ void monopole() {
   register int i, dir, dir2;
   register site *s;
   int a, b, c, d, ip2;
-  int total_mono_p[NDIMS], total_mono_m[NDIMS], total, total_abs;
+  int total_mono_p[NDIMS], total_mono_m[NDIMS], total = 0, total_abs = 0;
   int *mono[NDIMS][NDIMS], *charge[NDIMS];
   Real *phase[NDIMS], p2, p3, total_phase, permm;
   double threePI = 3.0 * PI, fivePI = 5.0 * PI, sevenPI = 7.0 * PI;
@@ -131,7 +131,7 @@ void monopole() {
       }
     }
     FORALLSITES(i, s)       // Normalize for epsilon loops double-counting
-      charge[a][i] /= 2.0;  // Should end up an integer
+      charge[a][i] *= 0.5;  // Should end up an integer
   }
 //  FORALLSITES(i, s) {
 //    FORALLUPDIR(dir) {
@@ -143,8 +143,6 @@ void monopole() {
 //  }
 
   // Finally accumulate and print global quantities
-  total = 0;
-  total_abs = 0;
   FORALLUPDIR(dir) {
     total_mono_p[dir] = 0;
     total_mono_m[dir] = 0;
@@ -158,8 +156,6 @@ void monopole() {
     g_intsum(&total_mono_m[dir]);
   }
 
-  total = 0;
-  total_abs = 0;
   node0_printf("MONOPOLE ");
   FORALLUPDIR(dir) {
     if (total_mono_p[dir] + total_mono_m[dir] != 0)

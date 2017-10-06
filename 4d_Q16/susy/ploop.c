@@ -26,23 +26,23 @@ complex ploop(int dir, int project, double *plpMod) {
   switch(dir) {
     case XUP:
       len = nx;
-      norm = (double)(nt * ny * nz);
+      norm = 1.0 / (double)(nt * ny * nz);
       break;
     case YUP:
       len = ny;
-      norm = (double)(nx * nt * nz);
+      norm = 1.0 / (double)(nx * nt * nz);
       break;
     case ZUP:
       len = nz;
-      norm = (double)(nx * ny * nt);
+      norm = 1.0 / (double)(nx * ny * nt);
       break;
     case TUP:
       len = nt;
-      norm = (double)(nx * ny * nz);
+      norm = 1.0 / (double)(nx * ny * nz);
       break;
     case DIR_5:
       len = nt;
-      norm = (double)(nx * ny * nz);
+      norm = 1.0 / (double)(nx * ny * nz);
       break;
     default:
       printf("ploop: unrecognized direction %d\n", dir);
@@ -115,8 +115,8 @@ complex ploop(int dir, int project, double *plpMod) {
   }
   g_complexsum(&sum);
   g_doublesum(plpMod);
-  CDIVREAL(sum, norm, sum);
-  *plpMod /= norm;
+  CMULREAL(sum, norm, sum);
+  *plpMod *= norm;
 
   if (project == 1) {       // Reset original links
     FORALLSITES(i, s)

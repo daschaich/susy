@@ -71,14 +71,14 @@ double det_force(Real eps);
 void fermion_op(Twist_Fermion *src, Twist_Fermion *dest, int sign);
 void DSq(Twist_Fermion *src, Twist_Fermion *dest);
 int congrad_multi(Twist_Fermion *src, Twist_Fermion **psim,
-                        int MaxCG, Real RsdCG, Real *size_r);
+                  int MaxCG, Real RsdCG, Real *size_r);
 
 // Compute average Tr[Udag U] / N_c
 // Number of blocking steps only affects output formatting
 double link_trace(double *linktr, double *linktr_width,
                   double *dets, double *det_ave, double *det_width);
 
-// Basic Twist_Fermion and gauge field manipulations
+// Basic Twist_Fermion utilities
 // May eventually move to libraries
 void dump_TF(Twist_Fermion *in);
 void copy_TF(Twist_Fermion *src, Twist_Fermion *dest);
@@ -236,15 +236,5 @@ void zgeev_(char *doL, char *doR, int *N1, double *store, int *N2, double *eigs,
 // Pfaffian phase
 #ifdef PHASE
 void phase();
-#endif
-// -----------------------------------------------------------------
-
-
-
-// -----------------------------------------------------------------
-// Stochastic mode number
-#ifdef MODE
-void coefficients();
-void step(Twist_Fermion *src, Twist_Fermion *res);
 #endif
 // -----------------------------------------------------------------

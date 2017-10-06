@@ -32,9 +32,9 @@ void compute_plaqdet() {
   }
 #endif
 
-  for (mu = 0; mu < 2; mu++) {
-    local_pt[0][mu] = gen_pt[mu];
-    local_pt[1][mu] = gen_pt[2 + mu];
+  for (a = 0; a < 2; a++) {
+    local_pt[0][a] = gen_pt[a];
+    local_pt[1][a] = gen_pt[2 + a];
   }
 
   // Gather determinants rather than the full matrices

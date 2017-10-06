@@ -107,13 +107,14 @@ void konishi() {
     }
   }
   // Normalization removed from site loop, followed by sum over nodes
-  norm = (Real)(nx * ny * nz);
+  norm = 1.0 / (Real)(nx * ny * nz);
   for (t = 0; t < nt; t++) {
     for (j = 0; j < N_K; j++) {
-      OK[j][t] /= norm;
+      OK[j][t] *= norm;
+      OS[j][t] *= norm;
+    }
+    for (j = 0; j < N_K; j++) {
       g_doublesum(&(OK[j][t]));
-
-      OS[j][t] /= norm;
       g_doublesum(&(OS[j][t]));
     }
   }

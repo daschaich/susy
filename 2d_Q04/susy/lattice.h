@@ -77,10 +77,6 @@ EXTERN Real traj_length;
 EXTERN matrix Lambda[DIMF];
 
 EXTERN Real rsqmin, lambda, kappa, bmass, fmass, kappa_u1, G, B;
-#ifdef DIMREDUCE
-EXTERN Real cWline;       // Coefficient of center-breaking term protecting
-                          // single-link 'Wilson line' in reduced dir(s)
-#endif
 EXTERN int doG, doB;
 EXTERN double g_plaq;     // Global plaq for I/O
 EXTERN double_complex linktrsum;

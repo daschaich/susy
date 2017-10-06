@@ -28,10 +28,6 @@ typedef struct {
   Real bmass, fmass;      // Bosonic and fermion masses
   Real kappa_u1;          // Plaquette determinant coupling
   Real G, B;              // Q-invariant plaq. det. coupling and bosonic mass
-#ifdef DIMREDUCE
-  Real cWline;            // Coefficient of center-breaking term protecting
-                          // single-link 'Wilson line' in reduced dir(s)
-#endif
 
   // Inversion parameters
   int niter;                    // Maximum number of CG iterations
