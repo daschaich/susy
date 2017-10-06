@@ -455,6 +455,12 @@ int readin(int prompt) {
 
 #ifdef DIMREDUCE
   cWline = par_buf.cWline;
+  #ifndef TRUNCATED
+  if (mynode() == 0 && cWline != 0.0) {
+    printf("WARNING: Dimensionally reduced center-breaking term ");
+    printf("may need small step sizes without truncation\n");
+  }
+  #endif
 #endif
 
   kappa = (Real)NCOL * 0.5 / lambda;

@@ -292,22 +292,22 @@ double gauge_force(Real eps) {
 #ifdef DIMREDUCE
   // Center-breaking term that protects the single-link 'Wilson line'
   // in reduced direction(s)
-  // No factor of two---presumably related to 2ReTr ~ x + x^* in action
+  // No factor of two---presumably related to 2ReTr(U) ~ U + Ubar in action
   if (cWline > IMAG_TOL) {
     Real dcW = cWline * cWline;
     FORALLUPDIR(mu) {
       if (length[mu] == 1) {
         FORALLSITES(i, s) {
+          invert(&(s->link[mu]), &tmat);
   #ifdef TRUNCATED
           // Just U - U^(-1), and can absorb overall negative sign
-          invert(&(s->link[mu]), &tmat);
           dif_matrix(&(s->link[mu]), &tmat);    // -U + U^(-1)
           scalar_mult_sum_matrix(&tmat, dcW, &(s->f_U[mu]));
   #else
-          // Just I plus overall negative sign
-          clear_mat(&tmat);
-          scalar_add_diag(&tmat, -1.0);        // -I
-          scalar_mult_sum_matrix(&tmat, dcW, &(s->f_U[mu]));
+          // Just I - U^(-2), and can absorb overall negative sign
+          mult_nn(&tmat, &tmat, &tmat2);
+          scalar_add_diag(&tmat2, -1.0);        // -I + U^(-2)
+          scalar_mult_sum_matrix(&tmat2, dcW, &(s->f_U[mu]));
   #endif
         }
       }
