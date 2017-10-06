@@ -28,7 +28,6 @@
                           // |det-1|^2 is not actively tested!!!
 #define SV                // Site/vector terms in action
 #define VP                // Vector/plaquette terms in action
-//#define DIMREDUCE         // Consider dimensionally reduced systems
 //#define DEBUG_CHECK       // Print lambdas, offsets, etc.
 
 // Tunable parameter in gauge action

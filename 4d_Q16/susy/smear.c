@@ -67,7 +67,6 @@ void exp_mult() {
 // Must copy or project desired links to s->mom before calling
 // dir is the direction of the original link
 // dir2 is the other direction that defines the staple
-// Use gather offsets to handle all five links!
 // Use tempmat and tempmat2 for temporary storage
 void directional_staple(int dir, int dir2) {
   register int i;
@@ -165,13 +164,13 @@ void stout_smear(int Nsmear, double alpha) {
 // Nsmear steps of APE smearing without unitarization, overwriting s->link
 // Optionally project unsmeared links and / or staple sums
 void APE_smear(int Nsmear, double alpha, int project) {
-  register int i, n, dir, dir2;
+  register int i, n = 2 * (NUMLINK - 1), dir, dir2;
   register site *s;
   Real tr, tr2;
   matrix tmat, tmat2;
 
   tr2 = 1.0 - alpha;
-  tr = alpha / (8.0 * tr2);
+  tr = alpha / ((Real)n * tr2);
 
   for (n = 0; n < Nsmear; n++) {
     FORALLSITES(i, s) {
@@ -197,7 +196,7 @@ void APE_smear(int Nsmear, double alpha, int project) {
           directional_staple(dir, dir2);
       }
 
-      // Combine (1 - alpha).link + (alpha / 8).staple
+      // Combine (1 - alpha).link + (alpha / #).staple
       // optionally projecting the staple, but not the end result
       FORALLSITES(i, s) {
 //        if (project == 1)

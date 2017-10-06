@@ -234,10 +234,12 @@ double gauge_force(Real eps) {
     FORALLSITES(i, s) {
       FORALLDIR(mu) {
 #ifdef EIG_POT
+        // Ubar_a(x) [U_a(x) Ubar_a(x) - I]
         mult_na(&(s->link[mu]), &(s->link[mu]), &tmat);
         scalar_add_diag(&tmat, -1.0);
         scalar_mult_an_sum(&(s->link[mu]), &tmat, dmu, &(s->f_U[mu]));
 #else
+        // Ubar_a(x) (Tr[U_a(x) Ubar_a(x)] / N - 1)
         tr = one_ov_N * realtrace(&(s->link[mu]), &(s->link[mu])) - 1.0;
         tr *= dmu;
         scalar_mult_sum_adj_matrix(&(s->link[mu]), tr, &(s->f_U[mu]));
@@ -743,6 +745,7 @@ void assemble_fermion_force(Twist_Fermion *sol, Twist_Fermion *psol) {
 #ifdef SV
   // Accumulate both terms in UpsiU[mu], use to initialize f_U[mu]
   // First calculate DUbar on eta Dbar_mu psi_mu (LtoS)
+  // [psi_mu(x) eta(x + mu) - eta(x) psi_mu(x)]^dag
   mtag[0] = start_gather_field(site_dest, sizeof(matrix),
                                goffset[0], EVENANDODD, gen_pt[0]);
   FORALLDIR(mu) {
@@ -761,6 +764,7 @@ void assemble_fermion_force(Twist_Fermion *sol, Twist_Fermion *psol) {
   }
 
   // 2nd term, DUbar on psi_mu Dbar_mu eta (StoL)
+  // [eta(x) psi_mu(x) - psi_mu(x) eta(x + mu)]^dag
   mtag[0] = start_gather_field(site_src, sizeof(matrix),
                                goffset[0], EVENANDODD, gen_pt[0]);
   FORALLDIR(mu) {

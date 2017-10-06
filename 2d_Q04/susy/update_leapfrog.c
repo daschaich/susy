@@ -40,7 +40,7 @@ int update_step(double *fnorm, double *gnorm,
 
   int step, iters = 0, n;
   Real final_rsq, eps = traj_length / (Real)nsteps[0], tr;
-  node0_printf("eps %.4g\n", eps);
+  node0_printf("eps %.4g for both fermion and gauge steps\n", eps);
 
   // First u(t/2)
   update_uu(0.5 * eps);

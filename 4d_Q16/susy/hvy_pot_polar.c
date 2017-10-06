@@ -12,7 +12,7 @@ void hvy_pot_polar() {
   register site *s;
   int j, t_dist, x_dist, y_dist, z_dist, y_start, z_start;
   double wloop;
-  matrix tmat, tmat2, *mat;
+  matrix tmat, tmat2;
   msg_tag *mtag = NULL;
 
   node0_printf("hvy_pot_polar: MAX_T = %d, MAX_X = %d\n", MAX_T, MAX_X);
@@ -35,10 +35,8 @@ void hvy_pot_polar() {
       mtag = start_gather_field(staple, sizeof(matrix),
                                 goffset[TUP], EVENANDODD, gen_pt[0]);
       wait_gather(mtag);
-      FORALLSITES(i, s) {
-        mat = (matrix *)gen_pt[0][i];
-        mult_nn(&(s->link[TUP]), mat, &(tempmat2[i]));
-      }
+      FORALLSITES(i, s)
+        mult_nn(&(s->link[TUP]), (matrix *)gen_pt[0][i], &(tempmat2[i]));
       cleanup_gather(mtag);
       FORALLSITES(i, s)
         mat_copy(&(tempmat2[i]), &(staple[i]));

@@ -74,7 +74,7 @@ G 0.1           # Q-invariant plaquette determinant coupling
 B 1.0           # Q-invariant scalar potential coupling
 
 # The next three lines must only be included when compiling with -DSMEAR
-stout_smear   # Type of smearing: no_smear, stout_smear or APE_smear
+APE_smear     # Type of smearing: no_smear, stout_smear or APE_smear
 Nsmear 1      # Number of smearing steps
 alpha 0.1     # Smearing parameter (rho for stout, alpha for APE)
 

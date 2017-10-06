@@ -12,11 +12,11 @@ void monopole() {
   complex det_link;
   msg_tag *mtag0, *mtag1;
 
-  FORALLDIR(dir)
+  FORALLUPDIR(dir)
     phase[dir] = malloc(sites_on_node * sizeof(Real));
 
   // First extract the U(1) part of the link
-  FORALLDIR(dir) {
+  FORALLUPDIR(dir) {
     FORALLSITES(i, s) {
       det_link = find_det(&(s->link[dir]));
       phase[dir][i] = atan2(det_link.imag, det_link.real);
@@ -88,7 +88,7 @@ void monopole() {
   node0_printf("MONOPOLE %d %d  ", total_mono_p, total_mono_m);
   node0_printf("  %d %d\n", total, total_abs);
 
-  FORALLDIR(dir)
+  FORALLUPDIR(dir)
     free(phase[dir]);
   free(mono);
 }
