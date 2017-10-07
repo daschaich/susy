@@ -1,9 +1,9 @@
-N=(2, 2) SYM, Nc = 4, DIMF = 16, fermion rep = adjoint
+N=(2,2) SYM, Nc = 4, DIMF = 16, fermion rep = adjoint
 Microcanonical simulation with refreshing
 Machine = Scalar processor, with 1 nodes
 Hybrid Monte Carlo algorithm
 Phi algorithm
-start: Wed Jun  8 17:00:46 2016
+start: Sat Oct  7 12:26:15 2017
 
 type 0 for no prompts or 1 for prompts
 nx 4
@@ -44,7 +44,7 @@ C2=1
 Restored binary gauge configuration serially from file config.U4.44
 Time stamp Sun Jun  5 14:52:08 2016
 Checksums 76286494 f9cc5591 OK
-Time to reload gauge configuration = 1.811028e-03
+Time to reload gauge configuration = 2.799034e-03
 CHECK PLAQ: 4.3618010746273379e+00
 CHECK NERSC LINKTR: 6.7269266294715635e-02 CKSUM: 0
 START 4.3618011 21.981423
@@ -119,6 +119,6 @@ RUNNING COMPLETED
 STOP 4.7434414 22.066715
 Average CG iters for steps: 3908
 
-Time = 1.283 seconds
+Time = 1.279 seconds
 total_iters = 11723
 
