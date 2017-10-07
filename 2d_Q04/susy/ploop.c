@@ -48,8 +48,8 @@ complex ploop(int dir, int project, double *plpMod) {
     }
     g_complexsum(&sum);
     g_doublesum(plpMod);
-    CDIVREAL(sum, norm, sum);
-    *plpMod /= norm;
+    CMULREAL(sum, norm, sum);
+    *plpMod *= norm;
 
     if (project == 1) {       // Reset original links
       FORALLSITES(i, s)
