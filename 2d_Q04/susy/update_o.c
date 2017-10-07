@@ -64,9 +64,7 @@ double update_gauge_step(Real eps) {
 
 
 // -----------------------------------------------------------------
-int update_step(double *fnorm, double *gnorm,
-                Twist_Fermion **src, Twist_Fermion ***psim) {
-
+int update_step(Twist_Fermion **src, Twist_Fermion ***psim) {
   int iters = 0, i_multi0, n;
   Real final_rsq, f_eps, g_eps, tr;
 
@@ -85,7 +83,7 @@ int update_step(double *fnorm, double *gnorm,
 
   for (i_multi0 = 1; i_multi0 <= nsteps[0]; i_multi0++) {
     tr = update_gauge_step(g_eps);
-    *gnorm += tr;
+    gnorm += tr;
     if (tr > max_gf)
       max_gf = tr;
 
@@ -100,7 +98,7 @@ int update_step(double *fnorm, double *gnorm,
     }
 #endif
     tr = update_gauge_step(g_eps);
-    *gnorm += tr;
+    gnorm += tr;
     if (tr > max_gf)
       max_gf = tr;
 
@@ -188,7 +186,7 @@ int update() {
   gauge_field_copy(F_OFFSET(link[0]), F_OFFSET(old_link[0]));
 #endif
   // Do microcanonical updating
-  iters += update_step(fnorm, &gnorm, src, psim);
+  iters += update_step(src, psim);
 
   // Find ending action
   // Reuse data from update_step, don't need CG to get (Mdag M)^(-1) chi

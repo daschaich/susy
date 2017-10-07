@@ -35,9 +35,7 @@ void update_uu(Real eps) {
 
 
 // -----------------------------------------------------------------
-int update_step(double *fnorm, double *gnorm,
-                Twist_Fermion **src, Twist_Fermion ***psim) {
-
+int update_step(Twist_Fermion **src, Twist_Fermion ***psim) {
   int step, iters = 0, n;
   Real final_rsq, eps = traj_length / (Real)nsteps[0], tr;
   node0_printf("eps %.4g for both fermion and gauge steps\n", eps);
@@ -48,7 +46,7 @@ int update_step(double *fnorm, double *gnorm,
   for (step = 0; step < nsteps[0]; step++) {
     // Inner steps p(t) u(t)
     tr = gauge_force(eps);
-    *gnorm += tr;
+    gnorm += tr;
     if (tr > max_gf)
       max_gf = tr;
 
@@ -125,7 +123,7 @@ int update() {
   gauge_field_copy(F_OFFSET(link[0]), F_OFFSET(old_link[0]));
 #endif
   // Do microcanonical updating
-  iters += update_step(fnorm, &gnorm, src, psim);
+  iters += update_step(src, psim);
 
   // Find ending action
   // Since update_step ended on a gauge update,

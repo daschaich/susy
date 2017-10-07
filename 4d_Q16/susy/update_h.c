@@ -292,7 +292,7 @@ double gauge_force(Real eps) {
 #ifdef DIMREDUCE
   // Center-breaking term that protects the single-link 'Wilson line'
   // in reduced direction(s)
-  // No factor of two---presumably related to 2ReTr(U) ~ U + Ubar in action
+  // No factor of two---presumably related to 2ReTr[U] ~ Tr[U + Ubar]
   if (cWline > IMAG_TOL) {
     Real dcW = cWline * cWline;
     FORALLUPDIR(mu) {
@@ -337,6 +337,7 @@ double gauge_force(Real eps) {
     }
   }
   g_doublesum(&returnit);
+  returnit *= kappa * kappa;
 
   // Add in force from separate determinant term if kappa_u1 non-zero
   if (kappa_u1 > IMAG_TOL) {
@@ -598,7 +599,7 @@ void detF(matrix *eta, matrix *psi[NUMLINK], int sign) {
   // Set up and store some basic ingredients
   FORALLSITES(i, s)
     tr_eta[i] = trace(&(eta[i]));
-  // Need all five directions for upcoming sums
+  // Need all directions for upcoming sums
   FORALLDIR(a) {
     // U_a(x)^{-1} and Udag_a(x)^{-1} are already in Uinv[a] and Udag_inv[a]
     // Save Tr[U_a(x)^{-1} psi_a(x) in Tr_Uinv[a]
