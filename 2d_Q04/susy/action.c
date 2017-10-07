@@ -283,7 +283,7 @@ double mom_action() {
 // Print out zeros for pieces of the action that aren't included
 double action(Twist_Fermion **src, Twist_Fermion ***sol) {
   double g_act, bmass_act = 0.0, p_act, f_act, det_act = 0.0;
-  double cWline_act = 0.0, total;
+  double total;
 
   g_act = gauge_action(NODET);
   if (bmass > IMAG_TOL)
@@ -295,7 +295,7 @@ double action(Twist_Fermion **src, Twist_Fermion ***sol) {
   node0_printf("gauge %.8g bmass %.8g ", g_act, bmass_act);
   node0_printf("det %.8g ", det_act);
 
-  total = g_act + bmass_act + det_act + cWline_act;
+  total = g_act + bmass_act + det_act;
 #ifndef PUREGAUGE
   int n;
   for (n = 0; n < Nroot; n++) {
