@@ -1,9 +1,9 @@
-N=(2, 2) SYM, Nc = 4, DIMF = 16, fermion rep = adjoint
+N=(2,2) SYM, Nc = 4, DIMF = 16, fermion rep = adjoint
 Microcanonical simulation with refreshing
 Machine = MPI (portable), with 2 nodes
 Hybrid Monte Carlo algorithm
 Phi algorithm
-start: Wed Jun  8 17:04:27 2016
+start: Sat Oct  7 12:22:41 2017
 
 type 0 for no prompts or 1 for prompts
 nx 4
@@ -18,7 +18,7 @@ Mallocing 0.0 MBytes per core for lattice
 Antiperiodic temporal boundary conditions
 Double-trace scalar potential
 Supersymmetric constraint on (det[plaq] - 1)
-Mallocing 0.0 MBytes per core for fields
+Mallocing 0.1 MBytes per core for fields
 Using Nroot = 1
 RHMC Norder 15 for spectral range [1e-7, 1000]
 
@@ -44,7 +44,7 @@ C2=1
 Restored binary gauge configuration serially from file config.U4.44
 Time stamp Sun Jun  5 14:52:08 2016
 Checksums 76286494 f9cc5591 OK
-Time to reload gauge configuration = 1.749039e-03
+Time to reload gauge configuration = 2.110958e-03
 CHECK PLAQ: 4.3618010746273388e+00
 CHECK NERSC LINKTR: 6.7269266294715635e-02 CKSUM: 0
 START 4.3618011 21.981423
@@ -119,6 +119,6 @@ RUNNING COMPLETED
 STOP 4.7434414 22.066716
 Average CG iters for steps: 3907
 
-Time = 0.8999 seconds
+Time = 0.921 seconds
 total_iters = 11721
 
