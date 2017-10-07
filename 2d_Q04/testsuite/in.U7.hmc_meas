@@ -1,0 +1,35 @@
+prompt 0
+nx 1
+nt 4
+PBC -1
+iseed 14
+
+Nroot 1
+Norder 15
+
+warms 0
+trajecs 3
+traj_length 1
+nstep 18
+nstep_gauge 4
+traj_between_meas 2
+
+lambda 1.0
+kappa_u1 1.0
+bmass 1.0
+fmass 0.0
+G 0.1
+B 1.0
+
+stout_smear
+Nsmear 1
+alpha 0.1
+
+max_cg_iterations 5000
+error_per_site 1e-5
+nsrc 3
+
+no_gauge_fix
+
+fresh
+forget

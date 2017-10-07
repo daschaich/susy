@@ -1,0 +1,95 @@
+N=(2,2) SYM, Nc = 4, DIMF = 16, fermion rep = adjoint
+Microcanonical simulation with refreshing
+Machine = Scalar processor, with 1 nodes
+Phi algorithm
+start: Sat Oct  7 12:26:17 2017
+
+type 0 for no prompts or 1 for prompts
+nx 4
+nt 4
+PBC -1
+iseed 41
+Nroot 1
+Norder 15
+LAYOUT = Hypercubes, options = hyper_prime,
+ON EACH NODE 4 x 4
+Mallocing 0.0 MBytes per core for lattice
+Antiperiodic temporal boundary conditions
+Double-trace scalar potential
+Supersymmetric constraint on (det[plaq] - 1)
+Mallocing 0.2 MBytes per core for fields
+
+
+warms 0
+trajecs 3
+traj_length 1
+nstep 8
+nstep_gauge 4
+traj_between_meas 3
+lambda 1
+kappa_u1 1
+bmass 1
+fmass 0
+G 0.1
+B 1
+max_cg_iterations 500
+error_per_site 1e-05
+Nvec 12
+eig_tol 1e-08
+maxIter 5000
+reload_serial config.U4.44
+forget
+lambda=1 --> kappa=Nc/(2lambda)=2
+C2=1
+Restored binary gauge configuration serially from file config.U4.44
+Time stamp Sun Jun  5 14:52:08 2016
+Checksums 76286494 f9cc5591 OK
+Time to reload gauge configuration = 2.061844e-03
+CHECK PLAQ: 4.3618010746273379e+00
+CHECK NERSC LINKTR: 6.7269266294715635e-02 CKSUM: 0
+START 4.3618011 21.981423
+FLINK 1.22507 1.37094 1.298 0.173365
+FLINK_DET 0.0911629 0.14682 0.118991 0.103182
+GMES -2.635915 -0.62105998 0 4.3618011 21.981423 3.0506075
+BACTION 21.981423
+EIGENVALUE 0 0.0032466119 1.2607831e-14
+EIGENVALUE 1 0.0032466119 1.5346335e-14
+EIGENVALUE 2 0.0072933327 1.3143413e-14
+EIGENVALUE 3 0.0072933327 1.7678808e-14
+EIGENVALUE 4 0.0086416056 1.7956741e-14
+EIGENVALUE 5 0.0086416056 1.6226239e-14
+EIGENVALUE 6 0.013583596 1.3505891e-14
+EIGENVALUE 7 0.013583596 1.6376216e-14
+EIGENVALUE 8 0.016918599 1.2787706e-14
+EIGENVALUE 9 0.016918599 1.6863439e-14
+EIGENVALUE 10 0.020733845 1.7442165e-14
+EIGENVALUE 11 0.020733845 1.6100625e-14
+Using LAPACK to diagonalize <psi_j | D | psi_i>
+D_eig 0 (0.00548502, 0.0297859)
+D_eig 1 (-0.00548502, -0.0297859)
+D_eig 2 (0.0140769, 0.0129131)
+D_eig 3 (0.00206549, 0.0182961)
+D_eig 4 (-0.00173739, 0.0111932)
+D_eig 5 (-0.0110449, 0.00582372)
+D_eig 6 (-0.0140769, -0.0129131)
+D_eig 7 (-0.0132115, -0.00116371)
+D_eig 8 (-0.0020655, -0.0182961)
+D_eig 9 (0.00173739, -0.0111932)
+D_eig 10 (0.0110449, -0.00582371)
+D_eig 11 (0.0132115, 0.00116371)
+BIGEIGVAL  0 13.457146 9.3621098e-15
+BIGEIGVAL  1 13.457146 1.4690569e-14
+BIGEIGVAL  2 12.887212 1.004436e-14
+BIGEIGVAL  3 12.887212 5.949215e-15
+BIGEIGVAL  4 12.231872 6.7142579e-17
+BIGEIGVAL  5 12.231872 1.3215797e-14
+BIGEIGVAL  6 11.97106 1.547131e-14
+BIGEIGVAL  7 11.97106 1.5527885e-14
+BIGEIGVAL  8 11.871983 7.9570841e-15
+BIGEIGVAL  9 11.871983 1.2852407e-14
+BIGEIGVAL  10 11.628682 1.6043662e-14
+BIGEIGVAL  11 11.628682 1.5017265e-14
+RUNNING COMPLETED
+
+Time = 0.532 seconds
+total_iters = 2053
