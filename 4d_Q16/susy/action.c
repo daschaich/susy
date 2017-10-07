@@ -211,8 +211,8 @@ double bmass_action() {
 
 // -----------------------------------------------------------------
 // Center-breaking term that protects the single-link 'Wilson line'
-// in reduced direction(s)
-// Comes with factors of kappa and -2
+// in reduced direction(s), 2ReTr[U] ~ Tr[U + Ubar]
+// Comes with factor of kappa
 #ifdef DIMREDUCE
 double cWline_action() {
   register int i, mu;

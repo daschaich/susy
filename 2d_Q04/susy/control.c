@@ -94,7 +94,7 @@ int main(int argc, char *argv[]) {
     node0_printf("%.8g\n", plpMod);
     node0_printf("BACTION %.8g\n", plaq / (double)volume);
 
-    // Full and polar-projected Wilson lines
+    // Full and polar-projected Wilson lines in all directions
     node0_printf("LINES      ");
     FORALLDIR(dir) {
       plp = ploop(dir, NODET, &plpMod);

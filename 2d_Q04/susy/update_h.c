@@ -260,6 +260,7 @@ double gauge_force(Real eps) {
     }
   }
   g_doublesum(&returnit);
+  returnit *= kappa * kappa;
 
   // Add in force from separate determinant term if kappa_u1 non-zero
   if (kappa_u1 > IMAG_TOL)
@@ -272,6 +273,7 @@ double gauge_force(Real eps) {
 
 
 // -----------------------------------------------------------------
+// Separate routines for each term in the fermion force
 // Plaquette determinant contributions to the fermion force
 // Use Uinv, Udag_inv, UpsiU, Tr_Uinv and tr_dest for temporary storage
 // Also use tempdet and (if global det) tempZW for temporary storage
