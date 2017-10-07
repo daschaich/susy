@@ -38,7 +38,7 @@ static int nsquares[2];             // Number of hypercubes in each direction
 static int machine_coordinates[2];  // Logical machine coordinates
 
 int prime[] = {2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53};
-# define MAXPRIMES ( sizeof(prime) / sizeof(int) )
+#define MAXPRIMES (sizeof(prime) / sizeof(int))
 // -----------------------------------------------------------------
 
 
@@ -72,12 +72,12 @@ static void setup_hyper_prime() {
     /* if one direction with largest dimension has already been
        divided, divide it again.  Otherwise divide first direction
        with largest dimension. */
-    FORALLDIR(dir) {
+    FORALLUPDIR(dir) {
       if (squaresize[dir] == j && nsquares[dir] > 1)
         break;
     }
     if (dir > TUP) {
-      FORALLDIR(dir) {
+      FORALLUPDIR(dir) {
         if (squaresize[dir] == j)
           break;
       }

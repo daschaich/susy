@@ -38,7 +38,7 @@ static int nsquares[4];             // Number of hypercubes in each direction
 static int machine_coordinates[4];  // Logical machine coordinates
 
 int prime[] = {2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53};
-# define MAXPRIMES (sizeof(prime) / sizeof(int))
+#define MAXPRIMES (sizeof(prime) / sizeof(int))
 // -----------------------------------------------------------------
 
 
