@@ -11,7 +11,6 @@
 // For the gauge action and force, compute at each site
 //   sum_mu [U_mu(x) * Udag_mu(x) - Udag_mu(x - mu) * U_mu(x - mu)]
 // Add plaquette determinant contribution if G is non-zero
-// Add scalar potential contribution if B is non-zero
 // Use tempmat and tempmat2 as temporary storage
 void compute_DmuUmu() {
   register int i;
@@ -20,14 +19,6 @@ void compute_DmuUmu() {
   Real tr;
   complex tc;
   msg_tag *mtag0 = NULL;
-
-#ifdef TR_DIST
-  if (this_node != 0) {
-    printf("compute_DmuUmu: don't run TR_DIST in parallel\n");
-    fflush(stdout);
-    terminate(1);
-  }
-#endif
 
   FORALLDIR(mu) {
     FORALLSITES(i, s) {
@@ -62,31 +53,10 @@ void compute_DmuUmu() {
             continue;
 
           CADD(plaqdet[mu][nu][i], minus1, tc);
-#ifdef LINEAR_DET
           CMULREAL(tc, G, tc);
           for (j = 0; j < NCOL; j++)
             CSUM(DmuUmu[i].e[j][j], tc);
-#else
-          tr = G * cabs_sq(&tc);
-          for (j = 0; j < NCOL; j++)
-            DmuUmu[i].e[j][j].real += tr;
-#endif
         }
-      }
-    }
-  }
-
-  // Add scalar potential contribution if B is non-zero
-  if (doB) {
-    FORALLSITES(i, s) {
-      FORALLDIR(mu) {
-        tr = one_ov_N * realtrace(&(s->link[mu]), &(s->link[mu])) - 1.0;
-        for (j = 0; j < NCOL; j++)
-          DmuUmu[i].e[j][j].real += B * B * tr * tr;
-#ifdef TR_DIST
-          printf("TR_DIST %d %d %d %d %d %.4g\n",
-                 s->x, s->y, s->z, s->t, mu, tr);
-#endif
       }
     }
   }
@@ -145,7 +115,6 @@ double gauge_action(int do_det) {
   FORALLSITES(i, s) {
     // d^2 term normalized by C2 / 2
     // DmuUmu includes the plaquette determinant contribution if G is non-zero
-    // and the scalar potential contribution if B is non-zero
     mult_nn(&(DmuUmu[i]), &(DmuUmu[i]), &tmat);
     scalar_mult_matrix(&tmat, norm, &tmat);
 

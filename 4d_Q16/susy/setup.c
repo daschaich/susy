@@ -120,18 +120,10 @@ int initial_set() {
 // -----------------------------------------------------------------
 // Allocate space for fields
 void make_fields() {
-#ifdef TRUNCATED
-  node0_printf("Gauge links truncated to SL(N,C)\n");
-#endif
 #ifdef EIG_POT
   node0_printf("Single-trace scalar potential\n");
 #else
   node0_printf("Double-trace scalar potential\n");
-#endif
-#ifdef LINEAR_DET
-  node0_printf("Supersymmetric constraint on (det[plaq] - 1)\n");
-#else
-  node0_printf("Supersymmetric constraint on |det[plaq] - 1|^2\n");
 #endif
   Real size = (Real)(2.0 * sizeof(complex));
   FIELD_ALLOC(tr_eta, complex);
@@ -157,10 +149,6 @@ void make_fields() {
   FIELD_ALLOC_MAT_OFFDIAG(plaqdet, complex, NUMLINK);
   FIELD_ALLOC_MAT_OFFDIAG(tempdet, complex, NUMLINK);
   FIELD_ALLOC_MAT_OFFDIAG(ZWstar, complex, NUMLINK);
-#ifndef LINEAR_DET
-  size += (Real)(2.0 * NPLAQ * sizeof(complex));
-  FIELD_ALLOC_MAT_OFFDIAG(tempZW, complex, NUMLINK);
-#endif
 
   // CG Twist_Fermions
   size += (Real)(3.0 * sizeof(Twist_Fermion));
@@ -327,15 +315,18 @@ int readin(int prompt) {
     IF_OK status += get_i(stdin, prompt, "traj_between_meas",
                           &par_buf.propinterval);
 
-    // lambda, kappa_u1, bmass, fmass, G and B
+    // lambda, kappa_u1, bmass, fmass, G
     IF_OK status += get_f(stdin, prompt, "lambda", &par_buf.lambda);
     IF_OK status += get_f(stdin, prompt, "kappa_u1", &par_buf.kappa_u1);
     IF_OK status += get_f(stdin, prompt, "bmass", &par_buf.bmass);
     IF_OK status += get_f(stdin, prompt, "fmass", &par_buf.fmass);
     IF_OK status += get_f(stdin, prompt, "G", &par_buf.G);
-    IF_OK status += get_f(stdin, prompt, "B", &par_buf.B);
 #ifdef DIMREDUCE
     IF_OK status += get_f(stdin, prompt, "cWline", &par_buf.cWline);
+    if (par_buf.cWline != 0.0) {
+      printf("WARNING: Dimensionally reduced center-breaking term ");
+      printf("may need small step sizes\n");
+    }
 #endif
 
 #ifdef SMEAR
@@ -447,20 +438,8 @@ int readin(int prompt) {
   else
     doG = 0;
 
-  B = par_buf.B;
-  if (B > IMAG_TOL)
-    doB = 1;
-  else
-    doB = 0;
-
 #ifdef DIMREDUCE
   cWline = par_buf.cWline;
-  #ifndef TRUNCATED
-  if (mynode() == 0 && cWline != 0.0) {
-    printf("WARNING: Dimensionally reduced center-breaking term ");
-    printf("may need small step sizes without truncation\n");
-  }
-  #endif
 #endif
 
   kappa = (Real)NCOL * 0.25 / lambda;

@@ -40,14 +40,12 @@ int main(int argc, char *argv[]) {
   }
   dtime = -dclock();
 
-  // Uncomment this block to print plaquette, determinant & trace distributions
+  // Uncomment this block to print plaquette and determinant distributions
   // Be sure to uncomment PLAQ_DIST and DET_DIST, and run in serial
 //  local_plaquette(&plaq);
 //  node0_printf("\n");
 //  if (G < IMAG_TOL)
 //    G = 999;
-//  if (B < IMAG_TOL)
-//    B = 999;
 //  compute_DmuUmu();
 //  dtime += dclock();
 //  node0_printf("\nTime = %.4g seconds\n", dtime);
