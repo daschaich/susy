@@ -105,11 +105,6 @@ void make_fields() {
 #else
   node0_printf("Double-trace scalar potential\n");
 #endif
-#ifdef LINEAR_DET
-  node0_printf("Supersymmetric constraint on (det[plaq] - 1)\n");
-#else
-  node0_printf("Supersymmetric constraint on |det[plaq] - 1|^2\n");
-#endif
   int Noffdiag = NUMLINK * (NUMLINK - 1);
   Real size = (Real)(2.0 * sizeof(complex));
   FIELD_ALLOC(tr_eta, complex);
@@ -135,10 +130,6 @@ void make_fields() {
   FIELD_ALLOC_MAT_OFFDIAG(plaqdet, complex, NUMLINK);
   FIELD_ALLOC_MAT_OFFDIAG(tempdet, complex, NUMLINK);
   FIELD_ALLOC_MAT_OFFDIAG(ZWstar, complex, NUMLINK);
-#ifndef LINEAR_DET
-  size += (Real)(Noffdiag * sizeof(complex));
-  FIELD_ALLOC_MAT_OFFDIAG(tempZW, complex, NUMLINK);
-#endif
 
   // CG Twist_Fermions
   size += (Real)(3.0 * sizeof(Twist_Fermion));
@@ -288,13 +279,12 @@ int readin(int prompt) {
     IF_OK status += get_i(stdin, prompt, "traj_between_meas",
                           &par_buf.propinterval);
 
-    // lambda, kappa_u1, bmass, fmass, G and B
+    // lambda, kappa_u1, bmass, fmass, G
     IF_OK status += get_f(stdin, prompt, "lambda", &par_buf.lambda);
     IF_OK status += get_f(stdin, prompt, "kappa_u1", &par_buf.kappa_u1);
     IF_OK status += get_f(stdin, prompt, "bmass", &par_buf.bmass);
     IF_OK status += get_f(stdin, prompt, "fmass", &par_buf.fmass);
     IF_OK status += get_f(stdin, prompt, "G", &par_buf.G);
-    IF_OK status += get_f(stdin, prompt, "B", &par_buf.B);
 
 #ifdef SMEAR
     // Smearing stuff -- passed to either APE or stout routines by application
@@ -376,14 +366,8 @@ int readin(int prompt) {
   else
     doG = 0;
 
-  B = par_buf.B;
-  if (B > IMAG_TOL)
-    doB = 1;
-  else
-    doB = 0;
-
-  kappa = (Real)NCOL * 0.5 / lambda;
-  node0_printf("lambda=%.4g --> kappa=Nc/(2lambda)=%.4g\n",
+  kappa = (Real)NCOL * 0.25 / lambda;
+  node0_printf("lambda=%.4g --> kappa=Nc/(4lambda)=%.4g\n",
                lambda, kappa);
   node0_printf("C2=%.4g\n", C2);    // Currently hardwired in defines.h
 

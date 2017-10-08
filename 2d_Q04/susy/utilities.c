@@ -2,11 +2,9 @@
 // Dirac operator and other helper functions for the action and force
 
 // #define DET_DIST prints out all determinants for plotting distribution
-// #define TR_DIST prints out all (Tr[U.Udag]/N-1)^2 for plotting distribution
-// CAUTION: Do not run DET_DIST or TR_DIST with MPI!
+// CAUTION: Do not run DET_DIST with MPI!
 
 //#define DET_DIST
-//#define TR_DIST
 #include "susy_includes.h"
 // -----------------------------------------------------------------
 
@@ -269,9 +267,8 @@ void DbplusStoL(matrix *src, matrix *dest[NUMLINK]) {
 // -----------------------------------------------------------------
 // Plaquette determinant coupling from site source to link destination
 //   U^{-1}[a](x) * sum_b {D[b][a](x) + D[a][b](x - b)}
-// In the global case D is Tr[eta] * plaqdet, Tr[eta] = i sqrt(N) eta^D
-// In the local case D is Tr[eta] plaqdet (plaqdet - 1)^*
-// In both cases T is Tr[U^{-1} Lambda] and
+// D is Tr[eta] * plaqdet, Tr[eta] = i sqrt(N) eta^D
+// T is Tr[U^{-1} Lambda]
 // Assume compute_plaqdet() has already been run
 // Use tr_dest and tempdet for temporary storage
 // bc[b](x - b) = bc[-b](x) on eta(x - b) psi_a(x)
@@ -282,23 +279,15 @@ void detStoL(matrix *dest[NUMLINK]) {
   register int i;
   register site *s;
   int a, b, opp_b;
-  Real localG = -1.0 * C2 * G;
+  Real localG = -0.5 * C2 * G;
   complex tc;
-#ifdef LINEAR_DET
-  localG *= 0.5;                          // Since not squared
-#endif
   msg_tag *tag[NUMLINK];
 
   // Save Tr[eta(x)] plaqdet[a][b](x)
   //   or Tr[eta(x)] ZWstar[a][b](x) in tempdet[a][b]
   FORALLSITES(i, s) {
-#ifdef LINEAR_DET
     CMUL(tr_eta[i], plaqdet[0][1][i], tempdet[0][1][i]);
     CMUL(tr_eta[i], plaqdet[1][0][i], tempdet[1][0][i]);
-#else
-    CMUL(tr_eta[i], ZWstar[0][1][i], tempdet[0][1][i]);
-    CMUL(tr_eta[i], ZWstar[1][0][i], tempdet[1][0][i]);
-#endif
   }
 
   // Now we gather tempdet in both cases
@@ -336,31 +325,6 @@ void detStoL(matrix *dest[NUMLINK]) {
     FORALLSITES(i, s) {
       CMULREAL(tr_dest[i], localG, tc);
       c_scalar_mult_sum_mat(&(Uinv[a][i]), &tc, &(dest[a][i]));
-    }
-  }
-}
-#endif
-// -----------------------------------------------------------------
-
-
-
-// -----------------------------------------------------------------
-// Scalar potential coupling from site source to link destination
-//   Udag[a](x) Tr[eta(x)] (Tr[U_a(x) Udag_a(x)] / N - 1)
-// Add negative to dest instead of overwriting
-// Negative sign is due to anti-commuting eta past psi
-#ifdef SV
-void potStoL(matrix *dest[NUMLINK]) {
-  register int i, a;
-  register site *s;
-  Real tr, localB = one_ov_N * C2 * B * B;
-  complex tc;
-
-  FORALLSITES(i, s) {
-    FORALLDIR(a) {
-      tr = 1.0 - one_ov_N * realtrace(&(s->link[a]), &(s->link[a]));
-      CMULREAL(tr_eta[i], tr * localB, tc);
-      c_scalar_mult_sum_mat_adj(&(s->link[a]), &tc, &(dest[a][i]));
     }
   }
 }
@@ -418,9 +382,7 @@ void DbminusLtoS(matrix *src[NUMLINK], matrix *dest) {
 // -----------------------------------------------------------------
 // Plaquette determinant coupling from link source to site destination
 //   sum_{a, b} D[a][b](x) * {T[b](x) +  T[a](x + b)}
-// In the global case D is plaqdet
-// In the local case D is plaqdet (plaqdet - 1)^*
-// In both cases T is Tr[U^{-1} psi]
+// D is plaqdet and T is Tr[U^{-1} psi]
 // Assume compute_plaqdet() has already been run
 // bc[b](x) on eta(x) psi_a(x + b)
 // Use Tr_Uinv and tr_dest for temporary storage
@@ -431,11 +393,8 @@ void detLtoS(matrix *src[NUMLINK], matrix *dest) {
   register int i;
   register site *s;
   int a, b;
-  Real localG = C2 * G * sqrt((Real)NCOL);
+  Real localG = 0.5 * C2 * G * sqrt((Real)NCOL);
   complex tc, tc2;
-#ifdef LINEAR_DET
-  localG *= 0.5;
-#endif
   msg_tag *tag[NUMLINK];
 
   // Prepare Tr[U_a^{-1} psi_a] = sum_j Tr[U_a^{-1} Lambda^j] psi_a^j
@@ -467,11 +426,7 @@ void detLtoS(matrix *src[NUMLINK], matrix *dest) {
         tc = *((complex *)(gen_pt[b][i]));
         tc2.real = Tr_Uinv[b][i].real + s->bc[b] * tc.real;
         tc2.imag = Tr_Uinv[b][i].imag + s->bc[b] * tc.imag;
-#ifdef LINEAR_DET
         CMUL(plaqdet[a][b][i], tc2, tc);
-#else
-        CMUL(ZWstar[a][b][i], tc2, tc);
-#endif
         // localG is purely imaginary...
         tr_dest[i].real -= tc.imag * localG;
         tr_dest[i].imag += tc.real * localG;
@@ -483,40 +438,6 @@ void detLtoS(matrix *src[NUMLINK], matrix *dest) {
   // Add to dest (negative comes from generator normalization)
   FORALLSITES(i, s)
     c_scalar_mult_dif_mat(&(Lambda[DIMF - 1]), &(tr_dest[i]), &(dest[i]));
-}
-#endif
-// -----------------------------------------------------------------
-
-
-
-// -----------------------------------------------------------------
-// Scalar potential coupling from link source to site destination
-//   sum_a (Tr[U_a(x) Udag_a(x)] / N - 1)^2 psi(x) Udag[a](x)
-// Use tr_dest for temporary storage
-// Add to dest instead of overwriting
-// Has same sign as DbminusLtoS (negative comes from generator normalization)
-#ifdef SV
-void potLtoS(matrix *src[NUMLINK], matrix *dest) {
-  register int i;
-  register site *s;
-  Real tr;
-  complex tc, localB = cmplx(0.0, sqrt(one_ov_N) * C2 * B * B);
-
-  FORALLSITES(i, s) {
-    // Initialize tr_dest
-    tr = one_ov_N * realtrace(&(s->link[0]), &(s->link[0])) - 1.0;
-    tr_dest[i] = complextrace_na(&(src[0][i]), &(s->link[0]));
-    CMULREAL(tr_dest[i], tr, tr_dest[i]);
-
-    tr = one_ov_N * realtrace(&(s->link[1]), &(s->link[1])) - 1.0;
-    tc = complextrace_na(&(src[1][i]), &(s->link[1]));
-    tr_dest[i].real += tr * tc.real;
-    tr_dest[i].imag += tr * tc.imag;
-
-    // Add to dest (negative comes from generator normalization)
-    CMUL(tr_dest[i], localB, tc);
-    c_scalar_mult_dif_mat(&(Lambda[DIMF - 1]), &tc, &(dest[i]));
-  }
 }
 #endif
 // -----------------------------------------------------------------
@@ -569,20 +490,11 @@ void fermion_op(Twist_Fermion *src, Twist_Fermion *dest, int sign) {
   if (doG)
     detStoL(link_dest);                   // Adds to link_dest
 
-  // Site-to-link scalar potential contribution if B is non-zero
-  // Only depends on Tr[eta(x)]
-  if (doB)
-    potStoL(link_dest);                   // Adds to link_dest
-
   DbminusLtoS(link_src, site_dest);       // Overwrites site_dest
 
   // Link-to-site plaquette determinant contribution if G is non-zero
   if (doG)
     detLtoS(link_src, site_dest);         // Adds to site_dest
-
-  // Link-to-site scalar potential contribution if B is non-zero
-  if (doB)
-    potLtoS(link_src, site_dest);         // Adds to site_dest
 #endif
 
 #ifdef QCLOSED

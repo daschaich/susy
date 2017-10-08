@@ -91,13 +91,9 @@ void invert(matrix *in, matrix *out) {
 // Average plaquette determinant over lattice volume
 // Assume compute_plaqdet() has already been run
 void measure_det() {
-#ifdef TRUNCATED
-  node0_printf("DET 1 0 1 0 0\n");
-  return;
-#endif
   register int i, a, b;
   register site *s;
-  Real norm = 1.0 / ((Real)(volume * NUMLINK * (NUMLINK - 1) / 2));
+  Real norm = 1.0 / ((Real)(volume * NPLAQ));
   double WSq = 0.0;
   complex tot = cmplx(0.0, 0.0), tot_sq = cmplx(0.0, 0.0), tc;
 
@@ -128,11 +124,6 @@ void measure_det() {
 // -----------------------------------------------------------------
 // Divide the determinant out of the matrix in
 void det_project(matrix *in, matrix *out) {
-#ifdef TRUNCATED
-  node0_printf("ERROR: Do not project out determinant ");
-  node0_printf("with truncated action... aborting\n");
-  terminate(1);
-#endif
   complex tc, tc2;
 
   tc = find_det(in);
