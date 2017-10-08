@@ -463,8 +463,8 @@ int readin(int prompt) {
   #endif
 #endif
 
-  kappa = (Real)NCOL * 0.5 / lambda;
-  node0_printf("lambda=%.4g --> kappa=Nc/(2lambda)=%.4g\n",
+  kappa = (Real)NCOL * 0.25 / lambda;
+  node0_printf("lambda=%.4g --> kappa=Nc/(4lambda)=%.4g\n",
                lambda, kappa);
   node0_printf("C2=%.4g\n", C2);    // Currently hardwired in defines.h
 
