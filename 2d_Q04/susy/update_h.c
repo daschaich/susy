@@ -19,7 +19,7 @@ double gauge_force(Real eps) {
   char **local_pt[2][2];
   int a, b, gather, flip = 0;
   double returnit = 0.0, tr;
-  complex tc, tc2;
+  complex tc;
   matrix tmat, tmat2, *mat[2];
   msg_tag *tag[NUMLINK], *tag0[2], *tag1[2];
 

@@ -16,7 +16,6 @@ void compute_DmuUmu() {
   register int i;
   register site *s;
   int mu, nu, j;
-  Real tr;
   complex tc;
   msg_tag *mtag0 = NULL;
 

@@ -6,15 +6,15 @@
 .lastmake*
 gmon.out
 localmake
+serial*
 susy_hmc*
 susy_meas
 susy_mcrg
 susy_eig
 susy_cheb
 susy_mode
-susy_phase*
+susy_phase
 susy_spill
-susy_corr
 poly
 error.dat
 mode_polynomial

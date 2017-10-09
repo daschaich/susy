@@ -189,7 +189,7 @@ int update() {
   iters += update_step(src, psim);
 
   // Find ending action
-  // Reuse data from update_step, don't need CG to get (Mdag M)^(-1) chi
+  // Reuse data from update_step, don't need CG to get (Mdag M)^(-1 / 4) chi
   // If the final step were a gauge update, CG would be necessary
   endaction = action(src, psim);
   change = endaction - startaction;
