@@ -10,9 +10,7 @@ void widths() {
   register site *s;
   int a, b;
   double plaq = 0.0, plaqSq = 0.0, norm = 0.1 / volume;
-#ifndef TRUNCATED
   double re = 0.0, reSq = 0.0, im = 0.0, imSq = 0.0;
-#endif
   complex tc;
   msg_tag *mtag = NULL, *mtag2 = NULL;
   matrix tmat;
@@ -44,39 +42,31 @@ void widths() {
         plaq += tc.real;
         plaqSq += tc.real * tc.real;
 
-#ifndef TRUNCATED
         tc = find_det(&tmat);
         re += tc.real;
         reSq += tc.real * tc.real;
         im += tc.imag;
         imSq += tc.imag * tc.imag;
-#endif
       }
       cleanup_gather(mtag2);
     }
   }
   g_doublesum(&plaq);
   g_doublesum(&plaqSq);
-#ifndef TRUNCATED
   g_doublesum(&re);
   g_doublesum(&reSq);
   g_doublesum(&im);
   g_doublesum(&imSq);
-#endif
 
   // Now compute and print square root of variances
   // Format: WIDTHS plaq re im
   plaq *= norm;
   plaqSq *= norm;
-#ifndef TRUNCATED
   re *= norm;
   reSq *= norm;
   im *= norm;
   imSq *= norm;
   node0_printf("WIDTHS %.6g %.6g %.6g\n", sqrt(plaqSq - plaq * plaq),
                sqrt(reSq - re * re), sqrt(imSq - im * im));
-#else
-  node0_printf("WIDTHS %.6g 0 0\n", sqrt(plaqSq - plaq * plaq));
-#endif
 }
 // -----------------------------------------------------------------
