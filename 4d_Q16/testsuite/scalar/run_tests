@@ -6,40 +6,6 @@ if [ $# -gt 1 ]; then
   N=$1
   target=$2
 
-  # Special case with truncated links
-  # Run `./run_tests SU2 hmc`
-  # Apart from setting up defines.h, follows same steps as documented below
-  if [ $N = 'SU2' ]; then
-    cd ../../susy/
-    sed -i -E "s/\/\/(#define TRUNCATED)/\1/" defines.h
-    sed -i -E "s/\/\/(#define EIG_POT)/\1/" defines.h
-
-    echo "Compiling susy_$target..."
-    if ! make -f Make_scalar susy_$target >& /dev/null ; then
-      echo "ERROR: susy_$target compilation failed"
-      make -f Make_scalar susy_$target
-      exit
-    fi
-    sed -i -E "s/(#define TRUNCATED)/\/\/\1/" defines.h
-    sed -i -E "s/(#define EIG_POT)/\/\/\1/" defines.h
-
-    cd ../testsuite/
-    rm -f scalar/$target.SU2.out
-    echo "Running susy_$target..."
-    ../susy/susy_$target < in.SU2.$target > scalar/$target.SU2.out
-
-    cd scalar/
-    d="`diff -I'Time' -I'time' -I'seconds' -I'^start' $target.SU2.ref $target.SU2.out`"
-    if [ -n "$d" ] ; then   # Non-zero string length
-      echo "$target.SU2.ref and $target.SU2.out differ:"
-      echo "$d"
-    else
-      echo "PASS: susy_$target reproduces reference output"
-    fi
-    exit
-  fi
-
-  # Standard case
   # Change N
   cd ../../susy/
   sed -i -E "s/(#define NCOL) .*/\1 $N/" ../include/susy.h

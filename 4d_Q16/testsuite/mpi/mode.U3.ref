@@ -2,7 +2,7 @@ N=4 SYM, Nc = 3, DIMF = 9, fermion rep = adjoint
 Microcanonical simulation with refreshing
 Machine = MPI (portable), with 2 nodes
 Phi algorithm
-start: Fri Apr 21 04:25:59 2017
+start: Mon Oct  9 16:18:22 2017
 
 type 0 for no prompts or 1 for prompts
 nx 4
@@ -18,7 +18,6 @@ ON EACH NODE 2 x 4 x 4 x 4
 Mallocing 1.4 MBytes per core for lattice
 Antiperiodic temporal boundary conditions
 Double-trace scalar potential
-Supersymmetric constraint on (det[plaq] - 1)
 Mallocing 4.2 MBytes per core for fields
 
 
@@ -33,7 +32,6 @@ kappa_u1 1
 bmass 1
 fmass 0
 G 0.1
-B 1
 max_cg_iterations 5000
 error_per_site 1e-05
 Nstoch 5
@@ -46,51 +44,51 @@ Omega 2
 Omega 2.5
 reload_serial config.U3.4444
 forget
-lambda=1 --> kappa=Nc/(2lambda)=1.5
+lambda=1 --> kappa=Nc/(4lambda)=0.75
 C2=1
 Restored binary gauge configuration serially from file config.U3.4444
-Time stamp Sat Apr 18 19:25:25 2015
-Checksums e828858e fed7af9c OK
-Time to reload gauge configuration = 1.909018e-03
-CHECK PLAQ: 3.0405154843882785e+00 3.0634923791751012e+00
-CHECK NERSC LINKTR: -1.1961921532114653e-04 CKSUM: 0
-START 3.0405155 3.0634924 6.1040079 39.022285
-FLINK 1.08717 1.10591 1.10827 1.10941 1.09913 1.10198 0.110405
-FLINK_DET 0.017665 0.0099886 0.0191393 0.031143 0.0142135 0.0184299 0.060591
-GMES -2.1190116 1.5154468 0 3.0405155 3.0634924 39.022285 2.6484552
-BACTION 39.022285
+Time stamp Sun Oct  8 10:56:41 2017
+Checksums 3fbef447 1a43c79a OK
+Time to reload gauge configuration = 3.161192e-03
+CHECK PLAQ: 3.0604476902737061e+00 3.0664742087345997e+00
+CHECK NERSC LINKTR: -1.6976032105162631e-03 CKSUM: 0
+START 3.0604477 3.0664742 6.1269219 36.827191
+FLINK 1.18421 1.1836 1.17128 1.17032 1.19413 1.18071 0.155041
+FLINK_DET 0.0867436 0.0590808 0.0553273 0.0525081 0.0778652 0.066305 0.153596
+GMES -2.3033198 1.3795486 0 3.0604477 3.0664742 36.827191 2.7556572
+BACTION 36.827191
 Step function order 32 epsilon 0.01 delta 0.000435 star 0.9633
-Stoch est 0 of 5 for Omega_* = 0.519 : 13.86 from 4449 iter 130 inverts 22.47 seconds
-Stoch est 1 of 5 for Omega_* = 0.519 : 12.07 from 4365 iter 130 inverts 22.03 seconds
-Stoch est 2 of 5 for Omega_* = 0.519 : 12.91 from 4400 iter 130 inverts 22.26 seconds
-Stoch est 3 of 5 for Omega_* = 0.519 : 17.57 from 4362 iter 130 inverts 22.05 seconds
-Stoch est 4 of 5 for Omega_* = 0.519 : 13.29 from 4552 iter 130 inverts 23.09 seconds
-Stoch est 0 of 5 for Omega_* = 1.038 : 303.3 from 2387 iter 130 inverts 12.13 seconds
-Stoch est 1 of 5 for Omega_* = 1.038 : 255.4 from 2390 iter 130 inverts 12.1 seconds
-Stoch est 2 of 5 for Omega_* = 1.038 : 316.1 from 2369 iter 130 inverts 12 seconds
-Stoch est 3 of 5 for Omega_* = 1.038 : 291.5 from 2399 iter 130 inverts 12.14 seconds
-Stoch est 4 of 5 for Omega_* = 1.038 : 310.5 from 2390 iter 130 inverts 12.08 seconds
-Stoch est 0 of 5 for Omega_* = 1.557 : 2285 from 1628 iter 130 inverts 8.261 seconds
-Stoch est 1 of 5 for Omega_* = 1.557 : 2264 from 1634 iter 130 inverts 8.296 seconds
-Stoch est 2 of 5 for Omega_* = 1.557 : 2386 from 1622 iter 130 inverts 8.227 seconds
-Stoch est 3 of 5 for Omega_* = 1.557 : 2271 from 1636 iter 130 inverts 8.299 seconds
-Stoch est 4 of 5 for Omega_* = 1.557 : 2329 from 1631 iter 130 inverts 8.275 seconds
-Stoch est 0 of 5 for Omega_* = 2.076 : 5566 from 1283 iter 130 inverts 6.517 seconds
-Stoch est 1 of 5 for Omega_* = 2.076 : 5446 from 1281 iter 130 inverts 6.507 seconds
-Stoch est 2 of 5 for Omega_* = 2.076 : 5718 from 1283 iter 130 inverts 6.517 seconds
-Stoch est 3 of 5 for Omega_* = 2.076 : 5509 from 1286 iter 130 inverts 6.538 seconds
-Stoch est 4 of 5 for Omega_* = 2.076 : 5569 from 1283 iter 130 inverts 6.532 seconds
-Stoch est 0 of 5 for Omega_* = 2.595 : 9748 from 1076 iter 130 inverts 5.482 seconds
-Stoch est 1 of 5 for Omega_* = 2.595 : 9626 from 1076 iter 130 inverts 5.481 seconds
-Stoch est 2 of 5 for Omega_* = 2.595 : 9794 from 1076 iter 130 inverts 5.484 seconds
-Stoch est 3 of 5 for Omega_* = 2.595 : 9678 from 1076 iter 130 inverts 5.473 seconds
-Stoch est 4 of 5 for Omega_* = 2.595 : 9653 from 1076 iter 130 inverts 5.485 seconds
-MODE 0.5 13.94019 0.9538
-MODE 1 295.36248 10.8
-MODE 1.5 2307.0256 22.7
-MODE 2 5561.4299 45.24
-MODE 2.5 9699.791 31.09
+Stoch est 0 of 5 for Omega_* = 0.519 : 16.78 from 5035 iter 130 inverts 24.58 seconds
+Stoch est 1 of 5 for Omega_* = 0.519 : 13.88 from 5041 iter 130 inverts 24.63 seconds
+Stoch est 2 of 5 for Omega_* = 0.519 : 14.86 from 5008 iter 130 inverts 24.43 seconds
+Stoch est 3 of 5 for Omega_* = 0.519 : 15.37 from 5026 iter 130 inverts 24.54 seconds
+Stoch est 4 of 5 for Omega_* = 0.519 : 17.25 from 5004 iter 130 inverts 24.43 seconds
+Stoch est 0 of 5 for Omega_* = 1.038 : 488.7 from 2532 iter 130 inverts 12.39 seconds
+Stoch est 1 of 5 for Omega_* = 1.038 : 444 from 2539 iter 130 inverts 12.42 seconds
+Stoch est 2 of 5 for Omega_* = 1.038 : 475.6 from 2526 iter 130 inverts 12.36 seconds
+Stoch est 3 of 5 for Omega_* = 1.038 : 529.9 from 2561 iter 130 inverts 12.54 seconds
+Stoch est 4 of 5 for Omega_* = 1.038 : 475.1 from 2532 iter 130 inverts 12.37 seconds
+Stoch est 0 of 5 for Omega_* = 1.557 : 2657 from 1738 iter 130 inverts 8.52 seconds
+Stoch est 1 of 5 for Omega_* = 1.557 : 2566 from 1729 iter 130 inverts 8.49 seconds
+Stoch est 2 of 5 for Omega_* = 1.557 : 2631 from 1735 iter 130 inverts 8.511 seconds
+Stoch est 3 of 5 for Omega_* = 1.557 : 2673 from 1744 iter 130 inverts 8.55 seconds
+Stoch est 4 of 5 for Omega_* = 1.557 : 2641 from 1727 iter 130 inverts 8.471 seconds
+Stoch est 0 of 5 for Omega_* = 2.076 : 6003 from 1384 iter 130 inverts 6.791 seconds
+Stoch est 1 of 5 for Omega_* = 2.076 : 6044 from 1380 iter 130 inverts 6.786 seconds
+Stoch est 2 of 5 for Omega_* = 2.076 : 6106 from 1385 iter 130 inverts 6.818 seconds
+Stoch est 3 of 5 for Omega_* = 2.076 : 5992 from 1387 iter 130 inverts 6.837 seconds
+Stoch est 4 of 5 for Omega_* = 2.076 : 6121 from 1375 iter 130 inverts 6.756 seconds
+Stoch est 0 of 5 for Omega_* = 2.595 : 1.009e+04 from 1172 iter 130 inverts 5.779 seconds
+Stoch est 1 of 5 for Omega_* = 2.595 : 1.011e+04 from 1169 iter 130 inverts 5.778 seconds
+Stoch est 2 of 5 for Omega_* = 2.595 : 1.019e+04 from 1173 iter 130 inverts 5.772 seconds
+Stoch est 3 of 5 for Omega_* = 2.595 : 1.011e+04 from 1173 iter 130 inverts 5.781 seconds
+Stoch est 4 of 5 for Omega_* = 2.595 : 1.021e+04 from 1169 iter 130 inverts 5.76 seconds
+MODE 0.5 15.627443 0.6194
+MODE 1 482.65756 13.92
+MODE 1.5 2633.9077 18.42
+MODE 2 6053.1692 26.2
+MODE 2.5 10140.581 22.97
 RUNNING COMPLETED
 
-Time = 273.7 seconds
-total_iters = 54010
+Time = 290.1 seconds
+total_iters = 59244

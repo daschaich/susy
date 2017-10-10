@@ -76,8 +76,8 @@ EXTERN Real traj_length;
 // U(N) generators
 EXTERN matrix Lambda[DIMF];
 
-EXTERN Real rsqmin, lambda, kappa, bmass, fmass, kappa_u1, G, B;
-EXTERN int doG, doB;
+EXTERN Real rsqmin, lambda, kappa, bmass, fmass, kappa_u1, G;
+EXTERN int doG;
 EXTERN double g_plaq;     // Global plaq for I/O
 EXTERN double_complex linktrsum;
 EXTERN u_int32type nersc_checksum;
@@ -125,9 +125,6 @@ EXTERN Real one_ov_N;
 EXTERN complex minus1, *tr_eta;
 EXTERN complex *tr_dest, *Tr_Uinv[NUMLINK], *plaqdet[NUMLINK][NUMLINK];
 EXTERN complex *ZWstar[NUMLINK][NUMLINK], *tempdet[NUMLINK][NUMLINK];
-#ifndef LINEAR_DET
-EXTERN complex *tempZW[NUMLINK][NUMLINK];
-#endif
 EXTERN matrix *DmuUmu, *Fmunu;
 EXTERN matrix *Uinv[NUMLINK], *Udag_inv[NUMLINK], *UpsiU[NUMLINK];
 

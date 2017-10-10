@@ -62,7 +62,6 @@ kappa_u1 0.6    # Plaquette determinant coupling
 bmass 0.2       # Scalar potential coupling (bosonic mass mu)
 fmass 0.0       # Mass shift in fermion operator
 G 0.1           # Q-invariant plaquette determinant coupling
-B 1.0           # Q-invariant scalar potential coupling
 
 # The next three lines must only be included when compiling with -DSMEAR
 APE_smear     # Type of smearing: no_smear, stout_smear or APE_smear

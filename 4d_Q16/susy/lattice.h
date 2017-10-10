@@ -81,12 +81,12 @@ EXTERN Real perm[NUMLINK][NUMLINK][NUMLINK][NUMLINK][NUMLINK];
 // Translate (mu, nu) to linear index of anti-symmetric matrix
 EXTERN int plaq_index[NUMLINK][NUMLINK];
 
-EXTERN Real rsqmin, lambda, kappa, bmass, fmass, kappa_u1, G, B;
+EXTERN Real rsqmin, lambda, kappa, bmass, fmass, kappa_u1, G;
 #ifdef DIMREDUCE
 EXTERN Real cWline;       // Coefficient of center-breaking term protecting
                           // single-link 'Wilson line' in reduced dir(s)
 #endif
-EXTERN int doG, doB;
+EXTERN int doG;
 EXTERN double g_ssplaq, g_stplaq;   // Global plaqs for I/O
 EXTERN double_complex linktrsum;
 EXTERN u_int32type nersc_checksum;
@@ -145,9 +145,6 @@ EXTERN Real one_ov_N;
 EXTERN complex minus1, *tr_eta;
 EXTERN complex *tr_dest, *Tr_Uinv[NUMLINK], *plaqdet[NUMLINK][NUMLINK];
 EXTERN complex *ZWstar[NUMLINK][NUMLINK], *tempdet[NUMLINK][NUMLINK];
-#ifndef LINEAR_DET
-EXTERN complex *tempZW[NUMLINK][NUMLINK];
-#endif
 EXTERN matrix *DmuUmu, *Fmunu[NPLAQ];
 EXTERN matrix *Uinv[NUMLINK], *Udag_inv[NUMLINK], *UpsiU[NUMLINK];
 
