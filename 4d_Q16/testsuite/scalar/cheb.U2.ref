@@ -2,7 +2,7 @@ N=4 SYM, Nc = 2, DIMF = 4, fermion rep = adjoint
 Microcanonical simulation with refreshing
 Machine = Scalar processor, with 1 nodes
 Phi algorithm
-start: Fri Apr 21 03:58:13 2017
+start: Tue Oct 10 01:36:12 2017
 
 type 0 for no prompts or 1 for prompts
 nx 4
@@ -18,7 +18,6 @@ ON EACH NODE 4 x 4 x 4 x 4
 Mallocing 2.5 MBytes per core for lattice
 Antiperiodic temporal boundary conditions
 Double-trace scalar potential
-Supersymmetric constraint on (det[plaq] - 1)
 Mallocing 2.6 MBytes per core for fields
 
 
@@ -33,7 +32,6 @@ kappa_u1 1
 bmass 1
 fmass 0
 G 0.1
-B 1
 max_cg_iterations 5000
 error_per_site 1e-05
 Nstoch 5
@@ -42,30 +40,30 @@ lambda_min -0.02
 lambda_max 25
 reload_serial config.U2.4444
 forget
-lambda=1 --> kappa=Nc/(2lambda)=1
+lambda=1 --> kappa=Nc/(4lambda)=0.5
 C2=1
 Restored binary gauge configuration serially from file config.U2.4444
-Time stamp Fri Apr 17 18:03:10 2015
-Checksums 2ffa97f c37b9702 OK
-Time to reload gauge configuration = 3.223896e-02
-CHECK PLAQ: 1.8931639183150830e+00 1.9392207138255673e+00
-CHECK NERSC LINKTR: 1.7868842204883606e-02 CKSUM: 0
-START 1.8931639 1.9392207 3.8323846 15.877752
-FLINK 1.04928 1.04712 1.07092 1.09201 1.07306 1.06648 0.175463
-FLINK_DET -0.151868 -0.176766 -0.197088 -0.191462 -0.180953 -0.179627 0.156754
-GMES -0.74288959 -0.6897311 0 1.8931639 1.9392207 15.877752 1.1794782
-BACTION 15.877752
+Time stamp Sun Oct  8 07:57:07 2017
+Checksums 632f69a0 bb8becc OK
+Time to reload gauge configuration = 9.413004e-03
+CHECK PLAQ: 1.9591170386368091e+00 1.9387730551508786e+00
+CHECK NERSC LINKTR: -5.3727121771416364e-03 CKSUM: 0
+START 1.959117 1.9387731 3.8978901 14.998133
+FLINK 1.12202 1.11849 1.19757 1.13141 1.18887 1.15167 0.221792
+FLINK_DET -0.311655 -0.316585 -0.466819 -0.327039 -0.422255 -0.36887 0.313824
+GMES 0.47956751 0.16301621 0 1.959117 1.9387731 14.998133 1.1964925
+BACTION 14.998133
 CHEBYSHEV c[0] 1 0
-CHEBYSHEV c[1] -0.21610719 0.001747
-CHEBYSHEV c[2] -0.60205279 0.001133
-CHEBYSHEV c[3] 0.23478962 0.002641
-CHEBYSHEV c[4] 0.11852468 0.001623
-CHEBYSHEV c[5] 0.020256447 0.001738
-CHEBYSHEV c[6] -0.04709975 0.001463
-CHEBYSHEV c[7] -0.0053435851 0.003121
-CHEBYSHEV c[8] -0.0006804496 0.001753
-CHEBYSHEV c[9] -0.02473684 0.003902
+CHEBYSHEV c[1] -0.15864217 0.001363
+CHEBYSHEV c[2] -0.52833756 0.001163
+CHEBYSHEV c[3] 0.13771027 0.003375
+CHEBYSHEV c[4] 0.01081337 0.001852
+CHEBYSHEV c[5] 0.045325765 0.003161
+CHEBYSHEV c[6] -0.021941124 0.004311
+CHEBYSHEV c[7] 0.0071002091 0.002311
+CHEBYSHEV c[8] 0.02027601 0.0018
+CHEBYSHEV c[9] -0.019838948 0.002309
 RUNNING COMPLETED
 
-Time = 0.1272 seconds
+Time = 0.1255 seconds
 total_iters = 0
