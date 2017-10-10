@@ -35,7 +35,8 @@ void setup_bc() {
   register int i, dir;
   register site *s;
 
-  for (dir = 0; dir < NUMLINK; dir++) {
+  // Single-offset terms only
+  FORALLDIR(dir) {
     FORALLSITES(i, s) {
       s->bc[dir] = 1.0;
       s->bc[OPP_LDIR(dir)] = 1.0;
@@ -70,7 +71,7 @@ void setup_offset() {
   int i, k;
 
   // Construct the link paths: one in each direction
-  for (i = 0; i < NDIMS; i++) {
+  FORALLUPDIR(i) {
     for (k = 0; k < NDIMS; k++)
       offset[i][k] = 0;
 
@@ -88,14 +89,14 @@ void setup_offset() {
   //   XUP, XDOWN, TUP, TDOWN
   // Then goffset[0]=4 and goffset[1]=6
   // But we can't use these in EVEN or ODD gathers!
-  for (i = 0; i < NUMLINK; i++) {
+  FORALLDIR(i) {
     goffset[i] = make_gather(cubic_neighbor, offset[i],
                              WANT_INVERSE, NO_EVEN_ODD, SCRAMBLE_PARITY);
 
 #ifdef DEBUG_CHECK
     int dir;
     node0_printf("  %d ahead:", i);
-    for (dir = XUP; dir <= TUP; dir++)
+    FORALLUPDIR(dir)
       node0_printf(" %d", offset[i][dir]);
 
     node0_printf(" (offset %d)\n", goffset[i]);

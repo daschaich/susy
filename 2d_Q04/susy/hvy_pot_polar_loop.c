@@ -1,8 +1,7 @@
 // -----------------------------------------------------------------
-// Wilson loops for fundamental links (hardwired in path)
+// Wilson loops for polar-projected static potential using path
 // Links unitarized via polar projection -- overwritten!!!
-// This version calls path to compute simple rectangular loops
-// so gauge fixing has no effect
+// This version computes simple rectangular loops so gauge fixing has no effect
 // Use tempmat for temporary storage
 #include "susy_includes.h"
 
@@ -65,7 +64,7 @@ void hvy_pot_polar_loop() {
       g_doublesum(&polarloop);
       node0_printf("PLOLAR_LOOP %d %d %.6g\n",
                    x_dist, t_dist, polarloop / volume);
-    } // x_dist
-  } // t_dist
+    }
+  }
 }
 // -----------------------------------------------------------------

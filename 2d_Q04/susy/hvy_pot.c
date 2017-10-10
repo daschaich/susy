@@ -37,7 +37,7 @@ void hvy_pot(int do_det) {
     }
 
     // Copy staple to tempmat
-    // Will shoft at end of loop
+    // Will shift at end of loop
     FORALLSITES(i, s)
       mat_copy(&(staple[i]), &(tempmat[i]));
     for (x_dist = 0; x_dist <= MAX_X; x_dist++) {

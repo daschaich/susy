@@ -1,7 +1,6 @@
 // -----------------------------------------------------------------
-// Wilson loops for fundamental links (hardwired in path)
-// This version calls path to compute simple rectangular loops
-// so gauge fixing has no effect
+// Wilson loops for static potential using path
+// This version computes simple rectangular loops so gauge fixing has no effect
 // Use tempmat for temporary storage
 #include "susy_includes.h"
 
@@ -63,7 +62,7 @@ void hvy_pot_loop(int do_det) {
       else
         node0_printf("PLOT_LOOP ");
       node0_printf("%d %d %.6g\n", x_dist, t_dist, wloop / volume);
-    } // x_dist
-  } // t_dist
+    }
+  }
 }
 // -----------------------------------------------------------------

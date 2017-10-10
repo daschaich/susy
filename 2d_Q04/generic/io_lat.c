@@ -29,7 +29,7 @@
    configuration for lattice files and for propagator files, the
    propagator for a single source spin-color combination.  Data in these
    files appear as a series of 32-bit floating point numbers.  We treat
-   the 32-bit values as unsigned integers v(i) where i = 0,...,N-1 ranges
+   the 32-bit values as unsigned integers v(i) where i = 0, ..., N-1 ranges
    over the values in the order of appearance on the file and N is the
    total count of values in the data set.  The checksum is obtained by a
    combination of bit-rotations and exclusive or operations.  It is
@@ -133,7 +133,7 @@ gauge_file *w_serial_i(char *filename) {
 
 
 // -----------------------------------------------------------------
-// Flush lbuf to output, resetting buf_length is reset
+// Flush lbuf to output, resetting buf_length
 static void flush_lbuf_to_file(gauge_file *gf, fmatrix *lbuf,
                                int *buf_length) {
 
@@ -233,9 +233,8 @@ void w_serial(gauge_file *gf) {
   off_t checksum_offset = 0;  // Location of checksum
   off_t gauge_check_size;     // Size of checksum record
 
-
-  // Allocate message buffer space for one x dimension of the local hypercube
-  // The largest possible space we need is nx
+  // tbuf holds message buffer space for the x dimension
+  // of the local hypercube (needs at most nx * NUMLINK matrices)
   if (tbuf == NULL) {
     printf("w_serial: node%d can't malloc tbuf\n", this_node);
     terminate(1);
@@ -278,10 +277,9 @@ void w_serial(gauge_file *gf) {
   gf->check.sum29 = 0;
   // Count 32-bit words mod 29 and mod 31 in order of appearance on file
   // Here only node 0 uses these values -- both start at 0
-  rank29 = NUMLINK * sizeof(fmatrix)
-                   / sizeof(int32type) * sites_on_node * this_node % 29;
-  rank31 = NUMLINK * sizeof(fmatrix)
-                   / sizeof(int32type) * sites_on_node * this_node % 31;
+  i = sizeof(fmatrix) / sizeof(int32type) * sites_on_node * this_node;
+  rank29 = (NUMLINK * i) % 29;
+  rank31 = (NUMLINK * i) % 31;
 
   g_sync();
   currentnode = 0;  // The node delivering data
@@ -368,18 +366,17 @@ void w_serial(gauge_file *gf) {
 // -----------------------------------------------------------------
 // Only node 0 reads the gauge configuration gf from a binary file
 void r_serial(gauge_file *gf) {
-  FILE *fp;
-  gauge_header *gh;
-  char *filename;
-  int byterevflag;
+  FILE *fp = gf->fp;
+  gauge_header *gh = gf->header;
+  char *filename = gf->filename;
+  int byterevflag = gf->byterevflag;
 
   off_t offset = 0;           // File stream pointer
   off_t gauge_check_size;     // Size of gauge configuration checksum record
   off_t coord_list_size;      // Size of coordinate list in bytes
   off_t head_size;            // Size of header plus coordinate list
   off_t checksum_offset = 0;  // Where we put the checksum
-  int rcv_rank, rcv_coords;
-  int destnode, stat;
+  int rcv_rank, rcv_coords, destnode, stat, idest = 0;
   int k, x, t;
   int buf_length = 0, where_in_buf = 0;
   gauge_check test_gc;
@@ -387,11 +384,6 @@ void r_serial(gauge_file *gf) {
   int rank29, rank31;
   fmatrix *lbuf = NULL;   // Only allocate on node0
   fmatrix tmat[NUMLINK];
-  int idest = 0;
-  fp = gf->fp;
-  gh = gf->header;
-  filename = gf->filename;
-  byterevflag = gf->byterevflag;
 
   if (this_node == 0) {
     // Compute offset for reading gauge configuration
@@ -407,8 +399,8 @@ void r_serial(gauge_file *gf) {
     checksum_offset = gf->header->header_bytes + coord_list_size;
     head_size = checksum_offset + gauge_check_size;
 
-    // Allocate single precision read buffer
-    lbuf = malloc(MAX_BUF_LENGTH * NUMLINK * sizeof(fmatrix));
+    // Allocate single-precision read buffer
+    lbuf = malloc(MAX_BUF_LENGTH * NUMLINK * sizeof(*lbuf));
     if (lbuf == NULL) {
       printf("r_serial: node%d can't malloc lbuf\n", this_node);
       fflush(stdout);
@@ -438,11 +430,10 @@ void r_serial(gauge_file *gf) {
 
   g_sync();
 
-  /* node0 reads and deals out the values */
+  // node0 reads and deals out the values
   for (rcv_rank = 0; rcv_rank < volume; rcv_rank++) {
     /* If file is in coordinate natural order, receiving coordinate
        is given by rank. Otherwise, it is found in the table */
-
     if (gf->header->order == NATURAL_ORDER)
       rcv_coords = rcv_rank;
     else
@@ -455,16 +446,16 @@ void r_serial(gauge_file *gf) {
     // The node that gets the next set of gauge links
     destnode = node_number(x, t);
 
+    // node0 fills its buffer, if necessary
     if (this_node == 0) {
-      /* node0 fills its buffer, if necessary */
       if (where_in_buf == buf_length) {  /* get new buffer */
         /* new buffer length  = remaining sites, but never bigger
            than MAX_BUF_LENGTH */
         buf_length = volume - rcv_rank;
         if (buf_length > MAX_BUF_LENGTH)
           buf_length = MAX_BUF_LENGTH;
-        /* then do read */
 
+        // Now do read
         stat = (int)fread(lbuf, NUMLINK * sizeof(fmatrix), buf_length, fp);
         if (stat != buf_length) {
           printf("r_serial: node%d gauge configuration read error %d file %s\n",

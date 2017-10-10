@@ -20,6 +20,7 @@ Eigenvalue measurements (susy_eig) require PRIMME (https://github.com/primme/pri
 # Defines for compilation:
 -DPHI_ALGORITHM for the basic phi algorithm (REQUIRED)
 -DHMC_ALGORITHM switches on the accept/reject step
+-DEIG_POT switches from a double-trace to a single-trace scalar potential (not actively tested)
 -DCORR switches on the Konishi and SUGRA correlator calculation
 -DSMEAR switches on optional smearing for measurements
 -DWLOOP switches on the gauge-fixed Wilson loop calculation
@@ -61,7 +62,6 @@ kappa_u1 0.6    # Plaquette determinant coupling
 bmass 0.2       # Scalar potential coupling (bosonic mass mu)
 fmass 0.0       # Mass shift in fermion operator
 G 0.1           # Q-invariant plaquette determinant coupling
-B 1.0           # Q-invariant scalar potential coupling
 
 # The next three lines must only be included when compiling with -DSMEAR
 APE_smear     # Type of smearing: no_smear, stout_smear or APE_smear
@@ -108,7 +108,7 @@ setup_lambda.c        -- Set up U(N) generators, epsilon tensor and lookup table
 setup_offset.c        -- Set up gathers for terms in the action, especially Qclosed terms
 action.c              -- Compute the action, including related routines also needed by forces
 plaq.c                -- Compute the average plaquette
-ploop.c               -- Compute the average Polyakov loop
+ploop.c               -- Compute the average Polyakov loop or Wilson line
 link_trace.c          -- Compute average link, Tr[U_a Ubar_a] / NCOL
 widths.c              -- Calculate sqrt(<P^2> - <P>^2) for the plaquette and plaquette determinant
 determinant.c         -- Utilities for finding the determinant of NCOL x NCOL link matrices, using LAPACK
@@ -144,6 +144,7 @@ hvy_pot_polar_loop.c -- Compute more standard on-axis Wilson loops of polar-proj
                         (NB: overwrites links, as above)
 path.c               -- Used to construct Wilson loops for hvy_pot_loop.c and hvy_pot_polar_loop.c
 rsymm.c              -- Compute modified Wilson loops related to R symmetry transformations
+scalar_eig.c         -- Compute eigenvalues of scalar fields
 
 # 1d) Additional files used only by MCRG target (susy_mcrg)
 control_mcrg.c       -- Main program for RG blocking and blocked measurements
@@ -168,6 +169,7 @@ phase.c         -- Phase and (log of) magnitude of the pfaffian
 # 1g) Files not currently used, retained for potential future testing
 ploop_corr.c      -- Find Polyakov loop on every spatial site to be fed into FFT
 update_leapfrog.c -- Leapfrog RHMC evolution
+phase_serial.c    -- A serial gaussian elimination pfaffian algorithm, to check the parallel computation
 
 # 2) Summary of files in the ../generic directory:
 # 2a) Files used by all executables

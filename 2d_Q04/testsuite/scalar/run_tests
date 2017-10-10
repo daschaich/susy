@@ -1,5 +1,5 @@
 #!/bin/bash
-# This script needs to be run from the 2dSYM/testsuite/scalar directory
+# This script needs to be run from the 2d_Q04/testsuite/scalar directory
 
 # Allow user to specify particular target
 if [ $# -gt 1 ]; then
@@ -8,7 +8,7 @@ if [ $# -gt 1 ]; then
 
   # Change N
   cd ../../susy/
-  awk -v"X=#define NCOL $N" '{sub(/^#define NCOL .*/,X);print}' ../include/susy.h > TEMP && mv TEMP ../include/susy.h
+  sed -i --follow-symlinks -E "s/(#define NCOL) .*/\1 $N/" ../include/susy.h
 
   # Compile
   echo "Compiling susy_$target..."
@@ -19,8 +19,7 @@ if [ $# -gt 1 ]; then
   fi
 
   # Reset to N=2
-  cd ../include/
-  awk -v"X=#define NCOL 2" '{sub(/^#define NCOL .*/,X);print}' susy.h > TEMP && mv TEMP susy.h
+  sed -i --follow-symlinks -E "s/(#define NCOL) .*/\1 2/" ../include/susy.h
 
   # Run
   cd ../testsuite/
@@ -45,10 +44,11 @@ fi
 for N in 2 3 4 ; do
   echo "N=$N"
 
-  # Compile
-  cd ../../susy/
   # Change N
-  awk -v"X=#define NCOL $N" '{sub(/^#define NCOL .*/,X);print}' ../include/susy.h > TEMP && mv TEMP ../include/susy.h
+  cd ../../susy/
+  sed -i --follow-symlinks -E "s/(#define NCOL) .*/\1 $N/" ../include/susy.h
+
+  # Compile all targets
   for target in hmc meas hmc_meas mcrg eig phase ; do
     echo "Compiling susy_$target..."
     if ! make -f Make_scalar susy_$target >& /dev/null ; then
@@ -57,9 +57,9 @@ for N in 2 3 4 ; do
       exit
     fi
   done
+
   # Reset to N=2
-  cd ../include/
-  awk -v"X=#define NCOL 2" '{sub(/^#define NCOL .*/,X);print}' susy.h > TEMP && mv TEMP susy.h
+  sed -i --follow-symlinks -E "s/(#define NCOL) .*/\1 2/" ../include/susy.h
 
   # Run
   cd ../testsuite/
@@ -71,16 +71,15 @@ for N in 2 3 4 ; do
 
   # Checkpointed pfaffian computation
   rm -f scalar/phase_part1.U$N.out scalar/phase_part2.U$N.out
-  cp in.U$N.phase SAV
-  awk -v"X=ckpt_save 100" '{sub(/ckpt_save 0/,X);print}' in.U$N.phase > TEMP && mv TEMP in.U$N.phase
+  sed -i -E "s/(ckpt_save) 0/\1 100/" in.U$N.phase
   echo "Running checkpointed susy_phase part 1 of 2..."
   ../susy/susy_phase < in.U$N.phase > scalar/phase_part1.U$N.out
-  cp SAV in.U$N.phase
-  awk -v"X=ckpt_load 100" '{sub(/ckpt_load 0/,X);print}' in.U$N.phase > TEMP && mv TEMP in.U$N.phase
+  sed -i -E "s/(ckpt_load) 0/\1 100/" in.U$N.phase
+  sed -i -E "s/(ckpt_save) 100/\1 0/" in.U$N.phase
   echo "Running checkpointed susy_phase part 2 of 2..."
   ../susy/susy_phase < in.U$N.phase > scalar/phase_part2.U$N.out
-  mv SAV in.U$N.phase
-  rm -f config.U$N.44.diag100 config.U$N.44.Q100
+  sed -i -E "s/(ckpt_load) 100/\1 0/" in.U$N.phase
+  rm -f config*diag* config*Q*
 
   # Check
   cd scalar/
