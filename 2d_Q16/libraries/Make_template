@@ -1,0 +1,105 @@
+# Two-dimensional N=(8,8) supersymmetric Yang--Mills theory
+# This template file defines rules and macros common to all architectures
+# It is intended to be an include file for other Makefiles
+# Don't use it by itself!
+
+.SUFFIXES: .1o .2o
+
+.c.1o:
+	${CC} -c ${CFLAGS} -DPRECISION=1 $*.c -o $*.1o
+.c.2o:
+	${CC} -c ${CFLAGS} -DPRECISION=2 $*.c -o $*.2o
+
+# List of headers currently used by some or all library routines
+# or by inheritance from their header files
+HEADERS = ../include/config.h    \
+          ../include/complex.h   \
+          ../include/dirs.h      \
+          ../include/random.h    \
+          ../include/int32type.h \
+          ../include/precision.h \
+          ../include/susy.h
+
+# To force a full remake when switching or updating Makefiles
+LASTMAKE = .lastmake.${MAKEFILE}
+
+ALLMAKES = ${MAKEFILE} Make_template
+
+${LASTMAKE}: ${ALL_MAKES}
+	-/bin/rm -f .lastmake.*
+	${MAKE} -f ${MAKEFILE} clean
+	touch ${LASTMAKE}
+
+COMPLEXOBJS1 =  cmplx.1o  cexp.1o  clog.1o  csqrt.1o  ce_itheta.1o \
+               dcmplx.1o dcexp.1o dclog.1o dcsqrt.1o dce_itheta.1o
+
+COMPLEXOBJS2 =  cmplx.2o  cexp.2o  clog.2o  csqrt.2o  ce_itheta.2o \
+               dcmplx.2o dcexp.2o dclog.2o dcsqrt.2o dce_itheta.2o
+
+${COMPLEXOBJS1} : ${HEADERS} ${ALLMAKES} ${LASTMAKE}
+${COMPLEXOBJS2} : ${HEADERS} ${ALLMAKES} ${LASTMAKE}
+
+complex.1.a: ${COMPLEXOBJS1}
+	${AR} rcs $@ ${COMPLEXOBJS1}
+
+complex.2.a: ${COMPLEXOBJS2}
+	${AR} rcs $@ ${COMPLEXOBJS2}
+
+SU3OBJS1 = cmp_ahmat.1o dump_ahmat.1o make_ahmat.1o uncmp_ahmat.1o dumpsu2.1o \
+           m_su2_mat_vec_n.1o m_su2_mat_vec_a.1o gaussrand.1o byterevn.1o \
+           m_mat_an.1o m_mat_na.1o m_mat_nn.1o realtr.1o \
+           s_m_a_mat.1o s_m_a_amat.1o s_m_s_mat.1o s_m_s_amat.1o\
+           adjoint.1o mat_copy.1o trace.1o complextr.1o \
+           dumpmat.1o dump_ahmat.1o clear_mat.1o \
+           addmat.1o addamat.1o  submat.1o subamat.1o \
+           clearvec.1o r_su2_hit_a.1o l_su2_hit_n.1o \
+           s_m_mat.1o s_m_amat.1o s_a_d_mat.1o cs_a_d_mat.1o \
+           s_m_mat_nn.1o s_m_mat_na.1o s_m_mat_an.1o cs_m_mat.1o \
+           cs_m_a_mat.1o cs_m_a_amat.1o cs_m_a_mata.1o cs_m_s_mat.1o
+
+SU3OBJS2 = cmp_ahmat.2o dump_ahmat.2o make_ahmat.2o uncmp_ahmat.2o dumpsu2.2o \
+           m_su2_mat_vec_n.2o m_su2_mat_vec_a.2o gaussrand.2o byterevn.2o \
+           m_mat_an.2o m_mat_na.2o m_mat_nn.2o realtr.2o \
+           s_m_a_mat.2o s_m_a_amat.2o s_m_s_mat.2o s_m_s_amat.2o \
+           adjoint.2o mat_copy.2o trace.2o complextr.2o \
+           clear_mat.2o dumpmat.2o dump_ahmat.2o \
+           addmat.2o addamat.2o submat.2o subamat.2o \
+           clearvec.2o r_su2_hit_a.2o l_su2_hit_n.2o \
+           s_m_mat.2o s_m_amat.2o s_a_d_mat.2o cs_a_d_mat.2o \
+           s_m_mat_nn.2o s_m_mat_na.2o s_m_mat_an.2o cs_m_mat.2o \
+           cs_m_a_mat.2o cs_m_a_amat.2o cs_m_a_mata.2o cs_m_s_mat.2o
+
+# Special header dependencies
+byterevn.o : ../include/int32type.h
+gaussrand.1o : ../include/random.h
+gaussrand.2o : ../include/random.h
+
+${SU3OBJS1} : ${HEADERS} ${ALLMAKES} ${LASTMAKE}
+${SU3OBJS2} : ${HEADERS} ${ALLMAKES} ${LASTMAKE}
+
+susy.1.a::	 ${SU3OBJS1}
+	${AR} rcs $@ ${SU3OBJS1}
+
+susy.2.a::	 ${SU3OBJS2}
+	${AR} rcs $@ ${SU3OBJS2}
+
+LIBRARIES1 = complex.1.a susy.1.a
+LIBRARIES2 = complex.2.a susy.2.a
+
+ifeq ($(strip ${PRECISION}),1)
+
+all: checkcc ${LIBRARIES1}
+
+else
+
+all: checkcc ${LIBRARIES2}
+
+endif
+
+checkcc:
+	@echo ================================================================
+	@echo PLEASE CHECK COMPILERS: Libraries: ${CC}.  Application: ${APP_CC}
+	@echo ================================================================
+
+clean:
+	-/bin/rm -f *.o
