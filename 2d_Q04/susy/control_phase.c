@@ -2,14 +2,10 @@
 // Main procedure for N=(2,2) SYM pfaffian phase
 #define CONTROL
 #include "susy_includes.h"
-// -----------------------------------------------------------------
 
-
-
-// -----------------------------------------------------------------
 int main(int argc, char *argv[]) {
   int prompt, dir;
-  double dplaq, dtime, plpMod = 0.0;
+  double plaq, dtime, plpMod = 0.0;
   double linktr[NUMLINK], linktr_ave, linktr_width;
   double link_det[NUMLINK], det_ave, det_width;
   complex plp = cmplx(99.0, 99.0);
@@ -37,10 +33,10 @@ int main(int argc, char *argv[]) {
   dtime = -dclock();
 
   // Check: compute initial plaquette and bosonic action
-  plaquette(&dplaq);
-  node0_printf("START %.8g ", dplaq);
-  dplaq = gauge_action(NODET);
-  node0_printf("%.8g\n", dplaq / (double)volume);
+  plaquette(&plaq);
+  node0_printf("START %.8g ", plaq);
+  plaq = gauge_action(NODET);
+  node0_printf("%.8g\n", plaq / (double)volume);
 
   // Do "local" measurements to check configuration
   // Polyakov loop measurement
@@ -59,16 +55,16 @@ int main(int argc, char *argv[]) {
   // Polyakov loop and plaquette measurements
   // Format: GMES Re(Polyakov) Im(Poyakov) cg_iters plaq
   plp = ploop(TUP, NODET, &plpMod);
-  plaquette(&dplaq);
+  plaquette(&plaq);
   node0_printf("GMES %.8g %.8g 0 %.8g ",
-               plp.real, plp.imag, dplaq);
+               plp.real, plp.imag, plaq);
 
   // Bosonic action (printed twice by request)
   // Might as well spit out volume average of Polyakov loop modulus
-  dplaq = gauge_action(NODET) / (double)volume;
-  node0_printf("%.8g ", dplaq);
+  plaq = gauge_action(NODET) / (double)volume;
+  node0_printf("%.8g ", plaq);
   node0_printf("%.8g\n", plpMod);
-  node0_printf("BACTION %.8g\n", dplaq);
+  node0_printf("BACTION %.8g\n", plaq);
 
   // Main measurement: pfaffian
   phase();

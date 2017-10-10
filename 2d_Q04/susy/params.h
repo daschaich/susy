@@ -27,25 +27,15 @@ typedef struct {
   Real lambda, kappa;     // 't Hooft coupling and Nc/(2lambda)
   Real bmass, fmass;      // Bosonic and fermion masses
   Real kappa_u1;          // Plaquette determinant coupling
-  Real G, B;              // Q-invariant plaq. det. coupling and bosonic mass
+  Real G;                 // Q-invariant plaquette determinant coupling
 
   // Inversion parameters
   int niter;                    // Maximum number of CG iterations
   Real rsqmin;                  // For deciding on convergence
   char startfile[MAXFILENAME], savefile[MAXFILENAME];
 
-#ifdef CORR
-  double vevK[N_K], vevS[N_K];  // Konishi and SUGRA vacuum subtractions
-#endif
-
 #ifdef BILIN
   int nsrc;                     // Number of stochastic sources
-#endif
-
-#ifdef EIG
-  // Eigenvalue parameters
-  int Nvec, maxIter;
-  Real eig_tol;
 #endif
 
 #ifdef SMEAR
@@ -55,15 +45,15 @@ typedef struct {
   Real alpha;
 #endif
 
+#ifdef EIG
+  // Eigenvalue parameters
+  int Nvec, maxIter;
+  Real eig_tol;
+#endif
+
 #ifdef PHASE
   // Pfaffian parameters
   int ckpt_load, ckpt_save;
-#endif
-
-#ifdef MODE
-  // Mode number (and associated step function) parameters
-  int order, Npts;
-  Real start_omega, spacing;
 #endif
 } params;
 #endif
