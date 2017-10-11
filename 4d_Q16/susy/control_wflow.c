@@ -70,8 +70,24 @@ int main(int argc, char *argv[]) {
   node0_printf("BACTION %.8g\n", ss_plaq);
 
   // Main measurement: Wilson flow
+  node0_printf("First, consider full links \n");
   wflow();
-
+    
+  node0_printf("Now, consider only unitarized links \n");
+  
+  register int i;
+  register site *s;
+  matrix tmat, tmat2;
+    FORALLDIR(dir){
+    FORALLSITES(i, s) {
+        // Polar projection of gauge-fixed links
+        // To be multiplied together after projecting
+        // !!! Overwrites links
+        polar(&(s->link[dir]), &tmat, &tmat2);
+        mat_copy(&tmat, &(s->link[dir]));
+    }
+    }
+  wflow();
   node0_printf("RUNNING COMPLETED\n");
   dtime += dclock();
   node0_printf("\nTime = %.4g seconds\n", dtime);
