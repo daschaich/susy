@@ -2,7 +2,7 @@
 // Fix Coulomb or Lorenz gauge by doing successive SU(2) gauge hits
 // Double-precision global sums, as always
 
-// For NUMLINK susy code: do not reunitarize
+// For susy code: do not reunitarize
 
 // NB: Gauge-fixing will fail on lattices
 // with an odd number of sites in any direction
@@ -17,11 +17,11 @@
 //          (matrix mp and vector chi)
 // gaugefix(TUP, 1.5, 500, 1.0e-7, F_OFFSET(mp), F_OFFSET(chi));
 //
-// gauge_dir is the "time" direction used to define Coulomb or Lorenz gauge:
+// gauge_dir is the "time" direction used to define Coulomb gauge:
 //   TUP for evaluating propagators in the time-like direction
 //   XUP for screening lengths
 //   8 (or anything except 0, 1) for Lorenz gauge
-//   (cf. definition of FORALLUPDIRBUT in ../include/macros.h)
+//   (cf. definition of FORALLDIRBUT in ../include/macros.h)
 // relax_boost is the overrelaxation parameter
 // max_gauge_iter is the maximum number of gauge-fixing iterations
 // gfix_tol tells us to stop if the action change is less than this
@@ -43,7 +43,7 @@ field_offset diffmat_offset, sumvec_offset;   // Field offsets
 // for determining optimum hit for gauge fixing
 // Differences are kept in diffmat
 // Diagonal elements of the sums are kept in sumvec
-// Downward links must be gathered to gen_pt[dir] in gaugefixstep()
+// Downward links gathered to gen_pt[dir] in gaugefixstep()
 void accum_gauge_hit(int gauge_dir, int parity) {
   register int i, j, dir;
   register matrix *m1, *m2;
@@ -132,9 +132,10 @@ void do_hit(int gauge_dir, int parity, int p, int q, Real relax_boost) {
     // a1 =  s->diffmat.e[q][p].imag + s->diffmat.e[p][q].imag;
     // a2 = -s->diffmat.e[q][p].real + s->diffmat.e[p][q].real;
     // a3 =  s->diffmat.e[p][p].imag - s->diffmat.e[q][q].imag;
-    if (sumvec_offset >= 0)
+    if (sumvec_offset >= 0) {
       a0 = ((vector *)F_PT(s, sumvec_offset))->c[p].real
          + ((vector *)F_PT(s, sumvec_offset))->c[q].real;
+    }
     else
       a0 = sumvecp[i].c[p].real + sumvecp[i].c[q].real;
 
@@ -184,11 +185,11 @@ void do_hit(int gauge_dir, int parity, int p, int q, Real relax_boost) {
     // Hit the links (on this checkerboard) on the left,
     // and the gathered links, from site (x - mu), on the right
     // Do SU(2) hit on all upward links
-    FORALLUPDIR(dir)
+    FORALLDIR(dir)
       left_su2_hit_n(&(u[i]), p, q, &(s->link[dir]));
 
     // Do SU(2) hit on all downward links
-    FORALLUPDIR(dir)
+    FORALLDIR(dir)
       right_su2_hit_a(&(u[i]), p, q, (matrix *)gen_pt[dir][i]);
   }
   // Exit with modified downward links left in communications buffer
@@ -202,7 +203,7 @@ void do_hit(int gauge_dir, int parity, int p, int q, Real relax_boost) {
 // Return average of gauge fixing action for sites of the given parity
 // Normalize to a maximum of 1 when all links are unit matrices
 double get_gauge_fix_action(int gauge_dir, int parity) {
-  register int dir, i, ndir;
+  register int dir, i, ndir = 0;
   register site *s;
   double gauge_fix_action = 0.0;
   complex tc;
@@ -218,7 +219,6 @@ double get_gauge_fix_action(int gauge_dir, int parity) {
   }
 
   // Count number of terms to average
-  ndir = 0;
   FORALLUPDIRBUT(gauge_dir, dir)
     ndir++;
 
@@ -251,11 +251,11 @@ void gaugefixstep(int gauge_dir, double *av_gauge_fix_action,
 
   for (parity = ODD; parity <= EVEN; parity++) {
     // Gather all downward links at once
-    FORALLUPDIR(dir) {
+    FORALLDIR(dir) {
       mtag[dir] = start_gather_site(F_OFFSET(link[dir]), sizeof(matrix),
                                     OPP_DIR(dir), parity, gen_pt[dir]);
     }
-    FORALLUPDIR(dir)
+    FORALLDIR(dir)
       wait_gather(mtag[dir]);
 
     // Do optimum gauge hit on all subspaces
@@ -269,7 +269,7 @@ void gaugefixstep(int gauge_dir, double *av_gauge_fix_action,
     *av_gauge_fix_action += gauge_fix_action;
 
     // Scatter downward link matrices by gathering to sites of opposite parity
-    FORALLUPDIR(dir) {
+    FORALLDIR(dir) {
       // Synchronize before scattering to be sure the new modified link
       // matrices are all ready to be scattered and diffmat is not
       // overwritten before it is used
@@ -291,12 +291,14 @@ void gaugefixstep(int gauge_dir, double *av_gauge_fix_action,
       g_sync();
 
       // Gather diffmat onto sites of opposite parity
-      if (diffmat_offset >= 0)
+      if (diffmat_offset >= 0) {
         mtag[dir] = start_gather_site(diffmat_offset, sizeof(matrix),
                                       dir, OPP_PAR(parity), gen_pt[dir]);
-      else
+      }
+      else {
         mtag[dir] = start_gather_field(diffmatp, sizeof(matrix),
                                        dir, OPP_PAR(parity), gen_pt[dir]);
+      }
       wait_gather(mtag[dir]);
 
       // Copy modified matrices into proper location
