@@ -195,7 +195,7 @@ double gauge_force(Real eps) {
     }
   }
 
-// Only compute susy-breaking scalar potential term if bmass non-zero
+  // Only compute susy-breaking scalar potential term if bmass non-zero
   if (bmass > IMAG_TOL) {
     Real dmu;
 #ifdef EIG_POT
