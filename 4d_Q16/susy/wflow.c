@@ -80,7 +80,7 @@ void update_flow(Real f1, Real f2) {
     FORALLSITES(i, s) {
       mult_na(&(s->link[dir]), &(S[dir][i]), &tmat);
       make_anti_hermitian(&tmat, &tmat_ah);
-      // A += f1 * U.S
+      // Q += f1 * U.S
       scalar_mult_sum_antiH(&tmat_ah, f1, &(Q[dir][i]));
     }
   }
@@ -95,7 +95,7 @@ void stout_step_rk() {
   register int i, dir;
   register site *s;
 
-  // Clear A, just in case
+  // Clear Q, just in case
   FORALLSITES(i, s) {
     FORALLDIR(dir)
       clear_antiH(&(Q[dir][i]));
