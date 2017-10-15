@@ -144,6 +144,7 @@ void wflow() {
     // TODO: Guessing numerical factor
     check = 20.0 * t * t * fabs((double)NCOL - plaq);
 
+    old_tSqE = tSqE;   // The reason why 'der_tSqE' was exploding before ! 
     node0_printf("WFLOW %g %g %g %g %g %g\n",
                  t, plaq, E, tSqE, der_tSqE, check);
   }
