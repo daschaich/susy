@@ -225,7 +225,7 @@ double gauge_force(Real eps) {
 #ifdef DIMREDUCE
   // Center-breaking term that protects the single-link 'Wilson line'
   // in reduced direction(s)
-  //   c_W^2 * [U_a(x) - I]
+  //   c_W^2 * [U_a(x) - I]^dag
   if (cWline > IMAG_TOL) {
     Real dcW = cWline * cWline;
     FORALLUPDIR(mu) {
