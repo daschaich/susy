@@ -179,7 +179,7 @@ double bmass_action() {
 
 // -----------------------------------------------------------------
 // Center-breaking term that protects the single-link 'Wilson line'
-// in reduced direction(s), ReTr[(U - I)^2]
+// in reduced direction(s), ReTr[|U - I|^2]
 // Comes with factor of kappa
 #ifdef DIMREDUCE
 double cWline_action() {
@@ -193,7 +193,7 @@ double cWline_action() {
       FORALLSITES(i, s) {
         mat_copy(&(s->link[mu]), &tmat);
         scalar_add_diag(&tmat, -1.0);
-        sum += realtrace_nn(&tmat, &tmat);       // (U - I)^2
+        sum += realtrace(&tmat, &tmat);       // (U - I)^dag.(U - I)
       }
     }
   }
