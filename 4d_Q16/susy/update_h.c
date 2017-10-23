@@ -225,15 +225,15 @@ double gauge_force(Real eps) {
 #ifdef DIMREDUCE
   // Center-breaking term that protects the single-link 'Wilson line'
   // in reduced direction(s)
-  //   2c_W^2 * [U_a(x) - I]
+  //   c_W^2 * [U_a(x) - I]
   if (cWline > IMAG_TOL) {
-    Real dcW = 2.0 * cWline * cWline;
+    Real dcW = cWline * cWline;
     FORALLUPDIR(mu) {
       if (length[mu] == 1) {
         FORALLSITES(i, s) {
           mat_copy(&(s->link[mu]), &tmat);
           scalar_add_diag(&tmat, -1.0);
-          scalar_mult_sum_matrix(&tmat, dcW, &(s->f_U[mu]));
+          scalar_mult_sum_adj_matrix(&tmat, dcW, &(s->f_U[mu]));
         }
       }
     }
