@@ -151,7 +151,7 @@ void wflow() {
 
     old_tSqE = tSqE;
     node0_printf("WFLOW %g %g %g %g %g %g %g\n",
-                 t, plaq, E, tSqE, der_tSqE, check, ssplaq);
+                 t, plaq, E, tSqE, der_tSqE, check, ssplaq/(4.50 * NCOL * NCOL));
   }
 }
 // -----------------------------------------------------------------
