@@ -129,8 +129,8 @@ void wflow() {
     // Compute t^2 E and its slope
     E = 0.0;
     FORALLSITES(i, s) {
-      for (dir = 0; dir < 10; dir++)
-        E -= (double)realtrace_nn(&(FS[dir][i]), &(FS[dir][i])); // TODO: Check minus sign, no FS dagger
+      for (dir = 0; dir < 10; dir++)    // TODO: Check minus sign, no FS dagger
+        E -= (double)realtrace_nn(&(FS[dir][i]), &(FS[dir][i]));
     }
     g_doublesum(&E);
     E /= (volume * 64.0); // Normalization factor of 1/8 for each F_munu
@@ -147,11 +147,11 @@ void wflow() {
     // Monitor bosonic action along flow
     compute_DmuUmu();
     compute_Fmunu();
-    ssplaq = gauge_action(NODET) /  (double)volume;
+    ssplaq = gauge_action(NODET) / ((double)volume * 4.5 * NCOL * NCOL);
 
     old_tSqE = tSqE;
     node0_printf("WFLOW %g %g %g %g %g %g %g\n",
-                 t, plaq, E, tSqE, der_tSqE, check, ssplaq/(4.50 * NCOL * NCOL));
+                 t, plaq, E, tSqE, der_tSqE, check, ssplaq);
   }
 }
 // -----------------------------------------------------------------
