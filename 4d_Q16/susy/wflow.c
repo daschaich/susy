@@ -41,15 +41,15 @@ void compute_staple() {
   int dir, dir2;
 
   FORALLSITES(i, s)
-    FORALLDIR(dir) {
+    FORALLUPDIR(dir) {
       mat_copy(&(s->link[dir]), &(s->mom[dir]));
   }
 
-  FORALLDIR(dir) {
+  FORALLUPDIR(dir) {
     FORALLSITES(i, s)
       clear_mat(&(staple[i]));
 
-    FORALLDIR(dir2) {
+    FORALLUPDIR(dir2) {
       if (dir == dir2)
         continue;
       directional_staple(dir, dir2);
@@ -76,7 +76,7 @@ void update_flow(Real f1, Real f2) {
   // This is where we can change the 'flow action'
   compute_staple();
 
-  FORALLDIR(dir) {
+  FORALLUPDIR(dir) {
     FORALLSITES(i, s) {
       mult_na(&(s->link[dir]), &(S[dir][i]), &tmat);
       make_anti_hermitian(&tmat, &tmat_ah);
@@ -97,7 +97,7 @@ void stout_step_rk() {
 
   // Clear Q, just in case
   FORALLSITES(i, s) {
-    FORALLDIR(dir)
+    FORALLUPDIR(dir)
       clear_antiH(&(Q[dir][i]));
   }
 
@@ -129,7 +129,7 @@ void wflow() {
     // Compute t^2 E and its slope
     E = 0.0;
     FORALLSITES(i, s) {
-      for (dir = 0; dir < 10; dir++)
+      for (dir = 0; dir < 6; dir++)
         E -= (double)realtrace_nn(&(FS[dir][i]), &(FS[dir][i])); // TODO: Check minus sign, no FS dagger
     }
     g_doublesum(&E);
@@ -142,7 +142,7 @@ void wflow() {
     plaquette(&ssplaq, &stplaq);
     plaq = 0.5 * (ssplaq + stplaq);
     // TODO: Guessing numerical factor
-    check = 20.0 * t * t * fabs((double)NCOL - plaq);
+    check = 12.0 * t * t * fabs((double)NCOL - plaq);
 
     // Monitor bosonic action along flow
     compute_DmuUmu();
@@ -155,3 +155,4 @@ void wflow() {
   }
 }
 // -----------------------------------------------------------------
+

@@ -11,7 +11,7 @@ void plaquette(double *ss_plaq, double *st_plaq) {
   matrix tmat;
 
   // We can exploit a symmetry under dir<-->dir2
-  for (dir = YUP; dir < NUMLINK; dir++) {
+  for (dir = YUP; dir < NUMLINK-1; dir++) {
     for (dir2 = XUP; dir2 < dir; dir2++) {
       // gen_pt[0] is U_b(x+a), gen_pt[1] is U_a(x+b)
       mtag0 = start_gather_site(F_OFFSET(link[dir2]), sizeof(matrix),
@@ -47,7 +47,7 @@ void plaquette(double *ss_plaq, double *st_plaq) {
 
   // Average over four plaquettes that involve the temporal link
   // and six that do not
-  *ss_plaq = ss_sum / ((double)(6.0 * volume));
-  *st_plaq = st_sum / ((double)(4.0 * volume));
+  *ss_plaq = ss_sum / ((double)(3.0 * volume));
+  *st_plaq = st_sum / ((double)(3.0 * volume));
 }
 // -----------------------------------------------------------------

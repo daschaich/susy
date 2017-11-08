@@ -141,10 +141,10 @@ Real order(int i, int j, int k, int l, int m) {
 // Set up translation of (mu, nu) to linear index of anti-symmetric matrix
 void setup_plaq_index() {
   int mu, nu, index;
-  FORALLDIR(mu) {
+  FORALLUPDIR(mu) {
     plaq_index[mu][mu] = -1;
-    for (nu = mu + 1; nu < NUMLINK; nu++) {
-      index = mu * (NUMLINK - 1) - mu * (mu + 1) / 2 + nu - 1;
+    for (nu = mu + 1; nu < NUMLINK-1; nu++) {
+      index = mu * (NUMLINK - 2) - mu * (mu + 1) / 2 + nu - 1;
       plaq_index[mu][nu] = index;
       plaq_index[nu][mu] = index;
     }

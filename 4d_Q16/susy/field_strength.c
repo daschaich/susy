@@ -44,8 +44,8 @@ void make_field_strength() {
   matrix tmat, tmat2;
   msg_tag *mtag, *mtag2;
   
-  FORALLDIR(dir) {
-    for(dir2 = dir+1; dir2<NUMLINK; dir2++)
+  FORALLUPDIR(dir) {
+    for(dir2 = dir+1; dir2<NUMLINK-1; dir2++)
     {
       component = plaq_index[dir][dir2];
       
