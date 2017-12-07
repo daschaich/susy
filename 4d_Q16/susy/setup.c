@@ -321,13 +321,6 @@ int readin(int prompt) {
     IF_OK status += get_f(stdin, prompt, "bmass", &par_buf.bmass);
     IF_OK status += get_f(stdin, prompt, "fmass", &par_buf.fmass);
     IF_OK status += get_f(stdin, prompt, "G", &par_buf.G);
-#ifdef DIMREDUCE
-    IF_OK status += get_f(stdin, prompt, "cWline", &par_buf.cWline);
-    if (par_buf.cWline != 0.0) {
-      printf("WARNING: Dimensionally reduced center-breaking term ");
-      printf("may need small step sizes\n");
-    }
-#endif
 
 #ifdef SMEAR
     // Smearing stuff -- passed to either APE or stout routines by application
