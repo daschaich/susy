@@ -321,6 +321,9 @@ int readin(int prompt) {
     IF_OK status += get_f(stdin, prompt, "bmass", &par_buf.bmass);
     IF_OK status += get_f(stdin, prompt, "fmass", &par_buf.fmass);
     IF_OK status += get_f(stdin, prompt, "G", &par_buf.G);
+#ifdef DIMREDUCE
+    IF_OK status += get_f(stdin, prompt, "cWline", &par_buf.cWline);
+#endif
 
 #ifdef SMEAR
     // Smearing stuff -- passed to either APE or stout routines by application
