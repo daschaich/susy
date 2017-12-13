@@ -323,10 +323,6 @@ int readin(int prompt) {
     IF_OK status += get_f(stdin, prompt, "G", &par_buf.G);
 #ifdef DIMREDUCE
     IF_OK status += get_f(stdin, prompt, "cWline", &par_buf.cWline);
-    if (par_buf.cWline != 0.0) {
-      printf("WARNING: Dimensionally reduced center-breaking term ");
-      printf("may need small step sizes\n");
-    }
 #endif
 
 #ifdef SMEAR
