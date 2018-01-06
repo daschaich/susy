@@ -44,11 +44,11 @@ int grsource(Twist_Fermion *src) {
   int avs_iters;
   Real size_r;
   complex grn;
-  Twist_Fermion **psim = malloc(Norder * sizeof(**psim));
+  Twist_Fermion **psim = malloc(sizeof **psim * Norder);
 
   // Allocate psim (will be zeroed in congrad_multi)
   for (i = 0; i < Norder; i++)
-    psim[i] = malloc(sites_on_node * sizeof(Twist_Fermion));
+    psim[i] = malloc(sizeof(Twist_Fermion) * sites_on_node);
 
   // Begin with pure gaussian random numbers
   FORALLSITES(i, s) {

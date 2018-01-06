@@ -13,7 +13,7 @@ void make_lattice() {
   // Allocate space for lattice
   node0_printf("Mallocing %.1f MBytes per core for lattice\n",
                (double)sites_on_node * sizeof(site) / 1e6);
-  lattice = malloc(sites_on_node * sizeof(*lattice));
+  lattice = malloc(sizeof *lattice * sites_on_node);
   if (lattice == NULL) {
     printf("node%d: no room for lattice\n", this_node);
     terminate(1);
@@ -21,7 +21,7 @@ void make_lattice() {
 
   // Allocate address vectors
   for (i = 0; i < N_POINTERS; i++) {
-    gen_pt[i] = malloc(sites_on_node * sizeof(char *));
+    gen_pt[i] = malloc(sizeof(char*) * sites_on_node);
     if (gen_pt[i] == NULL) {
       printf("node%d: no room for pointer array\n", this_node);
       terminate(1);

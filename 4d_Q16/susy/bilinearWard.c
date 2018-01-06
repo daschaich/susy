@@ -114,13 +114,13 @@ int bilinearWard() {
   matrix tmat;
   Twist_Fermion *g_rand, *src, **psim;
 
-  g_rand = malloc(sites_on_node * sizeof(*g_rand));
-  src = malloc(sites_on_node * sizeof(*src));
+  g_rand = malloc(sizeof *g_rand * sites_on_node);
+  src = malloc(sizeof *src * sites_on_node);
 
   // Hack a basic CG out of the multi-mass CG
   Norder = 1;
-  psim = malloc(sizeof(**psim));
-  psim[0] = malloc(sites_on_node * sizeof(Twist_Fermion));
+  psim = malloc(sizeof **psim);
+  psim[0] = malloc(sizeof(Twist_Fermion) * sites_on_node);
   shift[0] = 0;
 
   // Normalization: sum over NUMLINK but divide by volume

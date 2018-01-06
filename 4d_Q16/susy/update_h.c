@@ -509,9 +509,9 @@ void detF(matrix *eta, matrix *psi[NUMLINK], int sign) {
   }
 
   // Now we are ready to gather, accumulate and add to force
-  complex *plaq_term = malloc(sites_on_node * sizeof(*plaq_term));
-  complex *inv_term = malloc(sites_on_node * sizeof(*inv_term));
-  complex *adj_term = malloc(sites_on_node * sizeof(*adj_term));
+  complex *plaq_term = malloc(sizeof *plaq_term * sites_on_node);
+  complex *inv_term = malloc(sizeof *inv_term * sites_on_node);
+  complex *adj_term = malloc(sizeof *adj_term * sites_on_node);
 
   // Now we are ready to gather, accumulate and add to force
   // TODO: Could try to overlap these gathers, but that looks nasty...
@@ -910,7 +910,7 @@ double fermion_force(Real eps, Twist_Fermion *src, Twist_Fermion **sol) {
   register site *s;
   int mu, n;
   double returnit = 0.0;
-  matrix **fullforce = malloc(NUMLINK * sizeof(**fullforce));
+  matrix **fullforce = malloc(sizeof **fullforce * NUMLINK);
 
 #ifdef FORCE_DEBUG
   int kick, ii, jj, iters = 0;

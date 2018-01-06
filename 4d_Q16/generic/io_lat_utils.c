@@ -316,8 +316,8 @@ void write_gauge_info_file(gauge_file *gf) {
 // Set up the input gauge file and gauge header structures
 gauge_file* setup_input_gauge_file(char *filename) {
   char myname[] = "setup_input_gauge_file";
-  gauge_file *gf = malloc(sizeof(*gf));
-  gauge_header *gh = malloc(sizeof(*gh));
+  gauge_file *gf = malloc(sizeof *gf);
+  gauge_header *gh = malloc(sizeof *gh);
 
   // Check that file structure and header structure were set up successfully
   if (gf == NULL) {
@@ -349,8 +349,8 @@ gauge_file* setup_input_gauge_file(char *filename) {
 // Set up the output gauge file and gauge header structure
 gauge_file* setup_output_gauge_file() {
   int i;
-  gauge_file *gf = malloc(sizeof(*gf));
-  gauge_header *gh = malloc(sizeof(*gh));
+  gauge_file *gf = malloc(sizeof *gf);
+  gauge_header *gh = malloc(sizeof *gh);
   time_t time_stamp;
 
   // Check that file structure and header structure were set up successfully
@@ -458,7 +458,7 @@ void read_site_list(gauge_file *gf) {
      natural order */
 
   if (gf->header->order != NATURAL_ORDER) {
-    gf->rank2rcv = malloc(volume * sizeof(int32type));
+    gf->rank2rcv = malloc(sizeof(int32type) * volume);
     if (gf->rank2rcv == NULL) {
       printf("read_site_list: Can't malloc rank2rcv table\n");
       terminate(1);

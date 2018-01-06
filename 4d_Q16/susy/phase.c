@@ -228,9 +228,9 @@ void phase() {
   int Ndat = 16 * DIMF, shift = this_node * sites_on_node * Ndat;
   double phase, log_mag, tr, dtime;
   complex tc, tc2;
-  complex *diag = malloc(volume * Ndat * sizeof(*diag));
-  complex *MonC = malloc(sites_on_node * Ndat * sizeof(*MonC));
-  complex **Q = malloc(volume * Ndat * sizeof(**Q));
+  complex *diag = malloc(sizeof *diag * volume * Ndat);
+  complex *MonC = malloc(sizeof *MonC * sites_on_node * Ndat);
+  complex **Q = malloc(sizeof **Q * volume * Ndat);
 
   if (Q == NULL) {
     printf("phase: can't malloc Q\n");
@@ -248,7 +248,7 @@ void phase() {
   if (ckpt_load < 0)
     ckpt_load = 0;    // Cheap trick to allocate minimum necessary columns
   for (i = ckpt_load; i < volume * Ndat; i++) {
-    Q[i] = malloc(sites_on_node * Ndat * sizeof(complex));
+    Q[i] = malloc(sizeof(complex) * sites_on_node * Ndat);
     diag[i] = cmplx(0.0, 0.0);    // Initialize to zero
   }
   if (Q[volume * Ndat - 1] == NULL) {

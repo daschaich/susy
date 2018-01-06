@@ -19,8 +19,8 @@ void X(Twist_Fermion *src, Twist_Fermion *dest) {
 
   // Hack a basic CG out of the multi-mass CG
   Norder = 1;
-  psim = malloc(sizeof(**psim));
-  psim[0] = malloc(sites_on_node * sizeof(Twist_Fermion));
+  psim = malloc(sizeof **psim);
+  psim[0] = malloc(sizeof(Twist_Fermion) * sites_on_node);
   shift[0] = OmStar * OmStar;
 
   congrad_multi(src, psim, niter, rsqmin, &size_r);
@@ -42,8 +42,8 @@ void Z(Twist_Fermion *src, Twist_Fermion *dest) {
 
   // Hack a basic CG out of the multi-mass CG
   Norder = 1;
-  psim = malloc(sizeof(**psim));
-  psim[0] = malloc(sites_on_node * sizeof(Twist_Fermion));
+  psim = malloc(sizeof **psim);
+  psim[0] = malloc(sizeof(Twist_Fermion) * sites_on_node);
   shift[0] = OmSq;
 
   // This is more compact, but the subtraction in X(src)

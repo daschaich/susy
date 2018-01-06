@@ -34,8 +34,8 @@ double local_plaquette(double *ss_plaq, double *st_plaq) {
 
 #ifdef LOCAL_PLAQ
   int xx;
-  double *plaq_perp = malloc(MY_N * sizeof(*plaq_perp));
-  double *plaq_prll = malloc(MY_N * sizeof(*plaq_prll));
+  double *plaq_perp = malloc(sizeof *plaq_perp * MY_N);
+  double *plaq_prll = malloc(sizeof *plaq_prll * MY_N);
 
   for (xx = 0; xx < MY_N; xx++) {
     plaq_perp[xx] = 0.0;
