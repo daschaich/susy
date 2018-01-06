@@ -41,7 +41,7 @@ int congrad_multi(Twist_Fermion *src, Twist_Fermion **psim,
   double *alpha    = malloc(sizeof *alpha * Norder);
   double rsqj;
   complex ctmp;
-  Twist_Fermion **pm = malloc(sizeof **pm * Norder);
+  Twist_Fermion **pm = malloc(sizeof(Twist_Fermion*) * Norder);
   for (i = 1; i < Norder; i++)    // !!!
     pm[i] = malloc(sizeof(Twist_Fermion) * sites_on_node);
 

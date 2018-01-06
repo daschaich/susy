@@ -19,13 +19,16 @@ void X(Twist_Fermion *src, Twist_Fermion *dest) {
 
   // Hack a basic CG out of the multi-mass CG
   Norder = 1;
-  psim = malloc(sizeof **psim);
+  psim = malloc(sizeof(Twist_Fermion*));
   psim[0] = malloc(sizeof(Twist_Fermion) * sites_on_node);
   shift[0] = OmStar * OmStar;
 
   congrad_multi(src, psim, niter, rsqmin, &size_r);
   FORALLSITES(i, s)
     scalar_mult_add_TF(&(src[i]), &(psim[0][i]), m2OmSq, &(dest[i]));
+
+  free(psim[0]);
+  free(psim);
 }
 
 // dest = (2X^2 - 1 - step_eps) src / (1 - step_eps)
@@ -42,7 +45,7 @@ void Z(Twist_Fermion *src, Twist_Fermion *dest) {
 
   // Hack a basic CG out of the multi-mass CG
   Norder = 1;
-  psim = malloc(sizeof **psim);
+  psim = malloc(sizeof(Twist_Fermion*));
   psim[0] = malloc(sizeof(Twist_Fermion) * sites_on_node);
   shift[0] = OmSq;
 
@@ -66,6 +69,9 @@ void Z(Twist_Fermion *src, Twist_Fermion *dest) {
     scalar_mult_sum_TF(&(z_rand[i]), m4OmSq, &(dest[i]));
     sum_TF(&(src[i]), &(dest[i]));
   }
+
+  free(psim[0]);
+  free(psim);
 }
 // -----------------------------------------------------------------
 

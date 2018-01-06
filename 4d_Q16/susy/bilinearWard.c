@@ -119,7 +119,7 @@ int bilinearWard() {
 
   // Hack a basic CG out of the multi-mass CG
   Norder = 1;
-  psim = malloc(sizeof **psim);
+  psim = malloc(sizeof(Twist_Fermion*));
   psim[0] = malloc(sizeof(Twist_Fermion) * sites_on_node);
   shift[0] = 0;
 

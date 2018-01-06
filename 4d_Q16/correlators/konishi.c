@@ -119,7 +119,7 @@ void correlator_r() {
   Real one_ov_block = 1.0 / (Real)Nblock, blockNorm = 1.0 / (Real)Nmeas;
   Real std_norm = 1.0 / (Real)(Nblock * (Nblock - 1.0));
   Real ave, err, tr;
-  Kcorrs **corr = malloc(sizeof **corr * Nblock);
+  Kcorrs **corr = malloc(sizeof(Kcorrs*) * Nblock);
 
   // Set up Nblock Konishi and SUGRA correlators
   // Will be initialized within block loop below
