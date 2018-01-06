@@ -77,14 +77,14 @@ int update() {
   int j, n, iters = 0;
   Real final_rsq;
   double startaction, endaction, change;
-  Twist_Fermion **src = malloc(Nroot * sizeof(**src));
-  Twist_Fermion ***psim = malloc(Nroot * sizeof(***psim));
+  Twist_Fermion **src = malloc(sizeof **src * Nroot);
+  Twist_Fermion ***psim = malloc(sizeof ***psim * Nroot);
 
   for (n = 0; n < Nroot; n++) {
-    src[n] = malloc(sites_on_node * sizeof(Twist_Fermion));
-    psim[n] = malloc(Norder * sizeof(Twist_Fermion*));
+    src[n] = malloc(sizeof Twist_Fermion * sites_on_node);
+    psim[n] = malloc(sizeof Twist_Fermion* * Norder);
     for (j = 0; j < Norder; j++)
-      psim[n][j] = malloc(sites_on_node * sizeof(Twist_Fermion));
+      psim[n][j] = malloc(sizeof Twist_Fermion * sites_on_node);
   }
 
   // Refresh the momenta

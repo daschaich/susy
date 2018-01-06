@@ -42,7 +42,7 @@ Real A4map(x_in, y_in, z_in, t_in) {
 int count_points(Real MAX_r) {
   int total = 0, this, j, x_dist, y_dist, z_dist, t_dist;
   int y_start, z_start, t_start;
-  int *count = malloc(MAX_pts * sizeof(*count));
+  int *count = malloc(sizeof *count * MAX_pts);
   Real tr;
 
   for (x_dist = 0; x_dist <= MAX_X; x_dist++) {

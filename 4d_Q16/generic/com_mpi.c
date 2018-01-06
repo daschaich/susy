@@ -242,7 +242,7 @@ void initialize_machine(int *argc, char ***argv) {
     num_gather_ids = 1024;
 
   id_offset = 0;
-  id_array = malloc(num_gather_ids * sizeof(*id_array));
+  id_array = malloc(sizeof *id_array * num_gather_ids);
   for (i = 0; i < num_gather_ids; ++i)
     id_array[i] = 0;
 
@@ -328,7 +328,7 @@ void g_floatsum(Real *fpt) {
 // Sum a vector of Reals over all nodes
 void g_vecfloatsum(Real *fpt, int length) {
   int i;
-  Real *work = malloc(length * sizeof(*work));
+  Real *work = malloc(sizeof *work * length);
   MPI_Allreduce(fpt, work, length, OUR_MPI_REAL, MPI_SUM, MPI_COMM_WORLD);
   for (i = 0; i<length; i++)
     fpt[i] = work[i];
@@ -345,7 +345,7 @@ void g_doublesum(double *dpt) {
 // Sum a vector of doubles over all nodes
 void g_vecdoublesum(double *dpt, int length) {
   int i;
-  double *work = malloc(length * sizeof(*work));
+  double *work = malloc(sizeof *work * length);
   MPI_Allreduce(dpt, work, length, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
   for (i = 0; i < length; i++)
     dpt[i] = work[i];
@@ -362,7 +362,7 @@ void g_complexsum(complex *cpt) {
 // Sum a vector of complex over all nodes
 void g_veccomplexsum(complex *cpt, int length) {
   int i;
-  complex *work = malloc(length * sizeof(*work));
+  complex *work = malloc(sizeof *work * length);
   MPI_Allreduce(cpt, work, 2 * length, OUR_MPI_REAL, MPI_SUM, MPI_COMM_WORLD);
   for (i = 0; i < length; i++)
     cpt[i] = work[i];
@@ -379,7 +379,7 @@ void g_dcomplexsum(double_complex *cpt) {
 // Sum a vector of double_complex over all nodes
 void g_vecdcomplexsum(double_complex *cpt, int length) {
   int i;
-  double_complex *work = malloc(length * sizeof(*work));
+  double_complex *work = malloc(sizeof *work * length);
   MPI_Allreduce(cpt, work, 2 * length, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
   for (i = 0; i < length; i++)
     cpt[i] = work[i];
@@ -581,7 +581,7 @@ void make_nn_gathers() {
   }
 
   gather_array_len = 8;
-  gather_array = malloc(gather_array_len * sizeof(*gather_array));
+  gather_array = malloc(sizeof *gather_array * gather_array_len);
   if (gather_array == NULL) {
     printf("make_nn_gathers: node%d can't malloc gather_array\n", this_node);
     terminate(1);
@@ -620,7 +620,7 @@ static comlink* copy_list_switch(comlink *old_compt, int *send_subl) {
     return NULL;
 
   int r_subl, s_subl;
-  comlink *compt, *firstpt = malloc(sizeof(*firstpt));
+  comlink *compt, *firstpt = malloc(sizeof *firstpt);
   compt = firstpt;
 
   do {
@@ -633,8 +633,9 @@ static comlink* copy_list_switch(comlink *old_compt, int *send_subl) {
     compt->n_subl_connected[2] = old_compt->n_subl_connected[2];
     compt->sitelist[2] = old_compt->sitelist[2];
     if (old_compt->nextcomlink != NULL)
-      compt->nextcomlink = (comlink *)malloc(sizeof(comlink));
-    else compt->nextcomlink = NULL;
+      compt->nextcomlink = malloc(sizeof(comlink));
+    else
+      compt->nextcomlink = NULL;
     old_compt = old_compt->nextcomlink;
     compt = compt->nextcomlink;
   } while (old_compt != NULL);
@@ -658,7 +659,7 @@ static void sort_site_list(
 
   if (n == 0)
     return;
-  key = malloc(n * sizeof(*key));
+  key = malloc(sizeof *key * n);
   if (key == NULL) {
     printf("sort_site_list: node%d can't malloc key\n", mynode());
     terminate(1);
@@ -706,23 +707,22 @@ static comlink* make_send_receive_list(
   site *s;
   int x, y, z, t;
   int *sbuf[2];  /* to be malloc'd */
-  int *tbuf;          /* to be malloc'd */
-  comlink **combuf; /* to be malloc'd, remember where comlinks are */
+  int *tbuf = malloc(sizeof *tbuf * numnodes());
+  // Remember where comlinks are
+  comlink **combuf = malloc(sizeof(comlink*) * numnodes());
   comlink *compt, **comptpt;
   comlink *firstpt;
 
   /* make temporary buffers of numnodes() integers to count numbers of
      neighbors in each sublattice on each node */
-  for (subl=0; subl<2; subl++) {
-    sbuf[subl] = malloc(numnodes() * sizeof(int));
+  for (subl = 0; subl < 2; subl++) {
+    sbuf[subl] = malloc(sizeof(int) * numnodes());
     // Clear neighbor_numbers
     for (i = 0; i < numnodes(); i++)
       sbuf[subl][i] = 0;
   }
-  tbuf = malloc(numnodes() * sizeof(*tbuf));
   for (i = 0; i < numnodes(); i++)
     tbuf[i] = 0;
-  combuf = malloc(numnodes() * sizeof(comlink *));
 
   /* scan sites in lattice */
   FORALLSITES(i, s) {
@@ -756,7 +756,7 @@ static comlink* make_send_receive_list(
     if (tbuf[j] == 0)
       continue;   /* no neighbors on this node */
 
-    compt = malloc(sizeof(*compt));
+    compt = malloc(sizeof *compt);
     *comptpt = compt;
     combuf[j] = compt;  /* to make it easy to find again */
     compt->nextcomlink = NULL;  /* currently terminates list */
@@ -765,10 +765,10 @@ static comlink* make_send_receive_list(
     for (subl = 0; subl < 2; subl++) {
       compt->n_subl_connected[subl] = sbuf[subl][j];
     }
-    compt->sitelist[0] = compt->sitelist[2] =
-      (int *)malloc(tbuf[j]*sizeof(int));
-    for (subl=1; subl<2; subl++)
-      compt->sitelist[subl] = (compt->sitelist[subl-1]) + sbuf[subl-1][j];
+    compt->sitelist[2] = malloc(sizeof(int) * tbuf[j]);
+    compt->sitelist[0] = compt->sitelist[2];
+    for (subl = 1; subl < 2; subl++)
+      compt->sitelist[subl] = (compt->sitelist[subl - 1]) + sbuf[subl - 1][j];
     /* sitelist[...] must be filled in later */
     comptpt = &(compt->nextcomlink);  /* linked list, if we
           extend it this will get address of next comlink. */
@@ -777,7 +777,8 @@ static comlink* make_send_receive_list(
 
   /* clear neighbor_numbers, to be used as counters now */
   for (subl=0; subl<2; subl++) {
-    for (i = 0; i < numnodes(); i++) sbuf[subl][i] = 0;
+    for (i = 0; i < numnodes(); i++)
+      sbuf[subl][i] = 0;
   }
 
   /* scan sites in node again */
@@ -830,9 +831,9 @@ static id_list_t* make_id_list(
   int n_recv,          /* number of receives */
   comlink *send)       /* neighborlist_send */
 {
-  int i, *buf = malloc(n_recv * sizeof(*buf));
+  int i, *buf = malloc(sizeof *buf * n_recv);
   id_list_t *tol_top, *tol, **tol_next;
-  MPI_Request sreq, *req = malloc(n_recv * sizeof(*req));
+  MPI_Request sreq, *req = malloc(sizeof *req * n_recv);
   MPI_Status stat;
 
   for (i = 0; recv != NULL; ++i, recv=recv->nextcomlink) {
@@ -844,7 +845,8 @@ static id_list_t* make_id_list(
 
   tol_next = &tol_top;
   while (send != NULL) {
-    tol = *tol_next = (id_list_t *)malloc(sizeof(id_list_t));
+    *tol_next = malloc(sizeof(id_list_t));
+    tol = *tol_next;
     MPI_Irecv(&i, 1, MPI_INT, send->othernode, 0, MPI_COMM_WORLD, &sreq);
     MPI_Wait(&sreq, &stat);
     tol->id_offset = i;
@@ -897,14 +899,14 @@ int make_gather(
   }
 
   dir = n_gathers - 1;  // Index of gather we are working on
-  gather_array[dir].neighbor = malloc(sites_on_node * sizeof(int));
+  gather_array[dir].neighbor = malloc(sizeof(int) * sites_on_node);
   if (gather_array[dir].neighbor == NULL) {
     printf("make_gather: node%d: no room for neighbor vector\n", this_node);
     terminate(1);
   }
   if (inverse == WANT_INVERSE) {
     dir = n_gathers - 2;  // Index of gather we are working on
-    gather_array[dir].neighbor = malloc(sites_on_node * sizeof(int));
+    gather_array[dir].neighbor = malloc(sizeof(int) * sites_on_node);
     if (gather_array[dir].neighbor == NULL) {
       printf("make_gather: node%d no room for neighbor vector\n", this_node);
       terminate(1);
@@ -912,7 +914,7 @@ int make_gather(
   }
 
   if (want_even_odd == ALLOW_EVEN_ODD && parity_conserve != SCRAMBLE_PARITY) {
-    send_subl = malloc(2 * sizeof(*send_subl));
+    send_subl = malloc(sizeof *send_subl * 2);
     if (send_subl == NULL) {
       printf("node%d: no room for send_subl\n", this_node);
       terminate(1);
@@ -1186,7 +1188,7 @@ msg_tag* declare_strided_gather(
   }
 
   // Allocate the message tag
-  mtag = malloc(sizeof(*mtag));
+  mtag = malloc(sizeof *mtag);
   mtag->nids = gt->offset_increment;
   mtag->ids = NULL;
 
@@ -1203,7 +1205,7 @@ msg_tag* declare_strided_gather(
   if (gt->n_recv_msgs == 0)
     mrecv = NULL;
   else {
-    mrecv = malloc(gt->n_recv_msgs * sizeof(*mrecv));
+    mrecv = malloc(sizeof *mrecv * gt->n_recv_msgs);
     if (mrecv == NULL) {
       printf("declare_strided_gather: node%d can't malloc mrecv\n", this_node);
       terminate(1);
@@ -1211,7 +1213,7 @@ msg_tag* declare_strided_gather(
   }
   mtag->recv_msgs = mrecv;
 
-  for (i=0, compt = gt->neighborlist_send; compt != NULL;
+  for (i = 0, compt = gt->neighborlist_send; compt != NULL;
        compt = compt->nextcomlink) {
     if (compt->n_subl_connected[subl]!=0) ++i;
   }
@@ -1219,7 +1221,7 @@ msg_tag* declare_strided_gather(
   if (gt->n_send_msgs == 0)
     msend = NULL;
   else {
-    msend = (msg_sr_t *)malloc(gt->n_send_msgs*sizeof(msg_sr_t));
+    msend = malloc(sizeof(msg_sr_t) * gt->n_send_msgs);
     if (msend == NULL) {
       printf("NO ROOM for msend, node%d\n", mynode());
       terminate(1);
@@ -1228,14 +1230,14 @@ msg_tag* declare_strided_gather(
   mtag->send_msgs = msend;
 
   /* for each node which has neighbors of my sites */
-  for (i=0, compt = gt->neighborlist; compt != NULL;
+  for (i = 0, compt = gt->neighborlist; compt != NULL;
        i++, compt = compt->nextcomlink) {
     if (compt->n_subl_connected[subl] == 0) continue;
     mrecv[i].msg_node = compt->othernode;
     mrecv[i].id_offset = i;
     mrecv[i].msg_size = size*compt->n_subl_connected[subl];
     mrecv[i].msg_buf = NULL;
-    gmem = (gmem_t *)malloc(sizeof(gmem_t));
+    gmem = malloc(sizeof(gmem_t));
     mrecv[i].gmem = gmem;
     gmem->num = compt->n_subl_connected[subl];
     gmem->sitelist = compt->sitelist[subl];
@@ -1254,7 +1256,7 @@ msg_tag* declare_strided_gather(
     msend[i].id_offset = idl->id_offset;
     msend[i].msg_size = size*compt->n_subl_connected[subl];
     msend[i].msg_buf = NULL;
-    gmem = (gmem_t *)malloc(sizeof(gmem_t));
+    gmem = malloc(sizeof(gmem_t));
     msend[i].gmem = gmem;
     gmem->num = compt->n_subl_connected[subl];
     gmem->sitelist = compt->sitelist[subl];
@@ -1282,7 +1284,8 @@ void prepare_gather(msg_tag *mtag) {
 
   nids = mtag->nids;
   if (nids != 0) {
-    mtag->ids = ids = malloc(nids * sizeof(*ids));
+    ids = malloc(sizeof *ids * nids);
+    mtag->ids = ids;
     for (i = 0, j = id_offset; i < nids; i++, j = (j + 1) % num_gather_ids) {
       // Find next available type
       while (id_array[j] != 0) {
@@ -1305,7 +1308,8 @@ void prepare_gather(msg_tag *mtag) {
       node0_printf("error: unexpected zero msg_size\n");
       terminate(1);
     }
-    mrecv[i].msg_buf = tpt = (char *)malloc(mrecv[i].msg_size);
+    tpt = malloc(mrecv[i].msg_size);
+    mrecv[i].msg_buf = tpt;
     if (tpt == NULL) {
       printf("NO ROOM for msg_buf, node%d\n", mynode());
       terminate(1);
@@ -1627,7 +1631,7 @@ void accumulate_gather(msg_tag **mmtag, msg_tag *mtag) {
   msg_tag *amtag;
 
   if (*mmtag == NULL) {
-    amtag = malloc(sizeof(*amtag));
+    amtag = malloc(sizeof *amtag);
     if (amtag == NULL) {
       printf("accumulate_gather: node%d can't malloc amtag\n",mynode());
       terminate(1);
@@ -1828,7 +1832,7 @@ msg_tag* start_general_strided_gather(
   from_nodes[j].count++;
       else {
   if (n_recv_msgs == 0) {
-    from_nodes = malloc(sizeof(*from_nodes));
+    from_nodes = malloc(sizeof *from_nodes);
     from_nodes[0].node = othernode;
     from_nodes[0].count = 1;
     n_recv_msgs++;
@@ -1871,7 +1875,7 @@ msg_tag* start_general_strided_gather(
       }
       else {
   if (n_send_msgs == 0) {
-    to_nodes = malloc(sizeof(*to_nodes));
+    to_nodes = malloc(sizeof *to_nodes);
     to_nodes[0].node = othernode;
     to_nodes[0].count = 1;
     n_send_msgs++;
@@ -1886,11 +1890,11 @@ msg_tag* start_general_strided_gather(
     }
   }
 
-  mtag = malloc(sizeof(*mtag));
+  mtag = malloc(sizeof *mtag);
   if (n_recv_msgs == 0)
     mrecv = NULL;
   else {
-    mrecv = malloc(n_recv_msgs * sizeof(*mrecv));
+    mrecv = malloc(sizeof *mrecv * n_recv_msgs);
     if (mrecv == NULL) {
       printf("start_general_strided_gather: node%d can't malloc mrecv\n",
              mynode());
@@ -1900,7 +1904,7 @@ msg_tag* start_general_strided_gather(
   if (n_send_msgs == 0)
     msend = NULL;
   else {
-    msend = malloc(n_send_msgs * sizeof(*msend));
+    msend = malloc(sizeof *msend * n_send_msgs);
     if (msend == NULL) {
       printf("start_general_strided_gather: node%d can't malloc msend\n",
              mynode());
@@ -1918,8 +1922,8 @@ msg_tag* start_general_strided_gather(
     /* allocate buffer to receive neighbors */
     nsites = from_nodes[i].count;
     mrecv[i].msg_node = from_nodes[i].node;
-    mrecv[i].msg_size = nsites*tsize;
-    mrecv[i].msg_buf = (char *)malloc(nsites*tsize);
+    mrecv[i].msg_size = tsize * nsites;
+    mrecv[i].msg_buf = malloc(mrecv[i].msg_size);
     if (mrecv[i].msg_buf == NULL) {
       printf("start_general_strided_gather: node%d can't malloc msg_buf\n",
              mynode());
@@ -1934,7 +1938,7 @@ msg_tag* start_general_strided_gather(
   /* for each node whose neighbors I have */
   for (i = 0; i < n_send_msgs; i++) {
     /* Allocate buffer to gather data. */
-    tpt = malloc(to_nodes[i].count * tsize);
+    tpt = malloc(tsize * to_nodes[i].count);
     if (tpt == NULL) {
       printf("start_general_strided_gather: node%d can't malloc tpt\n",
              mynode());

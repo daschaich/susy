@@ -94,16 +94,16 @@ int initial_set() {
 
   // Set up stuff for RHMC and multi-mass CG
   Nroot = par_buf.Nroot;
-  fnorm = malloc(Nroot * sizeof(fnorm));
-  max_ff = malloc(Nroot * sizeof(max_ff));
+  fnorm = malloc(sizeof fnorm * Nroot);
+  max_ff = malloc(sizeof max_ff * Nroot);
 
   Norder = par_buf.Norder;
-  amp = malloc(Norder * sizeof(amp));
-  amp4 = malloc(Norder * sizeof(amp4));
-  amp8 = malloc(Norder * sizeof(amp8));
-  shift = malloc(Norder * sizeof(shift));
-  shift4 = malloc(Norder * sizeof(shift4));
-  shift8 = malloc(Norder * sizeof(shift8));
+  amp = malloc(sizeof amp * Norder);
+  amp4 = malloc(sizeof amp4 * Norder);
+  amp8 = malloc(sizeof amp8 * Norder);
+  shift = malloc(sizeof shift * Norder);
+  shift4 = malloc(sizeof shift4 * Norder);
+  shift8 = malloc(sizeof shift8 * Norder);
 
   this_node = mynode();
   number_of_nodes = numnodes();
@@ -461,8 +461,8 @@ int readin(int prompt) {
   // Include some mallocs here (make_fields has already been called)
   // (This memory usage will not be reported to the user)
   Nvec = par_buf.Nvec;
-  eigVal = malloc(Nvec * sizeof(*eigVal));
-  eigVec = malloc(Nvec * sizeof(*eigVec));
+  eigVal = malloc(sizeof *eigVal * Nvec);
+  eigVec = malloc(sizeof *eigVec * Nvec);
   for (i = 0; i < Nvec; i++)
     FIELD_ALLOC(eigVec[i], Twist_Fermion);
 
@@ -482,8 +482,8 @@ int readin(int prompt) {
 
 #ifdef CHEB
   cheb_order = par_buf.cheb_order;
-  cheb_coeff = malloc(cheb_order * sizeof(Real));
-  cheb_err = malloc(cheb_order * sizeof(Real));
+  cheb_coeff = malloc(sizeof(Real) * cheb_order);
+  cheb_err = malloc(sizeof(Real) * cheb_order);
 
   lambda_min = par_buf.lambda_min;
   lambda_max = par_buf.lambda_max;
@@ -491,17 +491,17 @@ int readin(int prompt) {
 
 #ifdef MODE
   // Save sources to reuse for each Omega
-  source = malloc(Nstoch * sizeof(*source));
+  source = malloc(sizeof *source * Nstoch);
   for (i = 0; i < Nstoch; i++)
     FIELD_ALLOC(source[i], Twist_Fermion);
 
   step_order = par_buf.step_order;
-  step_coeff = malloc((step_order + 1) * sizeof(Real));
+  step_coeff = malloc(sizeof(Real) * (step_order + 1));
 
   numOmega = par_buf.numOmega;
-  mode = malloc(numOmega * sizeof(Real));
-  err = malloc(numOmega * sizeof(Real));
-  Omega = malloc(numOmega * sizeof(Real));
+  mode = malloc(sizeof(Real) * numOmega);
+  err = malloc(sizeof(Real) * numOmega);
+  Omega = malloc(sizeof(Real) * numOmega);
   for (i = 0; i < numOmega; i++)
     Omega[i] = par_buf.Omega[i];
 #endif
@@ -521,13 +521,13 @@ int readin(int prompt) {
 
   // Allocate arrays to be used by LAPACK in determinant.c
   // Needs to be above compute_Uinv()
-  ipiv = malloc(NCOL * sizeof(*ipiv));
-  store = malloc(2 * NCOL * NCOL * sizeof(*store));
-  work = malloc(4 * NCOL * sizeof(*work));
+  ipiv = malloc(sizeof *ipiv * NCOL);
+  store = malloc(sizeof *store * 2 * NCOL * NCOL);
+  work = malloc(sizeof *work * 4 * NCOL);
 
   // Allocate some more arrays to be used by LAPACK in unit.c
-  Rwork = malloc((3 * NCOL - 2) * sizeof(*Rwork));
-  eigs = malloc(NCOL * sizeof(*eigs));
+  Rwork = malloc(sizeof *Rwork * (3 * NCOL - 2));
+  eigs = malloc(sizeof *eigs * NCOL);
 
   // Compute initial plaqdet, DmuUmu and Fmunu
   compute_plaqdet();

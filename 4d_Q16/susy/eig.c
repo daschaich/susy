@@ -182,10 +182,10 @@ int make_evs(int Nvec, Twist_Fermion **eigVec, double *eigVal, int flag) {
   register site* s;
   int i, j, k, mu, ivec, iter = 0, ret, Ndat = 16 * NCOL * NCOL;
   int maxn = sites_on_node * Ndat;
-  double check, *rnorms = malloc(Nvec * sizeof(*rnorms));
-  Complex_Z *workVecs = malloc(Nvec * maxn * sizeof(*workVecs));
+  double check, *rnorms = malloc(sizeof *rnorms * Nvec);
+  Complex_Z *workVecs = malloc(sizeof *workVecs * Nvec * maxn);
   static primme_params primme;
-  Twist_Fermion tTF, *tmpTF = malloc(sites_on_node * sizeof(*tmpTF));
+  Twist_Fermion tTF, *tmpTF = malloc(sizeof *tmpTF * sites_on_node);
 
   // Check memory allocations
   if (workVecs == NULL) {
@@ -336,13 +336,13 @@ void check_Dmat(int Nvec, Twist_Fermion **eigVec) {
   int ivec, jvec, stat = 0, unit = 1, doub = 2 * Nvec;
   double *store, *work, *eigs, *dum;
   double_complex tc, check;
-  Twist_Fermion *tmpTF = malloc(sites_on_node * sizeof(*tmpTF));
+  Twist_Fermion *tmpTF = malloc(sizeof *tmpTF * sites_on_node);
 
   // Allocate double arrays expected by LAPACK
-  store = malloc(2 * Nvec * Nvec * sizeof(*store));
-  work = malloc(4 * Nvec * sizeof(*work));
-  eigs = malloc(2 * Nvec * sizeof(*eigs));
-  dum = malloc(2 * sizeof(*dum));
+  store = malloc(sizeof *store * 2 * Nvec * Nvec);
+  work = malloc(sizeof *work * 4 * Nvec);
+  eigs = malloc(sizeof *eigs * 2 * Nvec);
+  dum = malloc(sizeof *dum * 2);
 
   // Hit each eigVec with D, then contract with every other eigVec
   for (ivec = 0; ivec < Nvec; ivec++) {

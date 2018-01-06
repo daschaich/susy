@@ -79,8 +79,8 @@ void konishi() {
 
   // Allocate and initialize Konishi and SUGRA operators on each time slice
   for (j = 0; j < N_K; j++) {
-    OK[j] = malloc(nt * sizeof(double));
-    OS[j] = malloc(nt * sizeof(double));
+    OK[j] = malloc(sizeof(double) * nt);
+    OS[j] = malloc(sizeof(double) * nt);
     for (t = 0; t < nt; t++) {
       OK[j][t] = 0.0;
       OS[j][t] = 0.0;

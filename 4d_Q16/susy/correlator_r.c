@@ -151,7 +151,7 @@ void correlator_r() {
   int *count, *temp, MAX_pts = 8 * MAX_X * MAX_X * MAX_X;
   Real MAX_r = 100.0 * MAX_X, tr;   // MAX_r to be overwritten
   Real *lookup, *sav;
-  Kops *ops = malloc(sites_on_node * sizeof(*ops));
+  Kops *ops = malloc(sizeof *ops * sites_on_node);
   Kcorrs *CK, *CS;
 
   // Find smallest scalar distance cut by imposing MAX_X
@@ -170,11 +170,11 @@ void correlator_r() {
 
   // Count number of unique scalar distances r < MAX_r
   // Copy sav and temp into lookup and count, respectively
-  sav = malloc(MAX_pts * sizeof(*sav));
-  temp = malloc(MAX_pts * sizeof(*temp));
+  sav = malloc(sizeof *sav * MAX_pts);
+  temp = malloc(sizeof *temp * MAX_pts);
   total_r = count_points(MAX_r, sav, temp, MAX_pts);
-  lookup = malloc(total_r * sizeof(*lookup));
-  count = malloc(total_r * sizeof(*count));
+  lookup = malloc(sizeof *lookup * total_r);
+  count = malloc(sizeof *count * total_r);
   for (j = 0; j < total_r; j++) {
     lookup[j] = sav[j];
     count[j] = temp[j];
@@ -183,8 +183,8 @@ void correlator_r() {
   free(temp);
 
   // Allocate correlator arrays now that we know how big they should be
-  CK = malloc(total_r * sizeof(*CK));
-  CS = malloc(total_r * sizeof(*CS));
+  CK = malloc(sizeof *CK * total_r);
+  CS = malloc(sizeof *CS * total_r);
 
   // Initialize operators and correlators
   FORALLSITES(i, s) {

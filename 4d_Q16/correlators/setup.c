@@ -213,7 +213,7 @@ int readin(int prompt) {
     strcpy(cfg[j], par_buf.cfg[j]);
 
   // Allocate Konishi and SUGRA operators now that we know tot_meas
-  ops = malloc(tot_meas * sizeof(**ops));
+  ops = malloc(sizeof **ops * tot_meas);
   for (j = 0; j < tot_meas; j++)
     FIELD_ALLOC(ops[j], Kops);
   size = (Real)(tot_meas * sizeof(Kops)) * sites_on_node;
@@ -232,19 +232,19 @@ int readin(int prompt) {
   // These two arrays only need to be of size total_r <= MAX_pts
   // but allocate MAX_pts memory for simplicity
   // Initialize to nonsense; can be used to check that they have been reset
-  lookup = malloc(MAX_pts * sizeof(*lookup));
-  norm = malloc(MAX_pts * sizeof(*norm));
+  lookup = malloc(sizeof *lookup * MAX_pts);
+  norm = malloc(sizeof *norm * MAX_pts);
   for (j = 0; j < MAX_pts; j++) {
     lookup[j] = -1.0;
     norm[j] = -1.0;
   }
 
   // Allocate arrays to be used by LAPACK in unit.c
-  ipiv = malloc(NCOL * sizeof(*ipiv));
-  store = malloc(2 * NCOL * NCOL * sizeof(*store));
-  work = malloc(4 * NCOL * sizeof(*work));
-  Rwork = malloc((3 * NCOL - 2) * sizeof(*Rwork));
-  eigs = malloc(NCOL * sizeof(*eigs));
+  ipiv = malloc(sizeof *ipiv * NCOL);
+  store = malloc(sizeof *store * 2 * NCOL * NCOL);
+  work = malloc(sizeof *work * 4 * NCOL);
+  Rwork = malloc(sizeof *Rwork * (3 * NCOL - 2));
+  eigs = malloc(sizeof *eigs * NCOL);
 
   return 0;
 }
