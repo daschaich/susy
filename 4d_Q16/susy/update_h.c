@@ -910,7 +910,7 @@ double fermion_force(Real eps, Twist_Fermion *src, Twist_Fermion **sol) {
   register site *s;
   int mu, n;
   double returnit = 0.0;
-  matrix **fullforce = malloc(sizeof **fullforce * NUMLINK);
+  matrix **fullforce = malloc(sizeof(matrix*) * NUMLINK);
 
 #ifdef FORCE_DEBUG
   int kick, ii, jj, iters = 0;

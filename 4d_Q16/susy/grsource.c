@@ -44,7 +44,7 @@ int grsource(Twist_Fermion *src) {
   int avs_iters;
   Real size_r;
   complex grn;
-  Twist_Fermion **psim = malloc(sizeof **psim * Norder);
+  Twist_Fermion **psim = malloc(sizeof(Twist_Fermion*) * Norder);
 
   // Allocate psim (will be zeroed in congrad_multi)
   for (i = 0; i < Norder; i++)

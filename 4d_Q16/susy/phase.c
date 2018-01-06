@@ -230,7 +230,7 @@ void phase() {
   complex tc, tc2;
   complex *diag = malloc(sizeof *diag * volume * Ndat);
   complex *MonC = malloc(sizeof *MonC * sites_on_node * Ndat);
-  complex **Q = malloc(sizeof **Q * volume * Ndat);
+  complex **Q = malloc(sizeof(complex*) * volume * Ndat);
 
   if (Q == NULL) {
     printf("phase: can't malloc Q\n");

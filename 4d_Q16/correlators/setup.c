@@ -213,7 +213,7 @@ int readin(int prompt) {
     strcpy(cfg[j], par_buf.cfg[j]);
 
   // Allocate Konishi and SUGRA operators now that we know tot_meas
-  ops = malloc(sizeof **ops * tot_meas);
+  ops = malloc(sizeof(Kops*) * tot_meas);
   for (j = 0; j < tot_meas; j++)
     FIELD_ALLOC(ops[j], Kops);
   size = (Real)(tot_meas * sizeof(Kops)) * sites_on_node;

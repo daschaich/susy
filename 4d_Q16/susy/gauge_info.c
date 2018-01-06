@@ -44,7 +44,7 @@ void write_appl_gauge_info(FILE *fp) {
 // Follow USQCD style for record XML
 char *create_QCDML() {
   size_t bytes = 0;
-  char *info = (char *)malloc(INFOSTRING_MAX);
+  char *info = malloc(INFOSTRING_MAX);
   size_t max = INFOSTRING_MAX;
   char begin[] = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><usqcdInfo><version>1.0</version>";
   char begin_info[] = "<info>";
