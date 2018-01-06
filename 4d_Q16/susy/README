@@ -47,8 +47,8 @@ Input parameter PBC = +/-1 chooses periodic or anti-periodic temporal BCs
 # ------------------------------------------------------------------
 # Sample input file with explanations:
 prompt 0    # If non-zero, prompt user to manually input each parameter
-nx 6        # Lattice volume is nx*ny*nz*nt
-ny 6
+nx 6        # Lattice volume is nx*ny*nz*nt and must be even
+ny 6        # (in fact, each processor must get an even number of sites)
 nz 6
 nt 6
 PBC -1      # Anti-periodic temporal boundary conditions for the fermions
