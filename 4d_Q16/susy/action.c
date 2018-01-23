@@ -12,12 +12,13 @@
 //   sum_mu [U_mu(x) * Udag_mu(x) - Udag_mu(x - mu) * U_mu(x - mu)]
 // Add plaquette determinant contribution if G is non-zero
 // Use tempmat and tempmat2 as temporary storage
+// TODO: Could overlap gathers...
 void compute_DmuUmu() {
   register int i;
   register site *s;
   int mu, nu, j;
   complex tc;
-  msg_tag *mtag0 = NULL;
+  msg_tag *mtag;
 
   FORALLDIR(mu) {
     FORALLSITES(i, s) {
@@ -26,9 +27,9 @@ void compute_DmuUmu() {
     }
 
     // Gather tempmat2 from below
-    mtag0 = start_gather_field(tempmat2, sizeof(matrix),
-                               goffset[mu] + 1, EVENANDODD, gen_pt[0]);
-    wait_gather(mtag0);
+    mtag = start_gather_field(tempmat2, sizeof(matrix),
+                              goffset[mu] + 1, EVENANDODD, gen_pt[0]);
+    wait_gather(mtag);
     if (mu == 0) {
       FORALLSITES(i, s)        // Initialize
         sub_matrix(&(tempmat[i]), (matrix *)(gen_pt[0][i]), &(DmuUmu[i]));
@@ -39,7 +40,7 @@ void compute_DmuUmu() {
         dif_matrix((matrix *)(gen_pt[0][i]), &(DmuUmu[i]));
       }
     }
-    cleanup_gather(mtag0);
+    cleanup_gather(mtag);
   }
 
   // Add plaquette determinant contribution if G is non-zero
@@ -66,33 +67,31 @@ void compute_DmuUmu() {
 
 // -----------------------------------------------------------------
 // For the gauge action and force, compute at each site
-//   U_mu(x) * U_mu(x + mu) - Udag_nu(x) * U_mu(x + nu)
-// Use tempmat and tempmat2 as temporary storage
+//   U_mu(x) * U_nu(x + mu) - U_nu(x) * U_mu(x + nu)
+// TODO: Could overlap gathers...
 void compute_Fmunu() {
   register int i;
   register site *s;
   int mu, nu, index;
-  matrix *mat0, *mat1;
-  msg_tag *mtag0 = NULL, *mtag1 = NULL;
+  matrix *mat;
+  msg_tag *mtag, *mtag2;
 
   FORALLDIR(mu) {
     for (nu = mu + 1; nu < NUMLINK; nu++) {
       index = plaq_index[mu][nu];
-      mtag0 = start_gather_site(F_OFFSET(link[nu]), sizeof(matrix),
-                                goffset[mu], EVENANDODD, gen_pt[0]);
-      mtag1 = start_gather_site(F_OFFSET(link[mu]), sizeof(matrix),
+      mtag = start_gather_site(F_OFFSET(link[nu]), sizeof(matrix),
+                               goffset[mu], EVENANDODD, gen_pt[0]);
+      mtag2 = start_gather_site(F_OFFSET(link[mu]), sizeof(matrix),
                                 goffset[nu], EVENANDODD, gen_pt[1]);
-      wait_gather(mtag0);
-      wait_gather(mtag1);
+      wait_gather(mtag);
+      wait_gather(mtag2);
       FORALLSITES(i, s) {
-        mat0 = (matrix *)(gen_pt[0][i]);
-        mat1 = (matrix *)(gen_pt[1][i]);
-        mult_nn(&(s->link[mu]), mat0, &(tempmat[i]));
-        mult_nn(&(s->link[nu]), mat1, &(tempmat2[i]));
-        sub_matrix(&(tempmat[i]), &(tempmat2[i]), &(Fmunu[index][i]));
+        mat = &(Fmunu[index][i]);
+        mult_nn(&(s->link[mu]), (matrix *)(gen_pt[0][i]), mat);
+        mult_nn_dif(&(s->link[nu]), (matrix *)(gen_pt[1][i]), mat);
       }
-      cleanup_gather(mtag0);
-      cleanup_gather(mtag1);
+      cleanup_gather(mtag);
+      cleanup_gather(mtag2);
     }
   }
 }
