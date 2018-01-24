@@ -34,153 +34,32 @@ void scalar_mult_sum_antiH(anti_hermitmat *b, Real s, anti_hermitmat *c) {
 
 
 // -----------------------------------------------------------------
-double gauge_force_flow() {
-  register int i, mu, nu;
-  register site *s;
-  char **local_pt[2][2];
-  int a, b, gather, flip = 0, index, next;
-  complex tc;
-  matrix tmat, tmat2, *mat[2];
-  msg_tag *tag[NUMLINK], *tag0[2], *tag1[2];
-
-  // Contribution from Fbar_{ab} F_{ab} term
-  // Start first set of gathers (mu = 0 and nu = 1)
-  for (mu = 0; mu < 2; mu++) {
-    local_pt[0][mu] = gen_pt[mu];
-    local_pt[1][mu] = gen_pt[2 + mu];
-  }
-  mat[0] = tempmat;
-  mat[1] = tempmat2;
-
-  tag0[0] = start_gather_site(F_OFFSET(link[1]), sizeof(matrix),
-                              goffset[0], EVENANDODD, local_pt[0][0]);
-
-  index = plaq_index[0][1];
-  FORALLSITES(i, s)     // mu = 0 < nu = 1
-    mult_an(&(Fmunu[index][i]), &(s->link[1]), &(mat[0][i]));
-  tag1[0] = start_gather_field(mat[0], sizeof(matrix),
-                               goffset[1] + 1, EVENANDODD, local_pt[0][1]);
-
-  // Main loop
-  FORALLDIR(mu) {
-    FORALLSITES(i, s)
-      clear_mat(&(S[mu][i]));
-
-    FORALLDIR(nu) {
-      if (mu == nu)
-        continue;
-
-      gather = (flip + 1) % 2;
-      if (mu < NUMLINK - 1 || nu < NUMLINK - 2) { // Start next gathers
-        if (nu == NUMLINK - 1) {
-          a = mu + 1;
-          b = 0;
-        }
-        else if (nu == mu - 1) {
-          a = mu;
-          b = nu + 2;
-        }
-        else {
-          a = mu;
-          b = nu + 1;
-        }
-
-        tag0[gather] = start_gather_site(F_OFFSET(link[b]),
-                                         sizeof(matrix), goffset[a],
-                                         EVENANDODD, local_pt[gather][0]);
-
-        next = plaq_index[a][b];
-        FORALLSITES(i, s) {
-          if (a > b) {
-            scalar_mult_matrix(&(Fmunu[next][i]), -1.0, &tmat);
-            mult_an(&tmat, &(s->link[b]), &(mat[gather][i]));
-          }
-          else
-            mult_an(&(Fmunu[next][i]), &(s->link[b]), &(mat[gather][i]));
-        }
-        tag1[gather] = start_gather_field(mat[gather], sizeof(matrix),
-                                          goffset[b] + 1, EVENANDODD,
-                                          local_pt[gather][1]);
-      }
-
-      index = plaq_index[mu][nu];
-      wait_gather(tag0[flip]);
-      wait_gather(tag1[flip]);
-      FORALLSITES(i, s) {
-        if (mu > nu) {
-          scalar_mult_matrix(&(Fmunu[index][i]), -1.0, &tmat);
-          mult_na((matrix *)local_pt[flip][0][i], &tmat, &tmat2);
-        }
-        else
-          mult_na((matrix *)local_pt[flip][0][i], &(Fmunu[index][i]), &tmat2);
-
-        sub_matrix(&tmat2, (matrix *)local_pt[flip][1][i], &tmat);
-        // !!!TODO: Sign is a guess that should be checked
-        // Can also move constant multiplication outside of the loop...
-        scalar_mult_dif_matrix(&tmat, 2.0, &(S[mu][i]));
-      }
-      cleanup_gather(tag0[flip]);
-      cleanup_gather(tag1[flip]);
-      flip = gather;
-    }
-
-    // !!!TODO: This is a guess that should be checked
-    FORALLSITES(i, s) {
-      adjoint(&(S[mu][i]), &tmat);
-      mat_copy(&tmat, &(S[mu][i]));
-    }
-  }
-}
-// -----------------------------------------------------------------
-
-
-
-// -----------------------------------------------------------------
-// Sum staples for direction dir over all other directions
-void compute_staple() {
-  register int i;
-  register site *s;
-  int dir, dir2;
-
-  FORALLSITES(i, s)
-    FORALLDIR(dir) {
-      mat_copy(&(s->link[dir]), &(s->mom[dir]));
-  }
-
-  FORALLDIR(dir) {
-    FORALLSITES(i, s)
-      clear_mat(&(staple[i]));
-
-    FORALLDIR(dir2) {
-      if (dir == dir2)
-        continue;
-      directional_staple(dir, dir2);
-    }
-
-    FORALLSITES(i, s)
-      mat_copy(&(staple[i]), &(S[dir][i]));
-  }
-}
-// -----------------------------------------------------------------
-
-
-
-// -----------------------------------------------------------------
 // Calculate Q = Q + f1 * Project_antihermitian_traceless(U.Sdag)
 //           U = exp(f2 * Q).U
 // S is the Lie derivative of the action being used to flow
 void update_flow(Real f1, Real f2) {
   register int i, dir;
   register site *s;
+  Real sav = 0.0;
   matrix tmat;
   anti_hermitmat tmat_ah;
 
   // This is where we can change the 'flow action'
-//  compute_staple();  // Standard Wilson action
-  gauge_force_flow();     // Should eventually pick up FbarF action (TODO!)
+  // !!!Non-zero kappa_u1 will overwrite desired s->f_U[dir]
+  if (kappa_u1 > IMAG_TOL) {
+    sav = kappa_u1;
+    kappa_u1 = 0.0;
+  }
+  gauge_force(0.0);       // Puts Lie derivative into s->f_U[dir]
+  if (sav > IMAG_TOL)
+    kappa_u1 = sav;
 
   FORALLDIR(dir) {
     FORALLSITES(i, s) {
+      // Extract flow action S[mu][i] from s->f_U[dir]
+      // !!!Sign is empirical
+      neg_adjoint(&(s->f_U[dir]), &(S[dir][i]));
+
       mult_na(&(s->link[dir]), &(S[dir][i]), &tmat);
       make_anti_hermitian(&tmat, &tmat_ah);
       // Q += f1 * U.S
