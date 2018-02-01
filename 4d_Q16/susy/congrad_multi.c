@@ -28,22 +28,22 @@ int congrad_multi(Twist_Fermion *src, Twist_Fermion **psim,
   register int i, j;
   register site *s;
   int N_iter, iteration = 0;
-  int *converged = malloc(Norder * sizeof(*converged));
+  int *converged = malloc(sizeof *converged * Norder);
   Real floatvar, floatvar2;     // SSE kluge
-  Real *floatvarj = malloc(Norder * sizeof(*floatvarj));
-  Real *floatvark = malloc(Norder * sizeof(*floatvark));
+  Real *floatvarj = malloc(sizeof *floatvarj * Norder);
+  Real *floatvark = malloc(sizeof *floatvark * Norder);
   double rsq, rsqnew, source_norm = 0.0, rsqstop, c1, c2, cd;
-  double *zeta_i   = malloc(Norder * sizeof(*zeta_i));
-  double *zeta_im1 = malloc(Norder * sizeof(*zeta_im1));
-  double *zeta_ip1 = malloc(Norder * sizeof(*zeta_ip1));
-  double *beta_i   = malloc(Norder * sizeof(*beta_i));
-  double *beta_im1 = malloc(Norder * sizeof(*beta_im1));
-  double *alpha    = malloc(Norder * sizeof(*alpha));
+  double *zeta_i   = malloc(sizeof *zeta_i * Norder);
+  double *zeta_im1 = malloc(sizeof *zeta_im1 * Norder);
+  double *zeta_ip1 = malloc(sizeof *zeta_ip1 * Norder);
+  double *beta_i   = malloc(sizeof *beta_i * Norder);
+  double *beta_im1 = malloc(sizeof *beta_im1 * Norder);
+  double *alpha    = malloc(sizeof *alpha * Norder);
   double rsqj;
   complex ctmp;
-  Twist_Fermion **pm = malloc(Norder * sizeof(**pm));
+  Twist_Fermion **pm = malloc(sizeof(Twist_Fermion*) * Norder);
   for (i = 1; i < Norder; i++)    // !!!
-    pm[i] = malloc(sites_on_node * sizeof(Twist_Fermion));
+    pm[i] = malloc(sizeof(Twist_Fermion) * sites_on_node);
 
   // Initialize zero initial guess, etc.
   // dest = 0, r = source, pm[j] = r

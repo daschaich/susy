@@ -15,12 +15,12 @@ void monopole() {
   msg_tag *mtag0, *mtag1;
 
   FORALLUPDIR(dir) {
-    charge[dir] = malloc(sites_on_node * sizeof(int));
-    phase[dir] = malloc(sites_on_node * sizeof(Real));
+    charge[dir] = malloc(sizeof(int) * sites_on_node);
+    phase[dir] = malloc(sizeof(Real) * sites_on_node);
   }
   FORALLUPDIR(dir) {
     FORALLUPDIR(dir2) {
-      mono[dir][dir2] = malloc(sites_on_node * sizeof(int));
+      mono[dir][dir2] = malloc(sizeof(int) * sites_on_node);
       FORALLSITES(i, s)
         mono[dir][dir2][i] = 0;     // Make sure we're initialized
     }

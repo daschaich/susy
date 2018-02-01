@@ -24,10 +24,10 @@ complex ploop_eig(int dir, int project, double *plpMod) {
   int j, k, t, len = nt;
   int size = NCOL, stat = 0, unit = 1, doub = 2 * NCOL;
   double norm = 0.0, mag;
-  double *eigs = malloc(2 * NCOL * sizeof(*eigs));
-  double *dum = malloc(2 * sizeof(*dum));
+  double *eigs = malloc(sizeof *eigs * 2 * NCOL);
+  double *dum = malloc(sizeof *dum * 2);
   complex ave, sum = cmplx(0.0, 0.0), plp, tc;
-  complex *ceigs = malloc(NCOL * sizeof(*ceigs));
+  complex *ceigs = malloc(sizeof *ceigs * NCOL);
   matrix tmat, tmat2;
 
   if (this_node != 0) {

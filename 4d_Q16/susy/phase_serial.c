@@ -216,10 +216,10 @@ void matvec(Real *in, complex *out) {
 void phase() {
   register int i, j, k, pivot;
   int Ndat = 16 * DIMF, interchange = 1;
-  Real *col = malloc(volume * Ndat * sizeof(*col));
+  Real *col = malloc(sizeof *col * volume * Ndat);
   double phase, log_mag, tr, maxSq;
   complex scale;
-  complex **D = malloc(volume * Ndat * sizeof(complex*));
+  complex **D = malloc(sizeof complex* * volume * Ndat);
 
   // This is serial code
   if (this_node != 0) {
@@ -240,7 +240,7 @@ void phase() {
   // Allocate and construct fermion operator D
   // Each Twist_Fermion has Ndat = 16DIMF non-trivial complex components
   for (i = 0; i < volume * Ndat; i++) {
-    D[i] = malloc(volume * Ndat * sizeof(complex));
+    D[i] = malloc(sizeof complex * volume * Ndat);
     col[i] = 1.0;
     matvec(col, D[i]);
     col[i] = 0.0;
