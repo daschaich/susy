@@ -19,7 +19,7 @@ void hvy_pot_loop(int do_det) {
   // Use tempmat to hold loop product at each site
   for (t_dist = 1; t_dist <= MAX_T; t_dist++) {
     // Set up rectangular path as list of dir * sign
-    FORALLUPDIR(mu) {
+    for (mu = XUP; mu <= ZUP; mu++) {
       for (x_dist[mu] = 0; x_dist[mu] <= MAX_X; x_dist[mu]++) {
         if (mu > 0 && x_dist[mu] == 0)
           x_dist[mu] = 1;   // Only check (0, T) "loop" once

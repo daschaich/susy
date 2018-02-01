@@ -91,8 +91,8 @@ int main(int argc, char *argv[]) {
     free(eigVec);
 
     Nvec = 12;
-    eigVal = malloc(Nvec * sizeof(*eigVal));
-    eigVec = malloc(Nvec * sizeof(*eigVec));
+    eigVal = malloc(sizeof *eigVal * Nvec);
+    eigVec = malloc(sizeof *eigVec * Nvec);
     for (ivec = 0; ivec < Nvec; ivec++)
       FIELD_ALLOC(eigVec[ivec], Twist_Fermion);
   }

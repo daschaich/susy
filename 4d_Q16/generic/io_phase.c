@@ -65,9 +65,9 @@ void loadQ(complex **Q, int ckpt_load) {
     // Allocate temporary storage to be passed to other nodes
     // Only need if numnodes() > 1, but hard-code it in any case
     // to suppress compiler warnings
-    tbuf = malloc(volume * Ndat * sizeof(complex*));
+    tbuf = malloc(sizeof(complex*) * volume * Ndat);
     for (i = ckpt_load; i < volume * Ndat; i++) {
-      tbuf[i] = malloc(sites_on_node * Ndat * sizeof(complex));
+      tbuf[i] = malloc(sizeof(complex) * sites_on_node * Ndat);
       for (j = 0; j < sites_on_node * Ndat; j++)
         tbuf[i][j] = cmplx(0.0, 0.0);
     }

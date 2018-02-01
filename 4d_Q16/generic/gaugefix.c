@@ -124,7 +124,7 @@ void do_hit(int gauge_dir, int parity, int p, int q, Real relax_boost) {
   register int dir, i;
   register site *s;
   Real a0, a1, a2, a3, asq, a0sq, x, r, xdr;
-  su2_matrix *u = malloc(sites_on_node * sizeof(*u));
+  su2_matrix *u = malloc(sizeof *u * sites_on_node);
   msg_tag *mtag = NULL;
 
   // Accumulate sums for determining optimum gauge hit
@@ -344,7 +344,7 @@ void gaugefixscratch(field_offset diffmat, field_offset sumvec) {
   diffmat_offset = diffmat;
   diffmatp = NULL;
   if (diffmat_offset < 0) {
-    diffmatp = malloc(sites_on_node * sizeof(*diffmatp));
+    diffmatp = malloc(sizeof *diffmatp * sites_on_node);
     if (diffmatp == NULL) {
       node0_printf("gaugefix: Can't malloc diffmat\n");
       fflush(stdout);
@@ -355,7 +355,7 @@ void gaugefixscratch(field_offset diffmat, field_offset sumvec) {
   sumvec_offset = sumvec;
   sumvecp = NULL;
   if (sumvec_offset < 0) {
-    sumvecp = malloc(sites_on_node * sizeof(*sumvecp));
+    sumvecp = malloc(sizeof *sumvecp * sites_on_node);
     if (sumvecp == NULL) {
       node0_printf("gaugefix: Can't malloc sumvec\n");
       fflush(stdout);

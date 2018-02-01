@@ -75,7 +75,7 @@ void setup_restrict_fourier( int *key, int *slice) {
       pfactor[dir] = i;
       notbase2 |= (i != 1);  /* If dim[dir] != 2^k and key[dir] != 1 */
       logdim[dir]=j;
-      butterfly_dir[dir] = (int *)malloc( j*sizeof(int) );
+      butterfly_dir[dir] = malloc(sizeof int * j);
       if (butterfly_dir[dir]==NULL) {
   printf("restrict_fourier: NODE %d: no room for butterfly_dir\n",
          this_node);
@@ -327,7 +327,7 @@ void restrict_fourier(
   int ndivp,nmodp,ncycmodp,dimdirdivp;
   int jcycle;
 
-  ncomp = size/sizeof(complex);
+  ncomp = size / sizeof complex;
   /* Danielson-Lanczos section for factor of 2 levels */
   /* loop over all directions, and if we are supposed to transform in
      that direction, do it */
@@ -336,7 +336,7 @@ void restrict_fourier(
     dimdirdivp = dim[dir]/pfactor[dir];
     theta_0 = -isign*2*PI/dimdirdivp;
     /* Make an array of phase factors */
-    phase = (complex *)malloc( (dim[dir]/2)*sizeof(complex) );
+    phase = malloc(sizeof complex * (dim[dir] / 2));
     if (phase == NULL) {
             printf("restrict_fourier: NODE %d: no room for 2's phase\n",
        this_node);
@@ -344,7 +344,7 @@ void restrict_fourier(
     }
     for (i=0;i<dimdirdivp/2;i++)phase[i]=ce_itheta( i*theta_0 );
 
-    for (level=logdim[dir]-1,mask=dimdirdivp>>1; level>=0; level--,mask>>=1 ) {
+    for (level=logdim[dir]-1,mask=dimdirdivp>>1; level>=0; level--,mask>>=1) {
       /* "mask" picks out the bit that is flipped to find the
    coordinate you are combining with */
 
@@ -474,20 +474,21 @@ void restrict_fourier(
     /* The fundamental angle, others are multiples of this */
     theta_0 = -isign*2*PI/dim[dir];
     /* Make an array of phase factors */
-    phase = (complex *)malloc( dim[dir]*sizeof(complex) );
+    phase = malloc(sizeof complex * dim[dir]);
     if (phase == NULL) {
-            printf("restrict_fourier: NODE %d: no room for odd phase\n",
-       this_node);
-            terminate(1);
+      printf("restrict_fourier: Node%d: no room for odd phase\n", this_node);
+      terminate(1);
     }
-    for (i=0;i<dim[dir];i++)phase[i]=ce_itheta( i*theta_0 );
+    for (i=0;i<dim[dir];i++)
+      phase[i] = ce_itheta(i * theta_0);
 
     /* Initialize by multiplying by appropriate phase factor */
     /* Values come from "space" and end up in "src" */
     for (x=dmin[XUP]; x < dmax[XUP]; x++)for (y=dmin[YUP]; y < dmax[YUP]; y++)
       for (z=dmin[ZUP]; z < dmax[ZUP]; z++)for (t=dmin[TUP]; t < dmax[TUP]; t++)
   {
-    if ( node_number(x,y,z,t) != mynode() )continue;
+    if ( node_number(x,y,z,t) != mynode())
+      continue;
     i = node_index(x,y,z,t);
     s = &lattice[i];
     /* Find coordinate - treat s->x,y,z,t as array */
