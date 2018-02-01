@@ -12,22 +12,10 @@
 // -----------------------------------------------------------------
 
 
-
-// -----------------------------------------------------------------
-// Twist_Fermion struct
-typedef struct {
-  matrix Fsite;
-  matrix Flink[NUMLINK];
-  matrix Fplaq;
-} Twist_Fermion;
-// -----------------------------------------------------------------
-
-
-
 // -----------------------------------------------------------------
 // The lattice is an array of this site struct
 typedef struct {
-  short x, t;         // Coordinates of this site
+  short t;         // Coordinates of this site
   char parity;        // Is it even or odd?
   int index;          // Index in the array
 
@@ -36,22 +24,21 @@ typedef struct {
   double_prn site_prn;
 #endif
 
-  matrix link[NUMLINK];       // Gauge links
+  matrix link;        // Gauge links
+  matrix X[NSCALAR];  // 9 Scalars
 
 #ifdef HMC_ALGORITHM
-  matrix old_link[NUMLINK];   // For accept/reject
+  matrix old_link;   // For accept/reject
+  matrix old_X[NSCALAR];
 #endif
 
   // Momentum matrices in each direction are just U(N) matrices
   // as opposed to anti-hermitian matrices
-  matrix mom[NUMLINK], f_U[NUMLINK];        // Force matrices
+  matrix mom, f_U;        // Force matrices
+  matrix mom_X[NSCALAR], f_X[NSCALAR];
 
   // Boundary conditions -- many unused
-  Real bc[2 * NUMLINK];
-
-#ifdef PL_CORR
-  complex print_var, ploop_corr, fft1, fft2;
-#endif
+  Real bc[2];
 } site;
 // -----------------------------------------------------------------
 
@@ -65,20 +52,17 @@ typedef struct {
 #define EXTERN extern
 #endif
 
-EXTERN int nx, nt;          // Lattice dimensions
-EXTERN int length[2];       // Duplicate lattice dimensions for loops
+EXTERN int nt;          // Lattice dimensions
+EXTERN int length;       // Duplicate lattice dimensions for loops
 EXTERN int PBC;             // Temporal fermion boundary condition flag
-EXTERN int volume;          // Volume of lattice
 EXTERN int iseed;           // Random number seed
 EXTERN int warms, trajecs, niter, propinterval;
 EXTERN Real traj_length;
 
-// U(N) generators
+// SU(N) generators
 EXTERN matrix Lambda[DIMF];
 
-EXTERN Real rsqmin, lambda, kappa, bmass, fmass, kappa_u1, G;
-EXTERN int doG;
-EXTERN double g_plaq;     // Global plaq for I/O
+EXTERN Real rsqmin, lambda, kappa, mu;
 EXTERN double_complex linktrsum;
 EXTERN u_int32type nersc_checksum;
 EXTERN char startfile[MAXFILENAME], savefile[MAXFILENAME];
@@ -108,39 +92,27 @@ EXTERN Real gnorm, *fnorm, max_gf, *max_ff;
 EXTERN double_prn node_prn;
 
 // Stuff for derivative and link terms
-EXTERN int offset[NUMLINK][NDIMS];    // Path along each link
-EXTERN int label[NUMLINK];
+EXTERN int offset;    // Path along each link
+EXTERN int label;
 
 // Stuff for gathers -- both forwards and backwards
-EXTERN int goffset[2 * NUMLINK];
+EXTERN int goffset[2];
 
-// Persistent site, link and plaq fermions for matrix--vector operation
+// Persistent fermions for matrix--vector operation
 // Used in fermion_op and assemble_fermion_force
-EXTERN matrix *site_src, *link_src[NUMLINK], *plaq_src;
-EXTERN matrix *site_dest, *link_dest[NUMLINK], *plaq_dest;
+EXTERN matrix *src[NFERMION], *dest[NFERMION];
 
 // For convenience in calculating action and force
 // May be wasteful of space
 EXTERN Real one_ov_N;
-EXTERN complex minus1, *tr_eta;
-EXTERN complex *tr_dest, *Tr_Uinv[NUMLINK], *plaqdet[NUMLINK][NUMLINK];
-EXTERN complex *ZWstar[NUMLINK][NUMLINK], *tempdet[NUMLINK][NUMLINK];
-EXTERN matrix *DmuUmu, *Fmunu;
-EXTERN matrix *Uinv[NUMLINK], *Udag_inv[NUMLINK], *UpsiU[NUMLINK];
+EXTERN complex minus1, *tr_eta, *tr_dest;
+EXTERN matrix *DmuUmu;
 
-// CG Twist_Fermions
-EXTERN Twist_Fermion *mpm, *pm0, *rm;
+// CG Fermions
+EXTERN matrix *mpm[NFERMION], *pm0[NFERMION], *rm[NFERMION];
 
-// Temporary matrices and Twist_Fermion
-EXTERN matrix *tempmat, *tempmat2, *staple;
-EXTERN Twist_Fermion *tempTF;
-
-// Arrays to be used by LAPACK in determinant.c
-EXTERN int *ipiv;
-EXTERN double *store, *work;
-
-// Allocate some more arrays to be used by LAPACK in unit.c
-EXTERN double *Rwork, *eigs;
+// Temporary matrices
+EXTERN matrix *tempmat, *tempmat2, *temp_ferm[NFERMION];
 
 EXTERN gauge_file *startlat_p;
 EXTERN gauge_file *savelat_p;
@@ -151,7 +123,7 @@ EXTERN site *lattice;
 
 // Vectors for addressing
 // Generic pointers, for gather routines
-// Need 10 for gauge-fixing, 9 for Q-invariant determinant force
+// TODO Figure out this issue in the future. Need 10 for gauge-fixing
 #define N_POINTERS 10
 EXTERN char **gen_pt[N_POINTERS];
 
