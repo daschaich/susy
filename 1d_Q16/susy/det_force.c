@@ -1,1 +1,0 @@
-../../4d_Q16/susy/det_force.c
