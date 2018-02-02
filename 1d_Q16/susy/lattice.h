@@ -53,7 +53,6 @@ typedef struct {
 #endif
 
 EXTERN int nt;          // Lattice dimensions
-EXTERN int length;       // Duplicate lattice dimensions for loops
 EXTERN int PBC;             // Temporal fermion boundary condition flag
 EXTERN int iseed;           // Random number seed
 EXTERN int warms, trajecs, niter, propinterval;
@@ -61,8 +60,8 @@ EXTERN Real traj_length;
 
 // SU(N) generators
 EXTERN matrix Lambda[DIMF];
-
 EXTERN Real rsqmin, lambda, kappa, mu;
+EXTERN Real mass_so3, mass_so6, mass_Myers, mass_fermion;
 EXTERN double_complex linktrsum;
 EXTERN u_int32type nersc_checksum;
 EXTERN char startfile[MAXFILENAME], savefile[MAXFILENAME];
@@ -145,14 +144,6 @@ typedef struct {
 EXTERN Kops *tempops, *tempops2;
 #endif
 
-#ifdef SMEAR
-// APE or stout smearing stuff
-EXTERN int smearflag;                 // NONE, STOUT, APE
-EXTERN int Nsmear;
-EXTERN double alpha;
-EXTERN anti_hermitmat *Q[NUMLINK];    // To be exponentiated
-#endif
-
 #ifdef BILIN
 EXTERN int nsrc;
 #endif
@@ -161,8 +152,8 @@ EXTERN int nsrc;
 // Eigenvalue stuff
 EXTERN int Nvec;
 EXTERN double *eigVal;
-EXTERN Twist_Fermion *src, *res;      // For av_ov matvec
-EXTERN Twist_Fermion **eigVec;
+EXTERN matrix *src[NFERMION], *res[NFERMION];      // For av_ov matvec
+EXTERN matrix **eigVec[NFERMION];
 EXTERN Real eig_tol;          // Tolerance for the eigenvalue computation
 EXTERN int maxIter;           // Maximum iterations
 #endif
@@ -171,7 +162,7 @@ EXTERN int maxIter;           // Maximum iterations
 // Pfaffian phase stuff
 EXTERN long int Nmatvecs;           // For timing/counting
 EXTERN int ckpt_load, ckpt_save;    // For checkpointing
-EXTERN Twist_Fermion *src, *res;    // For fieldwise matvec
+EXTERN matrix *src[NFERMION], *res[NFERMION];    // For fieldwise matvec
 #endif
 
 #endif // _LATTICE_H

@@ -8,7 +8,7 @@ typedef struct {
   int stopflag;           // 1 if it is time to stop
 
   // Initialization parameters
-  int nx, ny, nz, nt;     // Lattice dimensions
+  int nt;     // Lattice dimensions
   int PBC;                // Temporal fermion boundary condition
   int iseed;              // For random numbers
 
@@ -25,9 +25,7 @@ typedef struct {
   int fixflag;            // Whether to gauge fix to Coulomb gauge
   int saveflag;           // What to do with lattice at end
   Real lambda, kappa;     // 't Hooft coupling and Nc/(2lambda)
-  Real bmass, fmass;      // Bosonic and fermion masses
-  Real kappa_u1;          // Plaquette determinant coupling
-  Real G;                 // Q-invariant plaquette determinant coupling
+  Real mu;      // Mass
 
   // Inversion parameters
   int niter;                    // Maximum number of CG iterations
@@ -38,12 +36,6 @@ typedef struct {
   int nsrc;                     // Number of stochastic sources
 #endif
 
-#ifdef SMEAR
-  // Parameters for APE or stout smearing
-  int smearflag;                // NONE, STOUT, APE
-  int Nsmear;
-  Real alpha;
-#endif
 
 #ifdef EIG
   // Eigenvalue parameters

@@ -36,26 +36,23 @@ void setup_lambda();
 void setup_offset();
 void setup_rhmc();
 
-// Helper routines for action and force computations
-void compute_plaqdet();
-void compute_Uinv();
+// Helper routine for action and force computations
 void compute_DmuUmu();
-void compute_Fmunu();
 
 // Gaussian random momentum matrices and pseudofermions
 void ranmom();
-int grsource(Twist_Fermion *source);
+int grsource(matrix *source[NFERMION]);
 
 // Basic observables
-// #define PLAQ_DIST in local_plaquette to print all plaquettes in serial
-void plaquette(double *plaq);
-double local_plaquette(double *plaq);                 // Return max plaq
 complex ploop(int dir, int project, double *plpMod);
 
 // Scalar eigenvalues: averages, extrema and width
 // #define SCALAR_EIG_DIST to print all eigenvalues in serial
 void scalar_eig(int project, double *ave_eigs, double *eig_widths,
                 double *min_eigs, double *max_eigs);
+
+// We stop here.
+
 
 // Action routines
 double action(Twist_Fermion **source, Twist_Fermion ***sol);
