@@ -1,5 +1,5 @@
 // -----------------------------------------------------------------
-// N=(2,2) setup
+// BFSS/BMN setup
 #include "susy_includes.h"
 
 #define IF_OK if (status == 0)
@@ -17,8 +17,13 @@ int initial_set() {
   int prompt = 0, status = 0, dir;
   if (mynode() == 0) {
     // Print banner
-    printf("N=(2,2) SYM, Nc = %d, DIMF = %d, fermion rep = adjoint\n",
+#ifdef BMN
+    printf("BMN, Nc = %d, DIMF = %d, fermion rep = adjoint\n",
            NCOL, DIMF);
+#else
+    printf("BFSS, Nc = %d, DIMF = %d, fermion rep = adjoint\n",
+           NCOL, DIMF);
+#endif
     printf("Microcanonical simulation with refreshing\n");
     printf("Machine = %s, with %d nodes\n", machine_type(), numnodes());
 #ifdef HMC_ALGORITHM
@@ -33,7 +38,6 @@ int initial_set() {
     time_stamp("start");
     status = get_prompt(stdin, &prompt);
 
-    IF_OK status += get_i(stdin, prompt, "nx", &par_buf.nx);
     IF_OK status += get_i(stdin, prompt, "nt", &par_buf.nt);
     IF_OK status += get_i(stdin, prompt, "PBC", &par_buf.PBC);
     IF_OK status += get_i(stdin, prompt, "iseed", &par_buf.iseed);
@@ -55,20 +59,15 @@ int initial_set() {
   if (par_buf.stopflag != 0)
     normal_exit(0);
 
-  nx = par_buf.nx;
   nt = par_buf.nt;
   PBC = par_buf.PBC;
   iseed = par_buf.iseed;
 
   // Lattice volume sanity checks, including dimensional reduction
-  length[0] = nx;
-  length[1] = nt;
   if (mynode() == 0) {
-    FORALLUPDIR(dir) {
-      if (length[dir] < 1) {
-        printf("nx and nt must both be positive\n");
-        exit(1);
-      }
+    if (nt < 1) {
+      printf("nt must be positive\n");
+      exit(1);
     }
   }
 
@@ -88,7 +87,6 @@ int initial_set() {
   this_node = mynode();
   number_of_nodes = numnodes();
   one_ov_N = 1.0 / (Real)NCOL;
-  volume = nx * nt;
   total_iters = 0;
   minus1 = cmplx(-1.0, 0.0);
   return prompt;
@@ -105,45 +103,29 @@ void make_fields() {
 #else
   node0_printf("Double-trace scalar potential\n");
 #endif
-  int Noffdiag = NUMLINK * (NUMLINK - 1);
   Real size = (Real)(2.0 * sizeof(complex));
   FIELD_ALLOC(tr_eta, complex);
   FIELD_ALLOC(tr_dest, complex);
 
-  size += (Real)(2.0 * (2.0 + NUMLINK)) * sizeof(matrix);
-  FIELD_ALLOC(site_src, matrix);
-  FIELD_ALLOC(site_dest, matrix);
-  FIELD_ALLOC_VEC(link_src, matrix, NUMLINK);
-  FIELD_ALLOC_VEC(link_dest, matrix, NUMLINK);
-  FIELD_ALLOC(plaq_src, matrix);
-  FIELD_ALLOC(plaq_dest, matrix);
+  size += (Real)(2.0 * NFERMION * sizeof(matrix));
+  FIELD_ALLOC_VEC(src, matrix, NFERMION);
+  FIELD_ALLOC_VEC(dest, matrix, NFERMION);
 
   // For convenience in calculating action and force
-  size += (Real)(2.0 + 3.0 * NUMLINK) * sizeof(matrix);
-  size += (Real)(NUMLINK + 3.0 * Noffdiag) * sizeof(complex);
+  size += (Real)(sizeof(matrix));
   FIELD_ALLOC(DmuUmu, matrix);
-  FIELD_ALLOC(Fmunu, matrix);
-  FIELD_ALLOC_VEC(Uinv, matrix, NUMLINK);
-  FIELD_ALLOC_VEC(Udag_inv, matrix, NUMLINK);
-  FIELD_ALLOC_VEC(UpsiU, matrix, NUMLINK);
-  FIELD_ALLOC_VEC(Tr_Uinv, complex, NUMLINK);
-  FIELD_ALLOC_MAT_OFFDIAG(plaqdet, complex, NUMLINK);
-  FIELD_ALLOC_MAT_OFFDIAG(tempdet, complex, NUMLINK);
-  FIELD_ALLOC_MAT_OFFDIAG(ZWstar, complex, NUMLINK);
+  
+  // CG Fermions
+  size += (Real)(3.0 * NFERMION * sizeof(matrix));
+  FIELD_ALLOC_VEC(mpm, matrix, NFERMION);
+  FIELD_ALLOC_VEC(pm0, matrix, NFERMION);
+  FIELD_ALLOC_VEC(rm, matrix, NFERMION);
 
-  // CG Twist_Fermions
-  size += (Real)(3.0 * sizeof(Twist_Fermion));
-  FIELD_ALLOC(mpm, Twist_Fermion);
-  FIELD_ALLOC(pm0, Twist_Fermion);
-  FIELD_ALLOC(rm, Twist_Fermion);
-
-  // Temporary matrices and Twist_Fermion
-  size += (Real)(3.0 * sizeof(matrix));
-  size += (Real)(sizeof(Twist_Fermion));
+  // Temporary matrices and Fermions
+  size += (Real)((2.0 + NFERMION) * sizeof(matrix));
   FIELD_ALLOC(tempmat, matrix);
   FIELD_ALLOC(tempmat2, matrix);
-  FIELD_ALLOC(staple, matrix);
-  FIELD_ALLOC(tempTF, Twist_Fermion);
+  FIELD_ALLOC_VEC(temp_ferm, matrix, NFERMION);
 
 #ifdef CORR
   int j;
@@ -158,29 +140,23 @@ void make_fields() {
   FIELD_ALLOC(tempops2, Kops);
 #endif
 
-#ifdef SMEAR
-  // Stout smearing stuff
-  size += (Real)(NUMLINK * sizeof(anti_hermitmat));
-  FIELD_ALLOC_VEC(Q, anti_hermitmat, NUMLINK);    // To be exponentiated
-#endif
-
 #if defined(EIG) || defined(PHASE)
-  size += (Real)(2.0 * sizeof(Twist_Fermion));
-  FIELD_ALLOC(src, Twist_Fermion);
-  FIELD_ALLOC(res, Twist_Fermion);
+  size += (Real)(2.0 * NFERMION * sizeof(matrix));
+  FIELD_ALLOC_VEC(src, matrix, NFERMION);
+  FIELD_ALLOC_VEC(res, matrix, NFERMION);
 #endif
 
   size *= sites_on_node;
   node0_printf("Mallocing %.1f MBytes per core for fields\n", size / 1e6);
 #ifdef PHASE
-  // Total number of matvecs is (volume * 4 * DIMF)^2 / 4
-  Nmatvecs = volume * 4 * DIMF * volume * DIMF;
+  // Total number of matvecs is (nt * NFERMION * DIMF)^2 / 4
+  Nmatvecs = nt * NFERMION * DIMF * nt * DIMF;
 
-  // Total size of matrix is (volume * 4 * DIMF) x (sites_on_node * 4 * DIMF)
-  size = (Real)(volume * 4.0 * DIMF * 4.0 * DIMF * sizeof(complex));
+  // Total size of matrix is (nt * NFERMION * DIMF) x (sites_on_node * NFERMION * DIMF)
+  size = (Real)(nt * NFERMION * DIMF * NFERMION * DIMF * sizeof(complex));
   size *= sites_on_node;
   node0_printf("Q has %d columns --> %li matvecs and %.1f MBytes per core...",
-               volume * 4 * DIMF, Nmatvecs, size / 1e6);
+               nt * NFERMION * DIMF, Nmatvecs, size / 1e6);
 #endif
 }
 // -----------------------------------------------------------------
@@ -211,46 +187,6 @@ int setup() {
 // -----------------------------------------------------------------
 
 
-
-// -----------------------------------------------------------------
-#ifdef SMEAR
-// Find out what smearing to use
-int ask_smear_type(FILE *fp, int prompt, int *flag) {
-  int status = 0;
-  char savebuf[256];
-
-  if (prompt != 0)
-    printf("enter 'no_smear', 'stout_smear' or 'APE_smear'\n");
-  status = fscanf(fp, "%s", savebuf);
-  if (status == EOF) {
-    printf("ask_smear_type: EOF on STDIN\n");
-    return 1;
-  }
-  if (status != 1) {
-    printf("\nask_smear_type: ERROR IN INPUT: ");
-    printf("can't read smearing option\n");
-    return 1;
-  }
-
-  printf("%s\n", savebuf);
-  if (strcmp("no_smear", savebuf) == 0)
-    *flag = NO_SMEAR;
-  else if (strcmp("stout_smear", savebuf) == 0)
-    *flag = STOUT_SMEAR;
-  else if (strcmp("APE_smear", savebuf) == 0)
-    *flag = APE_SMEAR;
-  else {
-    printf("Error in input: invalid smear type\n");
-    printf("Only no_smear, stout_smear and APE_smear supported\n");
-    return 1;
-  }
-  return 0;
-}
-#endif
-// -----------------------------------------------------------------
-
-
-
 // -----------------------------------------------------------------
 // Read in parameters for Monte Carlo
 // prompt=1 indicates prompts are to be given for input
@@ -279,19 +215,9 @@ int readin(int prompt) {
     IF_OK status += get_i(stdin, prompt, "traj_between_meas",
                           &par_buf.propinterval);
 
-    // lambda, kappa_u1, bmass, fmass, G
+    // lambda, mu
     IF_OK status += get_f(stdin, prompt, "lambda", &par_buf.lambda);
-    IF_OK status += get_f(stdin, prompt, "kappa_u1", &par_buf.kappa_u1);
-    IF_OK status += get_f(stdin, prompt, "bmass", &par_buf.bmass);
-    IF_OK status += get_f(stdin, prompt, "fmass", &par_buf.fmass);
-    IF_OK status += get_f(stdin, prompt, "G", &par_buf.G);
-
-#ifdef SMEAR
-    // Smearing stuff -- passed to either APE or stout routines by application
-    IF_OK status += ask_smear_type(stdin, prompt, &par_buf.smearflag);
-    IF_OK status += get_i(stdin, prompt, "Nsmear", &par_buf.Nsmear);
-    IF_OK status += get_f(stdin, prompt, "alpha", &par_buf.alpha);
-#endif
+    IF_OK status += get_f(stdin, prompt, "mu", &par_buf.mu);
 
     // Maximum conjugate gradient iterations
     IF_OK status += get_i(stdin, prompt, "max_cg_iterations", &par_buf.niter);
@@ -321,10 +247,6 @@ int readin(int prompt) {
     IF_OK status += get_i(stdin, prompt, "ckpt_save", &par_buf.ckpt_save);
 #endif
 
-#ifdef WLOOP
-    // Find out whether or not to gauge fix to Coulomb gauge
-    IF_OK status += ask_gauge_fix(stdin, prompt, &par_buf.fixflag);
-#endif
 
     // Find out what kind of starting lattice to use
     IF_OK status += ask_starting_lattice(stdin, prompt, &par_buf.startflag,
@@ -352,34 +274,27 @@ int readin(int prompt) {
   nsteps[1] = par_buf.nsteps[1];
 
   propinterval = par_buf.propinterval;
-  fixflag = par_buf.fixflag;
   niter = par_buf.niter;
   rsqmin = par_buf.rsqmin;
 
   lambda = par_buf.lambda;
-  kappa_u1 = par_buf.kappa_u1;
-  bmass = par_buf.bmass;
-  fmass = par_buf.fmass;
-  G = par_buf.G;
-  if (G > IMAG_TOL)
-    doG = 1;
-  else
-    doG = 0;
-
+  mu = par_buf.mu;
+  
+#ifdef BMN
+  mass_so3 = mu*mu/9.0;
+  mass_so6 = 0.25 * mass_so3;
+  mass_Myers = 2.0 * sqrt(2.0) * mu / 3.0;
+  mass_fermion = 0.25 * mu;
+#else
+  mass_so3 = mu*mu;
+  mass_so6 = mass_so3;
+  mass_Myers = -999.0;
+  mass_fermion = -999.0;
+#endif
+  
   kappa = (Real)NCOL * 0.25 / lambda;
   node0_printf("lambda=%.4g --> kappa=Nc/(4lambda)=%.4g\n",
                lambda, kappa);
-  node0_printf("C2=%.4g\n", C2);    // Currently hardwired in defines.h
-
-#ifdef SMEAR
-  smearflag = par_buf.smearflag;
-  Nsmear = par_buf.Nsmear;
-  alpha = par_buf.alpha;
-  if (smearflag == NO_SMEAR) {
-    Nsmear = 0;
-    alpha = 0.0;
-  }
-#endif
 
 #ifdef BILIN
   nsrc = par_buf.nsrc;
@@ -392,7 +307,7 @@ int readin(int prompt) {
   eigVal = malloc(Nvec * sizeof(*eigVal));
   eigVec = malloc(Nvec * sizeof(*eigVec));
   for (i = 0; i < Nvec; i++)
-    FIELD_ALLOC(eigVec[i], Twist_Fermion);
+    FIELD_ALLOC_VEC(eigVec[i], matrix, NFERMION);
 
   eig_tol = par_buf.eig_tol;
   maxIter = par_buf.maxIter;
@@ -411,21 +326,8 @@ int readin(int prompt) {
   // Do whatever is needed to get lattice
   startlat_p = reload_lattice(startflag, startfile);
 
-  // Allocate arrays to be used by LAPACK in determinant.c
-  // Needs to be above compute_Uinv()
-  ipiv = malloc(NCOL * sizeof(*ipiv));
-  store = malloc(2 * NCOL * NCOL * sizeof(*store));
-  work = malloc(4 * NCOL * sizeof(*work));
-
-  // Allocate some more arrays to be used by LAPACK in unit.c
-  Rwork = malloc((3 * NCOL - 2) * sizeof(*Rwork));
-  eigs = malloc(NCOL * sizeof(*eigs));
-
-  // Compute initial plaqdet, DmuUmu and Fmunu
-  compute_plaqdet();
-  compute_Uinv();
+  // Compute initial DmuUmu
   compute_DmuUmu();
-  compute_Fmunu();
   return 0;
 }
 // -----------------------------------------------------------------
