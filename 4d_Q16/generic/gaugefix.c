@@ -12,8 +12,8 @@
 // The other links need attention from both checkerboards,
 // so they must be passed back and forth
 
-// NB: This means that gauge-fixing will fail on lattices with an odd number
-// of sites in any direction.
+// NB: This means that gauge-fixing will fail on lattices
+// with an odd number of sites in any direction
 // We check for this and terminate if the check fails
 
 // Prototype:
@@ -201,7 +201,7 @@ void do_hit(int gauge_dir, int parity, int p, int q, Real relax_boost) {
   wait_gather(mtag);
 
   FORSOMEPARITY(i, s, parity) {
-    // Note that we are hitting the links (on this checkerboard) on the left,
+    // Hit the links (on this checkerboard) on the left,
     // and the gathered links, from site (x - mu), on the right
     // This must be modified to hit the DIR_5 link on both sides,
     // and we must not touch the DIR_5 link on the other checkerboard

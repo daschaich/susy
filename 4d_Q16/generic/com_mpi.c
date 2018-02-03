@@ -597,8 +597,8 @@ void make_nn_gathers() {
                 ALLOW_EVEN_ODD, gather_parity);
   }
 
-  /* Sort into the order we want for nearest neighbor gathers,
-     so you can use XUP, XDOWN, etc. as argument in calling them. */
+  // Sort into desired order to use use XUP, XDOWN, etc.
+  // as argument in nearest-neighbor gathers
   sort_eight_gathers(0);
 }
 // -----------------------------------------------------------------

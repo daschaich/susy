@@ -96,7 +96,7 @@ static void setup_hyper_prime() {
     nsquares[dir] *= prime[k];
   }
 
-  // Dividing a 3x1x1x3 lattice among 2 or 4 nodes can give squaresize[i]=0
+  // Dividing all-odd lattice among multiple nodes can give squaresize[i]=0
   // Check for that and exit gracefully if encountered
   FORALLUPDIR(dir) {
     if (squaresize[dir] < 1) {

@@ -326,9 +326,10 @@ void sort_four_gathers(int index) {
 
   for (i = 0; i < 4; i++)
     memcpy(&tt[i], &gather_array[index + i], sizeof(gather_t));
-  FORALLDIR(i) {
+  FORALLUPDIR(i) {
     memcpy(&gather_array[index + i], &tt[2 * i], sizeof(gather_t));
-    memcpy(&gather_array[index + OPP_DIR(i)], &tt[2 * i + 1], sizeof(gather_t));
+    memcpy(&gather_array[index + OPP_DIR(i)],
+           &tt[2 * i + 1], sizeof(gather_t));
   }
 }
 
@@ -346,10 +347,10 @@ static void neighbor_coords_special(
   *x2p = x;
   *t2p = t;
   switch(dir) {
-    case XUP   : *x2p = (x + 1) % nx;       break;
-    case XDOWN : *x2p = (x + nx - 1) % nx;  break;
-    case TUP   : *t2p = (t + 1) % nt;       break;
-    case TDOWN : *t2p = (t + nt - 1) % nt;  break;
+    case XUP   : *x2p = (x + 1) % nx;      break;
+    case XDOWN : *x2p = (x + nx - 1) % nx; break;
+    case TUP   : *t2p = (t + 1) % nt;      break;
+    case TDOWN : *t2p = (t + nt - 1) % nt; break;
     default: printf("BOTCH: bad direction\n"); terminate(1);
   }
 }
@@ -365,9 +366,9 @@ void make_nn_gathers() {
   }
 
   gather_array_len = 4;
-  gather_array = malloc(gather_array_len * sizeof(*gather_array));
+  gather_array = malloc(sizeof *gather_array * gather_array_len);
   if (gather_array == NULL) {
-    printf("error: not enough room for gather_array in make_nn_gathers\n");
+    printf("make_nn_gathers: node%d can't malloc gather_array\n", this_node);
     terminate(1);
   }
 
@@ -376,7 +377,7 @@ void make_nn_gathers() {
   else
     gather_parity = SWITCH_PARITY;
 
-  FORALLDIR(i) {
+  FORALLUPDIR(i) {
     make_gather(neighbor_coords_special, &i, WANT_INVERSE,
                 ALLOW_EVEN_ODD, gather_parity);
   }
@@ -426,14 +427,14 @@ int make_gather(
   }
 
   dir = n_gathers - 1;  // Index of gather we are working on
-  gather_array[dir].neighbor = malloc(sites_on_node * sizeof(int));
+  gather_array[dir].neighbor = malloc(sizeof(int) * sites_on_node);
   if (gather_array[dir].neighbor == NULL) {
     printf("make_gather: node%d: no room for neighbor vector\n", this_node);
     terminate(1);
   }
   if (inverse == WANT_INVERSE) {
     dir = n_gathers - 2;  // Index of gather we are working on
-    gather_array[dir].neighbor = malloc(sites_on_node * sizeof(int));
+    gather_array[dir].neighbor = malloc(sizeof(int) * sites_on_node);
     if (gather_array[dir].neighbor == NULL) {
       printf("make_gather: node%d no room for neighbor vector\n", this_node);
       terminate(1);
@@ -441,7 +442,7 @@ int make_gather(
   }
 
   if (want_even_odd == ALLOW_EVEN_ODD && parity_conserve != SCRAMBLE_PARITY) {
-    send_subl = malloc(2 * sizeof(*send_subl));
+    send_subl = malloc(sizeof *send_subl * 2);
     if (send_subl == NULL) {
       printf("node%d: no room for send_subl\n", this_node);
       terminate(1);

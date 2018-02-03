@@ -1,5 +1,5 @@
 // -----------------------------------------------------------------
-// N=(2,2) setup
+// N=(2,2) SYM setup
 #include "susy_includes.h"
 
 #define IF_OK if (status == 0)
@@ -74,16 +74,16 @@ int initial_set() {
 
   // Set up stuff for RHMC and multi-mass CG
   Nroot = par_buf.Nroot;
-  fnorm = malloc(Nroot * sizeof(fnorm));
-  max_ff = malloc(Nroot * sizeof(max_ff));
+  fnorm = malloc(sizeof fnorm * Nroot);
+  max_ff = malloc(sizeof max_ff * Nroot);
 
   Norder = par_buf.Norder;
-  amp = malloc(Norder * sizeof(amp));
-  amp4 = malloc(Norder * sizeof(amp4));
-  amp8 = malloc(Norder * sizeof(amp8));
-  shift = malloc(Norder * sizeof(shift));
-  shift4 = malloc(Norder * sizeof(shift4));
-  shift8 = malloc(Norder * sizeof(shift8));
+  amp = malloc(sizeof amp * Norder);
+  amp4 = malloc(sizeof amp4 * Norder);
+  amp8 = malloc(sizeof amp8 * Norder);
+  shift = malloc(sizeof shift * Norder);
+  shift4 = malloc(sizeof shift4 * Norder);
+  shift8 = malloc(sizeof shift8 * Norder);
 
   this_node = mynode();
   number_of_nodes = numnodes();
@@ -389,8 +389,8 @@ int readin(int prompt) {
   // Include some mallocs here (make_fields has already been called)
   // (This memory usage will not be reported to the user)
   Nvec = par_buf.Nvec;
-  eigVal = malloc(Nvec * sizeof(*eigVal));
-  eigVec = malloc(Nvec * sizeof(*eigVec));
+  eigVal = malloc(sizeof *eigVal * Nvec);
+  eigVec = malloc(sizeof *eigVec * Nvec);
   for (i = 0; i < Nvec; i++)
     FIELD_ALLOC(eigVec[i], Twist_Fermion);
 
@@ -413,13 +413,13 @@ int readin(int prompt) {
 
   // Allocate arrays to be used by LAPACK in determinant.c
   // Needs to be above compute_Uinv()
-  ipiv = malloc(NCOL * sizeof(*ipiv));
-  store = malloc(2 * NCOL * NCOL * sizeof(*store));
-  work = malloc(4 * NCOL * sizeof(*work));
+  ipiv = malloc(sizeof *ipiv * NCOL);
+  store = malloc(sizeof *store * 2 * NCOL * NCOL);
+  work = malloc(sizeof *work * 4 * NCOL);
 
   // Allocate some more arrays to be used by LAPACK in unit.c
-  Rwork = malloc((3 * NCOL - 2) * sizeof(*Rwork));
-  eigs = malloc(NCOL * sizeof(*eigs));
+  Rwork = malloc(sizeof *Rwork * (3 * NCOL - 2));
+  eigs = malloc(sizeof *eigs * NCOL);
 
   // Compute initial plaqdet, DmuUmu and Fmunu
   compute_plaqdet();
