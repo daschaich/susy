@@ -46,13 +46,10 @@ MY_OBJECTS = setup.o        \
              setup_lambda.o \
              setup_offset.o \
              action.o       \
-             plaq.o         \
              ploop.o        \
-             unit.o         \
              scalar_eig.o   \
              link_trace.o   \
              widths.o       \
-             determinant.o  \
              grsource.o     \
              utilities.o    \
              library_util.o \
@@ -101,39 +98,33 @@ ${OBJECTS} : ${HEADERS} ${LASTMAKE} ${ALL_MAKES}
 
 ##### Targets:
 # lapack and blas needed for polar decomposition (scalar eigenvalues)
-# and also by -DEIG, -DWLOOP, -DSMEAR
+# and also by -DEIG
 susy_hmc::
 	${MAKE} -f ${MAKEFILE} target "MYTARGET= $@" \
 	"DEFINES = ${DEFINES} -DPHI_ALGORITHM -DHMC_ALGORITHM " \
 	"LAPACK = -llapack -lblas " \
-	"EXTRA_OBJECTS = control.o update_o.o update_h.o setup_rhmc.o det_force.o "
+	"EXTRA_OBJECTS = control.o update_o.o update_h.o setup_rhmc.o "
 
 susy_meas::
 	${MAKE} -f ${MAKEFILE} target "MYTARGET= $@" \
-	"DEFINES = ${DEFINES} -DPHI_ALGORITHM -DSMEAR -DCORR -DWLOOP -DBILIN " \
+	"DEFINES = ${DEFINES} -DPHI_ALGORITHM -DCORR -DBILIN " \
 	"LAPACK = -llapack -lblas " \
 	"EXTRA_OBJECTS = control_meas.o konishi.o correlator_r.o rsymm.o monopole.o \
-	                 bilinearWard.o hvy_pot.o hvy_pot_polar.o hvy_pot_loop.o \
-	                 hvy_pot_polar_loop.o path.o smear.o local_plaq.o "
+	                 bilinearWard.o "
 
 susy_hmc_meas::
 	${MAKE} -f ${MAKEFILE} target "MYTARGET= $@" \
-	"DEFINES = ${DEFINES} -DPHI_ALGORITHM -DHMC_ALGORITHM -DCORR -DWLOOP \
-	           -DBILIN -DSMEAR " \
+	"DEFINES = ${DEFINES} -DPHI_ALGORITHM -DHMC_ALGORITHM -DCORR -DBILIN " \
 	"LAPACK = -llapack -lblas " \
-	"EXTRA_OBJECTS = control.o update_o.o update_h.o setup_rhmc.o det_force.o \
-	                 konishi.o correlator_r.o rsymm.o hvy_pot.o monopole.o \
-	                 hvy_pot_polar.o path.o bilinearWard.o hvy_pot_loop.o \
-	                 hvy_pot_polar_loop.o smear.o local_plaq.o "
+	"EXTRA_OBJECTS = control.o update_o.o update_h.o setup_rhmc.o \
+	                 konishi.o bilinearWard.o  "
 
 susy_mcrg::
 	${MAKE} -f ${MAKEFILE} target "MYTARGET= $@" \
-	"DEFINES = ${DEFINES} -DPHI_ALGORITHM -DSMEAR -DCORR -DMCRG" \
+	"DEFINES = ${DEFINES} -DPHI_ALGORITHM -DCORR -DMCRG" \
 	"LAPACK = -llapack -lblas " \
-	"EXTRA_OBJECTS = control_mcrg.o block_mcrg.o rsymm.o blocked_plaq.o \
-	                 blocked_ops.o blocked_ploop.o blocked_rsymm.o path.o \
-	                 blocked_smear.o blocked_local_plaq.o konishi.o \
-	                 smear.o local_plaq.o "
+	"EXTRA_OBJECTS = control_mcrg.o block_mcrg.o blocked_ops.o blocked_ploop.o \
+	                 konishi.o "
 
 susy_eig::
 	${MAKE} -f ${MAKEFILE} target "MYTARGET= $@" \
@@ -160,17 +151,17 @@ susy_spill::
 susy_phi::
 	${MAKE} -f ${MAKEFILE} target "MYTARGET= $@" \
 	"DEFINES = ${DEFINES} -DPHI_ALGORITHM " \
-	"EXTRA_OBJECTS = control.o update_o.o update_h.o setup_rhmc.o det_force.o "
+	"EXTRA_OBJECTS = control.o update_o.o update_h.o setup_rhmc.o "
 
 susy_phi_pg::
 	${MAKE} -f ${MAKEFILE} target "MYTARGET= $@" \
 	"DEFINES = ${DEFINES} -DPHI_ALGORITHM -DPUREGAUGE " \
-	"EXTRA_OBJECTS = control.o update_o.o update_h.o setup_rhmc.o det_force.o "
+	"EXTRA_OBJECTS = control.o update_o.o update_h.o setup_rhmc.o "
 
 susy_hmc_pg::
 	${MAKE} -f ${MAKEFILE} target "MYTARGET= $@" \
 	"DEFINES = ${DEFINES} -DPHI_ALGORITHM -DHMC_ALGORITHM -DPUREGAUGE " \
-	"EXTRA_OBJECTS = control.o update_o.o update_h.o setup_rhmc.o det_force.o "
+	"EXTRA_OBJECTS = control.o update_o.o update_h.o setup_rhmc.o "
 
 clean:
 	-/bin/rm -f *.o

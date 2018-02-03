@@ -712,8 +712,7 @@ double fermion_force(Real eps, Twist_Fermion *src, Twist_Fermion **sol) {
     FORALLDIR(mu) {
       FORALLSITES(i, s) {
         // Take adjoint but don't negate yet...
-        add_adj_matrix(&(fullforce[mu][i]), &(s->f_U[mu]),
-                       &(fullforce[mu][i]));
+        sum_adj_matrix(&(s->f_U[mu]), &(fullforce[mu][i]));
 #ifdef FORCE_DEBUG
 //      if (s->x == 0 && s->t == 0 && mu == 3) {
 //        printf("Fermion force mu=%d on site (%d, %d)\n", mu, s->x, s->t);

@@ -9,25 +9,21 @@
 // The current maximum prime is 53
 // The array prime[] may be extended if necessary
 
-// Requires that the lattice volume be divisible by the number of nodes
+// Requires that the lattice volume be divisible by the number of cores
 // Each dimension must be divisible by a suitable factor,
-// such that the product of the four factors is the number of nodes
+// such that the product of the four factors is the number of cores
+// Also need even number of sites per core
 
-/* setup_layout() does any initial setup.  When it is called the
-     lattice dimensions nx and nt have been set.
-     This routine sets the global variables "sites_on_node",
-     "even_sites_on_node" and "odd_sites_on_node".
-   num_sites(node) returns the number of sites on a node
-   node_number(x, t) returns the node number on which a site lives.
-   node_index(x, t) returns the index of the site on the node - ie the
-     site is lattice[node_index(x, t)].
-   get_logical_dimensions() returns the machine dimensions
-   get_logical_coordinates() returns the mesh coordinates of this node
-   These routines will change as we change our minds about how to distribute
-     sites among the nodes.  Hopefully the setup routines will work for any
-     consistent choices. (ie node_index should return a different value for
-     each site on the node.)
-*/
+// setup_layout() does any initial setup
+//   When it is called the lattice dimensions nx and nt have been set
+//   This routine sets the global variables "sites_on_node",
+//   "even_sites_on_node" and "odd_sites_on_node"
+// node_number(x, t) returns the node number on which a site lives
+// node_index(x, t) returns the index of the site on the node
+//   i.e., the site is lattice[node_index(x, t)]
+// num_sites(node) returns the (constant) number of sites on a node
+// get_logical_dimensions() returns the machine dimensions
+// get_logical_coordinates() returns the mesh coordinates of this node
 #include "generic_includes.h"
 #ifdef HAVE_QMP
 #include <qmp.h>
@@ -47,7 +43,7 @@ int prime[] = {2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53};
 static void setup_hyper_prime() {
   int i, j, k, dir;
 
-  node0_printf("hyper_prime,\n");
+  node0_printf("hyper_prime\n");
 
   // Figure out dimensions of rectangle
   squaresize[XUP] = nx;
@@ -69,9 +65,9 @@ static void setup_hyper_prime() {
         j = squaresize[dir];
     }
 
-    /* if one direction with largest dimension has already been
-       divided, divide it again.  Otherwise divide first direction
-       with largest dimension. */
+    // If direction with largest extent has already been divided,
+    // divide it again
+    // Otherwise divide first direction with largest extent
     FORALLUPDIR(dir) {
       if (squaresize[dir] == j && nsquares[dir] > 1)
         break;
@@ -84,8 +80,9 @@ static void setup_hyper_prime() {
     }
     // This can fail if I run out of prime factors in the dimensions
     if (dir > TUP) {
-      node0_printf("LAYOUT: Can't lay out this lattice, ");
-      node0_printf("not enough factors of %d\n", prime[k]);
+      node0_printf("ERROR: Not enough factors of %d to lay out lattice\n",
+                   prime[k]);
+      g_sync();
       terminate(1);
     }
 
@@ -93,6 +90,17 @@ static void setup_hyper_prime() {
     i *= prime[k];
     squaresize[dir] /= prime[k];
     nsquares[dir] *= prime[k];
+  }
+
+  // Dividing all-odd lattice among multiple nodes can give squaresize[i]=0
+  // Check for that and exit gracefully if encountered
+  FORALLUPDIR(dir) {
+    if (squaresize[dir] < 1) {
+      node0_printf("ERROR: Can't lay out lattice ");
+      node0_printf("(bad squaresize in layout_hyper_prime)\n");
+      g_sync();
+      terminate(1);
+    }
   }
 }
 // -----------------------------------------------------------------
@@ -103,9 +111,7 @@ static void setup_hyper_prime() {
 void setup_layout() {
   int k = mynode();
 
-  if (k == 0)
-    printf("LAYOUT = Hypercubes, options = ");
-
+  node0_printf("LAYOUT = Hypercubes, options = ");
   setup_hyper_prime();
 
   // Compute machine coordinates
@@ -115,26 +121,27 @@ void setup_layout() {
 
   // Number of sites on node
   sites_on_node = squaresize[XUP] * squaresize[TUP];
-  /* Need even number of sites per hypercube */
-  if (mynode() == 0) {
-    if (sites_on_node % 2 != 0) {
-      printf("SORRY, CAN'T LAY OUT THIS LATTICE\n");
-      terminate(0);
-    }
+
+  // Need even number of sites per hypercube
+  if (sites_on_node % 2 != 0) {
+    node0_printf("ERROR: Can't lay out lattice ");
+    node0_printf("so that all nodes have an even number of sites\n");
+    g_sync();
+    terminate(1);
   }
+
   node0_printf("ON EACH NODE %d x %d\n", squaresize[XUP], squaresize[TUP]);
-  if (mynode() == 0 && sites_on_node % 2 != 0)
-    printf("WATCH OUT FOR EVEN/ODD SITES ON NODE BUG!!!\n");
+
   even_sites_on_node = sites_on_node / 2;
   odd_sites_on_node = sites_on_node / 2;
 }
 
 int node_number(int x, int t) {
-register int i;
-    x /= squaresize[XUP];
-    t /= squaresize[TUP];
-    i = x + nsquares[XUP] * t;
-    return i;
+  register int i;
+  x /= squaresize[XUP];
+  t /= squaresize[TUP];
+  i = x + nsquares[XUP] * t;
+  return i;
 }
 
 int node_index(int x, int t) {

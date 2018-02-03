@@ -663,7 +663,7 @@ msg_tag* declare_gather_site(
   char **dest)   /* one of the vectors of pointers */
 {
   return declare_strided_gather((char *)lattice + field, sizeof(site), size,
-         index, parity, dest);
+                                index, parity, dest);
 }
 
 // Old style gather routine: declare and start in one call
@@ -827,7 +827,7 @@ void declare_accumulate_gather_site(
   char **dest)   /* one of the vectors of pointers */
 {
   declare_accumulate_strided_gather(mmtag, (char *)lattice + field,
-             sizeof(site), size, index, parity, dest);
+                                    sizeof(site), size, index, parity, dest);
 }
 
 // Declare and merge gather from an array of fields
@@ -841,8 +841,8 @@ void declare_accumulate_gather_field(
          one of EVEN, ODD or EVENANDODD. */
   char **dest)   /* one of the vectors of pointers */
 {
-  declare_accumulate_strided_gather(mmtag, (char *)field, size, size, index, parity,
-             dest);
+  declare_accumulate_strided_gather(mmtag, (char *)field, size, size, index,
+                                    parity, dest);
 }
 // -----------------------------------------------------------------
 

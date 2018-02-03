@@ -19,10 +19,6 @@
 
 
 // -----------------------------------------------------------------
-// gaugefix.c
-void gaugefix(int gauge_dir,Real relax_boost,int max_gauge_iter,
-              Real gfix_tol, field_offset diffmat, field_offset sumvec);
-
 // io_helpers.c
 gauge_file *save_lattice(int flag, char *filename);
 gauge_file *reload_lattice(int flag, char *filename);
@@ -43,8 +39,8 @@ int get_prompt(FILE *fp, int *value);
 
 // layout_hyper_prime.c
 void setup_layout();
-int node_number(int x, int t);
-int node_index(int x, int t);
+int node_number(int t);
+int node_index(int t);
 size_t num_sites(int node);
 const int *get_logical_dimensions();
 const int *get_logical_coordinate();

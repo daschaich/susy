@@ -9,10 +9,10 @@
 // The current maximum prime is 53
 // The array prime[] may be extended if necessary
 
-// Requires that the lattice volume be divisible by the number of nodes
+// Requires that the lattice volume be divisible by the number of cores
 // Each dimension must be divisible by a suitable factor,
-// such that the product of the four factors is the number of nodes
-// Also need even number of sites per hypercube
+// such that the product of the four factors is the number of cores
+// Also need even number of sites per core
 
 // setup_layout() does any initial setup
 //   When it is called the lattice dimensions nx and nt have been set

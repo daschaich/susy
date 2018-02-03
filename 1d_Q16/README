@@ -1,4 +1,4 @@
-This directory of SUSY LATTICE contains parallel code for RHMC simulations of N=(2,2) supersymmetric Yang--Mills theory in two dimensions, including related measurements.
+This directory of SUSY LATTICE contains parallel code for RHMC simulations of 16-supercharge Yang--Mills (BFSS/BMN) theories in one dimension, including related measurements.
 
 See susy/README for the real README!
 
@@ -9,5 +9,5 @@ libraries -- Single processor linear algebra routines
 susy      -- RHMC and measurements
 
 Dependences:
-LAPACK is now required for all targets
+LAPACK is still required for scalar eigenvalues
 Eigenvalue measurements require PRIMME as well
