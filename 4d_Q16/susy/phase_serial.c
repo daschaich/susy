@@ -13,7 +13,7 @@
 void matvec(Real *in, complex *out) {
   register site *s;
   int i, j, iter;
-  msg_tag *mtag0 = NULL, *mtag1 = NULL, *mtag2;
+  msg_tag *mtag0, *mtag1, *mtag2;
   matrix *plaq23, *plaq13, *plaq12;
 
   // Copy complex vector into Twist_Fermion src

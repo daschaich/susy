@@ -3,8 +3,9 @@
 // Double-precision global sums, as always
 
 // For susy code: do not reunitarize
+// Gauge fixing is done checkerboard by checkerboard
 
-// NB: Gauge-fixing will fail on lattices
+// NB: This means that gauge-fixing will fail on lattices
 // with an odd number of sites in any direction
 // We check for this and terminate if the check fails
 
@@ -12,7 +13,7 @@
 // void gaugefix(int gauge_dir, Real relax_boost, int max_gauge_iter,
 //               Real gfix_tol, field_offset diffmat, field_offset sumvec);
 //
-// EXAMPLE: Fixing only the fundamental link matrices to Coulomb gauge,
+// EXAMPLE: Fixing only the link matrices to Coulomb gauge,
 //          using scratch space in the site structure
 //          (matrix mp and vector chi)
 // gaugefix(TUP, 1.5, 500, 1.0e-7, F_OFFSET(mp), F_OFFSET(chi));
@@ -21,7 +22,7 @@
 //   TUP for evaluating propagators in the time-like direction
 //   XUP for screening lengths
 //   8 (or anything except 0, 1) for Lorenz gauge
-//   (cf. definition of FORALLDIRBUT in ../include/macros.h)
+//   (cf. definition of FORALLUPDIRBUT in ../include/macros.h)
 // relax_boost is the overrelaxation parameter
 // max_gauge_iter is the maximum number of gauge-fixing iterations
 // gfix_tol tells us to stop if the action change is less than this
@@ -114,7 +115,7 @@ void do_hit(int gauge_dir, int parity, int p, int q, Real relax_boost) {
   register int dir, i;
   register site *s;
   Real a0, a1, a2, a3, asq, a0sq, x, r, xdr;
-  su2_matrix *u = malloc(sites_on_node * sizeof(*u));
+  su2_matrix *u = malloc(sizeof *u * sites_on_node);
 
   // Accumulate sums for determining optimum gauge hit
   accum_gauge_hit(gauge_dir, parity);
@@ -185,11 +186,11 @@ void do_hit(int gauge_dir, int parity, int p, int q, Real relax_boost) {
     // Hit the links (on this checkerboard) on the left,
     // and the gathered links, from site (x - mu), on the right
     // Do SU(2) hit on all upward links
-    FORALLDIR(dir)
+    FORALLUPDIR(dir)
       left_su2_hit_n(&(u[i]), p, q, &(s->link[dir]));
 
     // Do SU(2) hit on all downward links
-    FORALLDIR(dir)
+    FORALLUPDIR(dir)
       right_su2_hit_a(&(u[i]), p, q, (matrix *)gen_pt[dir][i]);
   }
   // Exit with modified downward links left in communications buffer
@@ -251,11 +252,11 @@ void gaugefixstep(int gauge_dir, double *av_gauge_fix_action,
 
   for (parity = ODD; parity <= EVEN; parity++) {
     // Gather all downward links at once
-    FORALLDIR(dir) {
+    FORALLUPDIR(dir) {
       mtag[dir] = start_gather_site(F_OFFSET(link[dir]), sizeof(matrix),
                                     OPP_DIR(dir), parity, gen_pt[dir]);
     }
-    FORALLDIR(dir)
+    FORALLUPDIR(dir)
       wait_gather(mtag[dir]);
 
     // Do optimum gauge hit on all subspaces
@@ -269,7 +270,7 @@ void gaugefixstep(int gauge_dir, double *av_gauge_fix_action,
     *av_gauge_fix_action += gauge_fix_action;
 
     // Scatter downward link matrices by gathering to sites of opposite parity
-    FORALLDIR(dir) {
+    FORALLUPDIR(dir) {
       // Synchronize before scattering to be sure the new modified link
       // matrices are all ready to be scattered and diffmat is not
       // overwritten before it is used
@@ -318,7 +319,7 @@ void gaugefixscratch(field_offset diffmat, field_offset sumvec) {
   diffmat_offset = diffmat;
   diffmatp = NULL;
   if (diffmat_offset < 0) {
-    diffmatp = malloc(sites_on_node * sizeof(*diffmatp));
+    diffmatp = malloc(sizeof *diffmatp * sites_on_node);
     if (diffmatp == NULL) {
       node0_printf("gaugefix: Can't malloc diffmat\n");
       fflush(stdout);
@@ -329,7 +330,7 @@ void gaugefixscratch(field_offset diffmat, field_offset sumvec) {
   sumvec_offset = sumvec;
   sumvecp = NULL;
   if (sumvec_offset < 0) {
-    sumvecp = malloc(sites_on_node * sizeof(*sumvecp));
+    sumvecp = malloc(sizeof *sumvecp * sites_on_node);
     if (sumvecp == NULL) {
       node0_printf("gaugefix: Can't malloc sumvec\n");
       fflush(stdout);
