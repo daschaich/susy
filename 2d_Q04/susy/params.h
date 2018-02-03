@@ -8,7 +8,7 @@ typedef struct {
   int stopflag;           // 1 if it is time to stop
 
   // Initialization parameters
-  int nx, ny, nz, nt;     // Lattice dimensions
+  int nx, nt;             // Lattice dimensions
   int PBC;                // Temporal fermion boundary condition
   int iseed;              // For random numbers
 
