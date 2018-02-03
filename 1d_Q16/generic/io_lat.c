@@ -226,7 +226,7 @@ void w_serial(gauge_file *gf) {
   FILE *fp = NULL;
   gauge_header *gh = NULL;
   fmatrix *lbuf = NULL;
-  fmatrix *tbuf = malloc(nx * NUMLINK * sizeof(*tbuf));
+  fmatrix *tbuf = malloc(sizeof *tbuf * nx * NUMLINK);
   off_t offset;               // File stream pointer
   off_t coord_list_size;      // Size of coordinate list in bytes
   off_t head_size;            // Size of header plus coordinate list
@@ -242,7 +242,7 @@ void w_serial(gauge_file *gf) {
 
   // Only allocate lbuf on node0
   if (this_node == 0) {
-    lbuf = malloc(MAX_BUF_LENGTH * NUMLINK * sizeof(*lbuf));
+    lbuf = malloc(sizeof *lbuf * MAX_BUF_LENGTH * NUMLINK);
     if (lbuf == NULL) {
       printf("w_serial: node0 can't malloc lbuf\n");
       fflush(stdout);
@@ -400,7 +400,7 @@ void r_serial(gauge_file *gf) {
     head_size = checksum_offset + gauge_check_size;
 
     // Allocate single-precision read buffer
-    lbuf = malloc(MAX_BUF_LENGTH * NUMLINK * sizeof(*lbuf));
+    lbuf = malloc(sizeof *lbuf * MAX_BUF_LENGTH * NUMLINK);
     if (lbuf == NULL) {
       printf("r_serial: node%d can't malloc lbuf\n", this_node);
       fflush(stdout);

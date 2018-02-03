@@ -73,16 +73,16 @@ int initial_set() {
 
   // Set up stuff for RHMC and multi-mass CG
   Nroot = par_buf.Nroot;
-  fnorm = malloc(Nroot * sizeof(fnorm));
-  max_ff = malloc(Nroot * sizeof(max_ff));
+  fnorm = malloc(sizeof fnorm * Nroot);
+  max_ff = malloc(sizeof max_ff * Nroot);
 
   Norder = par_buf.Norder;
-  amp = malloc(Norder * sizeof(amp));
-  amp4 = malloc(Norder * sizeof(amp4));
-  amp8 = malloc(Norder * sizeof(amp8));
-  shift = malloc(Norder * sizeof(shift));
-  shift4 = malloc(Norder * sizeof(shift4));
-  shift8 = malloc(Norder * sizeof(shift8));
+  amp = malloc(sizeof amp * Norder);
+  amp4 = malloc(sizeof amp4 * Norder);
+  amp8 = malloc(sizeof amp8 * Norder);
+  shift = malloc(sizeof shift * Norder);
+  shift4 = malloc(sizeof shift4 * Norder);
+  shift8 = malloc(sizeof shift8 * Norder);
 
   this_node = mynode();
   number_of_nodes = numnodes();
@@ -114,7 +114,7 @@ void make_fields() {
   // For convenience in calculating action and force
   size += (Real)(sizeof(matrix));
   FIELD_ALLOC(DmuUmu, matrix);
-  
+
   // CG Fermions
   size += (Real)(3.0 * NFERMION * sizeof(matrix));
   FIELD_ALLOC_VEC(mpm, matrix, NFERMION);
@@ -279,9 +279,9 @@ int readin(int prompt) {
 
   lambda = par_buf.lambda;
   mu = par_buf.mu;
-  
+
 #ifdef BMN
-  mass_so3 = mu*mu/9.0;
+  mass_so3 = mu * mu / 9.0;
   mass_so6 = 0.25 * mass_so3;
   mass_Myers = 2.0 * sqrt(2.0) * mu / 3.0;
   mass_fermion = 0.25 * mu;
@@ -291,7 +291,7 @@ int readin(int prompt) {
   mass_Myers = -999.0;
   mass_fermion = -999.0;
 #endif
-  
+
   kappa = (Real)NCOL * 0.25 / lambda;
   node0_printf("lambda=%.4g --> kappa=Nc/(4lambda)=%.4g\n",
                lambda, kappa);
@@ -304,8 +304,8 @@ int readin(int prompt) {
   // Include some mallocs here (make_fields has already been called)
   // (This memory usage will not be reported to the user)
   Nvec = par_buf.Nvec;
-  eigVal = malloc(Nvec * sizeof(*eigVal));
-  eigVec = malloc(Nvec * sizeof(*eigVec));
+  eigVal = malloc(sizeof *eigVal * Nvec);
+  eigVec = malloc(sizeof *eigVec * Nvec);
   for (i = 0; i < Nvec; i++)
     FIELD_ALLOC_VEC(eigVec[i], matrix, NFERMION);
 
@@ -325,6 +325,10 @@ int readin(int prompt) {
 
   // Do whatever is needed to get lattice
   startlat_p = reload_lattice(startflag, startfile);
+
+  // Allocate some more arrays to be used by LAPACK in scalar_eig.c
+  Rwork = malloc(sizeof *Rwork * (3 * NCOL - 2));
+  eigs = malloc(sizeof *eigs * NCOL);
 
   // Compute initial DmuUmu
   compute_DmuUmu();

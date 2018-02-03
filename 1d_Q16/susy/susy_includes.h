@@ -51,78 +51,35 @@ complex ploop(int dir, int project, double *plpMod);
 void scalar_eig(int project, double *ave_eigs, double *eig_widths,
                 double *min_eigs, double *max_eigs);
 
-// We stop here.
-
-
 // Action routines
-double action(Twist_Fermion **source, Twist_Fermion ***sol);
+double action(matrix **source[NFERMION], matrix ***sol[NFERMION]);
 double gauge_action(int do_det);
 double fermion_action();
 
 // Force routines
 double gauge_force(Real eps);
-double fermion_force(Real eps, Twist_Fermion *source, Twist_Fermion **psim);
-double det_force(Real eps);
+double fermion_force(Real eps, matrix *source[NFERMION],
+                     matrix **psim[NFERMION]);
 
 // Fermion matrix--vector operators (D & D^2) and multi-mass CG
-void fermion_op(Twist_Fermion *src, Twist_Fermion *dest, int sign);
-void DSq(Twist_Fermion *src, Twist_Fermion *dest);
-int congrad_multi(Twist_Fermion *src, Twist_Fermion **psim,
+void fermion_op(matrix *src[NFERMION], matrix *dest[NFERMION], int sign);
+void DSq(matrix *src[NFERMION], matrix *dest[NFERMION]);
+int congrad_multi(matrix *src[NFERMION], matrix **psim[NFERMION],
                   int MaxCG, Real RsdCG, Real *size_r);
 
 // Compute average Tr[Udag U] / N_c
 // Number of blocking steps only affects output formatting
-double link_trace(double *linktr, double *linktr_width,
-                  double *dets, double *det_ave, double *det_width);
+double link_trace(double *linktr, double *linktr_width);
 
-// Basic Twist_Fermion utilities
-// May eventually move to libraries
-void dump_TF(Twist_Fermion *in);
-void copy_TF(Twist_Fermion *src, Twist_Fermion *dest);
-void clear_TF(Twist_Fermion *dest);
-Real magsq_TF(Twist_Fermion *in);
-complex TF_dot(Twist_Fermion *a, Twist_Fermion *b);
-void scalar_mult_sum_TF(Twist_Fermion *b, Real s, Twist_Fermion *c);
-void scalar_mult_add_TF(Twist_Fermion *a, Twist_Fermion *b, Real s,
-                        Twist_Fermion *c);
-void scalar_mult_TF(Twist_Fermion *src, Real s, Twist_Fermion *dest);
-
-// Other routines in library_util.c that loop over all sites
+// Routines in library_util.c that loop over all sites
 void gauge_field_copy(field_offset src, field_offset dest);
 void shiftmat(matrix *dat, matrix *temp, int dir);
 
 // Random gauge transformation for testing gauge invariance
-void random_gauge_trans(Twist_Fermion *TF);
+void random_gauge_trans(matrix *temp_ferm[NFERMION]);
 
 // Determinant-related routines
-void measure_det();
 void widths();        // Widths of plaquette and det distributions
-complex find_det(matrix *Q);
-void det_project(matrix *in, matrix *out);
-
-// Use LAPACK in determinant and matrix calculations
-// Compute LU decomposition of a complex matrix
-// http://www.physics.orst.edu/~rubin/nacphy/lapack/routines/zgetrf.html
-// First and second arguments are the dimensions of the matrix
-// Third argument is the LU-decomposed matrix
-// Fourth argument is the
-// Fifth argument is the LU decomposition pivot matrix
-// Final argument reports success or information about failure
-void zgetrf_(int *N1, int *N2, double *store, int *lda, int *ipiv, int *stat);
-
-// Invert a complex matrix given its LU decomposition
-// http://www.physics.orst.edu/~rubin/nacphy/lapack/routines/zgetri.html
-// First four and last arguments are defined above
-// Fifth argument is real workspace of size given by the sixth argument
-void zgetri_(int *N, double *store, int *lda, int *ipiv,
-             double *work, int *Nwork, int* stat);
-
-// Matrix inverse via LAPACK
-void invert(matrix *in, matrix *out);
-
-// Modified Wilson loops use invert and path
-void path(int *dir, int *sign, int length);
-void rsymm();
 // -----------------------------------------------------------------
 
 
@@ -144,24 +101,7 @@ void correlator_r();            // Functions of r
 int bilinearWard();
 #endif
 
-#ifdef PL_CORR
-// Polyakov loop correlator -- NOT CURRENTLY IN USE
-void ploop_c();         // Computes Polyakov loop at each spatial site
-#endif
-
-#ifdef WLOOP
-// Wilson loops -- including determinant division and polar projection
-// These look at correlators of products of temporal links,
-// which requires gauge fixing
-void hvy_pot(int do_det);
-void hvy_pot_polar();
-
-// These construct explicit paths along lattice principal axes, for checking
-void hvy_pot_loop(int do_det);
-void hvy_pot_polar_loop();
-#endif
-
-// Use LAPACK in the polar projection
+// Use LAPACK for the scalar eigenvalues
 // http://www.physics.orst.edu/~rubin/nacphy/lapack/routines/zheev.html
 // First argument turns on eigenvector computations
 // Second argument chooses between storing upper or lower triangle
@@ -173,31 +113,11 @@ void hvy_pot_polar_loop();
 // Final argument reports success or information about failure
 void zheev_(char *doV, char *uplo, int *N1, double *store, int *N2,
             double *eigs, double *work, int *Nwork, double *Rwork, int *stat);
-void polar(matrix *in, matrix *u, matrix *P);
-void matrix_log(matrix *in, matrix *out);
-
-// Monopole computation uses find_det
-void monopole();
-
-#ifdef SMEAR
-// Stout and APE-like smearing, the latter with no final SU(N) projections
-// APE-like smearing optionally builds staples from projected links
-void exp_mult();
-void stout_smear(int Nsmear, double alpha);
-void APE_smear(int Nsmear, double alpha, int project);
-#endif
 
 #ifdef MCRG
 void block_mcrg(int bl);
-void blocked_plaq(int Nsmear, int bl);    // Also monitors det and widths
-void blocked_local_plaq(int Nsmear, int bl);    // Print max plaq
 void blocked_ops(int Nsmear, int bl);
 void blocked_ploop(int Nsmear, int bl);
-void blocked_rsymm(int Nsmear, int bl);
-#ifdef SMEAR            // Blocked stout and APE-like smearing, as above
-void blocked_stout(int Nsmear, double alpha, int block);
-void blocked_APE(int Nsmear, double alpha, int project, int block);
-#endif
 #endif
 // -----------------------------------------------------------------
 
@@ -206,8 +126,8 @@ void blocked_APE(int Nsmear, double alpha, int project, int block);
 // -----------------------------------------------------------------
 // Eigenvalue routines
 #ifdef EIG
-int make_evs(int Nvec, Twist_Fermion **eigVec, double *eigVal, int flag);
-void check_Dmat(int Nvec, Twist_Fermion **eigVec);
+int make_evs(int Nvec, matrix **eigVec[NFERMION], double *eigVal, int flag);
+void check_Dmat(int Nvec, matrix **eigVec[NFERMION]);
 
 // Use LAPACK to diagonalize <psi_j | D | psi_i>
 // on the subspace of Ddag.D eigenvalues psi

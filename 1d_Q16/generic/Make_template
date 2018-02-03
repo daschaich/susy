@@ -8,7 +8,6 @@
 
 G_ALL = com_mpi.o            \
         com_vanilla.o        \
-        gaugefix.o           \
         io_ansi.o            \
         io_helpers.o         \
         io_lat.o             \
@@ -41,8 +40,6 @@ ${G_ALL} : ${G_ALL_DEPEND}
 com_mpi.o: ../generic/com_mpi.c
 	${CC} -c ${CFLAGS} $<
 com_vanilla.o: ../generic/com_vanilla.c
-	${CC} -c ${CFLAGS} $<
-gaugefix.o: ../generic/gaugefix.c
 	${CC} -c ${CFLAGS} $<
 io_ansi.o: ../generic/io_ansi.c
 	${CC} -c ${CFLAGS} $<

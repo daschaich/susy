@@ -4,7 +4,6 @@
 #define _DEFINES_H
 
 #define SITERAND              // Use site-based random number generators
-#define GAUGE_FIX_TOL 1.0e-7  // For gauge fixing
 //#define TIMING              // Not currently used
 // -----------------------------------------------------------------
 
@@ -22,33 +21,17 @@
 
 // -----------------------------------------------------------------
 // Susy stuff
+#define BMN
 //#define EIG_POT           // Single rather than double-trace scalar potential
                           // Single-trace case is minimally tested!!!
 #define SV                // Site/vector terms in action
-#define VP                // Vector/plaquette terms in action
 //#define DEBUG_CHECK       // Print lambdas, offsets, etc.
-
-// Tunable parameter in gauge action
-#define C2 1.0
-
-// Whether or not to project determinant out of given observable
-#define NODET 0
-#define YESDET 1
 // -----------------------------------------------------------------
 
 
 
 // -----------------------------------------------------------------
 // Measurement stuff
-// Gauge fixing options
-#define NO_GAUGE_FIX 30
-#define COULOMB_GAUGE_FIX 31
-
-// Smearing options
-#define NO_SMEAR 40
-#define STOUT_SMEAR 41
-#define APE_SMEAR 42
-
 // Threshold to print warning about non-zero imaginary components
 // of quantities expected to be real
 #define IMAG_TOL 1.0e-8

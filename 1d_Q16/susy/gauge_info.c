@@ -44,21 +44,18 @@ void write_appl_gauge_info(FILE *fp) {
 // Follow USQCD style for record XML
 char *create_QCDML() {
   size_t bytes = 0;
-  char *info = (char *)malloc(INFOSTRING_MAX);
+  char *info = malloc(INFOSTRING_MAX);
   size_t max = INFOSTRING_MAX;
   char begin[] = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><usqcdInfo><version>1.0</version>";
   char begin_info[] = "<info>";
   char end_info[] = "</info>";
   char end[] = "</usqcdInfo>";
-  Real myplaq = g_plaq;                             // Precision conversion
   Real nersc_linktr = linktrsum.real * one_ov_N;    // Convention and precision
   char sums[20];
 
   snprintf(info + bytes, max - bytes, "%s", begin);
   bytes = strlen(info);
 
-  snprintf(info + bytes, max - bytes, "<plaq>%e</plaq>", myplaq);
-  bytes = strlen(info);
 
   bytes = strlen(info);
   snprintf(info + bytes, max - bytes, "<linktr>%e</linktr>", nersc_linktr);

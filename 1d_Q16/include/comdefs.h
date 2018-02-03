@@ -67,7 +67,7 @@ void sort_four_gathers(int index);
 #define sort_four_neighborlists sort_four_gathers
 
 int make_gather(
-  void (*func)(int, int, int*, int, int*, int*),
+  void (*func)(int, int*, int, int*),
             /* function which defines sites to gather from */
   int *args,    /* list of arguments, to be passed to function */
   int inverse,    /* OWN_INVERSE, WANT_INVERSE, or NO_INVERSE */
@@ -77,7 +77,7 @@ int make_gather(
 msg_tag* declare_gather_site(
   field_offset field, /* which field? Some member of structure "site" */
   int size,   /* size in bytes of the field (eg sizeof(vector))*/
-  int index,    /* direction to gather from. eg XUP - index into
+  int index,    /* direction to gather from. eg TUP - index into
          neighbor tables */
   int parity,   /* parity of sites whose neighbors we gather.
          one of EVEN, ODD or EVENANDODD. */
@@ -91,7 +91,7 @@ void cleanup_gather(msg_tag *mbuf);
 msg_tag* start_gather_site(
   field_offset field, /* which field? Some member of structure "site" */
   int size,   /* size in bytes of the field (eg sizeof(vector))*/
-  int index,    /* direction to gather from. eg XUP - index into
+  int index,    /* direction to gather from. eg TUP - index into
          neighbor tables */
   int parity,   /* parity of sites whose neighbors we gather.
          one of EVEN, ODD or EVENANDODD. */
@@ -100,7 +100,7 @@ msg_tag* start_gather_site(
 msg_tag* declare_gather_field(
   void *field,   /* which field? pointer returned by malloc() */
   int size,   /* size in bytes of the field (eg sizeof(vector))*/
-  int index,    /* direction to gather from. eg XUP - index into
+  int index,    /* direction to gather from. eg TUP - index into
          neighbor tables */
   int parity,   /* parity of sites whose neighbors we gather.
          one of EVEN, ODD or EVENANDODD. */
@@ -110,7 +110,7 @@ msg_tag* declare_strided_gather(
   void *field,          /* source buffer aligned to desired field */
   int stride,           /* bytes between fields in source buffer */
   int size,   /* size in bytes of the field (eg sizeof(vector))*/
-  int index,    /* direction to gather from. eg XUP - index into
+  int index,    /* direction to gather from. eg TUP - index into
          neighbor tables */
   int subl,   /* subl of sites whose neighbors we gather.
          It is EVENANDODD, if all sublattices are done. */
@@ -119,7 +119,7 @@ msg_tag* declare_strided_gather(
 msg_tag* start_gather_field(
   void *field,   /* which field? pointer returned by malloc() */
   int size,   /* size in bytes of the field (eg sizeof(vector))*/
-  int index,    /* direction to gather from. eg XUP - index into
+  int index,    /* direction to gather from. eg TUP - index into
          neighbor tables */
   int parity,   /* parity of sites whose neighbors we gather.
          one of EVEN, ODD or EVENANDODD. */
@@ -133,7 +133,7 @@ void declare_accumulate_gather_site(
   msg_tag **mmtag,      /* msg_tag to accumulate into */
   field_offset field, /* which field? Some member of structure "site" */
   int size,   /* size in bytes of the field (eg sizeof(vector))*/
-  int index,    /* direction to gather from. eg XUP - index into
+  int index,    /* direction to gather from. eg TUP - index into
          neighbor tables */
   int parity,   /* parity of sites whose neighbors we gather.
          one of EVEN, ODD or EVENANDODD. */
@@ -143,7 +143,7 @@ void declare_accumulate_gather_field(
   msg_tag **mmtag,      /* msg_tag to accumulate into */
   void *field,   /* which field? pointer returned by malloc() */
   int size,   /* size in bytes of the field (eg sizeof(vector))*/
-  int index,    /* direction to gather from. eg XUP - index into
+  int index,    /* direction to gather from. eg TUP - index into
          neighbor tables */
   int parity,   /* parity of sites whose neighbors we gather.
          one of EVEN, ODD or EVENANDODD. */
@@ -152,7 +152,7 @@ void declare_accumulate_gather_field(
 msg_tag* start_general_gather_site(
   field_offset field, /* which field? Some member of structure "site" */
   int size,   /* size in bytes of the field (eg sizeof(vector))*/
-  int *displacement,  /* displacement to gather from. four components */
+  int displacement,  /* displacement to gather from. four components */
   int parity,   /* parity of sites to which we gather.
          one of EVEN, ODD or EVENANDODD. */
   char **dest);  /* one of the vectors of pointers */
@@ -160,7 +160,7 @@ msg_tag* start_general_gather_site(
 msg_tag* start_general_gather_field(
  void *field,          /* which field? Pointer returned by malloc() */
  int size,    /* size in bytes of the field (eg sizeof(vector))*/
- int *displacement, /* displacement to gather from. four components */
+ int displacement, /* displacement to gather from. four components */
  int parity,    /* parity of sites to which we gather.
          one of EVEN, ODD or EVENANDODD. */
  char **dest);   /* one of the vectors of pointers */

@@ -545,7 +545,7 @@ void sort_eight_gathers(int index) {
 // Used by make_gather for nearest neighbor gathers
 static void neighbor_coords_special(
   int x, int y, int z, int t,       // Coordinates of site
-  int *dirpt,                       // Direction (eg XUP)
+  int *dirpt,                       // Direction (e.g., XUP)
   int fb,                           // Forwards/backwards
   int *x2p, int *y2p, int *z2p, int *t2p)
                                     // Pointers to coordinates of neighbor
@@ -652,7 +652,7 @@ static void sort_site_list(
   int *args,          /* arguments to pass to function */
   int forw_back)  /* look forwards or backwards in map */
 {
-  register int j,k,in1,in2,flag;
+  register int j, k, in1, in2, flag;
   register site *s;
   int x, y, z, t;
   int *key;
@@ -1962,7 +1962,10 @@ msg_tag* start_general_strided_gather(
     tt = (s->t - displacement[TUP] + nt) % nt;
     othernode = node_number(tx, ty, tz, tt);
     if (othernode != this_node) {
-      for (j = 0; j < n_send_msgs; j++) if (to_nodes[j].node == othernode) break;
+      for (j = 0; j < n_send_msgs; j++) {
+        if (to_nodes[j].node == othernode)
+          break;
+      }
       tpt = msend[j].msg_buf + to_nodes[j].count*tsize;
       *(int *)tpt = node_index(tx, ty, tz, tt);
       /* index of site on other node */
@@ -1979,7 +1982,7 @@ msg_tag* start_general_strided_gather(
               MPI_COMM_WORLD, &msend[i].msg_req);
   }
 
-  /* free temporary arrays */
+  // Free temporary arrays
   if (n_send_msgs > 0)
     free(to_nodes);
   /* mark gather in progress and return */
@@ -1997,7 +2000,7 @@ msg_tag* start_general_gather_site(
   char **dest)   /* one of the vectors of pointers */
 {
   return start_general_strided_gather((char *)lattice + field, sizeof(site),
-               size, displacement, parity, dest);
+                                      size, displacement, parity, dest);
 }
 
 msg_tag* start_general_gather_field(
@@ -2009,7 +2012,7 @@ msg_tag* start_general_gather_field(
   char **dest)   /* one of the vectors of pointers */
 {
   return start_general_strided_gather(field, size, size,
-               displacement, parity, dest);
+                                      displacement, parity, dest);
 }
 
 // Wait for a general gather to complete
@@ -2023,8 +2026,8 @@ void wait_general_gather(msg_tag *mtag) {
     /* set pointers in sites to correct location */
     for (j=0; j<from_nodes[i].count; j++) {
       /* k = index of site on this node, sent in message */
-      k = *(int *)(mtag->recv_msgs[i].msg_buf + j*tsize);
-      tdest[k] = mtag->recv_msgs[i].msg_buf + j*tsize + 2*sizeof(int);
+      k = *(int *)(mtag->recv_msgs[i].msg_buf + j * tsize);
+      tdest[k] = mtag->recv_msgs[i].msg_buf + j * tsize + 2 * sizeof(int);
     }
   }
   if (i > 0)
