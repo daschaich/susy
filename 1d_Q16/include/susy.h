@@ -1,6 +1,6 @@
 // -----------------------------------------------------------------
 // Defines and subroutine declarations for BFSS/BMN with gauge group SU(NCOL)
-// and fermions in the DIMF-dimensional adjoint rep
+// Scalars and fermions in the DIMF-dimensional adjoint rep
 #ifndef _SUSY_H
 #define _SUSY_H
 
@@ -15,6 +15,11 @@
 // Gauge group SU(NCOL) and size of adjoint rep DIMF = NCOL^2 - 1
 #define NCOL 2
 #define DIMF (NCOL * NCOL - 1)
+
+// Numbers of scalars and fermions for 1d BFSS/BMN
+#define NSCALAR 9
+#define NFERMION 16
+#define NCHIRAL_FERMION 8
 
 typedef struct { int e[NCHIRAL_FERMION][NCHIRAL_FERMION]; } gamma_mat;
 typedef struct { fcomplex e[NCOL][NCOL]; } fmatrix;

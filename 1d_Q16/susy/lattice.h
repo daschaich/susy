@@ -15,7 +15,7 @@
 // -----------------------------------------------------------------
 // The lattice is an array of this site struct
 typedef struct {
-  short t;         // Coordinates of this site
+  short t;            // Coordinates of this site
   char parity;        // Is it even or odd?
   int index;          // Index in the array
 
@@ -24,8 +24,8 @@ typedef struct {
   double_prn site_prn;
 #endif
 
-  matrix link;        // Gauge links
-  matrix X[NSCALAR];  // 9 Scalars
+  matrix link;        // Gauge link
+  matrix X[NSCALAR];  // 9 scalars
 
 #ifdef HMC_ALGORITHM
   matrix old_link;   // For accept/reject
@@ -52,7 +52,7 @@ typedef struct {
 #define EXTERN extern
 #endif
 
-EXTERN int nt;          // Lattice dimensions
+EXTERN int nt;              // Lattice length
 EXTERN int PBC;             // Temporal fermion boundary condition flag
 EXTERN int iseed;           // Random number seed
 EXTERN int warms, trajecs, niter, propinterval;
