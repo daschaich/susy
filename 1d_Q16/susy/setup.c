@@ -111,10 +111,6 @@ void make_fields() {
   FIELD_ALLOC_VEC(src, matrix, NFERMION);
   FIELD_ALLOC_VEC(dest, matrix, NFERMION);
 
-  // For convenience in calculating action and force
-  size += (Real)(sizeof(matrix));
-  FIELD_ALLOC(DmuUmu, matrix);
-
   // CG Fermions
   size += (Real)(3.0 * NFERMION * sizeof(matrix));
   FIELD_ALLOC_VEC(mpm, matrix, NFERMION);
@@ -162,6 +158,27 @@ void make_fields() {
 // -----------------------------------------------------------------
 
 
+// -----------------------------------------------------------------
+void setup_bc() {
+  register int i, dir;
+  register site *s;
+  
+  // Single-offset terms only
+  FORALLSITES(i, s) {
+    s->bc[0] = 1.0;
+    s->bc[1] = 1.0;
+    if (s->t + 1 > nt - 1)
+      s->bc[0] = PBC;
+    if (s->t - 1 < 0)
+      s->bc[1] = PBC;
+  }
+  
+  // BC test
+  //  FORALLSITES(i, s)
+  //      printf("%d : %4.2g %4.2g\n", s->t, s->bc[0], s->bc[1]);
+}
+// -----------------------------------------------------------------
+
 
 // -----------------------------------------------------------------
 int setup() {
@@ -177,8 +194,14 @@ int setup() {
   make_lattice();
   // Set up neighbor pointers and comlink structures
   make_nn_gathers();
-  // Set up offset tables for the five paths
-  setup_offset();
+  
+  // Set up boundary conditions
+  if (PBC >= 0)
+    node0_printf("Periodic temporal boundary conditions\n");
+  if (PBC < 0)
+    node0_printf("Antiperiodic temporal boundary conditions\n");
+  setup_bc();
+  
   // Allocate space for fields
   make_fields();
 
@@ -330,8 +353,6 @@ int readin(int prompt) {
   Rwork = malloc(sizeof *Rwork * (3 * NCOL - 2));
   eigs = malloc(sizeof *eigs * NCOL);
 
-  // Compute initial DmuUmu
-  compute_DmuUmu();
   return 0;
 }
 // -----------------------------------------------------------------

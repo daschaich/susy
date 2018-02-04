@@ -44,7 +44,7 @@ HEADERS = ${GLOBAL_HEADERS} ${MY_HEADERS}
 # Basic set from current directory
 MY_OBJECTS = setup.o        \
              setup_lambda.o \
-             setup_offset.o \
+             setup_gamma.o \
              action.o       \
              ploop.o        \
              scalar_eig.o   \

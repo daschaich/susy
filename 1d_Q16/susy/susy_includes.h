@@ -33,11 +33,8 @@ void update_u(Real eps);
 // Susy routines
 // Lots of things to initialize and set up
 void setup_lambda();
-void setup_offset();
+void setup_gamma();
 void setup_rhmc();
-
-// Helper routine for action and force computations
-void compute_DmuUmu();
 
 // Gaussian random momentum matrices and pseudofermions
 void ranmom();
@@ -53,11 +50,11 @@ void scalar_eig(int project, double *ave_eigs, double *eig_widths,
 
 // Action routines
 double action(matrix **source[NFERMION], matrix ***sol[NFERMION]);
-double gauge_action(int do_det);
+double bosonic_action();
 double fermion_action();
 
 // Force routines
-double gauge_force(Real eps);
+double bosonic_force(Real eps);
 double fermion_force(Real eps, matrix *source[NFERMION],
                      matrix **psim[NFERMION]);
 
