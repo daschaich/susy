@@ -50,14 +50,6 @@ void setup_lambda() {
     CMULREAL(Lambda[j].e[k][k], -1.0 * k, Lambda[j].e[k][k]);
   }
 
-  // U(1) generator i * I_N / sqrt(N)
-  if (DIMF == NCOL * NCOL) {    // Allow SU(N) compilation for now
-    i_inv_sqrt = cmplx(0.0, sqrt(one_ov_N));
-    clear_mat(&(Lambda[DIMF - 1]));
-    for (i = 0; i < NCOL; i++)
-      Lambda[DIMF - 1].e[i][i] = i_inv_sqrt;
-  }
-
 #ifdef DEBUG_CHECK
   int a;
   complex tc;

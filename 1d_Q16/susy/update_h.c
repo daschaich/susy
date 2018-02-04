@@ -8,79 +8,110 @@
 
 
 // -----------------------------------------------------------------
-// Update mom with the gauge force
-// Include tunable coefficient C2 in the d^2 term of the action
+// Update mom with the bosonic force
 // Use tr_dest and tempmat for temporary storage
-// Assume compute_DmuUmu() have already been run
-double gauge_force(Real eps) {
-  register int i, mu, nu;
+double bosonic_force(Real eps) {
+  register int i, j;
   register site *s;
-  char **local_pt[2][2];
-  int a, b, gather, flip = 0;
-  double returnit = 0.0, tr;
-  complex tc;
-  matrix tmat, tmat2, *mat[2];
-  msg_tag *tag[NUMLINK], *tag0[2], *tag1[2];
+  double returnit = 0.0, tmp_so3 = 2.0 * mass_so3, tmp_so6 = 2.0 * mass_so6;
+  matrix tmat;
+  msg_tag *tag, *tag2, *tag3;
 
-  // All contributions from d^2 term need a factor of C2
-  // First we have the finite difference operator derivative times DmuUmu
-  // Ubar_a(x) DmuUmu(x) - DmuUmu(x + a) Ubar_a(x)
-  tag[0] = start_gather_field(DmuUmu, sizeof(matrix),
-                              goffset[0], EVENANDODD, gen_pt[0]);
-  FORALLDIR(mu) {
-    if (mu < NUMLINK - 1)     // Start next gather
-      tag[mu + 1] = start_gather_field(DmuUmu, sizeof(matrix),
-                                       goffset[mu + 1], EVENANDODD,
-                                       gen_pt[mu + 1]);
-
-    wait_gather(tag[mu]);
-    FORALLSITES(i, s) {
-      mult_an(&(s->link[mu]), &(DmuUmu[i]), &(s->f_U[mu]));   // Initialize
-      mult_na_dif((matrix *)(gen_pt[mu][i]), &(s->link[mu]), &(s->f_U[mu]));
-    }
-    cleanup_gather(tag[mu]);
-  }
-
-  // Only compute susy-breaking scalar potential term if bmass non-zero
-  if (bmass > IMAG_TOL) {
-    Real dmu;
-#ifdef EIG_POT
-    dmu = 2.0 * bmass * bmass;
-#else
-    Real tr;
-    dmu = 2.0 * one_ov_N * bmass * bmass;
-#endif
-
-    FORALLSITES(i, s) {
-      FORALLDIR(mu) {
-#ifdef EIG_POT
-        // Ubar_a(x) [U_a(x) Ubar_a(x) - I]
-        mult_na(&(s->link[mu]), &(s->link[mu]), &tmat);
-        scalar_add_diag(&tmat, -1.0);
-        scalar_mult_an_sum(&(s->link[mu]), &tmat, dmu, &(s->f_U[mu]));
-#else
-        // Ubar_a(x) (Tr[U_a(x) Ubar_a(x)] / N - 1)
-        tr = one_ov_N * realtrace(&(s->link[mu]), &(s->link[mu])) - 1.0;
-        tr *= dmu;
-        scalar_mult_sum_adj_matrix(&(s->link[mu]), tr, &(s->f_U[mu]));
-#endif
-      }
+  // First we have the finite difference operator gauge derivative
+  // 2 * X_i(n + 1) * U^dagger(n) * X_i(n)
+  tag = start_gather_site(F_OFFSET(X[0]), sizeof(matrix) * NSCALAR,
+                          TUP, EVENANDODD, gen_pt[0]);
+  
+  tag2 = start_gather_site(F_OFFSET(X[0]), sizeof(matrix) * NSCALAR,
+                          TDOWN, EVENANDODD, gen_pt[1]);
+  
+  tag3 = start_gather_site(F_OFFSET(link), sizeof(matrix),
+                           TDOWN, EVENANDODD, gen_pt[2]);
+  wait_gather(tag);
+  
+  
+  FORALLSITES(i, s) {
+    for(j=0;j<NSCALAR;j++) {
+      mult_an(&s->link, &s->X[j], &tmat);
+      mult_nn((matrix *)(gen_pt[0][i][j]), &tmat, &s->f_U);
     }
   }
-
-  // Finally take adjoint and update the momentum
-  // Include overall factor of kappa = N / (2lambda)
-  // Subtract to reproduce -Adj(f_U)
-  // Compute average gauge force in same loop
-  tr = kappa * eps;
+  
+  tr = 2.0 * kappa * eps;
   FORALLSITES(i, s) {
     scalar_mult_dif_adj_matrix(&(s->f_U), tr, &(s->mom));
     returnit += realtrace(&(s->f_U), &(s->f_U));
   }
+
+  // This is the finite difference operator scalar derivative
+  wait_gather(tag2);
+  wait_gather(tag3);
+  
+  FORALLSITES(i, s) {
+    for(j=0;j<NSCALAR;j++) {
+      mult_na((matrix *)(gen_pt[0][i][j]), &s->link, &tmat);
+      mult_nn(&s->link, &tmat, &s->f_X[j]);
+      dif_matrix(&s->X[j], &s->f_X[j]);
+      mult_nn((matrix *)(gen_pt[1][i][j]), (matrix *)(gen_pt[2][i]), &tmat);
+      mult_an_sum((matrix *)(gen_pt[2][i]), &tmat, &s->f_X[j]);
+      scalar_mult_matrix(&s->f_X[j], 2.0, &s->f_X[j]);
+    }
+  }
+  
+  // The pure scalar stuff
+  FORALLSITES(i, s) {
+    for(j=0;j<NSCALAR;j++) {
+#ifdef BMN
+      for(k=0;k<NSCALAR;k++) {
+        if(j==k) continue;
+        for(l=0;l<NSCALAR;l++) {
+          if((j==l) || (k==l)) continue;
+          if(epsilon[j][k][l] > 0)
+            scalar_mult_nn_dif(&s->X[k], &s->X[l], mass_Myers, &s->f_X[j]);
+          else if(epsilon[j][k][l] < 0)
+            scalar_mult_nn_sum_matrix(&s->X[k], &s->X[l], mass_Myers, &s->f_X[j]);
+        }
+      }
+#endif
+      for(k=j+1;k<NSCALAR;k++) {
+        mult_nn(&s->X[j], &s->X[k], &tmat);
+        mult_nn_dif(&s->X[k], &s->X[j], &tmat);
+        
+        mult_nn_dif(&s->X[k], &tmat, &s->f_X[j]);
+        mult_nn_sum(&tmat, &s->X[k], &s->f_X[j]);
+        
+      }
+      
+      mult_na((matrix *)(gen_pt[0][i][j]), &s->link, &tmat);
+      mult_nn(&s->link, &tmat, &s->f_X[j]);
+      dif_matrix(&s->X[j], &s->f_X[j]);
+      mult_nn((matrix *)(gen_pt[1][i][j]), (matrix *)(gen_pt[2][i]), &tmat);
+      mult_an_sum((matrix *)(gen_pt[2][i]), &tmat, &s->f_X[j]);
+    }
+    for(j=0;j<3;j++)
+      scalar_mult_dif_matrix(&s->X[j], tmp_so3, &s->f_X[j]);
+    
+    
+    for(j=3;j<NSCALAR;j++)
+      scalar_mult_dif_matrix(&s->X[j], tmp_so6, &s->f_X[j]);
+  }
+  
+  // Finally take adjoint and update the momentum
+  // Include overall factor of kappa = N / (2lambda)
+  // Subtract to reproduce -Adj(f_X)
+  // Compute average scalar force in same loop
+  tr = kappa * eps;
+  FORALLSITES(i, s) {
+    for(j=0;j<NSCALAR;j++)
+    {
+      scalar_mult_dif_adj_matrix(&(s->f_X[j]), tr, &(s->mom_X[j]));
+      returnit += realtrace(&(s->f_X[j]), &(s->f_X[j]));
+    }
+  }
   g_doublesum(&returnit);
   returnit *= kappa * kappa;
 
-  return (eps * sqrt(returnit) / volume);
+  return (eps * sqrt(returnit) / nt);
 }
 // -----------------------------------------------------------------
 

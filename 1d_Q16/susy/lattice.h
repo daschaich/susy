@@ -60,6 +60,8 @@ EXTERN Real traj_length;
 
 // SU(N) generators
 EXTERN matrix Lambda[DIMF];
+EXTERN gamma_mat Gamma[NCHIRAL_FERMION - 1], Gamma123;
+EXTERN int epsilon[3][3][3];
 EXTERN Real rsqmin, lambda, kappa, mu;
 EXTERN Real mass_so3, mass_so6, mass_Myers, mass_fermion;
 EXTERN double_complex linktrsum;
@@ -90,13 +92,6 @@ EXTERN Real gnorm, *fnorm, max_gf, *max_ff;
 // generator state
 EXTERN double_prn node_prn;
 
-// Stuff for derivative and link terms
-EXTERN int offset;    // Path along each link
-EXTERN int label;
-
-// Stuff for gathers -- both forwards and backwards
-EXTERN int goffset[2];
-
 // Persistent fermions for matrix--vector operation
 // Used in fermion_op and assemble_fermion_force
 EXTERN matrix *src[NFERMION], *dest[NFERMION];
@@ -105,7 +100,6 @@ EXTERN matrix *src[NFERMION], *dest[NFERMION];
 // May be wasteful of space
 EXTERN Real one_ov_N;
 EXTERN complex minus1, *tr_eta, *tr_dest;
-EXTERN matrix *DmuUmu;
 
 // CG Fermions
 EXTERN matrix *mpm[NFERMION], *pm0[NFERMION], *rm[NFERMION];
