@@ -8,15 +8,14 @@
 
 // -----------------------------------------------------------------
 // Construct gaussian random momentum matrices
-// as sum of U(N) generators with gaussian random coefficients
+// as sum of SU(N) generators with gaussian random coefficients
 void ranmom() {
-  register int i, j, mu;
+  register int i, j;
   register site *s;
   complex grn;
 
   FORALLSITES(i, s) {
-    FORALLDIR(mu) {
-      clear_mat(&(s->mom[mu]));
+      clear_mat(&(s->mom));
       for (j = 0; j < DIMF; j++) {
 #ifdef SITERAND
         grn.real = gaussian_rand_no(&(s->site_prn));
@@ -25,7 +24,7 @@ void ranmom() {
         grn.real = gaussian_rand_no(&(s->node_prn));
         grn.imag = gaussian_rand_no(&(s->node_prn));
 #endif
-        c_scalar_mult_sum_mat(&(Lambda[j]), &grn, &(s->mom[mu]));
+        c_scalar_mult_sum_mat(&(Lambda[j]), &grn, &(s->mom));
       }
     }
   }
@@ -38,31 +37,27 @@ void ranmom() {
 // Construct a gaussian random vector R, return src = (Mdag M)^{1 / 8} R
 // Need to invert despite the positive power, since it is fractional
 // Return the number of iterations from the inversion
-int grsource(Twist_Fermion *src) {
-  register int i, j, mu;
+int grsource(matrix *src[NFERMION]) {
+  register int i, j, k;
   register site *s;
   int avs_iters;
   Real size_r;
   complex grn;
-  Twist_Fermion **psim = malloc(sizeof(Twist_Fermion*) * Norder);
+  matrix **psim[NFERMION];
 
   // Allocate psim (will be zeroed in congrad_multi)
+  for (j = 0; j < NFERMION; j++) {
+    psim[j] = malloc(sizeof(matrix*) * Norder);
+  
   for (i = 0; i < Norder; i++)
-    psim[i] = malloc(sizeof(Twist_Fermion) * sites_on_node);
-
+    psim[j][i] = malloc(sizeof(matrix) * sites_on_node);
+  }
+  
   // Begin with pure gaussian random numbers
   FORALLSITES(i, s) {
-    clear_TF(&(src[i]));
-    for (j = 0; j < DIMF; j++) {                // Site fermions
-#ifdef SITERAND
-      grn.real = gaussian_rand_no(&(s->site_prn));
-      grn.imag = gaussian_rand_no(&(s->site_prn));
-#else
-      grn.real = gaussian_rand_no(&node_prn);
-      grn.imag = gaussian_rand_no(&node_prn);
-#endif
-      c_scalar_mult_sum_mat(&(Lambda[j]), &grn, &(src[i].Fsite));
-      FORALLDIR(mu) {                           // Link fermions
+    for (k = 0; k < NFERMION; k++) {
+      clear_mat(&(src[k][i]));
+      for (j = 0; j < DIMF; j++) {                // Site fermions
 #ifdef SITERAND
         grn.real = gaussian_rand_no(&(s->site_prn));
         grn.imag = gaussian_rand_no(&(s->site_prn));
@@ -70,28 +65,20 @@ int grsource(Twist_Fermion *src) {
         grn.real = gaussian_rand_no(&node_prn);
         grn.imag = gaussian_rand_no(&node_prn);
 #endif
-        c_scalar_mult_sum_mat(&(Lambda[j]), &grn, &(src[i].Flink[mu]));
+        c_scalar_mult_sum_mat(&(Lambda[j]), &grn, &(src[k][i]));
       }
-      // Plaquette fermions
-#ifdef SITERAND
-      grn.real = gaussian_rand_no(&(s->site_prn));
-      grn.imag = gaussian_rand_no(&(s->site_prn));
-#else
-      grn.real = gaussian_rand_no(&node_prn);
-      grn.imag = gaussian_rand_no(&node_prn);
-#endif
-        c_scalar_mult_sum_mat(&(Lambda[j]), &grn, &(src[i].Fplaq));
     }
   }
 
 #ifdef DEBUG_CHECK
   double source_norm = 0.0;
   FORALLSITES(i, s) {
+    for (k = 0; k < NFERMION; k++) {
 //    if (i != 0)
-//      clear_TF(&(src[i]));
+//      clear_mat(&(src[k][i]));
 //    if (i == 0)
-//      dump_TF(&src[i]);
-    source_norm += (double)magsq_TF(&(src[i]));
+//      dumpmat(&src[k][i]);
+    source_norm += (double)realtrace_nn(&(src[k][i]), &(src[k][i]));
   }
   g_doublesum(&source_norm);
   node0_printf("source_norm in grsource %.4g\n", source_norm);
@@ -100,7 +87,7 @@ int grsource(Twist_Fermion *src) {
 //  fermion_op(psim[0], psim[1], MINUS);
 //  printf("\n\n TEST 1\n");
 //  FORALLSITES(i, s) {
-//    source_norm = (double)magsq_TF(&(psim[1][i]));
+//    source_norm = (double)realtrace_nn(&(psim[k][1][i]), &(src[k][i]));
 //    if (source_norm * source_norm > 0) {
 //      printf("%d %d %d %d %.4g\n",
 //             s->x, s->y, s->z, s->t, source_norm);

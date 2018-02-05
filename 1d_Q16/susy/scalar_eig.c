@@ -12,19 +12,16 @@
 void scalar_eig(double *ave_eigs, double *eig_widths,
                 double *min_eigs, double *max_eigs) {
 
-  register int i, dir;
+  register int i;
   register site *s;
   char N = 'N';     // Ask LAPACK only for eigenvalues
   char U = 'U';     // Have LAPACK store upper triangle of U.Ubar
-  int row, col, Npt = NCOL, stat = 0, Nwork = 2 * NCOL, j;
-  Real tr;
-  double sq_eigs[NCOL];
-  complex tc;
-  matrix USq, tmat;
+  int row, col, Npt = NCOL, stat = 0, Nwork = 2 * NCOL, j, k;
+  double sq_eigs[NCOL], norm = 1.0/(double) (NSCALAR * nt);
 
 #ifdef SCALAR_EIG_DIST
   if (this_node != 0) {
-    printf("plaquette: don't run SCALAR_EIG_DIST in parallel\n");
+    printf("scalar_eig: don't run SCALAR_EIG_DIST in parallel\n");
     fflush(stdout);
     terminate(1);
   }
@@ -40,11 +37,8 @@ void scalar_eig(double *ave_eigs, double *eig_widths,
 
   FORALLSITES(i, s) {
     for(j=0;j<NSCALAR;j++) {
-      
-    }
     
-    
-    // Convert USq to column-major double array used by LAPACK
+    // Convert X[j] to column-major double array used by LAPACK
       for (row = 0; row < NCOL; row++) {
         for (col = 0; col < NCOL; col++) {
           store[2 * (col * NCOL + row)] = s->X[j].e[row][col].real;
@@ -52,32 +46,29 @@ void scalar_eig(double *ave_eigs, double *eig_widths,
         }
       }
 
-      // Compute eigenvalues and eigenvectors of USq
+      // Compute eigenvalues and eigenvectors of X[j]
       zheev_(&N, &U, &Npt, store, &Npt, eigs, work, &Nwork, Rwork, &stat);
 
       // Make sure eigenvalues are always ordered consistently
       if (stat != 0)
-        printf("WARNING: Non-zero return for %d %d %d\n", s->x, s->t, dir);
+        printf("WARNING: Non-zero return for %d\n", s->t);
 
 #ifdef SCALAR_EIG_DIST
-      if (project == 1)
-        printf("POLAR_EIG_DIST ");
-      else
-        printf("UUBAR_EIG_DIST ");
-      printf("%d %d %d", s->x, s->t, dir);
-      for (j = 0; j < NCOL; j++)
-        printf(" %.4g", eigs[j]);
+      printf("SCALAR EIG DIST ");
+      printf("%d %d", s->t, j);
+      for (k = 0; k < NCOL; k++)
+        printf(" %.4g", eigs[k]);
       printf("\n");
 #endif
 
       // Average eigenvalues, monitor minimum and maximum
-      for (j = 0; j < NCOL; j++) {
-        ave_eigs[j] += eigs[j];
-        sq_eigs[j] += eigs[j] * eigs[j];
-        if (eigs[j] > max_eigs[j])
-          max_eigs[j] = eigs[j];
-        if (eigs[j] < min_eigs[j])
-          min_eigs[j] = eigs[j];
+      for (k = 0; k < NCOL; k++) {
+        ave_eigs[k] += eigs[k];
+        sq_eigs[k] += eigs[k] * eigs[k];
+        if (eigs[k] > max_eigs[k])
+          max_eigs[k] = eigs[k];
+        if (eigs[k] < min_eigs[k])
+          min_eigs[k] = eigs[k];
       }
     }
   }
@@ -85,10 +76,10 @@ void scalar_eig(double *ave_eigs, double *eig_widths,
   // Finalize averages, extrema and square root of variance
   for (j = 0; j < NCOL; j++) {
     g_doublesum(&(ave_eigs[j]));
-    ave_eigs[j] /= norm;
+    ave_eigs[j] *= norm;
 
     g_doublesum(&(sq_eigs[j]));
-    sq_eigs[j] /= norm;
+    sq_eigs[j] *= norm;
 
     eig_widths[j] = sqrt(sq_eigs[j] - ave_eigs[j] * ave_eigs[j]);
 
