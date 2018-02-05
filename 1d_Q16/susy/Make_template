@@ -48,8 +48,7 @@ MY_OBJECTS = setup.o        \
              action.o       \
              ploop.o        \
              scalar_eig.o   \
-             link_trace.o   \
-             widths.o       \
+             scalar_trace.o   \
              grsource.o     \
              utilities.o    \
              library_util.o \

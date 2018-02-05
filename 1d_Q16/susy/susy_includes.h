@@ -41,11 +41,11 @@ void ranmom();
 int grsource(matrix *source[NFERMION]);
 
 // Basic observables
-complex ploop(int dir, int project, double *plpMod);
+complex ploop();
 
 // Scalar eigenvalues: averages, extrema and width
 // #define SCALAR_EIG_DIST to print all eigenvalues in serial
-void scalar_eig(int project, double *ave_eigs, double *eig_widths,
+void scalar_eig(double *ave_eigs, double *eig_widths,
                 double *min_eigs, double *max_eigs);
 
 // Action routines
@@ -64,9 +64,8 @@ void DSq(matrix *src[NFERMION], matrix *dest[NFERMION]);
 int congrad_multi(matrix *src[NFERMION], matrix **psim[NFERMION],
                   int MaxCG, Real RsdCG, Real *size_r);
 
-// Compute average Tr[Udag U] / N_c
-// Number of blocking steps only affects output formatting
-double link_trace(double *linktr, double *linktr_width);
+// Compute average Tr[X[i]X[i]] / N_c
+double scalar_trace(double *Xtr, double *Xwidth);
 
 // Routines in library_util.c that loop over all sites
 void gauge_field_copy(field_offset src, field_offset dest);
@@ -75,8 +74,6 @@ void shiftmat(matrix *dat, matrix *temp, int dir);
 // Random gauge transformation for testing gauge invariance
 void random_gauge_trans(matrix *temp_ferm[NFERMION]);
 
-// Determinant-related routines
-void widths();        // Widths of plaquette and det distributions
 // -----------------------------------------------------------------
 
 
