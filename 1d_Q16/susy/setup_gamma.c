@@ -4,7 +4,7 @@
 #include "susy_includes.h"
 
 void setup_gamma() {
-  int i, j, k, l;
+  int i, j, k;
   
   for (i = 0; i < 3; i++) {
     for (j = 0; j < 3; j++) {

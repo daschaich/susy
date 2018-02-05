@@ -20,7 +20,6 @@
 #include "../include/macros.h"    // For MAXFILENAME
 #include "../include/file_types.h"
 #include "../include/susy.h"
-#include "../include/dirs.h"      // For NDIMS
 // -----------------------------------------------------------------
 
 
@@ -35,7 +34,7 @@ typedef struct {
   char time_stamp[MAX_TIME_STAMP]; /* Date and time stamp - used to
           check consistency between the
           ASCII header file and the lattice file */
-  int32type dims[NDIMS];                // Full lattice dimensions
+  int32type nt;                // Full lattice dimensions
   int32type header_bytes;               /* NOT WRITTEN TO THE FILE but
            helpful for finding the data */
   int32type order;                      /* 0 means no coordinate list is
@@ -97,7 +96,7 @@ typedef struct {
 
 // -----------------------------------------------------------------
 // Prototypes for generic/io_lat4.c
-void read_lat_dim_gf(char *filename, int *ndim, int dims[]);
+void read_lat_dim_gf(char *filename, int *ndim, int nt);
 gauge_file *restore_serial(char *filename);
 gauge_file *save_serial(char *filename);
 int write_gauge_info_item( FILE *fpout, /* ascii file pointer */

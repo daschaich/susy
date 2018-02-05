@@ -1,108 +1,56 @@
 // -----------------------------------------------------------------
 // Evaluate the Polyakov loop using repeated single-timeslice gathers
-// Use tempmat, tempmat2, staple and UpsiU[0] for temporary storage
+// Use tempmat and tempmat2 for temporary storage
 #include "susy_includes.h"
 
-// dir tells us the direction of the product: XUP or TUP
-// project == 1 tells us to consider links unitarized via polar projection
-complex ploop(int dir, int project, double *plpMod) {
+complex ploop() {
   register int i;
   register site *s;
-  int j, t, len = nt;
-  double norm = 0.0;
-  complex sum  = cmplx(0.0, 0.0), plp;
-  matrix tmat, tmat2;
+  int t;
+  double norm = 1.0/(double) nt;
+  complex plp;
+  matrix tmat;
 
-  // Optionally consider polar-projected links,
-  // saving original values in UpsiU[0] to be reset at end
-  if (project == 1) {
-    FORALLSITES(i, s) {
-      mat_copy(&(s->link[dir]), &(UpsiU[0][i]));
-      polar(&(s->link[dir]), &tmat, &tmat2);
-      mat_copy(&tmat, &(s->link[dir]));
-    }
-  }
+  // Special case: nt == 1
+  if (nt == 1) {
+    FORALLSITES(i, s)
+      plp = trace(&(s->link));
 
-  switch(dir) {
-    case XUP:
-      len = nx;
-      norm = 1.0 / (double)(nt);
-      break;
-    case TUP:
-      len = nt;
-      norm = 1.0 / (double)(nx);
-      break;
-    default:
-      printf("ploop: unrecognized direction %d\n", dir);
-      fflush(stdout);
-      terminate(1);
-  }
+    g_complexsum(&plp);
+    CMULREAL(plp, norm, plp);
 
-  // Special case: len == 1
-  if (len == 1) {
-    *plpMod = 0.0;
-    FORALLSITES(i, s) {
-      plp = trace(&(s->link[dir]));
-      CSUM(sum, plp);
-      *plpMod += cabs(&plp);
-    }
-    g_complexsum(&sum);
-    g_doublesum(plpMod);
-    CMULREAL(sum, norm, sum);
-    *plpMod *= norm;
-
-    if (project == 1) {       // Reset original links
-      FORALLSITES(i, s)
-        mat_copy(&(UpsiU[0][i]), &(s->link[dir]));
-    }
-
-    return sum;
+    return plp;
   }
 
   // Compute line by steadily shifting links to hyperplane 0
   FORALLSITES(i, s)
-    mat_copy(&(s->link[dir]), &(tempmat[i]));
+    mat_copy(&(s->link), &(tempmat[i]));
 
-  for (t = 1; t < len; t++) {
-    shiftmat(tempmat, tempmat2, goffset[dir]);
+  for (t = 1; t < nt; t++) {
+    shiftmat(tempmat, tempmat2, TUP);
     FORALLSITES(i, s) {
-      j = s->x;
-      if (dir == TUP)
-        j = s->t;
-      if (j != 0)
+      if (s->t != 0)
         continue;
 
       if (t == 1)
-        mult_nn(&(s->link[dir]), &(tempmat[i]), &(staple[i]));
+        mult_nn(&(s->link), &(tempmat[i]), &(tmat));
       else {
-        mult_nn(&(staple[i]), &(tempmat[i]), &(tempmat2[i]));
-        mat_copy(&(tempmat2[i]), &(staple[i]));
+        mult_nn(&(tmat), &(tempmat[i]), &(tempmat2[i]));
+        mat_copy(&(tempmat2[i]), &(tmat));
       }
     }
   }
 
-  *plpMod = 0.0;
   FORALLSITES(i, s) {
-    j = s->x;
-    if (dir == TUP)
-      j = s->t;
-    if (j != 0)
+    if (s->t != 0)
       continue;
 
-    plp = trace(&(staple[i]));
-    CSUM(sum, plp);
-    *plpMod += cabs(&plp);
+    plp = trace(&(tmat));
   }
-  g_complexsum(&sum);
-  g_doublesum(plpMod);
-  CMULREAL(sum, norm, sum);
-  *plpMod *= norm;
+  
+  g_complexsum(&plp);
+  CMULREAL(plp, norm, plp);
 
-  if (project == 1) {       // Reset original links
-    FORALLSITES(i, s)
-      mat_copy(&(UpsiU[0][i]), &(s->link[dir]));
-  }
-
-  return sum;
+  return plp;
 }
 // -----------------------------------------------------------------

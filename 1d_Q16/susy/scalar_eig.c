@@ -9,9 +9,7 @@
 //#define SCALAR_EIG_DIST
 #include "susy_includes.h"
 
-// project == 1 tells us to consider scalar fields from polar decomposition
-// rather than scalar fields from the U.Ubar product
-void scalar_eig(int project, double *ave_eigs, double *eig_widths,
+void scalar_eig(double *ave_eigs, double *eig_widths,
                 double *min_eigs, double *max_eigs) {
 
   register int i, dir;
@@ -20,7 +18,7 @@ void scalar_eig(int project, double *ave_eigs, double *eig_widths,
   char U = 'U';     // Have LAPACK store upper triangle of U.Ubar
   int row, col, Npt = NCOL, stat = 0, Nwork = 2 * NCOL, j;
   Real tr;
-  double norm = NUMLINK * volume, sq_eigs[NCOL];
+  double sq_eigs[NCOL];
   complex tc;
   matrix USq, tmat;
 
@@ -41,26 +39,16 @@ void scalar_eig(int project, double *ave_eigs, double *eig_widths,
   }
 
   FORALLSITES(i, s) {
-    FORALLDIR(dir) {
-      if (project == 1) {   // Consider polar-projected scalar fields
-        polar(&(s->link[dir]), &USq, &tmat);
-        // Take log
-        matrix_log(&tmat, &USq);
-      }
-      else {                // Consider U.Ubar scalar fields
-        mult_na(&(s->link[dir]), &(s->link[dir]), &USq);
-        // Take traceless part
-        tc = trace(&USq);
-        tr = one_ov_N * tc.real;
-        for (j = 0; j < NCOL; j++)
-          USq.e[j][j].real -= tr;
-      }
-
-      // Convert USq to column-major double array used by LAPACK
+    for(j=0;j<NSCALAR;j++) {
+      
+    }
+    
+    
+    // Convert USq to column-major double array used by LAPACK
       for (row = 0; row < NCOL; row++) {
         for (col = 0; col < NCOL; col++) {
-          store[2 * (col * NCOL + row)] = USq.e[row][col].real;
-          store[2 * (col * NCOL + row) + 1] = USq.e[row][col].imag;
+          store[2 * (col * NCOL + row)] = s->X[j].e[row][col].real;
+          store[2 * (col * NCOL + row) + 1] = s->X[j].e[row][col].imag;
         }
       }
 
