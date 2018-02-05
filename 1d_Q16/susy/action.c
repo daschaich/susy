@@ -10,12 +10,12 @@
 // -----------------------------------------------------------------
 // Bosonic contribution to the action
 double bosonic_action() {
-  register int i;
+  register int i,l;
   register site *s;
   double b_action, so3_sq=0.0, so6_sq=0.0, Myers=0.0;
   int j, k;
-  complex tc;
   matrix tmat, tmat2;
+  msg_tag *tag;
   
   // Scalar kinetic term
   tag = start_gather_site(F_OFFSET(X[0]), sizeof(matrix) * NSCALAR,
@@ -33,7 +33,7 @@ double bosonic_action() {
   FORALLSITES(i, s) {
     // Scalar hopping term ( D^+_tau X_i(t) )^2
     for(j=0;j<NSCALAR;j++) {
-      mult_nn(&(s->link), (matrix *)(gen_pt[0][i][j]), &tmat);
+      mult_nn(&(s->link), (matrix *)(gen_pt[0][i] + j), &tmat);
       mult_nn(&(s->X[j]), &tmat, &tmat2);
       
       b_action += realtrace(&(s->link), &tmat2);
@@ -89,8 +89,8 @@ double bosonic_action() {
 // Since the pseudofermion src is fixed throughout the trajectory,
 // ampdeg actually has no effect on Delta S (checked)
 // sol, however, depends on the gauge fields through the CG
-double fermion_action(matrix *src[NFERMION], MATRIX **sol[NFERMION]) {
-  register int i, j;
+double fermion_action(matrix *src[NFERMION], matrix **sol[NFERMION]) {
+  register int i, j, k;
   register site *s;
   double sum = 0.0;
   complex ctmp;

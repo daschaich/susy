@@ -107,6 +107,9 @@ EXTERN matrix *mpm[NFERMION], *pm0[NFERMION], *rm[NFERMION];
 // Temporary matrices
 EXTERN matrix *tempmat, *tempmat2, *temp_ferm[NFERMION];
 
+//Allocate some more arrays to be used by LAPACK in scalar eigenvalues
+EXTERN double *Rwork, *eigs, *store, *work;
+
 EXTERN gauge_file *startlat_p;
 EXTERN gauge_file *savelat_p;
 

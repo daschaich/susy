@@ -14,7 +14,7 @@ params par_buf;
 // -----------------------------------------------------------------
 // On node zero, read lattice size and seed, and send to others
 int initial_set() {
-  int prompt = 0, status = 0, dir;
+  int prompt = 0, status = 0;
   if (mynode() == 0) {
     // Print banner
 #ifdef BMN
@@ -160,7 +160,7 @@ void make_fields() {
 
 // -----------------------------------------------------------------
 void setup_bc() {
-  register int i, dir;
+  register int i;
   register site *s;
   
   // Single-offset terms only
@@ -187,7 +187,7 @@ int setup() {
   // Print banner, get volume and seed
   prompt = initial_set();
   // Initialize the node random number generator
-  initialize_prn(&node_prn, iseed, volume + mynode());
+  initialize_prn(&node_prn, iseed, nt + mynode());
   // Initialize the layout functions, which decide where sites live
   setup_layout();
   // Allocate space for lattice, set up coordinate fields
@@ -348,8 +348,10 @@ int readin(int prompt) {
 
   // Do whatever is needed to get lattice
   startlat_p = reload_lattice(startflag, startfile);
-
+  
   // Allocate some more arrays to be used by LAPACK in scalar_eig.c
+  work = malloc(sizeof *work * 4 * NCOL);
+  store = malloc(sizeof *store * 2 * NCOL * NCOL);
   Rwork = malloc(sizeof *Rwork * (3 * NCOL - 2));
   eigs = malloc(sizeof *eigs * NCOL);
 
