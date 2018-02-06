@@ -12,7 +12,7 @@ gauge_file *save_lattice(int flag, char *filename) {
   double dtime;
   gauge_file *gf = NULL;
 
-  d_linktrsum(&linktrsum);
+  sum_linktr(&linktrsum);
   nersc_checksum = nersc_cksum();
 
   dtime = -dclock();
@@ -124,7 +124,7 @@ gauge_file *reload_lattice(int flag, char *filename) {
   if (flag != FRESH && flag != CONTINUE)
     node0_printf("Time to reload gauge configuration = %e\n", dtime);
 
-  d_linktrsum(&linktrsum);
+  sum_linktr(&linktrsum);
   nersc_checksum = nersc_cksum();
 
 #if PRECISION == 1

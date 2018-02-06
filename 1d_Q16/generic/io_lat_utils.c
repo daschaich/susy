@@ -111,14 +111,14 @@ void swrite_gauge_hdr(FILE *fp, gauge_header *gh) {
 
   swrite_data(fp, (void *)&gh->magic_number, sizeof(gh->magic_number),
               myname, "magic_number");
-  swrite_data(fp, (void *)gh->dims, sizeof(gh->dims),
-              myname, "dimensions");
+  swrite_data(fp, (void *)&gh->nt, sizeof(gh->nt),
+              myname, "nt");
   swrite_data(fp, (void *)gh->time_stamp, sizeof(gh->time_stamp),
               myname, "time_stamp");
   swrite_data(fp, &gh->order, sizeof(gh->order), myname, "order");
 
   // Header byte length
-  gh->header_bytes = sizeof(gh->magic_number) + sizeof(gh->dims)
+  gh->header_bytes = sizeof(gh->magic_number) + sizeof(gh->nt)
                    + sizeof(gh->time_stamp) + sizeof(gh->order);
 }
 // -----------------------------------------------------------------
@@ -299,7 +299,6 @@ void write_gauge_info_file(gauge_file *gf) {
   write_gauge_info_item(info_fp, "time_stamp", "\"%s\"", gh->time_stamp, 0, 0);
   sprintf(sums, "%x %x", gf->check.sum29, gf->check.sum31);
   write_gauge_info_item(info_fp, "checksums", "\"%s\"", sums, 0, 0);
-  write_gauge_info_item(info_fp, "nx", "%d", (char *)&nx, 0, 0);
   write_gauge_info_item(info_fp, "nt", "%d", (char *)&nt, 0, 0);
   write_appl_gauge_info(info_fp);
   fclose(info_fp);
@@ -374,8 +373,7 @@ gauge_file* setup_output_gauge_file() {
   /* Load header values */
   gh->magic_number = GAUGE_VERSION_NUMBER;
 
-  gh->dims[0] = nx;
-  gh->dims[1] = nt;
+  gh->nt = nt;
 
   // Get date and time stamp using local time on node0
   if (this_node == 0) {
@@ -454,7 +452,7 @@ void read_site_list(gauge_file *gf) {
      natural order */
 
   if (gf->header->order != NATURAL_ORDER) {
-    gf->rank2rcv = malloc(sizeof(int32type) * volume);
+    gf->rank2rcv = malloc(sizeof(int32type) * nt);
     if (gf->rank2rcv == NULL) {
       printf("read_site_list: Can't malloc rank2rcv table\n");
       terminate(1);
@@ -463,18 +461,18 @@ void read_site_list(gauge_file *gf) {
     // Only node0 reads the site list
     if (this_node == 0) {
       /* Reads receiving site coordinate if file is not in natural order */
-      if ((int)fread(gf->rank2rcv,sizeof(int32type), volume,gf->fp) != volume) {
+      if ((int)fread(gf->rank2rcv,sizeof(int32type), nt,gf->fp) != nt) {
         printf("read_site_list: Node %d site list read error %d\n",
                this_node, errno);
         terminate(1);
       }
 
       if (gf->byterevflag == 1)
-        byterevn(gf->rank2rcv, volume);
+        byterevn(gf->rank2rcv, nt);
     }
 
     // Broadcast result to all nodes
-    broadcast_bytes((char *)gf->rank2rcv, volume * sizeof(int32type));
+    broadcast_bytes((char *)gf->rank2rcv, nt * sizeof(int32type));
   }
   else
     gf->rank2rcv = NULL;  // If no site list
@@ -489,7 +487,7 @@ int read_gauge_hdr(gauge_file *gf) {
   FILE *fp = gf->fp;
   gauge_header *gh = gf->header;
   int32type tmp, btmp;
-  int j, stat, byterevflag = 0;
+  int stat, byterevflag = 0;
   char myname[] = "read_gauge_hdr";
 
   // Read header, do byte reversal, if necessary, and check consistency
@@ -536,30 +534,23 @@ int read_gauge_hdr(gauge_file *gf) {
 
   // Read and process header information
   // Get lattice dimensions
-  stat = sread_byteorder(byterevflag, fp, gh->dims, sizeof(gh->dims),
+  stat = sread_byteorder(byterevflag, fp, &gh->nt, sizeof(gh->nt),
                          myname, "dimensions");
   if (stat != 0)
     terminate(1);
 
   // Check lattice dimensions for consistency
-  if (gh->dims[0] != nx ||
-      gh->dims[1] != nt) {
-    /* So we can use this routine to discover the dimensions,
-       we provide that if nx = nt = -1 initially
+  if (gh->nt != nt) {
+    /* So we can use this routine to discover nt
+     we provide that if nt = -1 initially
        we don't die */
-    if (nx != -1 || nt != -1) {
-      printf("%s: Incorrect lattice dimensions ",myname);
-      for (j = 0; j < NDIMS; j++)
-        printf("%d ", gh->dims[j]);
-      printf("\n");
+    if (nt != -1) {
+      printf("%s: Incorrect lattice dimensions %d\n",myname, gh->nt);
       fflush(stdout);
       terminate(1);
     }
-    else {
-      nx = gh->dims[0];
-      nt = gh->dims[1];
-      volume = nx * nt;
-    }
+    else
+      nt = gh->nt;
   }
   // Read date and time stamp
   stat = sread_data(fp, gh->time_stamp, sizeof(gh->time_stamp),
@@ -568,7 +559,7 @@ int read_gauge_hdr(gauge_file *gf) {
     terminate(1);
 
   // Read header byte length
-  gh->header_bytes = sizeof(gh->magic_number) + sizeof(gh->dims)
+  gh->header_bytes = sizeof(gh->magic_number) + sizeof(gh->nt)
                    + sizeof(gh->time_stamp) + sizeof(gh->order);
 
   // Read data order
@@ -670,25 +661,3 @@ void r_serial_f(gauge_file *gf) {
 }
 // -----------------------------------------------------------------
 
-
-
-// -----------------------------------------------------------------
-// Read lattice dimensions from a binary file and close the file
-void read_lat_dim_gf(char *filename, int *ndim, int dims[]) {
-  gauge_file *gf;
-  int i;
-
-  // Only two dimensions here
-  *ndim = NDIMS;
-
-  // Open the file
-  nx = -1;
-  nt = -1;
-  gf = r_serial_i(filename);
-
-  for (i = 0; i < *ndim; i++)
-    dims[i] = gf->header->dims[i];
-
-  r_serial_f(gf);
-}
-// -----------------------------------------------------------------

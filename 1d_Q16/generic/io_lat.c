@@ -217,8 +217,8 @@ static void send_buf_to_node0(fmatrix *tbuf, int tbuf_length,
 // Only node 0 writes the gauge configuration to a binary file gf
 void w_serial(gauge_file *gf) {
   register int i, j;
-  int rank29, rank31, buf_length, tbuf_length;
-  int x, t, currentnode, newnode;
+  int rank29, rank31, buf_length, tbuf_length, index;
+  int t, currentnode, newnode;
   FILE *fp = NULL;
   gauge_header *gh = NULL;
   fmatrix *lbuf = NULL;
@@ -282,49 +282,49 @@ void w_serial(gauge_file *gf) {
   buf_length = 0;
   tbuf_length = 0;
   for (t = 0; t < nt; t++) {
-      newnode = node_number(t);  // The node providing the next site
-      if (newnode != currentnode || x == 0) {
-        // We are switching to a new node or have exhausted a line of nx
-        // Sweep any data in the retiring node's tbuf to the node0 lbuf
-        if (tbuf_length > 0) {
-          if (currentnode != 0)
-            send_buf_to_node0(tbuf, tbuf_length, currentnode);
-
-          // node0 flushes tbuf, accumulates checksum
-          // and writes lbuf if it is full
-          if (this_node == 0) {
-            flush_tbuf_to_lbuf(gf, &rank29, &rank31, lbuf, &buf_length,
-                                                     tbuf, tbuf_length);
-            if (buf_length > MAX_BUF_LENGTH - nx)
-              flush_lbuf_to_file(gf, lbuf, &buf_length);
-          }
-          tbuf_length = 0;
+    newnode = node_number(t);  // The node providing the next site
+    if (newnode != currentnode) {
+      // We are switching to a new node or have exhausted a site
+      // Sweep any data in the retiring node's tbuf to the node0 lbuf
+      if (tbuf_length > 0) {
+        if (currentnode != 0)
+          send_buf_to_node0(tbuf, tbuf_length, currentnode);
+        
+        // node0 flushes tbuf, accumulates checksum
+        // and writes lbuf if it is full
+        if (this_node == 0) {
+          flush_tbuf_to_lbuf(gf, &rank29, &rank31, lbuf, &buf_length,
+                             tbuf, tbuf_length);
+          if (buf_length > MAX_BUF_LENGTH - 1)
+            flush_lbuf_to_file(gf, lbuf, &buf_length);
         }
-
-        // node0 sends a few bytes to newnode as a clear to send signal
-        if (newnode != currentnode) {
-          if (this_node == 0 && newnode != 0)
-            send_field((char *)tbuf, (NSCALAR + 1), newnode);
-          if (this_node == newnode && newnode != 0)
-            get_field((char *)tbuf, (NSCALAR + 1), 0);
-          currentnode = newnode;
-        }
+        tbuf_length = 0;
       }
-
-      // The node with the data just appends to its tbuf
-      if (this_node == currentnode) {
-        i = node_index(t);
-        index = (NSCALAR + 1) * tbuf_length;
-        d2f_mat(&lattice[i].link, &tbuf[index]);
-        for(j=0;j<NSCALAR;j++) {
-          index++;
-          d2f_mat(&lattice[i].link, &tbuf[index]);
-        }
+      
+      // node0 sends a few bytes to newnode as a clear to send signal
+      if (newnode != currentnode) {
+        if (this_node == 0 && newnode != 0)
+          send_field((char *)tbuf, (NSCALAR + 1), newnode);
+        if (this_node == newnode && newnode != 0)
+          get_field((char *)tbuf, (NSCALAR + 1), 0);
+        currentnode = newnode;
       }
-
-      if (this_node == currentnode || this_node == 0)
-        tbuf_length++;
     }
+    
+    // The node with the data just appends to its tbuf
+    if (this_node == currentnode) {
+      i = node_index(t);
+      index = (NSCALAR + 1) * tbuf_length;
+      d2f_mat(&lattice[i].link, &tbuf[index]);
+      for(j=0;j<NSCALAR;j++) {
+        index++;
+        d2f_mat(&lattice[i].link, &tbuf[index]);
+      }
+    }
+    
+    if (this_node == currentnode || this_node == 0)
+      tbuf_length++;
+  }
 
   // Purge any remaining data
   if (tbuf_length > 0) {
@@ -376,7 +376,7 @@ void r_serial(gauge_file *gf) {
   off_t head_size;            // Size of header plus coordinate list
   off_t checksum_offset = 0;  // Where we put the checksum
   int rcv_rank, rcv_coords, destnode, stat, idest = 0;
-  int k, x, t;
+  int j, k, t;
   int buf_length = 0, where_in_buf = 0;
   gauge_check test_gc;
   u_int32type *val;
@@ -394,7 +394,7 @@ void r_serial(gauge_file *gf) {
     if (gf->header->order == NATURAL_ORDER)
       coord_list_size = 0;
     else
-      coord_list_size = sizeof(int32type) * volume;
+      coord_list_size = sizeof(int32type) * nt;
     checksum_offset = gf->header->header_bytes + coord_list_size;
     head_size = checksum_offset + gauge_check_size;
 
@@ -430,7 +430,7 @@ void r_serial(gauge_file *gf) {
   g_sync();
 
   // node0 reads and deals out the values
-  for (rcv_rank = 0; rcv_rank < volume; rcv_rank++) {
+  for (rcv_rank = 0; rcv_rank < nt; rcv_rank++) {
     /* If file is in coordinate natural order, receiving coordinate
        is given by rank. Otherwise, it is found in the table */
     if (gf->header->order == NATURAL_ORDER)
@@ -438,19 +438,17 @@ void r_serial(gauge_file *gf) {
     else
       rcv_coords = gf->rank2rcv[rcv_rank];
 
-    x = rcv_coords % nx;
-    rcv_coords /= nx;
     t = rcv_coords % nt;
 
     // The node that gets the next set of gauge links
-    destnode = node_number(x, t);
+    destnode = node_number(t);
 
     // node0 fills its buffer, if necessary
     if (this_node == 0) {
       if (where_in_buf == buf_length) {  /* get new buffer */
         /* new buffer length  = remaining sites, but never bigger
            than MAX_BUF_LENGTH */
-        buf_length = volume - rcv_rank;
+        buf_length = nt - rcv_rank;
         if (buf_length > MAX_BUF_LENGTH)
           buf_length = MAX_BUF_LENGTH;
 
@@ -466,7 +464,7 @@ void r_serial(gauge_file *gf) {
       }  // End of the buffer read
 
       if (destnode == 0) {  // Just copy links
-        idest = node_index(x, t);
+        idest = node_index(t);
         // Save (NSCALAR + 1) matrices in tmat for further processing
         memcpy(tmat, &lbuf[(NSCALAR + 1) * where_in_buf],
                (NSCALAR + 1) * sizeof(fmatrix));
@@ -481,7 +479,7 @@ void r_serial(gauge_file *gf) {
     // The node that contains this site reads the message
     else {  // All nodes other than node 0
       if (this_node == destnode) {
-        idest = node_index(x, t);
+        idest = node_index(t);
         // Receive (NSCALAR + 1) matrices in temporary space for further processing
         get_field((char *)tmat, (NSCALAR + 1) * sizeof(fmatrix), 0);
       }
@@ -508,7 +506,9 @@ void r_serial(gauge_file *gf) {
           rank31 = 0;
       }
       // Copy (NSCALAR + 1) matrices to generic-precision lattice[idest]
-      f2d_mat(tmat, &lattice[idest].link[0]);
+      f2d_mat(&(tmat[0]), &lattice[idest].link);
+      for(j=0;j<NSCALAR;j++)
+        f2d_mat(&(tmat[j+1]), &lattice[idest].X[j]);
     }
     else {
       rank29 += (NSCALAR + 1) * sizeof(fmatrix) / sizeof(int32type);

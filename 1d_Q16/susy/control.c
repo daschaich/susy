@@ -1,15 +1,13 @@
 // -----------------------------------------------------------------
-// Main procedure for N=(2,2) SYM evolution and measurements
+// Main procedure for BFSS/BMN evolution and measurements
 #define CONTROL
 #include "susy_includes.h"
 
 int main(int argc, char *argv[]) {
-  int prompt, dir, j;
+  int prompt, j;
   int traj_done, s_iters, avs_iters = 0, avm_iters = 0, Nmeas = 0;
   Real f_eps, g_eps;
-  double plaq, dtime, plpMod = 0.0;
-  double linktr[NUMLINK], linktr_ave, linktr_width;
-  double link_det[NUMLINK], det_ave, det_width;
+  double b_act, dtime, Xtr[NSCALAR], Xtr_ave, Xtr_width;
   double ave_eigs[NCOL], eig_widths[NCOL], min_eigs[NCOL], max_eigs[NCOL];
   complex plp = cmplx(99.0, 99.0);
 
@@ -23,13 +21,8 @@ int main(int argc, char *argv[]) {
   g_sync();
   prompt = setup();
   setup_lambda();
+  setup_gamma();
   setup_rhmc();
-
-#ifdef SMEAR
-  register int i;
-  register site *s;
-  double max_plaq = 0.0;
-#endif
 
   // Load input and run
   if (readin(prompt) != 0) {
@@ -38,24 +31,17 @@ int main(int argc, char *argv[]) {
   }
   dtime = -dclock();
 
-  // Check: compute initial plaquette and bosonic action
-  plaquette(&plaq);
-  node0_printf("START %.8g ", plaq);
-  plaq = gauge_action(NODET);
-  node0_printf("%.8g\n", plaq / (double)volume);
-  // N>2 determinant of traceless part of U.Udag crashes with unit config
-  if (startflag != FRESH) {
-    linktr_ave = link_trace(linktr, &linktr_width,
+  // Check: compute initial bosonic action
+  b_act = bosonic_action();
+  node0_printf("START %.8g\n", b_act / (double)nt);
+  
+  linktr_ave = link_trace(linktr, &linktr_width,
                             link_det, &det_ave, &det_width);
     node0_printf("FLINK");
     FORALLDIR(dir)
       node0_printf(" %.6g", linktr[dir]);
     node0_printf(" %.6g %.6g\n", linktr_ave, linktr_width);
-    node0_printf("FLINK_DET");
-    FORALLDIR(dir)
-      node0_printf(" %.6g", link_det[dir]);
-    node0_printf(" %.6g %.6g\n", det_ave, det_width);
-  }
+  
 
   // Perform warmup trajectories
   f_eps = traj_length / (Real)nsteps[0];
