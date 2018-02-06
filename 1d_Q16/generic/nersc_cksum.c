@@ -17,34 +17,33 @@ u_int32type nersc_cksum() {
 
 
 // -----------------------------------------------------------------
-void d_linktrsum(double_complex *linktrsum) {
-  int i, dir;
+void sum_linktr(double_complex *linktrsum) {
+  int i;
   site *s;
   matrix *a;
-
+  
   linktrsum->real = 0.0;
   linktrsum->imag = 0.0;
-
+  
   FORALLSITES(i, s) {
-    FORALLDIR(dir) {
-      a = &s->link[dir];
-      CSUM(*linktrsum, a->e[0][0]);
-      CSUM(*linktrsum, a->e[1][1]);
+    a = &s->link;
+    CSUM(*linktrsum, a->e[0][0]);
+    CSUM(*linktrsum, a->e[1][1]);
 #if (NCOL > 2)
-      CSUM(*linktrsum, a->e[2][2]);
+    CSUM(*linktrsum, a->e[2][2]);
 #if (NCOL > 3)
-      CSUM(*linktrsum, a->e[3][3]);
+    CSUM(*linktrsum, a->e[3][3]);
 #if (NCOL > 4)
-      int j;
-      for (j = 4; j < NCOL; j++)
-        CSUM(*linktrsum, a->e[j][j]);
+    int j;
+    for (j = 4; j < NCOL; j++)
+      CSUM(*linktrsum, a->e[j][j]);
 #endif
 #endif
 #endif
-    }
   }
-
+  
+  
   g_dcomplexsum(linktrsum);
-  CDIVREAL(*linktrsum, (NDIMS * volume), *linktrsum);
+  CDIVREAL(*linktrsum, nt, *linktrsum);
 }
 // -----------------------------------------------------------------

@@ -355,10 +355,10 @@ void make_nn_gathers() {
   else
     gather_parity = SWITCH_PARITY;
 
-  FORALLUPDIR(i) {
+  i=TUP; // Hack to reuse higher dimensional functions
     make_gather(neighbor_coords_special, &i, WANT_INVERSE,
                 ALLOW_EVEN_ODD, gather_parity);
-  }
+  
   // Already in desired order, no need to sort
 }
 // -----------------------------------------------------------------
@@ -839,7 +839,7 @@ msg_tag* start_general_strided_gather(
   char *field,          /* source buffer aligned to desired field */
   int stride,           /* bytes between fields in source buffer */
   int size,   /* size in bytes of the field (eg sizeof(vector))*/
-  int *displacement,  /* displacement to gather from. four components */
+  int displacement,  /* displacement to gather from. four components */
   int subl,   /* subl of sites whose neighbors we gather.
          It is EVENANDODD, if all sublattices are done. */
   char **dest)   /* one of the vectors of pointers */
@@ -869,8 +869,8 @@ msg_tag* start_general_strided_gather(
   }
   else {
     FORSOMEPARITY(i, s, subl) {
-      if (displacement[TUP] != 0)
-        tt = (s->t + displacement[TUP] + nt) % nt;
+      if (displacement != 0)
+        tt = (s->t + displacement + nt) % nt;
       else
         tt = s->t;
       dest[i] = field + stride * node_index(tt);
@@ -885,7 +885,7 @@ msg_tag* start_general_strided_gather(
 msg_tag* start_general_gather_site(
   field_offset field, /* which field? Some member of structure "site" */
   int size,   /* size in bytes of the field (eg sizeof(vector))*/
-  int *displacement,  /* displacement to gather from. four components */
+  int displacement,  /* displacement to gather from. four components */
   int parity,   /* parity of sites to which we gather.
          one of EVEN, ODD or EVENANDODD. */
   char **dest)   /* one of the vectors of pointers */
@@ -897,7 +897,7 @@ msg_tag* start_general_gather_site(
 msg_tag* start_general_gather_field(
   void *field,         /* which field? Pointer returned by malloc() */
   int size,   /* size in bytes of the field (eg sizeof(vector))*/
-  int *displacement,  /* displacement to gather from. four components */
+  int displacement,  /* displacement to gather from. four components */
   int parity,   /* parity of sites to which we gather.
          one of EVEN, ODD or EVENANDODD. */
   char **dest)   /* one of the vectors of pointers */

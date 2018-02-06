@@ -1,26 +1,21 @@
 // -----------------------------------------------------------------
 // Routines to determine the distribution of sites on nodes
-// Divide the lattice by prime factors in any of the four directions
-// Prefers to divide the longest dimensions to minimize surface area
-// Prefers to divide dimensions which have already been divided,
-// to avoid introducing more off-node directions
+// Divide the lattice by prime factors
 
 // Start trying to divide with the largest prime factor, work down to 2
 // The current maximum prime is 53
 // The array prime[] may be extended if necessary
 
-// Requires that the lattice volume be divisible by the number of cores
-// Each dimension must be divisible by a suitable factor,
-// such that the product of the four factors is the number of cores
+// Requires that nt be divisible by the number of cores
 // Also need even number of sites per core
 
 // setup_layout() does any initial setup
-//   When it is called the lattice dimensions nx and nt have been set
+//   When it is called nt has been set
 //   This routine sets the global variables "sites_on_node",
 //   "even_sites_on_node" and "odd_sites_on_node"
-// node_number(x, t) returns the node number on which a site lives
-// node_index(x, t) returns the index of the site on the node
-//   i.e., the site is lattice[node_index(x, t)]
+// node_number(t) returns the node number on which a site lives
+// node_index(t) returns the index of the site on the node
+//   i.e., the site is lattice[node_index(t)]
 // num_sites(node) returns the (constant) number of sites on a node
 // get_logical_dimensions() returns the machine dimensions
 // get_logical_coordinates() returns the mesh coordinates of this node
@@ -29,9 +24,9 @@
 #include <qmp.h>
 #endif
 
-static int squaresize[2];           // Dimensions of hypercubes
-static int nsquares[2];             // Number of hypercubes in each direction
-static int machine_coordinates[2];  // Logical machine coordinates
+static int squaresize;           // Dimensions of hypercubes
+static int nsquares;             // Number of hypercubes
+static int machine_coordinates;  // Logical machine coordinates
 
 int prime[] = {2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53};
 #define MAXPRIMES (sizeof(prime) / sizeof(int))
@@ -41,15 +36,13 @@ int prime[] = {2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53};
 
 // -----------------------------------------------------------------
 static void setup_hyper_prime() {
-  int i, j, k, dir;
+  int i, k;
 
   node0_printf("hyper_prime\n");
 
   // Figure out dimensions of rectangle
-  squaresize[XUP] = nx;
-  squaresize[TUP] = nt;
-  nsquares[XUP] = 1;
-  nsquares[TUP] = 1;
+  squaresize = nt;
+  nsquares = 1;
 
   i = 1;  // Current number of hypercubes
   while (i < numnodes()) {
@@ -58,28 +51,8 @@ static void setup_hyper_prime() {
     while ((numnodes() / i) % prime[k] != 0 && k > 0)
       --k;
 
-    // Figure out which direction to divide
-    // Find largest even dimension of h-cubes
-    for (j = 1, dir = XUP; dir <= TUP; dir++) {
-      if (squaresize[dir] > j && squaresize[dir] % prime[k] == 0)
-        j = squaresize[dir];
-    }
-
-    // If direction with largest extent has already been divided,
-    // divide it again
-    // Otherwise divide first direction with largest extent
-    FORALLUPDIR(dir) {
-      if (squaresize[dir] == j && nsquares[dir] > 1)
-        break;
-    }
-    if (dir > TUP) {
-      FORALLUPDIR(dir) {
-        if (squaresize[dir] == j)
-          break;
-      }
-    }
-    // This can fail if I run out of prime factors in the dimensions
-    if (dir > TUP) {
+    // This can fail if I run out of prime factors
+    if (k == 0) {
       node0_printf("ERROR: Not enough factors of %d to lay out lattice\n",
                    prime[k]);
       g_sync();
@@ -88,20 +61,18 @@ static void setup_hyper_prime() {
 
     // Do the surgery
     i *= prime[k];
-    squaresize[dir] /= prime[k];
-    nsquares[dir] *= prime[k];
+    squaresize /= prime[k];
+    nsquares *= prime[k];
   }
 
-  // Dividing all-odd lattice among multiple nodes can give squaresize[i]=0
+  // Dividing odd nt lattice among multiple nodes can give squaresize=0
   // Check for that and exit gracefully if encountered
-  FORALLUPDIR(dir) {
-    if (squaresize[dir] < 1) {
+    if (squaresize < 1) {
       node0_printf("ERROR: Can't lay out lattice ");
       node0_printf("(bad squaresize in layout_hyper_prime)\n");
       g_sync();
       terminate(1);
     }
-  }
 }
 // -----------------------------------------------------------------
 
@@ -115,12 +86,10 @@ void setup_layout() {
   setup_hyper_prime();
 
   // Compute machine coordinates
-  machine_coordinates[XUP] = k % squaresize[XUP];
-  k /= squaresize[XUP];
-  machine_coordinates[TUP] = k % squaresize[TUP];
+  machine_coordinates = k % squaresize;
 
   // Number of sites on node
-  sites_on_node = squaresize[XUP] * squaresize[TUP];
+  sites_on_node = squaresize;
 
   // Need even number of sites per hypercube
   if (sites_on_node % 2 != 0) {
@@ -130,26 +99,24 @@ void setup_layout() {
     terminate(1);
   }
 
-  node0_printf("ON EACH NODE %d x %d\n", squaresize[XUP], squaresize[TUP]);
+  node0_printf("ON EACH NODE %d\n", squaresize);
 
   even_sites_on_node = sites_on_node / 2;
   odd_sites_on_node = sites_on_node / 2;
 }
 
-int node_number(int x, int t) {
+int node_number(int t) {
   register int i;
-  x /= squaresize[XUP];
-  t /= squaresize[TUP];
-  i = x + nsquares[XUP] * t;
+  t /= squaresize;
+  i = t;
   return i;
 }
 
-int node_index(int x, int t) {
-  register int i, xr, tr;
-  xr = x % squaresize[XUP];
-  tr = t % squaresize[TUP];
-  i = xr + squaresize[XUP] * tr;
-  if ((x + t) % 2 == 0)   // Even site
+int node_index(int t) {
+  register int i, tr;
+  tr = t % squaresize;
+  i = tr;
+  if (t % 2 == 0)   // Even site
     return (i / 2);
   else
     return ((i + sites_on_node) / 2);
@@ -168,7 +135,7 @@ size_t num_sites(int node) {
 
 // -----------------------------------------------------------------
 const int *get_logical_dimensions() {
-  return nsquares;
+  return &nsquares;
 }
 // -----------------------------------------------------------------
 
@@ -178,6 +145,6 @@ const int *get_logical_dimensions() {
 // Coordinates simulate a mesh architecture
 // Must correspond to the node_number result
 const int *get_logical_coordinate() {
-  return machine_coordinates;
+  return &machine_coordinates;
 }
 // -----------------------------------------------------------------
