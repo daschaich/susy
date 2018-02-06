@@ -9,7 +9,7 @@
 
 // -----------------------------------------------------------------
 // Update mom with the bosonic force
-// Use tr_dest and tempmat for temporary storage
+// Uses some pointer arithmetic that might be susceptible to bugs
 double bosonic_force(Real eps) {
   register int i, j;
   register site *s;
@@ -21,22 +21,21 @@ double bosonic_force(Real eps) {
   // 2 * X_i(n + 1) * U^dagger(n) * X_i(n)
   tag = start_gather_site(F_OFFSET(X[0]), sizeof(matrix) * NSCALAR,
                           TUP, EVENANDODD, gen_pt[0]);
-  
+
   tag2 = start_gather_site(F_OFFSET(X[0]), sizeof(matrix) * NSCALAR,
-                          TDOWN, EVENANDODD, gen_pt[1]);
-  
+                           TDOWN, EVENANDODD, gen_pt[1]);
+
   tag3 = start_gather_site(F_OFFSET(link), sizeof(matrix),
                            TDOWN, EVENANDODD, gen_pt[2]);
+
   wait_gather(tag);
-  
-  
   FORALLSITES(i, s) {
-    for(j=0;j<NSCALAR;j++) {
-      mult_an(&s->link, &s->X[j], &tmat);
-      mult_nn((matrix *)(gen_pt[0][i][j]), &tmat, &s->f_U);
+    for (j = 0; j < NSCALAR; j++) {
+      mult_an(&(s->link), &(s->X[j]), &tmat);
+      mult_nn((matrix *)(gen_pt[0][i] + j), &tmat, &(s->f_U));
     }
   }
-  
+
   tr = 2.0 * kappa * eps;
   FORALLSITES(i, s) {
     scalar_mult_dif_adj_matrix(&(s->f_U), tr, &(s->mom));
@@ -46,64 +45,69 @@ double bosonic_force(Real eps) {
   // This is the finite difference operator scalar derivative
   wait_gather(tag2);
   wait_gather(tag3);
-  
   FORALLSITES(i, s) {
-    for(j=0;j<NSCALAR;j++) {
-      mult_na((matrix *)(gen_pt[0][i][j]), &s->link, &tmat);
-      mult_nn(&s->link, &tmat, &s->f_X[j]);
-      dif_matrix(&s->X[j], &s->f_X[j]);
-      mult_nn((matrix *)(gen_pt[1][i][j]), (matrix *)(gen_pt[2][i]), &tmat);
-      mult_an_sum((matrix *)(gen_pt[2][i]), &tmat, &s->f_X[j]);
-      scalar_mult_matrix(&s->f_X[j], 2.0, &s->f_X[j]);
+    for (j = 0; j < NSCALAR; j++) {
+      mult_na((matrix *)(gen_pt[0][i] + j), &(s->link), &tmat);
+      mult_nn(&(s->link), &tmat, &(s->f_X[j]));
+      dif_matrix(&(s->X[j]), &(s->f_X[j]));
+      mult_nn((matrix *)(gen_pt[1][i] + j), (matrix *)(gen_pt[2][i]), &tmat);
+      mult_an_sum((matrix *)(gen_pt[2][i]), &tmat, &(s->f_X[j]));
+      scalar_mult_matrix(&(s->f_X[j]), 2.0, &(s->f_X[j]));
     }
   }
-  
+
   // The pure scalar stuff
   FORALLSITES(i, s) {
-    for(j=0;j<NSCALAR;j++) {
+    for (j = 0; j < NSCALAR; j++) {
 #ifdef BMN
-      for(k=0;k<NSCALAR;k++) {
-        if(j==k) continue;
-        for(l=0;l<NSCALAR;l++) {
-          if((j==l) || (k==l)) continue;
-          if(epsilon[j][k][l] > 0)
-            scalar_mult_nn_dif(&s->X[k], &s->X[l], mass_Myers, &s->f_X[j]);
-          else if(epsilon[j][k][l] < 0)
-            scalar_mult_nn_sum_matrix(&s->X[k], &s->X[l], mass_Myers, &s->f_X[j]);
+      for (k = 0; k < NSCALAR; k++) {
+        if (j == k)
+          continue;
+        for (l = 0; l < NSCALAR; l++) {
+          if((j == l) || (k == l))
+            continue;
+
+          if (epsilon[j][k][l] > 0) {
+            scalar_mult_nn_dif(&(s->X[k]), &(s->X[l]),
+                               mass_Myers, &(s->f_X[j]));
+          }
+          else if (epsilon[j][k][l] < 0) {
+            scalar_mult_nn_sum(&(s->X[k]), &(s->X[l]),
+                               mass_Myers, &(s->f_X[j]));
+          }
         }
       }
 #endif
-      for(k=j+1;k<NSCALAR;k++) {
-        mult_nn(&s->X[j], &s->X[k], &tmat);
-        mult_nn_dif(&s->X[k], &s->X[j], &tmat);
-        
-        mult_nn_dif(&s->X[k], &tmat, &s->f_X[j]);
-        mult_nn_sum(&tmat, &s->X[k], &s->f_X[j]);
-        
+      for (k = j + 1; k < NSCALAR; k++) {
+        mult_nn(&(s->X[j]), &(s->X[k]), &tmat);
+        mult_nn_dif(&(s->X[k]), &(s->X[j]), &tmat);
+        mult_nn_dif(&(s->X[k]), &tmat, &(s->f_X[j]));
+        mult_nn_sum(&tmat, &(s->X[k]), &(s->f_X[j]));
       }
-      
-      mult_na((matrix *)(gen_pt[0][i][j]), &s->link, &tmat);
-      mult_nn(&s->link, &tmat, &s->f_X[j]);
-      dif_matrix(&s->X[j], &s->f_X[j]);
-      mult_nn((matrix *)(gen_pt[1][i][j]), (matrix *)(gen_pt[2][i]), &tmat);
-      mult_an_sum((matrix *)(gen_pt[2][i]), &tmat, &s->f_X[j]);
+
+      mult_na((matrix *)(gen_pt[0][i] + j), &(s->link), &tmat);
+      mult_nn(&(s->link), &tmat, &(s->f_X[j]));
+      dif_matrix(&(s->X[j]), &(s->f_X[j]));
+      mult_nn((matrix *)(gen_pt[1][i] + j), (matrix *)(gen_pt[2][i]), &tmat);
+      mult_an_sum((matrix *)(gen_pt[2][i]), &tmat, &(s->f_X[j]));
     }
-    for(j=0;j<3;j++)
-      scalar_mult_dif_matrix(&s->X[j], tmp_so3, &s->f_X[j]);
-    
-    
-    for(j=3;j<NSCALAR;j++)
-      scalar_mult_dif_matrix(&s->X[j], tmp_so6, &s->f_X[j]);
+    for (j = 0; j < 3; j++)
+      scalar_mult_dif_matrix(&(s->X[j]), tmp_so3, &(s->f_X[j]));
+
+    for (j = 3; j < NSCALAR; j++)
+      scalar_mult_dif_matrix(&(s->X[j]), tmp_so6, &(s->f_X[j]));
   }
-  
+  cleanup_gather(tag);
+  cleanup_gather(tag2);
+  cleanup_gather(tag3);
+
   // Finally take adjoint and update the momentum
   // Include overall factor of kappa = N / (2lambda)
   // Subtract to reproduce -Adj(f_X)
   // Compute average scalar force in same loop
   tr = kappa * eps;
   FORALLSITES(i, s) {
-    for(j=0;j<NSCALAR;j++)
-    {
+    for (j = 0; j < NSCALAR; j++) {
       scalar_mult_dif_adj_matrix(&(s->f_X[j]), tr, &(s->mom_X[j]));
       returnit += realtrace(&(s->f_X[j]), &(s->f_X[j]));
     }
@@ -122,9 +126,9 @@ double bosonic_force(Real eps) {
 //   f_U = Adj(Ms).D_U M(U, Ub).s - Adj[Adj(Ms).D_Ub M(U, Ub).s]
 // "s" is sol while "Ms" is psol
 // Copy these into persistent matrices for easier gathering
-// Use tempmat, tempmat2, UpsiU, Tr_Uinv,
+// Use tempmat, tempmat2, Tr_Uinv,
 // tr_dest and Ddet[012] for temporary storage
-// (many through calls to detF)
+#ifndef PUREGAUGE
 void assemble_fermion_force(Twist_Fermion *sol, Twist_Fermion *psol) {
   register int i;
   register site *s;
@@ -199,6 +203,7 @@ void assemble_fermion_force(Twist_Fermion *sol, Twist_Fermion *psol) {
   }
 #endif
 }
+#endif
 // -----------------------------------------------------------------
 
 
@@ -208,14 +213,15 @@ void assemble_fermion_force(Twist_Fermion *sol, Twist_Fermion *psol) {
 // Update the momenta with the fermion force
 // Assume that the multiCG has been run, with the solution in sol[j]
 // Accumulate f_U for each pole into fullforce, add to momenta
-// Use fullforce-->DmuUmu and temp_ferm for temporary storage
+// Allocate fullforce while using temp_ferm for temporary storage
 // (Calls assemble_fermion_force, which uses many more temporaries)
+#ifndef PUREGAUGE
 double fermion_force(Real eps, Twist_Fermion *src, Twist_Fermion **sol) {
   register int i;
   register site *s;
   int mu, n;
   double returnit = 0.0;
-  matrix *fullforce = malloc(sizeof *fullforce);
+  matrix *fullforce = malloc(sizeof *fullforce * sites_on_node);
 
 #ifdef FORCE_DEBUG
   int kick, ii, jj, iters = 0;
@@ -225,9 +231,6 @@ double fermion_force(Real eps, Twist_Fermion *src, Twist_Fermion **sol) {
   clear_mat(&tprint);
   clear_mat(&tmat);
 #endif
-
-  // Use DmuUmu for temporary storage
-  fullforce = DmuUmu;
 
   // Initialize fullforce
   fermion_op(sol[0], tempTF, PLUS);
@@ -264,60 +267,58 @@ double fermion_force(Real eps, Twist_Fermion *src, Twist_Fermion **sol) {
                  n, eps * sqrt(individ_force) / volume);
 
     // Check that force syncs with fermion action
-    old_action = d_fermion_action(src, sol);
+    old_action = fermion_action(src, sol);
     iters += congrad_multi(src, sol, niter, rsqmin, &final_rsq);
-    new_action = d_fermion_action(src, sol);
+    new_action = fermion_action(src, sol);
     node0_printf("EXITING  %.4g\n", new_action - old_action);
     if (fabs(new_action - old_action) > 1e-3)
       terminate(1);                             // Don't go further for now
 
 #if 0
     // Do a scan of the fermion action
-    for (mu = XUP; mu < NUMLINK; mu++) {
-      FORALLSITES(i, s) {
-        node0_printf("mu=%d on site (%d, %d)\n", mu, s->x, s->t);
-        tmat = s->link[mu];
-        dumpmat(&(s->f_U[mu]));
+    FORALLSITES(i, s) {
+      node0_printf("site %d\n", s->t);
+      tmat = s->link;
+      dumpmat(&(s->f_U));
 
-        for (ii = 0; ii < NCOL; ii++) {
-          for (jj = 0; jj < NCOL; jj++) {
-            for (kick = -1; kick <= 1; kick += 2) {
-              s->link[mu] = tmat;
-              s->link[mu].e[ii][jj].real += 0.001 * (Real)kick;
+      for (ii = 0; ii < NCOL; ii++) {
+        for (jj = 0; jj < NCOL; jj++) {
+          for (kick = -1; kick <= 1; kick += 2) {
+            s->link = tmat;
+            s->link.e[ii][jj].real += 0.001 * (Real)kick;
 
-              iters += congrad_multi(src, sol, niter, rsqmin, &final_rsq);
-              if (kick == -1)
-                new_action -= d_fermion_action(src, sol);
-              if (kick == 1) {
-                new_action += d_fermion_action(src, sol);
-                tprint.e[ii][jj].real = -250.0 * new_action;
-              }
+            iters += congrad_multi(src, sol, niter, rsqmin, &final_rsq);
+            if (kick == -1)
+              new_action -= fermion_action(src, sol);
+            if (kick == 1) {
+              new_action += fermion_action(src, sol);
+              tprint.e[ii][jj].real = -250.0 * new_action;
             }
+          }
 
-            for (kick = -1; kick <= 1; kick += 2) {
-              s->link[mu] = tmat;
-              s->link[mu].e[ii][jj].imag += 0.001 * (Real)kick;
+          for (kick = -1; kick <= 1; kick += 2) {
+            s->link = tmat;
+            s->link.e[ii][jj].imag += 0.001 * (Real)kick;
 
-              iters += congrad_multi(src, sol, niter, rsqmin, &final_rsq);
-              if (kick == -1)
-                new_action -= d_fermion_action(src, sol);
-              if (kick == 1) {
-                new_action += d_fermion_action(src, sol);
-                node0_printf("XXXG%d%dI %.4g %.4g\n",
-                             ii, jj, 0.001 * (Real)kick, 500 * new_action);
-                tprint.e[ii][jj].imag = -250 * new_action;
-              }
+            iters += congrad_multi(src, sol, niter, rsqmin, &final_rsq);
+            if (kick == -1)
+              new_action -= fermion_action(src, sol);
+            if (kick == 1) {
+              new_action += fermion_action(src, sol);
+              node0_printf("XXXG%d%dI %.4g %.4g\n",
+                           ii, jj, 0.001 * (Real)kick, 500 * new_action);
+              tprint.e[ii][jj].imag = -250 * new_action;
             }
           }
         }
-        sub_matrix(&tprint, &(s->f_U[mu]), &tprint2);
-        node0_printf("mu=%d on site (%d, %d): %.4g\n", mu, s->x, s->t,
-                     realtrace(&tprint2, &tprint2));
-        dumpmat(&tprint);
-        s->link[mu] = tmat;
-
-        iters += congrad_multi(src, sol, niter, rsqmin, &final_rsq);
       }
+      sub_matrix(&tprint, &(s->f_U[mu]), &tprint2);
+      node0_printf("site %d: %.4g\n", s->t,
+                   realtrace(&tprint2, &tprint2));
+      dumpmat(&tprint);
+      s->link[mu] = tmat;
+
+      iters += congrad_multi(src, sol, niter, rsqmin, &final_rsq);
     }   // End scan of the fermion action
 #endif
 #endif
@@ -334,9 +335,7 @@ double fermion_force(Real eps, Twist_Fermion *src, Twist_Fermion **sol) {
   g_doublesum(&returnit);
 
   free(fullforce);
-
-  // Reset DmuUmu
-  compute_DmuUmu();
   return (eps * sqrt(returnit) / volume);
 }
+#endif
 // -----------------------------------------------------------------

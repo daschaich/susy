@@ -20,9 +20,6 @@
 // get_logical_dimensions() returns the machine dimensions
 // get_logical_coordinates() returns the mesh coordinates of this node
 #include "generic_includes.h"
-#ifdef HAVE_QMP
-#include <qmp.h>
-#endif
 
 static int squaresize;           // Dimensions of hypercubes
 static int nsquares;             // Number of hypercubes
@@ -65,14 +62,14 @@ static void setup_hyper_prime() {
     nsquares *= prime[k];
   }
 
-  // Dividing odd nt lattice among multiple nodes can give squaresize=0
+  // Dividing odd-nt lattice among multiple nodes can give squaresize=0
   // Check for that and exit gracefully if encountered
-    if (squaresize < 1) {
-      node0_printf("ERROR: Can't lay out lattice ");
-      node0_printf("(bad squaresize in layout_hyper_prime)\n");
-      g_sync();
-      terminate(1);
-    }
+  if (squaresize < 1) {
+    node0_printf("ERROR: Can't lay out lattice ");
+    node0_printf("(bad squaresize in layout_hyper_prime)\n");
+    g_sync();
+    terminate(1);
+  }
 }
 // -----------------------------------------------------------------
 
@@ -102,7 +99,7 @@ void setup_layout() {
   node0_printf("ON EACH NODE %d\n", squaresize);
 
   even_sites_on_node = sites_on_node / 2;
-  odd_sites_on_node = sites_on_node / 2;
+  odd_sites_on_node = even_sites_on_node;
 }
 
 int node_number(int t) {

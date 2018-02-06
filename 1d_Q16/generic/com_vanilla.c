@@ -355,10 +355,10 @@ void make_nn_gathers() {
   else
     gather_parity = SWITCH_PARITY;
 
-  i=TUP; // Hack to reuse higher dimensional functions
-    make_gather(neighbor_coords_special, &i, WANT_INVERSE,
-                ALLOW_EVEN_ODD, gather_parity);
-  
+  i = TUP; // Hack to reuse higher dimensional functions
+  make_gather(neighbor_coords_special, &i, WANT_INVERSE,
+              ALLOW_EVEN_ODD, gather_parity);
+
   // Already in desired order, no need to sort
 }
 // -----------------------------------------------------------------
@@ -398,7 +398,7 @@ int make_gather(
   if (n_gathers > gather_array_len) {
     gather_array_len = n_gathers;
     gather_array = realloc(gather_array,
-                           gather_array_len * sizeof(*gather_array));
+                           sizeof(*gather_array) * gather_array_len);
   }
 
   dir = n_gathers - 1;  // Index of gather we are working on

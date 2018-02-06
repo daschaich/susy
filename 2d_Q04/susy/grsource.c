@@ -38,6 +38,7 @@ void ranmom() {
 // Construct a gaussian random vector R, return src = (Mdag M)^{1 / 8} R
 // Need to invert despite the positive power, since it is fractional
 // Return the number of iterations from the inversion
+#ifndef PUREGAUGE
 int grsource(Twist_Fermion *src) {
   register int i, j, mu;
   register site *s;
@@ -80,7 +81,7 @@ int grsource(Twist_Fermion *src) {
       grn.real = gaussian_rand_no(&node_prn);
       grn.imag = gaussian_rand_no(&node_prn);
 #endif
-        c_scalar_mult_sum_mat(&(Lambda[j]), &grn, &(src[i].Fplaq));
+      c_scalar_mult_sum_mat(&(Lambda[j]), &grn, &(src[i].Fplaq));
     }
   }
 
@@ -96,27 +97,24 @@ int grsource(Twist_Fermion *src) {
   g_doublesum(&source_norm);
   node0_printf("source_norm in grsource %.4g\n", source_norm);
 
-//  fermion_op(src, psim[0], PLUS);
-//  fermion_op(psim[0], psim[1], MINUS);
+//  DSq(src, dest);
 //  printf("\n\n TEST 1\n");
 //  FORALLSITES(i, s) {
 //    source_norm = (double)magsq_TF(&(psim[1][i]));
-//    if (source_norm * source_norm > 0) {
-//      printf("%d %d %d %d %.4g\n",
-//             s->x, s->y, s->z, s->t, source_norm);
-//      for (mu = 0; mu < NUMLINK; mu++)
+//    if (fabs(source_norm) > IMAG_TOL)
+//      printf("%d %d %.4g\n", s->x, s->t, source_norm);
+//      FORALLDIR(mu)
 //        dumpmat(&(s->link[mu]));
 //    }
 //  }
 
-//  fermion_op(src, psim[0],PLUS);
+//  fermion_op(src, dest, PLUS);
 //  printf("\n\n TEST 2\n");
 //  FORALLSITES(i, s) {
 //    source_norm = (double)magsq_TF(&(psim[0][i]));
-//    if (source_norm * source_norm > 0) {
-//      printf("%d %d %d %d %.4g\n",
-//             s->x, s->y, s->z, s->t, source_norm);
-//      for (mu = 0; mu < NUMLINK; mu++)
+//    if (fabs(source_norm) > IMAG_TOL)
+//      printf("%d %d %.4g\n", s->x, s->t, source_norm);
+//      FORALLDIR(mu)
 //        dumpmat(&(s->link[mu]));
 //    }
 //  }
@@ -142,4 +140,5 @@ int grsource(Twist_Fermion *src) {
   free(psim);
   return avs_iters;
 }
+#endif
 // -----------------------------------------------------------------

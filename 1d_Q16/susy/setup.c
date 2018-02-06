@@ -158,11 +158,12 @@ void make_fields() {
 // -----------------------------------------------------------------
 
 
+
 // -----------------------------------------------------------------
 void setup_bc() {
   register int i;
   register site *s;
-  
+
   // Single-offset terms only
   FORALLSITES(i, s) {
     s->bc[0] = 1.0;
@@ -172,7 +173,7 @@ void setup_bc() {
     if (s->t - 1 < 0)
       s->bc[1] = PBC;
   }
-  
+
   // BC test
   //  FORALLSITES(i, s)
   //      printf("%d : %4.2g %4.2g\n", s->t, s->bc[0], s->bc[1]);
@@ -194,14 +195,14 @@ int setup() {
   make_lattice();
   // Set up neighbor pointers and comlink structures
   make_nn_gathers();
-  
+
   // Set up boundary conditions
   if (PBC >= 0)
     node0_printf("Periodic temporal boundary conditions\n");
   if (PBC < 0)
     node0_printf("Antiperiodic temporal boundary conditions\n");
   setup_bc();
-  
+
   // Allocate space for fields
   make_fields();
 
@@ -308,8 +309,8 @@ int readin(int prompt) {
   mass_so6 = 0.25 * mass_so3;
   mass_Myers = 2.0 * sqrt(2.0) * mu / 3.0;
   mass_fermion = 0.25 * mu;
-#else
-  mass_so3 = mu*mu;
+#else   // BFSS case: mass_so3 = mass_so6 = mu^2; other two shouldn't be used
+  mass_so3 = mu * mu;
   mass_so6 = mass_so3;
   mass_Myers = -999.0;
   mass_fermion = -999.0;
@@ -348,7 +349,7 @@ int readin(int prompt) {
 
   // Do whatever is needed to get lattice
   startlat_p = reload_lattice(startflag, startfile);
-  
+
   // Allocate some more arrays to be used by LAPACK in scalar_eig.c
   work = malloc(sizeof *work * 4 * NCOL);
   store = malloc(sizeof *store * 2 * NCOL * NCOL);

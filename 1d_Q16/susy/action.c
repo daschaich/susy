@@ -9,61 +9,62 @@
 
 // -----------------------------------------------------------------
 // Bosonic contribution to the action
+// Uses some pointer arithmetic that might be susceptible to bugs
 double bosonic_action() {
   register int i,l;
   register site *s;
-  double b_action, so3_sq=0.0, so6_sq=0.0, Myers=0.0;
+  double b_action, so3_sq = 0.0, so6_sq = 0.0, Myers = 0.0;
   int j, k;
   matrix tmat, tmat2;
   msg_tag *tag;
-  
+
   // Scalar kinetic term
   tag = start_gather_site(F_OFFSET(X[0]), sizeof(matrix) * NSCALAR,
                           TUP, EVENANDODD, gen_pt[0]);
   FORALLSITES(i, s) {
-    for(j=0;j<3;j++)
+    for (j = 0; j < 3; j++)
       so3_sq -= realtrace_nn(&s->X[j], &s->X[j]);
-    for(j=3;j<NSCALAR;j++)
+    for (j = 3; j < NSCALAR; j++)
       so6_sq -= realtrace_nn(&s->X[j], &s->X[j]);
   }
   b_action = so3_sq + so6_sq;
-  
+
+  // Scalar hopping term [D_t^+ X_i(t)]^2
   wait_gather(tag);
-  
   FORALLSITES(i, s) {
-    // Scalar hopping term ( D^+_tau X_i(t) )^2
-    for(j=0;j<NSCALAR;j++) {
+    for (j = 0; j < NSCALAR; j++) {
       mult_nn(&(s->link), (matrix *)(gen_pt[0][i] + j), &tmat);
       mult_nn(&(s->X[j]), &tmat, &tmat2);
-      
       b_action += realtrace(&(s->link), &tmat2);
     }
   }
   b_action *= 2.0;
-  
+  cleanup_gather(tag);
+
+  // Commutator term
   FORALLSITES(i, s) {
-    //Commutator term
-    for(j=0;j<NSCALAR;j++) {
-      for(k=j+1;k<NSCALAR;k++) {
+    for (j = 0; j < NSCALAR; j++) {
+      for (k = j + 1; k < NSCALAR; k++) {
         mult_nn(&(s->X[j]), &(s->X[k]), &tmat);
         mult_nn_dif(&(s->X[k]), &(s->X[j]), &tmat);
         b_action -= realtrace_nn(&tmat, &tmat);
       }
     }
   }
-  
+
   // Scalar potential terms
   // Couplings are set differently depending on BMN/BFSS in setup.c
-  
   b_action += mass_so3 * so3_sq + mass_so6 * so6_sq;
-
 #ifdef BMN
   FORALLSITES(i, s) {
     for (j = 0; j < 3; j++) {
       for (k = 0; k < 3; k++) {
-        if(j==k) continue;
+        if (j == k)
+          continue;
         for (l = 0; l < 3; l++) {
-          if((j==l) || (k==l)) continue;
+          if((j == l) || (k == l))
+            continue;
+
           mult_nn(&(s->X[k]), &(s->X[l]), &tmat);
           Myers -= epsilon[j][k][l] * realtrace_nn(&s->X[j], &tmat);
         }
@@ -71,9 +72,9 @@ double bosonic_action() {
     }
   }
   b_action += mass_Myers * Myers;
-    
+
 #endif
-  
+
   b_action *= kappa;
   g_doublesum(&b_action);
   return b_action;
@@ -97,9 +98,9 @@ double fermion_action(matrix *src[NFERMION], matrix **sol[NFERMION]) {
 #ifdef DEBUG_CHECK
   double im = 0.0;
 #endif
-  
+
   FORALLSITES(i, s) {
-    for(k=0;k<NFERMION;k++) {
+    for (k = 0; k < NFERMION; k++) {
       sum += ampdeg4 * (double)realtrace(&(src[k][i]), &(src[k][i]));
       for (j = 0; j < Norder; j++) {
         ctmp = complextrace_an(&(src[k][i]), &(sol[k][j][i]));   // src^dag.sol[j]
@@ -126,10 +127,10 @@ double mom_action() {
   register int i, j;
   register site *s;
   double sum = 0.0;
-  
+
   FORALLSITES(i, s) {
     sum += (double)realtrace(&(s->mom), &(s->mom));
-    for(j=0;j<NSCALAR;j++)
+    for (j = 0; j < NSCALAR; j++)
       sum += (double)realtrace(&(s->mom_X[j]), &(s->mom_X[j]));
   }
   g_doublesum(&sum);
@@ -141,26 +142,27 @@ double mom_action() {
 // -----------------------------------------------------------------
 // Print out zeros for pieces of the action that aren't included
 double action(matrix **src[NFERMION], matrix ***sol[NFERMION]) {
-  double b_act, p_act, f_act;
+  double b_act, p_act;
   double total;
-  
+
   b_act = bosonic_action();
-  
   node0_printf("action: ");
   node0_printf("boson %.8g ", b_act);
-  
   total = b_act;
+
 #ifndef PUREGAUGE
-  int n,m;
+  int n, m;
+  double f_act;
   for (n = 0; n < Nroot; n++) {
     f_act = 0.0;
-    for(m = 0; m<NFERMION; m++)
+    for (m = 0; m < NFERMION; m++)
       f_act += fermion_action(src[m][n], sol[m][n]);
-    
+
     node0_printf("fermion%d %.8g ", n, f_act);
     total += f_act;
   }
 #endif
+
   p_act = mom_action();
   node0_printf("mom %.8g ", p_act);
   total += p_act;

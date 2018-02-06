@@ -54,7 +54,7 @@ void make_lattice();
 void free_lattice();
 
 // nersc_cksum.c
-void d_linktrsum(double_complex *linktrsum);
+void sum_linktr(double_complex *linktrsum);
 u_int32type nersc_cksum();
 
 // remap_stdio_from_args.c

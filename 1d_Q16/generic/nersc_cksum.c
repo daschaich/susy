@@ -21,12 +21,12 @@ void sum_linktr(double_complex *linktrsum) {
   int i;
   site *s;
   matrix *a;
-  
+
   linktrsum->real = 0.0;
   linktrsum->imag = 0.0;
-  
+
   FORALLSITES(i, s) {
-    a = &s->link;
+    a = &(s->link);
     CSUM(*linktrsum, a->e[0][0]);
     CSUM(*linktrsum, a->e[1][1]);
 #if (NCOL > 2)
@@ -41,8 +41,7 @@ void sum_linktr(double_complex *linktrsum) {
 #endif
 #endif
   }
-  
-  
+
   g_dcomplexsum(linktrsum);
   CDIVREAL(*linktrsum, nt, *linktrsum);
 }

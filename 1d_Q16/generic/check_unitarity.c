@@ -17,9 +17,9 @@ Real check_unit(matrix *c) {
   // Check normalization of each row
   for (i = 0; i < NCOL; i++) {
     ar = 0.0;
-    for (j=0;j<NCOL;j++) {
-      ar += (*c).e[i][j].real * (*c).e[i][j].real +    /* sum of squares of row */
-  (*c).e[i][j].imag * (*c).e[i][j].imag;
+    for (j = 0; j < NCOL; j++) {    // Sum of squares of row
+      ar += (*c).e[i][j].real * (*c).e[i][j].real
+          + (*c).e[i][j].imag * (*c).e[i][j].imag;
     }
     ar =  fabs(sqrt((double)ar) - 1.0);
     if (max < ar)
@@ -63,7 +63,7 @@ Real check_unitarity() {
     Real fval;
     int ival;
   } ifval;
-  
+
   FORALLSITES(i, s) {
     mat = (matrix *)&(s->link);
     deviation = check_unit(mat);
@@ -95,7 +95,7 @@ Real check_unitarity() {
     if (max_deviation < deviation)
       max_deviation = deviation;
     av_deviation += deviation * deviation;
-    for(j=0;j<NSCALAR;j++) {
+    for (j = 0; j < NSCALAR; j++) {
       mat = (matrix *)&(s->X[j]);
       deviation = check_unit(mat);
       if (deviation > TOLERANCE) {

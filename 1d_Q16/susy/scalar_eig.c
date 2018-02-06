@@ -17,7 +17,7 @@ void scalar_eig(double *ave_eigs, double *eig_widths,
   char N = 'N';     // Ask LAPACK only for eigenvalues
   char U = 'U';     // Have LAPACK store upper triangle of U.Ubar
   int row, col, Npt = NCOL, stat = 0, Nwork = 2 * NCOL, j, k;
-  double sq_eigs[NCOL], norm = 1.0/(double) (NSCALAR * nt);
+  double sq_eigs[NCOL], norm = 1.0 / (double)(NSCALAR * nt);
 
 #ifdef SCALAR_EIG_DIST
   if (this_node != 0) {
@@ -36,9 +36,8 @@ void scalar_eig(double *ave_eigs, double *eig_widths,
   }
 
   FORALLSITES(i, s) {
-    for(j=0;j<NSCALAR;j++) {
-    
-    // Convert X[j] to column-major double array used by LAPACK
+    for (j = 0; j < NSCALAR; j++) {
+      // Convert X[j] to column-major double array used by LAPACK
       for (row = 0; row < NCOL; row++) {
         for (col = 0; col < NCOL; col++) {
           store[2 * (col * NCOL + row)] = s->X[j].e[row][col].real;

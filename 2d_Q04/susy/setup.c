@@ -201,7 +201,7 @@ int setup() {
   make_lattice();
   // Set up neighbor pointers and comlink structures
   make_nn_gathers();
-  // Set up offset tables for the five paths
+  // Set up offset tables for gathers
   setup_offset();
   // Allocate space for fields
   make_fields();

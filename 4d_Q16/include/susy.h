@@ -1,5 +1,5 @@
 // -----------------------------------------------------------------
-// Defines and subroutine declarations for N=4 SYM with gauge group U(NCOL)
+// Defines and subroutine declarations for N=(2,2) SYM with gauge group U(NCOL)
 // and fermions in the DIMF-dimensional adjoint rep
 #ifndef _SUSY_H
 #define _SUSY_H
