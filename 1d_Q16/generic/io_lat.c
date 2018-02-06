@@ -66,20 +66,18 @@
 // Copy a single precision fundamental matrix to generic precision
 void f2d_mat(fmatrix *a, matrix *b) {
   int i, j;
-
   for (i = 0; i < NCOL; i++) {
     for (j = 0; j < NCOL; j++)
-      set_complex_equal(&(a -> e[i][j]), &(b -> e[i][j]));
+      set_complex_equal(&(a->e[i][j]), &(b->e[i][j]));
   }
 }
 
 // Copy a generic precision fundamental matrix to single precision
 void d2f_mat(matrix *a, fmatrix *b) {
   int i, j;
-  
   for (i = 0; i < NCOL; i++) {
     for (j = 0; j < NCOL; j++)
-      set_complex_equal(&(a -> e[i][j]), &(b -> e[i][j]));
+      set_complex_equal(&(a->e[i][j]), &(b->e[i][j]));
   }
 }
 // -----------------------------------------------------------------
@@ -289,7 +287,7 @@ void w_serial(gauge_file *gf) {
       if (tbuf_length > 0) {
         if (currentnode != 0)
           send_buf_to_node0(tbuf, tbuf_length, currentnode);
-        
+
         // node0 flushes tbuf, accumulates checksum
         // and writes lbuf if it is full
         if (this_node == 0) {
@@ -300,7 +298,7 @@ void w_serial(gauge_file *gf) {
         }
         tbuf_length = 0;
       }
-      
+
       // node0 sends a few bytes to newnode as a clear to send signal
       if (newnode != currentnode) {
         if (this_node == 0 && newnode != 0)
@@ -310,18 +308,18 @@ void w_serial(gauge_file *gf) {
         currentnode = newnode;
       }
     }
-    
+
     // The node with the data just appends to its tbuf
     if (this_node == currentnode) {
       i = node_index(t);
       index = (NSCALAR + 1) * tbuf_length;
       d2f_mat(&lattice[i].link, &tbuf[index]);
-      for(j=0;j<NSCALAR;j++) {
+      for (j = 0; j < NSCALAR; j++) {
         index++;
         d2f_mat(&lattice[i].link, &tbuf[index]);
       }
     }
-    
+
     if (this_node == currentnode || this_node == 0)
       tbuf_length++;
   }
@@ -382,7 +380,7 @@ void r_serial(gauge_file *gf) {
   u_int32type *val;
   int rank29, rank31;
   fmatrix *lbuf = NULL;   // Only allocate on node0
-  fmatrix tmat[(NSCALAR + 1)];
+  fmatrix tmat[NSCALAR + 1];
 
   if (this_node == 0) {
     // Compute offset for reading gauge configuration
@@ -507,7 +505,7 @@ void r_serial(gauge_file *gf) {
       }
       // Copy (NSCALAR + 1) matrices to generic-precision lattice[idest]
       f2d_mat(&(tmat[0]), &lattice[idest].link);
-      for(j=0;j<NSCALAR;j++)
+      for (j = 0; j < NSCALAR; j++)
         f2d_mat(&(tmat[j+1]), &lattice[idest].X[j]);
     }
     else {

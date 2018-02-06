@@ -48,8 +48,8 @@ int grsource(Twist_Fermion *source);
 
 // Basic observables
 // #define PLAQ_DIST in local_plaquette to print all plaquettes in serial
-void plaquette(double *plaq);
-double local_plaquette(double *plaq);                 // Return max plaq
+void plaquette(double *ss_plaq, double *st_plaq);
+double local_plaquette(double *ss_plaq, double *st_plaq); // Return max plaq
 complex ploop(int dir, int project, double *plpMod);
 
 // Scalar eigenvalues: averages, extrema and width
@@ -70,11 +70,10 @@ double det_force(Real eps);
 // Fermion matrix--vector operators (D & D^2) and multi-mass CG
 void fermion_op(Twist_Fermion *src, Twist_Fermion *dest, int sign);
 void DSq(Twist_Fermion *src, Twist_Fermion *dest);
-int congrad_multi_field(Twist_Fermion *src, Twist_Fermion **psim,
-                        int MaxCG, Real RsdCG, Real *size_r);
+int congrad_multi(Twist_Fermion *src, Twist_Fermion **psim,
+                  int MaxCG, Real RsdCG, Real *size_r);
 
 // Compute average Tr[Udag U] / N_c
-// Number of blocking steps only affects output formatting
 double link_trace(double *linktr, double *linktr_width,
                   double *dets, double *det_ave, double *det_width);
 
@@ -236,15 +235,5 @@ void zgeev_(char *doL, char *doR, int *N1, double *store, int *N2, double *eigs,
 // Pfaffian phase
 #ifdef PHASE
 void phase();
-#endif
-// -----------------------------------------------------------------
-
-
-
-// -----------------------------------------------------------------
-// Stochastic mode number
-#ifdef MODE
-void coefficients();
-void step(Twist_Fermion *src, Twist_Fermion *res);
 #endif
 // -----------------------------------------------------------------

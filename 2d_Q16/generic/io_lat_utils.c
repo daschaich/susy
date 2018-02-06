@@ -542,11 +542,9 @@ int read_gauge_hdr(gauge_file *gf) {
     terminate(1);
 
   // Check lattice dimensions for consistency
-  if (gh->dims[0] != nx ||
-      gh->dims[1] != nt) {
+  if (gh->dims[0] != nx || gh->dims[1] != nt) {
     /* So we can use this routine to discover the dimensions,
-       we provide that if nx = nt = -1 initially
-       we don't die */
+       we provide that if nx = nt = -1 initially we don't die */
     if (nx != -1 || nt != -1) {
       printf("%s: Incorrect lattice dimensions ",myname);
       for (j = 0; j < NDIMS; j++)
@@ -667,28 +665,5 @@ void r_serial_f(gauge_file *gf) {
     free(gf->rank2rcv);
 
   // Do not free gf and gf->header so calling program can use them
-}
-// -----------------------------------------------------------------
-
-
-
-// -----------------------------------------------------------------
-// Read lattice dimensions from a binary file and close the file
-void read_lat_dim_gf(char *filename, int *ndim, int dims[]) {
-  gauge_file *gf;
-  int i;
-
-  // Only two dimensions here
-  *ndim = NDIMS;
-
-  // Open the file
-  nx = -1;
-  nt = -1;
-  gf = r_serial_i(filename);
-
-  for (i = 0; i < *ndim; i++)
-    dims[i] = gf->header->dims[i];
-
-  r_serial_f(gf);
 }
 // -----------------------------------------------------------------

@@ -660,4 +660,3 @@ void r_serial_f(gauge_file *gf) {
   // Do not free gf and gf->header so calling program can use them
 }
 // -----------------------------------------------------------------
-

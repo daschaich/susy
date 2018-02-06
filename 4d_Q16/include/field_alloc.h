@@ -2,11 +2,7 @@
 // Macros to allocate space for fields
 #ifndef _FIELD_ALLOC_H
 #define _FIELD_ALLOC_H
-// -----------------------------------------------------------------
 
-
-
-// -----------------------------------------------------------------
 #define FIELD_ALLOC(name, typ) {                        \
   name = malloc(sites_on_node * sizeof(typ));           \
   if (name == NULL) {                                   \

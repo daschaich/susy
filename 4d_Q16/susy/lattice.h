@@ -47,7 +47,7 @@ typedef struct {
   matrix mom[NUMLINK], f_U[NUMLINK];        // Force matrices
 
   // Boundary conditions -- many unused
-  Real bc1[2 * NUMLINK], bc2[2 * NUMLINK][2 * NUMLINK];
+  Real bc[2 * NUMLINK], bc2[2 * NUMLINK][2 * NUMLINK];
   Real bc3[2 * NUMLINK][2 * NUMLINK][2 * NUMLINK];
 
 #ifdef PL_CORR

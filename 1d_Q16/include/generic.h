@@ -19,7 +19,9 @@
 
 
 // -----------------------------------------------------------------
+// check_unitarity.c
 Real check_unitarity();
+
 // io_helpers.c
 gauge_file *save_lattice(int flag, char *filename);
 gauge_file *reload_lattice(int flag, char *filename);
@@ -61,6 +63,7 @@ int remap_stdio_from_args(int argc, char *argv[]);
 void initialize_prn(double_prn *prn_pt, int seed, int index);
 Real myrand(double_prn *prn_pt);
 
+// reunitarize.c
 void reunitarize();
 #endif
 // -----------------------------------------------------------------

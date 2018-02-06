@@ -2,7 +2,6 @@
 // General purpose IO-related routines for susy code
 #include "generic_includes.h"
 #include "../include/io_lat.h"
-
 // -----------------------------------------------------------------
 
 
@@ -49,24 +48,23 @@ gauge_file *save_lattice(int flag, char *filename) {
 void coldlat() {
   register int i, j, k, l;
   register site *s;
-  
+
   FORALLSITES(i, s) {
     for (j = 0; j < NCOL; j++) {
-      for (k = 0; k < NCOL; k++) {
-        if (j != k)
-          s->link.e[j][k] = cmplx(0.0, 0.0);
-        else
-          s->link.e[j][k] = cmplx(1.0, 0.0);
-        for(l=0;l<NSCALAR;l++) {
-          if (j != k)
-            s->X[l].e[j][k] = cmplx(0.0, 0.0);
-          else
-            s->X[l].e[j][k] = cmplx(1.0, 0.0);
+      s->link.e[j][j] = cmplx(1.0, 0.0);
+      for (l = 0; l < NSCALAR; l++)
+        s->X[j].e[j][j] = cmplx(1.0, 0.0);
+
+      for (k = j + 1; k < NCOL; k++) {
+        s->link.e[j][k] = cmplx(0.0, 0.0);
+        s->link.e[k][j] = cmplx(0.0, 0.0);
+        for (l = 0; l < NSCALAR; l++) {
+          s->X[l].e[j][k] = cmplx(0.0, 0.0);
+          s->X[l].e[k][j] = cmplx(0.0, 0.0);
         }
       }
     }
   }
-  
   node0_printf("unit gauge and scalar configuration loaded\n");
 }
 // -----------------------------------------------------------------
@@ -78,7 +76,7 @@ void coldlat() {
 void funnylat() {
   register int i, j, k, l;
   register site *s;
-  
+
   FORALLSITES(i, s) {
     for (j = 0; j < NCOL; ++j) {
       for (k = 0; k < NCOL; ++k) {

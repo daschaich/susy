@@ -119,8 +119,8 @@ EXTERN site *lattice;
 
 // Vectors for addressing
 // Generic pointers, for gather routines
-// TODO Figure out this issue in the future. Need 10 for gauge-fixing
-#define N_POINTERS 10
+// Need at least three for gauge force
+#define N_POINTERS 3
 EXTERN char **gen_pt[N_POINTERS];
 
 #ifdef CORR

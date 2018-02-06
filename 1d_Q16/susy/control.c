@@ -34,14 +34,13 @@ int main(int argc, char *argv[]) {
   // Check: compute initial bosonic action
   b_act = bosonic_action();
   node0_printf("START %.8g\n", b_act / (double)nt);
-  
+
   linktr_ave = link_trace(linktr, &linktr_width,
                             link_det, &det_ave, &det_width);
     node0_printf("FLINK");
     FORALLDIR(dir)
       node0_printf(" %.6g", linktr[dir]);
     node0_printf(" %.6g %.6g\n", linktr_ave, linktr_width);
-  
 
   // Perform warmup trajectories
   f_eps = traj_length / (Real)nsteps[0];

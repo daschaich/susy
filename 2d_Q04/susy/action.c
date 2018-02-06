@@ -195,7 +195,7 @@ double det_action() {
 // -----------------------------------------------------------------
 // Fermion contribution to the action
 // Include the ampdeg term to allow sanity check that the fermion action
-// is 16 DIMF volume on average
+// is 4 DIMF volume on average
 // Since the pseudofermion src is fixed throughout the trajectory,
 // ampdeg actually has no effect on Delta S (checked)
 // sol, however, depends on the gauge fields through the CG

@@ -15,7 +15,7 @@ gauge_file *save_lattice(int flag, char *filename) {
   gauge_file *gf = NULL;
 
   plaquette(&g_plaq);
-  d_linktrsum(&linktrsum);
+  sum_linktr(&linktrsum);
   nersc_checksum = nersc_cksum();
 
   dtime = -dclock();
@@ -55,14 +55,13 @@ void coldlat() {
   register int i, j, k, dir;
   register site *s;
 
-  for (dir = 0; dir < NUMLINK; dir++) {
+  FORALLDIR(dir) {
     FORALLSITES(i, s) {
       for (j = 0; j < NCOL; j++) {
-        for (k = 0; k < NCOL; k++) {
-          if (j != k)
-            s->link[dir].e[j][k] = cmplx(0.0, 0.0);
-          else
-            s->link[dir].e[j][k] = cmplx(1.0, 0.0);
+        s->link[dir].e[j][j] = cmplx(1.0, 0.0);
+        for (k = j + 1; k < NCOL; k++) {
+          s->link[dir].e[j][k] = cmplx(0.0, 0.0);
+          s->link[dir].e[k][j] = cmplx(0.0, 0.0);
         }
       }
     }
@@ -121,7 +120,7 @@ gauge_file *reload_lattice(int flag, char *filename) {
     node0_printf("Time to reload gauge configuration = %e\n", dtime);
 
   plaquette(&g_plaq);
-  d_linktrsum(&linktrsum);
+  sum_linktr(&linktrsum);
   nersc_checksum = nersc_cksum();
 
 #if PRECISION == 1

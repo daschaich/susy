@@ -1,6 +1,5 @@
 // -----------------------------------------------------------------
 // Dirac operator and other helper functions for the action and force
-
 #include "susy_includes.h"
 // -----------------------------------------------------------------
 
@@ -119,15 +118,12 @@ void fermion_op(matrix *src[NFERMION], matrix *dest[NFERMION], int sign) {
     tr_eta[i] = trace(&(site_src[i]));
 
   // Assemble separate routines for each term in the fermion operator
-
 #ifdef SV
   DbplusStoL(site_src, link_dest);        // Adds to link_dest
 
   // Site-to-link plaquette determinant contribution if G is non-zero
   // Only depends on Tr[eta(x)]
-
   DbminusLtoS(link_src, site_dest);       // Overwrites site_dest
-
 #endif
 
   // Copy local plaquette, link and site fermions into dest TwistFermion
@@ -148,6 +144,7 @@ void fermion_op(matrix *src[NFERMION], matrix *dest[NFERMION], int sign) {
     }
   }
 }
+#endif
 // -----------------------------------------------------------------
 
 
@@ -156,6 +153,7 @@ void fermion_op(matrix *src[NFERMION], matrix *dest[NFERMION], int sign) {
 // Squared matrix--vector operation
 //   dest = (D^2).src
 // Use temp_ferm for temporary storage
+#ifndef PUREGAUGE
 void DSq(matrix *src[NFERMION], matrix *dest[NFERMION]) {
   fermion_op(src, temp_ferm, PLUS);
   fermion_op(temp_ferm, dest, MINUS);

@@ -17,7 +17,7 @@ u_int32type nersc_cksum() {
 
 
 // -----------------------------------------------------------------
-void d_linktrsum(double_complex *linktrsum) {
+void sum_linktr(double_complex *linktrsum) {
   int i, dir;
   site *s;
   matrix *a;
@@ -27,7 +27,7 @@ void d_linktrsum(double_complex *linktrsum) {
 
   FORALLSITES(i, s) {
     FORALLUPDIR(dir) {
-      a = &s->link[dir];
+      a = &(s->link[dir]);
       CSUM(*linktrsum, a->e[0][0]);
       CSUM(*linktrsum, a->e[1][1]);
 #if (NCOL > 2)

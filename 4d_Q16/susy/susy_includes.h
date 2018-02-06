@@ -78,7 +78,6 @@ int congrad_multi(Twist_Fermion *src, Twist_Fermion **psim,
                   int MaxCG, Real RsdCG, Real *size_r);
 
 // Compute average Tr[Udag U] / N_c
-// Number of blocking steps only affects output formatting
 double link_trace(double *linktr, double *linktr_width,
                   double *dets, double *det_ave, double *det_width);
 

@@ -1,6 +1,6 @@
 // -----------------------------------------------------------------
 // Routines to determine the distribution of sites on nodes
-// Divide the lattice by prime factors in any of the four directions
+// Divide the lattice by prime factors in any of the two directions
 // Prefers to divide the longest dimensions to minimize surface area
 // Prefers to divide dimensions which have already been divided,
 // to avoid introducing more off-node directions
@@ -11,7 +11,7 @@
 
 // Requires that the lattice volume be divisible by the number of cores
 // Each dimension must be divisible by a suitable factor,
-// such that the product of the four factors is the number of cores
+// such that the product of the two factors is the number of cores
 // Also need even number of sites per core
 
 // setup_layout() does any initial setup
@@ -25,13 +25,10 @@
 // get_logical_dimensions() returns the machine dimensions
 // get_logical_coordinates() returns the mesh coordinates of this node
 #include "generic_includes.h"
-#ifdef HAVE_QMP
-#include <qmp.h>
-#endif
 
-static int squaresize[2];           // Dimensions of hypercubes
-static int nsquares[2];             // Number of hypercubes in each direction
-static int machine_coordinates[2];  // Logical machine coordinates
+static int squaresize[NDIMS];       // Dimensions of hypercubes
+static int nsquares[NDIMS];         // Number of hypercubes in each direction
+static int machine_coordinates[NDIMS];  // Logical machine coordinates
 
 int prime[] = {2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53};
 #define MAXPRIMES (sizeof(prime) / sizeof(int))
@@ -133,7 +130,7 @@ void setup_layout() {
   node0_printf("ON EACH NODE %d x %d\n", squaresize[XUP], squaresize[TUP]);
 
   even_sites_on_node = sites_on_node / 2;
-  odd_sites_on_node = sites_on_node / 2;
+  odd_sites_on_node = even_sites_on_node;
 }
 
 int node_number(int x, int t) {

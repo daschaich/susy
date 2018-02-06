@@ -3,7 +3,8 @@
 // Loop over directions up to NUMLINK and do not reunitarize
 #include "generic_includes.h"
 #include "../include/io_lat.h"
-#include "../susy/susy_includes.h"    // For plaquette
+
+void plaquette(double *ss_plaq, double *st_plaq);
 // -----------------------------------------------------------------
 
 
@@ -13,8 +14,8 @@ gauge_file *save_lattice(int flag, char *filename) {
   double dtime;
   gauge_file *gf = NULL;
 
-  plaquette(&g_plaq);
-  d_linktrsum(&linktrsum);
+  plaquette(&g_ssplaq, &g_stplaq);
+  sum_linktr(&linktrsum);
   nersc_checksum = nersc_cksum();
 
   dtime = -dclock();
@@ -33,12 +34,12 @@ gauge_file *save_lattice(int flag, char *filename) {
   if (flag != FORGET)
     node0_printf("Time to save = %e\n", dtime);
 #if PRECISION == 1
-  node0_printf("CHECK PLAQ: %e\n", g_plaq);
+  node0_printf("CHECK PLAQ: %e %e\n", g_ssplaq, g_stplaq);
   node0_printf("CHECK NERSC LINKTR: %e CKSUM: %x\n",
                linktrsum.real * one_ov_N, nersc_checksum);
 #else
   // Double precision
-  node0_printf("CHECK PLAQ: %.16e\n", g_plaq);
+  node0_printf("CHECK PLAQ: %.16e %.16e\n", g_ssplaq, g_stplaq);
   node0_printf("CHECK NERSC LINKTR: %.16e CKSUM: %x\n",
                linktrsum.real * one_ov_N, nersc_checksum);
 #endif
@@ -54,14 +55,13 @@ void coldlat() {
   register int i, j, k, dir;
   register site *s;
 
-  for (dir = 0; dir < NUMLINK; dir++) {
+  FORALLDIR(dir) {
     FORALLSITES(i, s) {
       for (j = 0; j < NCOL; j++) {
-        for (k = 0; k < NCOL; k++) {
-          if (j != k)
-            s->link[dir].e[j][k] = cmplx(0.0, 0.0);
-          else
-            s->link[dir].e[j][k] = cmplx(1.0, 0.0);
+        s->link[dir].e[j][j] = cmplx(1.0, 0.0);
+        for (k = j + 1; k < NCOL; k++) {
+          s->link[dir].e[j][k] = cmplx(0.0, 0.0);
+          s->link[dir].e[k][j] = cmplx(0.0, 0.0);
         }
       }
     }
@@ -119,16 +119,16 @@ gauge_file *reload_lattice(int flag, char *filename) {
   if (flag != FRESH && flag != CONTINUE)
     node0_printf("Time to reload gauge configuration = %e\n", dtime);
 
-  plaquette(&g_plaq);
-  d_linktrsum(&linktrsum);
+  plaquette(&g_ssplaq, &g_stplaq);
+  sum_linktr(&linktrsum);
   nersc_checksum = nersc_cksum();
 
 #if PRECISION == 1
-  node0_printf("CHECK PLAQ: %e\n", g_plaq);
+  node0_printf("CHECK PLAQ: %e %e\n", g_ssplaq, g_stplaq);
   node0_printf("CHECK NERSC LINKTR: %e CKSUM: %x\n",
                linktrsum.real * one_ov_N, nersc_checksum);
 #else             // Double precision
-  node0_printf("CHECK PLAQ: %.16e\n", g_plaq);
+  node0_printf("CHECK PLAQ: %.16e %.16e\n", g_ssplaq, g_stplaq);
   node0_printf("CHECK NERSC LINKTR: %.16e CKSUM: %x\n",
                linktrsum.real * one_ov_N, nersc_checksum);
 #endif

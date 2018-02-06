@@ -34,14 +34,13 @@ typedef struct {
   char time_stamp[MAX_TIME_STAMP]; /* Date and time stamp - used to
           check consistency between the
           ASCII header file and the lattice file */
-  int32type nt;                // Full lattice dimensions
+  int32type nt;                         // Full lattice dimensions
   int32type header_bytes;               /* NOT WRITTEN TO THE FILE but
            helpful for finding the data */
   int32type order;                      /* 0 means no coordinate list is
                 attached and the values are in
                 coordinate serial order.
-                Non-zero means that a
-                coordinate list is attached,
+                Non-zero means that a coordinate list is attached,
                 specifying the order of values */
 } gauge_header;
 
@@ -63,7 +62,6 @@ char *gauge_info_keyword[] = {
       "magic_number",
       "time_stamp",
       "checksums",
-      "nx",
       "nt",
       "gauge.previous.filename",
       "gauge.previous.time_stamp",
@@ -157,8 +155,7 @@ int write_gauge_info_item( FILE *fpout,    /* ascii file pointer */
              floating point data must be
              of type (Real) */
            int count,       /* number of data items if > 1 */
-           int stride);      /* byte stride of data if
-                                           count > 1 */
+           int stride);      /* byte stride of data if count > 1 */
 int sprint_gauge_info_item(
   char *string,    /* character string */
   size_t nstring,     /* string length */
@@ -169,8 +166,7 @@ int sprint_gauge_info_item(
           floating point data must be
           of type (Real) */
   int count,       /* number of data items if > 1 */
-  int stride);      /* byte stride of data if
-          count > 1 */
+  int stride);      /* byte stride of data if count > 1 */
 void write_gauge_info_file(gauge_file *gf);
 gauge_file *setup_input_gauge_file(char *filename);
 gauge_file *setup_output_gauge_file();

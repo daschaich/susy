@@ -439,6 +439,7 @@ void detF(matrix *eta, matrix *psi[NUMLINK], int sign) {
 // Use tempmat, tempmat2, UpsiU, Tr_Uinv,
 // tr_dest and Ddet[012] for temporary storage
 // (many through calls to detF)
+#ifndef PUREGAUGE
 void assemble_fermion_force(Twist_Fermion *sol, Twist_Fermion *psol) {
   register int i;
   register site *s;
@@ -729,9 +730,9 @@ double fermion_force(Real eps, Twist_Fermion *src, Twist_Fermion **sol) {
                  n, eps * sqrt(individ_force) / volume);
 
     // Check that force syncs with fermion action
-    old_action = d_fermion_action(src, sol);
+    old_action = fermion_action(src, sol);
     iters += congrad_multi(src, sol, niter, rsqmin, &final_rsq);
-    new_action = d_fermion_action(src, sol);
+    new_action = fermion_action(src, sol);
     node0_printf("EXITING  %.4g\n", new_action - old_action);
     if (fabs(new_action - old_action) > 1e-3)
       terminate(1);                             // Don't go further for now
@@ -752,9 +753,9 @@ double fermion_force(Real eps, Twist_Fermion *src, Twist_Fermion **sol) {
 
               iters += congrad_multi(src, sol, niter, rsqmin, &final_rsq);
               if (kick == -1)
-                new_action -= d_fermion_action(src, sol);
+                new_action -= fermion_action(src, sol);
               if (kick == 1) {
-                new_action += d_fermion_action(src, sol);
+                new_action += fermion_action(src, sol);
                 tprint.e[ii][jj].real = -250.0 * new_action;
               }
             }
@@ -765,9 +766,9 @@ double fermion_force(Real eps, Twist_Fermion *src, Twist_Fermion **sol) {
 
               iters += congrad_multi(src, sol, niter, rsqmin, &final_rsq);
               if (kick == -1)
-                new_action -= d_fermion_action(src, sol);
+                new_action -= fermion_action(src, sol);
               if (kick == 1) {
-                new_action += d_fermion_action(src, sol);
+                new_action += fermion_action(src, sol);
                 node0_printf("XXXG%d%dI %.4g %.4g\n",
                              ii, jj, 0.001 * (Real)kick, 500 * new_action);
                 tprint.e[ii][jj].imag = -250 * new_action;
@@ -807,4 +808,5 @@ double fermion_force(Real eps, Twist_Fermion *src, Twist_Fermion **sol) {
   compute_Fmunu();
   return (eps * sqrt(returnit) / volume);
 }
+#endif
 // -----------------------------------------------------------------

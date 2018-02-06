@@ -64,7 +64,7 @@ void DSq(matrix *src[NFERMION], matrix *dest[NFERMION]);
 int congrad_multi(matrix *src[NFERMION], matrix **psim[NFERMION],
                   int MaxCG, Real RsdCG, Real *size_r);
 
-// Compute average Tr[X[i]X[i]] / N_c
+// Compute average Tr[X[i] X[i]] / N_c
 double scalar_trace(double *Xtr, double *Xwidth);
 
 // Routines in library_util.c that loop over all sites
@@ -73,7 +73,6 @@ void shiftmat(matrix *dat, matrix *temp, int dir);
 
 // Random gauge transformation for testing gauge invariance
 void random_gauge_trans(matrix *temp_ferm[NFERMION]);
-
 // -----------------------------------------------------------------
 
 

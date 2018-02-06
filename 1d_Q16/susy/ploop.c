@@ -7,7 +7,7 @@ complex ploop() {
   register int i;
   register site *s;
   int t;
-  double norm = 1.0/(double) nt;
+  double norm = 1.0 / (double)nt;
   complex plp;
   matrix tmat;
 
@@ -33,10 +33,10 @@ complex ploop() {
         continue;
 
       if (t == 1)
-        mult_nn(&(s->link), &(tempmat[i]), &(tmat));
+        mult_nn(&(s->link), &(tempmat[i]), &tmat);
       else {
-        mult_nn(&(tmat), &(tempmat[i]), &(tempmat2[i]));
-        mat_copy(&(tempmat2[i]), &(tmat));
+        mult_nn(&tmat, &(tempmat[i]), &(tempmat2[i]));
+        mat_copy(&(tempmat2[i]), &tmat);
       }
     }
   }
@@ -45,9 +45,8 @@ complex ploop() {
     if (s->t != 0)
       continue;
 
-    plp = trace(&(tmat));
+    plp = trace(&tmat);
   }
-  
   g_complexsum(&plp);
   CMULREAL(plp, norm, plp);
 

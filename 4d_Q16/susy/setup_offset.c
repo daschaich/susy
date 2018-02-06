@@ -71,17 +71,17 @@ void setup_bc() {
   // Single-offset terms
   FORALLDIR(dir) {
     FORALLSITES(i, s) {
-      s->bc1[dir] = 1.0;
-      s->bc1[OPP_LDIR(dir)] = 1.0;
+      s->bc[dir] = 1.0;
+      s->bc[OPP_LDIR(dir)] = 1.0;
 
       if (s->t + offset[dir][TUP] < 0)
-        s->bc1[dir] = PBC;
+        s->bc[dir] = PBC;
       else if (s->t + offset[dir][TUP] > nt - 1)
-        s->bc1[dir] = PBC;
+        s->bc[dir] = PBC;
       if (s->t - offset[dir][TUP] < 0)
-        s->bc1[OPP_LDIR(dir)] = PBC;
+        s->bc[OPP_LDIR(dir)] = PBC;
       else if (s->t - offset[dir][TUP] > nt - 1)
-        s->bc1[OPP_LDIR(dir)] = PBC;
+        s->bc[OPP_LDIR(dir)] = PBC;
     }
   }
 
@@ -90,7 +90,7 @@ void setup_bc() {
 //    if (s->x == 1 && s->y == 1 && s->z == 2) {
 //      printf("%d %d %d %d:", s->x, s->y, s->z, s->t);
 //      for (dir = 0; dir < 2 * NUMLINK; dir++)
-//        printf("  %4.2g", s->bc1[dir]);
+//        printf("  %4.2g", s->bc[dir]);
 //      printf("\n");
 //    }
 //  }
