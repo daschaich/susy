@@ -1,98 +1,7 @@
 // -----------------------------------------------------------------
 // Dirac operator and other helper functions for the action and force
 
-// #define DET_DIST prints out all determinants for plotting distribution
-// CAUTION: Do not run DET_DIST with MPI!
-
-//#define DET_DIST
 #include "susy_includes.h"
-// -----------------------------------------------------------------
-
-
-
-// -----------------------------------------------------------------
-// Compute at each site all NUMLINK * (NUMLINK - 1) plaquette determinants
-// counting both orientations, and saving ZW* = plaqdet (plaqdet - 1)^*
-// Use Tr_Uinv as temporary storage
-void compute_plaqdet() {
-  register int i;
-  register site *s;
-  char **local_pt[2][2];
-  int a, b, flip = 0;
-  complex tc;
-  msg_tag *tag0[2], *tag1[2];
-
-#ifdef DET_DIST
-  if (this_node != 0) {
-    printf("compute_plaqdet: don't run DET_DIST in parallel\n");
-    fflush(stdout);
-    terminate(1);
-  }
-#endif
-
-  for (a = 0; a < 2; a++) {
-    local_pt[0][a] = gen_pt[a];
-    local_pt[1][a] = gen_pt[2 + a];
-  }
-
-  // Gather determinants rather than the full matrices
-  // Recall det[Udag] = (det[U])^*
-  FORALLSITES(i, s) {
-    FORALLDIR(a)
-      Tr_Uinv[a][i] = find_det(&(s->link[a]));
-  }
-
-  // Start first set of gathers (a = 0 and b = 1)
-  // local_pt[0][0] is det[U_1(x+0)], local_pt[0][1] is det[U_0(x+1)]
-  tag0[0] = start_gather_field(Tr_Uinv[1], sizeof(complex),
-                               goffset[0], EVENANDODD, local_pt[0][0]);
-  tag1[0] = start_gather_field(Tr_Uinv[0], sizeof(complex),
-                               goffset[1], EVENANDODD, local_pt[0][1]);
-
-  // Main loop
-  FORALLDIR(a) {
-    FORALLDIR(b) {
-      if (a == b)
-        continue;
-
-      if (a == 0) {         // Start other set of gathers (a = 1 and b = 0)
-        tag0[1] = start_gather_field(Tr_Uinv[0], sizeof(complex),
-                                     goffset[1], EVENANDODD, local_pt[1][0]);
-        tag1[1] = start_gather_field(Tr_Uinv[1], sizeof(complex),
-                                     goffset[0], EVENANDODD, local_pt[1][1]);
-      }
-
-      // Initialize plaqdet[a][b] with det[U_b(x)] det[Udag_a(x)]
-      FORALLSITES(i, s)
-        CMULJ_(Tr_Uinv[a][i], Tr_Uinv[b][i], plaqdet[a][b][i]);
-
-      // Now put it all together
-      wait_gather(tag0[flip]);
-      wait_gather(tag1[flip]);
-      FORALLSITES(i, s) {
-        // local_pt[flip][0] is det[U_b(x+a)]
-        // Conjugate it to get det[Udag_b(x+a)]
-        CMUL_J(plaqdet[a][b][i], *((complex *)(local_pt[flip][0][i])), tc);
-        // local_pt[flip][1] is det[U_a(x+b)]
-        CMUL(*((complex *)(local_pt[flip][1][i])), tc, plaqdet[a][b][i]);
-
-        // ZWstar = plaqdet (plaqdet - 1)^*
-        CADD(plaqdet[a][b][i], minus1, tc);
-        CMUL_J(plaqdet[a][b][i], tc, ZWstar[a][b][i]);
-#ifdef DET_DIST
-        if (a < b) {
-          printf("DET_DIST %d %d %d %d %.4g %.4g %.4g\n",
-                 s->x, s->t, a, b,
-                 plaqdet[a][b][i].real, plaqdet[a][b][i].imag, cabs_sq(&tc1));
-        }
-#endif
-      }
-      cleanup_gather(tag0[flip]);
-      cleanup_gather(tag1[flip]);
-      flip++;
-    }
-  }
-}
 // -----------------------------------------------------------------
 
 
@@ -179,6 +88,7 @@ void DbminusLtoS(matrix *src[NUMLINK], matrix *dest) {
 // -----------------------------------------------------------------
 // Matrix--vector operation
 // Applies either the operator (sign = 1) or its adjoint (sign = -1)
+#ifndef PUREGAUGE
 void fermion_op(matrix *src[NFERMION], matrix *dest[NFERMION], int sign) {
   register int i, mu;
   register site *s;
@@ -247,10 +157,8 @@ void fermion_op(matrix *src[NFERMION], matrix *dest[NFERMION], int sign) {
 //   dest = (D^2).src
 // Use temp_ferm for temporary storage
 void DSq(matrix *src[NFERMION], matrix *dest[NFERMION]) {
-  register int i;
-  register site *s;
-
   fermion_op(src, temp_ferm, PLUS);
   fermion_op(temp_ferm, dest, MINUS);
 }
+#endif
 // -----------------------------------------------------------------

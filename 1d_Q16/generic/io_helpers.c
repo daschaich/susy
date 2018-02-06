@@ -1,10 +1,8 @@
 // -----------------------------------------------------------------
 // General purpose IO-related routines for susy code
-// Loop over directions up to NUMLINK and do not reunitarize
 #include "generic_includes.h"
 #include "../include/io_lat.h"
 
-void plaquette(double *plaq);
 // -----------------------------------------------------------------
 
 
@@ -14,7 +12,6 @@ gauge_file *save_lattice(int flag, char *filename) {
   double dtime;
   gauge_file *gf = NULL;
 
-  plaquette(&g_plaq);
   d_linktrsum(&linktrsum);
   nersc_checksum = nersc_cksum();
 
@@ -34,12 +31,10 @@ gauge_file *save_lattice(int flag, char *filename) {
   if (flag != FORGET)
     node0_printf("Time to save = %e\n", dtime);
 #if PRECISION == 1
-  node0_printf("CHECK PLAQ: %e\n", g_plaq);
   node0_printf("CHECK NERSC LINKTR: %e CKSUM: %x\n",
                linktrsum.real * one_ov_N, nersc_checksum);
 #else
   // Double precision
-  node0_printf("CHECK PLAQ: %.16e\n", g_plaq);
   node0_printf("CHECK NERSC LINKTR: %.16e CKSUM: %x\n",
                linktrsum.real * one_ov_N, nersc_checksum);
 #endif
@@ -52,22 +47,27 @@ gauge_file *save_lattice(int flag, char *filename) {
 // -----------------------------------------------------------------
 // Set link to unit matrices
 void coldlat() {
-  register int i, j, k, dir;
+  register int i, j, k, l;
   register site *s;
-
-  for (dir = 0; dir < NUMLINK; dir++) {
-    FORALLSITES(i, s) {
-      for (j = 0; j < NCOL; j++) {
-        for (k = 0; k < NCOL; k++) {
+  
+  FORALLSITES(i, s) {
+    for (j = 0; j < NCOL; j++) {
+      for (k = 0; k < NCOL; k++) {
+        if (j != k)
+          s->link.e[j][k] = cmplx(0.0, 0.0);
+        else
+          s->link.e[j][k] = cmplx(1.0, 0.0);
+        for(l=0;l<NSCALAR;l++) {
           if (j != k)
-            s->link[dir].e[j][k] = cmplx(0.0, 0.0);
+            s->X[l].e[j][k] = cmplx(0.0, 0.0);
           else
-            s->link[dir].e[j][k] = cmplx(1.0, 0.0);
+            s->X[l].e[j][k] = cmplx(1.0, 0.0);
         }
       }
     }
   }
-  node0_printf("unit gauge NUMLINK configuration loaded\n");
+  
+  node0_printf("unit gauge and scalar configuration loaded\n");
 }
 // -----------------------------------------------------------------
 
@@ -76,16 +76,16 @@ void coldlat() {
 // -----------------------------------------------------------------
 // Set link to funny matrices for debugging
 void funnylat() {
-  register int i, j, k, dir;
+  register int i, j, k, l;
   register site *s;
-
+  
   FORALLSITES(i, s) {
-    FORALLDIR(dir) {
-      for (j = 0; j < NCOL; ++j) {
-        for (k = 0; k < NCOL; ++k)
-          s->link[dir].e[j][k] = cmplx(10.0 * j * s->x, 10.0 * k * s->t);
+    for (j = 0; j < NCOL; ++j) {
+      for (k = 0; k < NCOL; ++k) {
+        s->link.e[j][k] = cmplx(10.0 * j * nt, 10.0 * k * s->t);
+        for(l=0;l<NSCALAR;l++)
+          s->X[l].e[j][k] = cmplx(10.0 * j * l, 10.0 * k * s->t);
       }
-      s->link[dir].e[0][0] = cmplx((double)dir, (double)dir);
     }
   }
 }
@@ -95,9 +95,13 @@ void funnylat() {
 
 // -----------------------------------------------------------------
 // Reload a lattice in binary format, set to unit gauge or keep current
-// Do not reunitarize
+// Reunitarize
 gauge_file *reload_lattice(int flag, char *filename) {
   double dtime;
+  Real max_deviation;
+#if PRECISION == 2
+  Real max_deviation2;
+#endif
   gauge_file *gf = NULL;
 
   dtime = -dclock();
@@ -120,21 +124,35 @@ gauge_file *reload_lattice(int flag, char *filename) {
   if (flag != FRESH && flag != CONTINUE)
     node0_printf("Time to reload gauge configuration = %e\n", dtime);
 
-  plaquette(&g_plaq);
   d_linktrsum(&linktrsum);
   nersc_checksum = nersc_cksum();
 
 #if PRECISION == 1
-  node0_printf("CHECK PLAQ: %e\n", g_plaq);
   node0_printf("CHECK NERSC LINKTR: %e CKSUM: %x\n",
                linktrsum.real * one_ov_N, nersc_checksum);
 #else             // Double precision
-  node0_printf("CHECK PLAQ: %.16e\n", g_plaq);
   node0_printf("CHECK NERSC LINKTR: %.16e CKSUM: %x\n",
                linktrsum.real * one_ov_N, nersc_checksum);
 #endif
   fflush(stdout);
   dtime = -dclock();
+
+  max_deviation = check_unitarity();
+  g_floatmax(&max_deviation);
+#if PRECISION == 1
+  node0_printf("Unitarity checked.  Max deviation %.2g\n", max_deviation);
+#else
+  reunitarize();
+  max_deviation2 = check_unitarity();
+  g_floatmax(&max_deviation2);
+  node0_printf("Reunitarized for double precision.  ");
+  node0_printf("Max deviation %.2g changed to %.2g\n",
+               max_deviation, max_deviation2);
+#endif
+  fflush(stdout);
+  dtime += dclock();
+  node0_printf("Time to check unitarity = %.4g seconds\n", dtime);
+
   return gf;
 }
 // -----------------------------------------------------------------
@@ -231,41 +249,6 @@ int ask_ending_lattice(FILE *fp, int prompt, int *flag, char *filename) {
       return 1;
     }
     printf(" %s\n", filename);
-  }
-  return 0;
-}
-// -----------------------------------------------------------------
-
-
-
-// -----------------------------------------------------------------
-// Find out whether to gauge fix to Coulomb gauge
-int ask_gauge_fix(FILE *fp, int prompt, int *flag) {
-  int status = 0;
-  char savebuf[256];
-
-  if (prompt != 0)
-    printf("enter 'no_gauge_fix', or 'coulomb_gauge_fix'\n");
-  status = fscanf(fp, "%s", savebuf);
-  if (status == EOF) {
-    printf("ask_gauge_fix: EOF on STDIN\n");
-    return 1;
-  }
-  if (status != 1) {
-    printf("\nask_gauge_fix: ERROR IN INPUT: ");
-    printf("can't read gauge fixing option\n");
-    return 1;
-  }
-
-  printf("%s\n", savebuf);
-  if (strcmp("coulomb_gauge_fix", savebuf) == 0)
-    *flag = COULOMB_GAUGE_FIX;
-  else if (strcmp("no_gauge_fix", savebuf) == 0)
-    *flag = NO_GAUGE_FIX;
-  else {
-    printf("Error in input: invalid gauge fixing option\n");
-    printf("Only no_gauge_fix and coulomb_gauge_fix supported\n");
-    return 1;
   }
   return 0;
 }

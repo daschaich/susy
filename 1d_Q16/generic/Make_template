@@ -6,7 +6,8 @@
 
 # The paths are relative to the application directory
 
-G_ALL = com_mpi.o            \
+G_ALL = check_unitarity.o \
+	com_mpi.o            \
         com_vanilla.o        \
         io_ansi.o            \
         io_helpers.o         \
@@ -17,6 +18,7 @@ G_ALL = com_mpi.o            \
         make_lattice.o       \
         nersc_cksum.o        \
         ranstuff.o           \
+	reunitarise.o 	     \
         remap_stdio_from_args.o
 
 # Must match our headers in generic_includes.h
@@ -37,6 +39,8 @@ G_ALL_DEPEND = ../generic/generic_includes.h \
 
 ${G_ALL} : ${G_ALL_DEPEND}
 
+check_unitarity.o: ../generic/check_unitarity.c
+	${CC} -c ${CFLAGS} $<
 com_mpi.o: ../generic/com_mpi.c
 	${CC} -c ${CFLAGS} $<
 com_vanilla.o: ../generic/com_vanilla.c
@@ -63,4 +67,6 @@ nersc_cksum.o: ../generic/nersc_cksum.c
 ranstuff.o: ../generic/ranstuff.c
 	${CC} -c ${CFLAGS} $<
 remap_stdio_from_args.o: ../generic/remap_stdio_from_args.c
+	${CC} -c ${CFLAGS} $<
+reunitarize.o: ../generic/reunitarize.c
 	${CC} -c ${CFLAGS} $<
