@@ -24,7 +24,7 @@
 #define BMN
 //#define EIG_POT           // Single rather than double-trace scalar potential
                           // Single-trace case is minimally tested!!!
-#define SV                // Site/vector terms in action
+//#define SV                // Site/vector terms in action
 #define PUREGAUGE
 //#define DEBUG_CHECK       // Print lambdas, offsets, etc.
 // -----------------------------------------------------------------

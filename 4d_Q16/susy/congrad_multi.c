@@ -22,6 +22,7 @@
 // MaxCG is the maximum number of iterations per solve
 // errormin is the target |r|^2, scaled below by source_norm = |src|^2
 // size_r is the final obtained |r|^2, hopefully < errormin * source_norm
+#ifndef PUREGAUGE
 int congrad_multi(Twist_Fermion *src, Twist_Fermion **psim,
                   int MaxCG, Real errormin, Real *size_r) {
 
@@ -237,4 +238,5 @@ int congrad_multi(Twist_Fermion *src, Twist_Fermion **psim,
   free(floatvark);
   return iteration;
 }
+#endif
 // -----------------------------------------------------------------
