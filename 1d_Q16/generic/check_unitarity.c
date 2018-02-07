@@ -68,7 +68,7 @@ Real check_unitarity() {
     mat = (matrix *)&(s->link);
     deviation = check_unit(mat);
     if (deviation > TOLERANCE) {
-      printf("Unitarity problem on node %d, site %d, gauge deviation=%f\n",
+      printf("Unitarity problem on node %d, site %d, deviation=%f\n",
              mynode(), i, deviation);
       printf("SU(N) matrix:\n");
       for (ii = 0; ii < NCOL; ii++) {
@@ -88,56 +88,24 @@ Real check_unitarity() {
         }
         printf("\n");
       }
-      printf("  \n\n");
+      printf("\n");
       fflush(stdout);
       terminate(1);
     }
     if (max_deviation < deviation)
       max_deviation = deviation;
     av_deviation += deviation * deviation;
-    for (j = 0; j < NSCALAR; j++) {
-      mat = (matrix *)&(s->X[j]);
-      deviation = check_unit(mat);
-      if (deviation > TOLERANCE) {
-        printf("Unitarity problem on node %d, site %d, scalar %d, deviation=%f\n",
-               mynode(), i, j, deviation);
-        printf("SU(N) matrix:\n");
-        for (ii = 0; ii < NCOL; ii++) {
-          for (jj = 0; jj < NCOL; jj++) {
-            printf("%f ", (*mat).e[ii][jj].real);
-            printf("%f ", (*mat).e[ii][jj].imag);
-          }
-          printf("\n");
-        }
-        printf("repeat in hex:\n");
-        for (ii = 0; ii < NCOL; ii++) {
-          for (jj = 0; jj < NCOL; jj++) {
-            ifval.fval = (*mat).e[ii][jj].real;
-            printf("%08x ", ifval.ival);
-            ifval.fval = (*mat).e[ii][jj].imag;
-            printf("%08x ", ifval.ival);
-          }
-          printf("\n");
-        }
-        printf("  \n\n");
-        fflush(stdout);
-        terminate(1);
-      }
-      if (max_deviation < deviation)
-        max_deviation = deviation;
-      av_deviation += deviation * deviation;
-    }
   }
-
 
   av_deviation = sqrt(av_deviation / ((NSCALAR + 1.0) * nt));
 #ifdef UNIDEBUG
   printf("Deviation from unitarity on node %d: max %.4g, ave %.4g\n",
          mynode(), max_deviation, av_deviation);
 #endif
-  if (max_deviation > TOLERANCE)
+  if (max_deviation > TOLERANCE) {
     printf("Unitarity problem on node %d, maximum deviation %.4g\n",
            mynode(), max_deviation);
+  }
   return max_deviation;
 }
 // -----------------------------------------------------------------

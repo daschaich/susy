@@ -1,0 +1,25 @@
+prompt 0
+nt 4
+PBC -1
+iseed 41
+
+Nroot 1
+Norder 15
+
+warms 0
+trajecs 3
+traj_length 1
+nstep 15
+nstep_gauge 4
+traj_between_meas 2
+
+lambda 0.5
+mu 0.5
+
+max_cg_iterations 5000
+error_per_site 1e-5
+nsrc 3
+
+
+fresh
+forget

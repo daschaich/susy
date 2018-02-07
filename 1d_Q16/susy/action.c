@@ -17,11 +17,11 @@ double bosonic_action(double * so3_sq, double * so6_sq, double * Myers) {
   int j, k;
   matrix tmat, tmat2;
   msg_tag *tag;
+
   *so3_sq = 0.0;
   *so6_sq = 0.0;
   *Myers = 0.0;
-  
-  
+
   // Scalar kinetic term
   tag = start_gather_site(F_OFFSET(X[0]), sizeof(matrix) * NSCALAR,
                           TUP, EVENANDODD, gen_pt[0]);
@@ -62,7 +62,6 @@ double bosonic_action(double * so3_sq, double * so6_sq, double * Myers) {
   *so6_sq *= mass_so6;
   b_action += *so3_sq + *so6_sq;
 
-  
 #ifdef BMN
   FORALLSITES(i, s) {
     for (j = 0; j < 3; j++) {
@@ -80,23 +79,23 @@ double bosonic_action(double * so3_sq, double * so6_sq, double * Myers) {
     }
   }
   *Myers *= mass_Myers;
-  
+
   b_action += *Myers;
 
 #endif
 
   b_action *= kappa;
-  
+
   *so3_sq *= kappa;
   *so6_sq *= kappa;
   *Myers *= kappa;
-  
+
   g_doublesum(&b_action);
-  
+
   g_doublesum(so3_sq);
   g_doublesum(so6_sq);
   g_doublesum(Myers);
-  
+
   return b_action;
 }
 // -----------------------------------------------------------------
@@ -157,6 +156,7 @@ double mom_action() {
   return sum;
 }
 // -----------------------------------------------------------------
+
 
 
 // -----------------------------------------------------------------
