@@ -18,7 +18,7 @@ double bosonic_action(double * so3_sq, double * so6_sq, double * Myers) {
   matrix tmat, tmat2;
   msg_tag *tag;
 
-  // Scalar kinetic term
+  // Scalar kinetic term [D_t X(t)]^2 = [U(t) X(t+1) Udag(t) - X(t)]^2
   tag = start_gather_site(F_OFFSET(X[0]), sizeof(matrix) * NSCALAR,
                           TUP, EVENANDODD, gen_pt[0]);
 
