@@ -44,28 +44,28 @@ gauge_file *save_lattice(int flag, char *filename) {
 
 
 // -----------------------------------------------------------------
-// Set link to unit matrices
+// Set links to unit matrices and scalars to anti-hermitian generator
 void coldlat() {
   register int i, j, k, l;
   register site *s;
+  complex i_inv_sqrt = cmplx(0.0, 1.0 / sqrt(2.0));
+
 
   FORALLSITES(i, s) {
     for (j = 0; j < NCOL; j++) {
       s->link.e[j][j] = cmplx(1.0, 0.0);
-      for (l = 0; l < NSCALAR; l++)
-        s->X[j].e[j][j] = cmplx(1.0, 0.0);
-
       for (k = j + 1; k < NCOL; k++) {
         s->link.e[j][k] = cmplx(0.0, 0.0);
         s->link.e[k][j] = cmplx(0.0, 0.0);
-        for (l = 0; l < NSCALAR; l++) {
-          s->X[l].e[j][k] = cmplx(0.0, 0.0);
-          s->X[l].e[k][j] = cmplx(0.0, 0.0);
-        }
       }
     }
+    for (l = 0; l < NSCALAR; l++) {
+      clear_mat(&(s->X[l]));
+      s->X[l].e[0][0] = i_inv_sqrt;
+      CNEGATE(s->X[l].e[0][0], s->X[l].e[1][1]);
+    }
   }
-  node0_printf("unit gauge and scalar configuration loaded\n");
+  node0_printf("unit gauge and anti-hermitian scalar configuration loaded\n");
 }
 // -----------------------------------------------------------------
 

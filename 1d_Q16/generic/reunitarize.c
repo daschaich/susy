@@ -32,15 +32,15 @@ int check_deviation(Real deviation) {
 
 
 // -----------------------------------------------------------------
-void reunit_report_problem_matrix(matrix *mat, int i, int j) {
+void reunit_report_problem_matrix(matrix *mat, int i) {
   int ii, jj;
   union {
     Real fval;
     int ival;
   } ifval;
 
-  printf("Unitarity problem on node %d, site %d, field %d tolerance %.4g\n",
-          mynode(), i, j, TOLERANCE);
+  printf("Unitarity problem on node %d, site %d, tolerance %.4g\n",
+         mynode(), i, TOLERANCE);
   printf("SU(N) matrix:\n");
   for (ii = 0; ii < NCOL; ii++) {
     for (jj = 0; jj < NCOL; jj++) {
@@ -132,22 +132,22 @@ void ludcmp_cx(matrix *a, int *indx, Real *d) {
 }
 
 complex find_det(matrix *Q) {
-  complex det, det2;
+  complex det, tc;
   int i, indx[NCOL];
   Real d;
   matrix QQ;
 
   mat_copy(Q, &QQ);
   ludcmp_cx(&QQ, indx, &d);
-  det = cmplx(d, 0.0);
-  for (i = 0; i < NCOL; i++) {
-    CMUL(det, QQ.e[i][i], det2);
-    det = det2;
+  det = QQ.e[0][0];
+  for (i = 1; i < NCOL; i++) {
+    CMUL(det, QQ.e[i][i], tc);
+    det = tc;
   }
-#ifdef UNIDEBUG
-  printf("DET %e %e\n", det.real, det.imag);
-#endif
 
+#ifdef UNIDEBUG
+  printf("DET %.8g %.8g\n", det.real, det.imag);
+#endif
   return det;
 }
 // -----------------------------------------------------------------
@@ -162,13 +162,13 @@ int reunit(matrix *c) {
   complex sum, deter, tc, tc2;
 
 #ifdef UNIDEBUG
-  matrix cold;
+  matrix oldc;
   for (i = 0; i < NCOL; i++) {
     for (j = 0; j < NCOL; j++)
-      cold.e[i][j] = (*c).e[i][j];
+      oldc.e[i][j] = (*c).e[i][j];
   }
   node0_printf("OLD MATRIX\n");
-  dump_mat(&cold);
+  dump_mat(&oldc);
 #endif
 
   for (i = 0; i < NCOL; i++) {
@@ -260,23 +260,11 @@ void reunitarize() {
     errors = reunit(mat);
     errcount += errors; // Gauge field printed as scalar -1
     if (errors)
-      reunit_report_problem_matrix(mat, i, -1);
+      reunit_report_problem_matrix(mat, i);
     if (errcount > MAXERRCOUNT) {
       printf("Unitarity error count exceeded: %d\n", errcount);
       fflush(stdout);
       terminate(1);
-    }
-    for (j = 0; j < NSCALAR; j++) {
-      mat = (matrix *)&(s->X[j]);
-      errors = reunit(mat);
-      errcount += errors;
-      if (errors)
-        reunit_report_problem_matrix(mat, i, j);
-      if (errcount > MAXERRCOUNT) {
-        printf("Unitarity error count exceeded: %d\n", errcount);
-        fflush(stdout);
-        terminate(1);
-      }
     }
   }
 
