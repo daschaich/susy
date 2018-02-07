@@ -23,7 +23,7 @@ void update_uu(Real eps) {
 
   FORALLSITES(i, s) {
     scalar_mult_sum_matrix(&(s->mom), eps, &(s->link));
-    for(j=0;j<NSCALAR;j++)
+    for (j = 0; j < NSCALAR; j++)
       scalar_mult_sum_matrix(&(s->mom_X[j]), eps, &(s->X[j]));
   }
 }
@@ -124,10 +124,10 @@ int update() {
   int j, k, n, iters = 0;
   double startaction, endaction, change;
   matrix **source[NFERMION], ***psim[NFERMION];
-  for(k=0; k<NFERMION; k++) {
+  for (k = 0; k < NFERMION; k++) {
     source[k] = malloc(sizeof(matrix*) * Nroot);
     psim[k] = malloc(sizeof(matrix**) * Nroot);
-    
+
     for (n = 0; n < Nroot; n++) {
       source[k][n] = malloc(sizeof(matrix) * sites_on_node);
       psim[k][n] = malloc(sizeof(matrix*) * Norder);
