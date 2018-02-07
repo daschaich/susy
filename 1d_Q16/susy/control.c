@@ -10,38 +10,37 @@ int main(int argc, char *argv[]) {
   double b_act, dtime, Xtr[NSCALAR], Xtr_ave, Xtr_width;
   double ave_eigs[NCOL], eig_widths[NCOL], min_eigs[NCOL], max_eigs[NCOL];
   complex plp = cmplx(99.0, 99.0);
-  
+
   // Setup
   setlinebuf(stdout); // DEBUG
   initialize_machine(&argc, &argv);
   // Remap standard I/O
   if (remap_stdio_from_args(argc, argv) == 1)
     terminate(1);
-  
+
   g_sync();
   prompt = setup();
   setup_lambda();
   setup_gamma();
   setup_rhmc();
-  
+
   // Load input and run
   if (readin(prompt) != 0) {
     node0_printf("ERROR in readin, aborting\n");
     terminate(1);
   }
   dtime = -dclock();
-  
+
   // Check: compute initial bosonic action
-  b_act = bosonic_action(& Xtr[0], & Xtr[1], & Xtr[2]);
+  b_act = bosonic_action(&(Xtr[0]), &(Xtr[1]), &(Xtr[2]));
   node0_printf("START %.8g\n", b_act / (double)nt);
-  
+
   Xtr_ave = scalar_trace(Xtr, &Xtr_width);
   node0_printf("SCALAR SQUARES");
-  for(j=0; j<NSCALAR;j++)
+  for (j = 0; j < NSCALAR; j++)
     node0_printf(" %.6g", Xtr[j]);
-  
   node0_printf(" %.6g %.6g\n", Xtr_ave, Xtr_width);
-  
+
   // Perform warmup trajectories
   f_eps = traj_length / (Real)nsteps[0];
   b_eps = f_eps / (Real)(2 * nsteps[1]);
@@ -49,32 +48,32 @@ int main(int argc, char *argv[]) {
   for (traj_done = 0; traj_done < warms; traj_done++)
     update();
   node0_printf("WARMUPS COMPLETED\n");
-  
+
   // Perform trajectories with measurements
-  // But WITHOUT reunitarizing!
+  // TODO: Check reunitarization / antihermitianization...
   for (traj_done = 0; traj_done < trajecs; traj_done++) {
     s_iters = update();
     avs_iters += s_iters;
-    
+
     // Do "local" measurements every trajectory!
     // Tr[Udag.U] / N
     Xtr_ave = scalar_trace(Xtr, &Xtr_width);
     node0_printf("SCALAR SQUARES");
-    for(j=0; j<NSCALAR;j++)
+    for (j = 0; j < NSCALAR; j++)
       node0_printf(" %.6g", Xtr[j]);
-    
+
     node0_printf(" %.6g %.6g\n", Xtr_ave, Xtr_width);
     // Polyakov loop measurement
     // Format: GMES Re(Polyakov) Im(Poyakov) cg_iters
     plp = ploop();
-    node0_printf("GMES %.8g %.8g %d ",
-                 plp.real, plp.imag, s_iters);
-    
-    // Bosonic action (printed twice by request)
-    // Might as well spit out volume average of Polyakov loop modulus
-    b_act = bosonic_action(&Xtr[0], &Xtr[1], &Xtr[2]);
-    node0_printf("%.8g %.8g %.8g %.8g\n", b_act / (double)nt, Xtr[0] / (double)nt, Xtr[1] / (double)nt, Xtr[2] / (double)nt);
-    
+    node0_printf("GMES %.8g %.8g %d ", plp.real, plp.imag, s_iters);
+
+    // Bosonic action
+    b_act = bosonic_action(&(Xtr[0]), &(Xtr[1]), &(Xtr[2]));
+    node0_printf("%.8g %.8g %.8g %.8g\n",
+                 b_act / (double)nt, Xtr[0] / (double)nt,
+                 Xtr[1] / (double)nt, Xtr[2] / (double)nt);
+
     // Monitor scalar eigenvalues
     // Format: SCALAR_EIG # ave width min max
     scalar_eig(ave_eigs, eig_widths, min_eigs, max_eigs);
@@ -82,30 +81,28 @@ int main(int argc, char *argv[]) {
       node0_printf("SCALAR_EIG %d %.6g %.6g %.6g %.6g\n",
                    j, ave_eigs[j], eig_widths[j], min_eigs[j], max_eigs[j]);
     }
-    
+
     // Less frequent measurements every "propinterval" trajectories
     if ((traj_done % propinterval) == (propinterval - 1)) {
-      
 #ifdef CORR
       // Konishi and SUGRA
       konishi();
 #endif
-      
+
 #ifdef BILIN
       // Ward identity involving eta.psi_a fermion bilinear
       Nmeas++;
       avm_iters += bilinearWard();
 #endif
-      
     }
     fflush(stdout);
   }
   node0_printf("RUNNING COMPLETED\n");
-  
+
   // Check: compute final bosonic action
-  b_act = bosonic_action(& Xtr[0], & Xtr[1], & Xtr[2]);
-  node0_printf("STOP %.8g ", b_act/(double) nt);
-  
+  b_act = bosonic_action(&(Xtr[0]), &(Xtr[1]), &(Xtr[2]));
+  node0_printf("STOP %.8g ", b_act/(double)nt);
+
   node0_printf("Average CG iters for steps: %.4g\n",
                (double)avs_iters / trajecs);
   if (Nmeas > 0) {
@@ -118,7 +115,7 @@ int main(int argc, char *argv[]) {
   // Should equal total for steps plus measurements
   node0_printf("total_iters = %d\n\n", total_iters);
   fflush(stdout);
-  
+
   // Save lattice if requested
   if (saveflag != FORGET)
     save_lattice(saveflag, savefile);
