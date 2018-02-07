@@ -18,13 +18,14 @@ double bosonic_action(double * so3_sq, double * so6_sq, double * Myers) {
   matrix tmat, tmat2;
   msg_tag *tag;
 
-  *so3_sq = 0.0;
-  *so6_sq = 0.0;
-  *Myers = 0.0;
-
   // Scalar kinetic term
   tag = start_gather_site(F_OFFSET(X[0]), sizeof(matrix) * NSCALAR,
                           TUP, EVENANDODD, gen_pt[0]);
+
+  // On-site piece of scalar kinetic term
+  // (Has same form as some scalar potential terms, so will re-use below)
+  *so3_sq = 0.0;
+  *so6_sq = 0.0;
   FORALLSITES(i, s) {
     for (j = 0; j < 3; j++)
       *so3_sq -= realtrace_nn(&s->X[j], &s->X[j]);
@@ -33,7 +34,7 @@ double bosonic_action(double * so3_sq, double * so6_sq, double * Myers) {
   }
   b_action = *so3_sq + *so6_sq;
 
-  // Scalar hopping term [D_t^+ X_i(t)]^2
+  // Nearest-neighbor piece of scalar kinetic term
   wait_gather(tag);
   FORALLSITES(i, s) {
     for (j = 0; j < NSCALAR; j++) {
@@ -57,12 +58,12 @@ double bosonic_action(double * so3_sq, double * so6_sq, double * Myers) {
   }
 
   // Scalar potential terms
-  // Couplings are set differently depending on BMN/BFSS in setup.c
+  // Couplings are set differently in setup.c depending on BMN vs. BFSS
   *so3_sq *= mass_so3;
   *so6_sq *= mass_so6;
   b_action += *so3_sq + *so6_sq;
-
 #ifdef BMN
+  *Myers = 0.0;
   FORALLSITES(i, s) {
     for (j = 0; j < 3; j++) {
       for (k = 0; k < 3; k++) {
@@ -79,19 +80,15 @@ double bosonic_action(double * so3_sq, double * so6_sq, double * Myers) {
     }
   }
   *Myers *= mass_Myers;
-
   b_action += *Myers;
 
 #endif
 
   b_action *= kappa;
-
   *so3_sq *= kappa;
   *so6_sq *= kappa;
   *Myers *= kappa;
-
   g_doublesum(&b_action);
-
   g_doublesum(so3_sq);
   g_doublesum(so6_sq);
   g_doublesum(Myers);
