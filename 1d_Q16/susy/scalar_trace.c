@@ -7,29 +7,22 @@ double scalar_trace(double *Xtr, double *Xwidth) {
   register int i, j;
   register site *s;
   double Xtr_ave = 0.0, XtrSq = 0.0, td;
-  
-  for(j=0; j<NSCALAR;j++)
-    Xtr[j] = 0.0;
 
-  FORALLSITES(i, s) {
-    for (j = 0; j < NSCALAR; j++) {
+  for (j = 0; j < NSCALAR; j++) {
+    Xtr[j] = 0.0;
+    FORALLSITES(i, s) {
       td = realtrace(&(s->X[j]), &(s->X[j]));
       Xtr[j] += td;
       XtrSq += td * td;
     }
-  }
-
-  for (j = 0; j < NSCALAR; j++) {
-    Xtr[j] *= (one_ov_N / (double)nt);
+    Xtr[j] *= one_ov_N / ((double)nt);
     g_doublesum(&(Xtr[j]));
     Xtr_ave += Xtr[j];
   }
-
   Xtr_ave /= (double)NSCALAR;
-  XtrSq /= ((double)nt * NSCALAR);
+  XtrSq *= one_ov_N * one_ov_N / ((double)nt * NSCALAR);
   g_doublesum(&XtrSq);
-  td = Xtr_ave;
-  *Xwidth = sqrt(XtrSq - td * td);
+  *Xwidth = sqrt(XtrSq - Xtr_ave * Xtr_ave);
 
   return Xtr_ave;
 }
