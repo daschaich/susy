@@ -86,7 +86,7 @@ EXTERN Real ampdeg, *amp, *shift;
 EXTERN Real ampdeg4, *amp4, *shift4;
 EXTERN Real ampdeg8, *amp8, *shift8;
 EXTERN int Nroot, Norder;
-EXTERN Real gnorm, *fnorm, max_gf, *max_ff;
+EXTERN Real bnorm, *fnorm, max_bf, *max_ff;
 
 // Each node maintains a structure with the pseudorandom number
 // generator state

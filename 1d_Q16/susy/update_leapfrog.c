@@ -41,9 +41,9 @@ int update_step(Twist_Fermion **src, Twist_Fermion ***psim) {
   for (step = 0; step < nsteps[0]; step++) {
     // Inner steps p(t) u(t)
     tr = gauge_force(eps);
-    gnorm += tr;
-    if (tr > max_gf)
-      max_gf = tr;
+    bnorm += tr;
+    if (tr > max_bf)
+      max_bf = tr;
 
 #ifndef PUREGAUGE
     for (n = 0; n < Nroot; n++) {
@@ -105,8 +105,8 @@ int update() {
 
   // Find initial action
   startaction = action(src, psim);
-  gnorm = 0.0;
-  max_gf = 0.0;
+  bnorm = 0.0;
+  max_bf = 0.0;
   for (n = 0; n < Nroot; n++) {
     fnorm[n] = 0.0;
     max_ff[n] = 0.0;
@@ -179,7 +179,7 @@ int update() {
   if (traj_length > 0) {
     node0_printf("IT_PER_TRAJ %d\n", iters);
     node0_printf("MONITOR_FORCE_GAUGE    %.4g %.4g\n",
-                 gnorm / (double)(2 * nsteps[0]), max_gf);
+                 bnorm / (double)(2 * nsteps[0]), max_bf);
     for (n = 0; n < Nroot; n++) {
       node0_printf("MONITOR_FORCE_FERMION%d %.4g %.4g\n",
                    n, fnorm[n] / (double)(2 * nsteps[0]), max_ff[n]);

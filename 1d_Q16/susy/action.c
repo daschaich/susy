@@ -10,11 +10,11 @@
 // -----------------------------------------------------------------
 // Bosonic contribution to the action
 // Uses some pointer arithmetic that might be susceptible to bugs
-double bosonic_action(double * so3_sq, double * so6_sq, double * Myers) {
+double bosonic_action(double *so3_sq, double *so6_sq, double *Myers) {
   register int i,l;
   register site *s;
-  double b_action;
   int j, k;
+  double b_action;
   matrix tmat, tmat2;
   msg_tag *tag;
 
@@ -137,6 +137,7 @@ double fermion_action(matrix *src[NFERMION], matrix **sol[NFERMION]) {
 // -----------------------------------------------------------------
 
 
+
 // -----------------------------------------------------------------
 // Gauge and scalar momenta contribution to the action
 double mom_action() {
@@ -159,8 +160,7 @@ double mom_action() {
 // -----------------------------------------------------------------
 // Print out zeros for pieces of the action that aren't included
 double action(matrix **src[NFERMION], matrix ***sol[NFERMION]) {
-  double b_act, p_act, so3_act, so6_act, Myers_act;
-  double total;
+  double b_act, p_act, so3_act, so6_act, Myers_act, total;
 
   b_act = bosonic_action(&so3_act, &so6_act, &Myers_act);
   node0_printf("action: so3 %.8g so6 %.8g Myers %.8g ",

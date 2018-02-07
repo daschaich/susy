@@ -59,13 +59,13 @@ double bosonic_force(Real eps) {
 
   // The pure scalar stuff
   FORALLSITES(i, s) {
-    for (j = 0; j < NSCALAR; j++) {
 #ifdef BMN
-      for (k = 0; k < NSCALAR; k++) {
+    for (j = 0; j < 3; j++) {
+      for (k = 0; k < 3; k++) {
         if (j == k)
           continue;
-        for (l = 0; l < NSCALAR; l++) {
-          if((j == l) || (k == l))
+        for (l = 0; l < 3; l++) {
+          if ((j == l) || (k == l))
             continue;
 
           if (epsilon[j][k][l] > 0) {
@@ -78,7 +78,9 @@ double bosonic_force(Real eps) {
           }
         }
       }
+    }
 #endif
+    for (j = 0; j < NSCALAR; j++) {
       for (k = j + 1; k < NSCALAR; k++) {
         mult_nn(&(s->X[j]), &(s->X[k]), &tmat);
         mult_nn_dif(&(s->X[k]), &(s->X[j]), &tmat);
@@ -116,7 +118,7 @@ double bosonic_force(Real eps) {
   g_doublesum(&returnit);
   returnit *= kappa * kappa;
 
-  return (eps * sqrt(returnit) / nt);
+  return (eps * sqrt(returnit) / (double)nt);
 }
 // -----------------------------------------------------------------
 

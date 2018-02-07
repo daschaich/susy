@@ -79,9 +79,9 @@ int update_step(matrix **src[NFERMION], matrix ***psim[NFERMION]) {
 
   for (i_multi0 = 1; i_multi0 <= nsteps[0]; i_multi0++) {
     tr = update_bosonic_step(b_eps);
-    gnorm += tr;
-    if (tr > max_gf)
-      max_gf = tr;
+    bnorm += tr;
+    if (tr > max_bf)
+      max_bf = tr;
 
 #ifndef PUREGAUGE
     for (n = 0; n < Nroot; n++) {
@@ -94,9 +94,9 @@ int update_step(matrix **src[NFERMION], matrix ***psim[NFERMION]) {
     }
 #endif
     tr = update_bosonic_step(b_eps);
-    gnorm += tr;
-    if (tr > max_gf)
-      max_gf = tr;
+    bnorm += tr;
+    if (tr > max_bf)
+      max_bf = tr;
 
 #ifndef PUREGAUGE
     for (n = 0; n < Nroot; n++) {
@@ -124,6 +124,14 @@ int update() {
   int j, k, n, iters = 0;
   double startaction, endaction, change;
   matrix **source[NFERMION], ***psim[NFERMION];
+
+  // Refresh the momenta
+  ranmom();
+
+  // Set up the fermion variables, if needed
+#ifndef PUREGAUGE
+  Real final_rsq;
+
   for (k = 0; k < NFERMION; k++) {
     source[k] = malloc(sizeof(matrix*) * Nroot);
     psim[k] = malloc(sizeof(matrix**) * Nroot);
@@ -136,18 +144,12 @@ int update() {
     }
   }
 
-  // Refresh the momenta
-  ranmom();
-
-  // Set up the fermion variables, if needed
-#ifndef PUREGAUGE
-  Real final_rsq;
   // Compute g and src = (Mdag M)^(1 / 8) g
   for (n = 0; n < Nroot; n++) {
     iters += grsource(src);
-    for(j=0; j<NFERMION; j++) {
-      FORALLSITES(i,s)
-      mat_copy(&src[j][i], &source[j][n][i]);
+    for (j = 0; j < NFERMION; j++) {
+      FORALLSITES(i, s)
+      mat_copy(&(src[j][i]), &(source[j][n][i]));
     }
   }
   FIX THIS
@@ -166,8 +168,8 @@ int update() {
 
   // Find initial action
   startaction = action(source, psim);
-  gnorm = 0.0;
-  max_gf = 0.0;
+  bnorm = 0.0;
+  max_bf = 0.0;
   for (n = 0; n < Nroot; n++) {
     fnorm[n] = 0.0;
     max_ff[n] = 0.0;
@@ -230,19 +232,22 @@ int update() {
   node0_printf("CHECK: delta S = %.4g\n", (double)(change));
 #endif // ifdef HMC
 
+#ifndef PUREGAUGE
+  // TODO: Need to refactor from Twist_Fermions to matrix[NFERMION]s...
   for (n = 0; n < Nroot; n++) {
-    free(src[n]);
+    free(source[n]);
     for (j = 0; j < Norder; j++)
       free(psim[n][j]);
     free(psim[n]);
   }
-  free(src);
+  free(source);
   free(psim);
+#endif
 
   if (traj_length > 0) {
     node0_printf("IT_PER_TRAJ %d\n", iters);
     node0_printf("MONITOR_FORCE_GAUGE    %.4g %.4g\n",
-                 gnorm / (double)(2 * nsteps[0]), max_gf);
+                 bnorm / (double)(2 * nsteps[0]), max_bf);
     for (n = 0; n < Nroot; n++) {
       node0_printf("MONITOR_FORCE_FERMION%d %.4g %.4g\n",
                    n, fnorm[n] / (double)(2 * nsteps[0]), max_ff[n]);
