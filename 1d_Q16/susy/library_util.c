@@ -7,12 +7,30 @@
 
 // -----------------------------------------------------------------
 // Copy a gauge field as an array of NUMLINK matrices
-void gauge_field_copy(field_offset src, field_offset dest) {
-  register int i;
+void copy_bosons(int sign) {
+  register int i, j;
   register site *s;
-
-  FORALLSITES(i, s)
-    mat_copy((matrix *)F_PT(s, src), (matrix *)F_PT(s, dest));
+  
+  if(sign == 1)
+  {
+    FORALLSITES(i, s) {
+      mat_copy(&s->link, &s->old_link);
+      for(j=0;j<NSCALAR;j++)
+        mat_copy(&s->X[j], &s->old_X[j]);
+    }
+  }
+  else if(sign == -1)
+  {
+    FORALLSITES(i, s) {
+      mat_copy(&s->old_link, &s->link);
+      for(j=0;j<NSCALAR;j++)
+        mat_copy(&s->old_X[j], &s->X[j]);
+    }
+  }
+  else {
+    node0_printf("Error: incorrect sign in copy_boson: %d\n", sign);
+    terminate(1);
+  }
 }
 // -----------------------------------------------------------------
 

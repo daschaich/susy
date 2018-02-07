@@ -18,11 +18,14 @@
 
 // -----------------------------------------------------------------
 void update_uu(Real eps) {
-  register int i, mu;
+  register int i, j;
   register site *s;
 
   FORALLSITES(i, s) {
     scalar_mult_sum_matrix(&(s->mom), eps, &(s->link));
+    for(j=0;j<NSCALAR;j++)
+      scalar_mult_sum_matrix(&(s->mom_X[j]), eps, &(s->X[j]));
+  }
 }
 // -----------------------------------------------------------------
 
@@ -30,23 +33,23 @@ void update_uu(Real eps) {
 
 // -----------------------------------------------------------------
 // Omelyan version; ``dirty'' speeded-up version
-double update_gauge_step(Real eps) {
+double update_bosonic_step(Real eps) {
   int nsw = nsteps[1], isw;
   double norm;
 
 #ifdef UPDATE_DEBUG
   node0_printf("gauge %d steps %.4g dt\n", nsw, eps);
 #endif
-  norm = gauge_force(eps * LAMBDA);
+  norm = bosonic_force(eps * LAMBDA);
   for (isw = 1; isw <= nsw; isw++) {
     update_uu(0.5 * eps);
-    norm += gauge_force(eps * LAMBDA_MID);
+    norm += bosonic_force(eps * LAMBDA_MID);
     update_uu(0.5 * eps);
     if (isw < nsw)
-      norm += gauge_force(eps * TWO_LAMBDA);
+      norm += bosonic_force(eps * TWO_LAMBDA);
 
     else
-      norm += gauge_force(eps * LAMBDA);
+      norm += bosonic_force(eps * LAMBDA);
   }
   return (norm / nsw);
 }
@@ -55,14 +58,16 @@ double update_gauge_step(Real eps) {
 
 
 // -----------------------------------------------------------------
-int update_step(Twist_Fermion **src, Twist_Fermion ***psim) {
-  int iters = 0, i_multi0, n;
-  Real final_rsq, f_eps, g_eps, tr;
+int update_step(matrix **src[NFERMION], matrix ***psim[NFERMION]) {
+  int iters = 0, i_multi0;
+  Real f_eps, b_eps, tr;
 
   f_eps = traj_length / (Real)nsteps[0];
-  g_eps = f_eps / (Real)(2.0 * nsteps[1]);
+  b_eps = f_eps / (Real)(2.0 * nsteps[1]);
 
 #ifndef PUREGAUGE
+  int n;
+  Real final_rsq;
   for (n = 0; n < Nroot; n++) {
     // CG called before update_step
     tr = fermion_force(f_eps * LAMBDA, src[n], psim[n]);
@@ -73,7 +78,7 @@ int update_step(Twist_Fermion **src, Twist_Fermion ***psim) {
 #endif
 
   for (i_multi0 = 1; i_multi0 <= nsteps[0]; i_multi0++) {
-    tr = update_gauge_step(g_eps);
+    tr = update_bosonic_step(b_eps);
     gnorm += tr;
     if (tr > max_gf)
       max_gf = tr;
@@ -88,7 +93,7 @@ int update_step(Twist_Fermion **src, Twist_Fermion ***psim) {
         max_ff[n] = tr;
     }
 #endif
-    tr = update_gauge_step(g_eps);
+    tr = update_bosonic_step(b_eps);
     gnorm += tr;
     if (tr > max_gf)
       max_gf = tr;
@@ -116,17 +121,19 @@ int update_step(Twist_Fermion **src, Twist_Fermion ***psim) {
 
 // -----------------------------------------------------------------
 int update() {
-  int j, n, iters = 0;
-  Real final_rsq;
+  int j, k, n, iters = 0;
   double startaction, endaction, change;
-  Twist_Fermion **src = malloc(sizeof(Twist_Fermion*) * Nroot);
-  Twist_Fermion ***psim = malloc(sizeof(Twist_Fermion**) * Nroot);
-
-  for (n = 0; n < Nroot; n++) {
-    src[n] = malloc(sizeof(Twist_Fermion) * sites_on_node);
-    psim[n] = malloc(sizeof(Twist_Fermion*) * Norder);
-    for (j = 0; j < Norder; j++)
-      psim[n][j] = malloc(sizeof(Twist_Fermion) * sites_on_node);
+  matrix **source[NFERMION], ***psim[NFERMION];
+  for(k=0; k<NFERMION; k++) {
+    source[k] = malloc(sizeof(matrix*) * Nroot);
+    psim[k] = malloc(sizeof(matrix**) * Nroot);
+    
+    for (n = 0; n < Nroot; n++) {
+      source[k][n] = malloc(sizeof(matrix) * sites_on_node);
+      psim[k][n] = malloc(sizeof(matrix*) * Norder);
+      for (j = 0; j < Norder; j++)
+        psim[k][n][j] = malloc(sizeof(matrix) * sites_on_node);
+    }
   }
 
   // Refresh the momenta
@@ -134,9 +141,16 @@ int update() {
 
   // Set up the fermion variables, if needed
 #ifndef PUREGAUGE
+  Real final_rsq;
   // Compute g and src = (Mdag M)^(1 / 8) g
-  for (n = 0; n < Nroot; n++)
-    iters += grsource(src[n]);
+  for (n = 0; n < Nroot; n++) {
+    iters += grsource(src);
+    for(j=0; j<NFERMION; j++) {
+      FORALLSITES(i,s)
+      mat_copy(&src[j][i], &source[j][n][i]);
+    }
+  }
+  FIX THIS
 
   // Do a CG to get psim,
   // rational approximation to (Mdag M)^(-1 / 4) src = (Mdag M)^(-1 / 8) g
@@ -151,7 +165,7 @@ int update() {
 #endif // ifndef PUREGAUGE
 
   // Find initial action
-  startaction = action(src, psim);
+  startaction = action(source, psim);
   gnorm = 0.0;
   max_gf = 0.0;
   for (n = 0; n < Nroot; n++) {
@@ -174,15 +188,15 @@ int update() {
 #ifdef HMC_ALGORITHM
   Real xrandom;   // For accept/reject test
   // Copy link field to old_link
-  gauge_field_copy(F_OFFSET(link), F_OFFSET(old_link));
+  copy_bosons(PLUS);
 #endif
   // Do microcanonical updating
-  iters += update_step(src, psim);
+  iters += update_step(source, psim);
 
   // Find ending action
   // Reuse data from update_step, don't need CG to get (Mdag M)^(-1 / 4) chi
   // If the final step were a gauge update, CG would be necessary
-  endaction = action(src, psim);
+  endaction = action(source, psim);
   change = endaction - startaction;
 #ifdef HMC_ALGORITHM
   // Reject configurations giving overflow
@@ -203,7 +217,7 @@ int update() {
   broadcast_float(&xrandom);
   if (exp(-change) < (double)xrandom) {
     if (traj_length > 0.0)
-      gauge_field_copy(F_OFFSET(old_link), F_OFFSET(link));
+      copy_bosons(MINUS);
     node0_printf("REJECT: delta S = %.4g start S = %.12g end S = %.12g\n",
                  change, startaction, endaction);
   }

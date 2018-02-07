@@ -50,7 +50,7 @@ void scalar_eig(double *ave_eigs, double *eig_widths,
 
 // Action routines
 double action(matrix **source[NFERMION], matrix ***sol[NFERMION]);
-double bosonic_action();
+double bosonic_action(double *so3, double *so6, double *Myers);
 double fermion_action();
 
 // Force routines
@@ -68,7 +68,7 @@ int congrad_multi(matrix *src[NFERMION], matrix **psim[NFERMION],
 double scalar_trace(double *Xtr, double *Xwidth);
 
 // Routines in library_util.c that loop over all sites
-void gauge_field_copy(field_offset src, field_offset dest);
+void copy_bosons(int sign);
 void shiftmat(matrix *dat, matrix *temp, int dir);
 
 // Random gauge transformation for testing gauge invariance

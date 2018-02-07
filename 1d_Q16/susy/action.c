@@ -10,24 +10,28 @@
 // -----------------------------------------------------------------
 // Bosonic contribution to the action
 // Uses some pointer arithmetic that might be susceptible to bugs
-double bosonic_action() {
+double bosonic_action(double * so3_sq, double * so6_sq, double * Myers) {
   register int i,l;
   register site *s;
-  double b_action, so3_sq = 0.0, so6_sq = 0.0, Myers = 0.0;
+  double b_action;
   int j, k;
   matrix tmat, tmat2;
   msg_tag *tag;
-
+  *so3_sq = 0.0;
+  *so6_sq = 0.0;
+  *Myers = 0.0;
+  
+  
   // Scalar kinetic term
   tag = start_gather_site(F_OFFSET(X[0]), sizeof(matrix) * NSCALAR,
                           TUP, EVENANDODD, gen_pt[0]);
   FORALLSITES(i, s) {
     for (j = 0; j < 3; j++)
-      so3_sq -= realtrace_nn(&s->X[j], &s->X[j]);
+      *so3_sq -= realtrace_nn(&s->X[j], &s->X[j]);
     for (j = 3; j < NSCALAR; j++)
-      so6_sq -= realtrace_nn(&s->X[j], &s->X[j]);
+      *so6_sq -= realtrace_nn(&s->X[j], &s->X[j]);
   }
-  b_action = so3_sq + so6_sq;
+  b_action = *so3_sq + *so6_sq;
 
   // Scalar hopping term [D_t^+ X_i(t)]^2
   wait_gather(tag);
@@ -54,7 +58,11 @@ double bosonic_action() {
 
   // Scalar potential terms
   // Couplings are set differently depending on BMN/BFSS in setup.c
-  b_action += mass_so3 * so3_sq + mass_so6 * so6_sq;
+  *so3_sq *= mass_so3;
+  *so6_sq *= mass_so6;
+  b_action += *so3_sq + *so6_sq;
+
+  
 #ifdef BMN
   FORALLSITES(i, s) {
     for (j = 0; j < 3; j++) {
@@ -66,17 +74,29 @@ double bosonic_action() {
             continue;
 
           mult_nn(&(s->X[k]), &(s->X[l]), &tmat);
-          Myers -= epsilon[j][k][l] * realtrace_nn(&s->X[j], &tmat);
+          *Myers -= epsilon[j][k][l] * realtrace_nn(&s->X[j], &tmat);
         }
       }
     }
   }
-  b_action += mass_Myers * Myers;
+  *Myers *= mass_Myers;
+  
+  b_action += *Myers;
 
 #endif
 
   b_action *= kappa;
+  
+  *so3_sq *= kappa;
+  *so6_sq *= kappa;
+  *Myers *= kappa;
+  
   g_doublesum(&b_action);
+  
+  g_doublesum(so3_sq);
+  g_doublesum(so6_sq);
+  g_doublesum(Myers);
+  
   return b_action;
 }
 // -----------------------------------------------------------------
@@ -142,11 +162,12 @@ double mom_action() {
 // -----------------------------------------------------------------
 // Print out zeros for pieces of the action that aren't included
 double action(matrix **src[NFERMION], matrix ***sol[NFERMION]) {
-  double b_act, p_act;
+  double b_act, p_act, so3_act, so6_act, Myers_act;
   double total;
 
-  b_act = bosonic_action();
-  node0_printf("action: ");
+  b_act = bosonic_action(&so3_act, &so6_act, &Myers_act);
+  node0_printf("action: so3 %.8g so6 %.8g Myers %.8g ",
+               so3_act, so6_act, Myers_act);
   node0_printf("boson %.8g ", b_act);
   total = b_act;
 
