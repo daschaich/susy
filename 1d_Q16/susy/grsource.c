@@ -28,7 +28,7 @@ void ranmom() {
       }
 
       for (k = 0; k < NSCALAR; k++) {
-        clear_mat(&(s->mom_X[j]));
+        clear_mat(&(s->mom_X[k]));
         for (j = 0; j < DIMF; j++) {
 #ifdef SITERAND
           grn.real = gaussian_rand_no(&(s->site_prn));
