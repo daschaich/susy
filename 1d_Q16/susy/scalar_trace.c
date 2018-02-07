@@ -7,6 +7,9 @@ double scalar_trace(double *Xtr, double *Xwidth) {
   register int i, j;
   register site *s;
   double Xtr_ave = 0.0, XtrSq = 0.0, td;
+  
+  for(j=0; j<NSCALAR;j++)
+    Xtr[j] = 0.0;
 
   FORALLSITES(i, s) {
     for (j = 0; j < NSCALAR; j++) {

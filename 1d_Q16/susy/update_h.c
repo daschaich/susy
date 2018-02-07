@@ -11,8 +11,9 @@
 // Update mom with the bosonic force
 // Uses some pointer arithmetic that might be susceptible to bugs
 double bosonic_force(Real eps) {
-  register int i, j;
+  register int i, j, k, l;
   register site *s;
+  Real tr;
   double returnit = 0.0, tmp_so3 = 2.0 * mass_so3, tmp_so6 = 2.0 * mass_so6;
   matrix tmat;
   msg_tag *tag, *tag2, *tag3;
