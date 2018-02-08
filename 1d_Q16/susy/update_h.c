@@ -9,31 +9,32 @@
 
 // -----------------------------------------------------------------
 // Update mom with the bosonic force
-// Uses some pointer arithmetic that might be susceptible to bugs
 double bosonic_force(Real eps) {
-  register int i, j, k, l;
+  register int i, j, k, l, pt, pt2;
   register site *s;
   Real tr;
   double returnit = 0.0, tmp_so3 = 2.0 * mass_so3, tmp_so6 = 2.0 * mass_so6;
   matrix tmat;
-  msg_tag *tag, *tag2, *tag3;
+  msg_tag *tag[NSCALAR], *tag2[NSCALAR], *tag3;
 
   // First we have the finite difference operator gauge derivative
   // 2 * X_i(n + 1) * U^dagger(n) * X_i(n)
-  tag = start_gather_site(F_OFFSET(X[0]), sizeof(matrix) * NSCALAR,
-                          TUP, EVENANDODD, gen_pt[0]);
+  for (j = 0; j < NSCALAR; j++) {
+    tag[j] = start_gather_site(F_OFFSET(X[j]), sizeof(matrix),
+                               TUP, EVENANDODD, gen_pt[j]);
 
-  tag2 = start_gather_site(F_OFFSET(X[0]), sizeof(matrix) * NSCALAR,
-                           TDOWN, EVENANDODD, gen_pt[1]);
-
+    tag2[j] = start_gather_site(F_OFFSET(X[j]), sizeof(matrix),
+                                TDOWN, EVENANDODD, gen_pt[NSCALAR + j]);
+  }
   tag3 = start_gather_site(F_OFFSET(link), sizeof(matrix),
-                           TDOWN, EVENANDODD, gen_pt[2]);
+                           TDOWN, EVENANDODD, gen_pt[2 * NSCALAR + 1]);
 
-  wait_gather(tag);
+  for (j = 0; j < NSCALAR; j++)
+   wait_gather(tag[j]);
   FORALLSITES(i, s) {
     for (j = 0; j < NSCALAR; j++) {
       mult_an(&(s->link), &(s->X[j]), &tmat);
-      mult_nn((matrix *)(gen_pt[0][i] + j), &tmat, &(s->f_U));
+      mult_nn((matrix *)(gen_pt[j][i]), &tmat, &(s->f_U));
     }
   }
 
@@ -44,15 +45,18 @@ double bosonic_force(Real eps) {
   }
 
   // This is the finite difference operator scalar derivative
-  wait_gather(tag2);
+  for (j = 0; j < NSCALAR; j++)
+    wait_gather(tag2[j]);
   wait_gather(tag3);
   FORALLSITES(i, s) {
     for (j = 0; j < NSCALAR; j++) {
-      mult_na((matrix *)(gen_pt[0][i] + j), &(s->link), &tmat);
+      pt = NSCALAR + j;
+      pt2 = 2 * NSCALAR + 1;
+      mult_na((matrix *)(gen_pt[j][i]), &(s->link), &tmat);
       mult_nn(&(s->link), &tmat, &(s->f_X[j]));
       dif_matrix(&(s->X[j]), &(s->f_X[j]));
-      mult_nn((matrix *)(gen_pt[1][i] + j), (matrix *)(gen_pt[2][i]), &tmat);
-      mult_an_sum((matrix *)(gen_pt[2][i]), &tmat, &(s->f_X[j]));
+      mult_nn((matrix *)(gen_pt[pt][i]), (matrix *)(gen_pt[pt2][i]), &tmat);
+      mult_an_sum((matrix *)(gen_pt[pt2][i]), &tmat, &(s->f_X[j]));
       scalar_mult_matrix(&(s->f_X[j]), 2.0, &(s->f_X[j]));
     }
   }
@@ -88,11 +92,13 @@ double bosonic_force(Real eps) {
         mult_nn_sum(&tmat, &(s->X[k]), &(s->f_X[j]));
       }
 
-      mult_na((matrix *)(gen_pt[0][i] + j), &(s->link), &tmat);
+      pt = NSCALAR + j;
+      pt2 = 2 * NSCALAR + 1;
+      mult_na((matrix *)(gen_pt[j][i]), &(s->link), &tmat);
       mult_nn(&(s->link), &tmat, &(s->f_X[j]));
       dif_matrix(&(s->X[j]), &(s->f_X[j]));
-      mult_nn((matrix *)(gen_pt[1][i] + j), (matrix *)(gen_pt[2][i]), &tmat);
-      mult_an_sum((matrix *)(gen_pt[2][i]), &tmat, &(s->f_X[j]));
+      mult_nn((matrix *)(gen_pt[pt][i]), (matrix *)(gen_pt[pt2][i]), &tmat);
+      mult_an_sum((matrix *)(gen_pt[pt2][i]), &tmat, &(s->f_X[j]));
     }
     for (j = 0; j < 3; j++)
       scalar_mult_dif_matrix(&(s->X[j]), tmp_so3, &(s->f_X[j]));
@@ -100,8 +106,10 @@ double bosonic_force(Real eps) {
     for (j = 3; j < NSCALAR; j++)
       scalar_mult_dif_matrix(&(s->X[j]), tmp_so6, &(s->f_X[j]));
   }
-  cleanup_gather(tag);
-  cleanup_gather(tag2);
+  for (j = 0; j < NSCALAR; j++) {
+    cleanup_gather(tag[j]);
+    cleanup_gather(tag2[j]);
+  }
   cleanup_gather(tag3);
 
   // Finally take adjoint and update the momentum
