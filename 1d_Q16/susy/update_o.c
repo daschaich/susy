@@ -64,7 +64,7 @@ void update_uu(Real eps) {
     scalar_mult_sum_matrix(&tmat, eps, &(s->link));
 
     for (j = 0; j < NSCALAR; j++)
-      scalar_mult_sum_matrix(&(s->mom_X[j]), eps, &(s->X[j]));
+      scalar_mult_matrix(&(s->mom_X[j]), eps, &(s->X[j]));
   }
 }
 // -----------------------------------------------------------------
