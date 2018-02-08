@@ -20,9 +20,48 @@
 void update_uu(Real eps) {
   register int i, j;
   register site *s;
-
+  register Real t2, t3, t4, t5, t6, t7, t8;
+  matrix tmat, tmat2;
+  
+  // Calculate newU = exp(p).U
+  // Go to eighth order in the exponential:
+  //   exp(p) * U = (1 + p + p^2/2 + p^3/6 ...) * U
+  //              = U + p*(U + (p/2)*(U + (p/3)*( ... )))
+  
+  // Take divisions out of site loop (can't be done by compiler)
+  t2 = eps / 2.0;
+  t3 = eps / 3.0;
+  t4 = eps / 4.0;
+  t5 = eps / 5.0;
+  t6 = eps / 6.0;
+  t7 = eps / 7.0;
+  t8 = eps / 8.0;
+  
   FORALLSITES(i, s) {
-    scalar_mult_sum_matrix(&(s->mom), eps, &(s->link));
+    mult_nn(&(s->mom), &(s->link), &tmat);
+    scalar_mult_add_matrix(&(s->link), &tmat, t8, &tmat2);
+    
+    mult_nn(&(s->mom), &tmat2, &tmat);
+    scalar_mult_add_matrix(&(s->link), &tmat, t7, &tmat2);
+    
+    mult_nn(&(s->mom), &tmat2, &tmat);
+    scalar_mult_add_matrix(&(s->link), &tmat, t6, &tmat2);
+    
+    mult_nn(&(s->mom), &tmat2, &tmat);
+    scalar_mult_add_matrix(&(s->link), &tmat, t5, &tmat2);
+    
+    mult_nn(&(s->mom), &tmat2, &tmat);
+    scalar_mult_add_matrix(&(s->link), &tmat, t4, &tmat2);
+    
+    mult_nn(&(s->mom), &tmat2, &tmat);
+    scalar_mult_add_matrix(&(s->link), &tmat, t3, &tmat2);
+    
+    mult_nn(&(s->mom), &tmat2, &tmat);
+    scalar_mult_add_matrix(&(s->link), &tmat, t2, &tmat2);
+    
+    mult_nn(&(s->mom), &tmat2, &tmat);
+    scalar_mult_sum_matrix(&tmat, eps, &(s->link));
+    
     for (j = 0; j < NSCALAR; j++)
       scalar_mult_sum_matrix(&(s->mom_X[j]), eps, &(s->X[j]));
   }
@@ -79,6 +118,10 @@ int update_step(matrix **src[NFERMION], matrix ***psim[NFERMION]) {
 
   for (i_multi0 = 1; i_multi0 <= nsteps[0]; i_multi0++) {
     tr = update_bosonic_step(b_eps);
+#ifdef UPDATE_DEBUG
+    node0_printf("Step %d - 1 Action %.4g Force %.4g\n", i_multi0,
+                 action(src, psim), tr);
+#endif
     bnorm += tr;
     if (tr > max_bf)
       max_bf = tr;
@@ -94,6 +137,10 @@ int update_step(matrix **src[NFERMION], matrix ***psim[NFERMION]) {
     }
 #endif
     tr = update_bosonic_step(b_eps);
+#ifdef UPDATE_DEBUG
+    node0_printf("Step %d - 2 Action %.4g Force %.4g\n", i_multi0,
+                 action(src, psim), tr);
+#endif
     bnorm += tr;
     if (tr > max_bf)
       max_bf = tr;
