@@ -9,18 +9,19 @@
 
 // -----------------------------------------------------------------
 // Bosonic contribution to the action
-// Uses some pointer arithmetic that might be susceptible to bugs
 double bosonic_action(double *so3_sq, double *so6_sq, double *Myers) {
   register int i,l;
   register site *s;
   int j, k;
   double b_action;
   matrix tmat, tmat2;
-  msg_tag *tag;
+  msg_tag *tag[NSCALAR];
 
   // Scalar kinetic term [D_t X(t)]^2 = [U(t) X(t+1) Udag(t) - X(t)]^2
-  tag = start_gather_site(F_OFFSET(X[0]), sizeof(matrix) * NSCALAR,
-                          TUP, EVENANDODD, gen_pt[0]);
+  for (j = 0; j < NSCALAR; j++) {
+    tag[j] = start_gather_site(F_OFFSET(X[j]), sizeof(matrix),
+                               TUP, EVENANDODD, gen_pt[j]);
+  }
 
   // On-site piece of scalar kinetic term
   // (Has same form as some scalar potential terms, so will re-use below)
@@ -35,16 +36,18 @@ double bosonic_action(double *so3_sq, double *so6_sq, double *Myers) {
   b_action = *so3_sq + *so6_sq;
 
   // Nearest-neighbor piece of scalar kinetic term
-  wait_gather(tag);
+  for (j = 0; j < NSCALAR; j++)
+    wait_gather(tag[j]);
   FORALLSITES(i, s) {
     for (j = 0; j < NSCALAR; j++) {
-      mult_nn(&(s->link), (matrix *)(gen_pt[0][i] + j), &tmat);
+      mult_nn(&(s->link), (matrix *)(gen_pt[j][i]), &tmat);
       mult_nn(&(s->X[j]), &tmat, &tmat2);
       b_action += realtrace(&(s->link), &tmat2);
     }
   }
   b_action *= 2.0;
-  cleanup_gather(tag);
+  for (j = 0; j < NSCALAR; j++)
+    cleanup_gather(tag[j]);
 
   // Commutator term
   FORALLSITES(i, s) {

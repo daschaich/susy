@@ -53,7 +53,7 @@ Real check_unit(matrix *c) {
 
 // -----------------------------------------------------------------
 Real check_unitarity() {
-  register int i,j;
+  register int i;
   int ii, jj;
   register site *s;
   register matrix *mat;
