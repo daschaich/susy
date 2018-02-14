@@ -38,6 +38,12 @@ double bosonic_force(Real eps) {
     }
   }
 
+  /*FORALLSITES(i, s) {
+      tc = trace(&(s->f_U));
+      CMULREAL(tc,-1.0*one_ov_N,tc);
+      c_scalar_add_diag(&(s->f_U), &tc);
+  } TODO: May be we need this part in future ? */ 
+
   tr = 2.0 * kappa * eps;
   FORALLSITES(i, s) {
     scalar_mult_dif_adj_matrix(&(s->f_U), tr, &(s->mom));
@@ -47,7 +53,7 @@ double bosonic_force(Real eps) {
   // This is the finite difference operator scalar derivative
   for (j = 0; j < NSCALAR; j++)
     wait_gather(tag2[j]);
-  wait_gather(tag3);
+  
   FORALLSITES(i, s) {
     for (j = 0; j < NSCALAR; j++) {
       pt = NSCALAR + j;
@@ -113,7 +119,7 @@ double bosonic_force(Real eps) {
   cleanup_gather(tag3);
 
   // Finally take adjoint and update the momentum
-  // Include overall factor of kappa = N / (2lambda)
+  // Include overall factor of kappa = N / (4lambda)
   // Subtract to reproduce -Adj(f_X)
   // Compute average scalar force in same loop
   tr = kappa * eps;
