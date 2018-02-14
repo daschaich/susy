@@ -60,7 +60,7 @@ EXTERN Real traj_length;
 
 // SU(N) generators
 EXTERN matrix Lambda[DIMF];
-EXTERN gamma_mat Gamma[NCHIRAL_FERMION - 1], Gamma123;
+EXTERN gamma_mat Gamma[NCHIRAL_FERMION - 1], Gamma123, tg[NCHIRAL_FERMION - 1] ;
 EXTERN int epsilon[3][3][3];
 EXTERN Real rsqmin, lambda, kappa, mu;
 EXTERN Real mass_so3, mass_so6, mass_Myers, mass_fermion;

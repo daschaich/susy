@@ -100,8 +100,8 @@ void setup_gamma() {
 
 #ifdef DEBUG_CHECK
   int l, h;
-  gamma_mat tg;
-
+  gamma_mat tg[NCHIRAL_FERMION - 1]; 
+  
   // Print Gammas
   node0_printf("Computing gamma matrices\n");
   for (i = 0; i < NCHIRAL_FERMION - 1; i++){
@@ -122,7 +122,7 @@ void setup_gamma() {
 
   // Test Clifford algebra
   node0_printf("Test Clifford algebra\n");
-  node0_printf("Gamma[i] * Gamma[i] = I\n");
+  node0_printf("Gamma[i] * Gamma[i] = -I\n");
   for (i = 0; i < NCHIRAL_FERMION - 1; i++) {
     for (j = 0; j < NCHIRAL_FERMION; j++) {
       for (k = 0; k < NCHIRAL_FERMION; k++) {
@@ -135,7 +135,7 @@ void setup_gamma() {
                        i, j, k, tg[i].e[j][k]);
         }
       }
-      if (tg[i].e[j][j] != 1) {
+      if (tg[i].e[j][j] != -1) {
         node0_printf("WARNING: Gamma[%d]^2_%d%d = %d\n",
                      i, j, j, tg[i].e[j][j]);
       }
@@ -152,7 +152,7 @@ void setup_gamma() {
             tg[i].e[j][k] += Gamma[h].e[j][l] * Gamma[i].e[l][k];
 
           if (tg[i].e[j][k] != 0) {
-            node0_printf("Warning -- (Gamma[%d] * Gamma[%d])_%d%d = %d\n",
+	        node0_printf("Warning -- (Gamma[%d] * Gamma[%d])_%d%d = %d\n",
                          h, i, j, k, tg[i].e[j][k]);
           }
         }
