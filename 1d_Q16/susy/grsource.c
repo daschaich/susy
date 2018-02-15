@@ -8,36 +8,54 @@
 
 // -----------------------------------------------------------------
 // Construct gaussian random momentum matrices
-// as sum of SU(N) generators with gaussian random coefficients
+// All need to be anti-hermitian
 void ranmom() {
-  register int i, j, k;
+  register int i, j, k, n;
   register site *s;
-  complex grn;
+  Real tr, ti;
 
   FORALLSITES(i, s) {
       clear_mat(&(s->mom));
-      for (j = 0; j < DIMF; j++) {
+      for (j = 0; j < NCOL; j++) {
 #ifdef SITERAND
-        grn.real = gaussian_rand_no(&(s->site_prn));
-        grn.imag = gaussian_rand_no(&(s->site_prn));
+        s->mom.e[j][j].imag = gaussian_rand_no(&(s->site_prn));
 #else
-        grn.real = gaussian_rand_no(&(s->node_prn));
-        grn.imag = gaussian_rand_no(&(s->node_prn));
+        s->mom.e[j][j].imag = gaussian_rand_no(&(s->node_prn));
 #endif
-        c_scalar_mult_sum_mat(&(Lambda[j]), &grn, &(s->mom));
+        for (k = j + 1; k < NCOL; k++) {
+#ifdef SITERAND
+          tr = gaussian_rand_no(&(s->site_prn));
+          ti = gaussian_rand_no(&(s->site_prn));
+#else
+          tr = gaussian_rand_no(&(s->node_prn));
+          ti = gaussian_rand_no(&(s->node_prn));
+#endif
+          s->mom.e[j][k] = cmplx(tr, ti);
+          tr *= -1.0;
+          s->mom.e[k][j] = cmplx(tr, ti);
+        }
       }
 
-      for (k = 0; k < NSCALAR; k++) {
-        clear_mat(&(s->mom_X[k]));
-        for (j = 0; j < DIMF; j++) {
+      for (n = 0; n < NSCALAR; n++) {
+        clear_mat(&(s->mom_X[n]));
+        for (j = 0; j < NCOL; j++) {
 #ifdef SITERAND
-          grn.real = gaussian_rand_no(&(s->site_prn));
-          grn.imag = gaussian_rand_no(&(s->site_prn));
+          s->mom_X[n].e[j][j].imag = gaussian_rand_no(&(s->site_prn));
 #else
-          grn.real = gaussian_rand_no(&(s->node_prn));
-          grn.imag = gaussian_rand_no(&(s->node_prn));
+          s->mom_X[n].e[j][j].imag = gaussian_rand_no(&(s->node_prn));
 #endif
-          c_scalar_mult_sum_mat(&(Lambda[j]), &grn, &(s->mom_X[k]));
+        }
+        for (k = j + 1; k < NCOL; k++) {
+#ifdef SITERAND
+          tr = gaussian_rand_no(&(s->site_prn));
+          ti = gaussian_rand_no(&(s->site_prn));
+#else
+          tr = gaussian_rand_no(&(s->node_prn));
+          ti = gaussian_rand_no(&(s->node_prn));
+#endif
+          s->mom_X[n].e[j][k] = cmplx(tr, ti);
+          tr *= -1.0;
+          s->mom_X[n].e[k][j] = cmplx(tr, ti);
         }
       }
     }

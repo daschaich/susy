@@ -37,7 +37,6 @@ void update_uu(Real eps) {
   t7 = eps / 7.0;
   t8 = eps / 8.0;
 
-
   FORALLSITES(i, s) {
     mult_nn(&(s->mom), &(s->link), &tmat);
     scalar_mult_add_matrix(&(s->link), &tmat, t8, &tmat2);
@@ -74,18 +73,18 @@ void update_uu(Real eps) {
 // -----------------------------------------------------------------
 // Omelyan version; ``dirty'' speeded-up version
 double update_bosonic_step(Real eps) {
-  int n = nsteps[1], isw;
+  int n = nsteps[1], i;
   double norm;
 
 #ifdef UPDATE_DEBUG
   node0_printf("gauge %d steps %.4g dt\n", n, eps);
 #endif
   norm = bosonic_force(eps * LAMBDA);
-  for (isw = 1; isw <= n; isw++) {
+  for (i = 1; i <= n; i++) {
     update_uu(0.5 * eps);
     norm += bosonic_force(eps * LAMBDA_MID);
     update_uu(0.5 * eps);
-    if (isw < n)
+    if (i < n)
       norm += bosonic_force(eps * TWO_LAMBDA);
 
     else
