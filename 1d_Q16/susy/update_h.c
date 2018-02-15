@@ -31,10 +31,12 @@ double bosonic_force(Real eps) {
 
   for (j = 0; j < NSCALAR; j++)
    wait_gather(tag[j]);
+
   FORALLSITES(i, s) {
+    clear_mat(&(s->f_U));   // Clear the force collectors
     for (j = 0; j < NSCALAR; j++) {
       mult_an(&(s->link), &(s->X[j]), &tmat);
-      mult_nn((matrix *)(gen_pt[j][i]), &tmat, &(s->f_U));
+      mult_nn_sum((matrix *)(gen_pt[j][i]), &tmat, &(s->f_U));
     }
   }
 
@@ -44,6 +46,10 @@ double bosonic_force(Real eps) {
       c_scalar_add_diag(&(s->f_U), &tc);
   } TODO: May be we need this part in future ? */ 
 
+  // Take adjoint and update the gauge momenta
+  // Include overall factor of kappa = N / (4lambda)
+  // Subtract to reproduce -Adj(f_U)
+  // Compute average gauge force in same loop
   tr = 2.0 * kappa * eps;
   FORALLSITES(i, s) {
     scalar_mult_dif_adj_matrix(&(s->f_U), tr, &(s->mom));
@@ -118,10 +124,10 @@ double bosonic_force(Real eps) {
   }
   cleanup_gather(tag3);
 
-  // Finally take adjoint and update the momentum
+  // Take adjoint and update the scalar momenta
   // Include overall factor of kappa = N / (4lambda)
   // Subtract to reproduce -Adj(f_X)
-  // Compute average scalar force in same loop
+  // Compute average scalar force in same loop (combine with gauge from above)
   tr = kappa * eps;
   FORALLSITES(i, s) {
     for (j = 0; j < NSCALAR; j++) {

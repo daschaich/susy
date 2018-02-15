@@ -21,6 +21,7 @@
 // -----------------------------------------------------------------
 // check_unitarity.c and check_antihermity.c
 Real check_unitarity();
+Real check_ah();
 Real check_antihermity();
 
 // io_helpers.c

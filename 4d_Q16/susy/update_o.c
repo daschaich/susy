@@ -17,7 +17,7 @@
 
 
 // -----------------------------------------------------------------
-void update_uu(Real eps) {
+void update_u(Real eps) {
   register int i, mu;
   register site *s;
 
@@ -48,9 +48,9 @@ double update_gauge_step(Real eps) {
 #endif
   norm = gauge_force(eps * LAMBDA);
   for (isw = 1; isw <= nsw; isw++) {
-    update_uu(0.5 * eps);
+    update_u(0.5 * eps);
     norm += gauge_force(eps * LAMBDA_MID);
-    update_uu(0.5 * eps);
+    update_u(0.5 * eps);
     if (isw < nsw)
       norm += gauge_force(eps * TWO_LAMBDA);
 
