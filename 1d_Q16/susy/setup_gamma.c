@@ -33,6 +33,7 @@ void setup_gamma() {
   }
 
   // Non-zero elements blindly copied from serial code
+  // Anti-hermitian basis --> Gamma_i^2 = -I_8
   Gamma[0].e[0][7] = -1;
   Gamma[0].e[1][6] =  1;
   Gamma[0].e[2][5] =  1;
@@ -99,13 +100,13 @@ void setup_gamma() {
   Gamma123.e[7][4] =  1;
 
 #ifdef DEBUG_CHECK
-  int l, h;
-  gamma_mat tg[NCHIRAL_FERMION - 1]; 
-  
+  int l, m;
+  gamma_mat tg;
+
   // Print Gammas
   node0_printf("Computing gamma matrices\n");
   for (i = 0; i < NCHIRAL_FERMION - 1; i++){
-    node0_printf("Gamma[%d]\n",i);
+    node0_printf("Gamma[%d]\n", i);
     for (j = 0; j < NCHIRAL_FERMION; j++) {
       for (k = 0; k < NCHIRAL_FERMION; k++)
         node0_printf("  %d", Gamma[i].e[j][k]);
@@ -121,39 +122,41 @@ void setup_gamma() {
   }
 
   // Test Clifford algebra
-  node0_printf("Test Clifford algebra\n");
-  node0_printf("Gamma[i] * Gamma[i] = -I\n");
+  node0_printf("Two tests of the (anti-hermitian) Clifford algebra\n");
+  node0_printf("1) Gamma[i] * Gamma[i] = -I\n");
   for (i = 0; i < NCHIRAL_FERMION - 1; i++) {
     for (j = 0; j < NCHIRAL_FERMION; j++) {
       for (k = 0; k < NCHIRAL_FERMION; k++) {
-        tg[i].e[j][k] = 0;
-        for (l = 0; l < NCHIRAL_FERMION; l++)
-          tg[i].e[j][k] += Gamma[i].e[j][l] * Gamma[i].e[l][k];
+        tg.e[j][k] = Gamma[i].e[j][0] * Gamma[i].e[0][k];
+        for (l = 1; l < NCHIRAL_FERMION; l++)
+          tg.e[j][k] += Gamma[i].e[j][l] * Gamma[i].e[l][k];
 
-        if (j != k && tg[i].e[j][k] != 0) {
+        if (j != k && tg.e[j][k] != 0) {
           node0_printf("WARNING: Gamma[%d]^2_%d%d = %d\n",
-                       i, j, k, tg[i].e[j][k]);
+                       i, j, k, tg.e[j][k]);
         }
       }
-      if (tg[i].e[j][j] != -1) {
+      if (tg.e[j][j] != -1) {
         node0_printf("WARNING: Gamma[%d]^2_%d%d = %d\n",
-                     i, j, j, tg[i].e[j][j]);
+                     i, j, j, tg.e[j][j]);
       }
     }
   }
 
-  node0_printf("Gamma[i] * Gamma[j] = 0 for i != j\n");
-  for (h = 0; h < NCHIRAL_FERMION - 1; h++) {
+  node0_printf("\n2) {Gamma[i], Gamma[j]} = 0 for i != j\n");
     for (i = 0; i < NCHIRAL_FERMION - 1; i++) {
-      for (j = 0; j < NCHIRAL_FERMION; j++) {
+      for (j = i + 1; j < NCHIRAL_FERMION - 1; j++) {
         for (k = 0; k < NCHIRAL_FERMION; k++) {
-          tg[i].e[j][k] = 0;
-          for (l = 0; l < NCHIRAL_FERMION; l++)
-            tg[i].e[j][k] += Gamma[h].e[j][l] * Gamma[i].e[l][k];
-
-          if (tg[i].e[j][k] != 0) {
-	        node0_printf("Warning -- (Gamma[%d] * Gamma[%d])_%d%d = %d\n",
-                         h, i, j, k, tg[i].e[j][k]);
+          for (l = 0; l < NCHIRAL_FERMION; l++) {
+            tg.e[k][l] = Gamma[i].e[k][0] * Gamma[j].e[0][l]
+                       + Gamma[j].e[k][0] * Gamma[i].e[0][l];
+            for (m = 1; m < NCHIRAL_FERMION; m++) {
+              tg.e[k][l] += Gamma[i].e[k][m] * Gamma[j].e[m][l];
+              tg.e[k][l] += Gamma[j].e[k][m] * Gamma[i].e[m][l];
+            }
+          if (tg.e[k][l] != 0) {
+            node0_printf("WARNING: {Gamma[%d], Gamma[%d]}_%d%d = %d\n",
+                         i, j, k, l, tg.e[k][l]);
           }
         }
       }

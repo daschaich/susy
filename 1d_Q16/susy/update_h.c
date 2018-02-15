@@ -53,7 +53,7 @@ double bosonic_force(Real eps) {
   // This is the finite difference operator scalar derivative
   for (j = 0; j < NSCALAR; j++)
     wait_gather(tag2[j]);
-  
+  wait_gather(tag3);
   FORALLSITES(i, s) {
     for (j = 0; j < NSCALAR; j++) {
       pt = NSCALAR + j;

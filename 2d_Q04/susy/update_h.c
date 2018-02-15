@@ -220,7 +220,7 @@ double gauge_force(Real eps) {
   }
 
   // Finally take adjoint and update the momentum
-  // Include overall factor of kappa = N / (2lambda)
+  // Include overall factor of kappa = N / (4lambda)
   // Subtract to reproduce -Adj(f_U)
   // Compute average gauge force in same loop
   tr = kappa * eps;
