@@ -81,8 +81,8 @@ int grsource(matrix *src[NFERMION]) {
   for (j = 0; j < NFERMION; j++) {
     psim[j] = malloc(sizeof(matrix*) * Norder);
 
-  for (i = 0; i < Norder; i++)
-    psim[j][i] = malloc(sizeof(matrix) * sites_on_node);
+    for (i = 0; i < Norder; i++)
+      psim[j][i] = malloc(sizeof(matrix) * sites_on_node);
   }
 
   // Begin with pure gaussian random numbers

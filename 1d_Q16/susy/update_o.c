@@ -7,8 +7,13 @@
 // The last update was of the momenta
 
 // Uncomment to print out debugging messages
-//#define UPDATE_DEBUG
+#define UPDATE_DEBUG
 #include "susy_includes.h"
+
+#ifdef UPDATE_DEBUG
+#define TOLERANCE 0.0001    // For momenta anti-hermiticity check
+#endif
+
 #ifdef HAVE_IEEEFP_H
 #include <ieeefp.h>         // For "finite"
 #endif
@@ -17,17 +22,22 @@
 
 
 // -----------------------------------------------------------------
-void update_uu(Real eps) {
+void update_u(Real eps) {
   register int i, j;
   register site *s;
   register Real t2, t3, t4, t5, t6, t7, t8;
   matrix tmat, tmat2;
 
+#ifdef UPDATE_DEBUG
+  int k;
+  Real deviation;
+  matrix *mat;
+#endif
+
   // Calculate newU = exp(p).U
   // Go to eighth order in the exponential:
   //   exp(p) * U = (1 + p + p^2/2 + p^3/6 ...) * U
   //              = U + p*(U + (p/2)*(U + (p/3)*( ... )))
-
   // Take divisions out of site loop (can't be done by compiler)
   t2 = eps / 2.0;
   t3 = eps / 3.0;
@@ -38,6 +48,25 @@ void update_uu(Real eps) {
   t8 = eps / 8.0;
 
   FORALLSITES(i, s) {
+#ifdef UPDATE_DEBUG
+    // Check that gauge momenta are anti-hermitian
+    mat = &(s->mom);
+    deviation = check_ah(mat);
+    if (deviation > TOLERANCE) {
+      printf("Momentum anti-hermiticity problem on node %d, ", mynode());
+      printf("site %d, deviation=%f\n", i, deviation);
+      printf("Matrix:\n");
+      for (j = 0; j < NCOL; j++) {
+        for (k = 0; k < NCOL; k++) {
+          printf("  %f", (*mat).e[j][k].real);
+          printf("  %f", (*mat).e[j][k].imag);
+        }
+        printf("\n");
+      }
+      fflush(stdout);
+    }
+#endif
+
     mult_nn(&(s->mom), &(s->link), &tmat);
     scalar_mult_add_matrix(&(s->link), &tmat, t8, &tmat2);
 
@@ -81,9 +110,9 @@ double update_bosonic_step(Real eps) {
 #endif
   norm = bosonic_force(eps * LAMBDA);
   for (i = 1; i <= n; i++) {
-    update_uu(0.5 * eps);
+    update_u(0.5 * eps);
     norm += bosonic_force(eps * LAMBDA_MID);
-    update_uu(0.5 * eps);
+    update_u(0.5 * eps);
     if (i < n)
       norm += bosonic_force(eps * TWO_LAMBDA);
 
