@@ -1,5 +1,6 @@
 // -----------------------------------------------------------------
-// Check unitarity of the link matrices, terminate if not unitary
+// Check unitarity of the link matrices
+// Terminate if deviations exceed TOLERANCE
 #include "generic_includes.h"
 
 #define TOLERANCE 0.0001
@@ -21,7 +22,7 @@ Real check_unit(matrix *c) {
       ar += (*c).e[i][j].real * (*c).e[i][j].real
           + (*c).e[i][j].imag * (*c).e[i][j].imag;
     }
-    ar =  fabs(sqrt((double)ar) - 1.0);
+    ar = fabs(sqrt((double)ar) - 1.0);
     if (max < ar)
       max = ar;
   }
@@ -54,9 +55,9 @@ Real check_unit(matrix *c) {
 // -----------------------------------------------------------------
 Real check_unitarity() {
   register int i;
-  int ii, jj;
   register site *s;
   register matrix *mat;
+  int j, k;
   Real deviation, max_deviation = 0.0;
   double av_deviation = 0.0;
   union {
@@ -71,20 +72,20 @@ Real check_unitarity() {
       printf("Unitarity problem on node %d, site %d, deviation=%f\n",
              mynode(), i, deviation);
       printf("SU(N) matrix:\n");
-      for (ii = 0; ii < NCOL; ii++) {
-        for (jj = 0; jj < NCOL; jj++) {
-          printf("%f ", (*mat).e[ii][jj].real);
-          printf("%f ", (*mat).e[ii][jj].imag);
+      for (j = 0; j < NCOL; j++) {
+        for (k = 0; k < NCOL; k++) {
+          printf("  %f", (*mat).e[j][k].real);
+          printf("  %f", (*mat).e[j][k].imag);
         }
         printf("\n");
       }
-      printf("repeat in hex:\n");
-      for (ii = 0; ii < NCOL; ii++) {
-        for (jj = 0; jj < NCOL; jj++) {
-          ifval.fval = (*mat).e[ii][jj].real;
-          printf("%08x ", ifval.ival);
-          ifval.fval = (*mat).e[ii][jj].imag;
-          printf("%08x ", ifval.ival);
+      printf("Repeat in hex:\n");
+      for (j = 0; j < NCOL; j++) {
+        for (k = 0; k < NCOL; k++) {
+          ifval.fval = (*mat).e[j][k].real;
+          printf("  %08x", ifval.ival);
+          ifval.fval = (*mat).e[j][k].imag;
+          printf("  %08x", ifval.ival);
         }
         printf("\n");
       }
@@ -97,7 +98,7 @@ Real check_unitarity() {
     av_deviation += deviation * deviation;
   }
 
-  av_deviation = sqrt(av_deviation / ((NSCALAR + 1.0) * nt));
+  av_deviation = sqrt(av_deviation / (double)nt);
 #ifdef UNIDEBUG
   printf("Deviation from unitarity on node %d: max %.4g, ave %.4g\n",
          mynode(), max_deviation, av_deviation);

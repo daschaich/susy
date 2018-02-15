@@ -93,7 +93,7 @@ void funnylat() {
 
 // -----------------------------------------------------------------
 // Reload a lattice in binary format, set to unit gauge or keep current
-// Reunitarize
+// Reunitarize and reantihermize
 gauge_file *reload_lattice(int flag, char *filename) {
   double dtime;
   Real max_deviation;
@@ -147,9 +147,23 @@ gauge_file *reload_lattice(int flag, char *filename) {
   node0_printf("Max deviation %.2g changed to %.2g\n",
                max_deviation, max_deviation2);
 #endif
+
+  max_deviation = check_antihermity();
+  g_floatmax(&max_deviation);
+#if PRECISION == 1
+  node0_printf("Anti-hermiticity checked.  Max deviation %.2g\n", max_deviation);
+#else
+  reantihermize();
+  max_deviation2 = check_antihermity();
+  g_floatmax(&max_deviation2);
+  node0_printf("Reantihermized for double precision.  ");
+  node0_printf("Max deviation %.2g changed to %.2g\n",
+               max_deviation, max_deviation2);
+#endif
+
   fflush(stdout);
   dtime += dclock();
-  node0_printf("Time to check unitarity = %.4g seconds\n", dtime);
+  node0_printf("Time to check unitarity and anti-hermiticity = %.4g seconds\n", dtime);
 
   return gf;
 }

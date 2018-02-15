@@ -6,7 +6,8 @@
 
 # The paths are relative to the application directory
 
-G_ALL = check_unitarity.o    \
+G_ALL = check_antihermity.o  \
+        check_unitarity.o    \
         com_mpi.o            \
         com_vanilla.o        \
         io_ansi.o            \
@@ -18,6 +19,7 @@ G_ALL = check_unitarity.o    \
         make_lattice.o       \
         nersc_cksum.o        \
         ranstuff.o           \
+        reantihermize.o      \
         reunitarize.o        \
         remap_stdio_from_args.o
 
@@ -39,6 +41,8 @@ G_ALL_DEPEND = ../generic/generic_includes.h \
 
 ${G_ALL} : ${G_ALL_DEPEND}
 
+check_antihermity.o: ../generic/check_antihermity.c
+	${CC} -c ${CFLAGS} $<
 check_unitarity.o: ../generic/check_unitarity.c
 	${CC} -c ${CFLAGS} $<
 com_mpi.o: ../generic/com_mpi.c
@@ -67,6 +71,8 @@ nersc_cksum.o: ../generic/nersc_cksum.c
 ranstuff.o: ../generic/ranstuff.c
 	${CC} -c ${CFLAGS} $<
 remap_stdio_from_args.o: ../generic/remap_stdio_from_args.c
+	${CC} -c ${CFLAGS} $<
+reantihermize.o: ../generic/reantihermize.c
 	${CC} -c ${CFLAGS} $<
 reunitarize.o: ../generic/reunitarize.c
 	${CC} -c ${CFLAGS} $<

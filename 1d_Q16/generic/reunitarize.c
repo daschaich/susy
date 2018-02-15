@@ -1,6 +1,6 @@
 // -----------------------------------------------------------------
 // Reunitarization for arbitrary NCOL
-// 1) Re-innitarize row 0
+// 1) Re-unitarize row 0
 // 2) For rows 1, ..., NCOL-2, make orthogonal w.r.t previous rows,
 //    and orthogonalize
 // 3) For the last row, U(NCOL-1, i)=-(epsilon(i, j_0, j_1, j_2..)U(0, j_0)U(1, j_1)...U(NCOL-1, j_{NCOL-1})^*
@@ -32,40 +32,6 @@ int check_deviation(Real deviation) {
 
 
 // -----------------------------------------------------------------
-void reunit_report_problem_matrix(matrix *mat, int i) {
-  int ii, jj;
-  union {
-    Real fval;
-    int ival;
-  } ifval;
-
-  printf("Unitarity problem on node %d, site %d, tolerance %.4g\n",
-         mynode(), i, TOLERANCE);
-  printf("SU(N) matrix:\n");
-  for (ii = 0; ii < NCOL; ii++) {
-    for (jj = 0; jj < NCOL; jj++) {
-      printf("%f ",(*mat).e[ii][jj].real);
-      printf("%f ",(*mat).e[ii][jj].imag);
-    }
-    printf("\n");
-  }
-  printf("repeat in hex:\n");
-  for (ii = 0; ii < NCOL; ii++) {
-    for (jj = 0; jj < NCOL; jj++) {
-      ifval.fval = (*mat).e[ii][jj].real;
-      printf("%08x ", ifval.ival);
-      ifval.fval = (*mat).e[ii][jj].imag;
-      printf("%08x ", ifval.ival);
-    }
-    printf("\n");
-  }
-  fflush(stdout);
-}
-// -----------------------------------------------------------------
-
-
-
-// -----------------------------------------------------------------
 void ludcmp_cx(matrix *a, int *indx, Real *d) {
   int i, imax, j, k;
   Real big, fdum;
@@ -87,23 +53,18 @@ void ludcmp_cx(matrix *a, int *indx, Real *d) {
     }
     vv[i] = 1.0 / sqrt(big);
   }
-  // TODO: May now be more efficient complex macros...
   for (j = 0; j < NCOL; j++) {
     for (i = 0; i < j; i++) {
-      sum= (*a).e[i][j];
-      for (k = 0; k < i; k++) {
-        CMUL((*a).e[i][k],(*a).e[k][j], tc);
-        CSUB(sum, tc, sum);
-      }
-      (*a).e[i][j]=sum;
+      sum = (*a).e[i][j];
+      for (k = 0; k < i; k++)
+        CMULDIF((*a).e[i][k], (*a).e[k][j], sum);
+      (*a).e[i][j] = sum;
     }
     big = 0.0;
     for (i = j; i < NCOL; i++) {
       sum = (*a).e[i][j];
-      for (k = 0; k < j; k++) {
-        CMUL((*a).e[i][k],(*a).e[k][j], tc);
-        CSUB(sum, tc, sum);
-      }
+      for (k = 0; k < j; k++)
+        CMULDIF((*a).e[i][k], (*a).e[k][j], sum);
       (*a).e[i][j] = sum;
 
       if ((fdum = vv[i] * fabs(sum.real)) >= big) {
@@ -121,7 +82,7 @@ void ludcmp_cx(matrix *a, int *indx, Real *d) {
       vv[imax] = vv[j];
     }
     indx[j] = imax;
-    if (j != NCOL-1) {
+    if (j != NCOL - 1) {
       dum = (*a).e[j][j];
       for (i = j + 1; i < NCOL; i++) {
         CDIV((*a).e[i][j], dum, tc);
@@ -156,38 +117,28 @@ complex find_det(matrix *Q) {
 
 // -----------------------------------------------------------------
 int reunit(matrix *c) {
-  Real deviation;
-  int i, j, k, errors = 0;
   register Real ar;
-  complex sum, deter, tc, tc2;
+  int i, j, k, errors = 0;
+  Real deviation;
+  complex sum, deter, tc;
+  matrix tmat;
 
-#ifdef UNIDEBUG
-  matrix oldc;
-  for (i = 0; i < NCOL; i++) {
-    for (j = 0; j < NCOL; j++)
-      oldc.e[i][j] = (*c).e[i][j];
-  }
-  node0_printf("OLD MATRIX\n");
-  dump_mat(&oldc);
-#endif
-
+  mat_copy(c, &tmat);
   for (i = 0; i < NCOL; i++) {
     // Orthogonalize the ith vector w.r.t. all the lower ones
-    // TODO: May now be more efficient complex macros...
     sum = cmplx(0.0, 0.0);
     for (j = 0; j < i; j++) {
       for (k = 0; k < NCOL; k++) {
         CMULJ_(c->e[j][k], c->e[i][k], tc);
         CSUM(sum, tc);
       }
-      for (k = 0; k < NCOL; k++) {
-        CMUL(sum, c->e[j][k], tc2);
-        CSUB(c->e[i][k], tc2, c->e[i][k]);
-      }
+      for (k = 0; k < NCOL; k++)
+        CMULDIF(sum, c->e[j][k], c->e[i][k]);
     }
     // Normalize ith vector
-    ar = 0;
-    for (k = 0; k < NCOL; k++) {
+    ar = (*c).e[i][0].real * (*c).e[i][0].real
+       + (*c).e[i][0].imag * (*c).e[i][0].imag;
+    for (k = 1; k < NCOL; k++) {
       ar += (*c).e[i][k].real * (*c).e[i][k].real
           + (*c).e[i][k].imag * (*c).e[i][k].imag;
     }
@@ -215,7 +166,7 @@ int reunit(matrix *c) {
   // Check the determinant
 #ifdef UNIDEBUG
   node0_printf("MATRIX AFTER RE-ORTHONORMAL\n");
-  dump_mat(c);
+  dumpmat(c);
 #endif
   deter = find_det(c);
   ar = deter.real * deter.real + deter.imag * deter.imag;
@@ -236,8 +187,12 @@ int reunit(matrix *c) {
 #ifdef UNIDEBUG
   printf("DET DEV %e\n", deviation);
   node0_printf("NEW\n");
-  dump_mat(c);
+  dumpmat(c);
 #endif
+
+  // Print the problematic matrix rather than the updated one
+  if (errors)
+    dumpmat(&tmat);
 
   return errors;
 }
@@ -258,9 +213,11 @@ void reunitarize() {
   FORALLSITES(i, s) {
     mat = (matrix *)&(s->link);
     errors = reunit(mat);
-    errcount += errors; // Gauge field printed as scalar -1
-    if (errors)
-      reunit_report_problem_matrix(mat, i);
+    errcount += errors;
+    if (errors) {
+      printf("Unitarity problem above (node %d, site %d, tolerance %.4g)\n",
+             mynode(), i, TOLERANCE);
+    }
     if (errcount > MAXERRCOUNT) {
       printf("Unitarity error count exceeded: %d\n", errcount);
       fflush(stdout);
