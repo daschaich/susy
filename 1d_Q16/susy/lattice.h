@@ -24,18 +24,16 @@ typedef struct {
   double_prn site_prn;
 #endif
 
-  matrix link;        // Gauge link
-  matrix X[NSCALAR];  // 9 scalars
+  matrix link;          // Gauge link (in group)
+  matrix X[NSCALAR];    // Scalars (in algebra)
 
 #ifdef HMC_ALGORITHM
-  matrix old_link;   // For accept/reject
-  matrix old_X[NSCALAR];
+  matrix old_link, old_X[NSCALAR];      // For accept/reject
 #endif
 
-  // Momentum matrices in each direction are just U(N) matrices
-  // as opposed to anti-hermitian matrices
-  matrix mom, f_U;        // Force matrices
-  matrix mom_X[NSCALAR], f_X[NSCALAR];
+  // Momentum for the link should be an anti-hermitian matrix
+  // Momenta for the scalars should be just SU(N) matrices
+  matrix mom, f_U, mom_X[NSCALAR], f_X[NSCALAR];
 
   // Boundary conditions -- many unused
   Real bc[2];
@@ -60,7 +58,7 @@ EXTERN Real traj_length;
 
 // SU(N) generators
 EXTERN matrix Lambda[DIMF];
-EXTERN gamma_mat Gamma[NCHIRAL_FERMION - 1], Gamma123, tg[NCHIRAL_FERMION - 1] ;
+EXTERN gamma_mat Gamma[NCHIRAL_FERMION - 1], Gamma123;
 EXTERN int epsilon[3][3][3];
 EXTERN Real rsqmin, lambda, kappa, mu;
 EXTERN Real mass_so3, mass_so6, mass_Myers, mass_fermion;

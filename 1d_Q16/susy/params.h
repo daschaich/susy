@@ -24,8 +24,8 @@ typedef struct {
   int startflag;          // What to do for beginning lattice
   int fixflag;            // Whether to gauge fix to Coulomb gauge
   int saveflag;           // What to do with lattice at end
-  Real lambda, kappa;     // 't Hooft coupling and Nc/(2lambda)
-  Real mu;      // Mass
+  Real lambda, kappa;     // 't Hooft coupling and Nc/(4lambda)
+  Real mu;                // BMN mass or BFSS regulator
 
   // Inversion parameters
   int niter;                    // Maximum number of CG iterations

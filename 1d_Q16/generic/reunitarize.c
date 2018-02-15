@@ -247,7 +247,7 @@ int reunit(matrix *c) {
 
 // -----------------------------------------------------------------
 void reunitarize() {
-  register int i, j;
+  register int i;
   register site *s;
   register matrix *mat;
   int errcount = 0, errors;

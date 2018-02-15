@@ -74,24 +74,27 @@ void update_uu(Real eps) {
 // -----------------------------------------------------------------
 // Omelyan version; ``dirty'' speeded-up version
 double update_bosonic_step(Real eps) {
-  int nsw = nsteps[1], isw;
+  int n = nsteps[1], isw;
   double norm;
 
 #ifdef UPDATE_DEBUG
-  node0_printf("gauge %d steps %.4g dt\n", nsw, eps);
+  node0_printf("gauge %d steps %.4g dt\n", n, eps);
 #endif
   norm = bosonic_force(eps * LAMBDA);
-  for (isw = 1; isw <= nsw; isw++) {
+  for (isw = 1; isw <= n; isw++) {
     update_uu(0.5 * eps);
     norm += bosonic_force(eps * LAMBDA_MID);
     update_uu(0.5 * eps);
-    if (isw < nsw)
+    if (isw < n)
       norm += bosonic_force(eps * TWO_LAMBDA);
 
     else
       norm += bosonic_force(eps * LAMBDA);
   }
-  return (norm / nsw);
+
+  // Reunitarize the gauge field
+  reunitarize();
+  return (norm / n);
 }
 // -----------------------------------------------------------------
 
@@ -169,7 +172,7 @@ int update_step(matrix **src[NFERMION], matrix ***psim[NFERMION]) {
 
 // -----------------------------------------------------------------
 int update() {
-  int j, k, n, iters = 0;
+  int n, iters = 0;
   double startaction, endaction, change;
   matrix **source[NFERMION], ***psim[NFERMION];
 
@@ -178,6 +181,7 @@ int update() {
 
   // Set up the fermion variables, if needed
 #ifndef PUREGAUGE
+  int j, k;
   Real final_rsq;
 
   for (k = 0; k < NFERMION; k++) {
