@@ -92,8 +92,9 @@ double update_bosonic_step(Real eps) {
       norm += bosonic_force(eps * LAMBDA);
   }
 
-  // Reunitarize the gauge field
+  // Reunitarize the gauge field and re-anti-hermitianize the scalars
   reunitarize();
+  reantihermize();
   return (norm / n);
 }
 // -----------------------------------------------------------------
@@ -204,7 +205,7 @@ int update() {
       mat_copy(&(src[j][i]), &(source[j][n][i]));
     }
   }
-  FIX THIS
+  UPDATE FERMIONS FROM HERE // TODO
 
   // Do a CG to get psim,
   // rational approximation to (Mdag M)^(-1 / 4) src = (Mdag M)^(-1 / 8) g

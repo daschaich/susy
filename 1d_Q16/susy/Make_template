@@ -56,14 +56,16 @@ MY_OBJECTS = setup.o        \
              congrad_multi.o
 
 # Basic set from generic directory
-G_OBJECTS = check_unitarity.o \
-	    io_helpers.o   \
-            io_lat.o       \
-            io_lat_utils.o \
-            make_lattice.o \
-            nersc_cksum.o  \
-            ranstuff.o     \
-            reunitarize.o  \
+G_OBJECTS = check_antihermity.o \
+            check_unitarity.o   \
+            io_helpers.o        \
+            io_lat.o            \
+            io_lat_utils.o      \
+            make_lattice.o      \
+            nersc_cksum.o       \
+            ranstuff.o          \
+            reantihermize.o     \
+            reunitarize.o       \
             remap_stdio_from_args.o
 
 # Selection of layout

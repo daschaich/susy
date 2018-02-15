@@ -49,8 +49,7 @@ int main(int argc, char *argv[]) {
     update();
   node0_printf("WARMUPS COMPLETED\n");
 
-  // Perform trajectories with measurements
-  // TODO: Check reunitarization / antihermitianization...
+  // Perform trajectories, reunitarizations and measurements
   for (traj_done = 0; traj_done < trajecs; traj_done++) {
     s_iters = update();
     avs_iters += s_iters;
