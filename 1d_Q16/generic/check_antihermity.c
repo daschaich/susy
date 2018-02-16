@@ -40,43 +40,21 @@ Real check_ah(matrix *c) {
 
 // -----------------------------------------------------------------
 Real check_antihermity() {
-  register int i;
+  register int i, j;
   register site *s;
   register matrix *mat;
-  int j, k, l;
   Real deviation, max_deviation = 0.0;
   double av_deviation = 0.0;
-  union {
-    Real fval;
-    int ival;
-  } ifval;
 
   FORALLSITES(i, s) {
-    for (l = 0; l < NSCALAR; l++) {
-      mat = (matrix *)&(s->X[l]);
+    for (j = 0; j < NSCALAR; j++) {
+      mat = (matrix *)&(s->X[j]);
       deviation = check_ah(mat);
       if (deviation > TOLERANCE) {
-        printf("Anti-hermiticity problem on node %d, site %d, deviation=%f\n",
-               mynode(), i, deviation);
+        printf("Anti-hermiticity problem on node %d, site %d, ", mynode(), i);
+        printf("scalar %d, deviation=%f\n", j, deviation);
         printf("Matrix:\n");
-        for (j = 0; j < NCOL; j++) {
-          for (k = 0; k < NCOL; k++) {
-            printf("  %f", (*mat).e[j][k].real);
-            printf("  %f", (*mat).e[j][k].imag);
-          }
-          printf("\n");
-        }
-        printf("Repeat in hex:\n");
-        for (j = 0; j < NCOL; j++) {
-          for (k = 0; k < NCOL; k++) {
-            ifval.fval = (*mat).e[j][k].real;
-            printf("  %08x", ifval.ival);
-            ifval.fval = (*mat).e[j][k].imag;
-            printf("  %08x", ifval.ival);
-          }
-          printf("\n");
-        }
-        printf("\n");
+        dumpmat(mat);
         fflush(stdout);
         terminate(1);
       }
