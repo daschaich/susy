@@ -10,56 +10,27 @@
 // Construct gaussian random momentum matrices
 // All need to be anti-hermitian
 void ranmom() {
-  register int i, j, k, n;
+  register int i, j;
   register site *s;
-  Real tr, ti;
+  anti_hermitmat tah;
 
   FORALLSITES(i, s) {
-      clear_mat(&(s->mom));
-      for (j = 0; j < NCOL; j++) {
 #ifdef SITERAND
-        s->mom.e[j][j].imag = gaussian_rand_no(&(s->site_prn));
+    random_anti_hermitian(&(s->mom), &(s->site_prn));
 #else
-        s->mom.e[j][j].imag = gaussian_rand_no(&(s->node_prn));
+    random_anti_hermitian(&(s->mom), &(s->node_prn));
 #endif
-        for (k = j + 1; k < NCOL; k++) {
-#ifdef SITERAND
-          tr = gaussian_rand_no(&(s->site_prn));
-          ti = gaussian_rand_no(&(s->site_prn));
-#else
-          tr = gaussian_rand_no(&(s->node_prn));
-          ti = gaussian_rand_no(&(s->node_prn));
-#endif
-          s->mom.e[j][k] = cmplx(tr, ti);
-          tr *= -1.0;
-          s->mom.e[k][j] = cmplx(tr, ti);
-        }
-      }
 
-      for (n = 0; n < NSCALAR; n++) {
-        clear_mat(&(s->mom_X[n]));
-        for (j = 0; j < NCOL; j++) {
+    for (j = 0; j < NSCALAR; j++) {
 #ifdef SITERAND
-          s->mom_X[n].e[j][j].imag = gaussian_rand_no(&(s->site_prn));
+      random_anti_hermitian(&tah, &(s->site_prn));
 #else
-          s->mom_X[n].e[j][j].imag = gaussian_rand_no(&(s->node_prn));
+      random_anti_hermitian(&tah, &(s->node_prn));
 #endif
-        }
-        for (k = j + 1; k < NCOL; k++) {
-#ifdef SITERAND
-          tr = gaussian_rand_no(&(s->site_prn));
-          ti = gaussian_rand_no(&(s->site_prn));
-#else
-          tr = gaussian_rand_no(&(s->node_prn));
-          ti = gaussian_rand_no(&(s->node_prn));
-#endif
-          s->mom_X[n].e[j][k] = cmplx(tr, ti);
-          tr *= -1.0;
-          s->mom_X[n].e[k][j] = cmplx(tr, ti);
-        }
-      }
+      uncompress_anti_hermitian(&tah, &(s->mom_X[j]));
     }
   }
+}
 // -----------------------------------------------------------------
 
 

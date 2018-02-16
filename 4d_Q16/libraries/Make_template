@@ -45,24 +45,24 @@ complex.1.a: ${COMPLEXOBJS1}
 complex.2.a: ${COMPLEXOBJS2}
 	${AR} rcs $@ ${COMPLEXOBJS2}
 
-SU3OBJS1 = cmp_ahmat.1o dump_ahmat.1o make_ahmat.1o uncmp_ahmat.1o dumpsu2.1o \
+SU3OBJS1 = cmp_ahmat.1o dump_ahmat.1o make_ahmat.1o uncmp_ahmat.1o rand_ahmat.1o \
            m_su2_mat_vec_n.1o m_su2_mat_vec_a.1o gaussrand.1o z2rand.1o \
            byterevn.1o m_mat_an.1o m_mat_na.1o m_mat_nn.1o realtr.1o \
            s_m_a_mat.1o s_m_a_amat.1o s_m_s_mat.1o s_m_s_amat.1o\
            adjoint.1o mat_copy.1o trace.1o complextr.1o \
-           dumpmat.1o dump_ahmat.1o clear_mat.1o \
+           dumpmat.1o dumpsu2.1o clear_mat.1o \
            addmat.1o addamat.1o  submat.1o subamat.1o \
            clearvec.1o r_su2_hit_a.1o l_su2_hit_n.1o \
            s_m_mat.1o s_m_amat.1o s_a_d_mat.1o cs_a_d_mat.1o \
            s_m_mat_nn.1o s_m_mat_na.1o s_m_mat_an.1o cs_m_mat.1o \
            cs_m_a_mat.1o cs_m_a_amat.1o cs_m_a_mata.1o cs_m_s_mat.1o
 
-SU3OBJS2 = cmp_ahmat.2o dump_ahmat.2o make_ahmat.2o uncmp_ahmat.2o dumpsu2.2o \
+SU3OBJS2 = cmp_ahmat.2o dump_ahmat.2o make_ahmat.2o uncmp_ahmat.2o rand_ahmat.2o \
            m_su2_mat_vec_n.2o m_su2_mat_vec_a.2o gaussrand.2o z2rand.2o \
            byterevn.2o m_mat_an.2o m_mat_na.2o m_mat_nn.2o realtr.2o \
            s_m_a_mat.2o s_m_a_amat.2o s_m_s_mat.2o s_m_s_amat.2o \
            adjoint.2o mat_copy.2o trace.2o complextr.2o \
-           clear_mat.2o dumpmat.2o dump_ahmat.2o \
+           dumpmat.2o dumpsu2.2o clear_mat.2o \
            addmat.2o addamat.2o submat.2o subamat.2o \
            clearvec.2o r_su2_hit_a.2o l_su2_hit_n.2o \
            s_m_mat.2o s_m_amat.2o s_a_d_mat.2o cs_a_d_mat.2o \

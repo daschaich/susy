@@ -40,19 +40,16 @@ double bosonic_force(Real eps) {
     }
   }
 
-  /*FORALLSITES(i, s) {
-      tc = trace(&(s->f_U));
-      CMULREAL(tc,-1.0*one_ov_N,tc);
-      c_scalar_add_diag(&(s->f_U), &tc);
-  } TODO: May be we need this part in future ? */ 
-
   // Take adjoint and update the gauge momenta
+  // Make them anti-hermitian following non-susy code
   // Include overall factor of kappa = N / (4lambda)
   // Subtract to reproduce -Adj(f_U)
   // Compute average gauge force in same loop
   tr = 2.0 * kappa * eps;
   FORALLSITES(i, s) {
-    scalar_mult_dif_adj_matrix(&(s->f_U), tr, &(s->mom));
+    uncompress_anti_hermitian(&(s->mom), &tmat);
+    scalar_mult_dif_adj_matrix(&(s->f_U), tr, &tmat);
+    make_anti_hermitian(&tmat, &(s->mom));
     returnit += realtrace(&(s->f_U), &(s->f_U));
   }
 

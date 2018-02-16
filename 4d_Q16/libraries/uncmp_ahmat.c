@@ -1,5 +1,5 @@
 // -----------------------------------------------------------------
-// Uncompresses an anti-hermitian matrix into a matrix
+// Uncompress an anti-hermitian matrix into a matrix
 #include "../include/config.h"
 #include "../include/complex.h"
 #include "../include/susy.h"
