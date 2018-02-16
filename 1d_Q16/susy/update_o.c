@@ -55,14 +55,7 @@ void update_u(Real eps) {
     if (deviation > TOLERANCE) {
       printf("Momentum anti-hermiticity problem on node %d, ", mynode());
       printf("site %d, deviation=%f\n", i, deviation);
-      printf("Matrix:\n");
-      for (j = 0; j < NCOL; j++) {
-        for (k = 0; k < NCOL; k++) {
-          printf("  %f", (*mat).e[j][k].real);
-          printf("  %f", (*mat).e[j][k].imag);
-        }
-        printf("\n");
-      }
+      dumpmat(mat);
       fflush(stdout);
     }
 #endif

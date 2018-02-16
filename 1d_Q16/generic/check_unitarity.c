@@ -57,13 +57,8 @@ Real check_unitarity() {
   register int i;
   register site *s;
   register matrix *mat;
-  int j, k;
   Real deviation, max_deviation = 0.0;
   double av_deviation = 0.0;
-  union {
-    Real fval;
-    int ival;
-  } ifval;
 
   FORALLSITES(i, s) {
     mat = (matrix *)&(s->link);
@@ -72,24 +67,7 @@ Real check_unitarity() {
       printf("Unitarity problem on node %d, site %d, deviation=%f\n",
              mynode(), i, deviation);
       printf("SU(N) matrix:\n");
-      for (j = 0; j < NCOL; j++) {
-        for (k = 0; k < NCOL; k++) {
-          printf("  %f", (*mat).e[j][k].real);
-          printf("  %f", (*mat).e[j][k].imag);
-        }
-        printf("\n");
-      }
-      printf("Repeat in hex:\n");
-      for (j = 0; j < NCOL; j++) {
-        for (k = 0; k < NCOL; k++) {
-          ifval.fval = (*mat).e[j][k].real;
-          printf("  %08x", ifval.ival);
-          ifval.fval = (*mat).e[j][k].imag;
-          printf("  %08x", ifval.ival);
-        }
-        printf("\n");
-      }
-      printf("\n");
+      dumpmat(mat);
       fflush(stdout);
       terminate(1);
     }
