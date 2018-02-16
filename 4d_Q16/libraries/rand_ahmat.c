@@ -24,15 +24,15 @@ void random_anti_hermitian(anti_hermitmat *ahmat, double_prn *prn_pt) {
   ahmat->m[0].real = gaussian_rand_no(prn_pt);
   ahmat->m[0].imag = gaussian_rand_no(prn_pt);
 #if (NCOL > 2)
-  one_ov_root3 = sqrt((double)(1.0 / 3.0));
   r8 = gaussian_rand_no(prn_pt);
+  r8 *= sqrt((double)(1.0 / 3.0));
   ahmat->m[1].real = gaussian_rand_no(prn_pt);
   ahmat->m[1].imag = gaussian_rand_no(prn_pt);
   ahmat->m[2].real = gaussian_rand_no(prn_pt);
   ahmat->m[2].imag = gaussian_rand_no(prn_pt);
 #if (NCOL > 3)
-  sqrt_sixth = sqrt((double)(1.0 / 6.0));
   r15 = gaussian_rand_no(prn_pt);
+  r15 *= sqrt((double)(1.0 / 6.0));
   ahmat->m[3].real = gaussian_rand_no(prn_pt);
   ahmat->m[3].imag = gaussian_rand_no(prn_pt);
   ahmat->m[4].real = gaussian_rand_no(prn_pt);
@@ -54,17 +54,18 @@ void random_anti_hermitian(anti_hermitmat *ahmat, double_prn *prn_pt) {
   ahmat->im_diag[1] = -r3;
 #endif
 #if (NCOL == 3)
-  ahmat->im_diag[0] =   r3 + one_ov_root3 * r8;
-  ahmat->im_diag[1] =  -r3 + one_ov_root3 * r8;
-  ahmat->im_diag[2] = -2.0 * one_ov_root3 * r8;
+  ahmat->im_diag[0] =   r3 + r8;
+  ahmat->im_diag[1] =  -r3 + r8;
+  ahmat->im_diag[2] = -2.0 * r8;
 #endif
 #if (NCOL == 4)
-  ahmat->im_diag[0] =   r3 + one_ov_root3 * r8 + sqrt_sixth * r15;
-  ahmat->im_diag[1] =  -r3 + one_ov_root3 * r8 + sqrt_sixth * r15;
-  ahmat->im_diag[2] = -2.0 * one_ov_root3 * r8 + sqrt_sixth * r15;
-  ahmat->im_diag[3] =                     -3.0 * sqrt_sixth * r15;
+  ahmat->im_diag[0] =   r3 + r8 + r15;
+  ahmat->im_diag[1] =  -r3 + r8 + r15;
+  ahmat->im_diag[2] = -2.0 * r8 + r15;
+  ahmat->im_diag[3] =      -3.0 * r15;
 #endif
 #if (NCOL > 4)
+  // TODO: Need to generalize... looks straightforward enough...
   printf("ERROR: Still need to implement general-N rand_ahmat()\n");
   terminate(1);
 #endif
