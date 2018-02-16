@@ -69,7 +69,7 @@ void setup_lambda() {
   matrix tmat;
 
   // Print Lambdas
-  node0_printf("Computing generators for U(N)\n");
+  node0_printf("Computing generators for U(%d)\n", NCOL);
   for (i = 0; i < DIMF; i++){
     node0_printf("Lambda[%d]\n",i);
     if (this_node == 0)
