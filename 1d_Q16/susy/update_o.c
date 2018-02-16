@@ -7,12 +7,8 @@
 // The last update was of the momenta
 
 // Uncomment to print out debugging messages
-#define UPDATE_DEBUG
+//#define UPDATE_DEBUG
 #include "susy_includes.h"
-
-#ifdef UPDATE_DEBUG
-#define TOLERANCE 0.0001    // For momenta anti-hermiticity check
-#endif
 
 #ifdef HAVE_IEEEFP_H
 #include <ieeefp.h>         // For "finite"
@@ -26,13 +22,7 @@ void update_u(Real eps) {
   register int i, j;
   register site *s;
   register Real t2, t3, t4, t5, t6, t7, t8;
-  matrix tmat, tmat2;
-
-#ifdef UPDATE_DEBUG
-  int k;
-  Real deviation;
-  matrix *mat;
-#endif
+  matrix tmat, tmat2, tmp_mom;
 
   // Calculate newU = exp(p).U
   // Go to eighth order in the exponential:
@@ -48,40 +38,29 @@ void update_u(Real eps) {
   t8 = eps / 8.0;
 
   FORALLSITES(i, s) {
-#ifdef UPDATE_DEBUG
-    // Check that gauge momenta are anti-hermitian
-    mat = &(s->mom);
-    deviation = check_ah(mat);
-    if (deviation > TOLERANCE) {
-      printf("Momentum anti-hermiticity problem on node %d, ", mynode());
-      printf("site %d, deviation=%f\n", i, deviation);
-      dumpmat(mat);
-      fflush(stdout);
-    }
-#endif
-
-    mult_nn(&(s->mom), &(s->link), &tmat);
+    uncompress_anti_hermitian(&(s->mom), &tmp_mom);
+    mult_nn(&tmp_mom, &(s->link), &tmat);
     scalar_mult_add_matrix(&(s->link), &tmat, t8, &tmat2);
 
-    mult_nn(&(s->mom), &tmat2, &tmat);
+    mult_nn(&tmp_mom, &tmat2, &tmat);
     scalar_mult_add_matrix(&(s->link), &tmat, t7, &tmat2);
 
-    mult_nn(&(s->mom), &tmat2, &tmat);
+    mult_nn(&tmp_mom, &tmat2, &tmat);
     scalar_mult_add_matrix(&(s->link), &tmat, t6, &tmat2);
 
-    mult_nn(&(s->mom), &tmat2, &tmat);
+    mult_nn(&tmp_mom, &tmat2, &tmat);
     scalar_mult_add_matrix(&(s->link), &tmat, t5, &tmat2);
 
-    mult_nn(&(s->mom), &tmat2, &tmat);
+    mult_nn(&tmp_mom, &tmat2, &tmat);
     scalar_mult_add_matrix(&(s->link), &tmat, t4, &tmat2);
 
-    mult_nn(&(s->mom), &tmat2, &tmat);
+    mult_nn(&tmp_mom, &tmat2, &tmat);
     scalar_mult_add_matrix(&(s->link), &tmat, t3, &tmat2);
 
-    mult_nn(&(s->mom), &tmat2, &tmat);
+    mult_nn(&tmp_mom, &tmat2, &tmat);
     scalar_mult_add_matrix(&(s->link), &tmat, t2, &tmat2);
 
-    mult_nn(&(s->mom), &tmat2, &tmat);
+    mult_nn(&tmp_mom, &tmat2, &tmat);
     scalar_mult_sum_matrix(&tmat, eps, &(s->link));
 
     for (j = 0; j < NSCALAR; j++)

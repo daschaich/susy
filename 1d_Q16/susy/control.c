@@ -100,7 +100,7 @@ int main(int argc, char *argv[]) {
 
   // Check: compute final bosonic action
   b_act = bosonic_action(&(Xtr[0]), &(Xtr[1]), &(Xtr[2]));
-  node0_printf("STOP %.8g ", b_act/(double)nt);
+  node0_printf("STOP %.8g\n", b_act / (double)nt);
 
   node0_printf("Average CG iters for steps: %.4g\n",
                (double)avs_iters / trajecs);

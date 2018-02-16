@@ -15,6 +15,7 @@
 // Gauge group SU(NCOL) and size of adjoint rep DIMF = NCOL^2 - 1
 #define NCOL 2
 #define DIMF (NCOL * NCOL - 1)
+#define N_OFFDIAG (NCOL * (NCOL - 1) / 2)
 
 // Numbers of scalars and fermions for 1d BFSS/BMN
 #define NSCALAR 9
@@ -27,14 +28,14 @@ typedef struct { fcomplex c[NCOL]; } fvector;
 
 // Anti-hermitian matrices for general NCOL
 typedef struct {
-  fcomplex m[NCOL * (NCOL - 1) / 2];
+  fcomplex m[N_OFFDIAG];
   float im_diag[NCOL];
 } fanti_hermitmat;
 
 typedef struct { dcomplex e[NCOL][NCOL]; } dmatrix;
 typedef struct { dcomplex c[NCOL]; } dvector;
 typedef struct {
-  dcomplex m[NCOL * (NCOL - 1) / 2];
+  dcomplex m[N_OFFDIAG];
   double im_diag[NCOL];
 } danti_hermitmat;
 

@@ -31,9 +31,11 @@ typedef struct {
   matrix old_link, old_X[NSCALAR];      // For accept/reject
 #endif
 
-  // Momentum for the link should be an anti-hermitian matrix
-  // Momenta for the scalars should be just SU(N) matrices
-  matrix mom, f_U, mom_X[NSCALAR], f_X[NSCALAR];
+  // All momenta should be anti-hermitian matrices
+  // Since scalars are anti-hermitian but stored as full matrices,
+  // simplest to treat their momenta the same way
+  anti_hermitmat mom;
+  matrix f_U, mom_X[NSCALAR], f_X[NSCALAR];
 
   // Boundary conditions -- many unused
   Real bc[2];

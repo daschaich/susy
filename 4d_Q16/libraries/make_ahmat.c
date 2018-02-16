@@ -7,15 +7,15 @@
 
 void make_anti_hermitian(matrix *src, anti_hermitmat *dest) {
   int i, j, index = 0;
-  Real temp;
+  Real tr;
 
-  temp = src->e[0][0].imag;
+  tr = src->e[0][0].imag;
   for (i = 1; i < NCOL; i++)
-    temp += src->e[i][i].imag;
-  temp /= (Real)NCOL;
+    tr += src->e[i][i].imag;
+  tr /= (Real)NCOL;
 
   for (i = 0; i < NCOL; i++)
-    dest->im_diag[i] = src->e[i][i].imag - temp;
+    dest->im_diag[i] = src->e[i][i].imag - tr;
 
   for (i = 0; i < NCOL; i++) {
     for (j = i + 1; j < NCOL; j++) {
