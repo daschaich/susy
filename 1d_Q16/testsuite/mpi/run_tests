@@ -10,9 +10,10 @@ if [ $# -gt 1 ]; then
   N=$1
   target=$2
 
-  # Change N
+  # Change N---need to modify both local header and that used by the libraries
   cd ../../susy/
   sed -i --follow-symlinks -E "s/(#define NCOL) .*/\1 $N/" ../include/susy.h
+  sed -i --follow-symlinks -E "s/(#define NCOL) .*/\1 $N/" ../../4d_Q16/include/susy.h
 
   # Compile
   echo "Compiling susy_$target..."
@@ -24,6 +25,7 @@ if [ $# -gt 1 ]; then
 
   # Reset to N=2
   sed -i --follow-symlinks -E "s/(#define NCOL) .*/\1 2/" ../include/susy.h
+  sed -i --follow-symlinks -E "s/(#define NCOL) .*/\1 2/" ../../4d_Q16/include/susy.h
 
   # Run
   cd ../testsuite/
@@ -48,9 +50,10 @@ fi
 for N in 2 3 4 ; do
   echo "N=$N"
 
-  # Change N
+  # Change N---need to modify both local header and that used by the libraries
   cd ../../susy/
   sed -i --follow-symlinks -E "s/(#define NCOL) .*/\1 $N/" ../include/susy.h
+  sed -i --follow-symlinks -E "s/(#define NCOL) .*/\1 $N/" ../../4d_Q16/include/susy.h
 
   # Compile all targets
   for target in hmc meas hmc_meas mcrg eig phase ; do

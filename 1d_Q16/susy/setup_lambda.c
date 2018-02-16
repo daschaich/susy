@@ -51,12 +51,11 @@ void setup_lambda() {
   }
 
 #ifdef DEBUG_CHECK
-  int a;
   complex tc;
   matrix tmat;
 
   // Print Lambdas
-  node0_printf("Computing generators for SU(N)\n");
+  node0_printf("Computing generators for SU(%d)\n", NCOL);
   for (i = 0; i < DIMF; i++){
     node0_printf("Lambda[%d]\n",i);
     if (this_node == 0)
@@ -64,6 +63,8 @@ void setup_lambda() {
   }
 
   // Test group theory (useful reference: arXiv:1310.5353)
+#if 0   // This test seems to be specific to U(N) rather than SU(N)
+  int a;
   node0_printf("Check group theory ");
   node0_printf("Sum_a Lambda^a_{kl} Lambda^a_{ij} = -delta_kj delta_il\n");
   for (i = 0; i < NCOL; i++) {
@@ -87,6 +88,7 @@ void setup_lambda() {
       }
     }
   }
+#endif
 
   // Test orthogonality of products of Lambdas
   for (i = 0; i < DIMF; i++) {
