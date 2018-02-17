@@ -17,7 +17,10 @@ double bosonic_action(double *so3_sq, double *so6_sq, double *Myers) {
   matrix tmat, tmat2;
   msg_tag *tag[NSCALAR];
 
-  // Scalar kinetic term [D_t X(t)]^2 = [U(t) X(t+1) Udag(t) - X(t)]^2
+  // Scalar kinetic term -Tr[D_t X(t)]^2
+  //   -Tr[U(t) X(t+1) Udag(t) - X(t)]^2
+  //     = Tr[2 X(t) U(t) X(t+1) Udag(t) - X(t+1) X(t+1) - X(t) X(t)]
+  // Sum over t --> 2 Tr[X(t) U(t) X(t+1) Udag(t) - X(t) X(t)]
   for (j = 0; j < NSCALAR; j++) {
     tag[j] = start_gather_site(F_OFFSET(X[j]), sizeof(matrix),
                                TUP, EVENANDODD, gen_pt[j]);
@@ -50,6 +53,11 @@ double bosonic_action(double *so3_sq, double *so6_sq, double *Myers) {
     cleanup_gather(tag[j]);
 
   // Commutator term
+  //   sum_{i<j} -Tr[X_i, X_j]^2 = sum_{i<j} -Tr[X_i X_j - X_j X_i]^2
+  //     = sum_{i<j} -Tr[  X_i X_j X_i X_j - X_i X_j X_j X_i
+  //                     - X_j X_i X_i X_j + X_j X_i X_j X_i]
+  //     = sum_{i<j} -2Tr[X_i X_j X_i X_j - X_i X_j X_j X_i]
+  //     = sum_{i != j} -Tr[X_i X_j X_i X_j - X_i X_j X_j X_i]
   FORALLSITES(i, s) {
     for (j = 0; j < NSCALAR; j++) {
       for (k = j + 1; k < NSCALAR; k++) {
@@ -66,6 +74,7 @@ double bosonic_action(double *so3_sq, double *so6_sq, double *Myers) {
   *so6_sq *= mass_so6;
   b_action += *so3_sq + *so6_sq;
 #ifdef BMN
+  // Myers term -Tr[epsilon_{jkl} X_j(t) X_k(t) X_l(t)]]
   *Myers = 0.0;
   FORALLSITES(i, s) {
     for (j = 0; j < 3; j++) {
@@ -77,7 +86,10 @@ double bosonic_action(double *so3_sq, double *so6_sq, double *Myers) {
             continue;
 
           mult_nn(&(s->X[k]), &(s->X[l]), &tmat);
-          *Myers -= epsilon[j][k][l] * realtrace_nn(&s->X[j], &tmat);
+          if (epsilon[j][k][l] > 0)     // Overall negative sign absorbed
+            *Myers -= realtrace_nn(&s->X[j], &tmat);
+          else if (epsilon[j][k][l] < 0)
+            *Myers += realtrace_nn(&s->X[j], &tmat);
         }
       }
     }
