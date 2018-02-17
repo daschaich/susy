@@ -10,7 +10,7 @@
 // -----------------------------------------------------------------
 // Update mom with the bosonic force
 double bosonic_force(Real eps) {
-  register int i, j, k, l, pt, pt2;
+  register int i, j, k, l, pt, pt2 = 2 * NSCALAR + 1;
   register site *s;
   Real tr;
   double returnit = 0.0, tmp_so3 = 2.0 * mass_so3, tmp_so6 = 2.0 * mass_so6;
@@ -18,7 +18,8 @@ double bosonic_force(Real eps) {
   msg_tag *tag[NSCALAR], *tag2[NSCALAR], *tag3;
 
   // First we have the finite difference operator gauge derivative
-  // 2 * X_i(n + 1) * U^dagger(n) * X_i(n)
+  //   d/dU(n) Tr[2 U(t) X(t+1) Udag(t) X(t)  - X(t+1) X(t+1) - X(t) X(t)]
+  //     = 2 delta_{nt} X(t+1) Udag(t) X(t) = 2 X(n+1) Udag(n) X(n)
   for (j = 0; j < NSCALAR; j++) {
     tag[j] = start_gather_site(F_OFFSET(X[j]), sizeof(matrix),
                                TUP, EVENANDODD, gen_pt[j]);
@@ -27,22 +28,22 @@ double bosonic_force(Real eps) {
                                 TDOWN, EVENANDODD, gen_pt[NSCALAR + j]);
   }
   tag3 = start_gather_site(F_OFFSET(link), sizeof(matrix),
-                           TDOWN, EVENANDODD, gen_pt[2 * NSCALAR + 1]);
+                           TDOWN, EVENANDODD, gen_pt[pt2]);
 
   for (j = 0; j < NSCALAR; j++)
    wait_gather(tag[j]);
 
   FORALLSITES(i, s) {
     clear_mat(&(s->f_U));   // Clear the force collectors
-    for (j = 0; j < NSCALAR; j++) {
-      mult_an(&(s->link), &(s->X[j]), &tmat);
-      mult_nn_sum((matrix *)(gen_pt[j][i]), &tmat, &(s->f_U));
+    for (j = 0; j < NSCALAR; j++) {   // X(n+1) = gen_pt[j]
+      mult_na((matrix *)(gen_pt[j][i]), &(s->link), &tmat);
+      mult_nn_sum(&tmat, &(s->X[j]), &(s->f_U));
     }
   }
 
   // Take adjoint and update the gauge momenta
   // Make them anti-hermitian following non-susy code
-  // Include overall factor of kappa = N / (4lambda)
+  // Include overall factor of kappa = N / (4lambda), and factor of 2
   // Subtract to reproduce -Adj(f_U)
   // Compute average gauge force in same loop
   tr = 2.0 * kappa * eps;
@@ -54,25 +55,46 @@ double bosonic_force(Real eps) {
   }
 
   // This is the finite difference operator scalar derivative
+  //   d/dX(n) Tr[X(t) U(t) X(t+1) Udag(t) + X(t+1) Udag(t) X(t) U(t)
+  //              - X(t+1) X(t+1) - X(t) X(t)]
+  //     = 2 delta_{nt} U(t) X(t+1) Udag(t)
+  //       + 2 delta_{n(t+1)} Udag(t) X(t) U(t)
+  //       - 2 delta_{n(t+1)} X(t+1) - 2 delta_{nt} X(t)
+  //     = 2 [U(n) X(n+1) Udag(n) + Udag(n-1) X(n-1) U(n-1) - 2 X(n)]
   for (j = 0; j < NSCALAR; j++)
     wait_gather(tag2[j]);
   wait_gather(tag3);
   FORALLSITES(i, s) {
     for (j = 0; j < NSCALAR; j++) {
-      pt = NSCALAR + j;
-      pt2 = 2 * NSCALAR + 1;
+      pt = NSCALAR + j;             // X(n-1) is gen_pt[pt]
+
+      // Initialize force with on-site -2X(n)
+      scalar_mult_matrix(&(s->X[j]), -2.0, &(s->f_X[j]));
+
+      // Add forward hopping term using X(n+1) = gen_pt[j]
       mult_na((matrix *)(gen_pt[j][i]), &(s->link), &tmat);
-      mult_nn(&(s->link), &tmat, &(s->f_X[j]));
-      dif_matrix(&(s->X[j]), &(s->f_X[j]));
+      mult_nn_sum(&(s->link), &tmat, &(s->f_X[j]));
+
+      // Add backward hopping term using X(n-1) = gen_pt[pt]
+      //                             and U(n-1) = gen_pt[pt2]
       mult_nn((matrix *)(gen_pt[pt][i]), (matrix *)(gen_pt[pt2][i]), &tmat);
       mult_an_sum((matrix *)(gen_pt[pt2][i]), &tmat, &(s->f_X[j]));
+
       scalar_mult_matrix(&(s->f_X[j]), 2.0, &(s->f_X[j]));
     }
   }
 
   // The pure scalar stuff
+  tr = 3.0 * mass_Myers;
   FORALLSITES(i, s) {
 #ifdef BMN
+    // Myers term
+    //   d/dX_i(n) -Tr[eps_{jkl} X_j(t) X_k(t) X_l(t)]]
+    //     = -eps_{jkl} [delta_{ij} X_k(n) X_l(n) + delta_{ik} X_l(n) X_j(n)
+    //                                            + delta_{il} X_j(n) X_k(n)]
+    //     = -eps_{ikl} X_k(n) X_l(n) - eps_{ilj} X_l(n) X_j(n)
+    //                                - eps_{ijk} X_j(n) X_k(n)
+    //     = -3eps_{ikl} X_k(n) X_l(n)
     for (j = 0; j < 3; j++) {
       for (k = 0; k < 3; k++) {
         if (j == k)
@@ -81,34 +103,51 @@ double bosonic_force(Real eps) {
           if ((j == l) || (k == l))
             continue;
 
-          if (epsilon[j][k][l] > 0) {
-            scalar_mult_nn_dif(&(s->X[k]), &(s->X[l]),
-                               mass_Myers, &(s->f_X[j]));
-          }
-          else if (epsilon[j][k][l] < 0) {
-            scalar_mult_nn_sum(&(s->X[k]), &(s->X[l]),
-                               mass_Myers, &(s->f_X[j]));
-          }
+          if (epsilon[j][k][l] > 0)     // Overall negative sign absorbed
+            scalar_mult_nn_dif(&(s->X[k]), &(s->X[l]), tr, &(s->f_X[j]));
+          else if (epsilon[j][k][l] < 0)
+            scalar_mult_nn_sum(&(s->X[k]), &(s->X[l]), tr, &(s->f_X[j]));
         }
       }
     }
 #endif
+
+    // Commutator term (usual cyclic product rule trick...)
+    //   d/dX_k(n) sum_{i != j} -Tr[  X_i(t) X_j(t) X_i(t) X_j(t)
+    //                              + X_j(t) X_i(t) X_j(t) X_i(t)
+    //                              + X_i(t) X_j(t) X_i(t) X_j(t)
+    //                              + X_j(t) X_i(t) X_j(t) X_i(t)
+    //                              - X_i(t) X_j(t) X_j(t) X_i(t)
+    //                              - X_j(t) X_j(t) X_i(t) X_i(t)
+    //                              - X_j(t) X_i(t) X_i(t) X_j(t)
+    //                              - X_i(t) X_i(t) X_j(t) X_j(t)]
+    //     = sum_{j != k} -[4X_j(n) X_k(n) X_j(n) - 2X_j(n) X_j(n) X_k(n)
+    //                                            - 2X_k(n) X_j(n) X_j(n)]
+    //     = sum_{j != k} -2[X_j(n) X_k(n) X_j(n) - X_j(n) X_j(n) X_k(n)
+    //                     + X_j(n) X_k(n) X_j(n) - X_k(n) X_j(n) X_j(n)]
+    //     = sum_{j != k} -2[X_j(n) [X_k(n), X_j(n)] + [X_j(n), X_k(n)] X_j(n)]
+    //     = sum_{j != k} -2[X_j(n) [X_k(n), X_j(n)] - [X_k(n), X_j(n)] X_j(n)]
+    //     = sum_{j != k} -2[X_j(n), [X_k(n), X_j(n)]]
+    //   --> sum_{k != j} -2[X_k(n), [X_j(n), X_k(n)]], j fixed
+    // Following serial code, keep k>j with no factor 2
     for (j = 0; j < NSCALAR; j++) {
       for (k = j + 1; k < NSCALAR; k++) {
+        if (k == j)
+          continue;
+
+        // tmat = 2[X_j, X_k]
         mult_nn(&(s->X[j]), &(s->X[k]), &tmat);
         mult_nn_dif(&(s->X[k]), &(s->X[j]), &tmat);
+//        scalar_mult_matrix(&tmat, 2.0, &tmat);
+        // Overall negative sign absorbed below
         mult_nn_dif(&(s->X[k]), &tmat, &(s->f_X[j]));
         mult_nn_sum(&tmat, &(s->X[k]), &(s->f_X[j]));
       }
-
-      pt = NSCALAR + j;
-      pt2 = 2 * NSCALAR + 1;
-      mult_na((matrix *)(gen_pt[j][i]), &(s->link), &tmat);
-      mult_nn(&(s->link), &tmat, &(s->f_X[j]));
-      dif_matrix(&(s->X[j]), &(s->f_X[j]));
-      mult_nn((matrix *)(gen_pt[pt][i]), (matrix *)(gen_pt[pt2][i]), &tmat);
-      mult_an_sum((matrix *)(gen_pt[pt2][i]), &tmat, &(s->f_X[j]));
     }
+
+    // Simple d/dX_i(n) -X_j(t)^2 = -2 X_i(n)
+    // Absorb factor of two into tmp_so# = 2 * mass_so#
+    // Coefficients depend on BMN vs. BFSS, set in setup.c
     for (j = 0; j < 3; j++)
       scalar_mult_dif_matrix(&(s->X[j]), tmp_so3, &(s->f_X[j]));
 

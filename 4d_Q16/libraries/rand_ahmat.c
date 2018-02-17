@@ -66,7 +66,7 @@ void random_anti_hermitian(anti_hermitmat *ahmat, double_prn *prn_pt) {
 #endif
 #if (NCOL > 4)
   // TODO: Need to generalize... looks straightforward enough...
-  printf("ERROR: Still need to implement general-N rand_ahmat()\n");
+  printf("ERROR: Still need to implement general-N rand_ahmat\n");
   terminate(1);
 #endif
 }
