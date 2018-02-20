@@ -21,12 +21,11 @@
 
 // -----------------------------------------------------------------
 // Susy stuff
+#define KINETIC
+#define COMM_TERM
 #define BMN
-//#define EIG_POT           // Single rather than double-trace scalar potential
-                          // Single-trace case is minimally tested!!!
-#ifndef PUREGAUGE
-#define SV                // Site/vector terms in action
-#endif
+#define MYERS
+#define SCALAR_POT
 //#define DEBUG_CHECK       // Print lambdas, offsets, etc.
 // -----------------------------------------------------------------
 

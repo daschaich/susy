@@ -14,12 +14,24 @@ double bosonic_force(Real eps) {
   register site *s;
   Real tr;
   double returnit = 0.0, tmp_so3 = 2.0 * mass_so3, tmp_so6 = 2.0 * mass_so6;
-  matrix tmat;
+  matrix tmat, tmat2;
   msg_tag *tag[NSCALAR], *tag2[NSCALAR], *tag3;
+#ifdef DEBUG_CHECK
+  anti_hermitmat tah;
+#endif
 
+  // Clear the force collectors
+  FORALLSITES(i, s) {
+    clear_mat(&(s->f_U));
+    for (j = 0; j < NSCALAR; j++)
+      clear_mat(&(s->f_X[j]));
+  }
+
+#ifdef KINETIC
   // First we have the finite difference operator gauge derivative
-  //   d/dU(n) Tr[2 U(t) X(t+1) Udag(t) X(t)  - X(t+1) X(t+1) - X(t) X(t)]
-  //     = 2 delta_{nt} X(t+1) Udag(t) X(t) = 2 X(n+1) Udag(n) X(n)
+  // Must transform as site variable so momenta can be exponentiated
+  //   U(n) d/dU(n) Tr[2 U(t) X(t+1) Udag(t) X(t)  - X(t+1) X(t+1) - X(t) X(t)]
+  //     = 2 delta_{nt} U(n) X(t+1) Udag(t) X(t) = 2 U(n) X(n+1) Udag(n) X(n)
   for (j = 0; j < NSCALAR; j++) {
     tag[j] = start_gather_site(F_OFFSET(X[j]), sizeof(matrix),
                                TUP, EVENANDODD, gen_pt[j]);
@@ -37,9 +49,11 @@ double bosonic_force(Real eps) {
     clear_mat(&(s->f_U));   // Clear the force collectors
     for (j = 0; j < NSCALAR; j++) {   // X(n+1) = gen_pt[j]
       mult_na((matrix *)(gen_pt[j][i]), &(s->link), &tmat);
-      mult_nn_sum(&tmat, &(s->X[j]), &(s->f_U));
+      mult_nn(&(s->link), &tmat, &tmat2);
+      mult_nn_sum(&tmat2, &(s->X[j]), &(s->f_U));
     }
   }
+#endif
 
   // Take adjoint and update the gauge momenta
   // Make them anti-hermitian following non-susy code
@@ -49,11 +63,12 @@ double bosonic_force(Real eps) {
   tr = 2.0 * kappa * eps;
   FORALLSITES(i, s) {
     uncompress_anti_hermitian(&(s->mom), &tmat);
-    scalar_mult_dif_adj_matrix(&(s->f_U), tr, &tmat);
+    scalar_mult_sum_matrix(&(s->f_U), tr, &tmat);
     make_anti_hermitian(&tmat, &(s->mom));
     returnit += realtrace(&(s->f_U), &(s->f_U));
   }
 
+#ifdef KINETIC
   // This is the finite difference operator scalar derivative
   //   d/dX(n) Tr[X(t) U(t) X(t+1) Udag(t) + X(t+1) Udag(t) X(t) U(t)
   //              - X(t+1) X(t+1) - X(t) X(t)]
@@ -83,11 +98,13 @@ double bosonic_force(Real eps) {
       scalar_mult_matrix(&(s->f_X[j]), 2.0, &(s->f_X[j]));
     }
   }
+#endif
 
   // The pure scalar stuff
   tr = 3.0 * mass_Myers;
   FORALLSITES(i, s) {
 #ifdef BMN
+#ifdef MYERS
     // Myers term
     //   d/dX_i(n) -Tr[eps_{jkl} X_j(t) X_k(t) X_l(t)]]
     //     = -eps_{jkl} [delta_{ij} X_k(n) X_l(n) + delta_{ik} X_l(n) X_j(n)
@@ -111,7 +128,9 @@ double bosonic_force(Real eps) {
       }
     }
 #endif
+#endif
 
+#ifdef COMM_TERM
     // Commutator term (usual cyclic product rule trick...)
     //   d/dX_k(n) sum_{i != j} -Tr[  X_i(t) X_j(t) X_i(t) X_j(t)
     //                              + X_j(t) X_i(t) X_j(t) X_i(t)
@@ -144,7 +163,9 @@ double bosonic_force(Real eps) {
         mult_nn_sum(&tmat, &(s->X[k]), &(s->f_X[j]));
       }
     }
+#endif
 
+#ifdef SCALAR_POT
     // Simple d/dX_i(n) -X_j(t)^2 = -2 X_i(n)
     // Absorb factor of two into tmp_so# = 2 * mass_so#
     // Coefficients depend on BMN vs. BFSS, set in setup.c
@@ -153,6 +174,7 @@ double bosonic_force(Real eps) {
 
     for (j = 3; j < NSCALAR; j++)
       scalar_mult_dif_matrix(&(s->X[j]), tmp_so6, &(s->f_X[j]));
+#endif
   }
   for (j = 0; j < NSCALAR; j++) {
     cleanup_gather(tag[j]);
@@ -167,7 +189,12 @@ double bosonic_force(Real eps) {
   tr = kappa * eps;
   FORALLSITES(i, s) {
     for (j = 0; j < NSCALAR; j++) {
-      scalar_mult_dif_adj_matrix(&(s->f_X[j]), tr, &(s->mom_X[j]));
+#ifdef DEBUG_CHECK
+      // Make f_X traceless anti-hermitian, which it should be already
+      make_anti_hermitian(&(s->f_X[j]), &tah);
+      uncompress_anti_hermitian(&tah, &(s->f_X[j]));
+#endif
+      scalar_mult_sum_matrix(&(s->f_X[j]), tr, &(s->mom_X[j]));
       returnit += realtrace(&(s->f_X[j]), &(s->f_X[j]));
     }
   }
