@@ -40,24 +40,24 @@ void update_u(Real eps) {
 // -----------------------------------------------------------------
 // Omelyan version; ``dirty'' speeded-up version
 double update_gauge_step(Real eps) {
-  int nsw = nsteps[1], isw;
+  int n = nsteps[1], i;
   double norm;
 
 #ifdef UPDATE_DEBUG
-  node0_printf("gauge %d steps %.4g dt\n", nsw, eps);
+  node0_printf("gauge %d steps %.4g dt\n", n, eps);
 #endif
   norm = gauge_force(eps * LAMBDA);
-  for (isw = 1; isw <= nsw; isw++) {
+  for (i = 1; i <= n; i++) {
     update_u(0.5 * eps);
     norm += gauge_force(eps * LAMBDA_MID);
     update_u(0.5 * eps);
-    if (isw < nsw)
+    if (i < n)
       norm += gauge_force(eps * TWO_LAMBDA);
 
     else
       norm += gauge_force(eps * LAMBDA);
   }
-  return (norm / nsw);
+  return (norm / n);
 }
 // -----------------------------------------------------------------
 

@@ -119,7 +119,7 @@ EXTERN site *lattice;
 
 // Vectors for addressing
 // Generic pointers, for gather routines
-// Need at least 19 to gather scalars for the bosonic force
+// Need at least 2NSCALAR+1=19 to gather scalars for the bosonic force
 #define N_POINTERS 20
 EXTERN char **gen_pt[N_POINTERS];
 

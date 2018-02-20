@@ -98,13 +98,6 @@ int initial_set() {
 // -----------------------------------------------------------------
 // Allocate space for fields
 void make_fields() {
-#ifndef BMN
-#ifdef EIG_POT
-  node0_printf("Single-trace scalar potential\n");
-#else
-  node0_printf("Double-trace scalar potential\n");
-#endif
-#endif
   Real size = (Real)(2.0 * sizeof(complex));
   FIELD_ALLOC(tr_eta, complex);
   FIELD_ALLOC(tr_dest, complex);
