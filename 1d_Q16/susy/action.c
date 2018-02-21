@@ -174,7 +174,8 @@ double fermion_action(matrix *src[NFERMION], matrix **sol[NFERMION]) {
 // -----------------------------------------------------------------
 // Gauge and scalar momenta contribution to the action
 // Helper routine: Magnitude squared of an anti-hermition matrix
-// Normalization from non-supersymmetric MILC code
+// Normalization from non-supersymmetric MILC code is half
+// what we get from uncompress_anti_hermitian + realtrace...
 Real ahmat_mag_sq(anti_hermitmat *ah) {
   register int i;
   register Real sum;
@@ -199,9 +200,9 @@ double gauge_mom_action() {
   matrix tmat;
 
   FORALLSITES(i, s) {
-//    sum += (double)ahmat_mag_sq(&(s->mom));
-    uncompress_anti_hermitian(&(s->mom), &tmat);
-    sum += (double)realtrace(&tmat, &tmat);
+    sum += (double)ahmat_mag_sq(&(s->mom));
+//    uncompress_anti_hermitian(&(s->mom), &tmat);
+//    sum += (double)realtrace(&tmat, &tmat);
   }
 
   g_doublesum(&sum);
@@ -212,10 +213,14 @@ double scalar_mom_action() {
   register int i, j;
   register site *s;
   double sum = 0.0;
+  anti_hermitmat tah;
 
   FORALLSITES(i, s) {
-    for (j = 0; j < NSCALAR; j++)
-      sum += (double)realtrace(&(s->mom_X[j]), &(s->mom_X[j]));
+    for (j = 0; j < NSCALAR; j++) {
+      make_anti_hermitian(&(s->mom_X[j]), &tah);
+      sum += (double)ahmat_mag_sq(&tah);
+//      sum += (double)realtrace(&(s->mom_X[j]), &(s->mom_X[j]));
+    }
   }
   g_doublesum(&sum);
   return sum;
