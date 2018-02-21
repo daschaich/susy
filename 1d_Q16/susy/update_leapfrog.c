@@ -15,24 +15,66 @@
 
 // -----------------------------------------------------------------
 void update_u(Real eps) {
-  register int i, mu;
+  register int i, j;
   register site *s;
+  register Real t2, t3, t4, t5, t6, t7, t8;
+  matrix tmat, tmat2, tmp_mom;
 
-  FORALLSITES(i, s)
-    scalar_mult_sum_matrix(&(s->mom), eps, &(s->link));
+  // Calculate newU = exp(p).U
+  // Go to eighth order in the exponential:
+  //   exp(p) * U = (1 + p + p^2/2 + p^3/6 ...) * U
+  //              = U + p*(U + (p/2)*(U + (p/3)*( ... )))
+  // Take divisions out of site loop (can't be done by compiler)
+  t2 = eps / 2.0;
+  t3 = eps / 3.0;
+  t4 = eps / 4.0;
+  t5 = eps / 5.0;
+  t6 = eps / 6.0;
+  t7 = eps / 7.0;
+  t8 = eps / 8.0;
 
-  // Update DmuUmu
-  // (Needs to be done before calling gauge_force)
-  compute_DmuUmu();
+  FORALLSITES(i, s) {
+    uncompress_anti_hermitian(&(s->mom), &tmp_mom);
+    mult_nn(&tmp_mom, &(s->link), &tmat);
+    scalar_mult_add_matrix(&(s->link), &tmat, t8, &tmat2);
+
+    mult_nn(&tmp_mom, &tmat2, &tmat);
+    scalar_mult_add_matrix(&(s->link), &tmat, t7, &tmat2);
+
+    mult_nn(&tmp_mom, &tmat2, &tmat);
+    scalar_mult_add_matrix(&(s->link), &tmat, t6, &tmat2);
+
+    mult_nn(&tmp_mom, &tmat2, &tmat);
+    scalar_mult_add_matrix(&(s->link), &tmat, t5, &tmat2);
+
+    mult_nn(&tmp_mom, &tmat2, &tmat);
+    scalar_mult_add_matrix(&(s->link), &tmat, t4, &tmat2);
+
+    mult_nn(&tmp_mom, &tmat2, &tmat);
+    scalar_mult_add_matrix(&(s->link), &tmat, t3, &tmat2);
+
+    mult_nn(&tmp_mom, &tmat2, &tmat);
+    scalar_mult_add_matrix(&(s->link), &tmat, t2, &tmat2);
+
+    mult_nn(&tmp_mom, &tmat2, &tmat);
+    scalar_mult_sum_matrix(&tmat, eps, &(s->link));
+
+    for (j = 0; j < NSCALAR; j++)
+      scalar_mult_sum_matrix(&(s->mom_X[j]), eps, &(s->X[j]));
+  }
+
+  // Reunitarize the gauge field and re-anti-hermitianize the scalars
+  reunitarize();
+  reantihermize();
 }
 // -----------------------------------------------------------------
 
 
 
 // -----------------------------------------------------------------
-int update_step(Twist_Fermion **src, Twist_Fermion ***psim) {
-  int step, iters = 0, n;
-  Real final_rsq, eps = traj_length / (Real)nsteps[0], tr;
+int update_step(matrix **src[NFERMION], matrix ***psim[NFERMION]) {
+  int step, iters = 0;
+  Real eps = traj_length / (Real)nsteps[0], tr;
   node0_printf("eps %.4g for both fermion and gauge steps\n", eps);
 
   // First u(t/2)
@@ -40,12 +82,14 @@ int update_step(Twist_Fermion **src, Twist_Fermion ***psim) {
 
   for (step = 0; step < nsteps[0]; step++) {
     // Inner steps p(t) u(t)
-    tr = gauge_force(eps);
+    tr = bosonic_force(eps);
     bnorm += tr;
     if (tr > max_bf)
       max_bf = tr;
 
 #ifndef PUREGAUGE
+    int n;
+    Real final_rsq;
     for (n = 0; n < Nroot; n++) {
       // Do conjugate gradient to get (Mdag M)^(-1 / 4) chi
       iters += congrad_multi(src[n], psim[n], niter, rsqmin, &final_rsq);
@@ -70,11 +114,17 @@ int update_step(Twist_Fermion **src, Twist_Fermion ***psim) {
 // -----------------------------------------------------------------
 int update() {
   int j, n, iters = 0;
-  Real final_rsq;
   double startaction, endaction, change;
-  Twist_Fermion **src = malloc(sizeof(Twist_Fermion*) * Nroot);
-  Twist_Fermion ***psim = malloc(sizeof(Twist_Fermion**) * Nroot);
+  matrix **source[NFERMION], ***psim[NFERMION];
 
+  // Refresh the momenta
+  ranmom();
+
+  // Set up the fermion variables, if needed
+#ifndef PUREGAUGE
+  Real final_rsq;
+
+  FIXME... // TODO
   for (n = 0; n < Nroot; n++) {
     src[n] = malloc(sizeof(Twist_Fermion) * sites_on_node);
     psim[n] = malloc(sizeof(Twist_Fermion*) * Norder);
@@ -82,11 +132,6 @@ int update() {
       psim[n][j] = malloc(sizeof(Twist_Fermion) * sites_on_node);
   }
 
-  // Refresh the momenta
-  ranmom();
-
-  // Set up the fermion variables, if needed
-#ifndef PUREGAUGE
   // Compute g and src = (Mdag M)^(1 / 8) g
   for (n = 0; n < Nroot; n++)
     iters += grsource(src[n]);
@@ -104,7 +149,7 @@ int update() {
 #endif // ifndef PUREGAUGE
 
   // Find initial action
-  startaction = action(src, psim);
+  startaction = action(source, psim);
   bnorm = 0.0;
   max_bf = 0.0;
   for (n = 0; n < Nroot; n++) {
@@ -115,20 +160,22 @@ int update() {
 #ifdef HMC_ALGORITHM
   Real xrandom;   // For accept/reject test
   // Copy link field to old_link
-  gauge_field_copy(F_OFFSET(link), F_OFFSET(old_link));
+  copy_bosons(PLUS);
 #endif
   // Do microcanonical updating
-  iters += update_step(src, psim);
+  iters += update_step(source, psim);
 
   // Find ending action
   // Since update_step ended on a gauge update,
   // need to do conjugate gradient to get (Mdag M)^(-1 / 4) chi
+#ifndef PUREGAUGE
 #ifdef UPDATE_DEBUG
   node0_printf("Calling CG in update_leapfrog -- new action\n");
 #endif
   for (n = 0; n < Nroot; n++)
     iters += congrad_multi(src[n], psim[n], niter, rsqmin, &final_rsq);
-  endaction = action(src, psim);
+#endif
+  endaction = action(source, psim);
   change = endaction - startaction;
 #ifdef HMC_ALGORITHM
   // Reject configurations giving overflow
@@ -148,13 +195,8 @@ int update() {
     xrandom = myrand(&node_prn);
   broadcast_float(&xrandom);
   if (exp(-change) < (double)xrandom) {
-    if (traj_length > 0.0) {
-      gauge_field_copy(F_OFFSET(old_link), F_OFFSET(link));
-      compute_plaqdet();
-      compute_Uinv();
-      compute_DmuUmu();
-      compute_Fmunu();
-    }
+    if (traj_length > 0.0)
+      copy_bosons(MINUS);
     node0_printf("REJECT: delta S = %.4g start S = %.12g end S = %.12g\n",
                  change, startaction, endaction);
   }
@@ -166,15 +208,6 @@ int update() {
   // Only print check if not doing HMC
   node0_printf("CHECK: delta S = %.4g\n", (double)(change));
 #endif // ifdef HMC
-
-  for (n = 0; n < Nroot; n++) {
-    free(src[n]);
-    for (j = 0; j < Norder; j++)
-      free(psim[n][j]);
-    free(psim[n]);
-  }
-  free(src);
-  free(psim);
 
   if (traj_length > 0) {
     node0_printf("IT_PER_TRAJ %d\n", iters);

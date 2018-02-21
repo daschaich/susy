@@ -10,12 +10,12 @@
 // -----------------------------------------------------------------
 // Update mom with the bosonic force
 double bosonic_force(Real eps) {
-  register int i, j, k, l, pt, pt2 = 2 * NSCALAR + 1;
+  register int i, j, k, l;
   register site *s;
   Real tr;
   double returnit = 0.0, tmp_so3 = 2.0 * mass_so3, tmp_so6 = 2.0 * mass_so6;
   matrix tmat, tmat2;
-  msg_tag *tag[NSCALAR], *tag2[NSCALAR], *tag3;
+  msg_tag *tag[NSCALAR], *tag2[NSCALAR];
 #ifdef DEBUG_CHECK
   anti_hermitmat tah;
 #endif
@@ -30,17 +30,20 @@ double bosonic_force(Real eps) {
 #ifdef KINETIC
   // First we have the finite difference operator gauge derivative
   // Must transform as site variable so momenta can be exponentiated
-  //   U(n) d/dU(n) Tr[2 U(t) X(t+1) Udag(t) X(t)  - X(t+1) X(t+1) - X(t) X(t)]
+  //   U(n) d/dU(n) Tr[2 U(t) X(t+1) Udag(t) X(t) - X(t+1) X(t+1) - X(t) X(t)]
   //     = 2 delta_{nt} U(n) X(t+1) Udag(t) X(t) = 2 U(n) X(n+1) Udag(n) X(n)
   for (j = 0; j < NSCALAR; j++) {
     tag[j] = start_gather_site(F_OFFSET(X[j]), sizeof(matrix),
                                TUP, EVENANDODD, gen_pt[j]);
 
-    tag2[j] = start_gather_site(F_OFFSET(X[j]), sizeof(matrix),
-                                TDOWN, EVENANDODD, gen_pt[NSCALAR + j]);
+    // For scalar force term, compute and gather Udag(n-1) X(n-1) U(n-1)
+    FORALLSITES(i, s) {
+      mult_nn(&(s->X[j]), &(s->link), &tmat);
+      mult_an(&(s->link), &tmat, &(temp_X[j][i]));
+    }
+    tag2[j] = start_gather_field(temp_X[j], sizeof(matrix),
+                                 TDOWN, EVENANDODD, gen_pt[NSCALAR + j]);
   }
-  tag3 = start_gather_site(F_OFFSET(link), sizeof(matrix),
-                           TDOWN, EVENANDODD, gen_pt[pt2]);
 
   for (j = 0; j < NSCALAR; j++)
    wait_gather(tag[j]);
@@ -58,7 +61,6 @@ double bosonic_force(Real eps) {
   // Take adjoint and update the gauge momenta
   // Make them anti-hermitian following non-susy code
   // Include overall factor of kappa = N / (4lambda), and factor of 2
-  // Subtract to reproduce -Adj(f_U)
   // Compute average gauge force in same loop
   tr = 2.0 * kappa * eps;
   FORALLSITES(i, s) {
@@ -78,11 +80,8 @@ double bosonic_force(Real eps) {
   //     = 2 [U(n) X(n+1) Udag(n) + Udag(n-1) X(n-1) U(n-1) - 2 X(n)]
   for (j = 0; j < NSCALAR; j++)
     wait_gather(tag2[j]);
-  wait_gather(tag3);
   FORALLSITES(i, s) {
     for (j = 0; j < NSCALAR; j++) {
-      pt = NSCALAR + j;             // X(n-1) is gen_pt[pt]
-
       // Initialize force with on-site -2X(n)
       scalar_mult_matrix(&(s->X[j]), -2.0, &(s->f_X[j]));
 
@@ -90,13 +89,16 @@ double bosonic_force(Real eps) {
       mult_na((matrix *)(gen_pt[j][i]), &(s->link), &tmat);
       mult_nn_sum(&(s->link), &tmat, &(s->f_X[j]));
 
-      // Add backward hopping term using X(n-1) = gen_pt[pt]
-      //                             and U(n-1) = gen_pt[pt2]
-      mult_nn((matrix *)(gen_pt[pt][i]), (matrix *)(gen_pt[pt2][i]), &tmat);
-      mult_an_sum((matrix *)(gen_pt[pt2][i]), &tmat, &(s->f_X[j]));
+      // Add backward hopping term
+      //   Udag(n-1) X(n-1) U(n-1) = gen_pt[NSCALAR + j]
+      sum_matrix((matrix *)(gen_pt[NSCALAR + j][i]), &(s->f_X[j]));
 
       scalar_mult_matrix(&(s->f_X[j]), 2.0, &(s->f_X[j]));
     }
+  }
+  for (j = 0; j < NSCALAR; j++) {
+    cleanup_gather(tag[j]);
+    cleanup_gather(tag2[j]);
   }
 #endif
 
@@ -148,16 +150,15 @@ double bosonic_force(Real eps) {
     //     = sum_{j != k} -2[X_j(n) [X_k(n), X_j(n)] - [X_k(n), X_j(n)] X_j(n)]
     //     = sum_{j != k} -2[X_j(n), [X_k(n), X_j(n)]]
     //   --> sum_{k != j} -2[X_k(n), [X_j(n), X_k(n)]], j fixed
-    // Following serial code, keep k>j with no factor 2
     for (j = 0; j < NSCALAR; j++) {
-      for (k = j + 1; k < NSCALAR; k++) {
+      for (k = 0; k < NSCALAR; k++) {
         if (k == j)
           continue;
 
         // tmat = 2[X_j, X_k]
         mult_nn(&(s->X[j]), &(s->X[k]), &tmat);
         mult_nn_dif(&(s->X[k]), &(s->X[j]), &tmat);
-//        scalar_mult_matrix(&tmat, 2.0, &tmat);
+        scalar_mult_matrix(&tmat, 2.0, &tmat);
         // Overall negative sign absorbed below
         mult_nn_dif(&(s->X[k]), &tmat, &(s->f_X[j]));
         mult_nn_sum(&tmat, &(s->X[k]), &(s->f_X[j]));
@@ -176,11 +177,6 @@ double bosonic_force(Real eps) {
       scalar_mult_dif_matrix(&(s->X[j]), tmp_so6, &(s->f_X[j]));
 #endif
   }
-  for (j = 0; j < NSCALAR; j++) {
-    cleanup_gather(tag[j]);
-    cleanup_gather(tag2[j]);
-  }
-  cleanup_gather(tag3);
 
   // Take adjoint and update the scalar momenta
   // Include overall factor of kappa = N / (4lambda)
