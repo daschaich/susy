@@ -21,10 +21,10 @@
 
 // -----------------------------------------------------------------
 // Susy stuff
-//#define KINETIC
-//#define COMM_TERM
+#define KINETIC
+#define COMM_TERM
 #define BMN
-//#define MYERS
+#define MYERS
 #define SCALAR_POT
 //#define DEBUG_CHECK       // Print lambdas, offsets, etc.
 // -----------------------------------------------------------------

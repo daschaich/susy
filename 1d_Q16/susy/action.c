@@ -36,9 +36,9 @@ double bosonic_action(double *so3_sq, double *so6_sq, double *Myers) {
   // (Has same form as some scalar potential terms, so will re-use below)
   FORALLSITES(i, s) {
     for (j = 0; j < 3; j++)
-      *so3_sq -= realtrace_nn(&(s->X[j]), &(s->X[j]));
+      *so3_sq -= (double)realtrace_nn(&(s->X[j]), &(s->X[j]));
     for (j = 3; j < NSCALAR; j++)
-      *so6_sq -= realtrace_nn(&(s->X[j]), &(s->X[j]));
+      *so6_sq -= (double)realtrace_nn(&(s->X[j]), &(s->X[j]));
   }
   b_action = *so3_sq + *so6_sq;
 
@@ -48,8 +48,8 @@ double bosonic_action(double *so3_sq, double *so6_sq, double *Myers) {
   FORALLSITES(i, s) {
     for (j = 0; j < NSCALAR; j++) {
       mult_nn(&(s->link), (matrix *)(gen_pt[j][i]), &tmat);
-      mult_nn(&(s->X[j]), &tmat, &tmat2);
-      b_action += realtrace(&(s->link), &tmat2);
+      mult_na(&tmat, &(s->link), &tmat2);
+      b_action += (double)realtrace_nn(&(s->X[j]), &tmat2);
     }
   }
   b_action *= 2.0;

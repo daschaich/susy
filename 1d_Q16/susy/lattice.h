@@ -105,7 +105,7 @@ EXTERN complex minus1, *tr_eta, *tr_dest;
 EXTERN matrix *mpm[NFERMION], *pm0[NFERMION], *rm[NFERMION];
 
 // Temporary matrices
-EXTERN matrix *tempmat, *tempmat2, *temp_ferm[NFERMION];
+EXTERN matrix *tempmat, *tempmat2, *temp_ferm[NFERMION], *temp_X[NSCALAR];
 
 //Allocate some more arrays to be used by LAPACK in scalar eigenvalues
 EXTERN double *Rwork, *eigs, *store, *work;

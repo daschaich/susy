@@ -113,10 +113,11 @@ void make_fields() {
   FIELD_ALLOC_VEC(rm, matrix, NFERMION);
 
   // Temporary matrices and Fermions
-  size += (Real)((2.0 + NFERMION) * sizeof(matrix));
+  size += (Real)((2.0 + NFERMION + NSCALAR) * sizeof(matrix));
   FIELD_ALLOC(tempmat, matrix);
   FIELD_ALLOC(tempmat2, matrix);
   FIELD_ALLOC_VEC(temp_ferm, matrix, NFERMION);
+  FIELD_ALLOC_VEC(temp_X, matrix, NSCALAR);
 
 #ifdef CORR
   int j;
