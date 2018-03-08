@@ -4,12 +4,14 @@
 #include "susy_includes.h"
 
 int main(int argc, char *argv[]) {
-  int prompt, j;
+  int prompt, j, h, l, k, i;
   int traj_done, s_iters, avs_iters = 0, avm_iters = 0, Nmeas = 0;
   Real f_eps, b_eps;
   double b_act, dtime, Xtr[NSCALAR], Xtr_ave, Xtr_width;
   double ave_eigs[NCOL], eig_widths[NCOL], min_eigs[NCOL], max_eigs[NCOL];
   complex plp = cmplx(99.0, 99.0);
+  double re, im;
+  register site *s;
 
   // Setup
   setlinebuf(stdout); // DEBUG
@@ -23,13 +25,69 @@ int main(int argc, char *argv[]) {
   setup_lambda();
   setup_gamma();
   setup_rhmc();
-
+    
   // Load input and run
   if (readin(prompt) != 0) {
     node0_printf("ERROR in readin, aborting\n");
     terminate(1);
   }
   dtime = -dclock();
+    
+  // The part below is added for testing with the config generated from serial C++ code
+  // We will use the same "fresh" option and then overwrite the link, scalars at this point
+  // Now only for N = 2 . Should suffice for testing with serial C++ code for now.
+    
+  #ifndef PUREGAUGE
+  node0_printf("ERROR in reading config because NO FERMIONS, aborting\n");
+  terminate(1);
+  #endif
+    
+  double** data=malloc(1000*sizeof(double*));
+  for(i=0;i<1000;i++)
+  data[i]=malloc(1000*sizeof(double));
+    
+  FILE *input;
+  input = fopen("config.txt","r");
+    
+  if (input == NULL) {
+      fprintf(stderr, "Can't open file %s!\n","CONFIG");
+      exit(1);
+  }
+    
+  for(i = 0; i < NCOL*NCOL*2; i++) {
+     for(j = 0; j < 10*nt; j++){
+            if (!fscanf(input, "%lf", &data[i][j]))
+            break;
+      }
+  }
+  fclose(input);
+    
+  FORALLSITES(i, s){
+        for (j = 0; j < NCOL; j++) {
+        for (k = 0; k < NCOL; k++) {
+            
+        re = data[0][4*j + 2*k + i*NCOL*NCOL*2];
+        im = data[0][4*j + 2*k + 1 + i*NCOL*NCOL*2];
+        //printf(" Site is [%i] and Data [%i][%i] = %lf\n", i, 0, 4*j + 2*k + i*8, re);
+        s->link.e[j][k] = cmplx(re, im);
+        }
+        }
+  }
+    
+  FORALLSITES(i, s) {
+    for (l = 1; l < NSCALAR + 1 ; l++) {
+        clear_mat(&(s->X[l]));
+        for (j = 0; j < NCOL; j++) {
+            for (k = 0; k < NCOL; k++) {
+            re = data[l][4*j + 2*k + i*NCOL*NCOL*2];
+            im = data[l][4*j + 2*k + 1 + i*NCOL*NCOL*2];
+            s->X[l].e[j][k] = cmplx(re, im);
+            }
+        }
+    }
+}
+    
+node0_printf("CONFIG. FROM SERIAL CODE LOADED OVERWRITING ALL BEFORE \n");
 
   // Check: compute initial bosonic action
   b_act = bosonic_action(&(Xtr[0]), &(Xtr[1]), &(Xtr[2]));
