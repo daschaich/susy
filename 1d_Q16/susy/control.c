@@ -54,12 +54,20 @@ int main(int argc, char *argv[]) {
       exit(1);
   }
     
-  for(i = 0; i < NCOL*NCOL*2; i++) {
-     for(j = 0; j < 10*nt; j++){
+  for(i = 0; i < NSCALAR+1 ; i++) {
+     for(j = 0; j < nt*NCOL*NCOL*2; j++){
             if (!fscanf(input, "%lf", &data[i][j]))
             break;
       }
   }
+
+  for(i = 0; i < NSCALAR+1; i++) {
+    for(j = 0; j < nt*NCOL*NCOL*2; j++){
+  	  if (abs(&data[i][j]) < 1e-14)
+          data[i][j] = 0.0 ;
+	  }
+  }
+
   fclose(input);
     
   FORALLSITES(i, s){
@@ -68,19 +76,22 @@ int main(int argc, char *argv[]) {
             
         re = data[0][4*j + 2*k + i*NCOL*NCOL*2];
         im = data[0][4*j + 2*k + 1 + i*NCOL*NCOL*2];
-        //printf(" Site is [%i] and Data [%i][%i] = %lf\n", i, 0, 4*j + 2*k + i*8, re);
+        //printf(" LINK --> Site is [%i] and Data [%i][%i] = %lf\n", i, 0, 4*j + 2*k + i*NCOL*NCOL*2, re);
+        //printf(" LINK --> Site is [%i] and Data [%i][%i] = %lf\n", i, 0, 4*j + 2*k + 1 + i*NCOL*NCOL*2, im);
         s->link.e[j][k] = cmplx(re, im);
         }
         }
   }
     
+  for (l = 1; l < NSCALAR + 1 ; l++) {
   FORALLSITES(i, s) {
-    for (l = 1; l < NSCALAR + 1 ; l++) {
         clear_mat(&(s->X[l]));
         for (j = 0; j < NCOL; j++) {
             for (k = 0; k < NCOL; k++) {
             re = data[l][4*j + 2*k + i*NCOL*NCOL*2];
             im = data[l][4*j + 2*k + 1 + i*NCOL*NCOL*2];
+            //printf(" SCALAR --> Site is [%i] and Data [%i][%i] = %lf\n", i, l, 4*j + 2*k + i*NCOL*NCOL*2, re);
+            //printf(" SCALAR --> Site is [%i] and Data [%i][%i] = %lf\n", i, l, 4*j + 2*k + 1 + i*NCOL*NCOL*2, im);
             s->X[l].e[j][k] = cmplx(re, im);
             }
         }
