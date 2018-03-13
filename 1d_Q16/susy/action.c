@@ -197,7 +197,7 @@ double gauge_mom_action() {
   register int i, j;
   register site *s;
   double sum = 0.0;
-  matrix tmat;
+//  matrix tmat;
 
   FORALLSITES(i, s) {
     sum += (double)ahmat_mag_sq(&(s->mom));
