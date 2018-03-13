@@ -316,7 +316,7 @@ void w_serial(gauge_file *gf) {
       d2f_mat(&lattice[i].link, &tbuf[index]);
       for (j = 0; j < NSCALAR; j++) {
         index++;
-        d2f_mat(&lattice[i].link, &tbuf[index]);
+        d2f_mat(&lattice[i].X[j], &tbuf[index]);
       }
     }
 
@@ -506,7 +506,7 @@ void r_serial(gauge_file *gf) {
       // Copy (NSCALAR + 1) matrices to generic-precision lattice[idest]
       f2d_mat(&(tmat[0]), &lattice[idest].link);
       for (j = 0; j < NSCALAR; j++)
-        f2d_mat(&(tmat[j+1]), &lattice[idest].X[j]);
+        f2d_mat(&(tmat[j + 1]), &lattice[idest].X[j]);
     }
     else {
       rank29 += (NSCALAR + 1) * sizeof(fmatrix) / sizeof(int32type);

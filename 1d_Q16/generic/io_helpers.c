@@ -80,7 +80,7 @@ void funnylat() {
     for (j = 0; j < NCOL; ++j) {
       for (k = 0; k < NCOL; ++k) {
         s->link.e[j][k] = cmplx(10.0 * j * nt, 10.0 * k * s->t);
-        for(l=0;l<NSCALAR;l++)
+        for (l = 0; l < NSCALAR; l++)
           s->X[l].e[j][k] = cmplx(10.0 * j * l, 10.0 * k * s->t);
       }
     }
