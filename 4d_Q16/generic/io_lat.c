@@ -220,7 +220,7 @@ static void send_buf_to_node0(fmatrix *tbuf, int tbuf_length,
 // -----------------------------------------------------------------
 // Only node 0 writes the gauge configuration to a binary file gf
 void w_serial(gauge_file *gf) {
-  register int i, j;
+  register int i;
   int rank29, rank31, buf_length, tbuf_length;
   int x, y, z, t, currentnode, newnode;
   FILE *fp = NULL;
@@ -285,10 +285,10 @@ void w_serial(gauge_file *gf) {
   currentnode = 0;  // The node delivering data
   buf_length = 0;
   tbuf_length = 0;
-  for (j = 0, t = 0; t < nt; t++) {
+  for (t = 0; t < nt; t++) {
     for (z = 0; z < nz; z++) {
       for (y = 0; y < ny; y++) {
-        for (x = 0; x < nx; x++, j++) {
+        for (x = 0; x < nx; x++) {
           // The node providing the next site
           newnode = node_number(x, y, z, t);
           if (newnode != currentnode || x == 0) {

@@ -214,13 +214,13 @@ static void send_buf_to_node0(fmatrix *tbuf, int tbuf_length,
 // -----------------------------------------------------------------
 // Only node 0 writes the gauge configuration to a binary file gf
 void w_serial(gauge_file *gf) {
-  register int i, j;
+  register int i;
   int rank29, rank31, buf_length, tbuf_length, index;
-  int t, currentnode, newnode;
+  int j, t, currentnode, newnode;
   FILE *fp = NULL;
   gauge_header *gh = NULL;
   fmatrix *lbuf = NULL;
-  fmatrix *tbuf = malloc(sizeof *tbuf * (NSCALAR + 1));
+  fmatrix *tbuf = malloc(sizeof *tbuf * nt * (NSCALAR + 1));
   off_t offset;               // File stream pointer
   off_t coord_list_size;      // Size of coordinate list in bytes
   off_t head_size;            // Size of header plus coordinate list
@@ -228,7 +228,7 @@ void w_serial(gauge_file *gf) {
   off_t gauge_check_size;     // Size of checksum record
 
   // tbuf holds message buffer space for each site
-  // of the local hypercube (needs at most (NSCALAR + 1) matrices)
+  // of the local hypercube (needs at most nt * (NSCALAR + 1) matrices)
   if (tbuf == NULL) {
     printf("w_serial: node%d can't malloc tbuf\n", this_node);
     terminate(1);
@@ -320,6 +320,7 @@ void w_serial(gauge_file *gf) {
       }
     }
 
+    // tbuf_length is in units of (NSCALAR + 1) matrices
     if (this_node == currentnode || this_node == 0)
       tbuf_length++;
   }
@@ -378,7 +379,7 @@ void r_serial(gauge_file *gf) {
   int buf_length = 0, where_in_buf = 0;
   gauge_check test_gc;
   u_int32type *val;
-  int rank29, rank31;
+  int rank29 = 0, rank31 = 0;
   fmatrix *lbuf = NULL;   // Only allocate on node0
   fmatrix tmat[NSCALAR + 1];
 
@@ -418,12 +419,10 @@ void r_serial(gauge_file *gf) {
   }
 
   // All nodes initialize checksums
+  // Will count 32-bit words mod 29 and mod 31 in order of appearance in file
+  // All nodes see the same sequence because we read serially
   test_gc.sum29 = 0;
   test_gc.sum31 = 0;
-  // Count 32-bit words mod 29 and mod 31 in order of appearance on file
-  // Here all nodes see the same sequence because we read serially
-  rank29 = 0;
-  rank31 = 0;
 
   g_sync();
 
@@ -521,8 +520,8 @@ void r_serial(gauge_file *gf) {
 
   if (this_node == 0) {
     // Read and verify checksum
-    printf("Restored binary gauge configuration serially from file %s\n",
-           filename);
+    printf("Restored binary gauge and scalar configuration serially ");
+    printf("from file %s\n", filename);
     if (gh->magic_number == GAUGE_VERSION_NUMBER) {
       printf("Time stamp %s\n", gh->time_stamp);
       if (fseeko(fp, checksum_offset, SEEK_SET) < 0) {

@@ -44,7 +44,8 @@ gauge_file *save_lattice(int flag, char *filename) {
 
 
 // -----------------------------------------------------------------
-// Set links to unit matrices and scalars to anti-hermitian generator
+// Set links to unit matrices and scalars to an anti-hermitian generator
+// (specifically i*sigma_3 embedded in upper-left 2x2 block)
 void coldlat() {
   register int i, j, k, l;
   register site *s;
@@ -150,7 +151,8 @@ gauge_file *reload_lattice(int flag, char *filename) {
   max_deviation = check_antihermity();
   g_floatmax(&max_deviation);
 #if PRECISION == 1
-  node0_printf("Anti-hermiticity checked.  Max deviation %.2g\n", max_deviation);
+  node0_printf("Anti-hermiticity checked.  ");
+  node0_printf("Max deviation %.2g\n", max_deviation);
 #else
   reantihermize();
   max_deviation2 = check_antihermity();
@@ -162,7 +164,8 @@ gauge_file *reload_lattice(int flag, char *filename) {
 
   fflush(stdout);
   dtime += dclock();
-  node0_printf("Time to check unitarity and anti-hermiticity = %.4g seconds\n", dtime);
+  node0_printf("Time to check unitarity and anti-hermiticity");
+  node0_printf(" = %.4g seconds\n", dtime);
 
   return gf;
 }
