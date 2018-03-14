@@ -30,9 +30,6 @@ int congrad_multi(matrix *src[NFERMION], matrix **psim[NFERMION],
   register site *s;
   int N_iter, iteration = 0;
   int *converged = malloc(sizeof *converged * Norder);
-  Real floatvar, floatvar2;     // SSE kluge
-  Real *floatvarj = malloc(sizeof *floatvarj * Norder);
-  Real *floatvark = malloc(sizeof *floatvark * Norder);
   double rsq, rsqnew, source_norm = 0.0, rsqstop, c1, c2, cd;
   double *zeta_i   = malloc(sizeof *zeta_i * Norder);
   double *zeta_im1 = malloc(sizeof *zeta_im1 * Norder);
@@ -41,17 +38,14 @@ int congrad_multi(matrix *src[NFERMION], matrix **psim[NFERMION],
   double *beta_im1 = malloc(sizeof *beta_im1 * Norder);
   double *alpha    = malloc(sizeof *alpha * Norder);
   double rsqj;
-  complex ctmp;
   matrix **pm[NFERMION];
-  
+
   for (j = 0; j < NFERMION; j++) {
     pm[j] = malloc(sizeof(matrix*) * Norder);
-    
     for (i = 1; i < Norder; i++)    // !!!
       pm[j][i] = malloc(sizeof(matrix) * sites_on_node);
   }
-  
-  
+
   // Initialize zero initial guess, etc.
   // dest = 0, r = source, pm[j] = r
   for (i = 0; i < Norder; i++)
@@ -67,10 +61,10 @@ int congrad_multi(matrix *src[NFERMION], matrix **psim[NFERMION],
       }
     }
   }
-  
+
   for (k = 0; k < NFERMION; k++) {
-  FORALLSITES(i, s)
-    source_norm += (double)realtrace(&(src[k][i]), &(src[k][i]));
+    FORALLSITES(i, s)
+      source_norm += (double)realtrace(&(src[k][i]), &(src[k][i]));
   }
   g_doublesum(&source_norm);
   rsq = source_norm;
@@ -93,16 +87,14 @@ int congrad_multi(matrix *src[NFERMION], matrix **psim[NFERMION],
     iteration++;
     total_iters++;
     for (k = 0; k < NFERMION; k++) {
-    FORALLSITES(i, s)
-      scalar_mult_sum_matrix(&(pm0[k][i]), shift[0], &(mpm[k][i]));
+      FORALLSITES(i, s)
+        scalar_mult_sum_matrix(&(pm0[k][i]), shift[0], &(mpm[k][i]));
     }
     // beta_i[0] = -(r, r) / (pm, Mpm)
     cd = 0;
     for (k = 0; k < NFERMION; k++) {
-      FORALLSITES(i, s) {
-        ctmp = complextrace_an(&(pm0[k][i]), &(mpm[k][i]));
-        cd += ctmp.real;
-      }
+      FORALLSITES(i, s)
+        cd += realtrace(&(pm0[k][i]), &(mpm[k][i]));
     }
     g_doublesum(&cd);
 
@@ -125,33 +117,29 @@ int congrad_multi(matrix *src[NFERMION], matrix **psim[NFERMION],
     }
 
     // psim[j] = psim[j] - beta[j] * pm[j]
-    floatvar = -(Real)beta_i[0];
-    for (j = 1; j < Norder; j++) {
-      if (converged[j] == 0)
-        floatvarj[j] = -(Real)beta_i[j];
-    }
-
     for (k = 0; k < NFERMION; k++) {
       FORALLSITES(i, s) {
-        scalar_mult_sum_matrix(&(pm0[k][i]), floatvar, &(psim[k][0][i]));
+        scalar_mult_dif_matrix(&(pm0[k][i]), (Real)beta_i[0],
+                               &(psim[k][0][i]));
         for (j = 1; j < Norder; j++) {
-          if (converged[j] == 0)
-            scalar_mult_sum_matrix(&(pm[k][j][i]), floatvarj[j], &(psim[k][j][i]));
+          if (converged[j] == 0) {
+            scalar_mult_dif_matrix(&(pm[k][j][i]), (Real)beta_i[j],
+                                   &(psim[k][j][i]));
+          }
         }
       }
     }
 
     // r = r + beta[0] * mp
-    floatvar = (Real)beta_i[0];
     for (k = 0; k < NFERMION; k++) {
       FORALLSITES(i, s)
-      scalar_mult_sum_matrix(&(mpm[k][i]), floatvar, &(rm[k][i]));
+        scalar_mult_sum_matrix(&(mpm[k][i]), (Real)beta_i[0], &(rm[k][i]));
     }
     // alpha_ip1[j]
     rsqnew = 0;
     for (k = 0; k < NFERMION; k++) {
-    FORALLSITES(i, s)
-      rsqnew += (double)realtrace(&(rm[k][i]), &(rm[k][i]));
+      FORALLSITES(i, s)
+        rsqnew += (double)realtrace(&(rm[k][i]), &(rm[k][i]));
     }
     g_doublesum(&rsqnew);
     alpha[0] = rsqnew / rsq;
@@ -166,24 +154,21 @@ int congrad_multi(matrix *src[NFERMION], matrix **psim[NFERMION],
     }
 
     // pm[j] = zeta_ip1[j] * r + alpha[j] * pm[j]
-    floatvar  = (Real)zeta_ip1[0];
-    floatvar2 = (Real)alpha[0];
-    for (j = 1; j < Norder; j++) {
-      floatvarj[j] = (Real)zeta_ip1[j];
-      floatvark[j] = (Real)alpha[j];
-    }
     for (k = 0; k < NFERMION; k++) {
       FORALLSITES(i, s) {
-        scalar_mult_matrix(&(rm[k][i]),floatvar, &(mpm[k][i]));
-        scalar_mult_add_matrix(&(mpm[k][i]), &(pm0[k][i]), floatvar2, &(pm0[k][i]));
+        scalar_mult_matrix(&(rm[k][i]), (Real)zeta_ip1[0], &(mpm[k][i]));
+        scalar_mult_matrix(&(pm0[k][i]), (Real)alpha[0], &(pm0[k][i]));
+        sum_matrix(&(mpm[k][i]), &(pm0[k][i]));
         for (j = 1; j < Norder; j++) {
           if (converged[j] == 0) {
-            scalar_mult_matrix(&(rm[k][i]), floatvarj[j], &(mpm[k][i]));
-            scalar_mult_add_matrix(&(mpm[k][i]), &(pm[k][j][i]), floatvark[j], &(pm[k][j][i]));
+            scalar_mult_matrix(&(rm[k][i]), (Real)zeta_ip1[j], &(mpm[k][i]));
+            scalar_mult_matrix(&(pm[k][j][i]), (Real)alpha[j], &(pm[k][j][i]));
+            sum_matrix(&(mpm[k][i]), &(pm[k][j][i]));
           }
         }
       }
     }
+
     // Test for convergence
     rsq = rsqnew;
     for (j = 1; j < Norder; j++) {
@@ -224,8 +209,8 @@ int congrad_multi(matrix *src[NFERMION], matrix **psim[NFERMION],
   for (j = 0; j < Norder; j++) {
     source_norm = 0;
     for (k = 0; k < NFERMION; k++) {
-    FORALLSITES(i, s)
-      source_norm += (double)realtrace(&(psim[k][j][i]), &(psim[k][j][i]));
+      FORALLSITES(i, s)
+        source_norm += (double)realtrace(&(psim[k][j][i]), &(psim[k][j][i]));
     }
     g_doublesum(&source_norm);
     node0_printf("Norm of psim %d shift %.4g is %.4g\n",
@@ -234,9 +219,9 @@ int congrad_multi(matrix *src[NFERMION], matrix **psim[NFERMION],
     DSq(psim[j], mpm);              // mpm = (D^2 + fmass^2).psim[j]
     source_norm = 0;                // Re-using for convenience
     for (k = 0; k < NFERMION; k++) {
-      FORALLSITES(i, s) {             // Add shift.psi and subtract src
+      FORALLSITES(i, s) {           // Add shift.psi and subtract src
         scalar_mult_sum_matrix(&(psim[k][j][i]), shift[j],  &(mpm[k][i]));
-        scalar_mult_sum_matrix(&(src[k][i]), -1.0, &(mpm[k][i]));
+        dif_matrix(&(src[k][i]), &(mpm[k][i]));
         source_norm += (double)realtrace(&(mpm[k][i]), &(mpm[k][i]));
       }
     }
@@ -258,8 +243,6 @@ int congrad_multi(matrix *src[NFERMION], matrix **psim[NFERMION],
   free(beta_i);
   free(alpha);
   free(converged);
-  free(floatvarj);
-  free(floatvark);
   return iteration;
 }
 #endif

@@ -194,7 +194,7 @@ Real ahmat_mag_sq(anti_hermitmat *ah) {
 }
 
 double gauge_mom_action() {
-  register int i, j;
+  register int i;
   register site *s;
   double sum = 0.0;
 //  matrix tmat;
@@ -231,7 +231,7 @@ double scalar_mom_action() {
 
 // -----------------------------------------------------------------
 // Print out zeros for pieces of the action that aren't included
-double action(matrix **src[NFERMION], matrix ***sol[NFERMION]) {
+double action(matrix ***src, matrix ****sol) {
   double b_act, p_act, so3_act, so6_act, Myers_act, total;
 
   b_act = bosonic_action(&so3_act, &so6_act, &Myers_act);
@@ -241,12 +241,10 @@ double action(matrix **src[NFERMION], matrix ***sol[NFERMION]) {
   total = b_act;
 
 #ifndef PUREGAUGE
-  int n, m;
+  int n;
   double f_act;
   for (n = 0; n < Nroot; n++) {
-    f_act = 0.0;
-    for (m = 0; m < NFERMION; m++)
-      f_act += fermion_action(src[m][n], sol[m][n]);
+    f_act = fermion_action(src[n], sol[n]);
 
     node0_printf("fermion%d %.8g ", n, f_act);
     total += f_act;

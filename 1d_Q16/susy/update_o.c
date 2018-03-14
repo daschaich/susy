@@ -287,27 +287,27 @@ int update() {
 #endif // ifdef HMC
 
 #ifndef PUREGAUGE
-    for (n = 0; n < Nroot; n++) {
-      for(k=0;k<NFERMION;k++) {
-        free(source[n][k]);
-        for (j = 0; j < Norder; j++)
-          free(psim[n][k][j]);
-        free(psim[n][k]);
-      }
-      free(source[n]);
-      free(psim[n]);
+  for (n = 0; n < Nroot; n++) {
+    for (k = 0; k < NFERMION; k++) {
+      free(source[n][k]);
+      for (j = 0; j < Norder; j++)
+        free(psim[n][k][j]);
+      free(psim[n][k]);
     }
-    free(source);
-    free(psim);
+    free(source[n]);
+    free(psim[n]);
+  }
+  free(source);
+  free(psim);
 #endif
 
   if (traj_length > 0) {
     node0_printf("IT_PER_TRAJ %d\n", iters);
     node0_printf("MONITOR_FORCE_GAUGE    %.4g %.4g\n",
-                 bnorm / (double)(2 * nsteps[0]), max_bf);
+        bnorm / (double)(2.0 * nsteps[0]), max_bf);
     for (n = 0; n < Nroot; n++) {
       node0_printf("MONITOR_FORCE_FERMION%d %.4g %.4g\n",
-                   n, fnorm[n] / (double)(2 * nsteps[0]), max_ff[n]);
+          n, fnorm[n] / (double)(2.0 * nsteps[0]), max_ff[n]);
     }
     return iters;
   }
