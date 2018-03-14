@@ -173,9 +173,11 @@ int update_step(matrix **src[NFERMION], matrix ***psim[NFERMION]) {
 
 // -----------------------------------------------------------------
 int update() {
-  int n, iters = 0;
+  int i, n, iters = 0;
+  site *s;
   double startaction, endaction, change;
-  matrix **source[NFERMION], ***psim[NFERMION];
+  matrix ***source = malloc(sizeof(matrix**) * Nroot);
+  matrix ****psim = malloc(sizeof(matrix***) * Nroot);
 
   // Refresh the momenta
   ranmom();
@@ -185,15 +187,15 @@ int update() {
   int j, k;
   Real final_rsq;
 
-  for (k = 0; k < NFERMION; k++) {
-    source[k] = malloc(sizeof(matrix*) * Nroot);
-    psim[k] = malloc(sizeof(matrix**) * Nroot);
+  for (n = 0; n < Nroot; n++) {
+    source[n] = malloc(sizeof(matrix*) * NFERMION);
+    psim[n] = malloc(sizeof(matrix**) * NFERMION);
 
-    for (n = 0; n < Nroot; n++) {
-      source[k][n] = malloc(sizeof(matrix) * sites_on_node);
-      psim[k][n] = malloc(sizeof(matrix*) * Norder);
+  for (k = 0; k < NFERMION; k++) {
+      source[n][k] = malloc(sizeof(matrix) * sites_on_node);
+      psim[n][k] = malloc(sizeof(matrix*) * Norder);
       for (j = 0; j < Norder; j++)
-        psim[k][n][j] = malloc(sizeof(matrix) * sites_on_node);
+        psim[n][k][j] = malloc(sizeof(matrix) * sites_on_node);
     }
   }
 
@@ -202,10 +204,9 @@ int update() {
     iters += grsource(src);
     for (j = 0; j < NFERMION; j++) {
       FORALLSITES(i, s)
-      mat_copy(&(src[j][i]), &(source[j][n][i]));
+      mat_copy(&(src[j][i]), &(source[n][j][i]));
     }
   }
-  UPDATE FERMIONS FROM HERE // TODO
 
   // Do a CG to get psim,
   // rational approximation to (Mdag M)^(-1 / 4) src = (Mdag M)^(-1 / 8) g
@@ -216,7 +217,7 @@ int update() {
 #endif
   // congrad_multi initializes psim
   for (n = 0; n < Nroot; n++)
-    iters += congrad_multi(src[n], psim[n], niter, rsqmin, &final_rsq);
+    iters += congrad_multi(source[n], psim[n], niter, rsqmin, &final_rsq);
 #endif // ifndef PUREGAUGE
 
   // Find initial action
@@ -286,15 +287,18 @@ int update() {
 #endif // ifdef HMC
 
 #ifndef PUREGAUGE
-  // TODO: Need to refactor from Twist_Fermions to matrix[NFERMION]s...
-  for (n = 0; n < Nroot; n++) {
-    free(source[n]);
-    for (j = 0; j < Norder; j++)
-      free(psim[n][j]);
-    free(psim[n]);
-  }
-  free(source);
-  free(psim);
+    for (n = 0; n < Nroot; n++) {
+      for(k=0;k<NFERMION;k++) {
+        free(source[n][k]);
+        for (j = 0; j < Norder; j++)
+          free(psim[n][k][j]);
+        free(psim[n][k]);
+      }
+      free(source[n]);
+      free(psim[n]);
+    }
+    free(source);
+    free(psim);
 #endif
 
   if (traj_length > 0) {
