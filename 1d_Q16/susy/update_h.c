@@ -50,9 +50,8 @@ double bosonic_force(Real eps) {
 
   FORALLSITES(i, s) {
     clear_mat(&(s->f_U));   // Clear the force collectors
-    k=node_index((s->t+1)%nt);
     for (j = 0; j < NSCALAR; j++) {   // X(n+1) = gen_pt[j]
-      mult_na(&(lattice[k].X[j]), &(s->link), &tmat);
+      mult_na((matrix *)(gen_pt[j][i]), &(s->link), &tmat);
       mult_nn(&(s->link), &tmat, &tmat2);
       mult_nn_sum(&tmat2, &(s->X[j]), &(s->f_U));
     }
@@ -82,19 +81,17 @@ double bosonic_force(Real eps) {
   for (j = 0; j < NSCALAR; j++)
     wait_gather(tag2[j]);
   FORALLSITES(i, s) {
-    k=node_index((s->t+1)%nt);
-    l=node_index((s->t+nt-1)%nt);
     for (j = 0; j < NSCALAR; j++) {
       // Initialize force with on-site -2X(n)
       scalar_mult_matrix(&(s->X[j]), -2.0, &(s->f_X[j]));
 
       // Add forward hopping term using X(n+1) = gen_pt[j]
-      mult_na(&(lattice[k].X[j]), &(s->link), &tmat);
+      mult_na((matrix *)(gen_pt[j][i]), &(s->link), &tmat);
       mult_nn_sum(&(s->link), &tmat, &(s->f_X[j]));
 
       // Add backward hopping term
       //   Udag(n-1) X(n-1) U(n-1) = gen_pt[NSCALAR + j]
-      sum_matrix(&temp_X[j][l], &(s->f_X[j]));
+      sum_matrix((matrix *)(gen_pt[NSCALAR + j][i]), &(s->f_X[j]));
 
       scalar_mult_matrix(&(s->f_X[j]), 2.0, &(s->f_X[j]));
     }
