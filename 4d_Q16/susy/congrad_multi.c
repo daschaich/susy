@@ -30,9 +30,6 @@ int congrad_multi(Twist_Fermion *src, Twist_Fermion **psim,
   register site *s;
   int N_iter, iteration = 0;
   int *converged = malloc(sizeof *converged * Norder);
-  Real floatvar, floatvar2;     // SSE kluge
-  Real *floatvarj = malloc(sizeof *floatvarj * Norder);
-  Real *floatvark = malloc(sizeof *floatvark * Norder);
   double rsq, rsqnew, source_norm = 0.0, rsqstop, c1, c2, cd;
   double *zeta_i   = malloc(sizeof *zeta_i * Norder);
   double *zeta_im1 = malloc(sizeof *zeta_im1 * Norder);
@@ -41,7 +38,6 @@ int congrad_multi(Twist_Fermion *src, Twist_Fermion **psim,
   double *beta_im1 = malloc(sizeof *beta_im1 * Norder);
   double *alpha    = malloc(sizeof *alpha * Norder);
   double rsqj;
-  complex ctmp;
   Twist_Fermion **pm = malloc(sizeof(Twist_Fermion*) * Norder);
   for (i = 1; i < Norder; i++)    // !!!
     pm[i] = malloc(sizeof(Twist_Fermion) * sites_on_node);
@@ -87,10 +83,8 @@ int congrad_multi(Twist_Fermion *src, Twist_Fermion **psim,
 
     // beta_i[0] = -(r, r) / (pm, Mpm)
     cd = 0;
-    FORALLSITES(i, s) {
-      ctmp = TF_dot(&(pm0[i]), &(mpm[i]));
-      cd += ctmp.real;
-    }
+    FORALLSITES(i, s)
+      TF_rdot_sum(&(pm0[i]), &(mpm[i]), &cd);
     g_doublesum(&cd);
 
     beta_i[0] = -rsq / cd;
@@ -112,24 +106,17 @@ int congrad_multi(Twist_Fermion *src, Twist_Fermion **psim,
     }
 
     // psim[j] = psim[j] - beta[j] * pm[j]
-    floatvar = -(Real)beta_i[0];
-    for (j = 1; j < Norder; j++) {
-      if (converged[j] == 0)
-        floatvarj[j] = -(Real)beta_i[j];
-    }
-
     FORALLSITES(i, s) {
-      scalar_mult_sum_TF(&(pm0[i]), floatvar, &(psim[0][i]));
+      scalar_mult_dif_TF(&(pm0[i]), (Real)beta_i[0], &(psim[0][i]));
       for (j = 1; j < Norder; j++) {
         if (converged[j] == 0)
-          scalar_mult_sum_TF(&(pm[j][i]), floatvarj[j], &(psim[j][i]));
+          scalar_mult_dif_TF(&(pm[j][i]), (Real)beta_i[j], &(psim[j][i]));
       }
     }
 
     // r = r + beta[0] * mp
-    floatvar = (Real)beta_i[0];
     FORALLSITES(i, s)
-      scalar_mult_sum_TF(&(mpm[i]), floatvar, &(rm[i]));
+      scalar_mult_sum_TF(&(mpm[i]), (Real)beta_i[0], &(rm[i]));
 
     // alpha_ip1[j]
     rsqnew = 0;
@@ -149,19 +136,15 @@ int congrad_multi(Twist_Fermion *src, Twist_Fermion **psim,
     }
 
     // pm[j] = zeta_ip1[j] * r + alpha[j] * pm[j]
-    floatvar  = (Real)zeta_ip1[0];
-    floatvar2 = (Real)alpha[0];
-    for (j = 1; j < Norder; j++) {
-      floatvarj[j] = (Real)zeta_ip1[j];
-      floatvark[j] = (Real)alpha[j];
-    }
     FORALLSITES(i, s) {
-      scalar_mult_TF(&(rm[i]),floatvar, &(mpm[i]));
-      scalar_mult_add_TF(&(mpm[i]), &(pm0[i]), floatvar2, &(pm0[i]));
+      scalar_mult_TF(&(rm[i]), (Real)zeta_ip1[0], &(mpm[i]));
+      scalar_mult_TF(&(pm0[i]), (Real)alpha[0], &(pm0[i]));
+      sum_TF(&(mpm[i]), &(pm0[i]));
       for (j = 1; j < Norder; j++) {
         if (converged[j] == 0) {
-          scalar_mult_TF(&(rm[i]), floatvarj[j], &(mpm[i]));
-          scalar_mult_add_TF(&(mpm[i]), &(pm[j][i]), floatvark[j], &(pm[j][i]));
+          scalar_mult_TF(&(rm[i]), (Real)zeta_ip1[j], &(mpm[i]));
+          scalar_mult_TF(&(pm[j][i]), (Real)alpha[j], &(pm[j][i]));
+          sum_TF(&(mpm[i]), &(pm[j][i]));
         }
       }
     }
@@ -215,8 +198,8 @@ int congrad_multi(Twist_Fermion *src, Twist_Fermion **psim,
     DSq(psim[j], mpm);              // mpm = (D^2 + fmass^2).psim[j]
     source_norm = 0;                // Re-using for convenience
     FORALLSITES(i, s) {             // Add shift.psi and subtract src
-      scalar_mult_sum_TF(&(psim[j][i]), shift[j],  &(mpm[i]));
-      scalar_mult_sum_TF(&(src[i]), -1.0, &(mpm[i]));
+      scalar_mult_sum_TF(&(psim[j][i]), shift[j], &(mpm[i]));
+      dif_TF(&(src[i]), &(mpm[i]));
       source_norm += (double)magsq_TF(&(mpm[i]));
     }
     g_doublesum(&source_norm);
@@ -234,8 +217,6 @@ int congrad_multi(Twist_Fermion *src, Twist_Fermion **psim,
   free(beta_i);
   free(alpha);
   free(converged);
-  free(floatvarj);
-  free(floatvark);
   return iteration;
 }
 #endif

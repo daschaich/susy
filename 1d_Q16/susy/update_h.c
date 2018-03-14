@@ -207,83 +207,23 @@ double bosonic_force(Real eps) {
 // Assemble fermion contributions to gauge link force,
 //   f_U = Adj(Ms).D_U M(U, Ub).s - Adj[Adj(Ms).D_Ub M(U, Ub).s]
 // "s" is sol while "Ms" is psol
-// Copy these into persistent matrices for easier gathering
-// Use tempmat, tempmat2, Tr_Uinv,
-// tr_dest and Ddet[012] for temporary storage
+// Take Adj(Ms) for easier gathering
 #ifndef PUREGAUGE
-void assemble_fermion_force(Twist_Fermion *sol, Twist_Fermion *psol) {
+void assemble_fermion_force(matrix *sol[NFERMION], matrix *psol[NFERMION]) {
   register int i;
   register site *s;
-  char **local_pt[2][2];
-  int mu, nu, a, b, gather, flip = 0;
-  msg_tag *mtag[NUMLINK], *tag0[2], *tag1[2];
-  matrix *mat[2], tmat;
+  int j;
+  matrix tmat;
 
-  for (mu = 0; mu < 2; mu++) {
-    local_pt[0][mu] = gen_pt[mu];
-    local_pt[1][mu] = gen_pt[2 + mu];
-  }
-  mat[0] = tempmat;
-  mat[1] = tempmat2;
-
-  // For gathering it is convenient to copy the input Twist_Fermions
-  // into persistent site, link and plaq fermions
-  // We can reuse "src" and "dest" for this storage,
-  // corresponding to "sol" and "psol", respectively
-  FORALLSITES(i, s) {
-    mat_copy(&(sol[i].Fsite), &(site_src[i]));
-    adjoint(&(psol[i].Fsite), &(site_dest[i]));
-    FORALLDIR(mu) {
-      mat_copy(&(sol[i].Flink[mu]), &(link_src[mu][i]));
-      adjoint(&(psol[i].Flink[mu]), &(link_dest[mu][i]));
-    }
-    mat_copy(&(sol[i].Fplaq), &(plaq_src[i]));
-    adjoint(&(psol[i].Fplaq), &(plaq_dest[i]));
-  }
-
-#ifdef SV
-  // Accumulate both terms in UpsiU[mu], use to initialize f_U[mu]
-  // First calculate DUbar on eta Dbar_mu psi_mu (LtoS)
-  // [psi_mu(x) eta(x + mu) - eta(x) psi_mu(x)]^dag
-  mtag[0] = start_gather_field(site_dest, sizeof(matrix),
-                               goffset[0], EVENANDODD, gen_pt[0]);
-  FORALLDIR(mu) {
-    if (mu < NUMLINK - 1) {
-      mtag[mu + 1] = start_gather_field(site_dest, sizeof(matrix),
-                                        goffset[mu + 1], EVENANDODD,
-                                        gen_pt[mu + 1]);
-    }
-    wait_gather(mtag[mu]);
+  // For gathering it is convenient to take the adjoint of psol
+  for (j = 0; j < NFERMION; j++) {
     FORALLSITES(i, s) {
-      scalar_mult_matrix((matrix *)(gen_pt[mu][i]), s->bc[mu], &tmat);
-      mult_nn(&(link_src[mu][i]), &tmat, &(UpsiU[mu][i]));   // Initialize
-      mult_nn_dif(&(site_dest[i]), &(link_src[mu][i]), &(UpsiU[mu][i]));
+      adjoint(&(psol[j][i]), &tmat);
+      mat_copy(&tmat, &(psol[j][i]));
     }
-    cleanup_gather(mtag[mu]);
   }
 
-  // 2nd term, DUbar on psi_mu Dbar_mu eta (StoL)
-  // [eta(x) psi_mu(x) - psi_mu(x) eta(x + mu)]^dag
-  mtag[0] = start_gather_field(site_src, sizeof(matrix),
-                               goffset[0], EVENANDODD, gen_pt[0]);
-  FORALLDIR(mu) {
-    if (mu < NUMLINK - 1) {
-      mtag[mu + 1] = start_gather_field(site_src, sizeof(matrix),
-                                        goffset[mu + 1], EVENANDODD,
-                                        gen_pt[mu + 1]);
-    }
-    wait_gather(mtag[mu]);
-    FORALLSITES(i, s) {
-      scalar_mult_matrix((matrix *)(gen_pt[mu][i]), s->bc[mu], &tmat);
-      mult_nn_dif(&(link_dest[mu][i]), &tmat, &(UpsiU[mu][i]));
-      mult_nn_sum(&(site_src[i]), &(link_dest[mu][i]), &(UpsiU[mu][i]));
-
-      // Initialize the force collectors---done with UpsiU[mu]
-      scalar_mult_adj_matrix(&(UpsiU[mu][i]), 0.5, &(s->f_U[mu]));
-    }
-    cleanup_gather(mtag[mu]);
-  }
-#endif
+  // TODO: Fermion force goes here...
 }
 #endif
 // -----------------------------------------------------------------
@@ -298,7 +238,7 @@ void assemble_fermion_force(Twist_Fermion *sol, Twist_Fermion *psol) {
 // Allocate fullforce while using temp_ferm for temporary storage
 // (Calls assemble_fermion_force, which uses many more temporaries)
 #ifndef PUREGAUGE
-double fermion_force(Real eps, Twist_Fermion *src, Twist_Fermion **sol) {
+double fermion_force(Real eps, matrix *src[NFERMION], matrix **sol[NFERMION]) {
   register int i;
   register site *s;
   int mu, n;
