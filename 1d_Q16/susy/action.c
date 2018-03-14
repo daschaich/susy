@@ -46,8 +46,9 @@ double bosonic_action(double *so3_sq, double *so6_sq, double *Myers) {
   for (j = 0; j < NSCALAR; j++)
     wait_gather(tag[j]);
   FORALLSITES(i, s) {
+    k=node_index((s->t+1)%nt);
     for (j = 0; j < NSCALAR; j++) {
-      mult_nn(&(s->link), (matrix *)(gen_pt[j][i]), &tmat);
+      mult_nn(&(s->link), &(lattice[k].X[j]), &tmat);
       mult_na(&tmat, &(s->link), &tmat2);
       b_action += (double)realtrace_nn(&(s->X[j]), &tmat2);
     }
