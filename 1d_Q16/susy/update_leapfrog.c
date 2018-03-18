@@ -62,10 +62,6 @@ void update_u(Real eps) {
     for (j = 0; j < NSCALAR; j++)
       scalar_mult_sum_matrix(&(s->mom_X[j]), eps, &(s->X[j]));
   }
-
-  // Reunitarize the gauge field and re-anti-hermitianize the scalars
-  reunitarize();
-  reantihermize();
 }
 // -----------------------------------------------------------------
 
@@ -105,6 +101,10 @@ int update_step(matrix **src[NFERMION], matrix ***psim[NFERMION]) {
     else                // Final u(t/2)
       update_u(0.5 * eps);
   }
+
+  // Reunitarize the gauge field and re-anti-hermitianize the scalars
+//  reunitarize();
+  reantihermize();
   return iters;
 }
 // -----------------------------------------------------------------

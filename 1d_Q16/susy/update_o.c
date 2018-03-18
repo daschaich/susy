@@ -297,9 +297,9 @@ int update() {
     free(source[n]);
     free(psim[n]);
   }
+#endif
   free(source);
   free(psim);
-#endif
 
   if (traj_length > 0) {
     node0_printf("IT_PER_TRAJ %d\n", iters);
