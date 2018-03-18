@@ -173,8 +173,7 @@ int update_step(matrix **src[NFERMION], matrix ***psim[NFERMION]) {
 
 // -----------------------------------------------------------------
 int update() {
-  int i, n, iters = 0;
-  site *s;
+  int n, iters = 0;
   double startaction, endaction, change;
   matrix ***source = malloc(sizeof(matrix**) * Nroot);
   matrix ****psim = malloc(sizeof(matrix***) * Nroot);
@@ -184,7 +183,8 @@ int update() {
 
   // Set up the fermion variables, if needed
 #ifndef PUREGAUGE
-  int j, k;
+  register int i, j, k;
+  register site *s;
   Real final_rsq;
 
   for (n = 0; n < Nroot; n++) {
