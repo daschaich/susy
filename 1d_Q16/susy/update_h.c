@@ -61,8 +61,9 @@ double bosonic_force(Real eps) {
   // Take adjoint and update the gauge momenta
   // Make them anti-hermitian following non-susy code
   // Include overall factor of kappa = N / (4lambda), and factor of 2
+  // !!! Another factor of 2 needed for conservation (real vs. complex)?
   // Compute average gauge force in same loop
-  tr = 2.0 * kappa * eps;
+  tr = 4.0 * kappa * eps;
   FORALLSITES(i, s) {
     uncompress_anti_hermitian(&(s->mom), &tmat);
     scalar_mult_sum_matrix(&(s->f_U), tr, &tmat);
