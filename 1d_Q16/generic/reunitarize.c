@@ -1,240 +1,443 @@
 // -----------------------------------------------------------------
-// Reunitarization for arbitrary NCOL
-// 1) Re-unitarize row 0
-// 2) For rows 1, ..., NCOL-2, make orthogonal w.r.t previous rows,
-//    and orthogonalize
-// 3) For the last row, U(NCOL-1, i)=-(epsilon(i, j_0, j_1, j_2..)U(0, j_0)U(1, j_1)...U(NCOL-1, j_{NCOL-1})^*
 #include "generic_includes.h"
 
-#define TOLERANCE 0.0001
+#define TOLERANCE (0.0001)
 #define MAXERRCOUNT 100
-//#define UNIDEBUG
 
 Real max_deviation;
 double av_deviation;
-// -----------------------------------------------------------------
 
+#define fixsu2(matrix) \
+ { \
+    CONJG((*matrix).e[0][0],(*matrix).e[1][1]); \
+    CONJG((*matrix).e[0][1],(*matrix).e[1][0]); \
+    CNEGATE((*matrix).e[1][0],(*matrix).e[1][0]); \
+ }
 
+#define fixsu3(matrix) \
+ { \
+    bj0r = (*matrix).e[0][0].real; \
+    bj0i = (*matrix).e[0][0].imag; \
+    bj1r = (*matrix).e[0][1].real; \
+    bj1i = (*matrix).e[0][1].imag; \
+    bj2r = (*matrix).e[0][2].real; \
+    bj2i = (*matrix).e[0][2].imag; \
+    ar = (*matrix).e[1][2].real; \
+    ai = (*matrix).e[1][2].imag; \
+    tr = bj1r*ar - bj1i*ai; \
+    ti = bj1r*ai + bj1i*ar; \
+    ar = (*matrix).e[1][1].real; \
+    ai = (*matrix).e[1][1].imag; \
+    tr = tr - bj2r*ar + bj2i*ai; \
+    ti = ti - bj2r*ai - bj2i*ar; \
+    (*matrix).e[2][0].real = tr; \
+    (*matrix).e[2][0].imag = -ti; \
+    ar = (*matrix).e[1][0].real; \
+    ai = (*matrix).e[1][0].imag; \
+    tr = bj2r*ar - bj2i*ai; \
+    ti = bj2r*ai + bj2i*ar; \
+    ar = (*matrix).e[1][2].real; \
+    ai = (*matrix).e[1][2].imag; \
+    tr = tr - bj0r*ar + bj0i*ai; \
+    ti = ti - bj0r*ai - bj0i*ar; \
+    (*matrix).e[2][1].real = tr; \
+    (*matrix).e[2][1].imag = -ti; \
+    ar = (*matrix).e[1][1].real; \
+    ai = (*matrix).e[1][1].imag; \
+    tr = bj0r*ar - bj0i*ai; \
+    ti = bj0r*ai + bj0i*ar; \
+    ar = (*matrix).e[1][0].real; \
+    ai = (*matrix).e[1][0].imag; \
+    tr = tr - bj1r*ar + bj1i*ai; \
+    ti = ti - bj1r*ai - bj1i*ar; \
+    (*matrix).e[2][2].real = tr; \
+    (*matrix).e[2][2].imag = -ti; \
+ }
 
-// -----------------------------------------------------------------
+#if NCOL > 3
+void fixsu4(matrix *c){
+  /* calculate row 3 of SU(4) matrix from other 3 rows, assumed to be already
+     orthonormal    */
+
+  register Real bj0r, bj0i, bj1r, bj1i, bj2r, bj2i;
+  register Real ar, ai, tr, ti;
+
+  struct {complex e[3][3];} b;  /* 3x3 submatrix        */
+  complex sum,t;
+  int is,i,j,k,kk;
+  is=-1;      /* sign for perms of columns      */
+  for(i=0;i<4;i++){   /* loop over location of element of row 3 */
+    kk=0;     /* to allow skipping column i in c    */
+    for(k=0;k<4;k++){   /* loop on columns of c       */
+      if(k!=i){
+        for(j=0;j<2;j++)  /* load rows 0,1 of submatrix into b[][]  */
+          b.e[j][kk]=c->e[j][k];
+        kk++;
+      }
+    }
+    fixsu3((&b));   /* generate row 2 of b        */
+    sum.real = sum.imag = 0.;
+    kk=0;     /* dot product with row 2 of c      */
+    for(k=0;k<4;k++){
+      if(k!=i){
+        CMUL_J(b.e[2][kk],c->e[2][k],t);
+        CSUM(sum,t);
+        kk++;
+      }
+    }
+    if(is<0){CNEGATE(sum,sum);} /* minus sign for EVEN columns    */
+    c->e[3][i]=sum;
+    is=-is;
+  }
+}
+#endif
+
 int check_deviation(Real deviation) {
-  if (max_deviation < deviation)
-    max_deviation = deviation;
-  av_deviation += deviation * deviation;
+  if(max_deviation<deviation)
+    max_deviation=deviation;
+  av_deviation += deviation*deviation;
 
   if (deviation < TOLERANCE)
     return 0;
   else
     return 1;
 }
-// -----------------------------------------------------------------
 
+void reunit_report_problem_matrix(matrix *mat, int i, int dir) {
+  int ii,jj;
+  union {
+    Real fval;
+    int ival;
+  } ifval;
 
-
-// -----------------------------------------------------------------
-void ludcmp_cx(matrix *a, int *indx, Real *d) {
-  int i, imax, j, k;
-  Real big, fdum;
-  complex sum, dum, tc;
-  Real vv[NCOL];
-
-  *d = 1.0;
-  for (i = 0; i < NCOL; i++) {
-    big = 0.0;
-    for (j = 0; j < NCOL; j++) {
-      tc.real = (*a).e[i][j].real*(*a).e[i][j].real
-              + (*a).e[i][j].imag*(*a).e[i][j].imag;
-      if (tc.real > big)
-        big = tc.real;
+  printf("Unitarity problem on node %d, site %d, dir %d tolerance=%e\n",
+      mynode(),i,dir,TOLERANCE);
+  printf("SU(N) matrix:\n");
+  for(ii=0;ii<NCOL;ii++){
+    for(jj=0;jj<NCOL;jj++){
+      printf("%f ",(*mat).e[ii][jj].real);
+      printf("%f ",(*mat).e[ii][jj].imag);
     }
-    if (big == 0.0) {
-      node0_printf("ludcmp_cx: Singular matrix\n");
-      exit(1);
-    }
-    vv[i] = 1.0 / sqrt(big);
+    printf("\n");
   }
-  for (j = 0; j < NCOL; j++) {
-    for (i = 0; i < j; i++) {
-      sum = (*a).e[i][j];
-      for (k = 0; k < i; k++)
-        CMULDIF((*a).e[i][k], (*a).e[k][j], sum);
-      (*a).e[i][j] = sum;
+  printf("repeat in hex:\n");
+  for(ii=0;ii<NCOL;ii++){
+    for(jj=0;jj<NCOL;jj++){
+      ifval.fval = (*mat).e[ii][jj].real;
+      printf("%08x ", ifval.ival);
+      ifval.fval = (*mat).e[ii][jj].imag;
+      printf("%08x ", ifval.ival);
     }
-    big = 0.0;
-    for (i = j; i < NCOL; i++) {
-      sum = (*a).e[i][j];
-      for (k = 0; k < j; k++)
-        CMULDIF((*a).e[i][k], (*a).e[k][j], sum);
-      (*a).e[i][j] = sum;
-
-      if ((fdum = vv[i] * fabs(sum.real)) >= big) {
-        big = fdum;
-        imax = i;
-      }
-    }
-    if (j != imax) {
-      for (k = 0; k < NCOL; k++) {
-        dum = (*a).e[imax][k];
-        (*a).e[imax][k] = (*a).e[j][k];
-        (*a).e[j][k] = dum;
-      }
-      *d = -(*d);
-      vv[imax] = vv[j];
-    }
-    indx[j] = imax;
-    if (j != NCOL - 1) {
-      dum = (*a).e[j][j];
-      for (i = j + 1; i < NCOL; i++) {
-        CDIV((*a).e[i][j], dum, tc);
-        (*a).e[i][j] = tc;
-      }
-    }
+    printf("\n");
   }
+  printf("  \n \n");
+  fflush(stdout);
 }
 
-complex find_det(matrix *Q) {
-  complex det, tc;
-  int i, indx[NCOL];
-  Real d;
-  matrix QQ;
-
-  mat_copy(Q, &QQ);
-  ludcmp_cx(&QQ, indx, &d);
-  det = QQ.e[0][0];
-  for (i = 1; i < NCOL; i++) {
-    CMUL(det, QQ.e[i][i], tc);
-    det = tc;
-  }
-
-#ifdef UNIDEBUG
-  printf("DET %.8g %.8g\n", det.real, det.imag);
-#endif
-  return det;
-}
-// -----------------------------------------------------------------
-
-
-
-// -----------------------------------------------------------------
 int reunit(matrix *c) {
   register Real ar;
-  int i, j, k, errors = 0;
+  register Real c0r, c0i, c1r, c1i;
+#if (NCOL>2)
+  register Real c2r, c2i, ai;
+#if (NCOL==3)
+  register Real tr, ti, bj0r, bj0i, bj1r, bj1i, bj2r, bj2i;
+#endif
+#if (NCOL>3)
+  register Real c3r, c3i;
+#endif
+#endif
   Real deviation;
-  complex sum, deter, tc;
-  matrix tmat;
+  int errors;
 
-  mat_copy(c, &tmat);
-  for (i = 0; i < NCOL; i++) {
-    // Orthogonalize the ith vector w.r.t. all the lower ones
-    sum = cmplx(0.0, 0.0);
-    for (j = 0; j < i; j++) {
-      for (k = 0; k < NCOL; k++) {
-        CMULJ_(c->e[j][k], c->e[i][k], tc);
-        CSUM(sum, tc);
-      }
-      for (k = 0; k < NCOL; k++)
-        CMULDIF(sum, c->e[j][k], c->e[i][k]);
-    }
-    // Normalize ith vector
-    ar = (*c).e[i][0].real * (*c).e[i][0].real
-       + (*c).e[i][0].imag * (*c).e[i][0].imag;
-    for (k = 1; k < NCOL; k++) {
-      ar += (*c).e[i][k].real * (*c).e[i][k].real
-          + (*c).e[i][k].imag * (*c).e[i][k].imag;
-    }
-#ifdef UNIDEBUG
-    printf("%d %e\n", i, ar);
+  errors = 0;
+  /* first normalize row 0 */
+  ar = (*c).e[0][0].real * (*c).e[0][0].real    /* sum of squares of row */
+     + (*c).e[0][0].imag * (*c).e[0][0].imag
+     + (*c).e[0][1].real * (*c).e[0][1].real
+     + (*c).e[0][1].imag * (*c).e[0][1].imag;
+#if (NCOL>2)
+  ar += (*c).e[0][2].real * (*c).e[0][2].real
+      + (*c).e[0][2].imag * (*c).e[0][2].imag;
+#if (NCOL>3)
+  ar += (*c).e[0][3].real * (*c).e[0][3].real
+      + (*c).e[0][3].imag * (*c).e[0][3].imag;
+#endif
 #endif
 
-    // Usual test
-    // For the 0 to NCOL-2 vectors, check that the length didn't shift
-    // For the last row, the check is of the determinant
-    // Computing the row using the determinant
-    deviation = fabs(ar - 1.0);
-#ifdef UNIDEBUG
-    printf("DEV %e\n", deviation);
-#endif
-    errors += check_deviation(deviation);
-
-    ar = 1.0 / sqrt((double)ar);             /* used to normalize row */
-    for (j = 0; j < NCOL; j++) {
-      (*c).e[i][j].real *= ar;
-      (*c).e[i][j].imag *= ar;
-    }
-  }
-
-  // Check the determinant
-#ifdef UNIDEBUG
-  node0_printf("MATRIX AFTER RE-ORTHONORMAL\n");
-  dumpmat(c);
-#endif
-  deter = find_det(c);
-  ar = deter.real * deter.real + deter.imag * deter.imag;
   deviation = fabs(ar - 1.0);
   errors += check_deviation(deviation);
 
-  // Rephase last column
-  for (j = 0; j < NCOL; j++) {
-    CDIV((*c).e[NCOL - 1][j], deter, tc);
-    (*c).e[NCOL - 1][j] = tc;
-  }
-
-  // Check new det
-  deter = find_det(c);
-  ar = deter.real * deter.real + deter.imag * deter.imag;
-  deviation = fabs(ar - 1.0);
-  errors += check_deviation(deviation);
-#ifdef UNIDEBUG
-  printf("DET DEV %e\n", deviation);
-  node0_printf("NEW\n");
-  dumpmat(c);
+  ar = 1.0 / sqrt( (double)ar);         /* used to normalize row */
+  (*c).e[0][0].real *= ar;
+  (*c).e[0][0].imag *= ar;
+  (*c).e[0][1].real *= ar;
+  (*c).e[0][1].imag *= ar;
+#if (NCOL>2)
+  (*c).e[0][2].real *= ar;
+  (*c).e[0][2].imag *= ar;
+#if (NCOL>3)
+  (*c).e[0][3].real *= ar;
+  (*c).e[0][3].imag *= ar;
+#endif
 #endif
 
-  // Print the problematic matrix rather than the updated one
-  if (errors)
-    dumpmat(&tmat);
+#if (NCOL==2) /* conclude with row 1 */
+  /* Save for checking */
+  c0r = (*c).e[1][0].real;
+  c0i = (*c).e[1][0].imag;
+  c1r = (*c).e[1][1].real;
+  c1i = (*c).e[1][1].imag;
+
+  fixsu2(c); /* reconstruct row 1 */
+
+  /* check deviation */
+  ar = (c0r - (*c).e[1][0].real) * (c0r - (*c).e[1][0].real) +
+    (c0i - (*c).e[1][0].imag) * (c0i - (*c).e[1][0].imag) +
+    (c1r - (*c).e[1][1].real) * (c1r - (*c).e[1][1].real) +
+    (c1i - (*c).e[1][1].imag) * (c1i - (*c).e[1][1].imag);
+  deviation = ar;
+  errors += check_deviation(deviation);
+
+#else /* NCOL>2 from here to end */
+
+  /* make row 1 orthogonal to row 0 */
+  ar = (*c).e[0][0].real * (*c).e[1][0].real +     /* real part of 0 dot 1 */
+    (*c).e[0][0].imag * (*c).e[1][0].imag +
+    (*c).e[0][1].real * (*c).e[1][1].real +
+    (*c).e[0][1].imag * (*c).e[1][1].imag +
+    (*c).e[0][2].real * (*c).e[1][2].real +
+    (*c).e[0][2].imag * (*c).e[1][2].imag
+#if (NCOL>3)
+    +(*c).e[0][3].real * (*c).e[1][3].real +
+    (*c).e[0][3].imag * (*c).e[1][3].imag
+#endif
+   ;
+  ai = (*c).e[0][0].real * (*c).e[1][0].imag -     /* imag part of 0 dot 1 */
+    (*c).e[0][0].imag * (*c).e[1][0].real +
+    (*c).e[0][1].real * (*c).e[1][1].imag -
+    (*c).e[0][1].imag * (*c).e[1][1].real +
+    (*c).e[0][2].real * (*c).e[1][2].imag -
+    (*c).e[0][2].imag * (*c).e[1][2].real
+#if (NCOL>3)
+    +(*c).e[0][3].real * (*c).e[1][3].imag -
+    (*c).e[0][3].imag * (*c).e[1][3].real
+#endif
+   ;
+
+  deviation = ar*ar + ai*ai;
+  errors += check_deviation(deviation);
+
+  /* row 1 -= a * row 0 */
+  (*c).e[1][0].real -= ar*(*c).e[0][0].real - ai*(*c).e[0][0].imag;
+  (*c).e[1][0].imag -= ar*(*c).e[0][0].imag + ai*(*c).e[0][0].real;
+  (*c).e[1][1].real -= ar*(*c).e[0][1].real - ai*(*c).e[0][1].imag;
+  (*c).e[1][1].imag -= ar*(*c).e[0][1].imag + ai*(*c).e[0][1].real;
+  (*c).e[1][2].real -= ar*(*c).e[0][2].real - ai*(*c).e[0][2].imag;
+  (*c).e[1][2].imag -= ar*(*c).e[0][2].imag + ai*(*c).e[0][2].real;
+#if (NCOL>3)
+  (*c).e[1][3].real -= ar*(*c).e[0][3].real - ai*(*c).e[0][3].imag;
+  (*c).e[1][3].imag -= ar*(*c).e[0][3].imag + ai*(*c).e[0][3].real;
+#endif
+
+  /* normalize row 1 */
+  ar = (*c).e[1][0].real * (*c).e[1][0].real    /* sum of squares of row */
+     + (*c).e[1][0].imag * (*c).e[1][0].imag
+     + (*c).e[1][1].real * (*c).e[1][1].real
+     + (*c).e[1][1].imag * (*c).e[1][1].imag
+     + (*c).e[1][2].real * (*c).e[1][2].real
+     + (*c).e[1][2].imag * (*c).e[1][2].imag;
+#if (NCOL>3)
+  ar += (*c).e[1][3].real * (*c).e[1][3].real
+      + (*c).e[1][3].imag * (*c).e[1][3].imag;
+#endif
+
+  deviation = fabs(ar - 1.);
+  errors += check_deviation(deviation);
+
+  ar = 1.0 / sqrt( (double)ar);         /* used to normalize row */
+  (*c).e[1][0].real *= ar;
+  (*c).e[1][0].imag *= ar;
+  (*c).e[1][1].real *= ar;
+  (*c).e[1][1].imag *= ar;
+  (*c).e[1][2].real *= ar;
+  (*c).e[1][2].imag *= ar;
+#if (NCOL>3)
+  (*c).e[1][3].real *= ar;
+  (*c).e[1][3].imag *= ar;
+#endif
+
+#if (NCOL==3) /* conclude with row 2 */
+  /* Save for checking */
+  c0r = (*c).e[2][0].real;
+  c0i = (*c).e[2][0].imag;
+  c1r = (*c).e[2][1].real;
+  c1i = (*c).e[2][1].imag;
+  c2r = (*c).e[2][2].real;
+  c2i = (*c).e[2][2].imag;
+
+  fixsu3(c); /* reconstruct row 2 */
+
+  /* check deviation */
+  ar = (c0r - (*c).e[2][0].real) * (c0r - (*c).e[2][0].real) +
+    (c0i - (*c).e[2][0].imag) * (c0i - (*c).e[2][0].imag) +
+    (c1r - (*c).e[2][1].real) * (c1r - (*c).e[2][1].real) +
+    (c1i - (*c).e[2][1].imag) * (c1i - (*c).e[2][1].imag) +
+    (c2r - (*c).e[2][2].real) * (c2r - (*c).e[2][2].real) +
+    (c2i - (*c).e[2][2].imag) * (c2i - (*c).e[2][2].imag);
+  deviation = ar;
+  errors += check_deviation(deviation);
+
+#else /* NCOL>3 from here to end */
+
+  /* make row 2 orthogonal to row 0 */
+  ar = (*c).e[0][0].real * (*c).e[2][0].real +     /* real part of 0 dot 2 */
+    (*c).e[0][0].imag * (*c).e[2][0].imag +
+    (*c).e[0][1].real * (*c).e[2][1].real +
+    (*c).e[0][1].imag * (*c).e[2][1].imag +
+    (*c).e[0][2].real * (*c).e[2][2].real +
+    (*c).e[0][2].imag * (*c).e[2][2].imag +
+    (*c).e[0][3].real * (*c).e[2][3].real +
+    (*c).e[0][3].imag * (*c).e[2][3].imag;
+  ai = (*c).e[0][0].real * (*c).e[2][0].imag -     /* imag part of 0 dot 2 */
+    (*c).e[0][0].imag * (*c).e[2][0].real +
+    (*c).e[0][1].real * (*c).e[2][1].imag -
+    (*c).e[0][1].imag * (*c).e[2][1].real +
+    (*c).e[0][2].real * (*c).e[2][2].imag -
+    (*c).e[0][2].imag * (*c).e[2][2].real +
+    (*c).e[0][3].real * (*c).e[2][3].imag -
+    (*c).e[0][3].imag * (*c).e[2][3].real;
+
+  deviation = ar*ar + ai*ai;
+  errors += check_deviation(deviation);
+
+  /* row 2 -= a * row 0 */
+  (*c).e[2][0].real -= ar*(*c).e[0][0].real - ai*(*c).e[0][0].imag;
+  (*c).e[2][0].imag -= ar*(*c).e[0][0].imag + ai*(*c).e[0][0].real;
+  (*c).e[2][1].real -= ar*(*c).e[0][1].real - ai*(*c).e[0][1].imag;
+  (*c).e[2][1].imag -= ar*(*c).e[0][1].imag + ai*(*c).e[0][1].real;
+  (*c).e[2][2].real -= ar*(*c).e[0][2].real - ai*(*c).e[0][2].imag;
+  (*c).e[2][2].imag -= ar*(*c).e[0][2].imag + ai*(*c).e[0][2].real;
+  (*c).e[2][3].real -= ar*(*c).e[0][3].real - ai*(*c).e[0][3].imag;
+  (*c).e[2][3].imag -= ar*(*c).e[0][3].imag + ai*(*c).e[0][3].real;
+
+  /* make row 2 orthogonal to row 1 */
+  ar = (*c).e[1][0].real * (*c).e[2][0].real +     /* real part of 1 dot 2 */
+    (*c).e[1][0].imag * (*c).e[2][0].imag +
+    (*c).e[1][1].real * (*c).e[2][1].real +
+    (*c).e[1][1].imag * (*c).e[2][1].imag +
+    (*c).e[1][2].real * (*c).e[2][2].real +
+    (*c).e[1][2].imag * (*c).e[2][2].imag +
+    (*c).e[1][3].real * (*c).e[2][3].real +
+    (*c).e[1][3].imag * (*c).e[2][3].imag;
+  ai = (*c).e[1][0].real * (*c).e[2][0].imag -     /* imag part of 1 dot 2 */
+    (*c).e[1][0].imag * (*c).e[2][0].real +
+    (*c).e[1][1].real * (*c).e[2][1].imag -
+    (*c).e[1][1].imag * (*c).e[2][1].real +
+    (*c).e[1][2].real * (*c).e[2][2].imag -
+    (*c).e[1][2].imag * (*c).e[2][2].real +
+    (*c).e[1][3].real * (*c).e[2][3].imag -
+    (*c).e[1][3].imag * (*c).e[2][3].real;
+
+  deviation = ar*ar + ai*ai;
+  errors += check_deviation(deviation);
+
+  /* row 2 -= a * row 1 */
+  (*c).e[2][0].real -= ar*(*c).e[1][0].real - ai*(*c).e[1][0].imag;
+  (*c).e[2][0].imag -= ar*(*c).e[1][0].imag + ai*(*c).e[1][0].real;
+  (*c).e[2][1].real -= ar*(*c).e[1][1].real - ai*(*c).e[1][1].imag;
+  (*c).e[2][1].imag -= ar*(*c).e[1][1].imag + ai*(*c).e[1][1].real;
+  (*c).e[2][2].real -= ar*(*c).e[1][2].real - ai*(*c).e[1][2].imag;
+  (*c).e[2][2].imag -= ar*(*c).e[1][2].imag + ai*(*c).e[1][2].real;
+  (*c).e[2][3].real -= ar*(*c).e[1][3].real - ai*(*c).e[1][3].imag;
+  (*c).e[2][3].imag -= ar*(*c).e[1][3].imag + ai*(*c).e[1][3].real;
+
+  /* normalize row 2 */
+  ar = (*c).e[2][0].real * (*c).e[2][0].real +    /* sum of squares of row */
+    (*c).e[2][0].imag * (*c).e[2][0].imag +
+    (*c).e[2][1].real * (*c).e[2][1].real +
+    (*c).e[2][1].imag * (*c).e[2][1].imag +
+    (*c).e[2][2].real * (*c).e[2][2].real +
+    (*c).e[2][2].imag * (*c).e[2][2].imag +
+    (*c).e[2][3].real * (*c).e[2][3].real +
+    (*c).e[2][3].imag * (*c).e[2][3].imag;
+
+  deviation = fabs(ar - 1.);
+  errors += check_deviation(deviation);
+
+  ar = 1.0 / sqrt( (double)ar);         /* used to normalize row */
+  (*c).e[2][0].real *= ar;
+  (*c).e[2][0].imag *= ar;
+  (*c).e[2][1].real *= ar;
+  (*c).e[2][1].imag *= ar;
+  (*c).e[2][2].real *= ar;
+  (*c).e[2][2].imag *= ar;
+  (*c).e[2][3].real *= ar;
+  (*c).e[2][3].imag *= ar;
+
+  /* NCOL=4: conclude with row 3 */
+  /* Save for checking */
+  c0r = (*c).e[3][0].real;
+  c0i = (*c).e[3][0].imag;
+  c1r = (*c).e[3][1].real;
+  c1i = (*c).e[3][1].imag;
+  c2r = (*c).e[3][2].real;
+  c2i = (*c).e[3][2].imag;
+  c3r = (*c).e[3][3].real;
+  c3i = (*c).e[3][3].imag;
+
+  fixsu4(c); /* reconstruct row 3 */
+
+  /* check deviation */
+  ar = (c0r - (*c).e[3][0].real) * (c0r - (*c).e[3][0].real) +
+    (c0i - (*c).e[3][0].imag) * (c0i - (*c).e[3][0].imag) +
+    (c1r - (*c).e[3][1].real) * (c1r - (*c).e[3][1].real) +
+    (c1i - (*c).e[3][1].imag) * (c1i - (*c).e[3][1].imag) +
+    (c2r - (*c).e[3][2].real) * (c2r - (*c).e[3][2].real) +
+    (c2i - (*c).e[3][2].imag) * (c2i - (*c).e[3][2].imag) +
+    (c3r - (*c).e[3][3].real) * (c3r - (*c).e[3][3].real) +
+    (c3i - (*c).e[3][3].imag) * (c3i - (*c).e[3][3].imag);
+  deviation = ar;
+  errors += check_deviation(deviation);
+#endif   /* NCOL */
+#endif   /* NCOL */
 
   return errors;
 }
-// -----------------------------------------------------------------
 
-
-
-// -----------------------------------------------------------------
 void reunitarize() {
-  register int i;
-  register site *s;
   register matrix *mat;
-  int errcount = 0, errors;
+  register int i,dir;
+  register site *s;
+  int errcount = 0;
+  int errors;
 
-  max_deviation = 0.0;
-  av_deviation = 0.0;
+  max_deviation = 0.;
+  av_deviation = 0.;
 
-  FORALLSITES(i, s) {
+  FORALLSITES(i,s){
     mat = (matrix *)&(s->link);
-    errors = reunit(mat);
+    errors = reunit( mat );
     errcount += errors;
-    if (errors) {
-      printf("Unitarity problem above (node %d, site %d, tolerance %.4g)\n",
-             mynode(), i, TOLERANCE);
-    }
-    if (errcount > MAXERRCOUNT) {
-      printf("Unitarity error count exceeded: %d\n", errcount);
-      fflush(stdout);
+    if(errors)reunit_report_problem_matrix(mat,i,dir);
+    if(errcount > MAXERRCOUNT)
+    {
+      printf("Unitarity error count exceeded.\n");
       terminate(1);
     }
   }
 
 #ifdef UNIDEBUG
-  printf("Deviation from unitarity on node %d: max %.4g, ave %.4g\n",
-         mynode(), max_deviation, av_deviation);
+  printf("Deviation from unitarity on node %d: max %.3e, avrg %.3e\n",
+      mynode(), max_deviation, av_deviation);
 #endif
-  if (max_deviation > TOLERANCE) {
-    printf("reunitarize: Node %d unitarity problem, maximum deviation %.4g\n",
-           mynode(), max_deviation);
+  if(max_deviation> TOLERANCE)
+  {
+    printf("reunitarize: Node %d unitarity problem, maximum deviation=%e\n",
+        mynode(),max_deviation);
     errcount++;
-    if (errcount > MAXERRCOUNT) {
-      printf("Unitarity error count exceeded\n");
+    if(errcount > MAXERRCOUNT)
+    {
+      printf("Unitarity error count exceeded.\n");
       terminate(1);
     }
   }

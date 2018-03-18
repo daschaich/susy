@@ -103,7 +103,7 @@ int update_step(matrix **src[NFERMION], matrix ***psim[NFERMION]) {
   }
 
   // Reunitarize the gauge field and re-anti-hermitianize the scalars
-//  reunitarize();
+  reunitarize();
   reantihermize();
   return iters;
 }
