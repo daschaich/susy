@@ -22,7 +22,6 @@ double bosonic_action(double *so3_sq, double *so6_sq, double *Myers) {
   *so6_sq = 0.0;
   *Myers = 0.0;
 
-#if defined(KINETIC) || defined(SCALAR_POT)
   // Scalar kinetic term -Tr[D_t X(t)]^2
   //   -Tr[U(t) X(t+1) Udag(t) - X(t)]^2
   //     = Tr[2 X(t) U(t) X(t+1) Udag(t) - X(t+1) X(t+1) - X(t) X(t)]
@@ -43,24 +42,18 @@ double bosonic_action(double *so3_sq, double *so6_sq, double *Myers) {
   b_action = *so3_sq + *so6_sq;
 
   // Nearest-neighbor piece of scalar kinetic term
-  for (j = 0; j < NSCALAR; j++)
+  for (j = 0; j < NSCALAR; j++) {
     wait_gather(tag[j]);
-  FORALLSITES(i, s) {
-    for (j = 0; j < NSCALAR; j++) {
+    FORALLSITES(i, s) {
+
       mult_nn(&(s->link), (matrix *)(gen_pt[j][i]), &tmat);
       mult_na(&tmat, &(s->link), &tmat2);
       b_action += (double)realtrace_nn(&(s->X[j]), &tmat2);
     }
+    cleanup_gather(tag[j]);
   }
   b_action *= 2.0;
-  for (j = 0; j < NSCALAR; j++)
-    cleanup_gather(tag[j]);
-#endif
-#ifndef KINETIC   // Clear anything computed above just for scalar tests
-  b_action *= 0.0;
-#endif
 
-#ifdef COMM_TERM
   // Commutator term
   //   sum_{i<j} -Tr[X_i, X_j]^2 = sum_{i<j} -Tr[X_i X_j - X_j X_i]^2
   //     = sum_{i<j} -Tr[  X_i X_j X_i X_j - X_i X_j X_j X_i
@@ -76,21 +69,14 @@ double bosonic_action(double *so3_sq, double *so6_sq, double *Myers) {
       }
     }
   }
-#endif
 
-#ifdef SCALAR_POT
   // Scalar potential terms
   // Couplings are set differently in setup.c depending on BMN vs. BFSS
   *so3_sq *= mass_so3;
   *so6_sq *= mass_so6;
   b_action += *so3_sq + *so6_sq;
-#else
-  *so3_sq *= 0.0;
-  *so6_sq *= 0.0;
-#endif
 
 #ifdef BMN
-#ifdef MYERS
   // Myers term -Tr[epsilon_{jkl} X_j(t) X_k(t) X_l(t)]]
   FORALLSITES(i, s) {
     for (j = 0; j < 3; j++) {
@@ -112,9 +98,6 @@ double bosonic_action(double *so3_sq, double *so6_sq, double *Myers) {
   }
   *Myers *= mass_Myers;
   b_action += *Myers;
-#else
-  *Myers *= 0.0;
-#endif
 #endif
 
   b_action *= kappa;
@@ -173,9 +156,8 @@ double fermion_action(matrix *src[NFERMION], matrix **sol[NFERMION]) {
 
 // -----------------------------------------------------------------
 // Gauge and scalar momenta contribution to the action
-// Helper routine: Magnitude squared of an anti-hermition matrix
-// Normalization from non-supersymmetric MILC code is half
-// what we get from uncompress_anti_hermitian + realtrace...
+// Helper routine computes agnitude squared of an anti-hermition matrix
+// including the factor of 1/2 in the effective hamiltonian
 Real ahmat_mag_sq(anti_hermitmat *ah) {
   register int i;
   register Real sum;
@@ -197,13 +179,9 @@ double gauge_mom_action() {
   register int i;
   register site *s;
   double sum = 0.0;
-//  matrix tmat;
 
-  FORALLSITES(i, s) {
+  FORALLSITES(i, s)
     sum += (double)ahmat_mag_sq(&(s->mom));
-//    uncompress_anti_hermitian(&(s->mom), &tmat);
-//    sum += (double)realtrace(&tmat, &tmat);
-  }
 
   g_doublesum(&sum);
   return sum;
@@ -213,17 +191,13 @@ double scalar_mom_action() {
   register int i, j;
   register site *s;
   double sum = 0.0;
-  anti_hermitmat tah;
 
   FORALLSITES(i, s) {
-    for (j = 0; j < NSCALAR; j++) {
-      make_anti_hermitian(&(s->mom_X[j]), &tah);
-      sum += (double)ahmat_mag_sq(&tah);
-//      sum += (double)realtrace(&(s->mom_X[j]), &(s->mom_X[j]));
-    }
+    for (j = 0; j < NSCALAR; j++)
+      sum += (double)realtrace(&(s->mom_X[j]), &(s->mom_X[j]));
   }
   g_doublesum(&sum);
-  return sum;
+  return 0.5 * sum;
 }
 // -----------------------------------------------------------------
 
@@ -238,7 +212,7 @@ double action(matrix ***src, matrix ****sol) {
   node0_printf("action: so3 %.8g so6 %.8g Myers %.8g ",
                so3_act, so6_act, Myers_act);
   node0_printf("boson %.8g ", b_act);
-  total = b_act;
+  total = b_act;    // Includes so3, so6, Myers and kinetic
 
 #ifndef PUREGAUGE
   int n;

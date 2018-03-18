@@ -27,7 +27,6 @@ double bosonic_force(Real eps) {
       clear_mat(&(s->f_X[j]));
   }
 
-#ifdef KINETIC
   // First we have the finite difference operator gauge derivative
   // Must transform as site variable so momenta can be exponentiated
   //   U(n) d/dU(n) Tr[2 U(t) X(t+1) Udag(t) X(t) - X(t+1) X(t+1) - X(t) X(t)]
@@ -35,7 +34,9 @@ double bosonic_force(Real eps) {
   for (j = 0; j < NSCALAR; j++) {
     tag[j] = start_gather_site(F_OFFSET(X[j]), sizeof(matrix),
                                TUP, EVENANDODD, gen_pt[j]);
+  }
 
+  for (j = 0; j < NSCALAR; j++) {
     // For scalar force term, compute and gather Udag(n-1) X(n-1) U(n-1)
     FORALLSITES(i, s) {
       mult_nn(&(s->X[j]), &(s->link), &tmat);
@@ -45,33 +46,28 @@ double bosonic_force(Real eps) {
                                  TDOWN, EVENANDODD, gen_pt[NSCALAR + j]);
   }
 
-  for (j = 0; j < NSCALAR; j++)
-   wait_gather(tag[j]);
-
-  FORALLSITES(i, s) {
-    clear_mat(&(s->f_U));   // Clear the force collectors
-    for (j = 0; j < NSCALAR; j++) {   // X(n+1) = gen_pt[j]
+  for (j = 0; j < NSCALAR; j++) {   // X(n+1) = gen_pt[j]
+    wait_gather(tag[j]);
+    FORALLSITES(i, s) {
       mult_na((matrix *)(gen_pt[j][i]), &(s->link), &tmat);
       mult_nn(&(s->link), &tmat, &tmat2);
-      mult_nn_sum(&tmat2, &(s->X[j]), &(s->f_U));
+      mult_nn_sum(&(s->X[j]), &tmat2, &(s->f_U));
     }
   }
-#endif
 
   // Take adjoint and update the gauge momenta
   // Make them anti-hermitian following non-susy code
   // Include overall factor of kappa = N / (4lambda), and factor of 2
-  // !!! Another factor of 2 needed for conservation (real vs. complex)?
+  // !!! Another factor of 2 needed for conservation (real vs. complex?)
   // Compute average gauge force in same loop
   tr = 4.0 * kappa * eps;
   FORALLSITES(i, s) {
     uncompress_anti_hermitian(&(s->mom), &tmat);
-    scalar_mult_sum_matrix(&(s->f_U), tr, &tmat);
+    scalar_mult_dif_matrix(&(s->f_U), tr, &tmat);
     make_anti_hermitian(&tmat, &(s->mom));
     returnit += realtrace(&(s->f_U), &(s->f_U));
   }
 
-#ifdef KINETIC
   // This is the finite difference operator scalar derivative
   //   d/dX(n) Tr[X(t) U(t) X(t+1) Udag(t) + X(t+1) Udag(t) X(t) U(t)
   //              - X(t+1) X(t+1) - X(t) X(t)]
@@ -79,10 +75,9 @@ double bosonic_force(Real eps) {
   //       + 2 delta_{n(t+1)} Udag(t) X(t) U(t)
   //       - 2 delta_{n(t+1)} X(t+1) - 2 delta_{nt} X(t)
   //     = 2 [U(n) X(n+1) Udag(n) + Udag(n-1) X(n-1) U(n-1) - 2 X(n)]
-  for (j = 0; j < NSCALAR; j++)
+  for (j = 0; j < NSCALAR; j++) {
     wait_gather(tag2[j]);
-  FORALLSITES(i, s) {
-    for (j = 0; j < NSCALAR; j++) {
+    FORALLSITES(i, s) {
       // Initialize force with on-site -2X(n)
       scalar_mult_matrix(&(s->X[j]), -2.0, &(s->f_X[j]));
 
@@ -96,18 +91,14 @@ double bosonic_force(Real eps) {
 
       scalar_mult_matrix(&(s->f_X[j]), 2.0, &(s->f_X[j]));
     }
-  }
-  for (j = 0; j < NSCALAR; j++) {
     cleanup_gather(tag[j]);
     cleanup_gather(tag2[j]);
   }
-#endif
 
   // The pure scalar stuff
   tr = 3.0 * mass_Myers;
   FORALLSITES(i, s) {
 #ifdef BMN
-#ifdef MYERS
     // Myers term
     //   d/dX_i(n) -Tr[eps_{jkl} X_j(t) X_k(t) X_l(t)]]
     //     = -eps_{jkl} [delta_{ij} X_k(n) X_l(n) + delta_{ik} X_l(n) X_j(n)
@@ -131,9 +122,7 @@ double bosonic_force(Real eps) {
       }
     }
 #endif
-#endif
 
-#ifdef COMM_TERM
     // Commutator term (usual cyclic product rule trick...)
     //   d/dX_k(n) sum_{i != j} -Tr[  X_i(t) X_j(t) X_i(t) X_j(t)
     //                              + X_j(t) X_i(t) X_j(t) X_i(t)
@@ -165,9 +154,7 @@ double bosonic_force(Real eps) {
         mult_nn_sum(&tmat, &(s->X[k]), &(s->f_X[j]));
       }
     }
-#endif
 
-#ifdef SCALAR_POT
     // Simple d/dX_i(n) -X_j(t)^2 = -2 X_i(n)
     // Absorb factor of two into tmp_so# = 2 * mass_so#
     // Coefficients depend on BMN vs. BFSS, set in setup.c
@@ -176,7 +163,6 @@ double bosonic_force(Real eps) {
 
     for (j = 3; j < NSCALAR; j++)
       scalar_mult_dif_matrix(&(s->X[j]), tmp_so6, &(s->f_X[j]));
-#endif
   }
 
   // Take adjoint and update the scalar momenta
