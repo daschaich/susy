@@ -68,7 +68,7 @@ void update_u(Real eps) {
   }
 
   // Reunitarize the gauge field and re-anti-hermitianize the scalars
-  reunitarize();
+//  reunitarize();
   reantihermize();
 }
 // -----------------------------------------------------------------
