@@ -273,7 +273,7 @@ double fermion_force(Real eps, matrix *src[NFERMION], matrix **sol[NFERMION]) {
 #ifdef FORCE_DEBUG
     g_doublesum(&individ_force);
     node0_printf("Individ_force %d %.4g\n",
-                 n, eps * sqrt(individ_force) / volume);
+                 n, eps * sqrt(individ_force) / nt);
 
     // Check that force syncs with fermion action
     old_action = fermion_action(src, sol);
@@ -344,7 +344,7 @@ double fermion_force(Real eps, matrix *src[NFERMION], matrix **sol[NFERMION]) {
   g_doublesum(&returnit);
 
   free(fullforce);
-  return (eps * sqrt(returnit) / volume);
+  return (eps * sqrt(returnit) / nt);
 }
 #endif
 // -----------------------------------------------------------------

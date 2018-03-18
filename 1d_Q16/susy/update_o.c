@@ -93,7 +93,7 @@ double update_bosonic_step(Real eps) {
   }
 
   // Reunitarize the gauge field and re-anti-hermitianize the scalars
-//  reunitarize();
+  reunitarize();
   reantihermize();
   return (norm / n);
 }
