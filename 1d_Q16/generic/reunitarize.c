@@ -100,8 +100,8 @@ complex find_det(matrix *Q) {
 
   mat_copy(Q, &QQ);
   ludcmp_cx(&QQ, indx, &d);
-  det = QQ.e[0][0];
-  for (i = 1; i < NCOL; i++) {
+  det = cmplx(d, 0.0);
+  for (i = 0; i < NCOL; i++) {
     CMUL(det, QQ.e[i][i], tc);
     det = tc;
   }
@@ -133,7 +133,7 @@ int reunit(matrix *c) {
         CSUM(sum, tc);
       }
       for (k = 0; k < NCOL; k++)
-        CMULDIF(sum, c->e[j][k], c->e[i][k]);
+        CMULDIF(sum, c->e[j][k], c->e[i][k]);     // Okay since j < i
     }
     // Normalize ith vector
     ar = (*c).e[i][0].real * (*c).e[i][0].real
