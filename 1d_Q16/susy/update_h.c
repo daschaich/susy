@@ -232,20 +232,11 @@ double fermion_force(Real eps, matrix **src, matrix ***sol) {
   double returnit = 0.0;
   matrix *fullforce = malloc(sizeof *fullforce * sites_on_node);
 
-#ifdef FORCE_DEBUG
-  int kick, ii, jj, iters = 0;
-  Real final_rsq;
-  double individ_force, old_action, new_action = 0.0;
-  matrix tmat, tprint, tprint2;
-  clear_mat(&tprint);
-  clear_mat(&tmat);
-#endif
-  
   // Initialize fullforce
   fermion_op(sol[0], temp_ferm, PLUS);
-  for(k=0;k<NFERMION;k++) {
+  for (k = 0; k < NFERMION; k++) {
     FORALLSITES(i, s)
-    scalar_mult_matrix(&(temp_ferm[k][i]), amp4[0], &(temp_ferm[k][i]));
+      scalar_mult_matrix(&(temp_ferm[k][i]), amp4[0], &(temp_ferm[k][i]));
   }
   assemble_fermion_force(sol[0], temp_ferm);
   FORALLSITES(i, s)
@@ -253,17 +244,17 @@ double fermion_force(Real eps, matrix **src, matrix ***sol) {
   for (n = 1; n < Norder; n++) {
     fermion_op(sol[n], temp_ferm, PLUS);
     // Makes sense to multiply here by amp4[n]...
-    for(k=0;k<NFERMION;k++) {
+    for (k = 0; k < NFERMION; k++) {
       FORALLSITES(i, s)
-      scalar_mult_matrix(&(temp_ferm[k][i]), amp4[0], &(temp_ferm[k][i]));
+        scalar_mult_matrix(&(temp_ferm[k][i]), amp4[0], &(temp_ferm[k][i]));
     }
-    
+
     assemble_fermion_force(sol[n], temp_ferm);
     // Take adjoint but don't negate yet...
     FORALLSITES(i, s)
       sum_adj_matrix(&(s->f_U), &(fullforce[i]));
   }
-  
+
   // Update the momentum from the fermion force -- sum or eps
   // Opposite sign as to gauge force,
   // because dS_G / dU = 2F_g while ds_F / dU = -2F_f
@@ -273,7 +264,7 @@ double fermion_force(Real eps, matrix **src, matrix ***sol) {
     returnit += realtrace(&(fullforce[i]), &(fullforce[i]));
   }
   g_doublesum(&returnit);
-  
+
   free(fullforce);
   return (eps * sqrt(returnit) / nt);
 }

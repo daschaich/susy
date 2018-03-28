@@ -55,13 +55,12 @@ double fermion_action();
 
 // Force routines
 double bosonic_force(Real eps);
-double fermion_force(Real eps, matrix *source[NFERMION],
-                     matrix **psim[NFERMION]);
+double fermion_force(Real eps, matrix **source, matrix ***psim);
 
 // Fermion matrix--vector operators (D & D^2) and multi-mass CG
 void fermion_op(matrix *src[NFERMION], matrix *dest[NFERMION], int sign);
 void DSq(matrix *src[NFERMION], matrix *dest[NFERMION]);
-int congrad_multi(matrix *src[NFERMION], matrix **psim[NFERMION],
+int congrad_multi(matrix **src, matrix ***psim,
                   int MaxCG, Real RsdCG, Real *size_r);
 
 // Compute average Tr[X[i] X[i]] / N_c
