@@ -102,7 +102,7 @@ double update_bosonic_step(Real eps) {
 
 
 // -----------------------------------------------------------------
-int update_step(matrix **src[NFERMION], matrix ***psim[NFERMION]) {
+int update_step(matrix ***src, matrix ****psim) {
   int iters = 0, i_multi0;
   Real f_eps, b_eps, tr;
 
@@ -189,14 +189,14 @@ int update() {
 
   for (n = 0; n < Nroot; n++) {
     source[n] = malloc(sizeof(matrix*) * NFERMION);
-    psim[n] = malloc(sizeof(matrix**) * NFERMION);
-
-  for (k = 0; k < NFERMION; k++) {
-      source[n][k] = malloc(sizeof(matrix) * sites_on_node);
-      psim[n][k] = malloc(sizeof(matrix*) * Norder);
-      for (j = 0; j < Norder; j++)
-        psim[n][k][j] = malloc(sizeof(matrix) * sites_on_node);
+    psim[n] = malloc(sizeof(matrix**) * Norder);
+    for (j = 0; j < Norder; j++) {
+      psim[n][j] = malloc(sizeof(matrix*) * NFERMION);
+      for (k = 0; k < NFERMION; k++)
+        psim[n][j][k] = malloc(sizeof(matrix) * sites_on_node);
     }
+    for (k = 0; k < NFERMION; k++)
+      source[n][k] = malloc(sizeof(matrix) * sites_on_node);
   }
 
   // Compute g and src = (Mdag M)^(1 / 8) g

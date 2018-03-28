@@ -23,7 +23,7 @@
 // errormin is the target |r|^2, scaled below by source_norm = |src|^2
 // size_r is the final obtained |r|^2, hopefully < errormin * source_norm
 #ifndef PUREGAUGE
-int congrad_multi(matrix *src[NFERMION], matrix **psim[NFERMION],
+int congrad_multi(matrix **src, matrix ***psim,
                   int MaxCG, Real errormin, Real *size_r) {
 
   register int i, j, k;
@@ -38,11 +38,11 @@ int congrad_multi(matrix *src[NFERMION], matrix **psim[NFERMION],
   double *beta_im1 = malloc(sizeof *beta_im1 * Norder);
   double *alpha    = malloc(sizeof *alpha * Norder);
   double rsqj;
-  matrix **pm[NFERMION];
+  matrix ***pm = malloc(sizeof(matrix**) * Norder);
 
-  for (j = 0; j < NFERMION; j++) {
-    pm[j] = malloc(sizeof(matrix*) * Norder);
-    for (i = 1; i < Norder; i++)    // !!!
+  for (j = 1; j < Norder; j++) { // !!!
+    pm[j] = malloc(sizeof(matrix*) * NFERMION);
+    for (i = 0; i < NFERMION; i++)
       pm[j][i] = malloc(sizeof(matrix) * sites_on_node);
   }
 
@@ -54,10 +54,10 @@ int congrad_multi(matrix *src[NFERMION], matrix **psim[NFERMION],
     FORALLSITES(i, s) {
       mat_copy(&(src[k][i]), &(rm[k][i]));
       mat_copy(&(rm[k][i]), &(pm0[k][i]));
-      clear_mat(&(psim[k][0][i]));
+      clear_mat(&(psim[0][k][i]));
       for (j = 1; j < Norder; j++) {
-        clear_mat(&(psim[k][j][i]));
-        mat_copy(&(rm[k][i]), &(pm[k][j][i]));
+        clear_mat(&(psim[j][k][i]));
+        mat_copy(&(rm[k][i]), &(pm[j][k][i]));
       }
     }
   }
@@ -120,11 +120,11 @@ int congrad_multi(matrix *src[NFERMION], matrix **psim[NFERMION],
     for (k = 0; k < NFERMION; k++) {
       FORALLSITES(i, s) {
         scalar_mult_dif_matrix(&(pm0[k][i]), (Real)beta_i[0],
-                               &(psim[k][0][i]));
+                               &(psim[0][k][i]));
         for (j = 1; j < Norder; j++) {
           if (converged[j] == 0) {
-            scalar_mult_dif_matrix(&(pm[k][j][i]), (Real)beta_i[j],
-                                   &(psim[k][j][i]));
+            scalar_mult_dif_matrix(&(pm[j][k][i]), (Real)beta_i[j],
+                                   &(psim[j][k][i]));
           }
         }
       }
@@ -162,8 +162,8 @@ int congrad_multi(matrix *src[NFERMION], matrix **psim[NFERMION],
         for (j = 1; j < Norder; j++) {
           if (converged[j] == 0) {
             scalar_mult_matrix(&(rm[k][i]), (Real)zeta_ip1[j], &(mpm[k][i]));
-            scalar_mult_matrix(&(pm[k][j][i]), (Real)alpha[j], &(pm[k][j][i]));
-            sum_matrix(&(mpm[k][i]), &(pm[k][j][i]));
+            scalar_mult_matrix(&(pm[j][k][i]), (Real)alpha[j], &(pm[j][k][i]));
+            sum_matrix(&(mpm[k][i]), &(pm[j][k][i]));
           }
         }
       }
@@ -210,7 +210,7 @@ int congrad_multi(matrix *src[NFERMION], matrix **psim[NFERMION],
     source_norm = 0;
     for (k = 0; k < NFERMION; k++) {
       FORALLSITES(i, s)
-        source_norm += (double)realtrace(&(psim[k][j][i]), &(psim[k][j][i]));
+        source_norm += (double)realtrace(&(psim[j][k][i]), &(psim[j][k][i]));
     }
     g_doublesum(&source_norm);
     node0_printf("Norm of psim %d shift %.4g is %.4g\n",
@@ -220,7 +220,7 @@ int congrad_multi(matrix *src[NFERMION], matrix **psim[NFERMION],
     source_norm = 0;                // Re-using for convenience
     for (k = 0; k < NFERMION; k++) {
       FORALLSITES(i, s) {           // Add shift.psi and subtract src
-        scalar_mult_sum_matrix(&(psim[k][j][i]), shift[j],  &(mpm[k][i]));
+        scalar_mult_sum_matrix(&(psim[j][k][i]), shift[j],  &(mpm[k][i]));
         dif_matrix(&(src[k][i]), &(mpm[k][i]));
         source_norm += (double)realtrace(&(mpm[k][i]), &(mpm[k][i]));
       }
@@ -230,12 +230,13 @@ int congrad_multi(matrix *src[NFERMION], matrix **psim[NFERMION],
   }
 #endif
 
-  for (k = 0; k < NFERMION; k++) {
-    for (i = 1; i < Norder; i++)
-      free(pm[k][i]);
-    free(pm[k]);
+  for (i = 1; i < Norder; i++) {
+    for (k = 0; k < NFERMION; k++)
+      free(pm[i][k]);
+    free(pm[i]);
   }
 
+  free(pm);
   free(zeta_i);
   free(zeta_ip1);
   free(zeta_im1);
