@@ -188,13 +188,14 @@ int update() {
   Real final_rsq;
 
   for (n = 0; n < Nroot; n++) {
-    source[n] = malloc(sizeof(matrix*) * NFERMION);
     psim[n] = malloc(sizeof(matrix**) * Norder);
     for (j = 0; j < Norder; j++) {
       psim[n][j] = malloc(sizeof(matrix*) * NFERMION);
       for (k = 0; k < NFERMION; k++)
         psim[n][j][k] = malloc(sizeof(matrix) * sites_on_node);
     }
+
+    source[n] = malloc(sizeof(matrix*) * NFERMION);
     for (k = 0; k < NFERMION; k++)
       source[n][k] = malloc(sizeof(matrix) * sites_on_node);
   }
@@ -288,12 +289,13 @@ int update() {
 
 #ifndef PUREGAUGE
   for (n = 0; n < Nroot; n++) {
-    for (k = 0; k < NFERMION; k++) {
-      free(source[n][k]);
-      for (j = 0; j < Norder; j++)
-        free(psim[n][k][j]);
-      free(psim[n][k]);
+    for (j = 0; j < Norder; j++) {
+      for (k = 0; k < NFERMION; k++)
+        free(psim[n][j][k]);
+      free(psim[n][j]);
     }
+    for (k = 0; k < NFERMION; k++)
+      free(source[n][k]);
     free(source[n]);
     free(psim[n]);
   }

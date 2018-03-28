@@ -46,13 +46,12 @@ int grsource(matrix *src[NFERMION]) {
   int avs_iters;
   Real size_r;
   complex grn;
-  matrix **psim[NFERMION];
+  matrix ***psim = malloc(sizeof(matrix**) * Norder);
 
   // Allocate psim (will be zeroed in congrad_multi)
-  for (j = 0; j < NFERMION; j++) {
-    psim[j] = malloc(sizeof(matrix*) * Norder);
-
-    for (i = 0; i < Norder; i++)
+  for (j = 0; j < Norder; j++) {
+    psim[j] = malloc(sizeof(matrix*) * NFERMION);
+    for (i = 0; i < NFERMION; i++)
       psim[j][i] = malloc(sizeof(matrix) * sites_on_node);
   }
 
@@ -121,15 +120,16 @@ int grsource(matrix *src[NFERMION]) {
     for (k = 0; k < NFERMION; k++) {
       scalar_mult_matrix(&(src[k][i]), ampdeg8, &(src[k][i]));
       for (j = 0; j < Norder; j++)
-        scalar_mult_sum_matrix(&(psim[k][j][i]), amp8[j], &(src[k][i]));
+        scalar_mult_sum_matrix(&(psim[j][k][i]), amp8[j], &(src[k][i]));
     }
   }
 
-  for (k = 0; k < NFERMION; k++) {
-    for (i = 0; i < Norder; i++)
-      free(psim[k][i]);
-    free(psim[k]);
+  for (i = 0; i < Norder; i++) {
+    for (k = 0; k < NFERMION; k++)
+      free(psim[i][k]);
+    free(psim[i]);
   }
+  free(psim);
   return avs_iters;
 }
 #endif

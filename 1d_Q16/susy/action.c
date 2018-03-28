@@ -122,7 +122,7 @@ double bosonic_action(double *so3_sq, double *so6_sq, double *Myers) {
 // Since the pseudofermion src is fixed throughout the trajectory,
 // ampdeg actually has no effect on Delta S (checked)
 // sol, however, depends on the gauge fields through the CG
-double fermion_action(matrix *src[NFERMION], matrix **sol[NFERMION]) {
+double fermion_action(matrix **src, matrix ***sol) {
   register int i, j, k;
   register site *s;
   double sum = 0.0;
@@ -135,7 +135,8 @@ double fermion_action(matrix *src[NFERMION], matrix **sol[NFERMION]) {
     for (k = 0; k < NFERMION; k++) {
       sum += ampdeg4 * (double)realtrace(&(src[k][i]), &(src[k][i]));
       for (j = 0; j < Norder; j++) {
-        ctmp = complextrace_an(&(src[k][i]), &(sol[k][j][i]));   // src^dag.sol[j]
+        // src^dag.sol[j]
+        ctmp = complextrace_an(&(src[k][i]), &(sol[j][k][i]));
         sum += (double)(amp4[j] * ctmp.real);
 #ifdef DEBUG_CHECK  // Make sure imaginary part vanishes
         im += (double)(amp4[j] * ctmp.imag);
