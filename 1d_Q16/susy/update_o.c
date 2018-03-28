@@ -102,7 +102,7 @@ double update_bosonic_step(Real eps) {
 
 
 // -----------------------------------------------------------------
-int update_step(matrix ***src, matrix ****psim) {
+int update_step(matrix **src[NFERMION], matrix ***psim[NFERMION]) {
   int iters = 0, i_multi0;
   Real f_eps, b_eps, tr;
 

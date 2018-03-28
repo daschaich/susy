@@ -225,12 +225,21 @@ void assemble_fermion_force(matrix *sol[NFERMION], matrix *psol[NFERMION]) {
 // Allocate fullforce while using temp_ferm for temporary storage
 // (Calls assemble_fermion_force, which uses many more temporaries)
 #ifndef PUREGAUGE
-double fermion_force(Real eps, matrix **src, matrix ***sol) {
+double fermion_force(Real eps, matrix *src[NFERMION], matrix **sol[NFERMION]) {
   register int i;
   register site *s;
   int mu, n;
   double returnit = 0.0;
   matrix *fullforce = malloc(sizeof *fullforce * sites_on_node);
+
+#ifdef FORCE_DEBUG
+  int kick, ii, jj, iters = 0;
+  Real final_rsq;
+  double individ_force, old_action, new_action = 0.0;
+  matrix tmat, tprint, tprint2;
+  clear_mat(&tprint);
+  clear_mat(&tmat);
+#endif
 
   // Initialize fullforce
   fermion_op(sol[0], tempTF, PLUS);
@@ -246,11 +255,82 @@ double fermion_force(Real eps, matrix **src, matrix ***sol) {
       scalar_mult_TF(&(tempTF[i]), amp4[n], &(tempTF[i]));
 
     assemble_fermion_force(sol[n], tempTF);
-    
+#ifdef FORCE_DEBUG
+    individ_force = 0.0;
+#endif
     FORALLSITES(i, s) {
       // Take adjoint but don't negate yet...
       sum_adj_matrix(&(s->f_U), &(fullforce[i]));
+#ifdef FORCE_DEBUG
+//    if (s->t == 0 && mu == 3) {
+//      printf("Fermion force mu=%d on site (%d, %d)\n", mu, s->x, s->t);
+//      dumpmat(&(s->f_U[mu]));
+//    }
+      // Compute average gauge force
+      individ_force += realtrace(&(s->f_U), &(s->f_U));
+#endif
     }
+#ifdef FORCE_DEBUG
+    g_doublesum(&individ_force);
+    node0_printf("Individ_force %d %.4g\n",
+                 n, eps * sqrt(individ_force) / nt);
+
+    // Check that force syncs with fermion action
+    old_action = fermion_action(src, sol);
+    iters += congrad_multi(src, sol, niter, rsqmin, &final_rsq);
+    new_action = fermion_action(src, sol);
+    node0_printf("EXITING  %.4g\n", new_action - old_action);
+    if (fabs(new_action - old_action) > 1e-3)
+      terminate(1);                             // Don't go further for now
+
+#if 0
+    // Do a scan of the fermion action
+    FORALLSITES(i, s) {
+      node0_printf("site %d\n", s->t);
+      tmat = s->link;
+      dumpmat(&(s->f_U));
+
+      for (ii = 0; ii < NCOL; ii++) {
+        for (jj = 0; jj < NCOL; jj++) {
+          for (kick = -1; kick <= 1; kick += 2) {
+            s->link = tmat;
+            s->link.e[ii][jj].real += 0.001 * (Real)kick;
+
+            iters += congrad_multi(src, sol, niter, rsqmin, &final_rsq);
+            if (kick == -1)
+              new_action -= fermion_action(src, sol);
+            if (kick == 1) {
+              new_action += fermion_action(src, sol);
+              tprint.e[ii][jj].real = -250.0 * new_action;
+            }
+          }
+
+          for (kick = -1; kick <= 1; kick += 2) {
+            s->link = tmat;
+            s->link.e[ii][jj].imag += 0.001 * (Real)kick;
+
+            iters += congrad_multi(src, sol, niter, rsqmin, &final_rsq);
+            if (kick == -1)
+              new_action -= fermion_action(src, sol);
+            if (kick == 1) {
+              new_action += fermion_action(src, sol);
+              node0_printf("XXXG%d%dI %.4g %.4g\n",
+                           ii, jj, 0.001 * (Real)kick, 500 * new_action);
+              tprint.e[ii][jj].imag = -250 * new_action;
+            }
+          }
+        }
+      }
+      sub_matrix(&tprint, &(s->f_U[mu]), &tprint2);
+      node0_printf("site %d: %.4g\n", s->t,
+                   realtrace(&tprint2, &tprint2));
+      dumpmat(&tprint);
+      s->link[mu] = tmat;
+
+      iters += congrad_multi(src, sol, niter, rsqmin, &final_rsq);
+    }   // End scan of the fermion action
+#endif
+#endif
   }
 
   // Update the momentum from the fermion force -- sum or eps

@@ -23,7 +23,7 @@
 // errormin is the target |r|^2, scaled below by source_norm = |src|^2
 // size_r is the final obtained |r|^2, hopefully < errormin * source_norm
 #ifndef PUREGAUGE
-int congrad_multi(matrix **src, matrix ***psim,
+int congrad_multi(matrix *src[NFERMION], matrix **psim[NFERMION],
                   int MaxCG, Real errormin, Real *size_r) {
 
   register int i, j, k;
@@ -38,7 +38,7 @@ int congrad_multi(matrix **src, matrix ***psim,
   double *beta_im1 = malloc(sizeof *beta_im1 * Norder);
   double *alpha    = malloc(sizeof *alpha * Norder);
   double rsqj;
-  matrix ***pm=malloc(sizeof(matrix**) * NFERMION);
+  matrix **pm[NFERMION];
 
   for (j = 0; j < NFERMION; j++) {
     pm[j] = malloc(sizeof(matrix*) * Norder);
@@ -236,7 +236,6 @@ int congrad_multi(matrix **src, matrix ***psim,
     free(pm[k]);
   }
 
-  free(pm);
   free(zeta_i);
   free(zeta_ip1);
   free(zeta_im1);

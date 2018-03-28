@@ -102,10 +102,10 @@ EXTERN Real one_ov_N;
 EXTERN complex minus1, *tr_eta, *tr_dest;
 
 // CG Fermions
-EXTERN matrix **mpm, **pm0, **rm;
+EXTERN matrix *mpm[NFERMION], *pm0[NFERMION], *rm[NFERMION];
 
 // Temporary matrices
-EXTERN matrix *tempmat, *tempmat2, **temp_ferm, *temp_X[NSCALAR];
+EXTERN matrix *tempmat, *tempmat2, *temp_ferm[NFERMION], *temp_X[NSCALAR];
 
 //Allocate some more arrays to be used by LAPACK in scalar eigenvalues
 EXTERN double *Rwork, *eigs, *store, *work;
