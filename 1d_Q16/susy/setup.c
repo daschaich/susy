@@ -98,6 +98,7 @@ int initial_set() {
 // -----------------------------------------------------------------
 // Allocate space for fields
 void make_fields() {
+  int j;
   Real size = (Real)(2.0 * sizeof(complex));
   FIELD_ALLOC(tr_eta, complex);
   FIELD_ALLOC(tr_dest, complex);
@@ -108,19 +109,25 @@ void make_fields() {
 
   // CG Fermions
   size += (Real)(3.0 * NFERMION * sizeof(matrix));
-  FIELD_ALLOC_VEC(mpm, matrix, NFERMION);
-  FIELD_ALLOC_VEC(pm0, matrix, NFERMION);
-  FIELD_ALLOC_VEC(rm, matrix, NFERMION);
+  mpm = malloc(sizeof(matrix*) * NFERMION);
+  pm0 = malloc(sizeof(matrix*) * NFERMION);
+  rm = malloc(sizeof(matrix*) * NFERMION);
+  for(j=0;j<NFERMION;j++) {
+    FIELD_ALLOC(mpm, matrix);
+    FIELD_ALLOC(pm0, matrix);
+    FIELD_ALLOC(rm, matrix);
+  }
 
   // Temporary matrices and Fermions
   size += (Real)((2.0 + NFERMION + NSCALAR) * sizeof(matrix));
   FIELD_ALLOC(tempmat, matrix);
   FIELD_ALLOC(tempmat2, matrix);
-  FIELD_ALLOC_VEC(temp_ferm, matrix, NFERMION);
+  temp_ferm = malloc(sizeof(matrix*) * NFERMION);
+  for(j=0;j<NFERMION;j++)
+    FIELD_ALLOC(temp_ferm, matrix);
   FIELD_ALLOC_VEC(temp_X, matrix, NSCALAR);
 
 #ifdef CORR
-  int j;
   size += (Real)(N_B * NUMLINK * sizeof(matrix));
   size += (Real)(N_K * NUMLINK * NUMLINK * sizeof(Real));
   size += (Real)(2.0 * sizeof(Kops));
