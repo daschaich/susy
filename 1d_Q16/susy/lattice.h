@@ -95,6 +95,7 @@ EXTERN double_prn node_prn;
 // Persistent fermions for matrix--vector operation
 // Used in fermion_op and assemble_fermion_force
 EXTERN matrix *src[NFERMION], *dest[NFERMION];
+EXTERN matrix *Gamma_X[NCHIRAL_FERMION][NCHIRAL_FERMION];
 
 // For convenience in calculating action and force
 // May be wasteful of space

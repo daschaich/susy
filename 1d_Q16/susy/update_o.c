@@ -66,6 +66,8 @@ void update_u(Real eps) {
     for (j = 0; j < NSCALAR; j++)
       scalar_mult_sum_matrix(&(s->mom_X[j]), eps, &(s->X[j]));
   }
+  // Update Gamma_X
+  build_Gamma_X;
 }
 // -----------------------------------------------------------------
 
@@ -273,8 +275,10 @@ int update() {
     xrandom = myrand(&node_prn);
   broadcast_float(&xrandom);
   if (exp(-change) < (double)xrandom) {
-    if (traj_length > 0.0)
+    if (traj_length > 0.0) {
       copy_bosons(MINUS);
+      build_Gamma_X();
+    }
     node0_printf("REJECT: delta S = %.4g start S = %.12g end S = %.12g\n",
                  change, startaction, endaction);
   }
