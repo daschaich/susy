@@ -105,7 +105,8 @@ void make_fields() {
   size += (Real)(2.0 * NFERMION * sizeof(matrix));
   FIELD_ALLOC_VEC(src, matrix, NFERMION);
   FIELD_ALLOC_VEC(dest, matrix, NFERMION);
-
+  FIELD_ALLOC_MAT(Gamma_X, matrix, NCHIRAL_FERMION, NCHIRAL_FERMION);
+  
   // CG Fermions
   size += (Real)(3.0 * NFERMION * sizeof(matrix));
   FIELD_ALLOC_VEC(mpm, matrix, NFERMION);
@@ -352,6 +353,8 @@ int readin(int prompt) {
   store = malloc(sizeof *store * 2 * NCOL * NCOL);
   Rwork = malloc(sizeof *Rwork * (3 * NCOL - 2));
   eigs = malloc(sizeof *eigs * NCOL);
+  // Compute initial Gamma_X
+  build_Gamma_X;
 
   return 0;
 }
