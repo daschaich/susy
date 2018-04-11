@@ -75,7 +75,7 @@ void Dminus(matrix *src[NFERMION], matrix *dest[NFERMION]) {
 // Applies either the operator (sign = 1) or its adjoint (sign = -1)
 #ifndef PUREGAUGE
 void fermion_op(matrix *src[NFERMION], matrix *dest[NFERMION], int sign) {
-  register int i,j,k;
+  register int i, j, k, m, n, p;
   register site *s;
   Real tr;
   complex tc = cmplx(0.0, 1.0);
@@ -84,14 +84,14 @@ void fermion_op(matrix *src[NFERMION], matrix *dest[NFERMION], int sign) {
   // Fermion kinetic term
   Dplus(src, dest);
   Dminus(src, dest);
-  
+
   if (sign == -1) {
     for (j = 0; j < NFERMION; j++) {
       FORALLSITES(i, s)
         scalar_mult_matrix(&(dest[j][i]), -1.0, &(dest[j][i]));
     }
   }
-  
+
 #ifdef BMN
   for (j = 0; j < NCHIRAL_FERMION; j++) {
     for (k = 0; k < NCHIRAL_FERMION; k++) {
@@ -103,41 +103,45 @@ void fermion_op(matrix *src[NFERMION], matrix *dest[NFERMION], int sign) {
     }
   }
 #endif
-  
+
   // Assume build_Gamma_X has already been run
   for (j = 0; j < NCHIRAL_FERMION; j++) {
+    m = j + NCHIRAL_FERMION;
     for (k = 0; k < NCHIRAL_FERMION; k++) {
+      n = k + NCHIRAL_FERMION;
       FORALLSITES(i, s) {
-        mult_nn(&(Gamma_X[j][k][i]), &(src[k+NCHIRAL_FERMION][i]), &tmat);
-        mult_nn_dif(&(src[k+NCHIRAL_FERMION][i]), &(Gamma_X[j][k][i]), &tmat);
+        mult_nn(&(Gamma_X[j][k][i]), &(src[n][i]), &tmat);
+        mult_nn_dif(&(src[n][i]), &(Gamma_X[j][k][i]), &tmat);
         scalar_mult_sum_matrix(&tmat, (Real)sign, &(dest[j][i]));
-        
+
         mult_nn(&(Gamma_X[k][j][i]), &(src[k][i]), &tmat);
         mult_nn_dif(&(src[k][i]), &(Gamma_X[k][j][i]), &tmat);
-        scalar_mult_sum_matrix(&tmat, (Real)sign, &(dest[j+NCHIRAL_FERMION][i]));
+        scalar_mult_sum_matrix(&tmat, (Real)sign, &(dest[m][i]));
       }
     }
+
     // Last 2 gammas are diagonal
+    p = NSCALAR - 2;
+    n = NSCALAR - 1;
     FORALLSITES(i, s) {
-      mult_nn(&(s->X[NSCALAR-2]), &(src[j][i]), &tmat);
-      mult_nn_dif(&(src[j][i]), &(s->X[NSCALAR-2]), &tmat);
+      mult_nn(&(s->X[p]), &(src[j][i]), &tmat);
+      mult_nn_dif(&(src[j][i]), &(s->X[p]), &tmat);
       scalar_mult_dif_matrix(&tmat, (Real)sign, &(dest[j][i]));
-      
-      mult_nn(&(s->X[NSCALAR-2]), &(src[j+NCHIRAL_FERMION][i]), &tmat);
-      mult_nn_dif(&(src[j+NCHIRAL_FERMION][i]), &(s->X[NSCALAR-2]), &tmat);
-      scalar_mult_sum_matrix(&tmat, (Real)sign, &(dest[j+NCHIRAL_FERMION][i]));
-      
-      mult_nn(&(s->X[NSCALAR-1]), &(src[j][i]), &tmat);
-      mult_nn_dif(&(src[j][i]), &(s->X[NSCALAR-1]), &tmat);
+
+      mult_nn(&(s->X[p]), &(src[m][i]), &tmat);
+      mult_nn_dif(&(src[m][i]), &(s->X[p]), &tmat);
+      scalar_mult_sum_matrix(&tmat, (Real)sign, &(dest[m][i]));
+
+      mult_nn(&(s->X[n]), &(src[j][i]), &tmat);
+      mult_nn_dif(&(src[j][i]), &(s->X[n]), &tmat);
       c_scalar_mult_sum_mat(&tmat, &tc, &(dest[j][i]));
-      
-      mult_nn(&(s->X[NSCALAR-1]), &(src[j+NCHIRAL_FERMION][i]), &tmat);
-      mult_nn_dif(&(src[j+NCHIRAL_FERMION][i]), &(s->X[NSCALAR-1]), &tmat);
-      c_scalar_mult_sum_mat(&tmat, &tc, &(dest[j+NCHIRAL_FERMION][i]));
-      
+
+      mult_nn(&(s->X[n]), &(src[m][i]), &tmat);
+      mult_nn_dif(&(src[m][i]), &(s->X[n]), &tmat);
+      c_scalar_mult_sum_mat(&tmat, &tc, &(dest[m][i]));
+
       scalar_mult_matrix(&(dest[j][i]), 0.5, &(dest[j][i]));
-      scalar_mult_matrix(&(dest[j+NCHIRAL_FERMION][i]), 0.5,
-                         &(dest[j+NCHIRAL_FERMION][i]));
+      scalar_mult_matrix(&(dest[m][i]), 0.5, &(dest[m][i]));
     }
   }
 }
