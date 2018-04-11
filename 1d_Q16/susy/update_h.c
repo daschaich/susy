@@ -244,12 +244,12 @@ void assemble_fermion_force(matrix **sol, matrix *psol[NFERMION]) {
     }
     cleanup_gather(tag2[j]);
   }
-  
   FORALLSITES(i, s) {
     make_anti_hermitian(&(s->f_U), &tah);
     uncompress_anti_hermitian(&tah, &(s->f_U));
   }
-  // Assume build_Gamma_X has already been run
+
+  // Scalar forces
   for (j = 0; j < NCHIRAL_FERMION; j++) {
     for (k = 0; k < NCHIRAL_FERMION; k++) {
       FORALLSITES(i, s) {
@@ -257,7 +257,7 @@ void assemble_fermion_force(matrix **sol, matrix *psol[NFERMION]) {
           mult_nn(&(psol[j][i]), &(sol[k+NCHIRAL_FERMION][i]), &tmat);
           mult_nn_dif(&(sol[k+NCHIRAL_FERMION][i]), &(psol[j][i]), &tmat);
           scalar_mult_sum_matrix(&tmat, Gamma[l].e[j][k], &(s->f_X[l]));
-          
+
           mult_nn(&(psol[j+NCHIRAL_FERMION][i]), &(sol[k][i]), &tmat);
           mult_nn_dif(&(sol[k][i]), &(psol[j+NCHIRAL_FERMION][i]), &tmat);
           scalar_mult_sum_matrix(&tmat, Gamma[l].e[k][j], &(s->f_X[l]));
@@ -268,18 +268,18 @@ void assemble_fermion_force(matrix **sol, matrix *psol[NFERMION]) {
     FORALLSITES(i, s) {
       mult_nn_dif(&(psol[j][i]), &(sol[j][i]), &(s->f_X[NSCALAR-2]));
       mult_nn_sum(&(sol[j][i]), &(psol[j][i]), &(s->f_X[NSCALAR-2]));
-      
-      k=j+NCHIRAL_FERMION;
+
+      k = j + NCHIRAL_FERMION;
       mult_nn_sum(&(psol[k][i]), &(sol[k][i]), &(s->f_X[NSCALAR-2]));
       mult_nn_dif(&(sol[k][i]), &(psol[k][i]), &(s->f_X[NSCALAR-2]));
-      
+
       mult_nn(&(psol[j][i]), &(sol[j][i]), &tmat);
       mult_nn_dif(&(sol[j][i]), &(psol[j][i]), &tmat);
-      
+
       c_scalar_mult_sum_mat(&tmat, &tc, &(s->f_X[NSCALAR-1]));
     }
   }
-  
+
   FORALLSITES(i, s) {
     for(j=0; j<NSCALAR; j++) {
       make_anti_hermitian(&(s->f_X[j]), &tah);
