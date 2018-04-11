@@ -195,13 +195,22 @@ double bosonic_force(Real eps) {
 //   f_U = Adj(Ms).D_U M(U, Ub).s - Adj[Adj(Ms).D_Ub M(U, Ub).s]
 // "s" is sol while "Ms" is psol
 // Take Adj(Ms) for easier gathering
+// Serial code has a factor of 2 * 0.5 = 1.0 which we ignore
 #ifndef PUREGAUGE
 void assemble_fermion_force(matrix **sol, matrix *psol[NFERMION]) {
-  register int i;
+  register int i,j,k,l;
   register site *s;
-  int j;
-  matrix tmat;
-
+  complex tc = cmplx(0.0, 1.0);
+  matrix tmat, tmat2;
+  anti_hermitmat tah;
+  msg_tag *tag[NCHIRAL_FERMION], *tag2[NCHIRAL_FERMION];
+  
+  FORALLSITES(i, s) {
+    clear_mat(&(s->f_U));
+    
+    for(j=0; j<NSCALAR; j++)
+      clear_mat(&(s->f_X[j]));
+  }
   // For gathering it is convenient to take the adjoint of psol
   for (j = 0; j < NFERMION; j++) {
     FORALLSITES(i, s) {
@@ -209,8 +218,74 @@ void assemble_fermion_force(matrix **sol, matrix *psol[NFERMION]) {
       mat_copy(&tmat, &(psol[j][i]));
     }
   }
-
-  // TODO: Fermion force goes here...
+  for(j=0; j<NCHIRAL_FERMION; j++) {
+    tag[j] = start_gather_field(sol[j+NCHIRAL_FERMION], sizeof(matrix),
+                                TUP, EVENANDODD, gen_pt[j]);
+    tag2[j] = start_gather_field(psol[j+NCHIRAL_FERMION], sizeof(matrix),
+                                TUP, EVENANDODD, gen_pt[j+NCHIRAL_FERMION]);
+  }
+  
+  for(j=0; j<NCHIRAL_FERMION; j++) {
+    wait_gather(tag[j]);
+    FORALLSITES(i, s) {
+      mult_nn(&(s->link), (matrix *)(gen_pt[j][i]), &tmat);
+      scalar_mult_na(&tmat, &(s->link), s->bc[0], &tmat2);
+      mult_nn_dif(&tmat2, &(psol[j][i]), &(s->f_U));
+      mult_nn_sum(&(psol[j][i]), &tmat2, &(s->f_U));
+    }
+    cleanup_gather(tag[j]);
+    
+    wait_gather(tag2[j]);
+    FORALLSITES(i, s) {
+      mult_nn(&(s->link), (matrix *)(gen_pt[j+NCHIRAL_FERMION][i]), &tmat);
+      scalar_mult_na(&tmat, &(s->link), s->bc[0], &tmat2);
+      mult_nn_sum(&tmat2, &(sol[j][i]), &(s->f_U));
+      mult_nn_dif(&(sol[j][i]), &tmat2, &(s->f_U));
+    }
+    cleanup_gather(tag2[j]);
+  }
+  
+  FORALLSITES(i, s) {
+    make_anti_hermitian(&(s->f_U), &tah);
+    uncompress_anti_hermitian(&tah, &(s->f_U));
+  }
+  // Assume build_Gamma_X has already been run
+  for (j = 0; j < NCHIRAL_FERMION; j++) {
+    for (k = 0; k < NCHIRAL_FERMION; k++) {
+      FORALLSITES(i, s) {
+        for(l=0; l<NSCALAR-2; l++) {
+          mult_nn(&(psol[j][i]), &(sol[k+NCHIRAL_FERMION][i]), &tmat);
+          mult_nn_dif(&(sol[k+NCHIRAL_FERMION][i]), &(psol[j][i]), &tmat);
+          scalar_mult_sum_matrix(&tmat, Gamma[l].e[j][k], &(s->f_X[l]));
+          
+          mult_nn(&(psol[j+NCHIRAL_FERMION][i]), &(sol[k][i]), &tmat);
+          mult_nn_dif(&(sol[k][i]), &(psol[j+NCHIRAL_FERMION][i]), &tmat);
+          scalar_mult_sum_matrix(&tmat, Gamma[l].e[k][j], &(s->f_X[l]));
+        }
+      }
+    }
+    // Last 2 gammas are diagonal
+    FORALLSITES(i, s) {
+      mult_nn_dif(&(psol[j][i]), &(sol[j][i]), &(s->f_X[NSCALAR-2]));
+      mult_nn_sum(&(sol[j][i]), &(psol[j][i]), &(s->f_X[NSCALAR-2]));
+      
+      k=j+NCHIRAL_FERMION;
+      mult_nn_sum(&(psol[k][i]), &(sol[k][i]), &(s->f_X[NSCALAR-2]));
+      mult_nn_dif(&(sol[k][i]), &(psol[k][i]), &(s->f_X[NSCALAR-2]));
+      
+      mult_nn(&(psol[j][i]), &(sol[j][i]), &tmat);
+      mult_nn_dif(&(sol[j][i]), &(psol[j][i]), &tmat);
+      
+      c_scalar_mult_sum_mat(&tmat, &tc, &(s->f_X[NSCALAR-1]));
+    }
+  }
+  
+  FORALLSITES(i, s) {
+    for(j=0; j<NSCALAR; j++) {
+      make_anti_hermitian(&(s->f_X[j]), &tah);
+      uncompress_anti_hermitian(&tah, &(s->f_X[j]));
+    }
+  }
 }
 #endif
 // -----------------------------------------------------------------
@@ -221,8 +296,8 @@ void assemble_fermion_force(matrix **sol, matrix *psol[NFERMION]) {
 // -----------------------------------------------------------------
 // Update the momenta with the fermion force
 // Assume that the multiCG has been run, with the solution in sol[j]
-// Accumulate f_U for each pole into fullforce, add to momenta
-// Allocate fullforce while using temp_ferm for temporary storage
+// Accumulate f_U for each pole into force_U, add to momenta
+// Allocate force_U while using temp_ferm for temporary storage
 // (Calls assemble_fermion_force, which uses many more temporaries)
 #ifndef PUREGAUGE
 double fermion_force(Real eps, matrix **src, matrix ***sol) {
@@ -230,17 +305,20 @@ double fermion_force(Real eps, matrix **src, matrix ***sol) {
   register site *s;
   int k, n;
   double returnit = 0.0;
-  matrix *fullforce = malloc(sizeof *fullforce * sites_on_node);
+  matrix *force_U = malloc(sizeof *force_U * sites_on_node);
 
-  // Initialize fullforce
+  // Initialize force_U
   fermion_op(sol[0], temp_ferm, PLUS);
   for (k = 0; k < NFERMION; k++) {
     FORALLSITES(i, s)
       scalar_mult_matrix(&(temp_ferm[k][i]), amp4[0], &(temp_ferm[k][i]));
   }
   assemble_fermion_force(sol[0], temp_ferm);
-  FORALLSITES(i, s)
-    adjoint(&(s->f_U), &(fullforce[i]));
+  FORALLSITES(i, s) {
+    adjoint(&(s->f_U), &(force_U[i]));
+    for(k=0; k<NSCALAR; k++)
+      adjoint(&(s->f_X[k]), &(temp_X[k][i]));
+  }
   for (n = 1; n < Norder; n++) {
     fermion_op(sol[n], temp_ferm, PLUS);
     // Makes sense to multiply here by amp4[n]...
@@ -251,8 +329,11 @@ double fermion_force(Real eps, matrix **src, matrix ***sol) {
 
     assemble_fermion_force(sol[n], temp_ferm);
     // Take adjoint but don't negate yet...
-    FORALLSITES(i, s)
-      sum_adj_matrix(&(s->f_U), &(fullforce[i]));
+    FORALLSITES(i, s) {
+      sum_adj_matrix(&(s->f_U), &(force_U[i]));
+      for(k=0; k<NSCALAR; k++)
+        sum_adj_matrix(&(s->f_X[k]), &(temp_X[k][i]));
+    }
   }
 
   // Update the momentum from the fermion force -- sum or eps
@@ -260,12 +341,16 @@ double fermion_force(Real eps, matrix **src, matrix ***sol) {
   // because dS_G / dU = 2F_g while ds_F / dU = -2F_f
   // Move negation here as well, though adjoint remains above
   FORALLSITES(i, s) {
-    scalar_mult_dif_matrix(&(fullforce[i]), eps, &(s->mom));
-    returnit += realtrace(&(fullforce[i]), &(fullforce[i]));
+    scalar_mult_dif_matrix(&(force_U[i]), eps, &(s->mom));
+    returnit += realtrace(&(force_U[i]), &(force_U[i]));
+    for(k=0; k<NSCALAR; k++) {
+      scalar_mult_dif_matrix(&(temp_X[k][i]), eps, &(s->mom_X[k]));
+      returnit += realtrace(&(temp_X[k][i]), &(temp_X[k][i]));
+    }
   }
   g_doublesum(&returnit);
 
-  free(fullforce);
+  free(force_U);
   return (eps * sqrt(returnit) / nt);
 }
 #endif
