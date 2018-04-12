@@ -310,6 +310,7 @@ double fermion_force(Real eps, matrix **src, matrix ***sol) {
   register int i, k, n;
   register site *s;
   double returnit = 0.0;
+  matrix tmat;
 
   // Overwrite tempmat2 and temp_X with first (n=0) pole, then sum n>0
   fermion_op(sol[0], temp_ferm, PLUS);
@@ -344,7 +345,9 @@ double fermion_force(Real eps, matrix **src, matrix ***sol) {
   // because dS_G / dU = 2F_g while ds_F / dU = -2F_f
   // Move negation here as well, though adjoint remains above
   FORALLSITES(i, s) {
-    scalar_mult_dif_matrix(&(tempmat2[i]), eps, &(s->mom));
+    uncompress_anti_hermitian(&(s->mom), &tmat);
+    scalar_mult_dif_matrix(&(tempmat2[i]), eps, &tmat);
+    make_anti_hermitian(&tmat, &(s->mom));
     returnit += realtrace(&(tempmat2[i]), &(tempmat2[i]));
     for (k = 0; k < NSCALAR; k++) {
       scalar_mult_dif_matrix(&(temp_X[k][i]), eps, &(s->mom_X[k]));
