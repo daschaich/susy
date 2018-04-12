@@ -66,8 +66,8 @@ void update_u(Real eps) {
     for (j = 0; j < NSCALAR; j++)
       scalar_mult_sum_matrix(&(s->mom_X[j]), eps, &(s->X[j]));
   }
-  // Update Gamma_X
-  build_Gamma_X;
+  // Update Gamma_X (needs to be done before calling bosonic_force)
+  build_Gamma_X();
 }
 // -----------------------------------------------------------------
 
