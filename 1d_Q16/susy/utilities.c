@@ -3,15 +3,21 @@
 #include "susy_includes.h"
 // -----------------------------------------------------------------
 
+
+
+// -----------------------------------------------------------------
 void build_Gamma_X() {
-  register int i,j,k,l;
+  register int i, j, k, l;
   register site *s;
-  
-  for(j=0; j<NCHIRAL_FERMION; j++) {
-    for(k=0; k<NCHIRAL_FERMION; k++) {
+  Real tr;
+
+  for (j = 0; j < NCHIRAL_FERMION; j++) {
+    for (k = 0; k < NCHIRAL_FERMION; k++) {
+      tr = Gamma[0].e[j][k];
       FORALLSITES(i, s) {
-        clear_mat(&(Gamma_X[j][k][i]));
-        for(l=0; l<NSCALAR-2; l++) {
+        // Overwrite Gamma_X[j][k][i], then sum remaining contributions
+        scalar_mult_matrix(&(s->X[l]), tr, &(Gamma_X[j][k][i]));
+        for (l = 1; l < NSCALAR - 2; l++) {
           scalar_mult_sum_matrix(&(s->X[l]), Gamma[l].e[j][k],
                                  &(Gamma_X[j][k][i]));
         }
@@ -19,63 +25,75 @@ void build_Gamma_X() {
     }
   }
 }
+// -----------------------------------------------------------------
 
+
+
+// -----------------------------------------------------------------
 void Dplus(matrix *src[NFERMION], matrix *dest[NFERMION]) {
-  register int i,j;
+  register int i, j, k;
   register site *s;
   matrix tmat;
   msg_tag *tag[NCHIRAL_FERMION];
-  
-  for(j=0; j<NCHIRAL_FERMION; j++) {
-    tag[j] = start_gather_field(src[j+NCHIRAL_FERMION], sizeof(matrix),
+
+  for (j = 0; j < NCHIRAL_FERMION; j++) {
+    k = j + NCHIRAL_FERMION;
+    tag[j] = start_gather_field(src[k], sizeof(matrix),
                                 TUP, EVENANDODD, gen_pt[j]);
   }
-  
-  for(j=0; j<NCHIRAL_FERMION; j++) {
+
+  for (j = 0; j < NCHIRAL_FERMION; j++) {     // Overwrite dest
+    k = j + NCHIRAL_FERMION;
     wait_gather(tag[j]);
-    // Initialize dest[i]
     FORALLSITES(i, s) {
       mult_nn(&(s->link), (matrix *)(gen_pt[j][i]), &tmat);
       scalar_mult_na(&tmat, &(s->link), s->bc[0], &(dest[j][i]));
-      dif_matrix(&(src[j+NCHIRAL_FERMION][i]), &(dest[j][i]));
+      dif_matrix(&(src[k][i]), &(dest[j][i]));
     }
     cleanup_gather(tag[j]);
   }
 }
+// -----------------------------------------------------------------
 
-// This uses tempmat for temporary storage
+
+
+// -----------------------------------------------------------------
+// Use tempmat for temporary storage
 void Dminus(matrix *src[NFERMION], matrix *dest[NFERMION]) {
-  register int i,j;
+  register int i, j, k;
   register site *s;
   matrix tmat;
   msg_tag *tag;
-  
-  for(j=0; j<NCHIRAL_FERMION; j++) {
-    // Initialize dest[i]
+
+  // Include negative sign in product that is then gathered
+  for (j = 0; j < NCHIRAL_FERMION; j++) {
+    k = j + NCHIRAL_FERMION;
     FORALLSITES(i, s) {
       mult_an(&(s->link), &(src[j][i]), &tmat);
-      mult_nn(&tmat, &(s->link), &(tempmat[i]));
+      scalar_mult_nn(&tmat, &(s->link), -1.0, &(tempmat[i]));
     }
-
     tag = start_gather_field(tempmat, sizeof(matrix),
-                                TDOWN, EVENANDODD, gen_pt[0]);
+                             TDOWN, EVENANDODD, gen_pt[0]);
+
     wait_gather(tag);
-    // Initialize dest[i]
-    FORALLSITES(i, s) {
+    FORALLSITES(i, s) {           // Overwrite dest
       scalar_mult_add_matrix(&(src[j][i]), (matrix *)(gen_pt[0][i]),
-                             -1.0*s->bc[1], &(dest[j+NCHIRAL_FERMION][i]));
+                             s->bc[1], &(dest[k][i]));
     }
     cleanup_gather(tag);
   }
 }
+// -----------------------------------------------------------------
+
 
 
 // -----------------------------------------------------------------
 // Matrix--vector operation
 // Applies either the operator (sign = 1) or its adjoint (sign = -1)
+// Uses tempmat for temporary storage through Dminus
 #ifndef PUREGAUGE
 void fermion_op(matrix *src[NFERMION], matrix *dest[NFERMION], int sign) {
-  register int i, j, k, m, n, p;
+  register int i, j, k, m, n;
   register site *s;
   Real tr;
   complex tc = cmplx(0.0, 1.0);
@@ -94,11 +112,13 @@ void fermion_op(matrix *src[NFERMION], matrix *dest[NFERMION], int sign) {
 
 #ifdef BMN
   for (j = 0; j < NCHIRAL_FERMION; j++) {
+    m = j + NCHIRAL_FERMION;
     for (k = 0; k < NCHIRAL_FERMION; k++) {
-      tr = 0.75 * sign * mu * Gamma123.e[j][k]; // sign = +/- 1
+      n = k + NCHIRAL_FERMION;
+      tr = 0.75 * sign * mu * Gamma123.e[j][k];     // sign = +/- 1
       FORALLSITES(i, s) {
-        scalar_mult_sum_matrix(&(src[k+NCHIRAL_FERMION][i]), tr, &(dest[j][i]));
-        scalar_mult_dif_matrix(&(src[k][i]), tr, &(dest[j+NCHIRAL_FERMION][i]));
+        scalar_mult_sum_matrix(&(src[n][i]), tr, &(dest[j][i]));
+        scalar_mult_dif_matrix(&(src[k][i]), tr, &(dest[m][i]));
       }
     }
   }
@@ -121,15 +141,15 @@ void fermion_op(matrix *src[NFERMION], matrix *dest[NFERMION], int sign) {
     }
 
     // Last 2 gammas are diagonal
-    p = NSCALAR - 2;
+    k = NSCALAR - 2;
     n = NSCALAR - 1;
     FORALLSITES(i, s) {
-      mult_nn(&(s->X[p]), &(src[j][i]), &tmat);
-      mult_nn_dif(&(src[j][i]), &(s->X[p]), &tmat);
+      mult_nn(&(s->X[k]), &(src[j][i]), &tmat);
+      mult_nn_dif(&(src[j][i]), &(s->X[k]), &tmat);
       scalar_mult_dif_matrix(&tmat, (Real)sign, &(dest[j][i]));
 
-      mult_nn(&(s->X[p]), &(src[m][i]), &tmat);
-      mult_nn_dif(&(src[m][i]), &(s->X[p]), &tmat);
+      mult_nn(&(s->X[k]), &(src[m][i]), &tmat);
+      mult_nn_dif(&(src[m][i]), &(s->X[k]), &tmat);
       scalar_mult_sum_matrix(&tmat, (Real)sign, &(dest[m][i]));
 
       mult_nn(&(s->X[n]), &(src[j][i]), &tmat);

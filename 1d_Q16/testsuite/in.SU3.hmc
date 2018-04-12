@@ -13,7 +13,7 @@ nstep 8
 nstep_gauge 4
 traj_between_meas 3
 
-lambda 0.5
+lambda 1
 mu 0.5
 
 max_cg_iterations 500
