@@ -354,7 +354,7 @@ int readin(int prompt) {
   Rwork = malloc(sizeof *Rwork * (3 * NCOL - 2));
   eigs = malloc(sizeof *eigs * NCOL);
   // Compute initial Gamma_X
-  build_Gamma_X;
+  build_Gamma_X();
 
   return 0;
 }

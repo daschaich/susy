@@ -67,7 +67,7 @@ void update_u(Real eps) {
       scalar_mult_sum_matrix(&(s->mom_X[j]), eps, &(s->X[j]));
   }
   // Update Gamma_X
-  build_Gamma_X;
+  build_Gamma_X();
 }
 // -----------------------------------------------------------------
 
