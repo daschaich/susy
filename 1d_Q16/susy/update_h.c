@@ -195,6 +195,7 @@ double bosonic_force(Real eps) {
 //   f_U = Adj(Ms).D_U M(U, Ub).s - Adj[Adj(Ms).D_Ub M(U, Ub).s]
 // "s" is sol while "Ms" is psol
 // Take Adj(Ms) for easier gathering
+// Accumulate contribution into f_U and f_X[k], no overwriting
 // Serial code has a factor of 2 * 0.5 = 1.0 which we ignore
 #ifndef PUREGAUGE
 void assemble_fermion_force(matrix **sol, matrix *psol[NFERMION]) {
@@ -202,10 +203,10 @@ void assemble_fermion_force(matrix **sol, matrix *psol[NFERMION]) {
   register site *s;
   complex tc = cmplx(0.0, 1.0);
   matrix tmat, tmat2;
-  anti_hermitmat tah;
   msg_tag *tag[NCHIRAL_FERMION], *tag2[NCHIRAL_FERMION];
 
-    // For gathering it is convenient to overwrite psol by its adjoint
+  // First gauge force s->f_U
+  // For gathering it is convenient to overwrite psol by its adjoint
   for (j = 0; j < NFERMION; j++) {
     FORALLSITES(i, s) {
       adjoint(&(psol[j][i]), &tmat);
@@ -240,12 +241,8 @@ void assemble_fermion_force(matrix **sol, matrix *psol[NFERMION]) {
     }
     cleanup_gather(tag2[j]);
   }
-  FORALLSITES(i, s) {       // Make sure forces are traceless anti-hermitian
-    make_anti_hermitian(&(s->f_U), &tah);
-    uncompress_anti_hermitian(&tah, &(s->f_U));
-  }
 
-  // Scalar forces
+  // Now scalar forces s->f_X[k]
   for (j = 0; j < NCHIRAL_FERMION; j++) {
     m = j + NCHIRAL_FERMION;
     for (k = 0; k < NCHIRAL_FERMION; k++) {
@@ -255,7 +252,7 @@ void assemble_fermion_force(matrix **sol, matrix *psol[NFERMION]) {
           mult_nn(&(psol[j][i]), &(sol[n][i]), &tmat);
           mult_nn_dif(&(sol[n][i]), &(psol[j][i]), &tmat);
           scalar_mult_sum_matrix(&tmat, Gamma[l].e[j][k], &(s->f_X[l]));
-          
+
           mult_nn(&(psol[m][i]), &(sol[k][i]), &tmat);
           mult_nn_dif(&(sol[k][i]), &(psol[m][i]), &tmat);
           scalar_mult_sum_matrix(&tmat, Gamma[l].e[k][j], &(s->f_X[l]));
@@ -275,17 +272,11 @@ void assemble_fermion_force(matrix **sol, matrix *psol[NFERMION]) {
 
       mult_nn(&(psol[j][i]), &(sol[j][i]), &tmat);
       mult_nn_dif(&(sol[j][i]), &(psol[j][i]), &tmat);
-      
+
       mult_nn_sum(&(psol[m][i]), &(sol[m][i]), &tmat);
       mult_nn_dif(&(sol[m][i]), &(psol[m][i]), &tmat);
 
       c_scalar_mult_sum_mat(&tmat, &tc, &(s->f_X[n]));
-    }
-  }
-  FORALLSITES(i, s) {       // Make sure forces are traceless anti-hermitian
-    for (j = 0; j < NSCALAR; j++) {
-      make_anti_hermitian(&(s->f_X[j]), &tah);
-      uncompress_anti_hermitian(&tah, &(s->f_X[j]));
     }
   }
 }
@@ -298,8 +289,8 @@ void assemble_fermion_force(matrix **sol, matrix *psol[NFERMION]) {
 // -----------------------------------------------------------------
 // Update the momenta with the fermion force
 // Assume that the multiCG has been run, with the solution in sol[j]
-// Use temp_ferm, tempmat2 and temp_X for temporary storage
-// Accumulate f_U (f_X) into tempmat2 (temp_X) for each pole, then update mom
+// Use temp_ferm for temporary storage
+// assemble_fermion_force above accumulates into f_U and f_X
 // Calls fermion_op, which uses tempmat
 #ifndef PUREGAUGE
 double fermion_force(Real eps, matrix **src, matrix ***sol) {
@@ -307,28 +298,34 @@ double fermion_force(Real eps, matrix **src, matrix ***sol) {
   register site *s;
   double returnit = 0.0;
   matrix tmat;
+  anti_hermitmat tah;
+
   // Clear the force collectors
   FORALLSITES(i, s) {
     clear_mat(&(s->f_U));
     for (k = 0; k < NSCALAR; k++)
       clear_mat(&(s->f_X[k]));
   }
-  // Overwrite tempmat2 and temp_X with first (n=0) pole, then sum n>0
-  fermion_op(sol[0], temp_ferm, PLUS);
-  for (k = 0; k < NFERMION; k++) {
-    FORALLSITES(i, s)
-      scalar_mult_matrix(&(temp_ferm[k][i]), amp4[0], &(temp_ferm[k][i]));
-  }
-  assemble_fermion_force(sol[0], temp_ferm);
-  for (n = 1; n < Norder; n++) {
+
+  // Accumulate forces from each pole in the force collectors
+  for (n = 0; n < Norder; n++) {
     fermion_op(sol[n], temp_ferm, PLUS);
     // Makes sense to multiply here by amp4[n]...
     for (k = 0; k < NFERMION; k++) {
       FORALLSITES(i, s)
         scalar_mult_matrix(&(temp_ferm[k][i]), amp4[0], &(temp_ferm[k][i]));
     }
-
     assemble_fermion_force(sol[n], temp_ferm);
+  }
+
+  // Make sure forces are traceless anti-hermitian
+  FORALLSITES(i, s) {
+    make_anti_hermitian(&(s->f_U), &tah);
+    uncompress_anti_hermitian(&tah, &(s->f_U));
+    for (k = 0; k < NSCALAR; k++) {
+      make_anti_hermitian(&(s->f_X[k]), &tah);
+      uncompress_anti_hermitian(&tah, &(s->f_X[k]));
+    }
   }
 
   // Update the momentum from the fermion force -- sum or eps
