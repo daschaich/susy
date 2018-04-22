@@ -16,7 +16,7 @@ void build_Gamma_X() {
       tr = Gamma[0].e[j][k];
       FORALLSITES(i, s) {
         // Overwrite Gamma_X[j][k][i], then sum remaining contributions
-        scalar_mult_matrix(&(s->X[l]), tr, &(Gamma_X[j][k][i]));
+        scalar_mult_matrix(&(s->X[0]), tr, &(Gamma_X[j][k][i]));
         for (l = 1; l < NSCALAR - 2; l++) {
           scalar_mult_sum_matrix(&(s->X[l]), Gamma[l].e[j][k],
                                  &(Gamma_X[j][k][i]));
