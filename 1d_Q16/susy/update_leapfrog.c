@@ -133,7 +133,7 @@ int update() {
       for (k = 0; k < NFERMION; k++)
         psim[n][j][k] = malloc(sizeof(matrix) * sites_on_node);
     }
-    
+
     source[n] = malloc(sizeof(matrix*) * NFERMION);
     for (k = 0; k < NFERMION; k++)
       source[n][k] = malloc(sizeof(matrix) * sites_on_node);
@@ -141,7 +141,7 @@ int update() {
 
   // Compute g and src = (Mdag M)^(1 / 8) g
   for (n = 0; n < Nroot; n++) {
-    iters += grsource(src[n]);
+    iters += grsource(src);
     for (j = 0; j < NFERMION; j++) {
       FORALLSITES(i, s)
       mat_copy(&(src[j][i]), &(source[n][j][i]));
