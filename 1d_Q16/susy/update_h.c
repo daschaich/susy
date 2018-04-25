@@ -313,7 +313,7 @@ double fermion_force(Real eps, matrix **src, matrix ***sol) {
     // Makes sense to multiply here by amp4[n]...
     for (k = 0; k < NFERMION; k++) {
       FORALLSITES(i, s)
-        scalar_mult_matrix(&(temp_ferm[k][i]), amp4[0], &(temp_ferm[k][i]));
+        scalar_mult_matrix(&(temp_ferm[k][i]), amp4[n], &(temp_ferm[k][i]));
     }
     assemble_fermion_force(sol[n], temp_ferm);
   }
