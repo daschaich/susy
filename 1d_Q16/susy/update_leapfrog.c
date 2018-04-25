@@ -113,9 +113,11 @@ int update_step(matrix **src[NFERMION], matrix ***psim[NFERMION]) {
 
 // -----------------------------------------------------------------
 int update() {
-  int j, n, iters = 0;
+  int i, j, k, n, iters = 0;
+  site *s;
   double startaction, endaction, change;
-  matrix **source[NFERMION], ***psim[NFERMION];
+  matrix ***source = malloc(sizeof(matrix**) * Nroot);
+  matrix ****psim = malloc(sizeof(matrix***) * Nroot);
 
   // Refresh the momenta
   ranmom();
@@ -124,17 +126,27 @@ int update() {
 #ifndef PUREGAUGE
   Real final_rsq;
 
-  FIXME... // TODO
   for (n = 0; n < Nroot; n++) {
-    src[n] = malloc(sizeof(Twist_Fermion) * sites_on_node);
-    psim[n] = malloc(sizeof(Twist_Fermion*) * Norder);
-    for (j = 0; j < Norder; j++)
-      psim[n][j] = malloc(sizeof(Twist_Fermion) * sites_on_node);
+    psim[n] = malloc(sizeof(matrix**) * Norder);
+    for (j = 0; j < Norder; j++) {
+      psim[n][j] = malloc(sizeof(matrix*) * NFERMION);
+      for (k = 0; k < NFERMION; k++)
+        psim[n][j][k] = malloc(sizeof(matrix) * sites_on_node);
+    }
+    
+    source[n] = malloc(sizeof(matrix*) * NFERMION);
+    for (k = 0; k < NFERMION; k++)
+      source[n][k] = malloc(sizeof(matrix) * sites_on_node);
   }
 
   // Compute g and src = (Mdag M)^(1 / 8) g
-  for (n = 0; n < Nroot; n++)
+  for (n = 0; n < Nroot; n++) {
     iters += grsource(src[n]);
+    for (j = 0; j < NFERMION; j++) {
+      FORALLSITES(i, s)
+      mat_copy(&(src[j][i]), &(source[n][j][i]));
+    }
+  }
 
   // Do a CG to get psim,
   // rational approximation to (Mdag M)^(-1 / 4) src = (Mdag M)^(-1 / 8) g
@@ -145,7 +157,7 @@ int update() {
 #endif
   // congrad_multi initializes psim
   for (n = 0; n < Nroot; n++)
-    iters += congrad_multi(src[n], psim[n], niter, rsqmin, &final_rsq);
+    iters += congrad_multi(source[n], psim[n], niter, rsqmin, &final_rsq);
 #endif // ifndef PUREGAUGE
 
   // Find initial action
@@ -173,7 +185,7 @@ int update() {
   node0_printf("Calling CG in update_leapfrog -- new action\n");
 #endif
   for (n = 0; n < Nroot; n++)
-    iters += congrad_multi(src[n], psim[n], niter, rsqmin, &final_rsq);
+    iters += congrad_multi(source[n], psim[n], niter, rsqmin, &final_rsq);
 #endif
   endaction = action(source, psim);
   change = endaction - startaction;
@@ -208,6 +220,21 @@ int update() {
   // Only print check if not doing HMC
   node0_printf("CHECK: delta S = %.4g\n", (double)(change));
 #endif // ifdef HMC
+#ifndef PUREGAUGE
+    for (n = 0; n < Nroot; n++) {
+      for (j = 0; j < Norder; j++) {
+        for (k = 0; k < NFERMION; k++)
+          free(psim[n][j][k]);
+        free(psim[n][j]);
+      }
+      for (k = 0; k < NFERMION; k++)
+        free(source[n][k]);
+      free(source[n]);
+      free(psim[n]);
+    }
+#endif
+    free(source);
+    free(psim);
 
   if (traj_length > 0) {
     node0_printf("IT_PER_TRAJ %d\n", iters);
