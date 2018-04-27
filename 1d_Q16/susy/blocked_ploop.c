@@ -4,10 +4,10 @@
 // Use tempmat and tempmat2 for temporary storage
 #include "susy_includes.h"
 
-void blocked_ploop(int Nsmear, int block) {
-  register int i;
+void blocked_ploop(int block) {
+  register int i, index = node_index(0);
   register site *s;
-  int j, bl = 2, d[NDIMS] = {0, 0};
+  int j, bl = 2, d = 0;
   complex sum = cmplx(0.0, 0.0), plp;
   msg_tag *tag;
 
@@ -26,7 +26,7 @@ void blocked_ploop(int Nsmear, int block) {
   // Compute the bl-strided Polyakov loop "at" ALL the sites
   // on the first bl = 2^block timeslices
   for (j = bl; j < nt; j += bl) {
-    d[TUP] = j;               // Path from which to gather
+    d = j;               // Path from which to gather
     tag = start_general_gather_field(tempmat, sizeof(matrix),
                                      d, EVENANDODD, gen_pt[0]);
     wait_general_gather(tag);
@@ -50,8 +50,8 @@ void blocked_ploop(int Nsmear, int block) {
 
   // Average all the loops we just calculated
   g_complexsum(&sum);
-  plp.real = sum.real / ((Real)(nx * bl));
-  plp.imag = sum.imag / ((Real)(nx * bl));
-  node0_printf("BPLOOP %d %d %.8g %.8g\n", Nsmear, block, plp.real, plp.imag);
+  plp.real = sum.real / ((Real)bl);
+  plp.imag = sum.imag / ((Real)bl);
+  node0_printf("BPLOOP %d %.8g %.8g\n", block, plp.real, plp.imag);
 }
 // -----------------------------------------------------------------

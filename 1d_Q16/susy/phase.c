@@ -41,6 +41,7 @@ void matvec(complex *in, complex *out) {
   // TODO: Can we rearrange this to avoid all the matrix manipulation?
   iter = 0;
   FORALLSITES(i, s) {
+    FIXME... // TODO
     clear_TF(&(src[i]));
     for (j = 0; j < DIMF; j++) {
       c_scalar_mult_sum_mat(&(Lambda[j]), &(in[iter]), &(src[i].Fsite));

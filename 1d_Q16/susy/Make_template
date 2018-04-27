@@ -7,8 +7,7 @@
 # Targets:
 #   susy_phi uses phi algorithm
 #   susy_hmc uses hybrid Monte Carlo algorithm, i.e., phi + accept/reject
-#   susy_meas measures Wilson loops, scalar correlators and fermion bilinear
-#             with optional APE smearing
+#   susy_meas measures scalar correlators
 #   susy_mcrg calculates observables after RG blocking (UNDER DEVELOPMENT)
 #   susy_mode stochastically calculates eigenmode number (UNDER DEVELOPMENT)
 #   susy_eig calculates eigenvalues using PRIMME
@@ -109,17 +108,16 @@ susy_hmc::
 
 susy_meas::
 	${MAKE} -f ${MAKEFILE} target "MYTARGET= $@" \
-	"DEFINES = ${DEFINES} -DPHI_ALGORITHM -DCORR -DBILIN " \
+	"DEFINES = ${DEFINES} -DPHI_ALGORITHM -DCORR " \
 	"LAPACK = -llapack -lblas " \
-	"EXTRA_OBJECTS = control_meas.o konishi.o correlator_r.o rsymm.o monopole.o \
-	                 bilinearWard.o "
+	"EXTRA_OBJECTS = control_meas.o konishi.o correlator_r.o rsymm.o monopole.o "
 
 susy_hmc_meas::
 	${MAKE} -f ${MAKEFILE} target "MYTARGET= $@" \
-	"DEFINES = ${DEFINES} -DPHI_ALGORITHM -DHMC_ALGORITHM -DCORR -DBILIN " \
+	"DEFINES = ${DEFINES} -DPHI_ALGORITHM -DHMC_ALGORITHM -DCORR " \
 	"LAPACK = -llapack -lblas " \
 	"EXTRA_OBJECTS = control.o update_o.o update_h.o setup_rhmc.o \
-	                 konishi.o bilinearWard.o  "
+	                 konishi.o "
 
 susy_mcrg::
 	${MAKE} -f ${MAKEFILE} target "MYTARGET= $@" \

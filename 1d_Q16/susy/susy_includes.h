@@ -84,15 +84,6 @@ void random_gauge_trans(matrix *temp_ferm[NFERMION]);
 // Konishi and SUGRA correlators
 void compute_Ba();
 void konishi();       // Operators averaged over each timeslice
-
-// Map (x, t) to scalar displacements r
-Real r_map(int x_in, int t_in);
-void correlator_r();            // Functions of r
-#endif
-
-#ifdef BILIN
-// Ward identity involving eta.psi_a fermion bilinear
-int bilinearWard();
 #endif
 
 // Use LAPACK for the scalar eigenvalues
@@ -110,8 +101,8 @@ void zheev_(char *doV, char *uplo, int *N1, double *store, int *N2,
 
 #ifdef MCRG
 void block_mcrg(int bl);
-void blocked_ops(int Nsmear, int bl);
-void blocked_ploop(int Nsmear, int bl);
+void blocked_ops(int bl);
+void blocked_ploop(int bl);
 #endif
 // -----------------------------------------------------------------
 

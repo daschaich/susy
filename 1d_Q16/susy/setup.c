@@ -250,12 +250,6 @@ int readin(int prompt) {
       par_buf.rsqmin = x * x;
     }
 
-#ifdef BILIN
-    // Number of stochastic sources for fermion bilinear and susy trans
-    // Also used for stochastic mode number computation
-    IF_OK status += get_i(stdin, prompt, "nsrc", &par_buf.nsrc);
-#endif
-
 #ifdef EIG
     // Number of eigenvalues to calculate
     IF_OK status += get_i(stdin, prompt, "Nvec", &par_buf.Nvec);
@@ -317,10 +311,6 @@ int readin(int prompt) {
   kappa = (Real)NCOL * 0.25 / lambda;
   node0_printf("lambda=%.4g --> kappa=Nc/(4lambda)=%.4g\n",
                lambda, kappa);
-
-#ifdef BILIN
-  nsrc = par_buf.nsrc;
-#endif
 
 #ifdef EIG
   // Include some mallocs here (make_fields has already been called)

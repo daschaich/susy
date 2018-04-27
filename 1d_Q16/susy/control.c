@@ -31,7 +31,7 @@ int main(int argc, char *argv[]) {
   }
   dtime = -dclock();
 
-  // Check: compute initial bosonic action
+  // Check: compute initial bosonic action and scalar squares
   b_act = bosonic_action(&(Xtr[0]), &(Xtr[1]), &(Xtr[2]));
   node0_printf("START %.8g\n", b_act / (double)nt);
 
@@ -55,13 +55,13 @@ int main(int argc, char *argv[]) {
     avs_iters += s_iters;
 
     // Do "local" measurements every trajectory!
-    // Tr[Udag.U] / N
+    // Tr[X^2] / N
     Xtr_ave = scalar_trace(Xtr, &Xtr_width);
     node0_printf("SCALAR SQUARES");
     for (j = 0; j < NSCALAR; j++)
       node0_printf(" %.6g", Xtr[j]);
-
     node0_printf(" %.6g %.6g\n", Xtr_ave, Xtr_width);
+
     // Polyakov loop measurement
     // Format: GMES Re(Polyakov) Im(Poyakov) cg_iters
     plp = ploop();
@@ -86,12 +86,6 @@ int main(int argc, char *argv[]) {
 #ifdef CORR
       // Konishi and SUGRA
       konishi();
-#endif
-
-#ifdef BILIN
-      // Ward identity involving eta.psi_a fermion bilinear
-      Nmeas++;
-      avm_iters += bilinearWard();
 #endif
     }
     fflush(stdout);

@@ -18,6 +18,7 @@ void matvec(Real *in, complex *out) {
   // Each Twist_Fermion has Ndat = 4DIMF non-trivial complex components
   iter = 0;
   FORALLSITES(i, s) {
+    FIXME... // TODO
     clear_TF(&(src[i]));
     for (j = 0; j < DIMF; j++) {
       if (in[iter] > 0.5)

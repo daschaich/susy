@@ -1,13 +1,11 @@
 // -----------------------------------------------------------------
-// Main procedure for N=(2,2) SYM eigenvalues
+// Main procedure for BFSS/BMN eigenvalues
 #define CONTROL
 #include "susy_includes.h"
 
 int main(int argc, char *argv[]) {
   int prompt, dir;
-  double plaq, dtime, plpMod = 0.0;
-  double linktr[NUMLINK], linktr_ave, linktr_width;
-  double link_det[NUMLINK], det_ave, det_width;
+  double b_act, dtime, Xtr[NSCALAR], Xtr_ave, Xtr_width;
   complex plp = cmplx(99.0, 99.0);
   int ivec, total_iters = 0;
 #ifndef EIG
@@ -33,38 +31,24 @@ int main(int argc, char *argv[]) {
   }
   dtime = -dclock();
 
-  // Check: compute initial plaquette and bosonic action
-  plaquette(&plaq);
-  node0_printf("START %.8g ", plaq);
-  plaq = gauge_action(NODET);
-  node0_printf("%.8g\n", plaq / (double)volume);
+  // Compute bosonic action, scalar squares and Polyakov loop to check config
+  b_act = bosonic_action(&(Xtr[0]), &(Xtr[1]), &(Xtr[2]));
+  node0_printf("START %.8g\n", b_act / (double)nt);
 
-  // Do "local" measurements to check configuration
-  // Tr[Udag.U] / N
-  linktr_ave = link_trace(linktr, &linktr_width,
-                          link_det, &det_ave, &det_width);
-  node0_printf("FLINK");
-  FORALLDIR(dir)
-    node0_printf(" %.6g", linktr[dir]);
-  node0_printf(" %.6g %.6g\n", linktr_ave, linktr_width);
-  node0_printf("FLINK_DET");
-  FORALLDIR(dir)
-    node0_printf(" %.6g", link_det[dir]);
-  node0_printf(" %.6g %.6g\n", det_ave, det_width);
+  Xtr_ave = scalar_trace(Xtr, &Xtr_width);
+  node0_printf("SCALAR SQUARES");
+  for (j = 0; j < NSCALAR; j++)
+    node0_printf(" %.6g", Xtr[j]);
+  node0_printf(" %.6g %.6g\n", Xtr_ave, Xtr_width);
 
-  // Polyakov loop and plaquette measurements
-  // Format: GMES Re(Polyakov) Im(Poyakov) cg_iters plaq
-  plp = ploop(TUP, NODET, &plpMod);
-  plaquette(&plaq);
-  node0_printf("GMES %.8g %.8g 0 %.8g ",
-               plp.real, plp.imag, plaq);
+  // Format: GMES Re(Polyakov) Im(Poyakov) cg_iters
+  plp = ploop();
+  node0_printf("GMES %.8g %.8g 0 ", plp.real, plp.imag);
 
-  // Bosonic action (printed twice by request)
-  // Might as well spit out volume average of Polyakov loop modulus
-  plaq = gauge_action(NODET) / (double)volume;
-  node0_printf("%.8g ", plaq);
-  node0_printf("%.8g\n", plpMod);
-  node0_printf("BACTION %.8g\n", plaq);
+  // More details of bosonic action (to match expected GMES output format)
+  node0_printf("%.8g %.8g %.8g %.8g\n",
+               b_act / (double)nt, Xtr[0] / (double)nt,
+               Xtr[1] / (double)nt, Xtr[2] / (double)nt);
 
   // Main measurement: PRIMME eigenvalues
   // Calculate and print smallest eigenvalues,

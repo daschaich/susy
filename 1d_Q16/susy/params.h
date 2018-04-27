@@ -32,11 +32,6 @@ typedef struct {
   Real rsqmin;                  // For deciding on convergence
   char startfile[MAXFILENAME], savefile[MAXFILENAME];
 
-#ifdef BILIN
-  int nsrc;                     // Number of stochastic sources
-#endif
-
-
 #ifdef EIG
   // Eigenvalue parameters
   int Nvec, maxIter;

@@ -6,23 +6,23 @@
 
 
 // -----------------------------------------------------------------
-// Copy a gauge field as an array of NUMLINK matrices
+// Copy the gauge field and scalars on all sites
 void copy_bosons(int sign) {
   register int i, j;
   register site *s;
 
   if (sign == 1) {
     FORALLSITES(i, s) {
-      mat_copy(&s->link, &s->old_link);
+      mat_copy(&(s->link), &(s->old_link));
       for (j = 0; j < NSCALAR; j++)
-        mat_copy(&s->X[j], &s->old_X[j]);
+        mat_copy(&(s->X[j]), &(s->old_X[j]));
     }
   }
   else if (sign == -1) {
     FORALLSITES(i, s) {
-      mat_copy(&s->old_link, &s->link);
-      for(j=0;j<NSCALAR;j++)
-        mat_copy(&s->old_X[j], &s->X[j]);
+      mat_copy(&(s->old_link), &(s->link));
+      for (j = 0; j < NSCALAR; j++)
+        mat_copy(&(s->old_X[j]), &(s->X[j]));
     }
   }
   else {

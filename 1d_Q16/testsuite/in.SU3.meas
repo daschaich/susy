@@ -18,7 +18,6 @@ mu 0.3
 
 max_cg_iterations 500
 error_per_site 1e-5
-nsrc 3
 
 reload_serial config.SU3.4
 forget

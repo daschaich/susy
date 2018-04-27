@@ -1,10 +1,10 @@
 // -----------------------------------------------------------------
-// Main procedure for N=(2,2) SYM lattice printing
+// Main procedure for BFSS/BMN lattice printing
 #define CONTROL
 #include "susy_includes.h"
 
 int main(int argc, char *argv[]) {
-  int prompt, s, x, t, mu, i, j;
+  int prompt, s, t, i, j;
   Real re, im;
 
   // Setup
@@ -17,8 +17,6 @@ int main(int argc, char *argv[]) {
   g_sync();
   prompt = setup();
   setup_lambda();
-  setup_PtoP();
-  setup_FQ();
 
   // Load input and run (loop removed)
   if (readin(prompt) != 0) {
@@ -33,22 +31,17 @@ int main(int argc, char *argv[]) {
   }
 
   // Spill lattice in format expected by serial code
-  // (cf. read_in.cpp, loop_over_lattice and << overloading for Umatrix
-  // Also need to add first line: nx\t nt\t kappa\t f_eps\t N
+  // (cf. read_in.cpp, loop_over_lattice and << overloading for Umatrix)
   for (t = 0; t < nt; t++) {
-    for (x = 0; x < nx; x++) {
-      s = node_index(x, t);
-      FORALLDIR(mu) {
-        for (i = 0; i < NCOL; i++) {
-          for (j = 0; j < NCOL; j++) {
-            re = lattice[s].link[mu].e[i][j].real;
-            im = lattice[s].link[mu].e[i][j].imag;
-            printf("%g\t%g\t", re, im);
-          }
-        }
-        printf("\n");
+    s = node_index(t);
+    for (i = 0; i < NCOL; i++) {
+      for (j = 0; j < NCOL; j++) {
+        re = lattice[s].link.e[i][j].real;
+        im = lattice[s].link.e[i][j].imag;
+        printf("%g\t%g\t", re, im);
       }
     }
+    printf("\n");
   }
   fflush(stdout);
   return 0;

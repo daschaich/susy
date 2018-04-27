@@ -16,6 +16,7 @@ void rand_TFsource(Twist_Fermion *src) {
 
   // Begin with pure gaussian random numbers
   FORALLSITES(i, s) {
+    FIXME... // TODO
     clear_TF(&(src[i]));
     for (j = 0; j < DIMF; j++) {                // Site fermions
 #ifdef SITERAND
