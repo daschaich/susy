@@ -4,21 +4,15 @@
 #include "susy_includes.h"
 
 complex ploop() {
-  register int i;
+  register int i, index = node_index(0);
   register site *s;
   int t;
-  double norm = 1.0 / (double)nt;
-  complex plp;
+  complex plp = cmplx(0.0, 0.0);
   matrix tmat;
 
-  // Special case: nt == 1
+  // Special case: nt == 1 (i.e., a single-site 'lattice', s=0)
   if (nt == 1) {
-    FORALLSITES(i, s)
-      plp = trace(&(s->link));
-
-    g_complexsum(&plp);
-    CMULREAL(plp, norm, plp);
-
+    plp = trace(&(lattice[index].link));
     return plp;
   }
 
@@ -28,28 +22,17 @@ complex ploop() {
 
   for (t = 1; t < nt; t++) {
     shiftmat(tempmat, tempmat2, TUP);
-    FORALLSITES(i, s) {
-      if (s->t != 0)
-        continue;
-
-      if (t == 1)
-        mult_nn(&(s->link), &(tempmat[i]), &tmat);
-      else {
-        mult_nn(&tmat, &(tempmat[i]), &(tempmat2[i]));
-        mat_copy(&(tempmat2[i]), &tmat);
-      }
+    if (t == 1)
+      mult_nn(&(lattice[index].link), &(tempmat[index]), &tmat);
+    else {
+      mult_nn(&tmat, &(tempmat[index]), &(tempmat2[index]));
+      mat_copy(&(tempmat2[index]), &tmat);
     }
   }
-
-  FORALLSITES(i, s) {
-    if (s->t != 0)
-      continue;
-
+  if (mynode() == node_number(0))
     plp = trace(&tmat);
-  }
-  g_complexsum(&plp);
-  CMULREAL(plp, norm, plp);
-
+  g_sync();
+  g_complexsum(&plp);   // Broadcast same value to all nodes
   return plp;
 }
 // -----------------------------------------------------------------

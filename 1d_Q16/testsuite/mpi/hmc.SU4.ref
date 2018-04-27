@@ -1,9 +1,9 @@
 BMN, Nc = 4, DIMF = 15, fermion rep = adjoint
 Microcanonical simulation with refreshing
-Machine = Scalar processor, with 1 nodes
+Machine = MPI (portable), with 2 nodes
 Hybrid Monte Carlo algorithm
 Phi algorithm
-start: Fri Apr 27 06:59:19 2018
+start: Fri Apr 27 06:59:58 2018
 
 type 0 for no prompts or 1 for prompts
 nt 4
@@ -12,7 +12,7 @@ iseed 41
 Nroot 1
 Norder 15
 LAYOUT = Hypercubes, options = hyper_prime
-ON EACH NODE 4
+ON EACH NODE 2
 Mallocing 0.0 MBytes per core for lattice
 Antiperiodic temporal boundary conditions
 Mallocing 0.1 MBytes per core for fields
@@ -36,11 +36,11 @@ lambda=1 --> kappa=Nc/(4lambda)=1
 Restored binary gauge and scalar configuration serially from file config.SU4.4
 Time stamp Fri Apr 27 01:14:41 2018
 Checksums 7a0f1d04 cbc52451 OK
-Time to reload gauge configuration = 2.415895e-03
+Time to reload gauge configuration = 1.758099e-03
 CHECK NERSC LINKTR: -1.9830514240311459e-02 CKSUM: 0
 Reunitarized for double precision.  Max deviation 4.4e-08 changed to 4.7e-08
 Reantihermized for double precision.  Max deviation 1.5e-15 changed to 1.5e-15
-Time to check unitarity and anti-hermiticity = 3.195e-05 seconds
+Time to check unitarity and anti-hermiticity = 2.217e-05 seconds
 START 67.898925
 SCALAR SQUARES 22.2127 3.73782 24.1394 76.3879 6.06349 19.7999 33.6364 73.7196 76.4236 37.3468 28.3611
 f_eps 0.08333 b_eps 0.01042
@@ -85,6 +85,6 @@ RUNNING COMPLETED
 STOP 70.404168
 Average CG iters for steps: 2080
 
-Time = 3.158 seconds
+Time = 1.795 seconds
 total_iters = 6241
 
