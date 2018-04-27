@@ -49,7 +49,7 @@ static void setup_hyper_prime() {
       --k;
 
     // This can fail if I run out of prime factors
-    if (k == 0) {
+    if (k < 0) {
       node0_printf("ERROR: Not enough factors of %d to lay out lattice\n",
                    prime[k]);
       g_sync();
