@@ -3,7 +3,7 @@ Microcanonical simulation with refreshing
 Machine = Scalar processor, with 1 nodes
 Hybrid Monte Carlo algorithm
 Phi algorithm
-start: Thu Apr 26 00:38:11 2018
+start: Fri Apr 27 06:22:28 2018
 
 type 0 for no prompts or 1 for prompts
 nt 4
@@ -36,11 +36,11 @@ lambda=1 --> kappa=Nc/(4lambda)=0.5
 Restored binary gauge and scalar configuration serially from file config.SU2.4
 Time stamp Thu Apr 26 00:35:50 2018
 Checksums 6cca24f 6e9992f OK
-Time to reload gauge configuration = 2.445006e-02
+Time to reload gauge configuration = 2.918959e-03
 CHECK NERSC LINKTR: -1.7527786269783974e-01 CKSUM: 0
 Reunitarized for double precision.  Max deviation 3.2e-08 changed to 2.2e-16
 Reantihermized for double precision.  Max deviation 0 changed to 0
-Time to check unitarity and anti-hermiticity = 2.694e-05 seconds
+Time to check unitarity and anti-hermiticity = 1.597e-05 seconds
 START 14.194082
 SCALAR SQUARES 5.58164 8.96062 0.544124 2.03372 1.31179 0.0354667 23.6508 0.334661 100.003 15.8284 30.6553
 f_eps 0.2 b_eps 0.025
@@ -79,6 +79,6 @@ RUNNING COMPLETED
 STOP 14.515258
 Average CG iters for steps: 416.3
 
-Time = 0.3168 seconds
+Time = 0.249 seconds
 total_iters = 1249
 
