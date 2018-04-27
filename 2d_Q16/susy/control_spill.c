@@ -33,7 +33,7 @@ int main(int argc, char *argv[]) {
   }
 
   // Spill lattice in format expected by serial code
-  // (cf. read_in.cpp, loop_over_lattice and << overloading for Umatrix
+  // (cf. read_in.cpp, loop_over_lattice and << overloading for Umatrix)
   for (t = 0; t < nt; t++) {
     for (x = 0; x < nx; x++) {
       s = node_index(x, t);

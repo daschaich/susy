@@ -128,8 +128,8 @@ EXTERN char **gen_pt[N_POINTERS];
 #define N_B 2
 #define N_K 3    // N_B * (N_B + 1) / 2
 // Multiple scalar fields and their bilinear traces
-EXTERN matrix *Ba[N_B][NUMLINK];
-EXTERN double *traceBB[N_K][NUMLINK][NUMLINK];
+EXTERN matrix *Ba[N_B];
+EXTERN double *traceBB[N_K];
 
 // Structs for operators and correlators
 typedef struct {
@@ -140,10 +140,6 @@ typedef struct {
   double C[N_K][N_K];
 } Kcorrs;
 EXTERN Kops *tempops, *tempops2;
-#endif
-
-#ifdef BILIN
-EXTERN int nsrc;
 #endif
 
 #ifdef EIG

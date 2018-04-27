@@ -6,6 +6,7 @@
 #include "susy_includes.h"
 
 void random_gauge_trans(Twist_Fermion *TF) {
+  FIXME... // TODO
   int a, b, i, j, x = 1, t = 1, s = node_index(x, t);
   complex tc;
   matrix Gmat, tmat, etamat, psimat[NUMLINK], chimat;
