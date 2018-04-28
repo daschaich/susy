@@ -65,9 +65,20 @@ void random_anti_hermitian(anti_hermitmat *ahmat, double_prn *prn_pt) {
   ahmat->im_diag[3] =      -3.0 * r15;
 #endif
 #if (NCOL > 4)
-  // TODO: Need to generalize... looks straightforward enough...
-  printf("ERROR: Still need to implement general-N rand_ahmat\n");
-  terminate(1);
+  for (i = 4; i < NCOL; i++) {
+    ahmat->im_diag[0] =   r3 + r8 + r15;
+    ahmat->im_diag[1] =  -r3 + r8 + r15;
+    ahmat->im_diag[2] = -2.0 * r8 + r15;
+    ahmat->im_diag[3] =  3.0 * r15;
+
+  if (i+1 == NCOL){
+      ahmat->im_diag[i] = 0.0 ; 
+      for (j=0 ; j < i-1; j++)
+       ahmat->im_diag[i] -= ahmat->im_diag[j]; 
+  }
+  else 
+      ahmat->im_diag[i] = 3.0 * r15;
+
 #endif
 }
 // -----------------------------------------------------------------
