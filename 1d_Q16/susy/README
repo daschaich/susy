@@ -21,7 +21,6 @@ Eigenvalue measurements (susy_eig) require PRIMME (https://github.com/primme/pri
 -DPHI_ALGORITHM for the basic phi algorithm (REQUIRED)
 -DHMC_ALGORITHM switches on the accept/reject step
 -DEIG_POT switches from a double-trace to a single-trace scalar potential (not actively tested)
--DCORR switches on the Konishi and SUGRA correlator calculation
 -DEIG switches on the PRIMME eigenvalue calculation
 -DPUREGAUGE switches off the fermions (FOR TESTING)
 

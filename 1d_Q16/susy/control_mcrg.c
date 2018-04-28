@@ -63,11 +63,6 @@ int main(int argc, char *argv[]) {
 
   // ---------------------------------------------------------------
   // First print unblocked observables
-#ifdef CORR
-  // Unblocked Konishi and SUGRA operators
-  blocked_ops(0, 0);
-#endif
-
   // Unblocked scalar eigenvalues
   // Format: SCALAR_EIG bl # ave width min max
   scalar_eig(ave_eigs, eig_widths, min_eigs, max_eigs);
@@ -87,11 +82,6 @@ int main(int argc, char *argv[]) {
     j *= 2;
     node0_printf("Blocking %d gives L = %d\n", bl, nx / j);
     block_mcrg(bl);
-
-#ifdef CORR
-    // Blocked Konishi and SUGRA correlators
-    blocked_ops(0, bl);
-#endif
 
     // Blocked Polyakov and Wilson loops
     blocked_ploop(0, bl);

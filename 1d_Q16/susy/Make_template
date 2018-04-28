@@ -108,23 +108,21 @@ susy_hmc::
 
 susy_meas::
 	${MAKE} -f ${MAKEFILE} target "MYTARGET= $@" \
-	"DEFINES = ${DEFINES} -DPHI_ALGORITHM -DCORR " \
+	"DEFINES = ${DEFINES} -DPHI_ALGORITHM " \
 	"LAPACK = -llapack -lblas " \
-	"EXTRA_OBJECTS = control_meas.o konishi.o correlator_r.o rsymm.o monopole.o "
+	"EXTRA_OBJECTS = control_meas.o "
 
 susy_hmc_meas::
 	${MAKE} -f ${MAKEFILE} target "MYTARGET= $@" \
-	"DEFINES = ${DEFINES} -DPHI_ALGORITHM -DHMC_ALGORITHM -DCORR " \
+	"DEFINES = ${DEFINES} -DPHI_ALGORITHM -DHMC_ALGORITHM " \
 	"LAPACK = -llapack -lblas " \
-	"EXTRA_OBJECTS = control.o update_o.o update_h.o setup_rhmc.o \
-	                 konishi.o "
+	"EXTRA_OBJECTS = control.o update_o.o update_h.o setup_rhmc.o "
 
 susy_mcrg::
 	${MAKE} -f ${MAKEFILE} target "MYTARGET= $@" \
-	"DEFINES = ${DEFINES} -DPHI_ALGORITHM -DCORR -DMCRG" \
+	"DEFINES = ${DEFINES} -DPHI_ALGORITHM -DMCRG" \
 	"LAPACK = -llapack -lblas " \
-	"EXTRA_OBJECTS = control_mcrg.o block_mcrg.o blocked_ops.o blocked_ploop.o \
-	                 konishi.o "
+	"EXTRA_OBJECTS = control_mcrg.o block_mcrg.o blocked_ops.o blocked_ploop.o "
 
 susy_eig::
 	${MAKE} -f ${MAKEFILE} target "MYTARGET= $@" \

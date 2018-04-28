@@ -1,0 +1,67 @@
+BMN, Nc = 7, DIMF = 48, fermion rep = adjoint
+Microcanonical simulation with refreshing
+Machine = Scalar processor, with 1 nodes
+Hybrid Monte Carlo algorithm
+Phi algorithm
+start: Sat Apr 28 11:33:35 2018
+
+type 0 for no prompts or 1 for prompts
+nt 4
+PBC -1
+iseed 14
+Nroot 1
+Norder 15
+LAYOUT = Hypercubes, options = hyper_prime
+ON EACH NODE 4
+Mallocing 0.1 MBytes per core for lattice
+Antiperiodic temporal boundary conditions
+Mallocing 0.3 MBytes per core for fields
+Using Nroot = 1
+RHMC Norder 15 for spectral range [1e-7, 1000]
+
+
+warms 0
+trajecs 3
+traj_length 1
+nstep 40
+nstep_gauge 4
+traj_between_meas 2
+lambda 1
+mu 0.3
+max_cg_iterations 5000
+error_per_site 1e-05
+fresh
+forget
+lambda=1 --> kappa=Nc/(4lambda)=1.75
+unit gauge and anti-hermitian scalar configuration loaded
+CHECK NERSC LINKTR: 1.0000000000000000e+00 CKSUM: 0
+Reunitarized for double precision.  Max deviation 0 changed to 0
+Reantihermized for double precision.  Max deviation 0 changed to 0
+Time to check unitarity and anti-hermiticity = 4.792e-05 seconds
+START 0.07875
+SCALAR SQUARES 0.142857 0.142857 0.142857 0.142857 0.142857 0.142857 0.142857 0.142857 0.142857 0.142857 0
+f_eps 0.025 b_eps 0.003125
+WARMUPS COMPLETED
+action: so3 0.21 so6 0.105 Myers 0 boson 0.315 fermion0 3045.6931 Umom 94.147225 Xmom 728.21208 sum 3868.3674
+action: so3 1.6298796 so6 1.3292204 Myers -0.010577045 boson 860.55305 fermion0 1932.1895 Umom 102.43353 Xmom 972.02029 sum 3867.1964
+ACCEPT: delta S = -1.171 start S = 3868.36740987 end S = 3867.19635867
+IT_PER_TRAJ 52076
+MONITOR_FORCE_GAUGE    0.2599 0.3944
+MONITOR_FORCE_FERMION0 0.3832 1.712
+SCALAR SQUARES 0.588399 1.21776 1.52013 1.17108 0.86901 1.57288 1.01647 2.56379 3.65755 1.57523 0.91848
+GMES 2.6899146 3.4151891 52076 215.13826 0.4074699 0.33230509 -0.0026442613
+SCALAR_EIG 0 -1.07424 0.367276 -2.05405 -0.516781
+SCALAR_EIG 1 -0.609593 0.190453 -1.35663 -0.340772
+SCALAR_EIG 2 -0.30994 0.125362 -0.633682 -0.127701
+SCALAR_EIG 3 0.0402225 0.126334 -0.213746 0.315724
+SCALAR_EIG 4 0.314828 0.147258 0.108615 0.757694
+SCALAR_EIG 5 0.632663 0.197763 0.266156 1.1114
+SCALAR_EIG 6 1.00606 0.251631 0.539876 1.6734
+action: so3 1.6298796 so6 1.3292204 Myers -0.010577045 boson 860.55305 fermion0 3041.2534 Umom 129.56444 Xmom 1921926.3 sum 1925957.7
+ multi CONGRAD not converged
+ rsq = 1647
+ multi CONGRAD not converged
+ rsq = 5.52e+04
+ multi CONGRAD not converged
+ rsq = 2721
+ludcmp_cx: Singular matrix

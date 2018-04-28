@@ -7,6 +7,7 @@
 
 // -----------------------------------------------------------------
 // Copy the gauge field and scalars on all sites
+#ifdef HMC_ALGORITHM
 void copy_bosons(int sign) {
   register int i, j;
   register site *s;
@@ -30,6 +31,7 @@ void copy_bosons(int sign) {
     terminate(1);
   }
 }
+#endif
 // -----------------------------------------------------------------
 
 

@@ -82,12 +82,9 @@ int main(int argc, char *argv[]) {
     }
 
     // Less frequent measurements every "propinterval" trajectories
-    if ((traj_done % propinterval) == (propinterval - 1)) {
-#ifdef CORR
-      // Konishi and SUGRA
-      konishi();
-#endif
-    }
+    // None at the moment
+//    if ((traj_done % propinterval) == (propinterval - 1)) {
+//    }
     fflush(stdout);
   }
   node0_printf("RUNNING COMPLETED\n");
