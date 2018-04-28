@@ -13,8 +13,8 @@ void random_anti_hermitian(anti_hermitmat *ahmat, double_prn *prn_pt) {
   Real r8, one_ov_root3;
 #if (NCOL > 3)
   Real r15, sqrt_sixth;
-#if (NCOL > 3)
-  int i;
+#if (NCOL > 4)
+  int i, j;
 #endif
 #endif
 #endif
@@ -58,27 +58,19 @@ void random_anti_hermitian(anti_hermitmat *ahmat, double_prn *prn_pt) {
   ahmat->im_diag[1] =  -r3 + r8;
   ahmat->im_diag[2] = -2.0 * r8;
 #endif
-#if (NCOL == 4)
+#if (NCOL > 3)
   ahmat->im_diag[0] =   r3 + r8 + r15;
   ahmat->im_diag[1] =  -r3 + r8 + r15;
   ahmat->im_diag[2] = -2.0 * r8 + r15;
   ahmat->im_diag[3] =      -3.0 * r15;
 #endif
 #if (NCOL > 4)
-  for (i = 4; i < NCOL; i++) {
-    ahmat->im_diag[0] =   r3 + r8 + r15;
-    ahmat->im_diag[1] =  -r3 + r8 + r15;
-    ahmat->im_diag[2] = -2.0 * r8 + r15;
-    ahmat->im_diag[3] =  3.0 * r15;
+  ahmat->im_diag[3] *= -1.0;
+  for (i = 4; i < NCOL - 1; i++)
+    ahmat->im_diag[i] = 3.0 * r15;
 
-  if (i+1 == NCOL){
-      ahmat->im_diag[i] = 0.0 ; 
-      for (j=0 ; j < i-1; j++)
-       ahmat->im_diag[i] -= ahmat->im_diag[j]; 
-  }
-  else 
-      ahmat->im_diag[i] = 3.0 * r15;
-
+  // For tracelessness, the factor should be (NCOL - 3)
+  ahmat->im_diag[NCOL - 1] = -3.0 * (NCOL - 4) * r15;
 #endif
 }
 // -----------------------------------------------------------------

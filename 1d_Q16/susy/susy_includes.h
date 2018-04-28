@@ -69,7 +69,9 @@ int congrad_multi(matrix **src, matrix ***psim,
 double scalar_trace(double *Xtr, double *Xwidth);
 
 // Routines in library_util.c that loop over all sites
+#ifdef HMC_ALGORITHM
 void copy_bosons(int sign);
+#endif
 void shiftmat(matrix *dat, matrix *temp, int dir);
 
 // Random gauge transformation for testing gauge invariance
@@ -80,12 +82,6 @@ void random_gauge_trans(matrix *temp_ferm[NFERMION]);
 
 // -----------------------------------------------------------------
 // More measurements
-#ifdef CORR
-// Konishi and SUGRA correlators
-void compute_Ba();
-void konishi();       // Operators averaged over each timeslice
-#endif
-
 // Use LAPACK for the scalar eigenvalues
 // http://www.physics.orst.edu/~rubin/nacphy/lapack/routines/zheev.html
 // First argument turns on eigenvector computations

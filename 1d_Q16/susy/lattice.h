@@ -12,6 +12,7 @@
 // -----------------------------------------------------------------
 
 
+
 // -----------------------------------------------------------------
 // The lattice is an array of this site struct
 typedef struct {
@@ -123,24 +124,6 @@ EXTERN site *lattice;
 // Need at least 2NSCALAR+1=19 to gather scalars for the bosonic force
 #define N_POINTERS 20
 EXTERN char **gen_pt[N_POINTERS];
-
-#ifdef CORR
-#define N_B 2
-#define N_K 3    // N_B * (N_B + 1) / 2
-// Multiple scalar fields and their bilinear traces
-EXTERN matrix *Ba[N_B];
-EXTERN double *traceBB[N_K];
-
-// Structs for operators and correlators
-typedef struct {
-  double OK[N_K];
-  double OS[N_K];
-} Kops;
-typedef struct {
-  double C[N_K][N_K];
-} Kcorrs;
-EXTERN Kops *tempops, *tempops2;
-#endif
 
 #ifdef EIG
 // Eigenvalue stuff

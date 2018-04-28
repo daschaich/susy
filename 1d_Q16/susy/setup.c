@@ -106,7 +106,7 @@ void make_fields() {
   FIELD_ALLOC_VEC(src, matrix, NFERMION);
   FIELD_ALLOC_VEC(dest, matrix, NFERMION);
   FIELD_ALLOC_MAT(Gamma_X, matrix, NCHIRAL_FERMION, NCHIRAL_FERMION);
-  
+
   // CG Fermions
   size += (Real)(3.0 * NFERMION * sizeof(matrix));
   FIELD_ALLOC_VEC(mpm, matrix, NFERMION);
@@ -119,19 +119,6 @@ void make_fields() {
   FIELD_ALLOC(tempmat2, matrix);
   FIELD_ALLOC_VEC(temp_ferm, matrix, NFERMION);
   FIELD_ALLOC_VEC(temp_X, matrix, NSCALAR);
-
-#ifdef CORR
-  int j;
-  size += (Real)(N_B * NUMLINK * sizeof(matrix));
-  size += (Real)(N_K * NUMLINK * NUMLINK * sizeof(Real));
-  size += (Real)(2.0 * sizeof(Kops));
-  for (j = 0; j < N_B; j++)
-    FIELD_ALLOC_VEC(Ba[j], matrix, NUMLINK);
-  for (j = 0; j < N_K; j++)
-    FIELD_ALLOC_MAT(traceBB[j], Real, NUMLINK, NUMLINK);
-  FIELD_ALLOC(tempops, Kops);
-  FIELD_ALLOC(tempops2, Kops);
-#endif
 
 #if defined(EIG) || defined(PHASE)
   size += (Real)(2.0 * NFERMION * sizeof(matrix));
@@ -263,7 +250,6 @@ int readin(int prompt) {
     IF_OK status += get_i(stdin, prompt, "ckpt_save", &par_buf.ckpt_save);
 #endif
 
-
     // Find out what kind of starting lattice to use
     IF_OK status += ask_starting_lattice(stdin, prompt, &par_buf.startflag,
                                          par_buf.startfile);
@@ -343,6 +329,7 @@ int readin(int prompt) {
   store = malloc(sizeof *store * 2 * NCOL * NCOL);
   Rwork = malloc(sizeof *Rwork * (3 * NCOL - 2));
   eigs = malloc(sizeof *eigs * NCOL);
+
   // Compute initial Gamma_X
   build_Gamma_X();
 

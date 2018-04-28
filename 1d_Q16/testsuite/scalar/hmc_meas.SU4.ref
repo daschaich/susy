@@ -1,0 +1,90 @@
+BMN, Nc = 4, DIMF = 15, fermion rep = adjoint
+Microcanonical simulation with refreshing
+Machine = Scalar processor, with 1 nodes
+Hybrid Monte Carlo algorithm
+Phi algorithm
+start: Sat Apr 28 09:55:53 2018
+
+type 0 for no prompts or 1 for prompts
+nt 4
+PBC -1
+iseed 41
+Nroot 1
+Norder 15
+LAYOUT = Hypercubes, options = hyper_prime
+ON EACH NODE 4
+Mallocing 0.0 MBytes per core for lattice
+Antiperiodic temporal boundary conditions
+Mallocing 0.1 MBytes per core for fields
+Using Nroot = 1
+RHMC Norder 15 for spectral range [1e-7, 1000]
+
+
+warms 0
+trajecs 3
+traj_length 1
+nstep 12
+nstep_gauge 4
+traj_between_meas 2
+lambda 1
+mu 0.3
+max_cg_iterations 500
+error_per_site 1e-05
+reload_serial config.SU4.4
+forget
+lambda=1 --> kappa=Nc/(4lambda)=1
+Restored binary gauge and scalar configuration serially from file config.SU4.4
+Time stamp Fri Apr 27 01:14:41 2018
+Checksums 7a0f1d04 cbc52451 OK
+Time to reload gauge configuration = 2.177954e-03
+CHECK NERSC LINKTR: -1.9830514240311459e-02 CKSUM: 0
+Reunitarized for double precision.  Max deviation 4.4e-08 changed to 4.7e-08
+Reantihermized for double precision.  Max deviation 1.5e-15 changed to 1.5e-15
+Time to check unitarity and anti-hermiticity = 3.409e-05 seconds
+START 67.898925
+SCALAR SQUARES 22.2127 3.73782 24.1394 76.3879 6.06349 19.7999 33.6364 73.7196 76.4236 37.3468 28.3611
+f_eps 0.08333 b_eps 0.01042
+WARMUPS COMPLETED
+action: so3 8.0143817 so6 11.441238 Myers -0.013962804 boson 271.5957 fermion0 984.29566 Umom 27.977888 Xmom 241.50624 sum 1525.3755
+action: so3 9.0306001 so6 11.607537 Myers 0.0067025227 boson 270.67476 fermion0 981.99904 Umom 27.202556 Xmom 245.51154 sum 1525.3879
+ACCEPT: delta S = 0.01242 start S = 1525.37548225 end S = 1525.38790382
+IT_PER_TRAJ 2052
+MONITOR_FORCE_GAUGE    4.182 4.245
+MONITOR_FORCE_FERMION0 0.1331 0.1668
+SCALAR SQUARES 23.6496 4.92182 27.8698 81.1315 5.47718 17.1539 33.0429 76.4452 76.9377 38.5144 29.4584
+GMES -0.10431097 -2.1960202 2052 67.668691 2.25765 2.9018842 0.0016756307
+SCALAR_EIG 0 -6.70046 3.19445 -13.102 -1.81517
+SCALAR_EIG 1 -2.21474 1.4636 -6.58449 -0.0591796
+SCALAR_EIG 2 2.11703 1.43267 0.056269 5.61927
+SCALAR_EIG 3 6.79817 3.0953 2.11678 11.6034
+action: so3 9.0306001 so6 11.607537 Myers 0.0067025227 boson 270.67476 fermion0 988.21602 Umom 40.104456 Xmom 271.21128 sum 1570.2065
+action: so3 8.0511626 so6 11.668578 Myers 0.038015183 boson 268.82081 fermion0 984.70907 Umom 41.174927 Xmom 275.53358 sum 1570.2384
+ACCEPT: delta S = 0.03187 start S = 1570.20651515 end S = 1570.23838728
+IT_PER_TRAJ 2093
+MONITOR_FORCE_GAUGE    4.254 4.302
+MONITOR_FORCE_FERMION0 0.1361 0.1707
+SCALAR SQUARES 20.3737 6.22939 23.7167 75.7959 5.8559 17.1942 35.5919 75.004 82.2725 38.0038 29.4888
+GMES -0.2660779 0.8570501 2093 67.205203 2.0127906 2.9171446 0.0095037958
+SCALAR_EIG 0 -6.74445 3.12555 -12.9278 -2.49621
+SCALAR_EIG 1 -2.04138 1.40708 -5.79441 -0.376151
+SCALAR_EIG 2 2.04111 1.41928 -0.0216838 5.67516
+SCALAR_EIG 3 6.74471 3.0255 2.67417 11.9452
+action: so3 8.0511626 so6 11.668578 Myers 0.038015183 boson 268.82081 fermion0 945.10732 Umom 26.097067 Xmom 290.34248 sum 1530.3677
+action: so3 7.5129194 so6 11.384629 Myers 0.0056682925 boson 281.61667 fermion0 950.48004 Umom 34.704049 Xmom 263.59655 sum 1530.3973
+ACCEPT: delta S = 0.02963 start S = 1530.36767781 end S = 1530.39731158
+IT_PER_TRAJ 2096
+MONITOR_FORCE_GAUGE    4.23 4.293
+MONITOR_FORCE_FERMION0 0.1369 0.1703
+SCALAR SQUARES 20.3902 5.27715 21.2884 73.8649 5.20909 18.2526 35.3888 73.2905 78.6098 36.8413 28.619
+GMES 0.0027174771 -3.3108777 2096 70.404168 1.8782298 2.8461572 0.0014170731
+SCALAR_EIG 0 -6.53968 3.12483 -12.4505 -2.15719
+SCALAR_EIG 1 -2.03131 1.4601 -6.12941 -0.012803
+SCALAR_EIG 2 1.98189 1.42223 0.0470083 5.60467
+SCALAR_EIG 3 6.58909 3.02062 2.32717 11.8238
+RUNNING COMPLETED
+STOP 70.404168
+Average CG iters for steps: 2080
+
+Time = 3.154 seconds
+total_iters = 6241
+
