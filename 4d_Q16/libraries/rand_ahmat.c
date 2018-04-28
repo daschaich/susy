@@ -14,7 +14,7 @@ void random_anti_hermitian(anti_hermitmat *ahmat, double_prn *prn_pt) {
 #if (NCOL > 3)
   Real r15, sqrt_sixth;
 #if (NCOL > 4)
-  int i, j;
+  int i;
 #endif
 #endif
 #endif
