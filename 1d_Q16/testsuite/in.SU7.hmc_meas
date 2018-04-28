@@ -16,7 +16,7 @@ traj_between_meas 2
 lambda 1
 mu 0.3
 
-max_cg_iterations 5000
+max_cg_iterations 9000
 error_per_site 1e-5
 
 fresh
