@@ -32,83 +32,46 @@ int check_deviation(Real deviation) {
 
 
 // -----------------------------------------------------------------
-void ludcmp_cx(matrix *a, int *indx, Real *d) {
-  int i, imax, j, k;
-  Real big, fdum;
-  complex sum, dum, tc;
-  Real vv[NCOL];
-
-  *d = 1.0;
-  for (i = 0; i < NCOL; i++) {
-    big = 0.0;
-    for (j = 0; j < NCOL; j++) {
-      tc.real = (*a).e[i][j].real*(*a).e[i][j].real
-              + (*a).e[i][j].imag*(*a).e[i][j].imag;
-      if (tc.real > big)
-        big = tc.real;
-    }
-    if (big == 0.0) {
-      node0_printf("ludcmp_cx: Singular matrix\n");
-      exit(1);
-    }
-    vv[i] = 1.0 / sqrt(big);
-  }
-  for (j = 0; j < NCOL; j++) {
-    for (i = 0; i < j; i++) {
-      sum = (*a).e[i][j];
-      for (k = 0; k < i; k++)
-        CMULDIF((*a).e[i][k], (*a).e[k][j], sum);
-      (*a).e[i][j] = sum;
-    }
-    big = 0.0;
-    for (i = j; i < NCOL; i++) {
-      sum = (*a).e[i][j];
-      for (k = 0; k < j; k++)
-        CMULDIF((*a).e[i][k], (*a).e[k][j], sum);
-      (*a).e[i][j] = sum;
-
-      if ((fdum = vv[i] * fabs(sum.real)) >= big) {
-        big = fdum;
-        imax = i;
-      }
-    }
-    if (j != imax) {
-      for (k = 0; k < NCOL; k++) {
-        dum = (*a).e[imax][k];
-        (*a).e[imax][k] = (*a).e[j][k];
-        (*a).e[j][k] = dum;
-      }
-      *d = -(*d);
-      vv[imax] = vv[j];
-    }
-    indx[j] = imax;
-    if (j != NCOL - 1) {
-      dum = (*a).e[j][j];
-      for (i = j + 1; i < NCOL; i++) {
-        CDIV((*a).e[i][j], dum, tc);
-        (*a).e[i][j] = tc;
-      }
-    }
-  }
-}
-
+// Compute complex determinant of given link through LAPACK
 complex find_det(matrix *Q) {
-  int i, indx[NCOL];
-  Real d;
-  complex det, tc;
-  matrix QQ;
+  int i, row, col, Npt = NCOL, stat = 0;
+  complex det, det2;
+  matrix tmat;
 
-  mat_copy(Q, &QQ);
-  ludcmp_cx(&QQ, indx, &d);
-  det = cmplx(d, 0.0);
-  for (i = 0; i < NCOL; i++) {
-    CMUL(det, QQ.e[i][i], tc);
-    det = tc;
+  // Convert Q to column-major double array used by LAPACK
+  for (row = 0; row < NCOL; row++) {
+    for (col = 0; col < NCOL; col++) {
+      i = 2 * (col * NCOL + row);
+      store[i] = Q->e[row][col].real;
+      store[i + 1] = Q->e[row][col].imag;
+    }
   }
 
-#ifdef UNIDEBUG
-  printf("DET %.8g %.8g\n", det.real, det.imag);
-#endif
+  // Compute LU decomposition of in
+  zgetrf_(&Npt, &Npt, store, &Npt, ipiv, &stat);
+
+  // Move the results into the matrix structure tmat
+  for (row = 0; row < NCOL; row++) {
+    for (col = 0; col < NCOL; col++) {
+      i = 2 * (col * NCOL + row);
+      tmat.e[row][col].real = store[i];
+      tmat.e[row][col].imag = store[i + 1];
+    }
+  }
+
+  det = cmplx(1.0, 0.0);
+  for (i = 0; i < NCOL; i++) {
+    CMUL(det, tmat.e[i][i], det2);
+    // Negate if row has been pivoted according to pivot array
+    // Apparently LAPACK sets up ipiv so this doesn't double-count pivots
+    // Note 1<=ipiv[i]<=N rather than 0<=ipiv[i]<N because Fortran
+    if (ipiv[i] != i + 1) {     // Braces suppress compiler error
+      CNEGATE(det2, det);
+    }
+    else
+      det = det2;
+  }
+//  printf("DETER %.4g %.4g\n", det.real, det.imag);
   return det;
 }
 // -----------------------------------------------------------------

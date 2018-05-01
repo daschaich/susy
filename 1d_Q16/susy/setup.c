@@ -295,8 +295,7 @@ int readin(int prompt) {
 #endif
 
   kappa = (Real)NCOL * 0.25 / lambda;
-  node0_printf("lambda=%.4g --> kappa=Nc/(4lambda)=%.4g\n",
-               lambda, kappa);
+  node0_printf("lambda=%.4g --> kappa=Nc/(4lambda)=%.4g\n", lambda, kappa);
 
 #ifdef EIG
   // Include some mallocs here (make_fields has already been called)
@@ -321,14 +320,16 @@ int readin(int prompt) {
   strcpy(startfile, par_buf.startfile);
   strcpy(savefile, par_buf.savefile);
 
-  // Do whatever is needed to get lattice
-  startlat_p = reload_lattice(startflag, startfile);
-
   // Allocate some more arrays to be used by LAPACK in scalar_eig.c
+  // Needs to be above reunitarization
   work = malloc(sizeof *work * 4 * NCOL);
   store = malloc(sizeof *store * 2 * NCOL * NCOL);
   Rwork = malloc(sizeof *Rwork * (3 * NCOL - 2));
   eigs = malloc(sizeof *eigs * NCOL);
+  ipiv = malloc(sizeof *ipiv * NCOL);   // For generic/reunitarize.c
+
+  // Do whatever is needed to get lattice
+  startlat_p = reload_lattice(startflag, startfile);
 
   // Compute initial Gamma_X
   build_Gamma_X();

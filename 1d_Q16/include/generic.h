@@ -69,5 +69,14 @@ Real myrand(double_prn *prn_pt);
 int check_deviation();
 void reunitarize();
 void reantihermize();
+// Use LAPACK in determinant calculation for reunitarization
+// Compute LU decomposition of a complex matrix
+// http://www.physics.orst.edu/~rubin/nacphy/lapack/routines/zgetrf.html
+// First and second arguments are the dimensions of the matrix
+// Third argument is the LU-decomposed matrix
+// Fourth argument is the
+// Fifth argument is the LU decomposition pivot matrix
+// Final argument reports success or information about failure
+void zgetrf_(int *N1, int *N2, double *store, int *lda, int *ipiv, int *stat);
 #endif
 // -----------------------------------------------------------------

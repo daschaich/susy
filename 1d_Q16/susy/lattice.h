@@ -111,6 +111,7 @@ EXTERN matrix *tempmat, *tempmat2, *temp_ferm[NFERMION], *temp_X[NSCALAR];
 
 //Allocate some more arrays to be used by LAPACK in scalar eigenvalues
 EXTERN double *Rwork, *eigs, *store, *work;
+EXTERN int *ipiv;           // This one is for reunitarization
 
 EXTERN gauge_file *startlat_p;
 EXTERN gauge_file *savelat_p;
