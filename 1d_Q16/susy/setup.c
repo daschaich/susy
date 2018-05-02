@@ -202,7 +202,7 @@ int setup() {
 int readin(int prompt) {
   int status;
 #ifdef EIG
-  int i;
+  int i, j;
 #endif
   Real x;
 
@@ -303,8 +303,11 @@ int readin(int prompt) {
   Nvec = par_buf.Nvec;
   eigVal = malloc(sizeof *eigVal * Nvec);
   eigVec = malloc(sizeof *eigVec * Nvec);
-  for (i = 0; i < Nvec; i++)
-    FIELD_ALLOC_VEC(eigVec[i], matrix, NFERMION);
+  for (i = 0; i < Nvec; i++) {
+    eigVec[i] = malloc(sizeof(matrix*) * NFERMION);
+    for (j = 0; j < NFERMION; j++)
+      FIELD_ALLOC(eigVec[i][j], matrix);
+  }
 
   eig_tol = par_buf.eig_tol;
   maxIter = par_buf.maxIter;

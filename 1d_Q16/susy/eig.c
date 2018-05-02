@@ -13,7 +13,7 @@ int rand_source(matrix *src[NFERMION]) {
   register int i, j, k;
   register site *s;
   complex grn;
-  
+
   // Begin with pure gaussian random numbers
   FORALLSITES(i, s) {
     for (k = 0; k < NFERMION; k++) {
@@ -48,7 +48,7 @@ void av_ov (void *x, void *y, int *Nvec, primme_params *primme) {
     // Each Twist_Fermion has Ndat=4DIMF non-trivial complex components
     xx = ((Complex_Z*) x) + Ndat * ivec * sites_on_node;  // This vector in x
     iter = 0;
-    
+
     for(m=0; m<NFERMION; m++) {
       FORALLSITES(i, s) {
         for (j = 0; j < NCOL; j++) {
@@ -89,7 +89,7 @@ void av_ov (void *x, void *y, int *Nvec, primme_params *primme) {
 #endif
 
     DSq(src, res);    // D^2 + fmass^2
-    
+
     // Copy the resulting Twist_Fermion res back to complex vector y
     // Each Twist_Fermion has Ndat=16DIMF non-trivial complex components
     xx = ((Complex_Z*) y) + Ndat * ivec * sites_on_node;  // This vector in y
@@ -109,7 +109,7 @@ void av_ov (void *x, void *y, int *Nvec, primme_params *primme) {
 #ifdef DEBUG_CHECK
     if (iter != Ndat * sites_on_node)
       printf("av_ov: iter = %d after source\n", iter);
-    
+
     // Check that res is the same magnitude as y[ivec]
     double ymag = 0.0, res_mag = 0.0;
     xx = ((Complex_Z*) y) + Ndat * ivec * sites_on_node;   // This vector in x
@@ -273,13 +273,12 @@ int make_evs(int Nvec, matrix ***eigVec, double *eigVal, int flag) {
       node0_printf("BIGEIGVAL  %d %.8g %.8g\n", ivec, eigVal[ivec], check);
   }
   fflush(stdout);
-  
+
   // Clean up
   free(workVecs);
   free(rnorms);
   for(m=0; m<NFERMION; m++)
     free(tmpmat[m]);
-  free(tmpmat);
   primme_Free(&primme);
   return primme.stats.numOuterIterations;
 }
