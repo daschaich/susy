@@ -131,7 +131,7 @@ EXTERN char **gen_pt[N_POINTERS];
 EXTERN int Nvec;
 EXTERN double *eigVal;
 EXTERN matrix *src[NFERMION], *res[NFERMION];      // For av_ov matvec
-EXTERN matrix **eigVec[NFERMION];
+EXTERN matrix ***eigVec;
 EXTERN Real eig_tol;          // Tolerance for the eigenvalue computation
 EXTERN int maxIter;           // Maximum iterations
 #endif

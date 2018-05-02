@@ -4,7 +4,7 @@
 #include "susy_includes.h"
 
 int main(int argc, char *argv[]) {
-  int prompt, dir;
+  int j, prompt, dir;
   double b_act, dtime, Xtr[NSCALAR], Xtr_ave, Xtr_width;
   complex plp = cmplx(99.0, 99.0);
   int ivec, total_iters = 0;
@@ -55,13 +55,6 @@ int main(int argc, char *argv[]) {
   // checking |D^dag D phi - lambda phi|^2
   total_iters = make_evs(Nvec, eigVec, eigVal, 1);
 
-  // Check matrix elements of D with DDdag eigenmodes
-  // The eigenvalues should be paired, with each pair producing
-  // positive/negative matrix elements
-  // In principle, one could tighten eig_tol until all pairs are found
-  // For now we just print them all out to check offline
-  check_Dmat(Nvec, eigVec);
-
   // Calculate and print largest eigenvalues, for tuning RHMC
   // Don't need to compute many here...
   // (Initial eigVal/eigVec alloc moved to setup.c)
@@ -75,7 +68,7 @@ int main(int argc, char *argv[]) {
     eigVal = malloc(sizeof *eigVal * Nvec);
     eigVec = malloc(sizeof *eigVec * Nvec);
     for (ivec = 0; ivec < Nvec; ivec++)
-      FIELD_ALLOC(eigVec[ivec], Twist_Fermion);
+      FIELD_ALLOC_VEC(eigVec[ivec], matrix, NFERMION);
   }
   total_iters += make_evs(Nvec, eigVec, eigVal, -1);
 
