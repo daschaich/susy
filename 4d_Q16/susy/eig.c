@@ -318,6 +318,7 @@ int make_evs(int Nvec, Twist_Fermion **eigVec, double *eigVal, int flag) {
   // Clean up
   free(workVecs);
   free(rnorms);
+  free(tmpTF);
   primme_Free(&primme);
   return primme.stats.numOuterIterations;
 }
