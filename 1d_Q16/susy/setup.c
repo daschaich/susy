@@ -285,8 +285,8 @@ int readin(int prompt) {
 #ifdef BMN
   mass_so3 = mu * mu / 9.0;
   mass_so6 = 0.25 * mass_so3;
-  mass_Myers = 2.0 * sqrt(2.0) * mu / 3.0;
-  mass_fermion = 0.25 * mu;
+  mass_Myers = 2.0 * mu / 3.0;
+  mass_fermion = 0.25 * mu;  // Never used !
 #else   // BFSS case: mass_so3 = mass_so6 = mu^2; other two shouldn't be used
   mass_so3 = mu * mu;
   mass_so6 = mass_so3;
