@@ -35,7 +35,8 @@ void ranmom() {
 
 
 // -----------------------------------------------------------------
-// Construct a gaussian random vector R, return src = (Mdag M)^{1 / 8} R
+// Construct a gaussian random vector R
+// Return src = (Mdag M)^(1 / 8Nroot) R
 // Need to invert despite the positive power, since it is fractional
 // Return the number of iterations from the inversion
 int grsource(Twist_Fermion *src) {
@@ -123,7 +124,7 @@ int grsource(Twist_Fermion *src) {
 //  }
 #endif
 
-  // We now compute (Mdag M)^{1 / 8}.src
+  // Now compute (Mdag M)^(1 / 8Nroot).src
   for (i = 0; i < Norder; i++)
     shift[i] = shift8[i];
 
@@ -131,7 +132,7 @@ int grsource(Twist_Fermion *src) {
 #ifdef DEBUG_CHECK
   node0_printf("Iters for source %d\n", avs_iters);
 #endif
-  // Reconstruct (Mdag M)^{1 / 8}.src from multi-mass CG solution psim
+  // Reconstruct (Mdag M)^(1 / 8Nroot).src from multi-mass CG solution psim
   FORALLSITES(i, s) {
     scalar_mult_TF(&(src[i]), ampdeg8, &(src[i]));
     for (j = 0; j < Norder; j++)
