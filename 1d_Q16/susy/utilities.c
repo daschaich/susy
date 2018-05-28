@@ -115,7 +115,7 @@ void fermion_op(matrix *src[NFERMION], matrix *dest[NFERMION], int sign) {
     m = j + NCHIRAL_FERMION;
     for (k = 0; k < NCHIRAL_FERMION; k++) {
       n = k + NCHIRAL_FERMION;
-      tr = 0.75 * sign * mu * Gamma123.e[j][k];     // sign = +/- 1
+      tr = 3.0 * sign * mass_fermion * Gamma123.e[j][k];      // sign = +/- 1
       FORALLSITES(i, s) {
         scalar_mult_sum_matrix(&(src[n][i]), tr, &(dest[j][i]));
         scalar_mult_dif_matrix(&(src[k][i]), tr, &(dest[m][i]));
