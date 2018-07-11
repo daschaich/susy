@@ -84,7 +84,7 @@ double bosonic_action(double *so3_sq, double *so6_sq, double *Myers) {
         if (j == k)
           continue;
         for (l = 0; l < 3; l++) {
-          if((j == l) || (k == l))
+          if ((j == l) || (k == l))
             continue;
 
           mult_nn(&(s->X[k]), &(s->X[l]), &tmat);
@@ -207,13 +207,12 @@ double scalar_mom_action() {
 // -----------------------------------------------------------------
 // Print out zeros for pieces of the action that aren't included
 double action(matrix ***src, matrix ****sol) {
-  double b_act, p_act, so3_act, so6_act, Myers_act, total;
+  double p_act, so3_act, so6_act, Myers_act, total;
 
-  b_act = bosonic_action(&so3_act, &so6_act, &Myers_act);
-  node0_printf("action: so3 %.8g so6 %.8g Myers %.8g ",
-               so3_act, so6_act, Myers_act);
-  node0_printf("boson %.8g ", b_act);
-  total = b_act;    // Includes so3, so6, Myers and kinetic
+  // Includes so3, so6, Myers and kinetic
+  total = bosonic_action(&so3_act, &so6_act, &Myers_act);
+  node0_printf("action: so3 %.8g so6 %.8g Myers %.8g boson %.8g ",
+               so3_act, so6_act, Myers_act, total);
 
 #ifndef PUREGAUGE
   int n;
