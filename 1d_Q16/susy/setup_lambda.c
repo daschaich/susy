@@ -1,9 +1,11 @@
 // -----------------------------------------------------------------
-// Set up generator matrices, normalization Tr(TaTb) = -delta_ab
+// Set up generator matrices, normalization Tr(TaTb) = delta_ab
 #include "susy_includes.h"
 
 void setup_lambda() {
   int i, j, k, l, count;
+  complex tc2; 
+  matrix tmat2; 
   complex inv_sqrt = cmplx(1.0 / sqrt(2.0), 0.0);
   complex i_inv_sqrt = cmplx(0.0, 1.0 / sqrt(2.0));
 
@@ -61,6 +63,13 @@ void setup_lambda() {
     if (this_node == 0)
       dumpmat(&(Lambda[i]));
   }
+
+  tc2= cmplx(0.0,1.0);
+  for (i = 0; i < DIMF; i++){
+  c_scalar_mult_mat(&(Lambda[i]), &tc2, &tmat2);
+  mat_copy(&tmat2, &(Lambda[i]));
+  }
+
 
   // Test group theory (useful reference: arXiv:1310.5353)
 #if 0   // This test seems to be specific to U(N) rather than SU(N)
