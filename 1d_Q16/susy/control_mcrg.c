@@ -43,7 +43,7 @@ int main(int argc, char *argv[]) {
   }
 
   // Compute bosonic action, scalar squares and Polyakov loop to check config
-  b_act = bosonic_action(&(Xtr[0]), &(Xtr[1]), &(Xtr[2]));
+  b_act = bosonic_action(&(Xtr[0]), &(Xtr[1]), &(Xtr[2]), &(Xtr[3]));
   node0_printf("START %.8g\n", b_act / (double)nt);
 
   Xtr_ave = scalar_trace(Xtr, &Xtr_width);
