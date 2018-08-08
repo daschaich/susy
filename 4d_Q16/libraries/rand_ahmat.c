@@ -46,7 +46,7 @@ void random_anti_hermitian(anti_hermitmat *ahmat, double_prn *prn_pt) {
   ahmat->m[5].imag = gaussian_rand_no(prn_pt);
 #if (NCOL > 4)
   for (i = 6; i < N_OFFDIAG; i++) {
-    ahmat->m[i].imag = gaussian_rand_no(prn_pt);
+    ahmat->m[i].real = gaussian_rand_no(prn_pt);
     ahmat->m[i].imag = gaussian_rand_no(prn_pt);
   }
 #endif
