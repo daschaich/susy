@@ -52,7 +52,7 @@ void scalar_eig(double *ave_eigs, double *eig_widths,
 
 // Action routines
 double action(matrix ***source, matrix ****sol);
-double bosonic_action(double *so3, double *so6, double *Myers);
+double bosonic_action(double *so3, double *so6, double *comm, double *Myers);
 double fermion_action();
 
 // Force routines

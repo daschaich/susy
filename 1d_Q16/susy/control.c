@@ -32,7 +32,7 @@ int main(int argc, char *argv[]) {
   dtime = -dclock();
 
   // Check: compute initial bosonic action and scalar squares
-  b_act = bosonic_action(&(Xtr[0]), &(Xtr[1]), &(Xtr[2]));
+  b_act = bosonic_action(&(Xtr[0]), &(Xtr[1]), &(Xtr[2]), &(Xtr[3]));
   node0_printf("START %.8g\n", b_act / (double)nt);
 
   Xtr_ave = scalar_trace(Xtr, &Xtr_width);
@@ -68,7 +68,7 @@ int main(int argc, char *argv[]) {
     node0_printf("GMES %.8g %.8g %d ", plp.real, plp.imag, s_iters);
 
     // Bosonic action
-    b_act = bosonic_action(&(Xtr[0]), &(Xtr[1]), &(Xtr[2]));
+    b_act = bosonic_action(&(Xtr[0]), &(Xtr[1]), &(Xtr[2]), &(Xtr[3]));
     node0_printf("%.8g %.8g %.8g %.8g\n",
                  b_act / (double)nt, Xtr[0] / (double)nt,
                  Xtr[1] / (double)nt, Xtr[2] / (double)nt);
@@ -90,7 +90,7 @@ int main(int argc, char *argv[]) {
   node0_printf("RUNNING COMPLETED\n");
 
   // Check: compute final bosonic action
-  b_act = bosonic_action(&(Xtr[0]), &(Xtr[1]), &(Xtr[2]));
+  b_act = bosonic_action(&(Xtr[0]), &(Xtr[1]), &(Xtr[2]), &(Xtr[3]));
   node0_printf("STOP %.8g\n", b_act / (double)nt);
 
   node0_printf("Average CG iters for steps: %.4g\n",

@@ -9,7 +9,7 @@
 
 // -----------------------------------------------------------------
 // Bosonic contribution to the action
-double bosonic_action(double *so3_sq, double *so6_sq, double *Myers) {
+double bosonic_action(double *so3_sq, double *so6_sq, double *comm, double *Myers) {
   register int i,l;
   register site *s;
   int j, k;
@@ -20,6 +20,7 @@ double bosonic_action(double *so3_sq, double *so6_sq, double *Myers) {
   // Initialize
   *so3_sq = 0.0;
   *so6_sq = 0.0;
+  *comm = 0.0;
   *Myers = 0.0;
 
   // Scalar kinetic term -Tr[D_t X(t)]^2
@@ -65,7 +66,7 @@ double bosonic_action(double *so3_sq, double *so6_sq, double *Myers) {
       for (k = j + 1; k < NSCALAR; k++) {
         mult_nn(&(s->X[j]), &(s->X[k]), &tmat);
         mult_nn_dif(&(s->X[k]), &(s->X[j]), &tmat);
-        b_action -= realtrace_nn(&tmat, &tmat);
+        *comm -= realtrace_nn(&tmat, &tmat);
       }
     }
   }
@@ -74,7 +75,7 @@ double bosonic_action(double *so3_sq, double *so6_sq, double *Myers) {
   // Couplings are set differently in setup.c depending on BMN vs. BFSS
   *so3_sq *= mass_so3;
   *so6_sq *= mass_so6;
-  b_action += *so3_sq + *so6_sq;
+  b_action += *so3_sq + *so6_sq + *comm;
 
 #ifdef BMN
   // Myers term -Tr[epsilon_{jkl} X_j(t) X_k(t) X_l(t)]]
@@ -104,10 +105,12 @@ double bosonic_action(double *so3_sq, double *so6_sq, double *Myers) {
   b_action *= kappa;
   *so3_sq *= kappa;
   *so6_sq *= kappa;
+  *comm *= kappa;
   *Myers *= kappa;
   g_doublesum(&b_action);
   g_doublesum(so3_sq);
   g_doublesum(so6_sq);
+  g_doublesum(comm);
   g_doublesum(Myers);
 
   return b_action;
@@ -208,12 +211,12 @@ double scalar_mom_action() {
 // -----------------------------------------------------------------
 // Print out zeros for pieces of the action that aren't included
 double action(matrix ***src, matrix ****sol) {
-  double p_act, so3_act, so6_act, Myers_act, total;
+  double p_act, so3_act, so6_act, comm_act, Myers_act, total;
 
   // Includes so3, so6, Myers and kinetic
-  total = bosonic_action(&so3_act, &so6_act, &Myers_act);
-  node0_printf("action: so3 %.8g so6 %.8g Myers %.8g boson %.8g ",
-               so3_act, so6_act, Myers_act, total);
+  total = bosonic_action(&so3_act, &so6_act, &comm_act, &Myers_act);
+  node0_printf("action: so3 %.8g so6 %.8g comm %.8g Myers %.8g boson %.8g ",
+               so3_act, so6_act, comm_act, Myers_act, total);
 
 #ifndef PUREGAUGE
   int n;
