@@ -62,7 +62,6 @@ void setup_lambda() {
       dumpmat(&(Lambda[i]));
   }
 
-
   // Test group theory (useful reference: arXiv:1310.5353)
 #if 0   // This test seems to be specific to U(N) rather than SU(N)
   int a;
