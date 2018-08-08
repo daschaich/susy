@@ -347,14 +347,15 @@ int get_f(FILE *fp, int prompt, char *tag, Real *value) {
       fscanf(fp,"%s", checkvalue);
 #if PRECISION == 1
       s = sscanf(checkvalue, "%e", value);
+      printf("%s %e\n", tag, *value);
 #else
       s = sscanf(checkvalue, "%le", value);
+      printf("%s %le\n", tag, *value);
 #endif
       if (s == EOF)
         return 1;
       if (s == 0)
         printf("Data format error.\n");
-      else printf("%s %g\n", tag, *value);
     }
   }
   else {
@@ -363,13 +364,13 @@ int get_f(FILE *fp, int prompt, char *tag, Real *value) {
 
 #if PRECISION == 1
     s = fscanf(fp, "%e", value);
+    printf("%e\n", *value);
 #else
     s = fscanf(fp, "%le", value);
+    printf("%le\n", *value);
 #endif
     if (check_read(s, myname, tag) == 1)
       return 1;
-
-    printf("%g\n", *value);
   }
   return 0;
 }
