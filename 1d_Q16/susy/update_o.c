@@ -78,6 +78,9 @@ void update_u(Real eps) {
 double update_bosonic_step(Real eps) {
   int n = nsteps[1], i;
   double norm;
+#ifdef UPDATE_DEBUG
+  double td, td2;
+#endif
 
 #ifdef UPDATE_DEBUG
   node0_printf("gauge %d steps %.4g dt\n", n, eps);
@@ -95,8 +98,19 @@ double update_bosonic_step(Real eps) {
   }
 
   // Reunitarize the gauge field and re-anti-hermitianize the scalars
+#ifdef UPDATE_DEBUG
+  td = check_unitarity();
+  g_floatmax(&td);
+#endif
   reunitarize();
   reantihermize();
+#ifdef UPDATE_DEBUG
+  td2 = check_unitarity();
+  g_floatmax(&td2);
+  node0_printf("Reunitarized after boson update step.  ");
+  node0_printf("Max deviation %.2g changed to %.2g\n", td, td2);
+#endif
+
   return (norm / n);
 }
 // -----------------------------------------------------------------

@@ -12,8 +12,12 @@
 
 // -----------------------------------------------------------------
 Real check_unit(matrix *c) {
-  register int i, j, k;
-  register Real ar, ai, ari, max = 0.0;
+  register int i, j;
+  register Real ar, max = 0.0;
+#ifdef STRONG
+  register int k;
+  complex sum, tc;
+#endif
 
   // Check normalization of each row
   for (i = 0; i < NCOL; i++) {
@@ -31,17 +35,14 @@ Real check_unit(matrix *c) {
   // Test orthogonality of row i and row j
   for (i = 0; i < NCOL; i++) {
     for (j = i + 1; j < NCOL; j++) {
-      ar = 0.0;   // Real part of i dot j
-      ai = 0.0;   // Imag part of i dot j
-      for (k = 0; k < NCOL; k++) {
-        ar += (*c).e[i][k].real * (*c).e[j][k].real
-            + (*c).e[i][k].imag * (*c).e[j][k].imag;
-        ai += (*c).e[i][k].real * (*c).e[j][k].imag
-            - (*c).e[i][k].imag * (*c).e[j][k].real;
+      CMULJ_(c->e[j][0], c->e[i][0], sum);
+      for (k = 1; k < NCOL; k++) {
+        CMULJ_(c->e[j][k], c->e[i][k], tc);
+        CSUM(sum, tc);
       }
-      ari = sqrt((double)(ar * ar + ai * ai));
-      if (max < ari)
-        max = ari;
+      ar = cabs(&sum);
+      if (max < ar)
+        max = ar;
     }
   }
 #endif
@@ -61,7 +62,7 @@ Real check_unitarity() {
   double av_deviation = 0.0;
 
   FORALLSITES(i, s) {
-    mat = (matrix *)&(s->link);
+    mat = &(s->link);
     deviation = check_unit(mat);
     if (deviation > TOLERANCE) {
       printf("Unitarity problem on node %d, site %d, deviation=%f\n",

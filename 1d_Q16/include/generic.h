@@ -20,6 +20,7 @@
 
 // -----------------------------------------------------------------
 // check_unitarity.c and check_antihermity.c
+Real check_unit(matrix *c);
 Real check_unitarity();
 Real check_ah();
 Real check_antihermity();
@@ -69,14 +70,23 @@ Real myrand(double_prn *prn_pt);
 int check_deviation();
 void reunitarize();
 void reantihermize();
-// Use LAPACK in determinant calculation for reunitarization
-// Compute LU decomposition of a complex matrix
-// http://www.physics.orst.edu/~rubin/nacphy/lapack/routines/zgetrf.html
-// First and second arguments are the dimensions of the matrix
-// Third argument is the LU-decomposed matrix
-// Fourth argument is the
-// Fifth argument is the LU decomposition pivot matrix
+// Use LAPACK singular value decomposition for reunitarization
+// http://www.netlib.org/lapack/explore-3.1.1-html/zgesvd.f.html
+// First and second arguments tells LAPACK to compute all singular values
+// Third and fourth arguments are the dimensions of the matrix (both NCOL)
+// Fifth argument is the input matrix (lost)
+// Sixth argument is the leading dimension (NCOL)
+// Seventh argument is the array of singular values (discarded)
+// Eight argument is the matrix of left singular vectors (left)
+// Ninth argument is the dimension of left (NCOL)
+// Tenth argument is the matrix of right singular vectors (right^dag)
+// Eleventh argument is the dimension of right^dag (NCOL)
+// Twelfth argument is complex workspace of size given by the 13th argument
+// Fourteenth argument is real workspace of size 5 * NCOL
 // Final argument reports success or information about failure
-void zgetrf_(int *N1, int *N2, double *store, int *lda, int *ipiv, int *stat);
+void zgesvd_(char *A1, char *A2, int *N1, int *N2, double *store,
+             int *lda, double *junk, double *left, int *Nl,
+             double *right, int *Nr, double *work, int *Nwork,
+             double *Rwork, int *stat);
 #endif
 // -----------------------------------------------------------------

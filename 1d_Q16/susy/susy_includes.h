@@ -89,7 +89,7 @@ void random_gauge_trans(matrix *temp_ferm[NFERMION]);
 // Third and fifth arguments are the dimensions of the matrix
 // Fourth argument is that matrix, overwritten by the eigenvectors
 // Sixth argument holds the computed eigenvalues
-// Seventh argument is real workspace of size given by the eighth argument
+// Seventh argument is complex workspace of size given by the eighth argument
 // Ninth argument is real workspace of size 3 * NCOL - 2
 // Final argument reports success or information about failure
 void zheev_(char *doV, char *uplo, int *N1, double *store, int *N2,

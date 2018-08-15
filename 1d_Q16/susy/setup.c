@@ -324,12 +324,17 @@ int readin(int prompt) {
   strcpy(savefile, par_buf.savefile);
 
   // Allocate some more arrays to be used by LAPACK in scalar_eig.c
-  // Needs to be above reunitarization
-  work = malloc(sizeof *work * 4 * NCOL);
+  // and in generic/reunitarize.c
   store = malloc(sizeof *store * 2 * NCOL * NCOL);
-  Rwork = malloc(sizeof *Rwork * (3 * NCOL - 2));
   eigs = malloc(sizeof *eigs * NCOL);
-  ipiv = malloc(sizeof *ipiv * NCOL);   // For generic/reunitarize.c
+  work = malloc(sizeof *work * 4 * NCOL);
+  Rwork = malloc(sizeof *Rwork * (3 * NCOL - 2));
+  // Following are used only for reunitarization
+  left = malloc(sizeof *left * 2 * NCOL * NCOL);
+  right = malloc(sizeof *right * 2 * NCOL * NCOL);
+  junk = malloc(sizeof *junk * NCOL);
+  reunit_work = malloc(sizeof *reunit_work * 6 * NCOL);
+  reunit_Rwork = malloc(sizeof *reunit_Rwork * 5 * NCOL);
 
   // Do whatever is needed to get lattice
   startlat_p = reload_lattice(startflag, startfile);

@@ -109,9 +109,11 @@ EXTERN matrix *mpm[NFERMION], *pm0[NFERMION], *rm[NFERMION];
 // Temporary matrices
 EXTERN matrix *tempmat, *tempmat2, *temp_ferm[NFERMION], *temp_X[NSCALAR];
 
-//Allocate some more arrays to be used by LAPACK in scalar eigenvalues
+// Allocate some more arrays to be used by LAPACK in scalar eigenvalues
+// and reunitarization (in generic directory)
 EXTERN double *Rwork, *eigs, *store, *work;
-EXTERN int *ipiv;           // This one is for reunitarization
+EXTERN double *junk, *left, *right;           // For reunitarization
+EXTERN double *reunit_work, *reunit_Rwork;    // For reunitarization
 
 EXTERN gauge_file *startlat_p;
 EXTERN gauge_file *savelat_p;

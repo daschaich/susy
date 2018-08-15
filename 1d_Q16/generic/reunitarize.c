@@ -1,9 +1,9 @@
 // -----------------------------------------------------------------
 // Reunitarization for arbitrary NCOL
-// 1) Re-unitarize row 0
-// 2) For rows 1, ..., NCOL-2, make orthogonal w.r.t previous rows,
-//    and orthogonalize
-// 3) For the last row, U(NCOL-1, i)=-(epsilon(i, j_0, j_1, j_2..)U(0, j_0)U(1, j_1)...U(NCOL-1, j_{NCOL-1})^*
+// 1) Do a singular value decomposition (SVD) using LAPACK for arbitrary NCOL
+//      in --> L.S.Rdag
+// 2) Reconstruct out = L.Rdag, setting vector S=(1, 1, ..., 1)
+// Both L and R are unitary NCOLxNCOL matrices
 #include "generic_includes.h"
 
 #define TOLERANCE 0.0001
@@ -32,132 +32,49 @@ int check_deviation(Real deviation) {
 
 
 // -----------------------------------------------------------------
-// Compute complex determinant of given link through LAPACK
-complex find_det(matrix *Q) {
-  int i, row, col, Npt = NCOL, stat = 0;
-  complex det, det2;
-  matrix tmat;
-
-  // Convert Q to column-major double array used by LAPACK
-  for (row = 0; row < NCOL; row++) {
-    for (col = 0; col < NCOL; col++) {
-      i = 2 * (col * NCOL + row);
-      store[i] = Q->e[row][col].real;
-      store[i + 1] = Q->e[row][col].imag;
-    }
-  }
-
-  // Compute LU decomposition of in
-  zgetrf_(&Npt, &Npt, store, &Npt, ipiv, &stat);
-
-  // Move the results into the matrix structure tmat
-  for (row = 0; row < NCOL; row++) {
-    for (col = 0; col < NCOL; col++) {
-      i = 2 * (col * NCOL + row);
-      tmat.e[row][col].real = store[i];
-      tmat.e[row][col].imag = store[i + 1];
-    }
-  }
-
-  det = cmplx(1.0, 0.0);
-  for (i = 0; i < NCOL; i++) {
-    CMUL(det, tmat.e[i][i], det2);
-    // Negate if row has been pivoted according to pivot array
-    // Apparently LAPACK sets up ipiv so this doesn't double-count pivots
-    // Note 1<=ipiv[i]<=N rather than 0<=ipiv[i]<N because Fortran
-    if (ipiv[i] != i + 1) {     // Braces suppress compiler error
-      CNEGATE(det2, det);
-    }
-    else
-      det = det2;
-  }
-//  printf("DETER %.4g %.4g\n", det.real, det.imag);
-  return det;
-}
-// -----------------------------------------------------------------
-
-
-
-// -----------------------------------------------------------------
+// Reunitarize using LAPACK SVD
 int reunit(matrix *c) {
-  register Real ar;
-  int i, j, k, errors = 0;
-  Real deviation;
-  complex sum, deter, tc;
-  matrix tmat;
+  register int i;
+  char A = 'A';     // Ask LAPACK for all singular values
+  int row, col, Npt = NCOL, stat = 0, Nwork = 3 * NCOL, err = 0;
+  Real dev;
+  matrix lmat, rdagmat;
 
-  mat_copy(c, &tmat);
-  for (i = 0; i < NCOL; i++) {
-    // Orthogonalize the ith vector w.r.t. all the lower ones
-    sum = cmplx(0.0, 0.0);
-    for (j = 0; j < i; j++) {
-      for (k = 0; k < NCOL; k++) {
-        CMULJ_(c->e[j][k], c->e[i][k], tc);
-        CSUM(sum, tc);
-      }
-      for (k = 0; k < NCOL; k++)
-        CMULDIF(sum, c->e[j][k], c->e[i][k]);     // Okay since j < i
-    }
-    // Normalize ith vector
-    ar = (*c).e[i][0].real * (*c).e[i][0].real
-       + (*c).e[i][0].imag * (*c).e[i][0].imag;
-    for (k = 1; k < NCOL; k++) {
-      ar += (*c).e[i][k].real * (*c).e[i][k].real
-          + (*c).e[i][k].imag * (*c).e[i][k].imag;
-    }
-#ifdef UNIDEBUG
-    printf("%d %e\n", i, ar);
-#endif
-
-    // Usual test
-    // For the 0 to NCOL-2 vectors, check that the length didn't shift
-    // For the last row, the check is of the determinant
-    // Computing the row using the determinant
-    deviation = fabs(ar - 1.0);
-#ifdef UNIDEBUG
-    printf("DEV %e\n", deviation);
-#endif
-    errors += check_deviation(deviation);
-
-    ar = 1.0 / sqrt((double)ar);             /* used to normalize row */
-    for (j = 0; j < NCOL; j++) {
-      (*c).e[i][j].real *= ar;
-      (*c).e[i][j].imag *= ar;
+  // Convert c to column-major double array used by LAPACK
+  for (row = 0; row < NCOL; row++) {
+    for (col = 0; col < NCOL; col++) {
+      i = 2 * (col * NCOL + row);
+      store[i] = c->e[row][col].real;
+      store[i + 1] = c->e[row][col].imag;
     }
   }
 
-  // Check the determinant
-#ifdef UNIDEBUG
-  node0_printf("MATRIX AFTER RE-ORTHONORMAL\n");
-  dumpmat(c);
-#endif
-  deter = find_det(c);
-  ar = deter.real * deter.real + deter.imag * deter.imag;
-  deviation = fabs(ar - 1.0);
-  errors += check_deviation(deviation);
+  // Compute singular value decomposition of c
+  zgesvd_(&A, &A, &Npt, &Npt, store, &Npt, junk, left, &Npt, right, &Npt,
+          reunit_work, &Nwork, reunit_Rwork, &stat);
 
-  // Rephase last column
-  for (j = 0; j < NCOL; j++) {
-    CDIV((*c).e[NCOL - 1][j], deter, tc);
-    (*c).e[NCOL - 1][j] = tc;
+  // Move the results back into matrix structures
+  clear_mat(&lmat);
+  clear_mat(&rdagmat);
+  for (row = 0; row < NCOL; row++) {
+    for (col = 0; col < NCOL; col++) {
+      i = 2 * (col * NCOL + row);
+      lmat.e[row][col].real = left[i];
+      lmat.e[row][col].imag = left[i + 1];
+      rdagmat.e[row][col].real = right[i];
+      rdagmat.e[row][col].imag = right[i + 1];
+    }
   }
 
-  // Check new det
-  deter = find_det(c);
-  ar = deter.real * deter.real + deter.imag * deter.imag;
-  deviation = fabs(ar - 1.0);
-  errors += check_deviation(deviation);
-#ifdef UNIDEBUG
-  printf("DET DEV %e\n", deviation);
-  node0_printf("NEW\n");
-  dumpmat(c);
-#endif
+  // Now u = l.rdag (throwing out singular values in junk)
+  mult_nn(&lmat, &rdagmat, c);
 
-  // Print the problematic matrix rather than the updated one
-  if (errors)
-    dumpmat(&tmat);
-
-  return errors;
+  // Check the unitarity of the result
+  dev = check_unit(c);
+  err = check_deviation(dev);
+  if (err)
+    dumpmat(c);
+  return err;
 }
 // -----------------------------------------------------------------
 
@@ -188,6 +105,7 @@ void reunitarize() {
     }
   }
 
+  av_deviation = sqrt(av_deviation / (double)nt);
 #ifdef UNIDEBUG
   printf("Deviation from unitarity on node %d: max %.4g, ave %.4g\n",
          mynode(), max_deviation, av_deviation);
