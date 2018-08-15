@@ -9,7 +9,9 @@
 
 // -----------------------------------------------------------------
 // Bosonic contribution to the action
-double bosonic_action(double *so3_sq, double *so6_sq, double *comm, double *Myers) {
+double bosonic_action(double *so3_sq, double *so6_sq,
+                      double *comm, double *Myers) {
+
   register int i,l;
   register site *s;
   int j, k;
