@@ -216,7 +216,7 @@ int congrad_multi(matrix **src, matrix ***psim,
     node0_printf("Norm of psim %d shift %.4g is %.4g\n",
                  j, shift[j], source_norm);
 
-    DSq(psim[j], mpm);              // mpm = (D^2 + fmass^2).psim[j]
+    DSq(psim[j], mpm);              // mpm = (D^2).psim[j]
     source_norm = 0;                // Re-using for convenience
     for (k = 0; k < NFERMION; k++) {
       FORALLSITES(i, s) {           // Add shift.psi and subtract src

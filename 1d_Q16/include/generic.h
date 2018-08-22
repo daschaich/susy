@@ -72,7 +72,7 @@ void reunitarize();
 void reantihermize();
 // Use LAPACK singular value decomposition for reunitarization
 // http://www.netlib.org/lapack/explore-3.1.1-html/zgesvd.f.html
-// First and second arguments tells LAPACK to compute all singular values
+// First and second arguments tell LAPACK to compute all singular values
 // Third and fourth arguments are the dimensions of the matrix (both NCOL)
 // Fifth argument is the input matrix (lost)
 // Sixth argument is the leading dimension (NCOL)

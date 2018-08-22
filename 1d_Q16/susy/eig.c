@@ -88,7 +88,7 @@ void av_ov (void *x, void *y, int *Nvec, primme_params *primme) {
     }
 #endif
 
-    DSq(src, res);    // D^2 + fmass^2
+    DSq(src, res);    // D^2
 
     // Copy the resulting Twist_Fermion res back to complex vector y
     // Each Twist_Fermion has Ndat=16DIMF non-trivial complex components
