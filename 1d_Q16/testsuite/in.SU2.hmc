@@ -10,7 +10,7 @@ warms 0
 trajecs 3
 traj_length 1
 nstep 5
-nstep_gauge 4
+nstep_gauge 150
 traj_between_meas 3
 
 lambda 1

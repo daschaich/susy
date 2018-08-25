@@ -49,7 +49,7 @@ void av_ov (void *x, void *y, int *Nvec, primme_params *primme) {
     xx = ((Complex_Z*) x) + Ndat * ivec * sites_on_node;  // This vector in x
     iter = 0;
 
-    for(m=0; m<NFERMION; m++) {
+    for (m = 0; m < NFERMION; m++) {
       FORALLSITES(i, s) {
         for (j = 0; j < NCOL; j++) {
           for (k = 0; k < NCOL; k++) {
@@ -70,9 +70,9 @@ void av_ov (void *x, void *y, int *Nvec, primme_params *primme) {
     xx = ((Complex_Z*) x) + Ndat * ivec * sites_on_node;   // This vector in x
     for (i = 0; i < sites_on_node * Ndat; i++)
       xmag += xx[i].r * xx[i].r + xx[i].i * xx[i].i;
-    for(m=0; m<NFERMION; m++) {
+    for (m = 0; m < NFERMION; m++) {
       FORALLSITES(i, s)
-      src_mag += realtrace(&(src[m][i]), &(src[m][i]));
+        src_mag += realtrace(&(src[m][i]), &(src[m][i]));
     }
       if (fabs(xmag - src_mag) > eig_tol * eig_tol) {
         node0_printf("av_ov: |x[%d]|^2 = %.4g but |src|^2 = %.4g (%.4g)\n",
@@ -83,9 +83,8 @@ void av_ov (void *x, void *y, int *Nvec, primme_params *primme) {
 #ifdef DEBUG_CHECK
     // Check that src is being copied appropriately
     node0_printf("eigVec[0] copy check:\n");
-    for(m=0; m<NFERMION; m++) {
+    for (m = 0; m < NFERMION; m++)
       dumpmat(&(src[m][0]));
-    }
 #endif
 
     DSq(src, res);    // D^2
@@ -94,7 +93,7 @@ void av_ov (void *x, void *y, int *Nvec, primme_params *primme) {
     // Each Twist_Fermion has Ndat=16DIMF non-trivial complex components
     xx = ((Complex_Z*) y) + Ndat * ivec * sites_on_node;  // This vector in y
     iter = 0;
-    for(m=0; m<NFERMION; m++) {
+    for (m = 0; m < NFERMION; m++) {
       FORALLSITES(i, s) {
         for (j = 0; j < NCOL; j++) {
           for (k = 0; k < NCOL; k++) {
@@ -115,9 +114,9 @@ void av_ov (void *x, void *y, int *Nvec, primme_params *primme) {
     xx = ((Complex_Z*) y) + Ndat * ivec * sites_on_node;   // This vector in x
     for (i = 0; i < sites_on_node * Ndat; i++)
       ymag += xx[i].r * xx[i].r + xx[i].i * xx[i].i;
-    for(m=0; m<NFERMION; m++) {
+    for (m = 0; m < NFERMION; m++) {
       FORALLSITES(i, s)
-      res_mag += realtrace(&(res[m][i]), &(res[m][i]));
+        res_mag += realtrace(&(res[m][i]), &(res[m][i]));
     }
     if (fabs(ymag - res_mag) > eig_tol * eig_tol) {
       node0_printf("av_ov: |y[%d]|^2 = %.4g but |res|^2 = %.4g (%.4g)\n",
@@ -158,8 +157,8 @@ int make_evs(int Nvec, matrix ***eigVec, double *eigVal, int flag) {
   Complex_Z *workVecs = malloc(sizeof *workVecs * Nvec * maxn);
   static primme_params primme;
   matrix tmat, *tmpmat[NFERMION];
-  for(m=0; m<NFERMION; m++)
-    tmpmat[m] = malloc(sizeof (matrix) * sites_on_node );
+  for (m = 0; m < NFERMION; m++)
+    tmpmat[m] = malloc(sizeof(matrix) * sites_on_node);
   // Check memory allocations
   if (workVecs == NULL) {
     node0_printf("ERROR in make_evs: couldn't allocate workVecs\n");
@@ -236,15 +235,15 @@ int make_evs(int Nvec, matrix ***eigVec, double *eigVal, int flag) {
   // Each Twist_Fermion has Ndat = 4DIMF non-trivial complex components
   for (ivec = 0; ivec < Nvec; ivec++) {
     iter = Ndat * ivec * sites_on_node;   // This vector in workvecs
-    for(m=0;m<NFERMION;m++) {
-    FORALLSITES(i, s) {
-      for (j = 0; j < NCOL; j++) {
-        for (k = 0; k < NCOL; k++) {
-          eigVec[ivec][m][i].e[j][k].real = workVecs[iter].r;
-          eigVec[ivec][m][i].e[j][k].imag = workVecs[iter].i;
-          iter++;
+    for (m = 0; m < NFERMION; m++) {
+      FORALLSITES(i, s) {
+        for (j = 0; j < NCOL; j++) {
+          for (k = 0; k < NCOL; k++) {
+            eigVec[ivec][m][i].e[j][k].real = workVecs[iter].r;
+            eigVec[ivec][m][i].e[j][k].imag = workVecs[iter].i;
+            iter++;
+          }
         }
-      }
       }
     }
   }
