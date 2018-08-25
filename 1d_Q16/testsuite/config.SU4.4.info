@@ -1,7 +1,7 @@
 magic_number = 20103
-time_stamp = "Fri Apr 27 01:14:41 2018"
-checksums = "7a0f1d04 cbc52451"
+time_stamp = "Sat Aug 25 04:32:13 2018"
+checksums = "9148c07a d6b959eb"
 nt = 4
 gauge.previous.filename = "config.SU4.4"
-gauge.previous.time_stamp = "Wed Apr 25 23:16:53 2018"
-gauge.previous.checksums = "73babea9 959ff0c3"
+gauge.previous.time_stamp = "Fri Aug 24 09:17:19 2018"
+gauge.previous.checksums = "b8e62199 2f81ac5c"
