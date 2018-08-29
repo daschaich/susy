@@ -6,15 +6,13 @@
 
 
 // -----------------------------------------------------------------
-// g_rand is random gaussian only for N components of site fermion
-// and all components of link fermions
-// src = Mdag g_rand
-// Adapted from grsource to mimic pbp calculation
+// g_rand is random gaussian fermion source, then src = Mdag g_rand
+// Adapted from grsource to mimic QCD pbp calculation
 void bilinear_src(matrix *g_rand[NFERMION], matrix *src[NFERMION]) {
   register int i, j, k, mu;
   register site *s;
   complex grn;
-  
+
   FORALLSITES(i, s) {
     for (k = 0; k < NFERMION; k++) {
       clear_TF(&(g_rand[k][i]));
@@ -31,7 +29,7 @@ void bilinear_src(matrix *g_rand[NFERMION], matrix *src[NFERMION]) {
       }
     }
   }
-  
+
   // Set up src = Mdag g_rand
   fermion_op(g_rand, src, MINUS);
 }
@@ -40,11 +38,11 @@ void bilinear_src(matrix *g_rand[NFERMION], matrix *src[NFERMION]) {
 
 
 // -----------------------------------------------------------------
-// Measure Ward identity involving eta.psi_a fermion bilinear,
-//   Q sum_a tr(eta U_a Ubar_a) = tr(sum_b Dbar_b U_b sum_a U_a Ubar_a)
-//                                 - sum_a tr(eta psi_a Ubar_a)
+// Measure a few fermion bilinears (with k = j + NCHIRAL_FERMION):
+//   psi[k](t) - BC_+ * U(t) psi[k](t+1) Udag(t)        [Dplus]
+//   psi[j](t) - BC_- * Udag(t-1) psi[j](t-1) U(t-1)    [Dminus]
+//   TODO: THE REST...
 // Return total number of iterations
-// Assume compute_DmuUmu() has already been run
 int bilinearWard() {
   if (nsrc < 1)   // Only run if there are inversions to do
     return 0;
@@ -54,35 +52,30 @@ int bilinearWard() {
   Real size_r, norm;
   double sum = 0.0;
   double_complex tc, StoL, LtoS, ave = cmplx(0.0, 0.0);
-  matrix tmat;
-  Twist_Fermion *g_rand, *src, **psim;
-
-  g_rand = malloc(sizeof *g_rand * sites_on_node);
-  src = malloc(sizeof *src * sites_on_node);
+  matrix tmat, *g_rand[NFERMION], *src[NFERMION];
+  matrix ***psim = malloc(sizeof(matrix**));
+  msg_tag *tag[NCHIRAL_FERMION];
 
   // Hack a basic CG out of the multi-mass CG
   Norder = 1;
-  psim = malloc(sizeof(Twist_Fermion*));
-  psim[0] = malloc(sizeof(Twist_Fermion) * sites_on_node);
   shift[0] = 0;
-
-  // Normalization: sum over NUMLINK but divide by volume
-  // and divide by 2kappa as discussed on 15--17 December 2013
-  norm = 2.0 * kappa * (Real)volume;
+  psim[0] = malloc(sizeof(matrix*) * NFERMION);
+  for (i = 0; i < NFERMION; i++) {
+    psim[0][i] = malloc(sizeof(matrix) * sites_on_node);
+    g_rand[i] = malloc(sizeof(matrix) * sites_on_node);
+    src[i] = malloc(sizeof(matrix) * sites_on_node);
+  }
 
   for (isrc = 0; isrc < nsrc; isrc++) {
     // Make random source g_rand, now including trace piece
     // Hit it with Mdag to get src, invert to get M^{-1} g_rand
     // congrad_multi initializes psim
-    bilinear_src(g_rand, src, DIMF);
+    bilinear_src(g_rand, src);
     iters = congrad_multi(src, psim, niter, rsqmin, &size_r);
     tot_iters += iters;
-#ifdef DEBUG_CHECK
-    dump_TF(&(psim[0][10]));    // Check what components are non-zero
-#endif
 
-    // Now construct bilinear sum_a psi_a Udag_a eta
-    // All fields are on the same site, no gathers
+    // TODO: EDITS NEEDED FROM HERE...
+    // Now construct bilinears
     // Negative sign from generator normalization
     StoL = cmplx(0.0, 0.0);
     LtoS = cmplx(0.0, 0.0);
@@ -109,7 +102,7 @@ int bilinearWard() {
     g_dcomplexsum(&LtoS);
     CDIVREAL(StoL, norm, StoL);
     CDIVREAL(LtoS, norm, LtoS);
-    node0_printf("susy %.6g %.6g %.6g %.6g ( %d of %d ) %d\n",
+    node0_printf("bilin %.6g %.6g %.6g %.6g ( %d of %d ) %d\n",
                  StoL.real, StoL.imag, LtoS.real, LtoS.imag,
                  isrc + 1, nsrc, iters);
 
@@ -138,13 +131,17 @@ int bilinearWard() {
 
   // Average gauge term over volume, print along with difference
   sum /= (Real)volume;
-  node0_printf("SUSY %.6g %.6g %.6g %.6g ( ave over %d )\n",
+  node0_printf("BILIN %.6g %.6g %.6g %.6g ( ave over %d )\n",
                ave.real, ave.imag, sum, sum - ave.real, nsrc);
+  // ...TO HERE EDITS NEEDED TODO
 
   // Reset multi-mass CG and clean up
   Norder = sav;
-  free(g_rand);
-  free(src);
+  for (i = 0; i < NFERMION; i++) {
+    free(g_rand[i]);
+    free(src[i]);
+    free(psim[0][i]);
+  }
   free(psim[0]);
   free(psim);
   return tot_iters;
