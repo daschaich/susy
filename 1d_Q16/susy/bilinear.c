@@ -9,13 +9,13 @@
 // g_rand is random gaussian fermion source, then src = Mdag g_rand
 // Adapted from grsource to mimic QCD pbp calculation
 void bilinear_src(matrix *g_rand[NFERMION], matrix *src[NFERMION]) {
-  register int i, j, k, mu;
+  register int i, j, k;
   register site *s;
   complex grn;
 
   FORALLSITES(i, s) {
     for (k = 0; k < NFERMION; k++) {
-      clear_TF(&(g_rand[k][i]));
+      clear_mat(&(g_rand[k][i]));
       // Source all the fermions
       for (j = 0; j < DIMF; j++) {
 #ifdef SITERAND
@@ -43,16 +43,16 @@ void bilinear_src(matrix *g_rand[NFERMION], matrix *src[NFERMION]) {
 //   psi[j](t) - BC_- * Udag(t-1) psi[j](t-1) U(t-1)    [Dminus]
 //   TODO: THE REST...
 // Return total number of iterations
-int bilinearWard() {
+int bilinear() {
   if (nsrc < 1)   // Only run if there are inversions to do
     return 0;
   register int i;
   register site *s;
-  int mu, isrc, iters, tot_iters = 0, sav = Norder;
-  Real size_r, norm;
-  double sum = 0.0;
-  double_complex tc, StoL, LtoS, ave = cmplx(0.0, 0.0);
-  matrix tmat, *g_rand[NFERMION], *src[NFERMION];
+  int j, k, isrc, iters, tot_iters = 0, sav = Norder;
+  Real size_r, norm = (Real)nt;
+  double_complex tc, bilinear_Dplus, bilinear_Dminus;
+  double_complex ave_Dplus = cmplx(0.0, 0.0), ave_Dminus = cmplx(0.0, 0.0);
+  matrix tmat, tmat2, *g_rand[NFERMION], *src[NFERMION];
   matrix ***psim = malloc(sizeof(matrix**));
   msg_tag *tag[NCHIRAL_FERMION];
 
@@ -74,66 +74,68 @@ int bilinearWard() {
     iters = congrad_multi(src, psim, niter, rsqmin, &size_r);
     tot_iters += iters;
 
-    // TODO: EDITS NEEDED FROM HERE...
     // Now construct bilinears
     // Negative sign from generator normalization
-    StoL = cmplx(0.0, 0.0);
-    LtoS = cmplx(0.0, 0.0);
-    FORALLSITES(i, s) {
-      FORALLDIR(mu) {
-        mult_na(&(psim[0][i].Flink[mu]), &(s->link[mu]), &tmat);
-        tc = complextrace_an(&(g_rand[i].Fsite), &tmat);
-        CSUM(StoL, tc);
-#ifdef DEBUG_CHECK
-        printf("StoL[%d](%d) %d (%.4g, %.4g)\n",
-               i, mu, isrc, tc.real, tc.imag);
-#endif
-
-        mult_an(&(s->link[mu]), &(psim[0][i].Fsite), &tmat);
-        tc = complextrace_an(&(g_rand[i].Flink[mu]), &tmat);
-        CSUM(LtoS, tc);
-#ifdef DEBUG_CHECK
-        printf("LtoS[%d](%d) %d (%.4g, %.4g)\n",
-               i, mu, isrc, tc.real, tc.imag);
-#endif
-      }
+    bilinear_Dplus = cmplx(0.0, 0.0);
+    for (j = 0; j < NCHIRAL_FERMION; j++) {
+      k = j + NCHIRAL_FERMION;
+      tag[j] = start_gather_field(psim[0][k], sizeof(matrix),
+                                  TUP, EVENANDODD, gen_pt[j]);
     }
-    g_dcomplexsum(&StoL);
-    g_dcomplexsum(&LtoS);
-    CDIVREAL(StoL, norm, StoL);
-    CDIVREAL(LtoS, norm, LtoS);
+    
+    for (j = 0; j < NCHIRAL_FERMION; j++) {     // Overwrite dest
+      k = j + NCHIRAL_FERMION;
+      wait_gather(tag[j]);
+      FORALLSITES(i, s) {
+        mult_nn(&(s->link), (matrix *)(gen_pt[j][i]), &tmat);
+        scalar_mult_na(&tmat, &(s->link), s->bc[0], &(tmat2));
+        dif_matrix(&(psim[0][k][i]), &(tmat2));
+        tc = complextrace_an(&(g_rand[j][i]), &tmat2);
+        CSUM(bilinear_Dplus, tc);
+      }
+      cleanup_gather(tag[j]);
+    }
+    g_dcomplexsum(&bilinear_Dplus);
+    
+    
+    bilinear_Dminus = cmplx(0.0, 0.0);
+    // Include negative sign in product that is then gathered
+    for (j = 0; j < NCHIRAL_FERMION; j++) {
+      k = j + NCHIRAL_FERMION;
+      FORALLSITES(i, s) {
+        mult_an(&(s->link), &(psim[0][j][i]), &tmat);
+        scalar_mult_nn(&tmat, &(s->link), -1.0, &(tempmat[i]));
+      }
+      tag[0] = start_gather_field(tempmat, sizeof(matrix),
+                               TDOWN, EVENANDODD, gen_pt[0]);
+      
+      wait_gather(tag[0]);
+      FORALLSITES(i, s) {           // Overwrite dest
+        scalar_mult_add_matrix(&(psim[0][j][i]), (matrix *)(gen_pt[0][i]),
+                               s->bc[1], &tmat);
+        tc = complextrace_an(&(g_rand[k][i]), &tmat);
+        CSUM(bilinear_Dminus, tc);
+      }
+      cleanup_gather(tag[0]);
+    }
+    g_dcomplexsum(&bilinear_Dminus);
+    
+    CDIVREAL(bilinear_Dplus, norm, bilinear_Dplus);
+    CDIVREAL(bilinear_Dminus, norm, bilinear_Dminus);
     node0_printf("bilin %.6g %.6g %.6g %.6g ( %d of %d ) %d\n",
-                 StoL.real, StoL.imag, LtoS.real, LtoS.imag,
+                 bilinear_Dplus.real, bilinear_Dplus.imag,
+                 bilinear_Dminus.real, bilinear_Dminus.imag,
                  isrc + 1, nsrc, iters);
 
-    CSUM(ave, StoL);
-    CDIF(ave, LtoS);
+    CSUM(ave_Dplus, bilinear_Dplus);
+    CDIF(ave_Dminus, bilinear_Dminus);
   }
   // Normalize by number of sources (already averaged over volume)
-  CDIVREAL(ave, 2.0 * (Real)nsrc, ave);
+  CDIVREAL(ave_Dplus, (Real)nsrc, ave_Dplus);
+  CDIVREAL(ave_Dminus, (Real)nsrc, ave_Dminus);
 
-  // Now add gauge piece, including plaquette determinant term
-  // Accumulate sum_a U_a Udag_a in tmat
-  // Multiply by DmuUmu and trace
-  FORALLSITES(i, s) {
-    mult_na(&(s->link[0]), &(s->link[0]), &tmat);   // Initialize
-    for (mu = 1; mu < NUMLINK; mu++)
-      mult_na_sum(&(s->link[mu]), &(s->link[mu]), &tmat);
-    tc = complextrace_nn(&(DmuUmu[i]), &tmat);
-    // Make sure trace really is real
-    if (fabs(tc.imag) > IMAG_TOL) {
-      printf("node%d WARNING: Im(sum[%d]) = %.4g > %.4g\n",
-             this_node, i, tc.imag, IMAG_TOL);
-    }
-    sum += tc.real;
-  }
-  g_doublesum(&sum);
-
-  // Average gauge term over volume, print along with difference
-  sum /= (Real)volume;
   node0_printf("BILIN %.6g %.6g %.6g %.6g ( ave over %d )\n",
-               ave.real, ave.imag, sum, sum - ave.real, nsrc);
-  // ...TO HERE EDITS NEEDED TODO
+               ave_Dplus.real, ave_Dplus.imag, ave_Dminus.real, ave_Dminus.imag, nsrc);
 
   // Reset multi-mass CG and clean up
   Norder = sav;

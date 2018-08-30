@@ -108,9 +108,9 @@ susy_hmc::
 
 susy_meas::
 	${MAKE} -f ${MAKEFILE} target "MYTARGET= $@" \
-	"DEFINES = ${DEFINES} -DPHI_ALGORITHM " \
+	"DEFINES = ${DEFINES} -DPHI_ALGORITHM -DBILIN " \
 	"LAPACK = -llapack -lblas " \
-	"EXTRA_OBJECTS = control_meas.o "
+	"EXTRA_OBJECTS = control_meas.o bilinear.o "
 
 susy_hmc_meas::
 	${MAKE} -f ${MAKEFILE} target "MYTARGET= $@" \

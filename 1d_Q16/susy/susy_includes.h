@@ -95,10 +95,8 @@ void random_gauge_trans(matrix *temp_ferm[NFERMION]);
 void zheev_(char *doV, char *uplo, int *N1, double *store, int *N2,
             double *eigs, double *work, int *Nwork, double *Rwork, int *stat);
 
-#ifdef MCRG
-void block_mcrg(int bl);
-void blocked_ops(int bl);
-void blocked_ploop(int bl);
+#ifdef BILIN
+int bilinear();
 #endif
 // -----------------------------------------------------------------
 

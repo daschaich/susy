@@ -128,6 +128,10 @@ EXTERN site *lattice;
 #define N_POINTERS 20
 EXTERN char **gen_pt[N_POINTERS];
 
+#ifdef BILIN
+EXTERN int nsrc;
+#endif
+
 #ifdef EIG
 // Eigenvalue stuff
 EXTERN int Nvec;

@@ -31,6 +31,10 @@ typedef struct {
   int niter;                    // Maximum number of CG iterations
   Real rsqmin;                  // For deciding on convergence
   char startfile[MAXFILENAME], savefile[MAXFILENAME];
+  
+#ifdef BILIN
+  int nsrc;
+#endif
 
 #ifdef EIG
   // Eigenvalue parameters
