@@ -227,7 +227,9 @@ int readin(int prompt) {
     // lambda, mu
     IF_OK status += get_f(stdin, prompt, "lambda", &par_buf.lambda);
     IF_OK status += get_f(stdin, prompt, "mu", &par_buf.mu);
-
+#ifdef BILIN
+    IF_OK status += get_i(stdin, prompt, "nsrc", &par_buf.nsrc);
+#endif
     // Maximum conjugate gradient iterations
     IF_OK status += get_i(stdin, prompt, "max_cg_iterations", &par_buf.niter);
 
@@ -293,10 +295,14 @@ int readin(int prompt) {
   mass_Myers = -999.0;
   mass_fermion = -999.0;
 #endif
-
+  
   kappa = (Real)NCOL * 0.25 / lambda;
   node0_printf("lambda=%.4g --> kappa=Nc/(4lambda)=%.4g\n", lambda, kappa);
 
+#ifdef BILIN
+nsrc = par_buf.nsrc;
+#endif
+  
 #ifdef EIG
   // Include some mallocs here (make_fields has already been called)
   // (This memory usage will not be reported to the user)
