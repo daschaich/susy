@@ -44,8 +44,8 @@ void av_ov (void *x, void *y, int *Nvec, primme_params *primme) {
 
   for (ivec = 0; ivec < *Nvec; ivec++) {
     // Copy double precision complex vector x
-    // into Real precision Twist_Fermion src
-    // Each Twist_Fermion has Ndat=4DIMF non-trivial complex components
+    // into Real precision matrix* src
+    // with NFERMION * NCOL * NCOL non-trivial complex components
     xx = ((Complex_Z*) x) + Ndat * ivec * sites_on_node;  // This vector in x
     iter = 0;
 
@@ -150,7 +150,7 @@ void par_GlobalSumDouble(void *sendBuf, void *recvBuf,
 // If flag==1 we calculate the smallest eigenvalues
 // If flag==-1 we calculate the largest eigenvalues
 int make_evs(int Nvec, matrix ***eigVec, double *eigVal, int flag) {
-  register site* s;
+  register site *s;
   int i, j, k, m, ivec, iter = 0, ret, Ndat = NFERMION * NCOL * NCOL;
   int maxn = sites_on_node * Ndat;
   double check, *rnorms = malloc(sizeof *rnorms * Nvec);
@@ -159,6 +159,7 @@ int make_evs(int Nvec, matrix ***eigVec, double *eigVal, int flag) {
   matrix tmat, *tmpmat[NFERMION];
   for (m = 0; m < NFERMION; m++)
     tmpmat[m] = malloc(sizeof(matrix) * sites_on_node);
+
   // Check memory allocations
   if (workVecs == NULL) {
     node0_printf("ERROR in make_evs: couldn't allocate workVecs\n");

@@ -174,7 +174,7 @@ void par_GlobalSumDouble(void *sendBuf, void *recvBuf,
 // If flag==1 we calculate the smallest eigenvalues
 // If flag==-1 we calculate the largest eigenvalues
 int make_evs(int Nvec, Twist_Fermion **eigVec, double *eigVal, int flag) {
-  register site* s;
+  register site *s;
   int i, j, k, mu, ivec, iter = 0, ret, Ndat = 4 * DIMF;
   int maxn = sites_on_node * Ndat;
   double check, *rnorms = malloc(Nvec * sizeof(*rnorms));
