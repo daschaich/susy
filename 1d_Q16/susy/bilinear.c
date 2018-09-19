@@ -23,8 +23,8 @@ void bilinear_src(matrix *g_rand_j[NFERMION], matrix *src_j[NFERMION],
       // Clear all g_rand_* components
       clear_mat(&(g_rand_j[j][i]));
       clear_mat(&(g_rand_j[k][i]));
-      clear_mat(&(g_rand_j[j][i]));
-      clear_mat(&(g_rand_j[k][i]));
+      clear_mat(&(g_rand_k[j][i]));
+      clear_mat(&(g_rand_k[k][i]));
 
       // Source first (second) half of g_rand_j (g_rand_k)
       for (n = 0; n < DIMF; n++) {
