@@ -66,7 +66,7 @@ void update_u(Real eps) {
     for (j = 0; j < NSCALAR; j++)
       scalar_mult_sum_matrix(&(s->mom_X[j]), eps, &(s->X[j]));
   }
-  // Update Gamma_X
+  // Update dot product of first eight scalar fields and gamma matrices
   build_Gamma_X();
 }
 // -----------------------------------------------------------------
@@ -216,14 +216,9 @@ int update() {
       source[n][k] = malloc(sizeof(matrix) * sites_on_node);
   }
 
-  // Compute g and src = (Mdag M)^(1 / 8) g
-  for (n = 0; n < Nroot; n++) {
-    iters += grsource(src);
-    for (j = 0; j < NFERMION; j++) {
-      FORALLSITES(i, s)
-      mat_copy(&(src[j][i]), &(source[n][j][i]));
-    }
-  }
+  // Compute source = (Mdag M)^(1 / 8) g
+  for (n = 0; n < Nroot; n++)
+    iters += grsource(source[n]);
 
   // Do a CG to get psim,
   // rational approximation to (Mdag M)^(-1 / 4) src = (Mdag M)^(-1 / 8) g
@@ -290,7 +285,7 @@ int update() {
   broadcast_float(&xrandom);
   if (exp(-change) < (double)xrandom) {
     if (traj_length > 0.0) {
-      copy_bosons(MINUS);
+      copy_bosons(MINUS);   // Restore link field from old_link
       build_Gamma_X();
     }
     node0_printf("REJECT: delta S = %.4g start S = %.12g end S = %.12g\n",
