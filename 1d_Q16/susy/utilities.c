@@ -6,6 +6,9 @@
 
 
 // -----------------------------------------------------------------
+// Update dot product of first eight scalar fields and gamma matrices
+// for the corresponding Yukawa terms in fermion_op
+// (The last two gamma matrices are diagonal in our basis)
 void build_Gamma_X() {
   register int i, j, k, l;
   register site *s;
@@ -124,7 +127,7 @@ void fermion_op(matrix *src[NFERMION], matrix *dest[NFERMION], int sign) {
   }
 #endif
 
-  // Assume build_Gamma_X has already been run
+  // Yukawa terms -- assume build_Gamma_X has already been run
   for (j = 0; j < NCHIRAL_FERMION; j++) {
     m = j + NCHIRAL_FERMION;
     for (k = 0; k < NCHIRAL_FERMION; k++) {

@@ -102,9 +102,7 @@ void make_fields() {
   FIELD_ALLOC(tr_eta, complex);
   FIELD_ALLOC(tr_dest, complex);
 
-  size += (Real)(2.0 * NFERMION * sizeof(matrix));
-  FIELD_ALLOC_VEC(src, matrix, NFERMION);
-  FIELD_ALLOC_VEC(dest, matrix, NFERMION);
+  size += (Real)(NCHIRAL_FERMION * NCHIRAL_FERMION * sizeof(matrix));
   FIELD_ALLOC_MAT(Gamma_X, matrix, NCHIRAL_FERMION, NCHIRAL_FERMION);
 
   // CG Fermions

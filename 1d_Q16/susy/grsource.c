@@ -85,26 +85,6 @@ int grsource(matrix *src[NFERMION]) {
   }
   g_doublesum(&source_norm);
   node0_printf("source_norm in grsource %.4g\n", source_norm);
-
-//  DSq(src, dest);
-//  printf("\n\n TEST 1\n");
-//  FORALLSITES(i, s) {
-//    for (k = 0; k < NFERMION; k++) {
-//      source_norm = (double)realtrace_nn(&(dest[k][i]), &(dest[k][i]));
-//      if (fabs(source_norm) > IMAG_TOL)
-//        printf("%d %d %.4g\n", s->t, k, source_norm);
-//    }
-//  }
-
-//  fermion_op(src, dest, PLUS);
-//  printf("\n\n TEST 2\n");
-//  FORALLSITES(i, s) {
-//    for (k = 0; k < NFERMION; k++) {
-//      source_norm = (double)realtrace_nn(&(dest[k][i]), &(dest[k][i]));
-//      if (fabs(source_norm) > IMAG_TOL)
-//        printf("%d %d %.4g\n", s->t, k, source_norm);
-//    }
-//  }
 #endif
 
   // We now compute (Mdag M)^{1 / 8}.src

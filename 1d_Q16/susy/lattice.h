@@ -93,9 +93,9 @@ EXTERN Real bnorm, *fnorm, max_bf, *max_ff;
 // generator state
 EXTERN double_prn node_prn;
 
-// Persistent fermions for matrix--vector operation
-// Used in fermion_op and assemble_fermion_force
-EXTERN matrix *src[NFERMION], *dest[NFERMION];
+// Persistent dot product of first eight scalar fields and gamma matrices
+// for the corresponding Yukawa terms in fermion_op
+// (The last two gamma matrices are diagonal in our basis)
 EXTERN matrix *Gamma_X[NCHIRAL_FERMION][NCHIRAL_FERMION];
 
 // For convenience in calculating action and force
