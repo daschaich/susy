@@ -11,7 +11,7 @@
 // -----------------------------------------------------------------
 // Return a_i * b_i for two complex vectors (no conjugation!)
 double_complex inner(complex *a, complex *b) {
-  int i, Ndat = 4 * DIMF;
+  int i, Ndat = NFERMION * DIMF;
   double_complex dot;
 
   dot.real = a[0].real * b[0].real - a[0].imag * b[0].imag;
@@ -30,33 +30,28 @@ double_complex inner(complex *a, complex *b) {
 
 // -----------------------------------------------------------------
 // Wrapper for the fermion_op matvec
-// Convert between complex vectors and Twist_Fermions
+// Convert between complex vectors and fermion matrices
 void matvec(complex *in, complex *out) {
   register site *s;
   int i, j, iter;
 
-  // Copy complex vector into Twist_Fermion src
+  // Copy complex vector into matrix* src
   // Each Twist_Fermion has Ndat = 4DIMF non-trivial complex components
   // !!! Need to cycle over fields to ensure non-zero Q[i + 1] M Q[i]
   // TODO: Can we rearrange this to avoid all the matrix manipulation?
   iter = 0;
   FORALLSITES(i, s) {
-    FIXME... // TODO
-    clear_TF(&(src[i]));
-    for (j = 0; j < DIMF; j++) {
-      c_scalar_mult_sum_mat(&(Lambda[j]), &(in[iter]), &(src[i].Fsite));
-      iter++;
-      c_scalar_mult_sum_mat(&(Lambda[j]), &(in[iter]), &(src[i].Flink[0]));
-      iter++;
-      c_scalar_mult_sum_mat(&(Lambda[j]), &(in[iter]), &(src[i].Flink[1]));
-      iter++;
-      c_scalar_mult_sum_mat(&(Lambda[j]), &(in[iter]), &(src[i].Fplaq));
-      iter++;
+    for (k = 0; k < NFERMION; k++) {
+      clear_TF(&(src[k][i]));
+      for (j = 0; j < DIMF; j++) {
+        c_scalar_mult_sum_mat(&(Lambda[j]), &(in[iter]), &(src[k][i]));
+        iter++;
+      }
     }
   }
 #ifdef DEBUG_CHECK
   // Check that we didn't miss any components of the input vector
-  int Ndat = 4 * DIMF;
+  int Ndat = NFERMION * DIMF;
   if (iter != sites_on_node * Ndat) {
     printf("phase: cycled over %d of %d input components\n",
            iter, sites_on_node * Ndat);
@@ -68,18 +63,14 @@ void matvec(complex *in, complex *out) {
 //  fermion_op(src, res, MINUS);    // Ddag
   Nmatvecs++;
 
-  // Copy the resulting Twist_Fermion res back to complex vector y
+  // Copy the resulting matrix* res back to complex vector y
   iter = 0;
   FORALLSITES(i, s) {
-    for (j = 0; j < DIMF; j++) {
-      out[iter] = complextrace_nn(&(res[i].Fsite), &(Lambda[j]));
-      iter++;
-      out[iter] = complextrace_nn(&(res[i].Flink[0]), &(Lambda[j]));
-      iter++;
-      out[iter] = complextrace_nn(&(res[i].Flink[1]), &(Lambda[j]));
-      iter++;
-      out[iter] = complextrace_nn(&(res[i].Fplaq), &(Lambda[j]));
-      iter++;
+    for (k = 0; k < NFERMION; k++) {
+      for (j = 0; j < DIMF; j++) {
+        out[iter] = complextrace_nn(&(res[k][i]), &(Lambda[j]));
+        iter++;
+      }
     }
   }
 #ifdef DEBUG_CHECK
@@ -99,7 +90,7 @@ void matvec(complex *in, complex *out) {
 #ifdef PHASE
 void phase() {
   register int i, j, k;
-  int Ndat = 4 * DIMF, shift = this_node * sites_on_node * Ndat;
+  int Ndat = NFERMION * DIMF, shift = this_node * sites_on_node * Ndat;
   double phase, log_mag, tr, dtime;
   complex tc, tc2;
   complex *diag = malloc(sizeof *diag * volume * Ndat);
