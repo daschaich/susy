@@ -95,7 +95,7 @@ void av_ov (void *x, void *y, int *Nvec, primme_params *primme) {
       xmag += xx[i].r * xx[i].r + xx[i].i * xx[i].i;
     FORALLSITES(i, s)
       src_mag += magsq_TF(&(src[i]));
-    if (fabs(xmag - src_mag) > eig_tol * eig_tol) {
+    if (fabs(xmag - src_mag) > eig_tol) {
       node0_printf("av_ov: |x[%d]|^2 = %.4g but |src|^2 = %.4g (%.4g)\n",
                    ivec, xmag, src_mag, fabs(xmag - src_mag));
     }
@@ -142,7 +142,7 @@ void av_ov (void *x, void *y, int *Nvec, primme_params *primme) {
       ymag += xx[i].r * xx[i].r + xx[i].i * xx[i].i;
     FORALLSITES(i, s)
       res_mag += magsq_TF(&(res[i]));
-    if (fabs(ymag - res_mag) > eig_tol * eig_tol) {
+    if (fabs(ymag - res_mag) > eig_tol) {
       node0_printf("av_ov: |y[%d]|^2 = %.4g but |res|^2 = %.4g (%.4g)\n",
                    ivec, ymag, res_mag, fabs(ymag - res_mag));
     }

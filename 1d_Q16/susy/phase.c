@@ -2,6 +2,7 @@
 // Measure the phase of the pfaffian
 // Based on the algorithm in the appendix of hep-lat/0305002
 // !!! hep-lat/9903014 provides important definitions and caveats
+// Note that we work with DIMF=NCOL^2-1 rather than NCOL^2
 #include "susy_includes.h"
 #define PFA_TOL 1e-12
 // -----------------------------------------------------------------
@@ -36,8 +37,8 @@ void matvec(complex *in, complex *out) {
   int i, j, iter;
 
   // Copy complex vector into matrix* src
-  // Each Twist_Fermion has Ndat = 4DIMF non-trivial complex components
-  // !!! Need to cycle over fields to ensure non-zero Q[i + 1] M Q[i]
+  // with NFERMION * DIMF non-trivial complex components
+  // !!! Need to ensure non-zero Q[i + 1] M Q[i]
   // TODO: Can we rearrange this to avoid all the matrix manipulation?
   iter = 0;
   FORALLSITES(i, s) {
@@ -104,7 +105,7 @@ void phase() {
   }
 
   // Allocate and initialize Q, checking whether or not to reload
-  // Each Twist_Fermion has Ndat = 4DIMF non-trivial complex components
+  // Working with DIMF=NCOL^2-1 rather than NCOL^2
   // We keep part of every column on this node
   // The diagonal elements are distributed across different nodes
   // according to shift = this_node * sites_on_node * Ndat defined above
