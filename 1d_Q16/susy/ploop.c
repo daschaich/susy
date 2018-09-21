@@ -33,6 +33,11 @@ complex ploop() {
     plp = trace(&tmat);
   g_sync();
   g_complexsum(&plp);   // Broadcast same value to all nodes
+
+  // Kill off roundoff for NCOL=2
+  if (fabs(plp.imag) < IMAG_TOL)
+    plp.imag = 0.0;
+
   return plp;
 }
 // -----------------------------------------------------------------

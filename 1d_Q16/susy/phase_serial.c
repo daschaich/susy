@@ -1,6 +1,7 @@
 // -----------------------------------------------------------------
 // Measure the phase of the pfaffian using gaussian elimination
 // This provides a simpler serial check of the parallel computation
+// Note that we work with DIMF=NCOL^2-1 rather than NCOL^2
 #include "susy_includes.h"
 #define PFA_TOL 1e-12   // !!! The size of this can affect stability
 // -----------------------------------------------------------------
@@ -14,30 +15,22 @@ void matvec(Real *in, complex *out) {
   register site *s;
   int i, j, iter;
 
-  // Copy complex vector into Twist_Fermion src
-  // Each Twist_Fermion has Ndat = 4DIMF non-trivial complex components
+  // Copy complex vector into matrix* src
+  // with NFERMION * DIMF non-trivial complex components
   iter = 0;
   FORALLSITES(i, s) {
-    FIXME... // TODO
-    clear_TF(&(src[i]));
-    for (j = 0; j < DIMF; j++) {
-      if (in[iter] > 0.5)
-        sum_matrix(&(Lambda[j]), &(src[i].Fsite));
-      iter++;
-      if (in[iter] > 0.5)
-        sum_matrix(&(Lambda[j]), &(src[i].Flink[0]));
-      iter++;
-      if (in[iter] > 0.5)
-        sum_matrix(&(Lambda[j]), &(src[i].Flink[1]));
-      iter++;
-      if (in[iter] > 0.5)
-        sum_matrix(&(Lambda[j]), &(src[i].Fplaq));
-      iter++;
+    for (k = 0; k < NFERMION; k++) {
+      clear_TF(&(src[k][i]));
+      for (j = 0; j < DIMF; j++) {
+        if (in[iter] > 0.5)
+          sum_matrix(&(Lambda[j]), &(src[k][i]));
+        iter++;
+      }
     }
   }
 #ifdef DEBUG_CHECK
   // Check that we didn't miss any components of the input vector
-  int Ndat = 4 * DIMF;
+  int Ndat = NFERMION * DIMF;
   if (iter != sites_on_node * Ndat) {
     printf("phase: cycled over %d of %d input components\n",
            iter, sites_on_node * Ndat);
@@ -50,15 +43,11 @@ void matvec(Real *in, complex *out) {
   // Copy the resulting Twist_Fermion res back to complex vector y
   iter = 0;
   FORALLSITES(i, s) {
-    for (j = 0; j < DIMF; j++) {
-      out[iter] = complextrace_nn(&(res[i].Fsite), &(Lambda[j]));
-      iter++;
-      out[iter] = complextrace_nn(&(res[i].Flink[0]), &(Lambda[j]));
-      iter++;
-      out[iter] = complextrace_nn(&(res[i].Flink[1]), &(Lambda[j]));
-      iter++;
-      out[iter] = complextrace_nn(&(res[i].Fplaq), &(Lambda[j]));
-      iter++;
+    for (k = 0; k < NFERMION; k++) {
+      for (j = 0; j < DIMF; j++) {
+        out[iter] = complextrace_nn(&(res[k][i]), &(Lambda[j]));
+        iter++;
+      }
     }
   }
 #ifdef DEBUG_CHECK
@@ -78,7 +67,7 @@ void matvec(Real *in, complex *out) {
 #ifdef PHASE
 void phase() {
   register int i, j, k, pivot;
-  int Ndat = 4 * DIMF, interchange = 1;
+  int Ndat = NFERMION * DIMF, interchange = 1;
   Real *col = malloc(sizeof *col * volume * Ndat);
   double phase, log_mag, tr, maxSq;
   complex scale;
@@ -101,7 +90,7 @@ void phase() {
     col[i] = 0.0;
 
   // Allocate and construct fermion operator D
-  // Each Twist_Fermion has Ndat = 4DIMF non-trivial complex components
+  // Working with DIMF=NCOL^2-1 rather than NCOL^2
   for (i = 0; i < volume * Ndat; i++) {
     D[i] = malloc(sizeof complex * volume * Ndat);
     col[i] = 1.0;

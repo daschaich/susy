@@ -15,6 +15,7 @@ int rand_source(matrix *src[NFERMION]) {
   complex grn;
 
   // Begin with pure gaussian random numbers
+  // Note DIMF=NCOL^2-1 rather than the NCOL^2 that appears elsewhere
   FORALLSITES(i, s) {
     for (k = 0; k < NFERMION; k++) {
       clear_mat(&(src[k][i]));
@@ -43,8 +44,7 @@ void av_ov (void *x, void *y, int *Nvec, primme_params *primme) {
   Complex_Z *xx;
 
   for (ivec = 0; ivec < *Nvec; ivec++) {
-    // Copy double precision complex vector x
-    // into Real precision matrix* src
+    // Copy double precision complex vector x into Real precision matrix* src
     // with NFERMION * NCOL * NCOL non-trivial complex components
     xx = ((Complex_Z*) x) + Ndat * ivec * sites_on_node;  // This vector in x
     iter = 0;
@@ -74,7 +74,7 @@ void av_ov (void *x, void *y, int *Nvec, primme_params *primme) {
       FORALLSITES(i, s)
         src_mag += realtrace(&(src[m][i]), &(src[m][i]));
     }
-      if (fabs(xmag - src_mag) > eig_tol * eig_tol) {
+      if (fabs(xmag - src_mag) > eig_tol) {
         node0_printf("av_ov: |x[%d]|^2 = %.4g but |src|^2 = %.4g (%.4g)\n",
                      ivec, xmag, src_mag, fabs(xmag - src_mag));
       }
@@ -89,8 +89,8 @@ void av_ov (void *x, void *y, int *Nvec, primme_params *primme) {
 
     DSq(src, res);    // D^2
 
-    // Copy the resulting Twist_Fermion res back to complex vector y
-    // Each Twist_Fermion has Ndat=16DIMF non-trivial complex components
+    // Copy the resulting matrix* res back to complex vector y
+    // Again have NFERMION * NCOL * NCOL non-trivial complex components
     xx = ((Complex_Z*) y) + Ndat * ivec * sites_on_node;  // This vector in y
     iter = 0;
     for (m = 0; m < NFERMION; m++) {
@@ -118,7 +118,7 @@ void av_ov (void *x, void *y, int *Nvec, primme_params *primme) {
       FORALLSITES(i, s)
         res_mag += realtrace(&(res[m][i]), &(res[m][i]));
     }
-    if (fabs(ymag - res_mag) > eig_tol * eig_tol) {
+    if (fabs(ymag - res_mag) > eig_tol) {
       node0_printf("av_ov: |y[%d]|^2 = %.4g but |res|^2 = %.4g (%.4g)\n",
                    ivec, ymag, res_mag, fabs(ymag - res_mag));
     }
@@ -177,10 +177,10 @@ int make_evs(int Nvec, matrix ***eigVec, double *eigVal, int flag) {
   }
 
   // Copy initial guesses into double-precision temporary fields
-  // Each Twist_Fermion has Ndat = 16DIMF non-trivial complex components
+  // Again have NFERMION * NCOL * NCOL non-trivial complex components
   for (ivec = 0; ivec < Nvec; ivec++) {
     iter = Ndat * ivec * sites_on_node;   // This vector in workvecs
-    for(m=0; m<NFERMION; m++) {
+    for (m=0; m<NFERMION; m++) {
       FORALLSITES(i, s) {
         for (j = 0; j < NCOL; j++) {
           for (k = 0; k < NCOL; k++) {
@@ -257,7 +257,7 @@ int make_evs(int Nvec, matrix ***eigVec, double *eigVal, int flag) {
   for (ivec = 0; ivec < Nvec; ivec++) {
     check = 0.0;
     DSq(eigVec[ivec], tmpmat);
-    for(m=0; m<NFERMION; m++) {
+    for (m = 0; m < NFERMION; m++) {
       FORALLSITES(i, s) {
         // tmat = tmpmat - eigVal[ivec] * eigVec[ivec]
         scalar_mult_add_matrix(&(tmpmat[m][i]), &(eigVec[ivec][m][i]),
@@ -277,7 +277,7 @@ int make_evs(int Nvec, matrix ***eigVec, double *eigVal, int flag) {
   // Clean up
   free(workVecs);
   free(rnorms);
-  for(m=0; m<NFERMION; m++)
+  for (m = 0; m < NFERMION; m++)
     free(tmpmat[m]);
   primme_Free(&primme);
   return primme.stats.numOuterIterations;
