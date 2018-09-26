@@ -84,9 +84,9 @@ int bilinear() {
     g_rand[i] = malloc(sizeof(matrix) * sites_on_node);
     src[i] = malloc(sizeof(matrix) * sites_on_node);
   }
-  
+
   build_Gamma_X();
-  
+
   for (isrc = 0; isrc < nsrc; isrc++) {
     // Make random sources g_rand_*, hit with Mdag to get src_*
     bilinear_src(g_rand, src);
@@ -102,48 +102,48 @@ int bilinear() {
       for (k = 0; k < NCHIRAL_FERMION; k++) {
         n = k + NCHIRAL_FERMION;
         FORALLSITES(i, s) {
-          mult_na(&(Gamma_X[j][k][i]), &(psim[n][i]), &tmat);
+          mult_na(&(Gamma_X[j][k][i]), &(psim[0][n][i]), &tmat);
           tc = complextrace_an(&(g_rand[j][i]), &tmat);
           CDIF(Yukawa, tc);
-          
-          mult_nn(&(psim[n][i]), &(Gamma_X[j][k][i]), &tmat);
+
+          mult_nn(&(psim[0][n][i]), &(Gamma_X[j][k][i]), &tmat);
           tc = complextrace_an(&(g_rand[j][i]), &tmat);
           CDIF(Yukawa, tc);
-          
-          mult_na(&(Gamma_X[j][k][i]), &(psim[k][i]), &tmat);
+
+          mult_na(&(Gamma_X[j][k][i]), &(psim[0][k][i]), &tmat);
           tc = complextrace_an(&(g_rand[m][i]), &tmat);
           CDIF(Yukawa, tc);
-          
-          mult_nn(&(psim[k][i]), &(Gamma_X[j][k][i]), &tmat);
+
+          mult_nn(&(psim[0][k][i]), &(Gamma_X[j][k][i]), &tmat);
           tc = complextrace_an(&(g_rand[m][i]), &tmat);
           CDIF(Yukawa, tc);
         }
       }
-      
+
       // Last 2 gammas are diagonal
       k = NSCALAR - 2;
       n = NSCALAR - 1;
       FORALLSITES(i, s) {
-        mult_na(&(s->X[k]), &(psim[j][i]), &tmat);
-        mult_nn_sum(&(psim[j][i]), &(s->X[k]), &tmat);
+        mult_na(&(s->X[k]), &(psim[0][j][i]), &tmat);
+        mult_nn_sum(&(psim[0][j][i]), &(s->X[k]), &tmat);
         tc = complextrace_an(&(g_rand[j][i]), &tmat);
         CDIF(Yukawa, tc);
-        
-        mult_na(&(s->X[k]), &(psim[m][i]), &tmat);
-        mult_nn_sum(&(psim[m][i]), &(s->X[k]), &tmat);
+
+        mult_na(&(s->X[k]), &(psim[0][m][i]), &tmat);
+        mult_nn_sum(&(psim[0][m][i]), &(s->X[k]), &tmat);
         tc = complextrace_an(&(g_rand[m][i]), &tmat);
         CDIF(Yukawa, tc);
-        
-        mult_na(&(s->X[n]), &(psim[j][i]), &tmat);
-        mult_nn_sum(&(psim[j][i]), &(s->X[n]), &tmat);
+
+        mult_na(&(s->X[n]), &(psim[0][j][i]), &tmat);
+        mult_nn_sum(&(psim[0][j][i]), &(s->X[n]), &tmat);
         tc = complextrace_an(&(g_rand[j][i]), &tmat);
         CDIF(Yukawa, tc);
-        
-        mult_na(&(s->X[n]), &(psim[m][i]), &tmat);
-        mult_nn_sum(&(psim[m][i]), &(s->X[n]), &tmat);
+
+        mult_na(&(s->X[n]), &(psim[0][m][i]), &tmat);
+        mult_nn_sum(&(psim[0][m][i]), &(s->X[n]), &tmat);
         tc = complextrace_an(&(g_rand[m][i]), &tmat);
         CDIF(Yukawa, tc);
-  
+
       }
     }
     CMULREAL(Yukawa, 0.5, Yukawa);
