@@ -34,7 +34,7 @@ double_complex inner(complex *a, complex *b) {
 // Convert between complex vectors and fermion matrices
 void matvec(complex *in, complex *out) {
   register site *s;
-  int i, j, k, iter;
+  int i, j, k, m, iter;
 
   // Copy complex vector into matrix* src
   // with NFERMION * DIMF non-trivial complex components
@@ -42,10 +42,14 @@ void matvec(complex *in, complex *out) {
   // TODO: Can we rearrange this to avoid all the matrix manipulation?
   iter = 0;
   FORALLSITES(i, s) {
-    for (k = 0; k < NFERMION; k++) {
+    for (k = 0; k < NCHIRAL_FERMION; k++) {
+      m = k + NCHIRAL_FERMION;    // Alternate to avoid zero inner products
       clear_mat(&(src[k][i]));
+      clear_mat(&(src[m][i]));
       for (j = 0; j < DIMF; j++) {
         c_scalar_mult_sum_mat(&(Lambda[j]), &(in[iter]), &(src[k][i]));
+        iter++;
+        c_scalar_mult_sum_mat(&(Lambda[j]), &(in[iter]), &(src[m][i]));
         iter++;
       }
     }
@@ -67,9 +71,12 @@ void matvec(complex *in, complex *out) {
   // Copy the resulting matrix* res back to complex vector y
   iter = 0;
   FORALLSITES(i, s) {
-    for (k = 0; k < NFERMION; k++) {
+    for (k = 0; k < NCHIRAL_FERMION; k++) {
+      m = k + NCHIRAL_FERMION;    // Alternate to avoid zero inner products
       for (j = 0; j < DIMF; j++) {
         out[iter] = complextrace_nn(&(res[k][i]), &(Lambda[j]));
+        iter++;
+        out[iter] = complextrace_nn(&(res[m][i]), &(Lambda[j]));
         iter++;
       }
     }
