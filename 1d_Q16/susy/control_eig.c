@@ -4,7 +4,7 @@
 #include "susy_includes.h"
 
 int main(int argc, char *argv[]) {
-  int j, prompt, dir;
+  int j, prompt;
   double b_act, dtime, Xtr[NSCALAR], Xtr_ave, Xtr_width;
   complex plp = cmplx(99.0, 99.0);
   int ivec, total_iters = 0;
@@ -67,8 +67,11 @@ int main(int argc, char *argv[]) {
     Nvec = 12;
     eigVal = malloc(sizeof *eigVal * Nvec);
     eigVec = malloc(sizeof *eigVec * Nvec);
-    for (ivec = 0; ivec < Nvec; ivec++)
-      FIELD_ALLOC_VEC(eigVec[ivec], matrix, NFERMION);
+    for (ivec = 0; ivec < Nvec; ivec++) {
+      eigVec[ivec] = malloc(sizeof(matrix*) * NFERMION);
+      for (j = 0; j < NFERMION; j++)
+        FIELD_ALLOC(eigVec[ivec][j], matrix);
+    }
   }
   total_iters += make_evs(Nvec, eigVec, eigVal, -1);
 

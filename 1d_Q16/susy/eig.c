@@ -9,7 +9,7 @@
 
 // -----------------------------------------------------------------
 // Gaussian random fermion
-int rand_source(matrix *src[NFERMION]) {
+void rand_source(matrix *src[NFERMION]) {
   register int i, j, k;
   register site *s;
   complex grn;
