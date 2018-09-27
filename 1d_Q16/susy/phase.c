@@ -34,7 +34,7 @@ double_complex inner(complex *a, complex *b) {
 // Convert between complex vectors and fermion matrices
 void matvec(complex *in, complex *out) {
   register site *s;
-  int i, j, iter;
+  int i, j, k, iter;
 
   // Copy complex vector into matrix* src
   // with NFERMION * DIMF non-trivial complex components
@@ -43,7 +43,7 @@ void matvec(complex *in, complex *out) {
   iter = 0;
   FORALLSITES(i, s) {
     for (k = 0; k < NFERMION; k++) {
-      clear_TF(&(src[k][i]));
+      clear_mat(&(src[k][i]));
       for (j = 0; j < DIMF; j++) {
         c_scalar_mult_sum_mat(&(Lambda[j]), &(in[iter]), &(src[k][i]));
         iter++;
@@ -91,12 +91,13 @@ void matvec(complex *in, complex *out) {
 #ifdef PHASE
 void phase() {
   register int i, j, k;
-  int Ndat = NFERMION * DIMF, shift = this_node * sites_on_node * Ndat;
+  int Ndat = NFERMION * DIMF, tot_dat = nt * Ndat;
+  int shift = this_node * sites_on_node * Ndat;
   double phase, log_mag, tr, dtime;
   complex tc, tc2;
-  complex *diag = malloc(sizeof *diag * volume * Ndat);
+  complex *diag = malloc(sizeof *diag * tot_dat);
   complex *MonC = malloc(sizeof *MonC * sites_on_node * Ndat);
-  complex **Q = malloc(sizeof(complex*) * volume * Ndat);
+  complex **Q = malloc(sizeof(complex*) * tot_dat);
 
   if (Q == NULL) {
     printf("phase: can't malloc Q\n");
@@ -113,11 +114,11 @@ void phase() {
   // and then scatter it by summing over nodes
   if (ckpt_load < 0)
     ckpt_load = 0;    // Cheap trick to allocate minimum necessary columns
-  for (i = ckpt_load; i < volume * Ndat; i++) {
+  for (i = ckpt_load; i < tot_dat; i++) {
     Q[i] = malloc(sizeof(complex) * sites_on_node * Ndat);
     diag[i] = cmplx(0.0, 0.0);    // Initialize to zero
   }
-  if (Q[volume * Ndat - 1] == NULL) {
+  if (Q[tot_dat - 1] == NULL) {
     printf("phase: can't malloc Q[i]\n");
     fflush(stdout);
     terminate(1);
@@ -128,7 +129,7 @@ void phase() {
     loadQ(Q, ckpt_load);
   }
   else {                  // Initialize to unit matrix
-    for (i = 0; i < volume * Ndat; i++) {
+    for (i = 0; i < tot_dat; i++) {
       for (j = 0; j < sites_on_node * Ndat; j++)
         Q[i][j] = cmplx(0.0, 0.0);
     }
@@ -137,14 +138,14 @@ void phase() {
   }
 
   // Cycle over ALL pairs of columns after ckpt_load
-  for (i = ckpt_load; i < volume * Ndat - 1; i += 2) {
+  for (i = ckpt_load; i < tot_dat - 1; i += 2) {
     // Checkpoint if requested -- make sure ckpt_save = 0 doesn't trigger this
     if (i == ckpt_save || i + 1 == ckpt_save) {
       if (ckpt_save > 0)
         break;
     }
 
-    node0_printf("Columns %d--%d of %d: ", i + 1, i + 2, volume * Ndat);
+    node0_printf("Columns %d--%d of %d: ", i + 1, i + 2, tot_dat);
     Nmatvecs = 0;
     dtime = -dclock();
 
@@ -175,7 +176,7 @@ void phase() {
     }
 
     // Cycle over ALL subsequent columns
-    for (k = i + 2; k < volume * Ndat; k++) {
+    for (k = i + 2; k < tot_dat; k++) {
       // q_k --> q_k - q_i <q_{i + 1} | D | q_k> - q_{i + 1} <q_i | D | q_k>
       matvec(Q[k], MonC);
       tc = inner(Q[i + 1], MonC);
@@ -221,7 +222,7 @@ void phase() {
     free(diag);
 
     saveQ(Q, ckpt_save);
-    for (i = ckpt_save; i < volume * Ndat; i++)
+    for (i = ckpt_save; i < tot_dat; i++)
       free(Q[i]);
     free(Q);
     free(MonC);
@@ -237,7 +238,7 @@ void phase() {
   phase = 0.0;
   log_mag = 0.0;
   if (this_node == 0) {
-    for (i = 1; i < volume * Ndat; i += 2) {   // Start at 1, use diag[i]
+    for (i = 1; i < tot_dat; i += 2) {   // Start at 1, use diag[i]
       phase += carg(&(diag[i]));
       log_mag += log(cabs_sq(&(diag[i]))) / 2.0;
     }

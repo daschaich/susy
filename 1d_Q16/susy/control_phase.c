@@ -4,7 +4,7 @@
 #include "susy_includes.h"
 
 int main(int argc, char *argv[]) {
-  int prompt, dir;
+  int prompt, j;
   double b_act, dtime, Xtr[NSCALAR], Xtr_ave, Xtr_width;
   complex plp = cmplx(99.0, 99.0);
 #ifndef PHASE

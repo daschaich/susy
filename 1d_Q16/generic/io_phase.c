@@ -42,8 +42,8 @@ void load_diag(complex *diag, int ckpt_load) {
 // Only load non-zero elements of remaining columns of Q
 // Read from node0 only -- transfer data to all other nodes one by one
 void loadQ(complex **Q, int ckpt_load) {
-  int i, j, savi = 0, savj = 0, ret = 1, Ndat = 4 * DIMF, Qlen;
-  int mynode = 0, destnode = 0, Nlines = 0;
+  int i, j, savi = 0, savj = 0, ret = 1, Ndat = NFERMION * DIMF, Qlen;
+  int mynode = 0, destnode = 0, Nlines = 0, tot_dat = nt * Ndat;
   char infile[80];
   Real re, im;
   complex **tbuf = NULL;   // Only malloc on node0 if numnodes() > 1
@@ -53,7 +53,7 @@ void loadQ(complex **Q, int ckpt_load) {
   Qlen = sites_on_node * Ndat * sizeof(complex);
 
   if (this_node == 0) {
-    node0_printf("Reloading columns %d--%d\n", ckpt_load + 1, volume * Ndat);
+    node0_printf("Reloading columns %d--%d\n", ckpt_load + 1, tot_dat);
     sprintf(infile, "%s.Q%d", startfile, ckpt_load);
     fp = fopen(infile, "r");    // Open to read
     if (fp == NULL) {
@@ -65,13 +65,13 @@ void loadQ(complex **Q, int ckpt_load) {
     // Allocate temporary storage to be passed to other nodes
     // Only need if numnodes() > 1, but hard-code it in any case
     // to suppress compiler warnings
-    tbuf = malloc(sizeof(complex*) * volume * Ndat);
-    for (i = ckpt_load; i < volume * Ndat; i++) {
+    tbuf = malloc(sizeof(complex*) * tot_dat);
+    for (i = ckpt_load; i < tot_dat; i++) {
       tbuf[i] = malloc(sizeof(complex) * sites_on_node * Ndat);
       for (j = 0; j < sites_on_node * Ndat; j++)
         tbuf[i][j] = cmplx(0.0, 0.0);
     }
-    if (tbuf[volume * Ndat - 1] == NULL) {
+    if (tbuf[tot_dat - 1] == NULL) {
       printf("loadQ: can't malloc tbuf\n");
       fflush(stdout);
       terminate(1);
@@ -112,7 +112,7 @@ void loadQ(complex **Q, int ckpt_load) {
     g_sync();   // Don't let other nodes race ahead
 
     // Now send buffer to destnode
-    for (i = ckpt_load; i < volume * Ndat; i++) {
+    for (i = ckpt_load; i < tot_dat; i++) {
       if (this_node == 0)
         send_field((char *)tbuf[i], Qlen, destnode);
       else if (this_node == destnode)
@@ -123,7 +123,7 @@ void loadQ(complex **Q, int ckpt_load) {
 
     // Reset tbuf if we have another node to do
     if (this_node == 0 && mynode != -1) {
-      for (i = ckpt_load; i < volume * Ndat; i++) {
+      for (i = ckpt_load; i < tot_dat; i++) {
         for (j = 0; j < sites_on_node * Ndat; j++)
           tbuf[i][j] = cmplx(0.0, 0.0);
       }
@@ -150,7 +150,7 @@ void loadQ(complex **Q, int ckpt_load) {
     }
 
     fclose(fp);
-    for (i = ckpt_load; i < volume * Ndat; i++)
+    for (i = ckpt_load; i < tot_dat; i++)
       free(tbuf[i]);
     free(tbuf);
   }
@@ -195,7 +195,8 @@ void save_diag(complex *diag, int ckpt_save) {
 // Only save non-zero elements of remaining columns of Q
 // Write from node0 only -- transfer data from all other nodes one by one
 void saveQ(complex **Q, int ckpt_save) {
-  int i, j, Ndat = 4 * DIMF, mynode, Nlines = 0, Qlen;
+  int i, j, mynode, Nlines = 0, Qlen;
+  int Ndat = NFERMION * DIMF, tot_dat = nt * Ndat;
   char outfile[80];
   FILE *fp = NULL;
 
@@ -203,7 +204,7 @@ void saveQ(complex **Q, int ckpt_save) {
   Qlen = sites_on_node * Ndat * sizeof(complex);
 
   if (this_node == 0) {
-    printf("Dumping columns %d--%d\n", ckpt_save + 1, volume * Ndat);
+    printf("Dumping columns %d--%d\n", ckpt_save + 1, tot_dat);
     sprintf(outfile, "%s.Q%d", startfile, ckpt_save);
     fp = fopen(outfile, "w");    // Open to write
     if (fp == NULL) {
@@ -213,7 +214,7 @@ void saveQ(complex **Q, int ckpt_save) {
     }
 
     // node0 data ready to go
-    for (i = ckpt_save; i < volume * Ndat; i++) {
+    for (i = ckpt_save; i < tot_dat; i++) {
       for (j = 0; j < sites_on_node * Ndat; j++)
         if (Q[i][j].real != 0.0 || Q[i][j].real != 0.0) { // Loose condition
           fprintf(fp, "0\t%d\t%d\t%.16g\t%.16g\n",
@@ -227,7 +228,7 @@ void saveQ(complex **Q, int ckpt_save) {
 
   // Overwrite node0 Q with elements of Q on mynode
   for (mynode = 1; mynode < numnodes(); mynode++) {
-    for (i = ckpt_save; i < volume * Ndat; i++) {
+    for (i = ckpt_save; i < tot_dat; i++) {
       if (this_node == mynode)
         send_field((char *)Q[i], Qlen, 0);
       else if (this_node == 0)
@@ -236,7 +237,7 @@ void saveQ(complex **Q, int ckpt_save) {
       g_sync();   // To be cautious
     }
     if (this_node == 0) {   // Now print, as above
-      for (i = ckpt_save; i < volume * Ndat; i++) {
+      for (i = ckpt_save; i < tot_dat; i++) {
         for (j = 0; j < sites_on_node * Ndat; j++)
           if (Q[i][j].real != 0.0 || Q[i][j].real != 0.0) { // Loose condition
             fprintf(fp, "%d\t%d\t%d\t%.16g\t%.16g\n",
