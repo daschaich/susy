@@ -7,9 +7,7 @@
 # Targets:
 #   susy_phi uses phi algorithm
 #   susy_hmc uses hybrid Monte Carlo algorithm, i.e., phi + accept/reject
-#   susy_meas measures scalar correlators
-#   susy_mcrg calculates observables after RG blocking (UNDER DEVELOPMENT)
-#   susy_mode stochastically calculates eigenmode number (UNDER DEVELOPMENT)
+#   susy_meas measures fermion bilinears and other observables
 #   susy_eig calculates eigenvalues using PRIMME
 #   susy_phase calculates the pfaffian phase
 # Edit the Makefiles to change this.
@@ -43,11 +41,11 @@ HEADERS = ${GLOBAL_HEADERS} ${MY_HEADERS}
 # Basic set from current directory
 MY_OBJECTS = setup.o        \
              setup_lambda.o \
-             setup_gamma.o \
+             setup_gamma.o  \
              action.o       \
              ploop.o        \
              scalar_eig.o   \
-             scalar_trace.o   \
+             scalar_trace.o \
              grsource.o     \
              utilities.o    \
              library_util.o \
@@ -117,12 +115,6 @@ susy_hmc_meas::
 	"DEFINES = ${DEFINES} -DPHI_ALGORITHM -DHMC_ALGORITHM " \
 	"LAPACK = -llapack -lblas " \
 	"EXTRA_OBJECTS = control.o update_o.o update_h.o setup_rhmc.o "
-
-susy_mcrg::
-	${MAKE} -f ${MAKEFILE} target "MYTARGET= $@" \
-	"DEFINES = ${DEFINES} -DPHI_ALGORITHM -DMCRG" \
-	"LAPACK = -llapack -lblas " \
-	"EXTRA_OBJECTS = control_mcrg.o block_mcrg.o blocked_ops.o blocked_ploop.o "
 
 susy_eig::
 	${MAKE} -f ${MAKEFILE} target "MYTARGET= $@" \
