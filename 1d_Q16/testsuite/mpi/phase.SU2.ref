@@ -1,0 +1,145 @@
+BMN, Nc = 2, DIMF = 3, fermion rep = adjoint
+Microcanonical simulation with refreshing
+Machine = MPI (portable), with 2 nodes
+Phi algorithm
+start: Thu Sep 27 09:56:58 2018
+
+type 0 for no prompts or 1 for prompts
+nt 4
+PBC -1
+iseed 41
+Nroot 1
+Norder 15
+LAYOUT = Hypercubes, options = hyper_prime
+ON EACH NODE 2
+Mallocing 0.0 MBytes per core for lattice
+Antiperiodic temporal boundary conditions
+Mallocing 0.0 MBytes per core for fields
+Q has 192 columns --> 2304 matvecs and 0.3 MBytes per core...
+
+warms 0
+trajecs 3
+traj_length 1.000000e+00
+nstep 5
+nstep_gauge 4
+traj_between_meas 3
+lambda 1.000000e+00
+mu 3.000000e-01
+max_cg_iterations 500
+error_per_site 1.000000e-05
+ckpt_load 0
+ckpt_save 0
+reload_serial config.SU2.4
+forget
+lambda=1 --> kappa=Nc/(4lambda)=0.5
+Restored binary gauge and scalar configuration serially from file config.SU2.4
+Time stamp Sat Aug 25 03:55:33 2018
+Checksums 2ee21ffd b9cb6da7 OK
+Time to reload gauge configuration = 1.774788e-03
+CHECK NERSC LINKTR: -1.2152028828859329e-01 CKSUM: 0
+Reunitarized for double precision.  Max deviation 3e-08 changed to 3.5e-16
+Reantihermized for double precision.  Max deviation 0 changed to 0
+Time to check unitarity and anti-hermiticity = 0.000313 seconds
+START 12.692469
+SCALAR SQUARES 16.3411 5.6399 21.7291 1.70727 1.07448 57.345 0.68396 96.6941 146.663 38.6531 48.9701
+GMES 1.5410088 0 0 12.692469 4.0852819 1.4099739 5.4322751
+Columns 1--2 of 192: 191 matvecs in 0.005001 seconds -2 0
+Columns 3--4 of 192: 189 matvecs in 0.004728 seconds -0.02344871105903147 0
+Columns 5--6 of 192: 187 matvecs in 0.004667 seconds -0.1722872953330573 3.521348199475013e-18
+Columns 7--8 of 192: 185 matvecs in 0.004615 seconds -2 0
+Columns 9--10 of 192: 183 matvecs in 0.00459 seconds -0.02344871105903147 0
+Columns 11--12 of 192: 181 matvecs in 0.004532 seconds -0.1722872953330573 3.521348199475013e-18
+Columns 13--14 of 192: 179 matvecs in 0.004609 seconds -2 0
+Columns 15--16 of 192: 177 matvecs in 0.00446 seconds -0.02344871105903147 0
+Columns 17--18 of 192: 175 matvecs in 0.004436 seconds -0.1722872953330573 3.521348199475013e-18
+Columns 19--20 of 192: 173 matvecs in 0.004349 seconds -2 0
+Columns 21--22 of 192: 171 matvecs in 0.004323 seconds -0.02344871105903147 0
+Columns 23--24 of 192: 169 matvecs in 0.004265 seconds -0.1722872953330573 3.521348199475013e-18
+Columns 25--26 of 192: 167 matvecs in 0.004215 seconds -2 0
+Columns 27--28 of 192: 165 matvecs in 0.004248 seconds -0.02344871105903147 0
+Columns 29--30 of 192: 163 matvecs in 0.004213 seconds -0.1722872953330573 3.521348199475013e-18
+Columns 31--32 of 192: 161 matvecs in 0.004175 seconds -2 0
+Columns 33--34 of 192: 159 matvecs in 0.004116 seconds -0.02344871105903147 0
+Columns 35--36 of 192: 157 matvecs in 0.004073 seconds -0.1722872953330573 3.521348199475013e-18
+Columns 37--38 of 192: 155 matvecs in 0.004022 seconds -2 0
+Columns 39--40 of 192: 153 matvecs in 0.003968 seconds -0.02344871105903147 0
+Columns 41--42 of 192: 151 matvecs in 0.003928 seconds -0.1722872953330573 3.521348199475013e-18
+Columns 43--44 of 192: 149 matvecs in 0.003872 seconds -2 0
+Columns 45--46 of 192: 147 matvecs in 0.003812 seconds -0.02344871105903147 0
+Columns 47--48 of 192: 145 matvecs in 0.003752 seconds -0.1722872953330573 3.521348199475013e-18
+Columns 49--50 of 192: 143 matvecs in 0.003706 seconds -2 0
+Columns 51--52 of 192: 141 matvecs in 0.003665 seconds -0.002270311982962345 2.813693590520442e-08
+Columns 53--54 of 192: 139 matvecs in 0.003561 seconds -1.817066092635996 5.824684405946366e-07
+Columns 55--56 of 192: 137 matvecs in 0.003488 seconds -2 0
+Columns 57--58 of 192: 135 matvecs in 0.003443 seconds -0.002270311982962345 2.813693590520442e-08
+Columns 59--60 of 192: 133 matvecs in 0.003391 seconds -1.817066092635996 5.824684405946366e-07
+Columns 61--62 of 192: 131 matvecs in 0.003409 seconds -2 0
+Columns 63--64 of 192: 129 matvecs in 0.003361 seconds -0.002270311982962345 2.813693590520442e-08
+Columns 65--66 of 192: 127 matvecs in 0.003308 seconds -1.817066092635996 5.824684405946366e-07
+Columns 67--68 of 192: 125 matvecs in 0.003222 seconds -2 0
+Columns 69--70 of 192: 123 matvecs in 0.003153 seconds -0.002270311982962345 2.813693590520442e-08
+Columns 71--72 of 192: 121 matvecs in 0.003078 seconds -1.817066092635996 5.824684405946366e-07
+Columns 73--74 of 192: 119 matvecs in 0.003115 seconds -2 0
+Columns 75--76 of 192: 117 matvecs in 0.003062 seconds -0.002270311982962345 2.813693590520442e-08
+Columns 77--78 of 192: 115 matvecs in 0.002987 seconds -1.817066092635996 5.824684405946366e-07
+Columns 79--80 of 192: 113 matvecs in 0.002889 seconds -2 0
+Columns 81--82 of 192: 111 matvecs in 0.002914 seconds -0.002270311982962345 2.813693590520442e-08
+Columns 83--84 of 192: 109 matvecs in 0.002861 seconds -1.817066092635996 5.824684405946366e-07
+Columns 85--86 of 192: 107 matvecs in 0.002799 seconds -2 0
+Columns 87--88 of 192: 105 matvecs in 0.002764 seconds -0.002270311982962345 2.813693590520442e-08
+Columns 89--90 of 192: 103 matvecs in 0.002706 seconds -1.817066092635996 5.824684405946366e-07
+Columns 91--92 of 192: 101 matvecs in 0.002643 seconds -2 0
+Columns 93--94 of 192: 99 matvecs in 0.002588 seconds -0.002270311982962345 2.813693590520442e-08
+Columns 95--96 of 192: 97 matvecs in 0.002547 seconds -1.817066092635996 5.824684405946366e-07
+Columns 97--98 of 192: 95 matvecs in 0.002516 seconds -2 0
+Columns 99--100 of 192: 93 matvecs in 0.002455 seconds -0.07522578050451494 3.252561100630275e-06
+Columns 101--102 of 192: 91 matvecs in 0.002401 seconds -0.05655497572644983 1.80592862429211e-07
+Columns 103--104 of 192: 89 matvecs in 0.002342 seconds -2 0
+Columns 105--106 of 192: 87 matvecs in 0.0023 seconds -0.07522578050451494 3.252561100630275e-06
+Columns 107--108 of 192: 85 matvecs in 0.002246 seconds -0.05655497572644983 1.80592862429211e-07
+Columns 109--110 of 192: 83 matvecs in 0.00219 seconds -2 0
+Columns 111--112 of 192: 81 matvecs in 0.00214 seconds -0.07522578050451494 3.252561100630275e-06
+Columns 113--114 of 192: 79 matvecs in 0.002093 seconds -0.05655497572644983 1.80592862429211e-07
+Columns 115--116 of 192: 77 matvecs in 0.002037 seconds -2 0
+Columns 117--118 of 192: 75 matvecs in 0.001946 seconds -0.07522578050451494 3.252561100630275e-06
+Columns 119--120 of 192: 73 matvecs in 0.001886 seconds -0.05655497572644983 1.80592862429211e-07
+Columns 121--122 of 192: 71 matvecs in 0.001846 seconds -2 0
+Columns 123--124 of 192: 69 matvecs in 0.001795 seconds -0.07522578050451494 3.252561100630275e-06
+Columns 125--126 of 192: 67 matvecs in 0.001741 seconds -0.05655497572644983 1.80592862429211e-07
+Columns 127--128 of 192: 65 matvecs in 0.001695 seconds -2 0
+Columns 129--130 of 192: 63 matvecs in 0.001628 seconds -0.07522578050451494 3.252561100630275e-06
+Columns 131--132 of 192: 61 matvecs in 0.001566 seconds -0.05655497572644983 1.80592862429211e-07
+Columns 133--134 of 192: 59 matvecs in 0.001566 seconds -2 0
+Columns 135--136 of 192: 57 matvecs in 0.001495 seconds -0.07522578050451494 3.252561100630275e-06
+Columns 137--138 of 192: 55 matvecs in 0.001435 seconds -0.05655497572644983 1.80592862429211e-07
+Columns 139--140 of 192: 53 matvecs in 0.001383 seconds -2 0
+Columns 141--142 of 192: 51 matvecs in 0.001359 seconds -0.07522578050451494 3.252561100630275e-06
+Columns 143--144 of 192: 49 matvecs in 0.001288 seconds -0.05655497572644983 1.80592862429211e-07
+Columns 145--146 of 192: 47 matvecs in 0.001236 seconds -1.607593020577778 -0.0005592985449903433
+Columns 147--148 of 192: 45 matvecs in 0.001196 seconds -0.003694659107870175 1.073957453401837e-06
+Columns 149--150 of 192: 43 matvecs in 0.001136 seconds -0.6741284383303994 3.948073661199674e-05
+Columns 151--152 of 192: 41 matvecs in 0.001084 seconds -1.607593020577778 -0.0005592985449903433
+Columns 153--154 of 192: 39 matvecs in 0.001037 seconds -0.003694659107870175 1.073957453401837e-06
+Columns 155--156 of 192: 37 matvecs in 0.0009789 seconds -0.6741284383303994 3.948073661199674e-05
+Columns 157--158 of 192: 35 matvecs in 0.0009229 seconds -1.607593020577778 -0.0005592985449903433
+Columns 159--160 of 192: 33 matvecs in 0.0008721 seconds -0.003694659107870175 1.073957453401837e-06
+Columns 161--162 of 192: 31 matvecs in 0.0008199 seconds -0.6741284383303994 3.948073661199674e-05
+Columns 163--164 of 192: 29 matvecs in 0.000788 seconds -1.607593020577778 -0.0005592985449903433
+Columns 165--166 of 192: 27 matvecs in 0.000736 seconds -0.003694659107870175 1.073957453401837e-06
+Columns 167--168 of 192: 25 matvecs in 0.0006828 seconds -0.6741284383303994 3.948073661199674e-05
+Columns 169--170 of 192: 23 matvecs in 0.0006051 seconds -1.607593020577778 -0.0005592985449903433
+Columns 171--172 of 192: 21 matvecs in 0.000581 seconds -0.003694659107870175 1.073957453401837e-06
+Columns 173--174 of 192: 19 matvecs in 0.0005 seconds -0.6741284383303994 3.948073661199674e-05
+Columns 175--176 of 192: 17 matvecs in 0.0004542 seconds -1.607593020577778 -0.0005592985449903433
+Columns 177--178 of 192: 15 matvecs in 0.000397 seconds -0.003694659107870175 1.073957453401837e-06
+Columns 179--180 of 192: 13 matvecs in 0.0003471 seconds -0.6741284383303994 3.948073661199674e-05
+Columns 181--182 of 192: 11 matvecs in 0.0002961 seconds -1.607593020577778 -0.0005592985449903433
+Columns 183--184 of 192: 9 matvecs in 0.0002429 seconds -0.003694659107870175 1.073957453401837e-06
+Columns 185--186 of 192: 7 matvecs in 0.0001898 seconds -0.6741284383303994 3.948073661199674e-05
+Columns 187--188 of 192: 5 matvecs in 0.000139 seconds -1.607593020577778 -0.0005592985449903433
+Columns 189--190 of 192: 3 matvecs in 0.000109 seconds -0.003694659107870175 1.073957453401837e-06
+Columns 191--192 of 192: 1 matvecs in 2.718e-05 seconds -0.6741284383303994 3.948073661199674e-05
+PFAFF 159.22377 0.00048382365 0.99999988 0.00048382364
+RUNNING COMPLETED
+
+Time = 0.2395 seconds
