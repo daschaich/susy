@@ -102,7 +102,7 @@ int bilinear() {
       for (k = 0; k < NCHIRAL_FERMION; k++) {
         n = k + NCHIRAL_FERMION;
         FORALLSITES(i, s) {
-          mult_na(&(Gamma_X[j][k][i]), &(psim[0][n][i]), &tmat);
+          mult_na(&(Gamma_X[k][j][i]), &(psim[0][n][i]), &tmat);
           tc = complextrace_an(&(g_rand[j][i]), &tmat);
           CDIF(Yukawa, tc);
 
@@ -110,7 +110,7 @@ int bilinear() {
           tc = complextrace_an(&(g_rand[j][i]), &tmat);
           CDIF(Yukawa, tc);
 
-          mult_na(&(Gamma_X[j][k][i]), &(psim[0][k][i]), &tmat);
+          mult_na(&(Gamma_X[k][j][i]), &(psim[0][k][i]), &tmat);
           tc = complextrace_an(&(g_rand[m][i]), &tmat);
           CDIF(Yukawa, tc);
 
@@ -124,23 +124,23 @@ int bilinear() {
       k = NSCALAR - 2;
       n = NSCALAR - 1;
       FORALLSITES(i, s) {
-        mult_na(&(s->X[k]), &(psim[0][j][i]), &tmat);
-        mult_nn_sum(&(psim[0][j][i]), &(s->X[k]), &tmat);
-        tc = complextrace_an(&(g_rand[j][i]), &tmat);
-        CDIF(Yukawa, tc);
-
         mult_na(&(s->X[k]), &(psim[0][m][i]), &tmat);
         mult_nn_sum(&(psim[0][m][i]), &(s->X[k]), &tmat);
-        tc = complextrace_an(&(g_rand[m][i]), &tmat);
+        tc = complextrace_an(&(g_rand[j][i]), &tmat);
         CDIF(Yukawa, tc);
 
-        mult_na(&(s->X[n]), &(psim[0][j][i]), &tmat);
-        mult_nn_sum(&(psim[0][j][i]), &(s->X[n]), &tmat);
-        tc = complextrace_an(&(g_rand[j][i]), &tmat);
+        mult_na(&(s->X[k]), &(psim[0][j][i]), &tmat);
+        mult_nn_sum(&(psim[0][j][i]), &(s->X[k]), &tmat);
+        tc = complextrace_an(&(g_rand[m][i]), &tmat);
         CDIF(Yukawa, tc);
 
         mult_na(&(s->X[n]), &(psim[0][m][i]), &tmat);
         mult_nn_sum(&(psim[0][m][i]), &(s->X[n]), &tmat);
+        tc = complextrace_an(&(g_rand[j][i]), &tmat);
+        CDIF(Yukawa, tc);
+
+        mult_na(&(s->X[n]), &(psim[0][j][i]), &tmat);
+        mult_nn_sum(&(psim[0][j][i]), &(s->X[n]), &tmat);
         tc = complextrace_an(&(g_rand[m][i]), &tmat);
         CDIF(Yukawa, tc);
 
