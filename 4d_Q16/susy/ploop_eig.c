@@ -75,23 +75,9 @@ complex ploop_eig(int dir, int project, double *plpMod) {
 
   // Special case: len == 1
   if (len == 1) {
-    *plpMod = 0.0;
-    FORALLSITES(i, s) {
-      plp = trace(&(s->link[dir]));
-      CSUM(sum, plp);
-      *plpMod += cabs(&plp);
-    }
-    g_complexsum(&sum);
-    g_doublesum(plpMod);
-    CDIVREAL(sum, norm, sum);
-    *plpMod /= norm;
-
-    if (project == 1) {       // Reset original links
-      FORALLSITES(i, s)
-        mat_copy(&(UpsiU[0][i]), &(s->link[dir]));
-    }
-
-    return sum;
+    printf("ploop_eig: not yet set up for len=1\n");
+    fflush(stdout);
+    terminate(1);
   }
 
   // Compute line by steadily shifting links to hyperplane 0
