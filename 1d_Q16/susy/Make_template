@@ -1,4 +1,4 @@
-# Two-dimensional N=(2,2) supersymmetric Yang--Mills theory
+# One-dimensional 16-supercharge supersymmetric (BFSS/BMN) theory
 # Generic make-include file
 # This template file defines rules and macros common to all architectures
 # It is intended to be an include file for other Makefiles

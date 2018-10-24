@@ -199,8 +199,7 @@ int update() {
 
   // Set up the fermion variables, if needed
 #ifndef PUREGAUGE
-  register int i, j, k;
-  register site *s;
+  register int j, k;
   Real final_rsq;
 
   for (n = 0; n < Nroot; n++) {

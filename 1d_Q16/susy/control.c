@@ -62,7 +62,7 @@ int main(int argc, char *argv[]) {
       node0_printf(" %.6g", Xtr[j]);
     node0_printf(" %.6g %.6g\n", Xtr_ave, Xtr_width);
 
-    // Polyakov loop measurement
+    // Polyakov loop eigenvalues and trace
     // Format: GMES Re(Polyakov) Im(Poyakov) cg_iters
     plp = ploop_eig();
     node0_printf("GMES %.8g %.8g %d ", plp.real, plp.imag, s_iters);

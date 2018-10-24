@@ -37,8 +37,9 @@ int main(int argc, char *argv[]) {
     node0_printf(" %.6g", Xtr[j]);
   node0_printf(" %.6g %.6g\n", Xtr_ave, Xtr_width);
 
+  // Print Polyakov loop eigenvalues followed by trace itself
   // Format: GMES Re(Polyakov) Im(Poyakov) cg_iters
-  plp = ploop();
+  plp = ploop_eig();
   node0_printf("GMES %.8g %.8g 0 ", plp.real, plp.imag);
 
   // More details of bosonic action (to match expected GMES output format)
