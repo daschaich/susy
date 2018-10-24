@@ -64,7 +64,7 @@ int main(int argc, char *argv[]) {
 
     // Polyakov loop measurement
     // Format: GMES Re(Polyakov) Im(Poyakov) cg_iters
-    plp = ploop();
+    plp = ploop_eig();
     node0_printf("GMES %.8g %.8g %d ", plp.real, plp.imag, s_iters);
 
     // Bosonic action
