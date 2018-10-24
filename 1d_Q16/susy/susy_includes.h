@@ -42,8 +42,24 @@ void build_Gamma_X();
 void ranmom();
 int grsource(matrix *source[NFERMION]);
 
-// Basic observables
+// Polyakov loop observables
 complex ploop();
+complex ploop_eig();
+// Use LAPACK to diagonalize Polyakov loop
+// http://www.physics.orst.edu/~rubin/nacphy/lapack/routines/zgeev.html
+// First two arguments turn off eigenvector computations
+// Third and fifth arguments are the dimensions of the matrix
+// Fourth argument is that matrix, which will be overwritten
+// Sixth argument holds the computed eigenvalues
+// Seventh and ninth arguments are eigenvectors
+// Eighth and tenth arguments are the dimensions of the eigenvectors
+// Eleventh argument is real workspace, of size given by the twelfth argument
+// Thirteenth argument is real workspace, of size given by the third argument
+// Final argument reports success or information about failure
+void zgeev_(char *doL, char *doR, int *N1, double *store, int *N2, double *eigs,
+            double *dumL, int *NL, double *dumR, int *NR,
+            double *work, int *Nwork, double *Rwork, int *stat);
+
 
 // Scalar eigenvalues: averages, extrema and width
 // #define SCALAR_EIG_DIST to print all eigenvalues in serial
