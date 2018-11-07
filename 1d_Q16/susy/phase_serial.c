@@ -40,7 +40,7 @@ void matvec(Real *in, complex *out) {
 
   fermion_op(src, res, PLUS);     // D
 
-  // Copy the resulting Twist_Fermion res back to complex vector y
+  // Copy the resulting matrix* res back to complex vector y
   iter = 0;
   FORALLSITES(i, s) {
     for (k = 0; k < NFERMION; k++) {
@@ -253,9 +253,11 @@ void phase() {
   phase = 0.0;
   log_mag = 0.0;
   for (i = 0; i < tot_dat; i += 2) {
-    phase += carg(&(D[i][i + 1]));
-    log_mag += log(cabs_sq(&(D[i][i + 1]))) / 2.0;
+    j = i + 1;
+    phase += carg(&(D[i][j]));
+    log_mag += log(cabs_sq(&(D[i][j]))) / 2.0;
     free(D[i]);
+    free(D[j]);
   }
   free(D);
 

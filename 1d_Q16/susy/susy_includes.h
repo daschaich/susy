@@ -121,8 +121,11 @@ int bilinear();
 // -----------------------------------------------------------------
 // Eigenvalue routines
 #ifdef EIG
-//void eig();
 int make_evs(int Nvec, matrix **eigVec[NFERMION], double *eigVal, int flag);
+
+// Sanity check: Serial computation using exact diagonalization
+// Requires adding eig_serial.c to compilation
+//void eig();
 #endif
 // -----------------------------------------------------------------
 

@@ -1,9 +1,9 @@
 // -----------------------------------------------------------------
-// Measure the phase of the pfaffian using gaussian elimination
-// This provides a simpler serial check of the parallel computation
+// Measure the eigenvalues of DSq using gaussian elimination
+// This provides a simpler serial check of the PRIMME computation
 // Note that we work with DIMF=NCOL^2-1 rather than NCOL^2
 #include "susy_includes.h"
-#define PFA_TOL 1e-12   // !!! The size of this can affect stability
+#define EIG_TOL 1e-12   // !!! The size of this can affect stability
 // -----------------------------------------------------------------
 
 
@@ -32,7 +32,7 @@ void matvec(Real *in, complex *out) {
   // Check that we didn't miss any components of the input vector
   int Ndat = NFERMION * DIMF;
   if (iter != sites_on_node * Ndat) {
-    printf("phase: cycled over %d of %d input components\n",
+    printf("eig: cycled over %d of %d input components\n",
            iter, sites_on_node * Ndat);
     terminate(1);
   }
@@ -40,7 +40,7 @@ void matvec(Real *in, complex *out) {
 
   fermion_op(src, res, PLUS);     // D
 
-  // Copy the resulting Twist_Fermion res back to complex vector y
+  // Copy the resulting matrix* res back to complex vector y
   iter = 0;
   FORALLSITES(i, s) {
     for (k = 0; k < NFERMION; k++) {
@@ -53,7 +53,7 @@ void matvec(Real *in, complex *out) {
 #ifdef DEBUG_CHECK
   // Check that we didn't miss any components of the output vector
   if (iter != sites_on_node * Ndat) {
-    printf("phase: cycled over %d of %d output components\n",
+    printf("eig: cycled over %d of %d output components\n",
            iter, sites_on_node * Ndat);
     terminate(1);
   }
@@ -67,9 +67,9 @@ void matvec(Real *in, complex *out) {
 #ifdef EIG
 void eig() {
   register int i, j, k, pivot;
-  int Ndat = NFERMION * DIMF, tot_dat = nt * Ndat, interchange = 1;
+  int Ndat = NFERMION * DIMF, tot_dat = nt * Ndat;
   Real *col = malloc(sizeof *col * tot_dat);
-  double phase, log_mag, tr, maxSq;
+  double tr, maxSq;
   complex scale;
   complex **D = malloc(sizeof(complex*) * tot_dat);
 
@@ -80,9 +80,9 @@ void eig() {
   }
 
 #ifdef DEBUG_CHECK
-  // In the past the size of PFA_TOL has affected stability
+  // In the past the size of EIG_TOL has affected stability
   node0_printf("Running serial pfaffian computation with tolerance %.4g\n",
-               PFA_TOL);
+               EIG_TOL);
 #endif
 
   // Make sure col has only one non-zero component
@@ -103,12 +103,12 @@ void eig() {
   // Check anti-symmetry of D
   int count = 0;
   for (i = 0; i < tot_dat; i++) {
-    if (fabs(D[i][i].real) > PFA_TOL || fabs(D[i][i].imag) > PFA_TOL)
+    if (fabs(D[i][i].real) > EIG_TOL || fabs(D[i][i].imag) > EIG_TOL)
       node0_printf("  (%.4g, %.4g)\n", D[i][i].real, D[i][i].imag);
     for (j = i + 1; j < tot_dat; j++) {
-      if (fabs(D[i][j].real + D[j][i].real) > PFA_TOL
-       || fabs(D[i][j].imag + D[j][i].imag) > PFA_TOL) {
-        printf("phase: D[%d][%d] = (%.4g, %.4g) but ",
+      if (fabs(D[i][j].real + D[j][i].real) > EIG_TOL
+       || fabs(D[i][j].imag + D[j][i].imag) > EIG_TOL) {
+        printf("eig: D[%d][%d] = (%.4g, %.4g) but ",
                i, j, D[i][j].real, D[i][j].imag);
         printf("D[%d][%d] = (%.4g, %.4g)\n",
                j, i, D[j][i].real, D[j][i].imag);
@@ -119,12 +119,12 @@ void eig() {
     tr = cabs_sq(&(D[i][0]));
     for (j = 1; j < tot_dat; j++)
       tr += cabs_sq(&(D[i][j]));
-    if (tr < PFA_TOL)
-      printf("phase: Column %d vanishes: %.4g\n", i, tr);
+    if (tr < EIG_TOL)
+      printf("eig: Column %d vanishes: %.4g\n", i, tr);
 
     // Count number of non-zero elements in lower triangle
     for (j = i; j < tot_dat; j++) {
-      if (cabs_sq(&(D[i][j])) > PFA_TOL)
+      if (cabs_sq(&(D[i][j])) > EIG_TOL)
         count++;
     }
   }
@@ -145,8 +145,8 @@ void eig() {
       }
     }
 #ifdef DEBUG_CHECK
-    if (maxSq < PFA_TOL) {    // We have a problem
-      printf("phase: maxSq = %.4g for i = %d:\n", maxSq, i);
+    if (maxSq < EIG_TOL) {    // We have a problem
+      printf("eig: maxSq = %.4g for i = %d:\n", maxSq, i);
       for (j = 0; j < tot_dat; j++)
         printf("       (%.4g, %.4g)\n", D[i][j].real, D[i][j].imag);
       terminate(1);
@@ -158,7 +158,6 @@ void eig() {
     node0_printf("Columns %d--%d of %d: ", i + 1, i + 2, tot_dat);
     if (pivot != i + 1) {
       node0_printf("pivoting %d<-->%d to obtain ", i + 1, pivot);
-      interchange *= -1;
 
       for (j = 0; j < tot_dat; j++) {
         set_complex_equal(&(D[j][i + 1]), &scale);
@@ -179,8 +178,8 @@ void eig() {
     // progressively zero out elements of columns D[i] & D[i + 1]
     // Then zero out elements of rows D[:][i] & D[:][i + 1]
     for (j = i + 2; j < tot_dat; j++) {
-      if (cabs_sq(&(D[i][i + 1])) < PFA_TOL) {
-        printf("phase: can't divide by D[%d][%d] = (%.4g, %.4g)\n",
+      if (cabs_sq(&(D[i][i + 1])) < EIG_TOL) {
+        printf("eig: can't divide by D[%d][%d] = (%.4g, %.4g)\n",
                i, i + 1, D[i][i + 1].real, D[i][i + 1].imag);
         terminate(1);
       }
@@ -196,8 +195,8 @@ void eig() {
     }
     for (j = i + 2; j < tot_dat; j++) {
       // scale = D[i + 1][j] / D[i + 1][i]
-      if (cabs_sq(&(D[i + 1][i])) < PFA_TOL) {
-        printf("phase: can't divide by D[%d][%d] = (%.4g, %.4g)\n",
+      if (cabs_sq(&(D[i + 1][i])) < EIG_TOL) {
+        printf("eig: can't divide by D[%d][%d] = (%.4g, %.4g)\n",
                i + 1, i, D[i + 1][i].real, D[i + 1][i].imag);
         terminate(1);
       }
@@ -216,18 +215,18 @@ void eig() {
       tr = cabs_sq(&(D[k][0]));
       for (j = 1; j < tot_dat; j++)
         tr += cabs_sq(&(D[k][j]));
-      if (tr < PFA_TOL)
+      if (tr < EIG_TOL)
         printf("Column %d vanishes after round %d: %.4g\n", k, i, tr);
     }
 
     // Check that D is still anti-symmetric
     for (k = 0; k < tot_dat; k++) {
-      if (fabs(D[k][k].real) > PFA_TOL || fabs(D[k][k].imag) > PFA_TOL)
+      if (fabs(D[k][k].real) > EIG_TOL || fabs(D[k][k].imag) > EIG_TOL)
         node0_printf("  (%.4g, %.4g)\n", D[k][k].real, D[k][k].imag);
       for (j = k + 1; j < tot_dat; j++) {
-        if (fabs(D[k][j].real + D[j][k].real) > PFA_TOL
-         || fabs(D[k][j].imag + D[j][k].imag) > PFA_TOL) {
-          printf("phase: D[%d][%d] = (%.4g, %.4g) but ",
+        if (fabs(D[k][j].real + D[j][k].real) > EIG_TOL
+         || fabs(D[k][j].imag + D[j][k].imag) > EIG_TOL) {
+          printf("eig: D[%d][%d] = (%.4g, %.4g) but ",
                  k, j, D[k][j].real, D[k][j].imag);
           printf("D[%d][%d] = (%.4g, %.4g)\n",
                  j, k, D[j][k].real, D[j][k].imag);
@@ -247,8 +246,27 @@ void eig() {
       }
     }
   }
+
+  // Now the eigenvalues of DSq should just be the squares
+  // of the non-zero elements of the non-zero 2x2 diagonal blocks
   for (i = 0; i < tot_dat - 1; i += 2) {
     j = i + 1;
+
+#ifdef DEBUG_CHECK
+    // Check for non-zero matrix elements outside of 2x2 diagonal blocks
+    for (k = 0; k < tot_dat; k++) {
+      if (k == i || k == j)
+        continue;
+
+      tr = cabs_sq(&D[i][k]);     // Should still have antisymmetry
+      if (tr > EIG_TOL)
+        printf("Non-zero D[%d][%d]: %.4g\n", i, k, tr);
+      tr = cabs_sq(&D[j][k]);     // Should still have antisymmetry
+      if (tr > EIG_TOL)
+        printf("Non-zero D[%d][%d]: %.4g\n", j, k, tr);
+    }
+#endif
+
     node0_printf("EIG %.8g\n", cabs_sq(&D[i][j]));
     node0_printf("EIG %.8g\n", cabs_sq(&D[j][i]));
     fflush(stdout);
