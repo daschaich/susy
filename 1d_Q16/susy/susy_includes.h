@@ -121,6 +121,7 @@ int bilinear();
 // -----------------------------------------------------------------
 // Eigenvalue routines
 #ifdef EIG
+//void eig();
 int make_evs(int Nvec, matrix **eigVec[NFERMION], double *eigVal, int flag);
 #endif
 // -----------------------------------------------------------------
