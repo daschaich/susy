@@ -75,7 +75,7 @@ int main(int argc, char *argv[]) {
     }
   }
   total_iters += make_evs(Nvec, eigVec, eigVal, -1);
-
+  //eig();
   node0_printf("RUNNING COMPLETED\n");
   dtime += dclock();
   node0_printf("\nTime = %.4g seconds\n", dtime);
