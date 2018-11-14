@@ -124,7 +124,7 @@ int bilinear();
 int make_evs(int Nvec, matrix **eigVec[NFERMION], double *eigVal, int flag);
 
 // Sanity check: Serial computation using exact diagonalization
-// Requires adding eig_serial.c to compilation
+// Requires adding eig_serial.c or eig_lapack.c to compilation
 //void eig();
 #endif
 // -----------------------------------------------------------------
