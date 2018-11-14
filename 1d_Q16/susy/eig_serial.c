@@ -81,7 +81,7 @@ void eig() {
 
 #ifdef DEBUG_CHECK
   // In the past the size of EIG_TOL has affected stability
-  node0_printf("Running serial pfaffian computation with tolerance %.4g\n",
+  node0_printf("Running serial eigenvalue computation with tolerance %.4g\n",
                EIG_TOL);
 #endif
 
