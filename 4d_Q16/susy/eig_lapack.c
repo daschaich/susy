@@ -239,7 +239,6 @@ void eig() {
   size *= tot_dat;
   node0_printf("\nWARNING: ");
   node0_printf("Mallocing %.1f MBytes for diagonalization\n", size / 1e6);
-  normal_exit(0);
 
   // Make sure Dcol has only one non-zero component
   for (i = 0; i < tot_dat; i++)
