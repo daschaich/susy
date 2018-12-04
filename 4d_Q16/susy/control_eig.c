@@ -98,6 +98,10 @@ int main(int argc, char *argv[]) {
   }
   total_iters += make_evs(Nvec, eigVec, eigVal, -1);
 
+  // Sanity check: Serial computation using exact diagonalization
+  // Requires adding eig_serial.c to compilation
+//  eig();
+
   node0_printf("RUNNING COMPLETED\n");
   dtime += dclock();
   node0_printf("\nTime = %.4g seconds\n", dtime);
