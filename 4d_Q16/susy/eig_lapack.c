@@ -237,6 +237,7 @@ void eig() {
   size += (Real)((8.0 + 2.0 * tot_dat) * sizeof(double));
   size += (Real)(tot_dat * sizeof(complex));
   size *= tot_dat;
+  node0_printf("\nWARNING: ");
   node0_printf("Mallocing %.1f MBytes for diagonalization\n", size / 1e6);
   normal_exit(0);
 
