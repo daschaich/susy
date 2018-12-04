@@ -306,8 +306,9 @@ void eig() {
 
   // Now the eigenvalues of DSq should just be the squares
   // of the non-zero elements of the non-zero 2x2 diagonal blocks
+  // Absorb overall negative sign
   for (i = 0; i < tot_dat; i++) {
-    node0_printf("EIG %.8g\n", Deigs[i]);
+    node0_printf("EIG %.8g\n", -1.0 * Deigs[i]);
     fflush(stdout);
     free(D[i]);
   }
