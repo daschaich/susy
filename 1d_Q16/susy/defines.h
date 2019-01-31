@@ -21,6 +21,7 @@
 
 // -----------------------------------------------------------------
 // Susy stuff
+#define QM                  // Tell include/susy.h that we're in 1d
 #define BMN
 //#define DEBUG_CHECK       // Print lambdas, offsets, etc.
 // -----------------------------------------------------------------
