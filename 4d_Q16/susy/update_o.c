@@ -89,7 +89,7 @@ int update_step(Twist_Fermion **src, Twist_Fermion ***psim) {
 
 #ifndef PUREGAUGE
     for (n = 0; n < Nroot; n++) {
-      // Do conjugate gradient to get (Mdag M)^(-1 / 4) chi
+      // Do conjugate gradient to get (Mdag M)^(-1 / 4Nroot) chi
       iters += congrad_multi(src[n], psim[n], niter, rsqmin, &final_rsq);
       tr = fermion_force(f_eps * LAMBDA_MID, src[n], psim[n]);
       fnorm[n] += tr;
@@ -104,7 +104,7 @@ int update_step(Twist_Fermion **src, Twist_Fermion ***psim) {
 
 #ifndef PUREGAUGE
     for (n = 0; n < Nroot; n++) {
-      // Do conjugate gradient to get (Mdag M)^(-1 / 4) chi
+      // Do conjugate gradient to get (Mdag M)^(-1 / 4Nroot) chi
       iters += congrad_multi(src[n], psim[n], niter, rsqmin, &final_rsq);
 
       if (i_multi0 < nsteps[0])
@@ -143,12 +143,12 @@ int update() {
 
   // Set up the fermion variables, if needed
 #ifndef PUREGAUGE
-  // Compute g and src = (Mdag M)^(1 / 8) g
+  // Compute g and src = (Mdag M)^(1 / 8Nroot) g
   for (n = 0; n < Nroot; n++)
     iters += grsource(src[n]);
 
-  // Do a CG to get psim,
-  // rational approximation to (Mdag M)^(-1 / 4) src = (Mdag M)^(-1 / 8) g
+  // Do a CG to get psim, rational approximation
+  // to (Mdag M)^(-1 / 4Nroot) src = (Mdag M)^(-1 / 8Nroot) g
   for (j = 0; j < Norder; j++)
     shift[j] = shift4[j];
 #ifdef UPDATE_DEBUG
@@ -189,7 +189,7 @@ int update() {
   iters += update_step(src, psim);
 
   // Find ending action
-  // Reuse data from update_step, don't need CG to get (Mdag M)^(-1 / 4) chi
+  // Reuse (Mdag M)^(-1 / 4Nroot) chi from update_step, don't need CG
   // If the final step were a gauge update, CG would be necessary
   endaction = action(src, psim);
   change = endaction - startaction;
