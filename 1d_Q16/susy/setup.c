@@ -293,14 +293,14 @@ int readin(int prompt) {
   mass_Myers = -999.0;
   mass_fermion = -999.0;
 #endif
-  
+
   kappa = (Real)NCOL * 0.25 / lambda;
   node0_printf("lambda=%.4g --> kappa=Nc/(4lambda)=%.4g\n", lambda, kappa);
 
 #ifdef BILIN
 nsrc = par_buf.nsrc;
 #endif
-  
+
 #ifdef EIG
   // Include some mallocs here (make_fields has already been called)
   // (This memory usage will not be reported to the user)

@@ -66,7 +66,7 @@ int main(int argc, char *argv[]) {
   // Should equal total for bilinear measurements
   node0_printf("total_iters = %d\n", total_iters);
 #endif
-  
+
   dtime += dclock();
   node0_printf("\nTime = %.4g seconds\n", dtime);
   fflush(stdout);

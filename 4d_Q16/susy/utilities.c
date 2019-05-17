@@ -204,7 +204,7 @@ void Dplus(matrix *src[NUMLINK], matrix *dest[NPLAQ]) {
                            s->bc[nu], &(plaq_dest[index][i]));
 
         mult_nn_sum(&(src[mu][i]), (matrix *)(local_pt[flip][3][i]),
-                      &(plaq_dest[index][i]));
+                    &(plaq_dest[index][i]));
       }
       cleanup_gather(tag0[flip]);
       cleanup_gather(tag1[flip]);
@@ -385,12 +385,12 @@ void DbplusPtoP(matrix *src[NPLAQ], matrix *dest[NPLAQ]) {
     wait_gather(tag3[flip]);
     FORALLSITES(i, s) {
       scalar_mult_na_sum((matrix *)(local_pt[flip][1][i]),
-                           (matrix *)(local_pt[flip][0][i]),
-                           tr * s->bc3[a][b][c], &(dest[i_ab][i]));
+                         (matrix *)(local_pt[flip][0][i]),
+                         tr * s->bc3[a][b][c], &(dest[i_ab][i]));
 
       scalar_mult_an_dif((matrix *)(local_pt[flip][3][i]),
-                           (matrix *)(local_pt[flip][2][i]),
-                           tr * s->bc2[a][b], &(dest[i_ab][i]));
+                         (matrix *)(local_pt[flip][2][i]),
+                         tr * s->bc2[a][b], &(dest[i_ab][i]));
     }
     cleanup_gather(tag0[flip]);
     cleanup_gather(tag1[flip]);
@@ -477,12 +477,12 @@ void DbminusPtoP(matrix *src[NPLAQ], matrix *dest[NPLAQ]) {
     wait_gather(tag3[flip]);
     FORALLSITES(i, s) {
       scalar_mult_na_sum((matrix *)(local_pt[flip][1][i]),
-                           (matrix *)(local_pt[flip][0][i]),
-                           tr * s->bc2[opp_a][opp_b], &(dest[i_de][i]));
+                         (matrix *)(local_pt[flip][0][i]),
+                         tr * s->bc2[opp_a][opp_b], &(dest[i_de][i]));
 
       scalar_mult_an_dif((matrix *)(local_pt[flip][3][i]),
-                           (matrix *)(local_pt[flip][2][i]),
-                           tr * s->bc3[opp_a][opp_b][opp_c], &(dest[i_de][i]));
+                         (matrix *)(local_pt[flip][2][i]),
+                         tr * s->bc3[opp_a][opp_b][opp_c], &(dest[i_de][i]));
     }
     cleanup_gather(tag0[flip]);
     cleanup_gather(tag1[flip]);
