@@ -589,7 +589,7 @@ void make_nn_gathers() {
                 ALLOW_EVEN_ODD, gather_parity);
   }
 
-  // Sort into desired order to use use XUP, XDOWN, etc.
+  // Sort into desired order to use XUP, XDOWN, etc.
   // as argument in nearest-neighbor gathers
   sort_four_gathers(0);
 }
@@ -768,7 +768,7 @@ static comlink* make_send_receive_list(
   }
 
   /* clear neighbor_numbers, to be used as counters now */
-  for (subl=0; subl<2; subl++) {
+  for (subl = 0; subl < 2; subl++) {
     for (i = 0; i < numnodes(); i++)
       sbuf[subl][i] = 0;
   }
@@ -1737,7 +1737,7 @@ msg_tag* start_general_strided_gather(
   char *field,          /* source buffer aligned to desired field */
   int stride,           /* bytes between fields in source buffer */
   int size,   /* size in bytes of the field (eg sizeof(vector))*/
-  int *displacement,  /* displacement to gather from. four components */
+  int *displacement,  /* displacement to gather from. two components */
   int parity,   /* parity of sites to which we gather.
          one of EVEN, ODD or EVENANDODD. */
   char **dest)   /* one of the vectors of pointers */
@@ -1931,7 +1931,10 @@ msg_tag* start_general_strided_gather(
     tt = (s->t - displacement[TUP] + nt) % nt;
     othernode = node_number(tx, tt);
     if (othernode != this_node) {
-      for (j = 0; j < n_send_msgs; j++) if (to_nodes[j].node == othernode) break;
+      for (j = 0; j < n_send_msgs; j++) {
+        if (to_nodes[j].node == othernode)
+          break;
+      }
       tpt = msend[j].msg_buf + to_nodes[j].count*tsize;
       *(int *)tpt = node_index(tx, tt);
       /* index of site on other node */
@@ -1948,7 +1951,7 @@ msg_tag* start_general_strided_gather(
               MPI_COMM_WORLD, &msend[i].msg_req);
   }
 
-  /* free temporary arrays */
+  // Free temporary arrays
   if (n_send_msgs > 0)
     free(to_nodes);
   /* mark gather in progress and return */
@@ -1966,19 +1969,19 @@ msg_tag* start_general_gather_site(
   char **dest)   /* one of the vectors of pointers */
 {
   return start_general_strided_gather((char *)lattice + field, sizeof(site),
-               size, displacement, parity, dest);
+                                      size, displacement, parity, dest);
 }
 
 msg_tag* start_general_gather_field(
   void *field,         /* which field? Pointer returned by malloc() */
   int size,   /* size in bytes of the field (eg sizeof(vector))*/
-  int *displacement,  /* displacement to gather from. four components */
+  int *displacement,  /* displacement to gather from. two components */
   int parity,   /* parity of sites to which we gather.
          one of EVEN, ODD or EVENANDODD. */
   char **dest)   /* one of the vectors of pointers */
 {
   return start_general_strided_gather(field, size, size,
-               displacement, parity, dest);
+                                      displacement, parity, dest);
 }
 
 // Wait for a general gather to complete
@@ -1992,8 +1995,8 @@ void wait_general_gather(msg_tag *mtag) {
     /* set pointers in sites to correct location */
     for (j=0; j<from_nodes[i].count; j++) {
       /* k = index of site on this node, sent in message */
-      k = *(int *)(mtag->recv_msgs[i].msg_buf + j*tsize);
-      tdest[k] = mtag->recv_msgs[i].msg_buf + j*tsize + 2*sizeof(int);
+      k = *(int *)(mtag->recv_msgs[i].msg_buf + j * tsize);
+      tdest[k] = mtag->recv_msgs[i].msg_buf + j * tsize + 2 * sizeof(int);
     }
   }
   if (i > 0)

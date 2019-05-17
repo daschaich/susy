@@ -208,10 +208,10 @@ void initialize_machine(int *argc, char ***argv) {
   comm = MPI_COMM_WORLD;
   if (flag)
     err_func(&comm, &flag);
-  flag = MPI_Errhandler_create(err_func, &errhandler);
+  flag = MPI_Comm_create_errhandler(err_func, &errhandler);
   if (flag)
     err_func(&comm, &flag);
-  flag = MPI_Errhandler_set(MPI_COMM_WORLD, errhandler);
+  flag = MPI_Comm_set_errhandler(MPI_COMM_WORLD, errhandler);
   if (flag)
     err_func(&comm, &flag);
 
@@ -230,10 +230,8 @@ void initialize_machine(int *argc, char ***argv) {
   }
 #endif
 
-  /* get the number of message types */
-  /* Note: with MPI-2 MPI_Comm_get_attr is preferred,
-     but we keep MPI_Attr_get until MPI-2 is more widely available */
-  MPI_Attr_get(MPI_COMM_WORLD, MPI_TAG_UB, &tag_ub, &flag);
+  // Get the number of message types
+  MPI_Comm_get_attr(MPI_COMM_WORLD, MPI_TAG_UB, &tag_ub, &flag);
   num_gather_ids = *tag_ub + 1 - GATHER_BASE_ID;
   if (num_gather_ids > 1024)
     num_gather_ids = 1024;
@@ -744,7 +742,7 @@ static comlink* make_send_receive_list(
   }
 
   /* clear neighbor_numbers, to be used as counters now */
-  for (subl=0; subl<2; subl++) {
+  for (subl = 0; subl < 2; subl++) {
     for (i = 0; i < numnodes(); i++)
       sbuf[subl][i] = 0;
   }
