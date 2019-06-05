@@ -99,7 +99,7 @@ void fermion_op(matrix *src[NFERMION], matrix *dest[NFERMION], int sign) {
   register int i, j, k, m, n;
   register site *s;
   Real tr;
-  complex tc = cmplx(0.0, 1.0);
+  complex tc = cmplx(0.0, 1.0/sqrt(2.0)); //Eq. 14 of 02 Jun 2019 notes
   matrix tmat;
 
   // Fermion kinetic term
@@ -128,6 +128,8 @@ void fermion_op(matrix *src[NFERMION], matrix *dest[NFERMION], int sign) {
 #endif
 
   // Yukawa terms -- assume build_Gamma_X has already been run
+  // This is a dirty hack to implement Eq. 14 of 02 Jun 2019 notes
+  tr = (Real)sign/sqrt(2.0);
   for (j = 0; j < NCHIRAL_FERMION; j++) {
     m = j + NCHIRAL_FERMION;
     for (k = 0; k < NCHIRAL_FERMION; k++) {
@@ -135,11 +137,11 @@ void fermion_op(matrix *src[NFERMION], matrix *dest[NFERMION], int sign) {
       FORALLSITES(i, s) {
         mult_nn(&(Gamma_X[j][k][i]), &(src[n][i]), &tmat);
         mult_nn_dif(&(src[n][i]), &(Gamma_X[j][k][i]), &tmat);
-        scalar_mult_sum_matrix(&tmat, (Real)sign, &(dest[j][i]));
+        scalar_mult_sum_matrix(&tmat, tr, &(dest[j][i]));
 
         mult_nn(&(Gamma_X[k][j][i]), &(src[k][i]), &tmat);
         mult_nn_dif(&(src[k][i]), &(Gamma_X[k][j][i]), &tmat);
-        scalar_mult_sum_matrix(&tmat, (Real)sign, &(dest[m][i]));
+        scalar_mult_sum_matrix(&tmat, tr, &(dest[m][i]));
       }
     }
 
@@ -149,11 +151,11 @@ void fermion_op(matrix *src[NFERMION], matrix *dest[NFERMION], int sign) {
     FORALLSITES(i, s) {
       mult_nn(&(s->X[k]), &(src[j][i]), &tmat);
       mult_nn_dif(&(src[j][i]), &(s->X[k]), &tmat);
-      scalar_mult_dif_matrix(&tmat, (Real)sign, &(dest[j][i]));
+      scalar_mult_dif_matrix(&tmat, tr, &(dest[j][i]));
 
       mult_nn(&(s->X[k]), &(src[m][i]), &tmat);
       mult_nn_dif(&(src[m][i]), &(s->X[k]), &tmat);
-      scalar_mult_sum_matrix(&tmat, (Real)sign, &(dest[m][i]));
+      scalar_mult_sum_matrix(&tmat, tr, &(dest[m][i]));
 
       mult_nn(&(s->X[n]), &(src[j][i]), &tmat);
       mult_nn_dif(&(src[j][i]), &(s->X[n]), &tmat);
