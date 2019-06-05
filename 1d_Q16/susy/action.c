@@ -72,6 +72,7 @@ double bosonic_action(double *so3_sq, double *so6_sq,
       }
     }
   }
+  *comm *= 0.5;
 
   // Scalar potential terms
   // Couplings are set differently in setup.c depending on BMN vs. BFSS
@@ -90,12 +91,13 @@ double bosonic_action(double *so3_sq, double *so6_sq,
           if ((j == l) || (k == l))
             continue;
 
-          // TODO: Overall negative sign incorrect?
+          // Different sign to follow Costa et al
+          // Ref to notes dated Jun 02, 2019
           mult_nn(&(s->X[k]), &(s->X[l]), &tmat);
-          if (epsilon[j][k][l] > 0)     // Overall negative sign absorbed
-            *Myers -= realtrace_nn(&s->X[j], &tmat);
-          else if (epsilon[j][k][l] < 0)
+          if (epsilon[j][k][l] > 0)
             *Myers += realtrace_nn(&s->X[j], &tmat);
+          else if (epsilon[j][k][l] < 0)
+            *Myers -= realtrace_nn(&s->X[j], &tmat);
         }
       }
     }

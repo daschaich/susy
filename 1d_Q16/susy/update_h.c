@@ -114,10 +114,10 @@ double bosonic_force(Real eps) {
           if ((j == l) || (k == l))
             continue;
 
-          if (epsilon[j][k][l] > 0)     // Overall negative sign absorbed
-            scalar_mult_nn_dif(&(s->X[k]), &(s->X[l]), tr, &(s->f_X[j]));
-          else if (epsilon[j][k][l] < 0)
+          if (epsilon[j][k][l] > 0)     // Following 02 Jun 2019 notes
             scalar_mult_nn_sum(&(s->X[k]), &(s->X[l]), tr, &(s->f_X[j]));
+          else if (epsilon[j][k][l] < 0)
+            scalar_mult_nn_dif(&(s->X[k]), &(s->X[l]), tr, &(s->f_X[j]));
         }
       }
     }
@@ -140,15 +140,15 @@ double bosonic_force(Real eps) {
     //     = sum_{j != k} -2[X_j(n) [X_k(n), X_j(n)] - [X_k(n), X_j(n)] X_j(n)]
     //     = sum_{j != k} -2[X_j(n), [X_k(n), X_j(n)]]
     //   --> sum_{k != j} -2[X_k(n), [X_j(n), X_k(n)]], j fixed
+    // Overall factor of 2 cancels with 1/2 of Eq. 14 of 02 Jun 2019 notes
     for (j = 0; j < NSCALAR; j++) {
       for (k = 0; k < NSCALAR; k++) {
         if (k == j)
           continue;
 
-        // tmat = 2[X_j, X_k]
+        // tmat = [X_j, X_k]
         mult_nn(&(s->X[j]), &(s->X[k]), &tmat);
         mult_nn_dif(&(s->X[k]), &(s->X[j]), &tmat);
-        scalar_mult_matrix(&tmat, 2.0, &tmat);
         // Overall negative sign absorbed below
         mult_nn_dif(&(s->X[k]), &tmat, &(s->f_X[j]));
         mult_nn_sum(&tmat, &(s->X[k]), &(s->f_X[j]));
@@ -201,7 +201,8 @@ double bosonic_force(Real eps) {
 void assemble_fermion_force(matrix **sol, matrix *psol[NFERMION]) {
   register int i, j, k, l, m, n;
   register site *s;
-  complex tc = cmplx(0.0, 1.0);
+  Real tr = 1.0/sqrt(2.0); // Following Eq. 14 of 02 Jun 2019 notes
+  complex tc = cmplx(0.0, 1.0/sqrt(2.0)); // Following Eq. 14 of 02 Jun 2019 notes
   matrix tmat, tmat2;
   msg_tag *tag[NCHIRAL_FERMION], *tag2[NCHIRAL_FERMION];
 
@@ -251,11 +252,12 @@ void assemble_fermion_force(matrix **sol, matrix *psol[NFERMION]) {
         for (l = 0; l < NSCALAR - 2; l++) {
           mult_nn(&(psol[j][i]), &(sol[n][i]), &tmat);
           mult_nn_dif(&(sol[n][i]), &(psol[j][i]), &tmat);
-          scalar_mult_sum_matrix(&tmat, Gamma[l].e[j][k], &(s->f_X[l]));
+          scalar_mult_sum_matrix(&tmat, Gamma[l].e[j][k]/sqrt(2.0), &(s->f_X[l]));
+          
 
           mult_nn(&(psol[m][i]), &(sol[k][i]), &tmat);
           mult_nn_dif(&(sol[k][i]), &(psol[m][i]), &tmat);
-          scalar_mult_sum_matrix(&tmat, Gamma[l].e[k][j], &(s->f_X[l]));
+          scalar_mult_sum_matrix(&tmat, Gamma[l].e[k][j]/sqrt(2.0), &(s->f_X[l]));
         }
       }
     }
@@ -264,11 +266,11 @@ void assemble_fermion_force(matrix **sol, matrix *psol[NFERMION]) {
     k = NSCALAR - 2;
     n = NSCALAR - 1;
     FORALLSITES(i, s) {
-      mult_nn_dif(&(psol[j][i]), &(sol[j][i]), &(s->f_X[k]));
-      mult_nn_sum(&(sol[j][i]), &(psol[j][i]), &(s->f_X[k]));
+      scalar_mult_nn_dif(&(psol[j][i]), &(sol[j][i]), tr, &(s->f_X[k]));
+      scalar_mult_nn_sum(&(sol[j][i]), &(psol[j][i]), tr, &(s->f_X[k]));
 
-      mult_nn_sum(&(psol[m][i]), &(sol[m][i]), &(s->f_X[k]));
-      mult_nn_dif(&(sol[m][i]), &(psol[m][i]), &(s->f_X[k]));
+      scalar_mult_nn_sum(&(psol[m][i]), &(sol[m][i]), tr, &(s->f_X[k]));
+      scalar_mult_nn_dif(&(sol[m][i]), &(psol[m][i]), tr, &(s->f_X[k]));
 
       mult_nn(&(psol[j][i]), &(sol[j][i]), &tmat);
       mult_nn_dif(&(sol[j][i]), &(psol[j][i]), &tmat);
