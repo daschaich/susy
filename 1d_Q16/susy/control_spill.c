@@ -14,7 +14,6 @@ int main(int argc, char *argv[]) {
   if (remap_stdio_from_args(argc, argv) == 1)
     terminate(1);
 
-  g_sync();
   prompt = setup();
   setup_lambda();
 
