@@ -236,7 +236,7 @@ int ask_ending_lattice(FILE *fp, int prompt, int *flag, char *filename) {
 
   if (prompt!=0)
     printf("'forget' lattice at end or 'save_serial'\n");
-  status = fscanf(fp,"%s", savebuf);
+  status = fscanf(fp, "%s", savebuf);
   if (status != 1) {
     printf("\nask_ending_lattice: ERROR IN INPUT: error reading ending lattice command\n");
     return 1;
@@ -344,7 +344,7 @@ int get_f(FILE *fp, int prompt, char *tag, Real *value) {
     s = 0;
     while (s != 1) {
       printf("enter %s ", tag);
-      fscanf(fp,"%s", checkvalue);
+      fscanf(fp, "%s", checkvalue);
 #if PRECISION == 1
       s = sscanf(checkvalue, "%e", value);
       printf("%s %e\n", tag, *value);
@@ -390,7 +390,7 @@ int get_i(FILE *fp, int prompt, char *tag, int *value) {
     while (s != 1) {
       printf("enter %s ", tag);
       fscanf(fp, "%s", checkvalue);
-      s=sscanf(checkvalue,"%d", value);
+      s = sscanf(checkvalue, "%d", value);
       if (s == EOF) return 1;
       if (s == 0) printf("Data format error\n");
       else printf("%s %d\n", tag, *value);
