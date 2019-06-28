@@ -1590,7 +1590,7 @@ void setup_rhmc10() {
 // Nroot 1 gives errors 1.928152e-05 and 1.038366e-05
 // Nroot 2 gives errors 1.038366e-05 and 5.287008e-06
 void setup_rhmc9() {
-  if (Nroot = 1) {
+  if (Nroot == 1) {
     // awk '/res_MD/{print("amp4["$2"] =",$3";")}' < remez/out.N1.D9
     ampdeg4 = 2.0777859903387064e-01;
     amp4[0] = 3.1361646774095720e-04;
