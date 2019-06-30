@@ -96,7 +96,7 @@ int main(int argc, char *argv[]) {
   node0_printf("total_iters = %d\n", total_iters);
   fflush(stdout);
 
-  g_sync();         // Needed by at least some clusters
+  normal_exit(0);         // Needed by at least some clusters
   return 0;
 }
 // -----------------------------------------------------------------
