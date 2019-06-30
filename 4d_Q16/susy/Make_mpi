@@ -3,7 +3,7 @@ MAKEFILE = Make_mpi
 
 MPP            = true
 PRECISION      = 2
-CC             = /usr/local/mpich2-1.4.1p1/bin/mpicc
+CC             = mpicc
 OPT            = -O3 -Wall -fno-strict-aliasing
 CLFS           = -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE64
                  # Large files gcc only
