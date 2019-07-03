@@ -1,7 +1,6 @@
 // -----------------------------------------------------------------
 // Update the momentum matrices
 // Uncomment to print out debugging messages
-//#define FORCE_DEBUG
 #include "susy_includes.h"
 // -----------------------------------------------------------------
 
@@ -677,15 +676,6 @@ double fermion_force(Real eps, Twist_Fermion *src, Twist_Fermion **sol) {
   double returnit = 0.0;
   matrix **fullforce = malloc(sizeof(matrix*) * NUMLINK);
 
-#ifdef FORCE_DEBUG
-  int kick, ii, jj, iters = 0;
-  Real final_rsq;
-  double individ_force, old_action, new_action = 0.0;
-  matrix tmat, tprint, tprint2;
-  clear_mat(&tprint);
-  clear_mat(&tmat);
-#endif
-
   // Use DmuUmu and Fmunu for temporary storage
   fullforce[0] = DmuUmu;
   fullforce[1] = Fmunu;
@@ -706,23 +696,10 @@ double fermion_force(Real eps, Twist_Fermion *src, Twist_Fermion **sol) {
       scalar_mult_TF(&(tempTF[i]), amp4[n], &(tempTF[i]));
 
     assemble_fermion_force(sol[n], tempTF);
-#ifdef FORCE_DEBUG
-    individ_force = 0.0;
-#endif
+    // Take adjoint but don't negate yet...
     FORALLDIR(mu) {
-      FORALLSITES(i, s) {
-        // Take adjoint but don't negate yet...
-        add_adj_matrix(&(fullforce[mu][i]), &(s->f_U[mu]),
-                       &(fullforce[mu][i]));
-#ifdef FORCE_DEBUG
-//      if (s->x == 0 && s->t == 0 && mu == 3) {
-//        printf("Fermion force mu=%d on site (%d, %d)\n", mu, s->x, s->t);
-//        dumpmat(&(s->f_U[mu]));
-//      }
-        // Compute average gauge force
-        individ_force += realtrace(&(s->f_U[mu]), &(s->f_U[mu]));
-#endif
-      }
+      FORALLSITES(i, s)
+        sum_adj_matrix(&(s->f_U[mu]), &(fullforce[mu][i]));
     }
   }
 
