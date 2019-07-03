@@ -1,5 +1,5 @@
 // -----------------------------------------------------------------
-// Add two matrices with one adjoint
+// Add two matrices with one adjoint -- unlike CSUM, output it always last
 // c <-- c + bdag
 // c <-- a + bdag
 #include "../include/config.h"
