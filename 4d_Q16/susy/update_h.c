@@ -1,7 +1,6 @@
 // -----------------------------------------------------------------
 // Update the momentum matrices
 // Uncomment to print out debugging messages
-//#define FORCE_DEBUG
 #include "susy_includes.h"
 // -----------------------------------------------------------------
 
@@ -917,15 +916,6 @@ double fermion_force(Real eps, Twist_Fermion *src, Twist_Fermion **sol) {
   double returnit = 0.0;
   matrix **fullforce = malloc(sizeof(matrix*) * NUMLINK);
 
-#ifdef FORCE_DEBUG
-  int kick, ii, jj, iters = 0;
-  Real final_rsq;
-  double individ_force, old_action, new_action = 0.0;
-  matrix tmat, tprint, tprint2;
-  clear_mat(&tprint);
-  clear_mat(&tmat);
-#endif
-
   FORALLDIR(mu)
     fullforce[mu] = Fmunu[mu];    // Use Fmunu for temporary storage
 
@@ -945,89 +935,11 @@ double fermion_force(Real eps, Twist_Fermion *src, Twist_Fermion **sol) {
       scalar_mult_TF(&(tempTF[i]), amp4[n], &(tempTF[i]));
 
     assemble_fermion_force(sol[n], tempTF);
-#ifdef FORCE_DEBUG
-    individ_force = 0.0;
-#endif
+    // Take adjoint but don't negate yet...
     FORALLDIR(mu) {
-      FORALLSITES(i, s) {
-        // Take adjoint but don't negate yet...
+      FORALLSITES(i, s)
         sum_adj_matrix(&(s->f_U[mu]), &(fullforce[mu][i]));
-#ifdef FORCE_DEBUG
-//      if (s->x == 0 && s->y == 0 && s->z == 0 && s->t == 0 && mu == 3) {
-//        printf("Fermion force mu=%d on site (%d, %d, %d, %d)\n",
-//               mu, s->x, s->y, s->z ,s->t);
-//        dumpmat(&(s->f_U[mu]));
-//      }
-        // Compute average gauge force
-        individ_force += realtrace(&(s->f_U[mu]), &(s->f_U[mu]));
-#endif
-      }
     }
-#ifdef FORCE_DEBUG
-    g_doublesum(&individ_force);
-    node0_printf("Individ_force %d %.4g\n",
-                 n, eps * sqrt(individ_force) / volume);
-
-    // Check that force syncs with fermion action
-    old_action = fermion_action(src, sol);
-    iters += congrad_multi(src, sol, niter, rsqmin, &final_rsq);
-    new_action = fermion_action(src, sol);
-    node0_printf("EXITING  %.4g\n", new_action - old_action);
-    if (fabs(new_action - old_action) > 1e-3)
-      terminate(1);                             // Don't go further for now
-
-#if 0
-    // Do a scan of the fermion action
-    for (mu = XUP; mu < NUMLINK; mu++) {
-      FORALLSITES(i, s) {
-        node0_printf("mu=%d on site (%d, %d, %d, %d)\n",
-                     mu, s->x, s->y, s->z, s->t);
-        tmat = s->link[mu];
-        dumpmat(&(s->f_U[mu]));
-
-        for (ii = 0; ii < NCOL; ii++) {
-          for (jj = 0; jj < NCOL; jj++) {
-            for (kick = -1; kick <= 1; kick += 2) {
-              s->link[mu] = tmat;
-              s->link[mu].e[ii][jj].real += 0.001 * (Real)kick;
-
-              iters += congrad_multi(src, sol, niter, rsqmin, &final_rsq);
-              if (kick == -1)
-                new_action -= fermion_action(src, sol);
-              if (kick == 1) {
-                new_action += fermion_action(src, sol);
-                tprint.e[ii][jj].real = -250.0 * new_action;
-              }
-            }
-
-            for (kick = -1; kick <= 1; kick += 2) {
-              s->link[mu] = tmat;
-              s->link[mu].e[ii][jj].imag += 0.001 * (Real)kick;
-
-              iters += congrad_multi(src, sol, niter, rsqmin, &final_rsq);
-              if (kick == -1)
-                new_action -= fermion_action(src, sol);
-              if (kick == 1) {
-                new_action += fermion_action(src, sol);
-                node0_printf("XXXG%d%dI %.4g %.4g\n",
-                             ii, jj, 0.001 * (Real)kick, 500 * new_action);
-                tprint.e[ii][jj].imag = -250 * new_action;
-              }
-            }
-          }
-        }
-        sub_matrix(&tprint, &(s->f_U[mu]), &tprint2);
-        node0_printf("mu=%d on site (%d, %d, %d, %d): %.4g\n",
-                     mu, s->x, s->y, s->z, s->t,
-                     realtrace(&tprint2, &tprint2));
-        dumpmat(&tprint);
-        s->link[mu] = tmat;
-
-        iters += congrad_multi(src, sol, niter, rsqmin, &final_rsq);
-      }
-    }   // End scan of the fermion action
-#endif
-#endif
   }
 
   // Update the momentum from the fermion force -- sum or eps
