@@ -93,6 +93,7 @@ void sum_matrix(matrix *b, matrix *c);
 void add_matrix(matrix *a, matrix *b, matrix *c);
 
 // In file addamat.c
+void sum_adj_matrix(matrix *b, matrix *c);
 void add_adj_matrix(matrix *a, matrix *b, matrix *c);
 
 // In file submat.c
