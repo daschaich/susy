@@ -5,10 +5,10 @@
 #include <stdlib.h>
 #include <math.h>
 #include <string.h>             // For setup.c, gauge_info.c
+#include "lattice.h"            // Define QM before including susy.h
 #include "../include/complex.h"
 #include "../include/susy.h"
 #include "../include/macros.h"
-#include "lattice.h"
 #include "../include/comdefs.h"
 #include "../include/io_lat.h"
 #include "../include/generic.h"
