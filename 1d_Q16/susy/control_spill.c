@@ -16,6 +16,7 @@ int main(int argc, char *argv[]) {
 
   prompt = setup();
   setup_lambda();
+  setup_gamma();
 
   // Load input and run (loop removed)
   if (readin(prompt) != 0) {
