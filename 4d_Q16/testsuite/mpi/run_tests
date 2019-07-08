@@ -1,9 +1,9 @@
 #!/bin/bash
 # This script needs to be run from the 4d_Q16/testsuite/mpi directory
 
-# Customization for the HET cluster at the University of Colorado
+# May need to be customized for different platforms
 makefile=Make_mpi
-run="/usr/local/mpich2-1.4.1p1/bin/mpirun -np 2"
+run="mpirun -np 2"
 
 # Allow user to specify particular target
 if [ $# -gt 1 ]; then
