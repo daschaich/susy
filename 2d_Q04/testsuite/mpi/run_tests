@@ -1,9 +1,9 @@
 #!/bin/bash
 # This script needs to be run from the 2d_Q04/testsuite/mpi directory
 
-# Customization for the HET cluster at the University of Colorado
+# May need to be customized for different platforms
 makefile=Make_mpi
-run="/usr/local/mpich2-1.4.1p1/bin/mpirun -np 2"
+run="mpirun -np 2"
 
 # Allow user to specify particular target
 if [ $# -gt 1 ]; then
@@ -12,7 +12,7 @@ if [ $# -gt 1 ]; then
 
   # Change N
   cd ../../susy/
-  sed -i --follow-symlinks -E "s/(#define NCOL) .*/\1 $N/" ../include/susy.h
+  sed -i -E "s/(#define NCOL) .*/\1 $N/" ../../4d_Q16/include/susy.h
 
   # Compile
   echo "Compiling susy_$target..."
@@ -23,7 +23,7 @@ if [ $# -gt 1 ]; then
   fi
 
   # Reset to N=2
-  sed -i --follow-symlinks -E "s/(#define NCOL) .*/\1 2/" ../include/susy.h
+  sed -i -E "s/(#define NCOL) .*/\1 2/" ../../4d_Q16/include/susy.h
 
   # Run
   cd ../testsuite/
@@ -50,7 +50,7 @@ for N in 2 3 4 ; do
 
   # Change N
   cd ../../susy/
-  sed -i --follow-symlinks -E "s/(#define NCOL) .*/\1 $N/" ../include/susy.h
+  sed -i -E "s/(#define NCOL) .*/\1 $N/" ../../4d_Q16/include/susy.h
 
   # Compile all targets
   for target in hmc meas hmc_meas mcrg eig phase ; do
@@ -63,7 +63,7 @@ for N in 2 3 4 ; do
   done
 
   # Reset to N=2
-  sed -i --follow-symlinks -E "s/(#define NCOL) .*/\1 2/" ../include/susy.h
+  sed -i -E "s/(#define NCOL) .*/\1 2/" ../../4d_Q16/include/susy.h
 
   # Run
   cd ../testsuite/
