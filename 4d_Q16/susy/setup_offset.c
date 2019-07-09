@@ -187,10 +187,16 @@ void setup_offset() {
   }
 
   // Make boundary condition tables
-  if (PBC >= 0)
+  if (PBC == 1) {               // Braces suppress compiler warning
     node0_printf("Periodic temporal boundary conditions\n");
-  if (PBC < 0)
+  }
+  else if (PBC == -1) {         // Braces suppress compiler warning
     node0_printf("Antiperiodic temporal boundary conditions\n");
+  }
+  else {
+    node0_printf("Error: Periodic or antiperiodic BCs expected\n");
+    terminate(1);
+  }
   setup_bc();
 }
 // -----------------------------------------------------------------
