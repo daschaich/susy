@@ -307,7 +307,7 @@ int make_evs(int Nvec, Twist_Fermion **eigVec, double *eigVal, int flag) {
       check += magsq_TF(&tTF);
     }
     g_doublesum(&check);    // Accumulate across all nodes
-    if (flag == 1)  {       // Braces suppress compiler warning
+    if (flag == 1) {        // Braces suppress compiler warning
       node0_printf("EIGENVALUE %d %.8g %.8g\n", ivec, eigVal[ivec], check);
     }
     else if (flag == -1)
