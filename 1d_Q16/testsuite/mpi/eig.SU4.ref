@@ -1,0 +1,78 @@
+BMN, Nc = 4, DIMF = 15, fermion rep = adjoint
+Microcanonical simulation with refreshing
+Machine = MPI (portable), with 2 nodes
+Phi algorithm
+start: Tue Jul  9 12:36:00 2019
+
+type 0 for no prompts or 1 for prompts
+nt 4
+PBC -1
+iseed 41
+Nroot 1
+Norder 15
+LAYOUT = Hypercubes, options = hyper_prime
+ON EACH NODE 2
+Mallocing 0.0 MBytes per core for lattice
+Antiperiodic temporal boundary conditions
+Mallocing 0.1 MBytes per core for fields
+
+
+warms 0
+trajecs 3
+traj_length 1.000000e+00
+nstep 12
+nstep_gauge 4
+traj_between_meas 3
+lambda 1.000000e+00
+mu 3.000000e-01
+max_cg_iterations 500
+error_per_site 1.000000e-05
+Nvec 12
+eig_tol 1.000000e-08
+maxIter 5000
+reload_serial config.SU4.4
+forget
+lambda=1 --> kappa=Nc/(4lambda)=1
+Restored binary gauge and scalar configuration serially from file config.SU4.4
+Time stamp Mon Jul  8 01:16:40 2019
+Checksums c21c2a3d e2344404 OK
+Time to reload gauge configuration = 1.224041e-03
+CHECK NERSC LINKTR: 7.6767886057496071e-02 CKSUM: 0
+Reunitarized for double precision.  Max deviation 3.9e-08 changed to 8.9e-16
+Reantihermized for double precision.  Max deviation 1.4e-15 changed to 1.4e-15
+Time to check unitarity and anti-hermiticity = 0.0003939 seconds
+START 71.918361
+SCALAR SQUARES 4.53926 12.9102 5.8881 11.8758 18.0901 34.3091 33.2881 114.26 10.0551 27.2462 32.4433
+LINES_EIG 2.164 0.7861 -0.6289 -1.248
+GMES 0.33767447 1.227797 0 71.918361 1.134816 3.2275485 1.4720247
+Loosening stopping condition to 1e-07
+EIGENVALUE 0 0.13380262 3.9920525e-13
+EIGENVALUE 1 0.13380262 1.5808103e-12
+EIGENVALUE 2 0.13441208 1.9532007e-12
+EIGENVALUE 3 0.13441208 1.8802468e-12
+EIGENVALUE 4 0.13471349 8.7724476e-13
+EIGENVALUE 5 0.13471349 1.6731718e-10
+EIGENVALUE 6 0.13509361 1.3776743e-12
+EIGENVALUE 7 0.13509363 1.7706327e-10
+EIGENVALUE 8 0.13539036 1.1868509e-12
+EIGENVALUE 9 0.13539037 1.7467448e-10
+EIGENVALUE 10 0.13563637 1.9204854e-12
+EIGENVALUE 11 0.13590226 3.8718041e-11
+BIGEIGVAL  0 146.90129 1.8561764e-12
+BIGEIGVAL  1 146.90129 5.5175883e-13
+BIGEIGVAL  2 146.89464 8.3124025e-13
+BIGEIGVAL  3 146.89464 1.5406795e-12
+BIGEIGVAL  4 146.87349 1.2605559e-12
+BIGEIGVAL  5 146.87349 1.9449612e-12
+BIGEIGVAL  6 146.86759 1.4391728e-12
+BIGEIGVAL  7 146.86759 2.068003e-12
+BIGEIGVAL  8 146.54419 1.0814897e-12
+BIGEIGVAL  9 146.54419 1.2046743e-12
+BIGEIGVAL  10 146.53644 1.848115e-12
+BIGEIGVAL  11 146.53644 1.203704e-12
+RUNNING COMPLETED
+
+Time = 2.047 seconds
+total_iters = 3257
+exit: Tue Jul  9 12:36:02 2019
+
