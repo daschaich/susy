@@ -84,7 +84,7 @@ for N in 2 3 4 ; do
   # Check
   cd scalar/
   for target in hmc meas hmc_meas mcrg eig phase phase_part1 phase_part2 ; do
-    d="`diff -I'Time' -I'time' -I'seconds' -I'^start' $target.SU$N.ref $target.SU$N.out`"
+    d="`diff -I'Time' -I'time' -I'seconds' -I'^start' -I'^exit' $target.SU$N.ref $target.SU$N.out`"
     if [ -n "$d" ] ; then   # Non-zero string length
       echo "$target.SU$N.ref and $target.SU$N.out differ:"
       echo "$d"
