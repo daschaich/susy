@@ -33,7 +33,7 @@ if [ $# -gt 1 ]; then
 
   # Check
   cd mpi/
-  d="`diff -I'Time' -I'time' -I'seconds' -I'^start' $target.U$N.ref $target.U$N.out`"
+  d="`diff -I'Time' -I'time' -I'seconds' -I'^start' -I'^exit' $target.U$N.ref $target.U$N.out`"
   if [ -n "$d" ] ; then   # Non-zero string length
     echo "$target.U$N.ref and $target.U$N.out differ:"
     echo "$d"
@@ -88,7 +88,7 @@ for N in 2 3 4 ; do
   # Check
   cd mpi/
   for target in hmc meas hmc_meas mcrg eig phase phase_part1 phase_part2 ; do
-    d="`diff -I'Time' -I'time' -I'seconds' -I'^start' $target.U$N.ref $target.U$N.out`"
+    d="`diff -I'Time' -I'time' -I'seconds' -I'^start' -I'^exit' $target.U$N.ref $target.U$N.out`"
     if [ -n "$d" ] ; then   # Non-zero string length
       echo "$target.U$N.ref and $target.U$N.out differ:"
       echo "$d"
