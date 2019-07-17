@@ -66,7 +66,8 @@ void update_u(Real eps) {
     for (j = 0; j < NSCALAR; j++)
       scalar_mult_sum_matrix(&(s->mom_X[j]), eps, &(s->X[j]));
   }
-  // Update dot product of first eight scalar fields and gamma matrices
+
+  // Update dot product of non-diagonal gamma matrices with scalars
   build_Gamma_X();
 }
 // -----------------------------------------------------------------
