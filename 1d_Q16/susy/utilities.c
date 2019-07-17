@@ -99,7 +99,7 @@ void fermion_op(matrix *src[NFERMION], matrix *dest[NFERMION], int sign) {
   register int i, j, k, m, n;
   register site *s;
   Real tr;
-  complex tc = cmplx(0.0, 1.0/sqrt(2.0)); //Eq. 14 of 02 Jun 2019 notes
+  complex tc = cmplx(0.0, 1.0 / sqrt(2.0));   // Eq. 14 of 2 Jun 2019 notes
   matrix tmat;
 
   // Fermion kinetic term
@@ -128,8 +128,8 @@ void fermion_op(matrix *src[NFERMION], matrix *dest[NFERMION], int sign) {
 #endif
 
   // Yukawa terms -- assume build_Gamma_X has already been run
-  // This is a dirty hack to implement Eq. 14 of 02 Jun 2019 notes
-  tr = (Real)sign/sqrt(2.0);
+  // Quick implementation of Eq. 14 in 2 Jun 2019 notes
+  tr = (Real)sign / sqrt(2.0);
   for (j = 0; j < NCHIRAL_FERMION; j++) {
     m = j + NCHIRAL_FERMION;
     for (k = 0; k < NCHIRAL_FERMION; k++) {
