@@ -201,8 +201,9 @@ double bosonic_force(Real eps) {
 void assemble_fermion_force(matrix **sol, matrix *psol[NFERMION]) {
   register int i, j, k, l, m, n;
   register site *s;
-  Real tr = 1.0/sqrt(2.0); // Following Eq. 14 of 02 Jun 2019 notes
-  complex tc = cmplx(0.0, 1.0/sqrt(2.0)); // Following Eq. 14 of 02 Jun 2019 notes
+  Real tr;
+  // sqrt(2) factor from Eq. 14 of 2 Jun 2019 notes
+  complex tc = cmplx(0.0, 1.0 / sqrt(2.0));
   matrix tmat, tmat2;
   msg_tag *tag[NCHIRAL_FERMION], *tag2[NCHIRAL_FERMION];
 
@@ -248,16 +249,19 @@ void assemble_fermion_force(matrix **sol, matrix *psol[NFERMION]) {
     m = j + NCHIRAL_FERMION;
     for (k = 0; k < NCHIRAL_FERMION; k++) {
       n = k + NCHIRAL_FERMION;
-      FORALLSITES(i, s) {
-        for (l = 0; l < NSCALAR - 2; l++) {
-          mult_nn(&(psol[j][i]), &(sol[n][i]), &tmat);
-          mult_nn_dif(&(sol[n][i]), &(psol[j][i]), &tmat);
-          scalar_mult_sum_matrix(&tmat, Gamma[l].e[j][k]/sqrt(2.0), &(s->f_X[l]));
-          
+      for (l = 0; l < NSCALAR - 2; l++) {
+        tr = Gamma[l].e[j][k] / sqrt(2.0);    // Sqrt from 2 Jun 2019 notes
+        if (tr * tr > SQ_TOL) {
+          FORALLSITES(i, s) {
+            mult_nn(&(psol[j][i]), &(sol[n][i]), &tmat);
+            mult_nn_dif(&(sol[n][i]), &(psol[j][i]), &tmat);
+            scalar_mult_sum_matrix(&tmat, tr, &(s->f_X[l]));
 
-          mult_nn(&(psol[m][i]), &(sol[k][i]), &tmat);
-          mult_nn_dif(&(sol[k][i]), &(psol[m][i]), &tmat);
-          scalar_mult_sum_matrix(&tmat, Gamma[l].e[k][j]/sqrt(2.0), &(s->f_X[l]));
+            // dif instead of sum since Gamma[l].e[k][j] = -Gamma[l].e[j][k]
+            mult_nn(&(psol[m][i]), &(sol[k][i]), &tmat);
+            mult_nn_dif(&(sol[k][i]), &(psol[m][i]), &tmat);
+            scalar_mult_dif_matrix(&tmat, tr, &(s->f_X[l]));
+          }
         }
       }
     }
@@ -265,6 +269,7 @@ void assemble_fermion_force(matrix **sol, matrix *psol[NFERMION]) {
     // Last 2 gammas are diagonal
     k = NSCALAR - 2;
     n = NSCALAR - 1;
+    tr = 1.0 / sqrt(2.0);                     // Sqrt from 2 Jun 2019 notes
     FORALLSITES(i, s) {
       scalar_mult_nn_dif(&(psol[j][i]), &(sol[j][i]), tr, &(s->f_X[k]));
       scalar_mult_nn_sum(&(sol[j][i]), &(psol[j][i]), tr, &(s->f_X[k]));
