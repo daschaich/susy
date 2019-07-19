@@ -44,25 +44,6 @@ void direct_prod42(int A[4][4], int B[2][2], int C[8][8]) {
 
 
 // -----------------------------------------------------------------
-// Compute inner product A[i][j] * B[j][k] * C[k][m]
-// All of these are 8x8 gamma matrices
-// Add/subtract to Gamma123[i][m] depending on sign
-void gamma_prod(int A[8][8], int B[8][8], int C[8][8], int sign) {
-  int i, j, k, m;
-  for (i = 0; i < 8; i++) {
-    for (m = 0; m < 8; m++) {
-      for (j = 0; j < 8; j++) {
-        for (k = 0; k < 8; k++)
-          Gamma123[i][m] += sign * A[i][j] * B[j][k] * C[k][m];
-      }
-    }
-  }
-}
-// -----------------------------------------------------------------
-
-
-
-// -----------------------------------------------------------------
 void setup_gamma() {
   int i, j, k, temp44[4][4];
   int sigma1[2][2] = {{0, 1}, {1, 0}};
@@ -97,52 +78,26 @@ void setup_gamma() {
   direct_prod22(sigma3, m_i_sigma2, temp44);
   direct_prod42(temp44, unit, Gamma[2]);
 
-  // Gamma[3] = (-i*sigma2) X unit x sigma1
+  // Gamma[3] = (-i*sigma2) X unit X sigma1
   direct_prod22(m_i_sigma2, unit, temp44);
   direct_prod42(temp44, sigma1, Gamma[3]);
 
-  // Gamma[4] = (-i*sigma2) X unit x sigma3
+  // Gamma[4] = (-i*sigma2) X unit X sigma3
   direct_prod22(m_i_sigma2, unit, temp44);
   direct_prod42(temp44, sigma3, Gamma[4]);
 
-  // Gamma[5] = unit x sigma1 X (-i*sigma2)
+  // Gamma[5] = unit X sigma1 X (-i*sigma2)
   direct_prod22(unit, sigma1, temp44);
   direct_prod42(temp44, m_i_sigma2, Gamma[5]);
 
-  // Gamma[6] = unit x sigma3 X (-i*sigma2)
+  // Gamma[6] = unit X sigma3 X (-i*sigma2)
   direct_prod22(unit, sigma3, temp44);
   direct_prod42(temp44, m_i_sigma2, Gamma[6]);
 
-  // Initialize Gamma123
-  for (i = 0; i < 8; i++) {
-    for (j = 0; j < 8; j++)
-      Gamma123[i][j] = 0;
-  }
-
   // Gamma123 = epsilon[i][j][k] Gamma[i] Gamma[j] Gamma[k] / 6
-  for (i = 0; i < 3; i++) {
-    for (j = 0; j < 3; j++) {
-      for (k = 0; k < 3; k++) {
-        if (epsilon[i][j][k] == 0)
-          continue;
-
-        // Add product to Gamma123
-        gamma_prod(Gamma[i], Gamma[j], Gamma[k], epsilon[i][j][k]);
-      }
-    }
-  }
-
-  // Overly cautious to avoid integer division issues
-  for (i = 0; i < 8; i++) {
-    for (j = 0; j < 8; j++) {
-      if (Gamma123[i][j] == 6)
-        Gamma123[i][j] = 1;
-      else if (Gamma123[i][j] == -6)
-        Gamma123[i][j] = -1;
-      else
-        Gamma123[i][j] = 0;
-    }
-  }
+  //          = unit X (-i*sigma2) X (-i*sigma2)
+  direct_prod22(unit, m_i_sigma2, temp44);
+  direct_prod42(temp44, m_i_sigma2, Gamma123);
 
 #ifdef DEBUG_CHECK
   int l, m, tg[8][8];
