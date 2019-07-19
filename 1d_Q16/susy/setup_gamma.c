@@ -1,12 +1,76 @@
 // -----------------------------------------------------------------
 // Set up 3-component epsilon tensor and gamma matrices
-// Check Clifford algebra
+// Check Clifford algebra if DEBUG_CHECK #defined
 #include "susy_includes.h"
+//#define DEBUG_CHECK
+// -----------------------------------------------------------------
 
+
+
+// -----------------------------------------------------------------
+// Compute tensor products of 2x2 X 2x2 and 4x4 X 2x2 matrices
+// In both cases, A[i][x] * B[j][y] ends up in C[2 * i + j][2 * x + y]
+void direct_prod22(int A[2][2], int B[2][2], int C[4][4]) {
+  int i, j, K, x, y, Z;
+  for (i = 0; i < 2; i++) {
+    for (j = 0; j < 2; j++) {
+      K = 2 * i + j;
+      for (x = 0; x < 2; x++) {
+        for (y = 0; y < 2; y++) {
+          Z = 2 * x + y;
+          C[K][Z] = A[i][x] * B[j][y];
+        }
+      }
+    }
+  }
+}
+
+void direct_prod42(int A[4][4], int B[2][2], int C[8][8]) {
+  int i, j, K, x, y, Z;
+  for (i = 0; i < 4; i++) {
+    for (j = 0; j < 2; j++) {
+      K = 2 * i + j;
+      for (x = 0; x < 4; x++) {
+        for (y = 0; y < 2; y++) {
+          Z = 2 * x + y;
+          C[K][Z] = A[i][x] * B[j][y];
+        }
+      }
+    }
+  }
+}
+// -----------------------------------------------------------------
+
+
+
+// -----------------------------------------------------------------
+// Compute inner product A[i][j] * B[j][k] * C[k][m]
+// All of these are 8x8 gamma matrices
+// Add/subtract to Gamma123[i][m] depending on sign
+void gamma_prod(int A[8][8], int B[8][8], int C[8][8], int sign) {
+  int i, j, k, m;
+  for (i = 0; i < 8; i++) {
+    for (m = 0; m < 8; m++) {
+      for (j = 0; j < 8; j++) {
+        for (k = 0; k < 8; k++)
+          Gamma123[i][m] += sign * A[i][j] * B[j][k] * C[k][m];
+      }
+    }
+  }
+}
+// -----------------------------------------------------------------
+
+
+
+// -----------------------------------------------------------------
 void setup_gamma() {
-  int i, j, k;
+  int i, j, k, temp44[4][4];
+  int sigma1[2][2] = {{0, 1}, {1, 0}};
+  int m_i_sigma2[2][2] = {{0, -1}, {1, 0}};
+  int sigma3[2][2] = {{1, 0}, {0, -1}};
+  int unit[2][2] = {{1, 0}, {0, 1}};
 
-  // Simple 3-component epsilon tensor
+  // We'll need the 3-component epsilon tensor to set up Gamma123
   for (i = 0; i < 3; i++) {
     for (j = 0; j < 3; j++) {
       for (k = 0; k < 3; k++)
@@ -20,88 +84,68 @@ void setup_gamma() {
   epsilon[2][0][1] =  1;
   epsilon[1][0][2] = -1;
 
-  // Initialize gamma matrices
-  for (i = 0; i < NCHIRAL_FERMION - 1; i++) {
-    for (j = 0; j < NCHIRAL_FERMION; j++) {
-      for (k = 0; k < NCHIRAL_FERMION; k++)
-        Gamma[i].e[j][k] = 0;
+  // Direct products of Pauli matrices define the 8x8 gamma matrices
+  // Gamma[0] = (-i*sigma2) X (-i*sigma2) X (-i*sigma2)
+  direct_prod22(m_i_sigma2, m_i_sigma2, temp44);
+  direct_prod42(temp44, m_i_sigma2, Gamma[0]);
+
+  // Gamma[1] = sigma1 X (-i*sigma2) X unit
+  direct_prod22(sigma1, m_i_sigma2, temp44);
+  direct_prod42(temp44, unit, Gamma[1]);
+
+  // Gamma[2] = sigma3 X (-i*sigma2) X unit
+  direct_prod22(sigma3, m_i_sigma2, temp44);
+  direct_prod42(temp44, unit, Gamma[2]);
+
+  // Gamma[3] = (-i*sigma2) X unit x sigma1
+  direct_prod22(m_i_sigma2, unit, temp44);
+  direct_prod42(temp44, sigma1, Gamma[3]);
+
+  // Gamma[4] = (-i*sigma2) X unit x sigma3
+  direct_prod22(m_i_sigma2, unit, temp44);
+  direct_prod42(temp44, sigma3, Gamma[4]);
+
+  // Gamma[5] = unit x sigma1 X (-i*sigma2)
+  direct_prod22(unit, sigma1, temp44);
+  direct_prod42(temp44, m_i_sigma2, Gamma[5]);
+
+  // Gamma[6] = unit x sigma3 X (-i*sigma2)
+  direct_prod22(unit, sigma3, temp44);
+  direct_prod42(temp44, m_i_sigma2, Gamma[6]);
+
+  // Initialize Gamma123
+  for (i = 0; i < 8; i++) {
+    for (j = 0; j < 8; j++)
+      Gamma123[i][j] = 0;
+  }
+
+  // Gamma123 = epsilon[i][j][k] Gamma[i] Gamma[j] Gamma[k] / 6
+  for (i = 0; i < 3; i++) {
+    for (j = 0; j < 3; j++) {
+      for (k = 0; k < 3; k++) {
+        if (epsilon[i][j][k] == 0)
+          continue;
+
+        // Add product to Gamma123
+        gamma_prod(Gamma[i], Gamma[j], Gamma[k], epsilon[i][j][k]);
+      }
     }
   }
-  for (j = 0; j < NCHIRAL_FERMION; j++) {
-    for (k = 0; k < NCHIRAL_FERMION; k++)
-      Gamma123.e[j][k] = 0;
+
+  // Overly cautious to avoid integer division issues
+  for (i = 0; i < 8; i++) {
+    for (j = 0; j < 8; j++) {
+      if (Gamma123[i][j] == 6)
+        Gamma123[i][j] = 1;
+      else if (Gamma123[i][j] == -6)
+        Gamma123[i][j] = -1;
+      else
+        Gamma123[i][j] = 0;
+    }
   }
 
-  // Non-zero elements blindly copied from serial code
-  // Anti-hermitian basis --> Gamma_i^2 = -I_8
-  Gamma[0].e[0][7] = -1;
-  Gamma[0].e[1][6] =  1;
-  Gamma[0].e[2][5] =  1;
-  Gamma[0].e[3][4] = -1;
-  Gamma[0].e[4][3] =  1;
-  Gamma[0].e[5][2] = -1;
-  Gamma[0].e[6][1] = -1;
-  Gamma[0].e[7][0] =  1;
-  Gamma[1].e[0][6] = -1;
-  Gamma[1].e[1][7] = -1;
-  Gamma[1].e[2][4] =  1;
-  Gamma[1].e[3][5] =  1;
-  Gamma[1].e[4][2] = -1;
-  Gamma[1].e[5][3] = -1;
-  Gamma[1].e[6][0] =  1;
-  Gamma[1].e[7][1] =  1;
-  Gamma[2].e[0][2] = -1;
-  Gamma[2].e[1][3] = -1;
-  Gamma[2].e[2][0] =  1;
-  Gamma[2].e[3][1] =  1;
-  Gamma[2].e[4][6] =  1;
-  Gamma[2].e[5][7] =  1;
-  Gamma[2].e[6][4] = -1;
-  Gamma[2].e[7][5] = -1;
-  Gamma[3].e[0][5] = -1;
-  Gamma[3].e[1][4] = -1;
-  Gamma[3].e[2][7] = -1;
-  Gamma[3].e[3][6] = -1;
-  Gamma[3].e[4][1] =  1;
-  Gamma[3].e[5][0] =  1;
-  Gamma[3].e[6][3] =  1;
-  Gamma[3].e[7][2] =  1;
-  Gamma[4].e[0][4] = -1;
-  Gamma[4].e[1][5] =  1;
-  Gamma[4].e[2][6] = -1;
-  Gamma[4].e[3][7] =  1;
-  Gamma[4].e[4][0] =  1;
-  Gamma[4].e[5][1] = -1;
-  Gamma[4].e[6][2] =  1;
-  Gamma[4].e[7][3] = -1;
-  Gamma[5].e[0][3] = -1;
-  Gamma[5].e[1][2] =  1;
-  Gamma[5].e[2][1] = -1;
-  Gamma[5].e[3][0] =  1;
-  Gamma[5].e[4][7] = -1;
-  Gamma[5].e[5][6] =  1;
-  Gamma[5].e[6][5] = -1;
-  Gamma[5].e[7][4] =  1;
-  Gamma[6].e[0][1] = -1;
-  Gamma[6].e[1][0] =  1;
-  Gamma[6].e[2][3] =  1;
-  Gamma[6].e[3][2] = -1;
-  Gamma[6].e[4][5] = -1;
-  Gamma[6].e[5][4] =  1;
-  Gamma[6].e[6][7] =  1;
-  Gamma[6].e[7][6] = -1;
-  Gamma123.e[0][3] =  1;
-  Gamma123.e[1][2] = -1;
-  Gamma123.e[2][1] = -1;
-  Gamma123.e[3][0] =  1;
-  Gamma123.e[4][7] =  1;
-  Gamma123.e[5][6] = -1;
-  Gamma123.e[6][5] = -1;
-  Gamma123.e[7][4] =  1;
-
 #ifdef DEBUG_CHECK
-  int l, m;
-  gamma_mat tg;
+  int l, m, tg[8][8];
 
   // Print Gammas
   node0_printf("Computing gamma matrices\n");
@@ -109,7 +153,7 @@ void setup_gamma() {
     node0_printf("Gamma[%d]\n", i);
     for (j = 0; j < NCHIRAL_FERMION; j++) {
       for (k = 0; k < NCHIRAL_FERMION; k++)
-        node0_printf("  %d", Gamma[i].e[j][k]);
+        node0_printf("  %d", Gamma[i][j][k]);
       node0_printf("\n");
     }
   }
@@ -117,7 +161,7 @@ void setup_gamma() {
   node0_printf("Gamma123\n");
   for (j = 0; j < NCHIRAL_FERMION; j++) {
     for (k = 0; k < NCHIRAL_FERMION; k++)
-      node0_printf("  %d", Gamma123.e[j][k]);
+      node0_printf("  %d", Gamma123[j][k]);
     node0_printf("\n");
   }
 
@@ -127,18 +171,18 @@ void setup_gamma() {
   for (i = 0; i < NCHIRAL_FERMION - 1; i++) {
     for (j = 0; j < NCHIRAL_FERMION; j++) {
       for (k = 0; k < NCHIRAL_FERMION; k++) {
-        tg.e[j][k] = Gamma[i].e[j][0] * Gamma[i].e[0][k];
+        tg[j][k] = Gamma[i][j][0] * Gamma[i][0][k];
         for (l = 1; l < NCHIRAL_FERMION; l++)
-          tg.e[j][k] += Gamma[i].e[j][l] * Gamma[i].e[l][k];
+          tg[j][k] += Gamma[i][j][l] * Gamma[i][l][k];
 
-        if (j != k && tg.e[j][k] != 0) {
+        if (j != k && tg[j][k] != 0) {
           node0_printf("WARNING: Gamma[%d]^2_%d%d = %d\n",
-                       i, j, k, tg.e[j][k]);
+                       i, j, k, tg[j][k]);
         }
       }
-      if (tg.e[j][j] != -1) {
+      if (tg[j][j] != -1) {
         node0_printf("WARNING: Gamma[%d]^2_%d%d = %d\n",
-                     i, j, j, tg.e[j][j]);
+                     i, j, j, tg[j][j]);
       }
     }
   }
@@ -148,15 +192,15 @@ void setup_gamma() {
       for (j = i + 1; j < NCHIRAL_FERMION - 1; j++) {
         for (k = 0; k < NCHIRAL_FERMION; k++) {
           for (l = 0; l < NCHIRAL_FERMION; l++) {
-            tg.e[k][l] = Gamma[i].e[k][0] * Gamma[j].e[0][l]
-                       + Gamma[j].e[k][0] * Gamma[i].e[0][l];
+            tg[k][l] = Gamma[i][k][0] * Gamma[j][0][l]
+                       + Gamma[j][k][0] * Gamma[i][0][l];
             for (m = 1; m < NCHIRAL_FERMION; m++) {
-              tg.e[k][l] += Gamma[i].e[k][m] * Gamma[j].e[m][l];
-              tg.e[k][l] += Gamma[j].e[k][m] * Gamma[i].e[m][l];
+              tg[k][l] += Gamma[i][k][m] * Gamma[j][m][l];
+              tg[k][l] += Gamma[j][k][m] * Gamma[i][m][l];
             }
-          if (tg.e[k][l] != 0) {
+          if (tg[k][l] != 0) {
             node0_printf("WARNING: {Gamma[%d], Gamma[%d]}_%d%d = %d\n",
-                         i, j, k, l, tg.e[k][l]);
+                         i, j, k, l, tg[k][l]);
           }
         }
       }

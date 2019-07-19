@@ -17,13 +17,13 @@ void build_Gamma_X() {
   for (j = 0; j < NCHIRAL_FERMION; j++) {
     for (k = 0; k < NCHIRAL_FERMION; k++) {
       // Overwrite Gamma_X[j][k][i], potentially with zero
-      tr = Gamma[0].e[j][k];
+      tr = Gamma[0][j][k];
       FORALLSITES(i, s)
         scalar_mult_matrix(&(s->X[0]), tr, &(Gamma_X[j][k][i]));
 
       // Add remaining non-zero contributions
       for (l = 1; l < NSCALAR - 2; l++) {
-        tr = Gamma[l].e[j][k];
+        tr = Gamma[l][j][k];
         if (tr * tr > SQ_TOL) {
           FORALLSITES(i, s)
             scalar_mult_sum_matrix(&(s->X[l]), tr, &(Gamma_X[j][k][i]));
@@ -123,7 +123,7 @@ void fermion_op(matrix *src[NFERMION], matrix *dest[NFERMION], int sign) {
     m = j + NCHIRAL_FERMION;
     for (k = 0; k < NCHIRAL_FERMION; k++) {
       n = k + NCHIRAL_FERMION;
-      tr = sign * mass_fermion * Gamma123.e[j][k];      // sign = +/- 1
+      tr = sign * mass_fermion * Gamma123[j][k];      // sign = +/- 1
       if (tr * tr > SQ_TOL) {
         FORALLSITES(i, s) {
           scalar_mult_sum_matrix(&(src[n][i]), tr, &(dest[j][i]));
