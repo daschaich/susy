@@ -251,7 +251,7 @@ void assemble_fermion_force(matrix **sol, matrix *psol[NFERMION]) {
     for (k = 0; k < NCHIRAL_FERMION; k++) {
       n = k + NCHIRAL_FERMION;
       for (l = 0; l < NSCALAR - 2; l++) {
-        tr = Gamma[l].e[j][k] / sqrt(2.0);    // Sqrt from 2 Jun 2019 notes
+        tr = Gamma[l][j][k] / sqrt(2.0);      // Sqrt from 2 Jun 2019 notes
         if (tr * tr > SQ_TOL) {
           FORALLSITES(i, s) {
             mult_nn(&(psol[j][i]), &(sol[n][i]), &tmat);

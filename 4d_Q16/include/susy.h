@@ -26,7 +26,6 @@
 #define NSCALAR 9
 #define NFERMION 16
 #define NCHIRAL_FERMION 8
-typedef struct { int e[NCHIRAL_FERMION][NCHIRAL_FERMION]; } gamma_mat;
 
 // Generic stuff resumes
 typedef struct { fcomplex e[NCOL][NCOL]; } fmatrix;
