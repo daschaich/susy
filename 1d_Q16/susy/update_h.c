@@ -203,7 +203,7 @@ void assemble_fermion_force(matrix **sol, matrix *psol[NFERMION]) {
   register site *s;
   Real tr;
   // sqrt(2) factor from Eq. 14 of 2 Jun 2019 notes
-  complex tc = cmplx(0.0, 1.0 / sqrt(2.0));
+  complex tc = cmplx(0.0, -1.0 / sqrt(2.0));
   matrix tmat, tmat2;
   msg_tag *tag[NCHIRAL_FERMION], *tag2[NCHIRAL_FERMION];
 
@@ -244,7 +244,8 @@ void assemble_fermion_force(matrix **sol, matrix *psol[NFERMION]) {
     cleanup_gather(tag2[j]);
   }
 
-  // Now scalar forces s->f_X[k]
+  // Now scalar forces s->f_X[k] from Yukawa terms
+  // Gamma[0--6] embedded into -i*sigma_2 = ( 0 -1 \\ 1 0 ) in 8x8 blocks
   for (j = 0; j < NCHIRAL_FERMION; j++) {
     m = j + NCHIRAL_FERMION;
     for (k = 0; k < NCHIRAL_FERMION; k++) {
@@ -255,12 +256,11 @@ void assemble_fermion_force(matrix **sol, matrix *psol[NFERMION]) {
           FORALLSITES(i, s) {
             mult_nn(&(psol[j][i]), &(sol[n][i]), &tmat);
             mult_nn_dif(&(sol[n][i]), &(psol[j][i]), &tmat);
-            scalar_mult_sum_matrix(&tmat, tr, &(s->f_X[l]));
+            scalar_mult_dif_matrix(&tmat, tr, &(s->f_X[l]));
 
-            // dif instead of sum since Gamma[l].e[k][j] = -Gamma[l].e[j][k]
             mult_nn(&(psol[m][i]), &(sol[k][i]), &tmat);
             mult_nn_dif(&(sol[k][i]), &(psol[m][i]), &tmat);
-            scalar_mult_dif_matrix(&tmat, tr, &(s->f_X[l]));
+            scalar_mult_sum_matrix(&tmat, tr, &(s->f_X[l]));
           }
         }
       }
@@ -271,12 +271,15 @@ void assemble_fermion_force(matrix **sol, matrix *psol[NFERMION]) {
     n = NSCALAR - 1;
     tr = 1.0 / sqrt(2.0);                     // Sqrt from 2 Jun 2019 notes
     FORALLSITES(i, s) {
+      // Gamma[7] = ( -1 0 \\ 0 1 ) in 8x8 blocks
       scalar_mult_nn_dif(&(psol[j][i]), &(sol[j][i]), tr, &(s->f_X[k]));
       scalar_mult_nn_sum(&(sol[j][i]), &(psol[j][i]), tr, &(s->f_X[k]));
 
       scalar_mult_nn_sum(&(psol[m][i]), &(sol[m][i]), tr, &(s->f_X[k]));
       scalar_mult_nn_dif(&(sol[m][i]), &(psol[m][i]), tr, &(s->f_X[k]));
 
+      // Gamma[8] = ( -i 0 \\ 0 -i ) in 8x8 blocks
+      // Negative absorbed into tc above
       mult_nn(&(psol[j][i]), &(sol[j][i]), &tmat);
       mult_nn_dif(&(sol[j][i]), &(psol[j][i]), &tmat);
 
