@@ -255,7 +255,7 @@ int update() {
 
 #ifdef HMC_ALGORITHM
   Real xrandom;   // For accept/reject test
-  // Copy link field to old_link
+  // Copy link field and scalars to old_link and old_X
   copy_bosons(PLUS);
 #endif
   // Do microcanonical updating
@@ -285,7 +285,8 @@ int update() {
   broadcast_float(&xrandom);
   if (exp(-change) < (double)xrandom) {
     if (traj_length > 0.0) {
-      copy_bosons(MINUS);   // Restore link field from old_link
+      // Restore link field and scalars from old_link and old_X
+      copy_bosons(MINUS);
       build_Gamma_X();
     }
     node0_printf("REJECT: delta S = %.4g start S = %.12g end S = %.12g\n",

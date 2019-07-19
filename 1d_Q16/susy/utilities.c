@@ -6,8 +6,8 @@
 
 
 // -----------------------------------------------------------------
-// Update dot product of first eight scalar fields and gamma matrices
-// for the corresponding Yukawa terms in fermion_op
+// Dot product of non-diagonal gamma matrices with scalars
+// Used by Yukawa term in fermion operator
 // (The last two gamma matrices are diagonal in our basis)
 void build_Gamma_X() {
   register int i, j, k, l;
@@ -16,13 +16,17 @@ void build_Gamma_X() {
 
   for (j = 0; j < NCHIRAL_FERMION; j++) {
     for (k = 0; k < NCHIRAL_FERMION; k++) {
+      // Overwrite Gamma_X[j][k][i], potentially with zero
       tr = Gamma[0].e[j][k];
-      FORALLSITES(i, s) {
-        // Overwrite Gamma_X[j][k][i], then sum remaining contributions
+      FORALLSITES(i, s)
         scalar_mult_matrix(&(s->X[0]), tr, &(Gamma_X[j][k][i]));
-        for (l = 1; l < NSCALAR - 2; l++) {
-          scalar_mult_sum_matrix(&(s->X[l]), Gamma[l].e[j][k],
-                                 &(Gamma_X[j][k][i]));
+
+      // Add remaining non-zero contributions
+      for (l = 1; l < NSCALAR - 2; l++) {
+        tr = Gamma[l].e[j][k];
+        if (tr * tr > SQ_TOL) {
+          FORALLSITES(i, s)
+            scalar_mult_sum_matrix(&(s->X[l]), tr, &(Gamma_X[j][k][i]));
         }
       }
     }
@@ -119,16 +123,18 @@ void fermion_op(matrix *src[NFERMION], matrix *dest[NFERMION], int sign) {
     for (k = 0; k < NCHIRAL_FERMION; k++) {
       n = k + NCHIRAL_FERMION;
       tr = sign * mass_fermion * Gamma123.e[j][k];      // sign = +/- 1
-      FORALLSITES(i, s) {
-        scalar_mult_sum_matrix(&(src[n][i]), tr, &(dest[j][i]));
-        scalar_mult_dif_matrix(&(src[k][i]), tr, &(dest[m][i]));
+      if (tr * tr > SQ_TOL) {
+        FORALLSITES(i, s) {
+          scalar_mult_sum_matrix(&(src[n][i]), tr, &(dest[j][i]));
+          scalar_mult_dif_matrix(&(src[k][i]), tr, &(dest[m][i]));
+        }
       }
     }
   }
 #endif
 
   // Yukawa terms -- assume build_Gamma_X has already been run
-  // Quick implementation of Eq. 14 in 2 Jun 2019 notes
+  // Sqrt factor from Eq. 14 in 2 Jun 2019 notes
   tr = (Real)sign / sqrt(2.0);
   for (j = 0; j < NCHIRAL_FERMION; j++) {
     m = j + NCHIRAL_FERMION;
