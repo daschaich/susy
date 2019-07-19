@@ -103,7 +103,8 @@ void fermion_op(matrix *src[NFERMION], matrix *dest[NFERMION], int sign) {
   register int i, j, k, m, n;
   register site *s;
   Real tr;
-  complex tc = cmplx(0.0, 1.0 / sqrt(2.0));   // Eq. 14 of 2 Jun 2019 notes
+  // Sqrt factor from Eq. 14 in 2 Jun 2019 notes
+  complex tc = cmplx(0.0, 1.0 / sqrt(2.0));
   matrix tmat;
 
   // Fermion kinetic term
@@ -135,18 +136,26 @@ void fermion_op(matrix *src[NFERMION], matrix *dest[NFERMION], int sign) {
 
   // Yukawa terms -- assume build_Gamma_X has already been run
   // Sqrt factor from Eq. 14 in 2 Jun 2019 notes
+  // Gamma_X[j][k] embedded into -i*sigma_2 = ( 0 -1 \\ 1 0 ) in 8x8 blocks
   tr = (Real)sign / sqrt(2.0);
   for (j = 0; j < NCHIRAL_FERMION; j++) {
     m = j + NCHIRAL_FERMION;
     for (k = 0; k < NCHIRAL_FERMION; k++) {
       n = k + NCHIRAL_FERMION;
+
+      // Can skip j==k since Gamma_X[j][k] anti-symmetric
+      if (j == k)
+        continue;
+
       FORALLSITES(i, s) {
+        // Upper-right block takes n to j with negative sign
         mult_nn(&(Gamma_X[j][k][i]), &(src[n][i]), &tmat);
         mult_nn_dif(&(src[n][i]), &(Gamma_X[j][k][i]), &tmat);
-        scalar_mult_sum_matrix(&tmat, tr, &(dest[j][i]));
+        scalar_mult_dif_matrix(&tmat, tr, &(dest[j][i]));
 
-        mult_nn(&(Gamma_X[k][j][i]), &(src[k][i]), &tmat);
-        mult_nn_dif(&(src[k][i]), &(Gamma_X[k][j][i]), &tmat);
+        // Lower-left block takes k to m
+        mult_nn(&(Gamma_X[j][k][i]), &(src[k][i]), &tmat);
+        mult_nn_dif(&(src[k][i]), &(Gamma_X[j][k][i]), &tmat);
         scalar_mult_sum_matrix(&tmat, tr, &(dest[m][i]));
       }
     }
@@ -155,6 +164,7 @@ void fermion_op(matrix *src[NFERMION], matrix *dest[NFERMION], int sign) {
     k = NSCALAR - 2;
     n = NSCALAR - 1;
     FORALLSITES(i, s) {
+      // Gamma[7] = ( -1 0 \\ 0 1 ) in 8x8 blocks
       mult_nn(&(s->X[k]), &(src[j][i]), &tmat);
       mult_nn_dif(&(src[j][i]), &(s->X[k]), &tmat);
       scalar_mult_dif_matrix(&tmat, tr, &(dest[j][i]));
@@ -163,17 +173,22 @@ void fermion_op(matrix *src[NFERMION], matrix *dest[NFERMION], int sign) {
       mult_nn_dif(&(src[m][i]), &(s->X[k]), &tmat);
       scalar_mult_sum_matrix(&tmat, tr, &(dest[m][i]));
 
+      // Gamma[8] = ( -i 0 \\ 0 -i ) in 8x8 blocks
+      // tc purely imaginary --> same for both sign = +/-1
       mult_nn(&(s->X[n]), &(src[j][i]), &tmat);
       mult_nn_dif(&(src[j][i]), &(s->X[n]), &tmat);
-      c_scalar_mult_sum_mat(&tmat, &tc, &(dest[j][i]));
+      c_scalar_mult_dif_mat(&tmat, &tc, &(dest[j][i]));
 
       mult_nn(&(s->X[n]), &(src[m][i]), &tmat);
       mult_nn_dif(&(src[m][i]), &(s->X[n]), &tmat);
-      c_scalar_mult_sum_mat(&tmat, &tc, &(dest[m][i]));
-
-      scalar_mult_matrix(&(dest[j][i]), 0.5, &(dest[j][i]));
-      scalar_mult_matrix(&(dest[m][i]), 0.5, &(dest[m][i]));
+      c_scalar_mult_dif_mat(&tmat, &tc, &(dest[m][i]));
     }
+  }
+
+  // Overall factor of 1/2
+  for (j = 0; j < NFERMION; j++) {
+    FORALLSITES(i, s)
+      scalar_mult_matrix(&(dest[j][i]), 0.5, &(dest[j][i]));
   }
 }
 #endif
