@@ -99,9 +99,7 @@ EXTERN double_prn node_prn;
 EXTERN matrix *Gamma_X[NCHIRAL_FERMION][NCHIRAL_FERMION];
 
 // For convenience in calculating action and force
-// May be wasteful of space
 EXTERN Real one_ov_N;
-EXTERN complex minus1, *tr_eta, *tr_dest;
 
 // CG Fermions
 EXTERN matrix *mpm[NFERMION], *pm0[NFERMION], *rm[NFERMION];

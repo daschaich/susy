@@ -88,7 +88,6 @@ int initial_set() {
   number_of_nodes = numnodes();
   one_ov_N = 1.0 / (Real)NCOL;
   total_iters = 0;
-  minus1 = cmplx(-1.0, 0.0);
   return prompt;
 }
 // -----------------------------------------------------------------
@@ -98,11 +97,7 @@ int initial_set() {
 // -----------------------------------------------------------------
 // Allocate space for fields
 void make_fields() {
-  Real size = (Real)(2.0 * sizeof(complex));
-  FIELD_ALLOC(tr_eta, complex);
-  FIELD_ALLOC(tr_dest, complex);
-
-  size += (Real)(NCHIRAL_FERMION * NCHIRAL_FERMION * sizeof(matrix));
+  Real size = (Real)(NCHIRAL_FERMION * NCHIRAL_FERMION * sizeof(matrix));
   FIELD_ALLOC_MAT(Gamma_X, matrix, NCHIRAL_FERMION, NCHIRAL_FERMION);
 
   // CG Fermions
