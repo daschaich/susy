@@ -18,7 +18,8 @@ HEADERS = ../include/config.h    \
           ../include/random.h    \
           ../include/int32type.h \
           ../include/precision.h \
-          ../include/susy.h
+          ../include/susy.h      \
+          ../../1d_Q16/include/susy.h
 
 # To force a full remake when switching or updating Makefiles
 LASTMAKE = .lastmake.${MAKEFILE}

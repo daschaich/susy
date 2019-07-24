@@ -11,23 +11,12 @@
 
 // -----------------------------------------------------------------
 // N=4 SYM fermions always in adjoint rep, as are dim-reduced scalars
-// For d>1 gauge group is U(NCOL) and size of adjoint rep DIMF = NCOL^2
-// For d=1 gauge group is SU(NCOL) and adjoint rep DIMF = NCOL^2 - 1
+// This file is only included for 2d-dimensional systems with d>=2
+// The gauge group is U(NCOL) and size of adjoint rep DIMF = NCOL^2
 #define NCOL 2
-#ifndef QM
 #define DIMF (NCOL * NCOL)
-#else
-#define DIMF (NCOL * NCOL - 1)
-#endif
 #define N_OFFDIAG (NCOL * (NCOL - 1) / 2)
 
-// Some 1d-specific stuff
-// Numbers of scalars and fermions for 1d BFSS/BMN
-#define NSCALAR 9
-#define NFERMION 16
-#define NCHIRAL_FERMION 8
-
-// Generic stuff resumes
 typedef struct { fcomplex e[NCOL][NCOL]; } fmatrix;
 typedef struct { fcomplex c[NCOL]; } fvector;
 

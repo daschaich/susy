@@ -11,6 +11,7 @@ double scalar_trace(double *Xtr, double *Xwidth) {
   for (j = 0; j < NSCALAR; j++) {
     Xtr[j] = 0.0;
     FORALLSITES(i, s) {
+      // Take adjoint of first to get rid of overall negative sign
       td = realtrace(&(s->X[j]), &(s->X[j]));
       Xtr[j] += td;
       XtrSq += td * td;
