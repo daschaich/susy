@@ -3,7 +3,7 @@
 #ifndef _LATTICE_H
 #define _LATTICE_H
 
-#include "defines.h"              // Define QM before including susy.h
+#include "defines.h"
 #include "../include/macros.h"    // For MAXFILENAME
 #include "../include/io_lat.h"    // For gauge_file
 #include "../include/susy.h"
