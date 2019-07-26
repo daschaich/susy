@@ -11,7 +11,7 @@
 
 // -----------------------------------------------------------------
 // N=4 SYM fermions always in adjoint rep, as are dim-reduced scalars
-// This file is only included for 2d-dimensional systems with d>=2
+// This file is only included for d-dimensional systems with d>=2
 // The gauge group is U(NCOL) and size of adjoint rep DIMF = NCOL^2
 #define NCOL 2
 #define DIMF (NCOL * NCOL)
