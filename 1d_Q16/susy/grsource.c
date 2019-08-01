@@ -45,7 +45,7 @@ int grsource(matrix *src[NFERMION]) {
   register site *s;
   int avs_iters;
   Real size_r;
-  complex grn;
+  anti_hermitmat tah;
   matrix ***psim = malloc(sizeof(matrix**) * Norder);
 
   // Allocate psim (will be zeroed in congrad_multi)
@@ -58,17 +58,12 @@ int grsource(matrix *src[NFERMION]) {
   // Begin with pure gaussian random numbers
   FORALLSITES(i, s) {
     for (k = 0; k < NFERMION; k++) {
-      clear_mat(&(src[k][i]));
-      for (j = 0; j < DIMF; j++) {
 #ifdef SITERAND
-        grn.real = gaussian_rand_no(&(s->site_prn));
-        grn.imag = gaussian_rand_no(&(s->site_prn));
+      random_anti_hermitian(&tah, &(s->site_prn));
 #else
-        grn.real = gaussian_rand_no(&node_prn);
-        grn.imag = gaussian_rand_no(&node_prn);
+      random_anti_hermitian(&tah, &(s->node_prn));
 #endif
-        c_scalar_mult_sum_mat(&(Lambda[j]), &grn, &(src[k][i]));
-      }
+      uncompress_anti_hermitian(&tah, &(src[k][i]));
     }
   }
 
