@@ -9,7 +9,7 @@ See subdirectories for more detailed READMEs:
 Please contact David Schaich with any questions, requests for new features, or (especially) bug reports:
 http://www.davidschaich.net
 
-Contributors: David Schaich, Thomas DeGrand, Raghav Jha, Georg Bergner, Simon Catterall, Joel Giedt
+Contributors: David Schaich, Thomas DeGrand, Raghav Jha, Anosh Joseph, Georg Bergner, Simon Catterall, Joel Giedt
 
 Reference: A summary of useful information appears in the following paper, which we ask that you cite if you find SUSY LATTICE useful in your work:
   David Schaich and Thomas DeGrand,
@@ -17,4 +17,4 @@ Reference: A summary of useful information appears in the following paper, which
   Comput. Phys. Commun. 190:200--212 (2015)
   [doi:10.1016/j.cpc.2014.12.025, arXiv:1410.6971].
 
-Support: Development was supported in part by Syracuse University, the University of Colorado Boulder, the University of Bern, Friedrich Schiller University Jena, and Rensselaer Polytechnic Institute, as well as by the U.S. Department of Energy under grants DE-FG02-04ER41290, DE-SC0010005, DE-SC0008669 and DE-SC0009998.
+Support: Development was supported in part by Syracuse University, the University of Colorado Boulder, the University of Bern, Friedrich Schiller University Jena, the International Centre for Theoretical Sciences Bangalore, the Indian Institute of Science Education and Research Mohali and Rensselaer Polytechnic Institute, as well as by the U.S. Department of Energy under grants DE-FG02-04ER41290, DE-SC0010005, DE-SC0008669 and DE-SC0009998.
