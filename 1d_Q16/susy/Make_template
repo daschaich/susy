@@ -130,14 +130,6 @@ susy_phase::
 	"LAPACK = -llapack -lblas " \
 	"EXTRA_OBJECTS = control_phase.o phase.o io_phase.o "
 
-# Convert configuration into format the serial C++ code can read
-# for testing/debugging
-susy_spill::
-	${MAKE} -f ${MAKEFILE} target "MYTARGET= $@" \
-	"DEFINES = ${DEFINES} -DPHI_ALGORITHM " \
-	"LAPACK = -llapack -lblas " \
-	"EXTRA_OBJECTS = control_spill.o "
-
 # The targets below have not been used/tested recently
 susy_phi::
 	${MAKE} -f ${MAKEFILE} target "MYTARGET= $@" \
