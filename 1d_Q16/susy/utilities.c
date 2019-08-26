@@ -186,9 +186,10 @@ void fermion_op(matrix *src[NFERMION], matrix *dest[NFERMION], int sign) {
   }
 
   // Overall factor of 1/2
+  tr = 0.5 * kappa;
   for (j = 0; j < NFERMION; j++) {
     FORALLSITES(i, s)
-      scalar_mult_matrix(&(dest[j][i]), 0.5, &(dest[j][i]));
+      scalar_mult_matrix(&(dest[j][i]), tr, &(dest[j][i]));
   }
 }
 #endif
