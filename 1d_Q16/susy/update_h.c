@@ -245,14 +245,15 @@ void assemble_fermion_force(matrix **sol, matrix *psol[NFERMION]) {
   }
 
   // Now scalar forces s->f_X[k] from Yukawa terms
+  // Sqrt factor from Eq. 14 in 2 Jun 2019 notes
   // Gamma[0--6] embedded into -i*sigma_2 = ( 0 -1 \\ 1 0 ) in 8x8 blocks
   for (j = 0; j < NCHIRAL_FERMION; j++) {
     m = j + NCHIRAL_FERMION;
     for (k = 0; k < NCHIRAL_FERMION; k++) {
       n = k + NCHIRAL_FERMION;
       for (l = 0; l < NSCALAR - 2; l++) {
-        tr = Gamma[l][j][k] / sqrt(2.0);      // Sqrt from 2 Jun 2019 notes
-        if (tr * tr > SQ_TOL) {
+        if (Gamma[l][j][k] != 0) {
+          tr = (Real)Gamma[l][j][k] / sqrt(2.0);
           FORALLSITES(i, s) {
             mult_nn(&(psol[j][i]), &(sol[n][i]), &tmat);
             mult_nn_dif(&(sol[n][i]), &(psol[j][i]), &tmat);
@@ -269,7 +270,7 @@ void assemble_fermion_force(matrix **sol, matrix *psol[NFERMION]) {
     // Last 2 gammas are diagonal
     k = NSCALAR - 2;
     n = NSCALAR - 1;
-    tr = 1.0 / sqrt(2.0);                     // Sqrt from 2 Jun 2019 notes
+    tr = 1.0 / sqrt(2.0);                 // Sqrt from 2 Jun 2019 notes
     FORALLSITES(i, s) {
       // Gamma[7] = ( -1 0 \\ 0 1 ) in 8x8 blocks
       scalar_mult_nn_dif(&(psol[j][i]), &(sol[j][i]), tr, &(s->f_X[k]));

@@ -93,11 +93,6 @@ EXTERN Real bnorm, *fnorm, max_bf, *max_ff;
 // generator state
 EXTERN double_prn node_prn;
 
-// Persistent dot product of non-diagonal gamma matrices with scalars
-// Used by Yukawa term in fermion operator
-// (The last two gamma matrices are diagonal in our basis)
-EXTERN matrix *Gamma_X[NCHIRAL_FERMION][NCHIRAL_FERMION];
-
 // For convenience in calculating action and force
 EXTERN Real one_ov_N;
 

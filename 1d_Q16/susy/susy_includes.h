@@ -35,8 +35,6 @@ void update_u(Real eps);
 void setup_lambda();
 void setup_gamma();
 void setup_rhmc();
-// Helper routine for action and force computation
-void build_Gamma_X();
 
 // Gaussian random momentum matrices and pseudofermions
 void ranmom();

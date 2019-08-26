@@ -97,11 +97,8 @@ int initial_set() {
 // -----------------------------------------------------------------
 // Allocate space for fields
 void make_fields() {
-  Real size = (Real)(NCHIRAL_FERMION * NCHIRAL_FERMION * sizeof(matrix));
-  FIELD_ALLOC_MAT(Gamma_X, matrix, NCHIRAL_FERMION, NCHIRAL_FERMION);
-
   // CG Fermions
-  size += (Real)(3.0 * NFERMION * sizeof(matrix));
+  Real size = (Real)(3.0 * NFERMION * sizeof(matrix));
   FIELD_ALLOC_VEC(mpm, matrix, NFERMION);
   FIELD_ALLOC_VEC(pm0, matrix, NFERMION);
   FIELD_ALLOC_VEC(rm, matrix, NFERMION);
@@ -344,9 +341,6 @@ nsrc = par_buf.nsrc;
 
   // Do whatever is needed to get lattice
   startlat_p = reload_lattice(startflag, startfile);
-
-  // Compute initial Gamma_X
-  build_Gamma_X();
 
   return 0;
 }
