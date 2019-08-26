@@ -83,8 +83,7 @@ void setup_gamma() {
   direct_prod42(temp44, sigma1, Gamma[3]);
 
   // Gamma[4] = (-i*sigma2) X unit X sigma3
-  direct_prod22(m_i_sigma2, unit, temp44);
-  direct_prod42(temp44, sigma3, Gamma[4]);
+  direct_prod42(temp44, sigma3, Gamma[4]);        // Reusing temp44
 
   // Gamma[5] = unit X sigma1 X (-i*sigma2)
   direct_prod22(unit, sigma1, temp44);

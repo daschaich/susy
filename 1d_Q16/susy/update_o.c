@@ -66,9 +66,6 @@ void update_u(Real eps) {
     for (j = 0; j < NSCALAR; j++)
       scalar_mult_sum_matrix(&(s->mom_X[j]), eps, &(s->X[j]));
   }
-
-  // Update dot product of non-diagonal gamma matrices with scalars
-  build_Gamma_X();
 }
 // -----------------------------------------------------------------
 
@@ -287,7 +284,6 @@ int update() {
     if (traj_length > 0.0) {
       // Restore link field and scalars from old_link and old_X
       copy_bosons(MINUS);
-      build_Gamma_X();
     }
     node0_printf("REJECT: delta S = %.4g start S = %.12g end S = %.12g\n",
                  change, startaction, endaction);
