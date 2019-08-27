@@ -11,6 +11,3 @@ susy      -- RHMC and measurements
 Dependences:
 LAPACK is still required for scalar eigenvalues
 Eigenvalue measurements require PRIMME as well
-
-Note:
-At least for this theory, the gauge force can happily be at least an order of magnitude larger than the fermion force
