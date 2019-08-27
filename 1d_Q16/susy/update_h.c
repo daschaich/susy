@@ -307,7 +307,6 @@ void assemble_fermion_force(matrix **sol, matrix *psol[NFERMION]) {
 double fermion_force(Real eps, matrix **src, matrix ***sol) {
   register int i, k, n;
   register site *s;
-  Real tr;
   double returnit = 0.0;
   matrix tmat;
   anti_hermitmat tah;
@@ -341,24 +340,20 @@ double fermion_force(Real eps, matrix **src, matrix ***sol) {
   }
 
   // Update the momentum from the fermion force -- sum or eps
-  // Include overall factor of kappa = N / (4lambda)
   // Opposite sign as to gauge force,
   // because dS_G / dU = 2F_g while ds_F / dU = -2F_f
   // Move negation here as well, though adjoint remains above
-  tr = kappa * eps;
   FORALLSITES(i, s) {
     uncompress_anti_hermitian(&(s->mom), &tmat);
-    scalar_mult_sum_matrix(&(s->f_U), tr, &tmat);
+    scalar_mult_sum_matrix(&(s->f_U), eps, &tmat);
     make_anti_hermitian(&tmat, &(s->mom));
     returnit += realtrace(&(s->f_U), &(s->f_U));
     for (k = 0; k < NSCALAR; k++) {
-      scalar_mult_sum_matrix(&(s->f_X[k]), tr, &(s->mom_X[k]));
+      scalar_mult_sum_matrix(&(s->f_X[k]), eps, &(s->mom_X[k]));
       returnit += realtrace(&(s->f_X[k]), &(s->f_X[k]));
     }
   }
   g_doublesum(&returnit);
-  returnit *= kappa * kappa;
-
   return (eps * sqrt(returnit) / nt);
 }
 #endif
