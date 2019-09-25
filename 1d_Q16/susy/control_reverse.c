@@ -224,9 +224,7 @@ int main(int argc, char *argv[]) {
   }
 
   plp = ploop_eig();
-  node0_printf("POLYA %.8g %.8g ", plp.real, plp.imag);
-
-
+  node0_printf("POLYA %.8g %.8g\n", plp.real, plp.imag);
 
   // Evolve forward for one trajectory
   f_eps = traj_length / (Real)nsteps[0];
@@ -255,7 +253,7 @@ int main(int argc, char *argv[]) {
   }
 
   plp = ploop_eig();
-  node0_printf("POLYA %.8g %.8g ", plp.real, plp.imag);
+  node0_printf("POLYA %.8g %.8g\n", plp.real, plp.imag);
 
   // Reverse momenta and evolve backwards for one trajectory
   s_iters = reverse(source, psim);
@@ -281,7 +279,7 @@ int main(int argc, char *argv[]) {
   }
 
   plp = ploop_eig();
-  node0_printf("POLYA %.8g %.8g ", plp.real, plp.imag);
+  node0_printf("POLYA %.8g %.8g\n", plp.real, plp.imag);
 
   // Done
   node0_printf("RUNNING COMPLETED\n");

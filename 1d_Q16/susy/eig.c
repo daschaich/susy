@@ -10,19 +10,22 @@
 // -----------------------------------------------------------------
 // Gaussian random fermion
 void rand_source(matrix *src[NFERMION]) {
-  register int i, k;
+  register int i, j, k;
   register site *s;
-  anti_hermitmat tah;
+  Real grn;
 
   // Begin with pure gaussian random numbers
   FORALLSITES(i, s) {
     for (k = 0; k < NFERMION; k++) {
+      clear_mat(&(src[k][i]));
+      for (j = 0; j < DIMF; j++) {
 #ifdef SITERAND
-      random_anti_hermitian(&tah, &(s->site_prn));
+        grn = gaussian_rand_no(&(s->site_prn));
 #else
-      random_anti_hermitian(&tah, &(s->node_prn));
+        grn = gaussian_rand_no(&node_prn);
 #endif
-      uncompress_anti_hermitian(&tah, &(src[k][i]));
+        scalar_mult_sum_matrix(&(Lambda[j]), grn, &(src[k][i]));
+      }
     }
   }
 }
