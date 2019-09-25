@@ -9,12 +9,12 @@ Norder 15
 warms 0
 trajecs 3
 traj_length 1
-nstep 6
-nstep_gauge 100
+nstep 9
+nstep_gauge 4
 traj_between_meas 3
 
-lambda 1
-mu 0.3
+lambda 0.01
+mu 1
 
 max_cg_iterations 500
 error_per_site 1e-5
