@@ -8,7 +8,7 @@
 
 
 // -----------------------------------------------------------------
-// Gaussian random fermion
+// Gaussian random fermion --- overall normalization doesn't matter
 void rand_source(matrix *src[NFERMION]) {
   register int i, j, k;
   register site *s;

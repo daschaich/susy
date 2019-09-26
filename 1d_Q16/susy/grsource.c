@@ -101,6 +101,12 @@ int grsource(matrix *src[NFERMION]) {
     }
   }
 
+  // sqrt(2) normalization factor to recover correct fermion action
+  FORALLSITES(i, s) {
+    for (k = 0; k < NFERMION; k++)
+      scalar_mult_matrix(&(src[k][i]), 1.41421356237, &(src[k][i]));
+  }
+
   for (i = 0; i < Norder; i++) {
     for (k = 0; k < NFERMION; k++)
       free(psim[i][k]);
