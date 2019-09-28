@@ -8,30 +8,27 @@
 
 
 // -----------------------------------------------------------------
-// Gaussian random fermion --- overall normalization doesn't matter
+// Gaussian random fermion
 void rand_source(matrix *src[NFERMION]) {
-  register int i, j, k, n;
+  register int i, j, k;
   register site *s;
-  complex tc;
+  complex grn;
 
   // Begin with pure gaussian random numbers
+  // Recall DIMF=NCOL^2-1 rather than the NCOL^2 that appears elsewhere
   FORALLSITES(i, s) {
     for (k = 0; k < NFERMION; k++) {
-      for (j = 0; j < NCOL; j++) {
-        for (n = 0; n < NCOL; n++) {
+      clear_mat(&(src[k][i]));
+      for (j = 0; j < DIMF; j++) {
 #ifdef SITERAND
-          src[k][i].e[j][n].real = gaussian_rand_no(&(s->site_prn));
-          src[k][i].e[j][n].imag = gaussian_rand_no(&(s->site_prn));
+        grn.real = gaussian_rand_no(&(s->site_prn));
+        grn.imag = gaussian_rand_no(&(s->site_prn));
 #else
-          src[k][i].e[j][n].real = gaussian_rand_no(&node_prn);
-          src[k][i].e[j][n].imag = gaussian_rand_no(&node_prn);
+        grn.real = gaussian_rand_no(&node_prn);
+        grn.imag = gaussian_rand_no(&node_prn);
 #endif
-        }
+        c_scalar_mult_sum_mat(&(Lambda[j]), &grn, &(src[k][i]));
       }
-      // Subtract trace
-      tc = trace(&(src[k][i]));
-      CMULREAL(tc, -1.0 * one_ov_N, tc);
-      c_scalar_add_diag(&(src[k][i]), &tc);
     }
   }
 }
@@ -286,4 +283,3 @@ int make_evs(int Nvec, matrix ***eigVec, double *eigVal, int flag) {
   return primme.stats.numOuterIterations;
 }
 // -----------------------------------------------------------------
-
