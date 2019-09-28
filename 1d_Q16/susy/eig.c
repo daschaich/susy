@@ -10,22 +10,27 @@
 // -----------------------------------------------------------------
 // Gaussian random fermion --- overall normalization doesn't matter
 void rand_source(matrix *src[NFERMION]) {
-  register int i, j, k;
+  register int i, j, k, n;
   register site *s;
-  Real grn;
 
   // Begin with pure gaussian random numbers
   FORALLSITES(i, s) {
     for (k = 0; k < NFERMION; k++) {
-      clear_mat(&(src[k][i]));
-      for (j = 0; j < DIMF; j++) {
+      for (j = 0; j < NCOL; j++) {
+        for (n = 0; n < NCOL; n++) {
 #ifdef SITERAND
-        grn = gaussian_rand_no(&(s->site_prn));
+          src[k][i].e[j][n].real = gaussian_rand_no(&(s->site_prn));
+          src[k][i].e[j][n].imag = gaussian_rand_no(&(s->site_prn));
 #else
-        grn = gaussian_rand_no(&node_prn);
+          src[k][i].e[j][n].real = gaussian_rand_no(&node_prn);
+          src[k][i].e[j][n].imag = gaussian_rand_no(&node_prn);
 #endif
-        scalar_mult_sum_matrix(&(Lambda[j]), grn, &(src[k][i]));
+        }
       }
+      // Subtract trace
+      tc = trace(&(src[k][i]));
+      CMULREAL(tc, -1.0 * one_ov_N, tc);
+      c_scalar_add_diag(&(src[k][i]), &tc);
     }
   }
 }
