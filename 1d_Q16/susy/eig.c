@@ -12,6 +12,7 @@
 void rand_source(matrix *src[NFERMION]) {
   register int i, j, k, n;
   register site *s;
+  complex tc;
 
   // Begin with pure gaussian random numbers
   FORALLSITES(i, s) {
