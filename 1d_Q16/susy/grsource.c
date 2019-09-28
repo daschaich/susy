@@ -41,10 +41,11 @@ void ranmom() {
 // Return the number of iterations from the inversion
 #ifndef PUREGAUGE
 int grsource(matrix *src[NFERMION]) {
-  register int i, j, k;
+  register int i, j, k, n;
   register site *s;
   int avs_iters;
-  Real size_r, grn;
+  Real size_r;
+  complex tc;
   matrix ***psim = malloc(sizeof(matrix**) * Norder);
 
   // Allocate psim (will be zeroed in congrad_multi)
@@ -57,15 +58,21 @@ int grsource(matrix *src[NFERMION]) {
   // Begin with pure gaussian random numbers
   FORALLSITES(i, s) {
     for (k = 0; k < NFERMION; k++) {
-      clear_mat(&(src[k][i]));
-      for (j = 0; j < DIMF; j++) {
+      for (j = 0; j < NCOL; j++) {
+        for (n = 0; n < NCOL; n++) {
 #ifdef SITERAND
-        grn = gaussian_rand_no(&(s->site_prn));
+          src[k][i].e[j][n].real = gaussian_rand_no(&(s->site_prn));
+          src[k][i].e[j][n].imag = gaussian_rand_no(&(s->site_prn));
 #else
-        grn = gaussian_rand_no(&node_prn);
+          src[k][i].e[j][n].real = gaussian_rand_no(&node_prn);
+          src[k][i].e[j][n].imag = gaussian_rand_no(&node_prn);
 #endif
-        scalar_mult_sum_matrix(&(Lambda[j]), grn, &(src[k][i]));
+        }
       }
+      // Subtract trace
+      tc = trace(&(src[k][i]));
+      CMULREAL(tc, -1.0 * one_ov_N, tc);
+      c_scalar_add_diag(&(src[k][i]), &tc);
     }
   }
 
@@ -99,12 +106,6 @@ int grsource(matrix *src[NFERMION]) {
       for (j = 0; j < Norder; j++)
         scalar_mult_sum_matrix(&(psim[j][k][i]), amp8[j], &(src[k][i]));
     }
-  }
-
-  // sqrt(2) normalization factor to recover correct fermion action
-  FORALLSITES(i, s) {
-    for (k = 0; k < NFERMION; k++)
-      scalar_mult_matrix(&(src[k][i]), 1.41421356237, &(src[k][i]));
   }
 
   for (i = 0; i < Norder; i++) {
