@@ -86,10 +86,8 @@ int congrad_multi(Twist_Fermion *src, Twist_Fermion **psim,
 
     // beta_i[0] = -(r, r) / (pm, Mpm)
     cd = 0;
-    FORALLSITES(i, s) {
-      ctmp = TF_dot(&(pm0[i]), &(mpm[i]));
-      cd += ctmp.real;
-    }
+    FORALLSITES(i, s)
+      TF_rdot_sum(&(pm0[i]), &(mpm[i]), &cd);
     g_doublesum(&cd);
 
     beta_i[0] = -rsq / cd;
@@ -155,7 +153,7 @@ int congrad_multi(Twist_Fermion *src, Twist_Fermion **psim,
       floatvark[j] = (Real)alpha[j];
     }
     FORALLSITES(i, s) {
-      scalar_mult_TF(&(rm[i]),floatvar, &(mpm[i]));
+      scalar_mult_TF(&(rm[i]), floatvar, &(mpm[i]));
       scalar_mult_add_TF(&(mpm[i]), &(pm0[i]), floatvar2, &(pm0[i]));
       for (j = 1; j < Norder; j++) {
         if (converged[j] == 0) {
@@ -215,7 +213,7 @@ int congrad_multi(Twist_Fermion *src, Twist_Fermion **psim,
     source_norm = 0;                // Re-using for convenience
     FORALLSITES(i, s) {             // Add shift.psi and subtract src
       scalar_mult_sum_TF(&(psim[j][i]), shift[j],  &(mpm[i]));
-      scalar_mult_sum_TF(&(src[i]), -1.0, &(mpm[i]));
+      dif_TF(&(src[i]), &(mpm[i]));
       source_norm += (double)magsq_TF(&(mpm[i]));
     }
     g_doublesum(&source_norm);
