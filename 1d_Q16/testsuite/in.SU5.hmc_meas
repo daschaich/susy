@@ -1,7 +1,7 @@
 prompt 0
 nt 4
 PBC -1
-iseed 41
+iseed 42
 
 Nroot 1
 Norder 15
@@ -9,7 +9,7 @@ Norder 15
 warms 0
 trajecs 3
 traj_length 1
-nstep 12
+nstep 13
 nstep_gauge 4
 traj_between_meas 2
 
