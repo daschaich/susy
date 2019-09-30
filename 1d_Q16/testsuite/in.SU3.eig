@@ -9,7 +9,7 @@ Norder 15
 warms 0
 trajecs 3
 traj_length 1
-nstep 9
+nstep 10
 nstep_gauge 4
 traj_between_meas 3
 
