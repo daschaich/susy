@@ -99,7 +99,7 @@ int main(int argc, char *argv[]) {
   total_iters += make_evs(Nvec, eigVec, eigVal, -1);
 
   // Sanity check: Serial computation using exact diagonalization
-  // Requires adding eig_serial.c to compilation
+  // Requires adding eig_lapack.c to compilation
 //  eig();
 
   node0_printf("RUNNING COMPLETED\n");
