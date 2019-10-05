@@ -241,7 +241,7 @@ void zgeev_(char *doL, char *doR, int *N1, double *store, int *N2, double *eigs,
             double *work, int *Nwork, double *Rwork, int *stat);
 
 // Sanity check: Serial computation using exact diagonalization
-// Requires adding eig_serial.c or eig_lapack.c to compilation
+// Requires adding eig_lapack.c to compilation
 //void eig();
 #endif
 // -----------------------------------------------------------------
