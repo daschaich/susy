@@ -773,12 +773,11 @@ void fermion_op(Twist_Fermion *src, Twist_Fermion *dest, int sign) {
     terminate(1);
   }
   FORALLSITES(i, s) {
-    tr_eta[i] = trace(&(site_src[i]));
-
     // Optionally rescale to make fermion operator more symmetric
 #ifdef RESCALE
     scalar_mult_matrix(&(site_src[i]), 2.0, &(site_src[i]));
 #endif
+    tr_eta[i] = trace(&(site_src[i]));
   }
 
   // Assemble separate routines for each term in the fermion operator
