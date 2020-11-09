@@ -50,9 +50,6 @@ int main(int argc, char *argv[]) {
 
   // Main measurements (more may be added later)
   // For now just monitor scalar eigenvalues
-#ifdef BILIN
-  int avm_iters = bilinear();
-#endif
   // Format: SCALAR_EIG # ave width min max
   scalar_eig(ave_eigs, eig_widths, min_eigs, max_eigs);
   for (j = 0; j < NCOL; j++) {
@@ -61,12 +58,6 @@ int main(int argc, char *argv[]) {
   }
 
   node0_printf("RUNNING COMPLETED\n");
-#ifdef BILIN
-  node0_printf("CG iters for measurements: %d\n", avm_iters);
-  // total_iters is accumulated in the multiCG itself
-  // Should equal total for bilinear measurements
-  node0_printf("total_iters = %d\n", total_iters);
-#endif
 
   dtime += dclock();
   node0_printf("\nTime = %.4g seconds\n", dtime);
