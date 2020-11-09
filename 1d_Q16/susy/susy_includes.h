@@ -1,5 +1,5 @@
-// -----------------------------------------------------------------
-// Include files for supersymmetric evolution
+  // -----------------------------------------------------------------
+  // Include files for supersymmetric evolution
 #include "../include/config.h"  // Keep this first
 #include <stdio.h>
 #include <stdlib.h>
@@ -14,49 +14,49 @@
 #include "../include/generic.h"
 #include "../include/dirs.h"
 #include "../include/field_alloc.h"
-// -----------------------------------------------------------------
+  // -----------------------------------------------------------------
 
 
 
-// -----------------------------------------------------------------
-// Prototypes for functions in high level code
-int setup();
-int readin(int prompt);
-int update();
-void update_h(Real eps);
-void update_u(Real eps);
-// -----------------------------------------------------------------
+  // -----------------------------------------------------------------
+  // Prototypes for functions in high level code
+  int setup();
+  int readin(int prompt);
+  int update();
+  void update_h(Real eps);
+  void update_u(Real eps);
+  // -----------------------------------------------------------------
 
 
 
-// -----------------------------------------------------------------
-// Susy routines
-// Lots of things to initialize and set up
-void setup_lambda();
-void setup_gamma();
-void setup_rhmc();
+  // -----------------------------------------------------------------
+  // Susy routines
+  // Lots of things to initialize and set up
+  void setup_lambda();
+  void setup_gamma();
+  void setup_rhmc();
 
-// Gaussian random momentum matrices and pseudofermions
-void ranmom();
-int grsource(matrix *source[NFERMION]);
+  // Gaussian random momentum matrices and pseudofermions
+  void ranmom();
+  int grsource(matrix *source[NFERMION]);
 
-// Polyakov loop observables
-complex ploop();
-complex ploop_eig();
-// Use LAPACK to diagonalize Polyakov loop
-// http://www.physics.orst.edu/~rubin/nacphy/lapack/routines/zgeev.html
-// First two arguments turn off eigenvector computations
-// Third and fifth arguments are the dimensions of the matrix
-// Fourth argument is that matrix, which will be overwritten
-// Sixth argument holds the computed eigenvalues
-// Seventh and ninth arguments are eigenvectors
-// Eighth and tenth arguments are the dimensions of the eigenvectors
-// Eleventh argument is real workspace, of size given by the twelfth argument
-// Thirteenth argument is real workspace, of size given by the third argument
-// Final argument reports success or information about failure
-void zgeev_(char *doL, char *doR, int *N1, double *store, int *N2, double *eigs,
-            double *dumL, int *NL, double *dumR, int *NR,
-            double *work, int *Nwork, double *Rwork, int *stat);
+  // Polyakov loop observables
+  complex ploop();
+  complex ploop_eig();
+  // Use LAPACK to diagonalize Polyakov loop
+  // http://www.physics.orst.edu/~rubin/nacphy/lapack/routines/zgeev.html
+  // First two arguments turn off eigenvector computations
+  // Third and fifth arguments are the dimensions of the matrix
+  // Fourth argument is that matrix, which will be overwritten
+  // Sixth argument holds the computed eigenvalues
+  // Seventh and ninth arguments are eigenvectors
+  // Eighth and tenth arguments are the dimensions of the eigenvectors
+  // Eleventh argument is real workspace, of size given by the twelfth argument
+  // Thirteenth argument is real workspace, of size given by the third argument
+  // Final argument reports success or information about failure
+  void zgeev_(char *doL, char *doR, int *N1, double *store, int *N2, double *eigs,
+              double *dumL, int *NL, double *dumR, int *NR,
+              double *work, int *Nwork, double *Rwork, int *stat);
 
 
 // Scalar eigenvalues: averages, extrema and width
@@ -107,10 +107,6 @@ void random_gauge_trans(matrix *temp_ferm[NFERMION]);
 // Final argument reports success or information about failure
 void zheev_(char *doV, char *uplo, int *N1, double *store, int *N2,
             double *eigs, double *work, int *Nwork, double *Rwork, int *stat);
-
-#ifdef BILIN
-int bilinear();
-#endif
 // -----------------------------------------------------------------
 
 
