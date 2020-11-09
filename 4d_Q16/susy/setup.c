@@ -125,6 +125,9 @@ void make_fields() {
 #else
   node0_printf("Double-trace scalar potential\n");
 #endif
+#ifdef RESCALE
+  node0_printf("Rescaled fermion operator\n");
+#endif
   Real size = (Real)(2.0 * sizeof(complex));
   FIELD_ALLOC(tr_eta, complex);
   FIELD_ALLOC(tr_dest, complex);
