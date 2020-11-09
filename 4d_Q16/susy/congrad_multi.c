@@ -198,11 +198,7 @@ int congrad_multi(Twist_Fermion *src, Twist_Fermion **psim,
     DSq(psim[j], mpm);              // mpm = (D^2 + fmass^2).psim[j]
     source_norm = 0;                // Re-using for convenience
     FORALLSITES(i, s) {             // Add shift.psi and subtract src
-<<<<<<< HEAD
       scalar_mult_sum_TF(&(psim[j][i]), shift[j], &(mpm[i]));
-=======
-      scalar_mult_sum_TF(&(psim[j][i]), shift[j],  &(mpm[i]));
->>>>>>> master
       dif_TF(&(src[i]), &(mpm[i]));
       source_norm += (double)magsq_TF(&(mpm[i]));
     }
