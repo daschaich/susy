@@ -27,6 +27,7 @@
 #define SV                // Site/vector terms in action
 #define VP                // Vector/plaquette terms in action
 #define QCLOSED           // Q-closed terms in action
+//#define RESCALE           // Rescale for more symmetric fermion operator
 //#define DIMREDUCE         // Consider dimensionally reduced systems
 //#define DEBUG_CHECK       // Print lambdas, offsets, etc.
 

@@ -30,6 +30,7 @@ Eigenvalue measurements (susy_eig) require PRIMME (https://github.com/primme/pri
 -DEIG switches on the PRIMME eigenvalue calculation
 -DCHEB switches on Chebyshev spectral density computations
 -DMODE switches on stochastic eigenmode number computations
+-DRESCALE switches to more symmetric fermion operator
 -DPL_CORR switches on the Polyakov loop correlator calculation (NOT CURRENTLY IN USE)
 -DPUREGAUGE switches off the fermions (FOR TESTING)
 

@@ -772,13 +772,25 @@ void fermion_op(Twist_Fermion *src, Twist_Fermion *dest, int sign) {
     node0_printf("Error: incorrect sign in fermion_op: %d\n", sign);
     terminate(1);
   }
-  FORALLSITES(i, s)
+  FORALLSITES(i, s) {
+    // Optionally rescale to make fermion operator more symmetric
+#ifdef RESCALE
+    scalar_mult_matrix(&(site_src[i]), 2.0, &(site_src[i]));
+#endif
     tr_eta[i] = trace(&(site_src[i]));
+  }
 
   // Assemble separate routines for each term in the fermion operator
 #ifdef VP
   Dplus(link_src, plaq_dest);             // Overwrites plaq_dest
   Dminus(plaq_src, link_dest);            // Overwrites link_dest
+#else
+  FORALLSITES(i, s) {                     // Zero link_dest and plaq_dest
+    FORALLDIR(mu)
+      clear_mat(&(link_dest[mu][i]));
+    for (mu = 0; mu < NPLAQ; mu++)
+      clear_mat(&(plaq_dest[mu][i]));
+  }
 #endif
 
 #ifdef SV
@@ -794,11 +806,20 @@ void fermion_op(Twist_Fermion *src, Twist_Fermion *dest, int sign) {
   // Link-to-site plaquette determinant contribution if G is non-zero
   if (doG)
     detLtoS(link_src, site_dest);         // Adds to site_dest
+#else
+  FORALLSITES(i, s)                       // Zero site_dest
+    clear_mat(&(site_dest[i]));
 #endif
 
 #ifdef QCLOSED
   DbminusPtoP(plaq_src, plaq_dest);       // Adds to plaq_dest
   DbplusPtoP(plaq_src, plaq_dest);        // Adds to plaq_dest
+#endif
+
+  // Optionally rescale to make fermion operator more symmetric
+#ifdef RESCALE
+  FORALLSITES(i, s)
+    scalar_mult_matrix(&(site_dest[i]), 2.0, &(site_dest[i]));
 #endif
 
   // Copy local plaquette, link and site fermions into dest TwistFermion
@@ -835,7 +856,7 @@ void DSq(Twist_Fermion *src, Twist_Fermion *dest) {
 
   fermion_op(src, tempTF, PLUS);
   fermion_op(tempTF, dest, MINUS);
-  if (fmass > IMAG_TOL) {
+  if (fmass > IMAG_TOL) {           // Assume fmass non-negative
     Real fmass2 = fmass * fmass;
     FORALLSITES(i, s)
       scalar_mult_sum_TF(&(src[i]), fmass2, &(dest[i]));

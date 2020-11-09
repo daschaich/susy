@@ -144,13 +144,13 @@ susy_eig::
 
 susy_cheb::
 	${MAKE} -f ${MAKEFILE} target "MYTARGET= $@" \
-	"DEFINES = ${DEFINES} -DPHI_ALGORITHM -DCHEB " \
+	"DEFINES = ${DEFINES} -DPHI_ALGORITHM -DCHEB -DRESCALE " \
 	"LAPACK = -llapack -lblas " \
 	"EXTRA_OBJECTS = control_cheb.o chebyshev.o z2source.o "
 
 susy_mode::
 	${MAKE} -f ${MAKEFILE} target "MYTARGET= $@" \
-	"DEFINES = ${DEFINES} -DPHI_ALGORITHM -DMODE " \
+	"DEFINES = ${DEFINES} -DPHI_ALGORITHM -DMODE -DRESCALE " \
 	"LAPACK = -llapack -lblas " \
 	"EXTRA_OBJECTS = control_mode.o modenumber.o mode_coeffs.o z2source.o "
 

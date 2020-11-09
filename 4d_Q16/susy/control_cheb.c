@@ -10,7 +10,7 @@
 #include "susy_includes.h"
 
 #ifndef CHEB
-#error "Don't use control_mode unless compiling with -DMODE!"
+#error "Don't use control_cheb unless compiling with -DCHEB!"
 #endif
 #ifdef MODE
 #error "-DCHEB and -DMODE will clobber each other!"
@@ -93,7 +93,6 @@ int main(int argc, char *argv[]) {
   node0_printf("RUNNING COMPLETED\n");
   dtime += dclock();
   node0_printf("\nTime = %.4g seconds\n", dtime);
-  node0_printf("total_iters = %d\n", total_iters);
   fflush(stdout);
 
   normal_exit(0);         // Needed by at least some clusters
