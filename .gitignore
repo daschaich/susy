@@ -9,6 +9,7 @@ gmon.out
 localmake
 serial*
 susy_hmc*
+susy_phi
 susy_eig
 susy_meas
 susy_corr
