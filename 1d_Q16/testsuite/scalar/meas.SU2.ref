@@ -1,0 +1,51 @@
+BMN, Nc = 2, DIMF = 3, fermion rep = adjoint
+Microcanonical simulation with refreshing
+Machine = Scalar processor, with 1 nodes
+Phi algorithm
+start: Fri Nov 13 13:16:00 2020
+
+type 0 for no prompts or 1 for prompts
+nt 4
+PBC -1
+iseed 41
+Nroot 1
+Norder 15
+LAYOUT = Hypercubes, options = hyper_prime
+ON EACH NODE 4
+Mallocing 0.0 MBytes per core for lattice
+Antiperiodic temporal boundary conditions
+Mallocing 0.0 MBytes per core for fields
+
+
+warms 0
+trajecs 3
+traj_length 1.000000e+00
+nstep 6
+nstep_gauge 4
+traj_between_meas 2
+lambda 1.000000e-02
+mu 1.000000e+00
+max_cg_iterations 500
+error_per_site 1.000000e-05
+reload_serial config.SU2.4
+forget
+lambda=0.01 --> kappa=Nc/(4lambda)=50
+Restored binary gauge and scalar configuration serially from file config.SU2.4
+Time stamp Sun Sep 29 21:17:28 2019
+Checksums 692efb07 d22e9404 OK
+Time to reload gauge configuration = 1.430511e-04
+CHECK NERSC LINKTR: -1.7945235595107079e-01 CKSUM: 0
+Reunitarized for double precision.  Max deviation 1.9e-08 changed to 1.6e-16
+Reantihermized for double precision.  Max deviation 0 changed to 0
+Time to check unitarity and anti-hermiticity = 0.000222 seconds
+START 14.329448
+SCALAR SQUARES 0.0463778 0.0315837 0.0220554 0.00332564 0.027864 0.0142333 0.00500791 0.0095236 0.172861 0.0369814 0.0519536
+LINES_EIG -0.3398 0.3398
+GMES 1.8856657 0 0 14.329448 0.011594462 0.0078959365 0.0055138572
+SCALAR_EIG 0 -0.122352 0.100475 -0.460972 -0.0219805
+SCALAR_EIG 1 0.122352 0.100475 0.0219805 0.460972
+RUNNING COMPLETED
+
+Time = 0.0002131 seconds
+exit: Fri Nov 13 13:16:00 2020
+
