@@ -1,0 +1,102 @@
+BMN, Nc = 2, DIMF = 3, fermion rep = adjoint
+Microcanonical simulation with refreshing
+Machine = MPI (portable), with 2 nodes
+Phi algorithm
+start: Fri Nov 13 13:02:46 2020
+
+type 0 for no prompts or 1 for prompts
+nt 4
+PBC -1
+iseed 41
+Nroot 1
+Norder 15
+LAYOUT = Hypercubes, options = hyper_prime
+ON EACH NODE 2
+Mallocing 0.0 MBytes per core for lattice
+Antiperiodic temporal boundary conditions
+Mallocing 0.0 MBytes per core for fields
+Q has 192 columns --> 2304 matvecs and 0.3 MBytes per core...
+
+warms 0
+trajecs 3
+traj_length 1.000000e+00
+nstep 6
+nstep_gauge 4
+traj_between_meas 3
+lambda 1.000000e-02
+mu 1.000000e+00
+max_cg_iterations 500
+error_per_site 1.000000e-05
+ckpt_load 0
+ckpt_save 100
+reload_serial config.SU2.4
+forget
+lambda=0.01 --> kappa=Nc/(4lambda)=50
+Restored binary gauge and scalar configuration serially from file config.SU2.4
+Time stamp Sun Sep 29 21:17:28 2019
+Checksums 692efb07 d22e9404 OK
+Time to reload gauge configuration = 2.679825e-04
+CHECK NERSC LINKTR: -1.7945235595107079e-01 CKSUM: 0
+Reunitarized for double precision.  Max deviation 1.9e-08 changed to 1.6e-16
+Reantihermized for double precision.  Max deviation 0 changed to 0
+Time to check unitarity and anti-hermiticity = 0.0003371 seconds
+START 14.329448
+SCALAR SQUARES 0.0463778 0.0315837 0.0220554 0.00332564 0.027864 0.0142333 0.00500791 0.0095236 0.172861 0.0369814 0.0519536
+LINES_EIG -0.3398 0.3398
+GMES 1.8856657 0 0 14.329448 0.011594462 0.0078959365 0.0055138572
+Columns 1--2 of 192: 191 matvecs in 0.01118 seconds -2 0
+Columns 3--4 of 192: 189 matvecs in 0.008865 seconds -1.990687137895929 7.595236559667266e-20
+Columns 5--6 of 192: 187 matvecs in 0.006916 seconds -1.390105216448204 -6.461894298705304e-18
+Columns 7--8 of 192: 185 matvecs in 0.005122 seconds -2.016764732355965 -1.096588943755973e-19
+Columns 9--10 of 192: 183 matvecs in 0.004922 seconds -1.99614068139176 -2.202093393501807e-19
+Columns 11--12 of 192: 181 matvecs in 0.004493 seconds -1.386660803827868 3.129507116509335e-17
+Columns 13--14 of 192: 179 matvecs in 0.004297 seconds -2.114687203209268 -3.272919789904689e-19
+Columns 15--16 of 192: 177 matvecs in 0.004317 seconds -2.123305515795761 8.112737727385666e-19
+Columns 17--18 of 192: 175 matvecs in 0.004164 seconds -1.36703137823586 -8.90239367850234e-18
+Columns 19--20 of 192: 173 matvecs in 0.004085 seconds -2.125300177788745 -5.923505403471729e-19
+Columns 21--22 of 192: 171 matvecs in 0.004032 seconds -2.127228085243538 -2.507058984523724e-18
+Columns 23--24 of 192: 169 matvecs in 0.00392 seconds -1.368539459481987 -4.239963863340668e-18
+Columns 25--26 of 192: 167 matvecs in 0.003872 seconds -2.394214542219004 -5.924889875925309e-19
+Columns 27--28 of 192: 165 matvecs in 0.003792 seconds -2.10321106401574 8.105649558968518e-18
+Columns 29--30 of 192: 163 matvecs in 0.003784 seconds -1.284049551840336 9.690802826677016e-18
+Columns 31--32 of 192: 161 matvecs in 0.003716 seconds -2.366685302902406 2.279877800611653e-18
+Columns 33--34 of 192: 159 matvecs in 0.003543 seconds -2.119573566098068 -5.603157060176474e-18
+Columns 35--36 of 192: 157 matvecs in 0.003464 seconds -1.347102663793511 -3.073504858627742e-17
+Columns 37--38 of 192: 155 matvecs in 0.003435 seconds -2.526867581566349 -6.048191595283156e-18
+Columns 39--40 of 192: 153 matvecs in 0.003371 seconds -2.243820295322944 -3.627035160963737e-18
+Columns 41--42 of 192: 151 matvecs in 0.003378 seconds -1.233529034917389 -3.913284487201049e-17
+Columns 43--44 of 192: 149 matvecs in 0.003344 seconds -2.518885549769528 -1.9593107593901e-17
+Columns 45--46 of 192: 147 matvecs in 0.00324 seconds -2.25403314179185 1.339828652412164e-18
+Columns 47--48 of 192: 145 matvecs in 0.00314 seconds -1.276444421074357 1.983821316659569e-18
+Columns 49--50 of 192: 143 matvecs in 0.003128 seconds -2 0
+Columns 51--52 of 192: 141 matvecs in 0.003077 seconds -1.69457872065704 0.04147086273017452
+Columns 53--54 of 192: 139 matvecs in 0.003139 seconds -1.383049368391148 0.003103296018586902
+Columns 55--56 of 192: 137 matvecs in 0.002989 seconds -2.014619330203967 0.001411776151551283
+Columns 57--58 of 192: 135 matvecs in 0.00289 seconds -1.696358344682401 0.04221622758036492
+Columns 59--60 of 192: 133 matvecs in 0.002954 seconds -1.389965692821688 0.002849146075145348
+Columns 61--62 of 192: 131 matvecs in 0.002865 seconds -2.105498788178596 0.0008011018519612486
+Columns 63--64 of 192: 129 matvecs in 0.002749 seconds -1.777196663355489 0.05340966489292402
+Columns 65--66 of 192: 127 matvecs in 0.00271 seconds -1.343022209584555 0.001541578506260844
+Columns 67--68 of 192: 125 matvecs in 0.002738 seconds -2.121865160952063 -0.0002153260579887744
+Columns 69--70 of 192: 123 matvecs in 0.002689 seconds -1.776308572011852 0.06217213706716111
+Columns 71--72 of 192: 121 matvecs in 0.002591 seconds -1.336501325784429 -0.0001066953744370936
+Columns 73--74 of 192: 119 matvecs in 0.002663 seconds -2.121236156663279 0.0349103514056297
+Columns 75--76 of 192: 117 matvecs in 0.002479 seconds -1.61924641555738 0.06897131935505645
+Columns 77--78 of 192: 115 matvecs in 0.002456 seconds -1.243436032372948 -0.0092849536006035
+Columns 79--80 of 192: 113 matvecs in 0.00245 seconds -2.201655169685839 0.01598602810655712
+Columns 81--82 of 192: 111 matvecs in 0.002327 seconds -1.696385106549474 0.0691960219142231
+Columns 83--84 of 192: 109 matvecs in 0.002354 seconds -1.257795165206219 0.003318319822211768
+Columns 85--86 of 192: 107 matvecs in 0.002337 seconds -2.209883399641494 0.02865898480189549
+Columns 87--88 of 192: 105 matvecs in 0.002251 seconds -1.683143817321213 0.07655102040135275
+Columns 89--90 of 192: 103 matvecs in 0.002264 seconds -1.21495283450137 -0.01108829423876789
+Columns 91--92 of 192: 101 matvecs in 0.002119 seconds -2.279969806286017 0.01477050165634219
+Columns 93--94 of 192: 99 matvecs in 0.002125 seconds -1.734699486568852 0.09419940663845935
+Columns 95--96 of 192: 97 matvecs in 0.002041 seconds -1.201472522865005 -0.01039526163907173
+Columns 97--98 of 192: 95 matvecs in 0.002058 seconds -2 0
+Columns 99--100 of 192: 93 matvecs in 0.001947 seconds -1.135153100972838 0.05592565790493281
+Dumping columns 101--192
+RUNNING COMPLETED
+
+Time = 0.3361 seconds
+exit: Fri Nov 13 13:02:46 2020
+
