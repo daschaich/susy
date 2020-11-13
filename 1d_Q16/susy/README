@@ -3,15 +3,14 @@ One-dimensional 16-supercharge supersymmetric (BFSS/BMN) theory
 
 # Actively maintained targets:
 susy_hmc for evolution with accept/reject step
-susy_meas for standard measurements on saved configurations
-susy_hmc_meas for evolution along with standard measurements
 susy_eig for eigenvalue measurements on saved configurations
 susy_phase for pfaffian phase measurements on saved configurations
+susy_meas for standard measurements on saved configurations [placeholder]
+susy_hmc_meas for evolution along with standard measurements [placeholder]
 
 # Additional targets, not actively maintained or regularly tested
 susy_phi for evolution without accept/reject step
 susy_hmc_pg and susy_phi_pg for testing with gauge fields only (no fermions)
-susy_spill for printing out configuration in format expected by serial C++ code
 
 # Dependences:
 LAPACK is still required for scalar eigenvalues
@@ -20,7 +19,6 @@ Eigenvalue measurements (susy_eig) require PRIMME (https://github.com/primme/pri
 # Defines for compilation:
 -DPHI_ALGORITHM for the basic phi algorithm (REQUIRED)
 -DHMC_ALGORITHM switches on the accept/reject step
--DEIG_POT switches from a double-trace to a single-trace scalar potential (not actively tested)
 -DEIG switches on the PRIMME eigenvalue calculation
 -DPUREGAUGE switches off the fermions (FOR TESTING)
 
