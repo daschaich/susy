@@ -2,16 +2,12 @@
 // Main procedure for N=(8,8) SYM evolution and measurements
 #define CONTROL
 #include "susy_includes.h"
-// -----------------------------------------------------------------
 
-
-
-// -----------------------------------------------------------------
 int main(int argc, char *argv[]) {
   int prompt, dir, j;
   int traj_done, s_iters, avs_iters = 0, avm_iters = 0, Nmeas = 0;
   Real f_eps, g_eps;
-  double dplaq, dtime, plpMod = 0.0;
+  double plaq, dtime, plpMod = 0.0;
   double linktr[NUMLINK], linktr_ave, linktr_width;
   double link_det[NUMLINK], det_ave, det_width;
   double ave_eigs[NCOL], eig_widths[NCOL], min_eigs[NCOL], max_eigs[NCOL];
@@ -43,10 +39,10 @@ int main(int argc, char *argv[]) {
   dtime = -dclock();
 
   // Check: compute initial plaquette and bosonic action
-  plaquette(&dplaq);
-  node0_printf("START %.8g ", dplaq);
-  dplaq = gauge_action(NODET);
-  node0_printf("%.8g\n", dplaq / (double)volume);
+  plaquette(&plaq);
+  node0_printf("START %.8g ", plaq);
+  plaq = gauge_action(NODET);
+  node0_printf("%.8g\n", plaq / (double)volume);
   // N>2 determinant of traceless part of U.Udag crashes with unit config
   if (startflag != FRESH) {
     linktr_ave = link_trace(linktr, &linktr_width,
@@ -87,18 +83,18 @@ int main(int argc, char *argv[]) {
     // Polyakov loop and plaquette measurements
     // Format: GMES Re(Polyakov) Im(Poyakov) cg_iters plaq
     plp = ploop(TUP, NODET, &plpMod);
-    plaquette(&dplaq);
+    plaquette(&plaq);
     node0_printf("GMES %.8g %.8g %d %.8g ",
-                 plp.real, plp.imag, s_iters, dplaq);
+                 plp.real, plp.imag, s_iters, plaq);
 
     // Bosonic action (printed twice by request)
     // Might as well spit out volume average of Polyakov loop modulus
-    dplaq = gauge_action(NODET);
-    node0_printf("%.8g ", dplaq / (double)volume);
+    plaq = gauge_action(NODET);
+    node0_printf("%.8g ", plaq / (double)volume);
     node0_printf("%.8g\n", plpMod);
-    node0_printf("BACTION %.8g\n", dplaq / (double)volume);
+    node0_printf("BACTION %.8g\n", plaq / (double)volume);
 
-    // Full and polar-projected Wilson lines
+    // Full and polar-projected Wilson lines in all directions
     node0_printf("LINES      ");
     FORALLDIR(dir) {
       plp = ploop(dir, NODET, &plpMod);
@@ -146,8 +142,8 @@ int main(int argc, char *argv[]) {
 
       // Check minimum plaquette in addition to averages
       node0_printf("BEFORE ");
-      max_plaq = local_plaquette(&dplaq);     // Prints out MIN_PLAQ
-      node0_printf(" %.8g %.8g\n", dplaq, max_plaq);
+      max_plaq = local_plaquette(&plaq);     // Prints out MIN_PLAQ
+      node0_printf(" %.8g %.8g\n", plaq, max_plaq);
 
       // Overwrite s->link
       // Save unsmeared links in UpsiU (mom and f_U both already used)
@@ -160,10 +156,10 @@ int main(int argc, char *argv[]) {
       else if (smearflag == APE_SMEAR)
         APE_smear(Nsmear, alpha, YESDET);
       node0_printf("AFTER  ");
-      max_plaq = local_plaquette(&dplaq);      // Prints out MIN_PLAQ
-      node0_printf(" %.8g %.8g\n", dplaq, max_plaq);
+      max_plaq = local_plaquette(&plaq);      // Prints out MIN_PLAQ
+      node0_printf(" %.8g %.8g\n", plaq, max_plaq);
 
-      // Update plaquette determinants, DmuUmu and Fmunu with smeared links
+      // Update plaqdet, Uinv, DmuUmu and Fmunu with smeared links
       compute_plaqdet();
       compute_Uinv();
       compute_DmuUmu();
@@ -199,7 +195,7 @@ int main(int argc, char *argv[]) {
         register int i;
         register site *s;
 #endif
-        plaquette(&dplaq);      // To be printed below
+        plaquette(&plaq);      // To be printed below
         FORALLSITES(i, s) {
           FORALLDIR(dir)
             mat_copy(&(s->link[dir]), &(s->mom[dir]));
@@ -214,9 +210,9 @@ int main(int argc, char *argv[]) {
         gaugefix(TUP, 1.5, 5000, GAUGE_FIX_TOL, -1, -1);
         gtime += dclock();
         node0_printf("GFIX time = %.4g seconds\n", gtime);
-        node0_printf("BEFORE %.8g\n", dplaq);
-        plaquette(&dplaq);
-        node0_printf("AFTER  %.8g\n", dplaq);
+        node0_printf("BEFORE %.8g\n", plaq);
+        plaquette(&plaq);
+        node0_printf("AFTER  %.8g\n", plaq);
       }
       else if (fixflag == NO_GAUGE_FIX) { // Braces suppress compiler warning
         node0_printf("Gauge fixing skipped\n");
@@ -253,7 +249,7 @@ int main(int argc, char *argv[]) {
           mat_copy(&(UpsiU[dir][i]), &(s->link[dir]));
       }
 
-      // Restore unsmeared plaquette determinants, DmuUmu and Fmunu
+      // Recompute unsmeared plaqdet, Uinv, DmuUmu and Fmunu
       compute_plaqdet();
       compute_Uinv();
       compute_DmuUmu();
@@ -268,10 +264,10 @@ int main(int argc, char *argv[]) {
   // Reset DmuUmu and Fmunu in case they were smeared above
   compute_DmuUmu();
   compute_Fmunu();
-  plaquette(&dplaq);
-  node0_printf("STOP %.8g ", dplaq);
-  dplaq = gauge_action(NODET);
-  node0_printf("%.8g\n", dplaq / (double)volume);
+  plaquette(&plaq);
+  node0_printf("STOP %.8g ", plaq);
+  plaq = gauge_action(NODET);
+  node0_printf("%.8g\n", plaq / (double)volume);
 
   node0_printf("Average CG iters for steps: %.4g\n",
                (double)avs_iters / trajecs);
@@ -289,7 +285,7 @@ int main(int argc, char *argv[]) {
   // Save lattice if requested
   if (saveflag != FORGET)
     save_lattice(saveflag, savefile);
-  g_sync();         // Needed by at least some clusters
+  normal_exit(0);         // Needed by at least some clusters
   return 0;
 }
 // -----------------------------------------------------------------

@@ -55,6 +55,7 @@ int main(int argc, char *argv[]) {
     }
   }
   fflush(stdout);
+  normal_exit(0);         // Needed by at least some clusters
   return 0;
 }
 // -----------------------------------------------------------------
