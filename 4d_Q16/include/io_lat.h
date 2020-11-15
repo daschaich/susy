@@ -99,7 +99,6 @@ typedef struct {
 
 // -----------------------------------------------------------------
 // Prototypes for generic/io_lat4.c
-void read_lat_dim_gf(char *filename, int *ndim, int dims[]);
 gauge_file *restore_serial(char *filename);
 gauge_file *save_serial(char *filename);
 int write_gauge_info_item( FILE *fpout, /* ascii file pointer */

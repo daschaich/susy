@@ -14,12 +14,12 @@
 
 
 // -----------------------------------------------------------------
-void update_uu(Real eps) {
+void update_u(Real eps) {
   register int i, mu;
   register site *s;
 
-  FORALLSITES(i, s) {
-    FORALLDIR(mu)
+  FORALLDIR(mu) {
+    FORALLSITES(i, s)
       scalar_mult_sum_matrix(&(s->mom[mu]), eps, &(s->link[mu]));
   }
 
@@ -41,7 +41,7 @@ int update_step(Twist_Fermion **src, Twist_Fermion ***psim) {
   node0_printf("eps %.4g for both fermion and gauge steps\n", eps);
 
   // First u(t/2)
-  update_uu(0.5 * eps);
+  update_u(0.5 * eps);
 
   for (step = 0; step < nsteps[0]; step++) {
     // Inner steps p(t) u(t)
@@ -62,9 +62,9 @@ int update_step(Twist_Fermion **src, Twist_Fermion ***psim) {
 #endif
 
     if (step < nsteps[0] - 1)
-      update_uu(eps);
+      update_u(eps);
     else                // Final u(t/2)
-      update_uu(0.5 * eps);
+      update_u(0.5 * eps);
   }
   return iters;
 }

@@ -77,7 +77,6 @@ int congrad_multi(Twist_Fermion *src, Twist_Fermion **psim,
                   int MaxCG, Real RsdCG, Real *size_r);
 
 // Compute average Tr[Udag U] / N_c
-// Number of blocking steps only affects output formatting
 double link_trace(double *linktr, double *linktr_width,
                   double *dets, double *det_ave, double *det_width);
 
@@ -98,6 +97,7 @@ void dif_TF(Twist_Fermion *b, Twist_Fermion *c);
 void scalar_mult_sum_TF(Twist_Fermion *b, Real s, Twist_Fermion *c);
 void scalar_mult_add_TF(Twist_Fermion *a, Twist_Fermion *b, Real s,
                         Twist_Fermion *c);
+void scalar_mult_dif_TF(Twist_Fermion *b, Real s, Twist_Fermion *c);
 void scalar_mult_TF(Twist_Fermion *src, Real s, Twist_Fermion *dest);
 
 // Other routines in library_util.c that loop over all sites

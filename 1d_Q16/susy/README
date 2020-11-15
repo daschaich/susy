@@ -1,0 +1,120 @@
+# ------------------------------------------------------------------
+One-dimensional 16-supercharge Yang--Mills (BFSS/BMN) theories
+
+# Actively maintained targets:
+susy_hmc for evolution with accept/reject step
+susy_eig for eigenvalue measurements on saved configurations
+susy_phase for pfaffian phase measurements on saved configurations
+susy_meas for standard measurements on saved configurations [placeholder]
+susy_hmc_meas for evolution along with standard measurements [placeholder]
+
+# Additional targets, not actively maintained or regularly tested
+susy_phi for evolution without accept/reject step
+susy_hmc_pg and susy_phi_pg for testing with gauge fields only (no fermions)
+
+# Dependences:
+LAPACK is required for all targets
+Eigenvalue measurements (susy_eig) require PRIMME v1.2.2 (https://github.com/primme/primme) as well
+
+# Defines for compilation:
+-DPHI_ALGORITHM for the basic phi algorithm (REQUIRED)
+-DHMC_ALGORITHM switches on the accept/reject step
+-DEIG switches on the PRIMME eigenvalue calculation
+-DPUREGAUGE switches off the fermions (FOR TESTING)
+
+# Gauge group and fermion rep:
+NCOL and DIMF defined in ../include/susy.h
+For now we fix SU(NCOL) gauge group with DIMF=NCOL*NCOL-1 for adjoint rep
+
+# Boundary conditions for fermions:
+Only supports periodic spatial boundary conditions (BCs) for now
+Input parameter PBC = +/-1 chooses periodic or anti-periodic temporal BCs
+# ------------------------------------------------------------------
+
+
+
+# ------------------------------------------------------------------
+# Sample input file with explanations:
+prompt 0    # If non-zero, prompt user to manually input each parameter
+nt 6        # Must be even (and divide to an even number per processor)
+PBC -1      # Anti-periodic temporal boundary conditions for the fermions
+iseed 41    # Random number generator seed
+
+Nroot 1     # Number of quarter-roots to accelerate MD evolution
+Norder 15   # Order of rational approximation for each quarter-root
+
+warms 0               # Number of trajectories without expensive measurements
+trajecs 10            # Number of trajectories with expensive measurements
+traj_length 1         # Trajectory length
+nstep 10              # Fermion steps per trajectory; step_size = traj_length / nstep
+nstep_gauge 10        # Gauge steps per fermion step
+traj_between_meas 10  # How many trajectories to skip between expensive measurements
+
+lambda 1.5      # 't Hooft coupling
+mu 0.2          # Scalar potential coupling (bosonic mass mu)
+
+max_cg_iterations 500   # Maximum number of CG iterations
+error_per_site 1e-5     # Stopping condition for CG (will be squared)
+
+# The next three lines must only be included when compiling with -DEIG
+Nvec 100              # Number of eigenvalues to calculate
+eig_tol 1e-8          # Eigenvalue convergence criterion
+maxIter 5000          # Maximum number of eigenvalue iterations
+
+# The next two lines must only be included when compiling with -DPHASE
+ckpt_load -1    # If positive, load checkpointed pfaffian computation
+                # from config.Q$ckpt_load and config.diag$ckpt_load
+ckpt_save -1    # If positive, checkpoint pfaffian computation
+                # to config.Q$ckpt_save and config.diag$ckpt_save
+
+fresh     # What to do with lattice at start: fresh, continue or reload_serial
+forget    # What to do with lattice at end: forget or save_serial
+# ------------------------------------------------------------------
+
+
+
+# ------------------------------------------------------------------
+# Summary of files in this directory (ignoring symlinks to ../../4d_Q16/susy)
+# 0) Header files
+defines.h       -- Define Omelyan parameters, numbers of offsets and terms in the action, tunable parameter C2 and some other useful quantities
+lattice.h       -- Define Twist_Fermions, the site struct, global variables and fields
+params.h        -- Define a struct for reading input parameters
+susy_includes.h -- Define lots of routines, some of which are discussed below
+
+# 1) Other files used by all executables
+setup.c         -- Read in parameters, initialize variables and allocate global fields
+setup_gamma.c   -- Set up 3-component epsilon tensor and gamma matrices
+setup_lambda.c  -- Set up SU(N) generators
+action.c        -- Compute the action, including related routines also needed by forces
+ploop.c         -- Compute the average Polyakov loop
+ploop_eig.c     -- Compute the eigenvalues of the Polyakov loop
+scalar_trace.c  -- 
+grsource.c      -- Generate gaussian random pseudofermions and momenta for the RHMC
+congrad_multi.c -- Multi-mass CG inverter
+utilities.c     -- Fermion matrix--vector operator and related routines also needed by forces
+library_util.c  -- Helper routines, many of which might be better suited to ../libraries/
+gauge_info.c    -- Put information into configuration files
+
+# 2) Files mainly used by RHMC evolution targets (susy_hmc and susy_hmc_meas)
+control.c    -- Main program for evolution, optionally including additional measurements
+update_o.c   -- Omelyan RHMC evolution
+update_h.c   -- Update gauge momenta with forces from both gauge and fermion fields
+
+# 3) Files used mainly by standard measurement targets (susy_meas and susy_hmc_meas)
+control_meas.c       -- Main program for standard measurements only
+scalar_eig.c         -- Compute eigenvalues of scalar fields
+
+# 4) Additional files used only by fermion eigenvalue target (susy_eig)
+control_eig.c -- Main program for eigenvalues measurements only
+eig.c         -- Eigenvalue measurements using PRIMME, LAPACK and BLAS
+                 (NB: User may need to modify path to primme.h)
+                 (NB: User may need to modify PLIB in makefile to provide libzprimme.a)
+
+# 5) Additional files used only by pfaffian target (susy_phase)
+control_phase.c -- Main program for pfaffian measurements only
+phase.c         -- Phase and (log of) magnitude of the pfaffian
+
+# 6) Files not currently used, retained for potential future testing
+update_leapfrog.c -- Leapfrog RHMC evolution
+phase_serial.c    -- A serial gaussian elimination pfaffian algorithm, to check the parallel computation
+# ------------------------------------------------------------------

@@ -1,0 +1,123 @@
+#!/bin/bash
+# This script needs to be run from the 1d_Q16/testsuite/mpi directory
+
+# May need to be customized for different platforms
+makefile=Make_mpi
+run="mpirun -np 2"
+
+# Allow user to specify particular target
+if [ $# -gt 1 ]; then
+  N=$1
+  target=$2
+
+  # Change N---need to modify both local header and that used by the libraries
+  cd ../../susy/
+  sed -i -E "s/(#define NCOL) .*/\1 $N/" ../include/susy.h
+  sed -i -E "s/(#define NCOL) .*/\1 $N/" ../../4d_Q16/include/susy.h
+
+  # Compile
+  echo "Compiling susy_$target..."
+  if ! make -f $makefile susy_$target >& /dev/null ; then
+    echo "ERROR: susy_$target compilation failed"
+    make -f $makefile susy_$target
+    exit
+  fi
+
+  # Reset to N=2
+  sed -i -E "s/(#define NCOL) .*/\1 2/" ../include/susy.h
+  sed -i -E "s/(#define NCOL) .*/\1 2/" ../../4d_Q16/include/susy.h
+
+  # Run
+  cd ../testsuite/
+  rm -f mpi/$target.SU$N.out
+  echo "Running susy_$target..."
+  $run ../susy/susy_$target < in.SU$N.$target > mpi/$target.SU$N.out
+
+  # Check
+  cd mpi/
+  d="`diff -I'Time' -I'time' -I'seconds' -I'^start' -I'^exit' $target.SU$N.ref $target.SU$N.out`"
+  if [ -n "$d" ] ; then   # Non-zero string length
+    echo "$target.SU$N.ref and $target.SU$N.out differ:"
+    echo "$d"
+  else
+    echo "PASS: susy_$target reproduces reference output"
+  fi
+  exit
+fi
+
+# Otherwise consider all active targets
+# This can take a while!
+for N in 2 3 4 ; do
+  echo "N=$N"
+
+  # Change N---need to modify both local header and that used by the libraries
+  cd ../../susy/
+  sed -i -E "s/(#define NCOL) .*/\1 $N/" ../include/susy.h
+  sed -i -E "s/(#define NCOL) .*/\1 $N/" ../../4d_Q16/include/susy.h
+
+  # Compile all targets
+  for target in hmc meas hmc_meas eig phase ; do
+    echo "Compiling susy_$target..."
+    if ! make -f $makefile susy_$target >& /dev/null ; then
+      echo "ERROR: susy_$target compilation failed"
+      make -f $makefile susy_$target
+      exit
+    fi
+  done
+
+  # Reset to N=2
+  sed -i -E "s/(#define NCOL) .*/\1 2/" ../include/susy.h
+  sed -i -E "s/(#define NCOL) .*/\1 2/" ../../4d_Q16/include/susy.h
+
+  # Run
+  cd ../testsuite/
+  for target in hmc meas hmc_meas eig phase ; do
+    rm -f mpi/$target.SU$N.out
+    echo "Running susy_$target..."
+    $run ../susy/susy_$target < in.SU$N.$target > mpi/$target.SU$N.out
+  done
+
+  # Checkpointed pfaffian computation
+  rm -f mpi/phase_part1.SU$N.out mpi/phase_part2.SU$N.out
+  sed -i -E "s/(ckpt_save) 0/\1 100/" in.SU$N.phase
+  echo "Running checkpointed susy_phase part 1 of 2..."
+  $run ../susy/susy_phase < in.SU$N.phase > mpi/phase_part1.SU$N.out
+  sed -i -E "s/(ckpt_load) 0/\1 100/" in.SU$N.phase
+  sed -i -E "s/(ckpt_save) 100/\1 0/" in.SU$N.phase
+  echo "Running checkpointed susy_phase part 2 of 2..."
+  $run ../susy/susy_phase < in.SU$N.phase > mpi/phase_part2.SU$N.out
+  sed -i -E "s/(ckpt_load) 100/\1 0/" in.SU$N.phase
+  rm -f config*diag* config*Q*
+
+  # Check
+  cd mpi/
+  for target in hmc meas hmc_meas eig phase phase_part1 phase_part2 ; do
+    d="`diff -I'Time' -I'time' -I'seconds' -I'^start' -I'^exit' $target.SU$N.ref $target.SU$N.out`"
+    if [ -n "$d" ] ; then   # Non-zero string length
+      echo "$target.SU$N.ref and $target.SU$N.out differ:"
+      echo "$d"
+      echo
+    else
+      echo "PASS: susy_$target reproduces reference output"
+    fi
+  done
+done
+
+# This can be useful to check whether intermediate steps of the pfaffian computation have changed
+exit 0  # For now it is not included in the standard checks
+for N in 2 3 4 ; do
+  for target in phase phase_part1 phase_part2 ; do
+    grep Column $target.SU$N.out | awk '{print $10}' > TEMP.out
+    grep Column $target.SU$N.ref | awk '{print $10}' > TEMP.ref
+    paste TEMP.out TEMP.ref > TEMP
+    d="`awk '{if(($1-$2)^2>1e-12)print $1, $2}' TEMP`"
+    if [ -n "$d" ] ; then   # Non-zero string length
+      echo "$target.SU$N.ref and $target.SU$N.out differ:"
+      echo "$d"
+      echo
+    else
+      echo "PASS: susy_$target reproduces reference output"
+    fi
+    rm -f TEMP TEMP.out TEMP.ref
+  done
+done

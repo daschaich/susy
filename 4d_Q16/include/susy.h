@@ -1,6 +1,5 @@
 // -----------------------------------------------------------------
-// Defines and subroutine declarations for N=4 SYM with gauge group U(NCOL)
-// and fermions in the DIMF-dimensional adjoint rep
+// Defines and subroutine declarations for N=4 SYM and its dim'l reductions
 #ifndef _SUSY_H
 #define _SUSY_H
 
@@ -11,24 +10,26 @@
 
 
 // -----------------------------------------------------------------
-// N=4 SYM fermions always in adjoint rep
-// Gauge group U(NCOL) and size of adjoint rep DIMF = NCOL^2
+// N=4 SYM fermions always in adjoint rep, as are dim-reduced scalars
+// This file is only included for d-dimensional systems with d>=2
+// The gauge group is U(NCOL) and size of adjoint rep DIMF = NCOL^2
 #define NCOL 2
 #define DIMF (NCOL * NCOL)
+#define N_OFFDIAG (NCOL * (NCOL - 1) / 2)
 
 typedef struct { fcomplex e[NCOL][NCOL]; } fmatrix;
 typedef struct { fcomplex c[NCOL]; } fvector;
 
 // Anti-hermitian matrices for general NCOL
 typedef struct {
-  fcomplex m[NCOL * (NCOL - 1) / 2];
+  fcomplex m[N_OFFDIAG];
   float im_diag[NCOL];
 } fanti_hermitmat;
 
 typedef struct { dcomplex e[NCOL][NCOL]; } dmatrix;
 typedef struct { dcomplex c[NCOL]; } dvector;
 typedef struct {
-  dcomplex m[NCOL * (NCOL - 1) / 2];
+  dcomplex m[N_OFFDIAG];
   double im_diag[NCOL];
 } danti_hermitmat;
 

@@ -156,6 +156,16 @@ void scalar_mult_add_TF(Twist_Fermion *a, Twist_Fermion *b,
   for (i = 0; i < NPLAQ; i++)
     scalar_mult_add_matrix(&(a->Fplaq[i]), &(b->Fplaq[i]), s, &(c->Fplaq[i]));
 }
+
+// c <-- c - s * b
+void scalar_mult_dif_TF(Twist_Fermion *b, Real s, Twist_Fermion *c) {
+  register int i;
+  scalar_mult_dif_matrix(&(b->Fsite), s, &(c->Fsite));
+  FORALLDIR(i)
+    scalar_mult_dif_matrix(&(b->Flink[i]), s, &(c->Flink[i]));
+  for (i = 0; i < NPLAQ; i++)
+    scalar_mult_dif_matrix(&(b->Fplaq[i]), s, &(c->Fplaq[i]));
+}
 // -----------------------------------------------------------------
 
 

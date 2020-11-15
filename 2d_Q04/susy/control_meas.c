@@ -85,7 +85,7 @@ int main(int argc, char *argv[]) {
   node0_printf("%.8g\n", plpMod);
   node0_printf("BACTION %.8g\n", plaq);
 
-  // Full and polar-projected Wilson lines in all five basis dirs
+  // Full and polar-projected Wilson lines in all basis dirs
   node0_printf("LINES      ");
   FORALLDIR(dir) {
     plp = ploop(dir, NODET, &plpMod);
@@ -208,7 +208,7 @@ int main(int argc, char *argv[]) {
   dtime += dclock();
   node0_printf("\nTime = %.4g seconds\n", dtime);
   fflush(stdout);
-  g_sync();         // Needed by at least some clusters
+  normal_exit(0);         // Needed by at least some clusters
   return 0;
 }
 // -----------------------------------------------------------------

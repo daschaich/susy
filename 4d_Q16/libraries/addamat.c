@@ -15,6 +15,7 @@ void sum_adj_matrix(matrix *b, matrix *c) {
     }
   }
 }
+
 void add_adj_matrix(matrix *a, matrix *b, matrix *c) {
   register int i, j;
   for (i = 0; i < NCOL; i++) {

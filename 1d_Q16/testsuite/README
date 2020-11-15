@@ -1,0 +1,22 @@
+This directory provides a suite of tests for the SUSY LATTICE code to simulate one-dimensional 16-supercharge Yang--Mills (BFSS/BMN) theories
+
+Reference input and output files are provided for the following compilation targets (which are described in ../susy/README):
+susy_hmc
+susy_meas
+susy_hmc_meas
+susy_eig
+susy_phase
+
+Every target may be tested for SU(N) gauge theory with N=2, 3 or 4 colors.  The gauge configurations loaded by each test are also provided.  The susy_phase target is tested with and without checkpointing.  For the susy_eig tests we just make sure the extremal eigenvalues are doubled, without trying to obtain the full degeneracies expected for these theories.
+
+The scripts scalar/run_tests and mpi/run_tests automate the process of compiling, running and checking the given target for the given gauge group.  Each script must be run from its respective directory.  Given the two arguments
+$ ./run_tests <N> <tag>
+the script will compile the target susy_$tag for gauge group SU($N), run the susy_$tag executable using the appropriate input file in this directory, save the output to $tag.SU$N.out and check for differences between this output and the reference file $tag.SU$N.ref.
+
+The $makefile and $run variables at the start of mpi/run_tests may need to be adjusted to run on a given system.
+
+Alternately, if run_tests is run with no arguments it will test every target for every N=2, 3 and 4.  This should be pretty quick, just a few minutes to run and almost as long to compile.
+
+Current limitations:
+Only anti-periodic temporal boundary conditions for the fermions are tested.
+Only a conservative (15-pole) rational approximation is tested.

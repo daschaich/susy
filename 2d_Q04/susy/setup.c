@@ -110,7 +110,7 @@ void make_fields() {
   FIELD_ALLOC(tr_eta, complex);
   FIELD_ALLOC(tr_dest, complex);
 
-  size += (Real)(2.0 * (2.0 + NUMLINK)) * sizeof(matrix);
+  size += (Real)(2.0 * (2.0 + NUMLINK) * sizeof(matrix));
   FIELD_ALLOC(site_src, matrix);
   FIELD_ALLOC(site_dest, matrix);
   FIELD_ALLOC_VEC(link_src, matrix, NUMLINK);
@@ -201,7 +201,7 @@ int setup() {
   make_lattice();
   // Set up neighbor pointers and comlink structures
   make_nn_gathers();
-  // Set up offset tables for the five paths
+  // Set up offset tables for gathers
   setup_offset();
   // Allocate space for fields
   make_fields();

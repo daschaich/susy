@@ -1,0 +1,77 @@
+BMN, Nc = 2, DIMF = 3, fermion rep = adjoint
+Microcanonical simulation with refreshing
+Machine = Scalar processor, with 1 nodes
+Phi algorithm
+start: Mon Sep 30 02:15:40 2019
+
+type 0 for no prompts or 1 for prompts
+nt 4
+PBC -1
+iseed 41
+Nroot 1
+Norder 15
+LAYOUT = Hypercubes, options = hyper_prime
+ON EACH NODE 4
+Mallocing 0.0 MBytes per core for lattice
+Antiperiodic temporal boundary conditions
+Mallocing 0.0 MBytes per core for fields
+
+
+warms 0
+trajecs 3
+traj_length 1.000000e+00
+nstep 6
+nstep_gauge 4
+traj_between_meas 3
+lambda 1.000000e-02
+mu 1.000000e+00
+max_cg_iterations 500
+error_per_site 1.000000e-05
+Nvec 12
+eig_tol 1.000000e-10
+maxIter 5000
+reload_serial config.SU2.4
+forget
+lambda=0.01 --> kappa=Nc/(4lambda)=50
+Restored binary gauge and scalar configuration serially from file config.SU2.4
+Time stamp Sun Sep 29 21:17:28 2019
+Checksums 692efb07 d22e9404 OK
+Time to reload gauge configuration = 1.840591e-04
+CHECK NERSC LINKTR: -1.7945235595107079e-01 CKSUM: 0
+Reunitarized for double precision.  Max deviation 1.9e-08 changed to 1.6e-16
+Reantihermized for double precision.  Max deviation 0 changed to 0
+Time to check unitarity and anti-hermiticity = 0.000278 seconds
+START 14.329448
+SCALAR SQUARES 0.0463778 0.0315837 0.0220554 0.00332564 0.027864 0.0142333 0.00500791 0.0095236 0.172861 0.0369814 0.0519536
+LINES_EIG -0.3398 0.3398
+GMES 1.8856657 0 0 14.329448 0.011594462 0.0078959365 0.0055138572
+EIGENVALUE 0 0.08036975 2.3788268e-20
+EIGENVALUE 1 0.08036975 1.6016335e-20
+EIGENVALUE 2 0.08664033 2.327461e-20
+EIGENVALUE 3 0.08664033 2.6345184e-20
+EIGENVALUE 4 0.09579159 3.1968784e-20
+EIGENVALUE 5 0.09579159 2.1999418e-20
+EIGENVALUE 6 0.10046009 2.8638815e-20
+EIGENVALUE 7 0.10046009 1.4904289e-20
+EIGENVALUE 8 0.1047849 3.0169952e-20
+EIGENVALUE 9 0.1047849 3.2695454e-20
+EIGENVALUE 10 0.10968285 2.5334674e-20
+EIGENVALUE 11 0.10968285 2.8289735e-20
+BIGEIGVAL  0 1.8231291 9.7089752e-21
+BIGEIGVAL  1 1.8231291 1.1043609e-20
+BIGEIGVAL  2 1.8073507 2.5444207e-20
+BIGEIGVAL  3 1.8073507 1.6791295e-20
+BIGEIGVAL  4 1.8021704 4.4059705e-21
+BIGEIGVAL  5 1.8021704 4.9124316e-21
+BIGEIGVAL  6 1.7800005 2.9415167e-24
+BIGEIGVAL  7 1.7800005 1.9969745e-20
+BIGEIGVAL  8 1.6351606 8.8067225e-21
+BIGEIGVAL  9 1.6351606 2.1648708e-20
+BIGEIGVAL  10 1.6247464 8.8999886e-21
+BIGEIGVAL  11 1.6247464 1.3958996e-20
+RUNNING COMPLETED
+
+Time = 0.1239 seconds
+total_iters = 1155
+exit: Mon Sep 30 02:15:40 2019
+

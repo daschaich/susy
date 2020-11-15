@@ -219,7 +219,7 @@ double gauge_force(Real eps) {
   }
 
   // Finally take adjoint and update the momentum
-  // Include overall factor of kappa = N / (2lambda)
+  // Include overall factor of kappa = N / (4lambda)
   // Subtract to reproduce -Adj(f_U)
   // Compute average gauge force in same loop
   tr = kappa * eps;
@@ -251,6 +251,7 @@ double gauge_force(Real eps) {
 // Assume compute_plaqdet() has already been run
 // Appropriate adjoints set up in assemble_fermion_force
 // A bit more code reuse may be possible
+#ifdef SV
 void detF(matrix *eta, matrix *psi[NUMLINK], int sign) {
   register int i;
   register site *s;
@@ -426,6 +427,7 @@ void detF(matrix *eta, matrix *psi[NUMLINK], int sign) {
   free(inv_term);
   free(adj_term);
 }
+#endif
 // -----------------------------------------------------------------
 
 
@@ -438,6 +440,7 @@ void detF(matrix *eta, matrix *psi[NUMLINK], int sign) {
 // Use tempmat, tempmat2, UpsiU, Tr_Uinv,
 // tr_dest and Ddet[012] for temporary storage
 // (many through calls to detF)
+#ifndef PUREGAUGE
 void assemble_fermion_force(Twist_Fermion *sol, Twist_Fermion *psol) {
   register int i;
   register site *s;
@@ -509,6 +512,11 @@ void assemble_fermion_force(Twist_Fermion *sol, Twist_Fermion *psol) {
       scalar_mult_adj_matrix(&(UpsiU[mu][i]), 0.5, &(s->f_U[mu]));
     }
     cleanup_gather(mtag[mu]);
+  }
+#else
+  FORALLDIR(mu) {                         // Zero force collectors
+    FORALLSITES(i, s)
+      clear_mat(&(s->f_U[mu]));
   }
 #endif
 #ifdef VP
@@ -649,6 +657,7 @@ void assemble_fermion_force(Twist_Fermion *sol, Twist_Fermion *psol) {
   }
 #endif
 
+#ifdef SV
   // Plaquette determinant contributions if G is non-zero
   if (doG) {
     // First connect link_src with site_dest[DIMF - 1]^dag (LtoS)
@@ -657,6 +666,7 @@ void assemble_fermion_force(Twist_Fermion *sol, Twist_Fermion *psol) {
     // Second connect site_src[DIMF - 1] with link_dest^dag (StoL)
     detF(site_src, link_dest, MINUS);
   }
+#endif
 }
 // -----------------------------------------------------------------
 
@@ -722,4 +732,5 @@ double fermion_force(Real eps, Twist_Fermion *src, Twist_Fermion **sol) {
   compute_Fmunu();
   return (eps * sqrt(returnit) / volume);
 }
+#endif
 // -----------------------------------------------------------------

@@ -497,11 +497,6 @@ void fermion_op(Twist_Fermion *src, Twist_Fermion *dest, int sign) {
     detLtoS(link_src, site_dest);         // Adds to site_dest
 #endif
 
-#ifdef QCLOSED
-  DbminusPtoP(plaq_src, plaq_dest);       // Adds to plaq_dest
-  DbplusPtoP(plaq_src, plaq_dest);        // Adds to plaq_dest
-#endif
-
   // Copy local plaquette, link and site fermions into dest TwistFermion
   if (sign == 1) {
     FORALLSITES(i, s) {
@@ -534,7 +529,7 @@ void DSq(Twist_Fermion *src, Twist_Fermion *dest) {
 
   fermion_op(src, tempTF, PLUS);
   fermion_op(tempTF, dest, MINUS);
-  if (fmass > IMAG_TOL) {
+  if (fmass > IMAG_TOL) {           // Assume fmass non-negative
     Real fmass2 = fmass * fmass;
     FORALLSITES(i, s)
       scalar_mult_sum_TF(&(src[i]), fmass2, &(dest[i]));

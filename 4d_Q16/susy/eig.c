@@ -98,7 +98,7 @@ void av_ov (void *x, void *y, int *Nvec, primme_params *primme) {
       xmag += xx[i].r * xx[i].r + xx[i].i * xx[i].i;
     FORALLSITES(i, s)
       src_mag += magsq_TF(&(src[i]));
-    if (fabs(xmag - src_mag) > eig_tol * eig_tol) {
+    if (fabs(xmag - src_mag) > eig_tol) {
       node0_printf("av_ov: |x[%d]|^2 = %.4g but |src|^2 = %.4g (%.4g)\n",
                    ivec, xmag, src_mag, fabs(xmag - src_mag));
     }
@@ -147,7 +147,7 @@ void av_ov (void *x, void *y, int *Nvec, primme_params *primme) {
       ymag += xx[i].r * xx[i].r + xx[i].i * xx[i].i;
     FORALLSITES(i, s)
       res_mag += magsq_TF(&(res[i]));
-    if (fabs(ymag - res_mag) > eig_tol * eig_tol) {
+    if (fabs(ymag - res_mag) > eig_tol) {
       node0_printf("av_ov: |y[%d]|^2 = %.4g but |res|^2 = %.4g (%.4g)\n",
                    ivec, ymag, res_mag, fabs(ymag - res_mag));
     }
@@ -179,7 +179,7 @@ void par_GlobalSumDouble(void *sendBuf, void *recvBuf,
 // If flag==1 we calculate the smallest eigenvalues
 // If flag==-1 we calculate the largest eigenvalues
 int make_evs(int Nvec, Twist_Fermion **eigVec, double *eigVal, int flag) {
-  register site* s;
+  register site *s;
   int i, j, k, mu, ivec, iter = 0, ret, Ndat = 16 * NCOL * NCOL;
   int maxn = sites_on_node * Ndat;
   double check, *rnorms = malloc(sizeof *rnorms * Nvec);
@@ -318,6 +318,7 @@ int make_evs(int Nvec, Twist_Fermion **eigVec, double *eigVal, int flag) {
   // Clean up
   free(workVecs);
   free(rnorms);
+  free(tmpTF);
   primme_Free(&primme);
   return primme.stats.numOuterIterations;
 }
