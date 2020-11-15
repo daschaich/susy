@@ -10,7 +10,6 @@
 #   susy_meas measures Wilson loops, scalar correlators and fermion bilinear
 #             with optional APE smearing
 #   susy_mcrg calculates observables after RG blocking (UNDER DEVELOPMENT)
-#   susy_mode stochastically calculates eigenmode number (UNDER DEVELOPMENT)
 #   susy_eig calculates eigenvalues using PRIMME
 #   susy_phase calculates the pfaffian phase
 # Edit the Makefiles to change this.
@@ -57,7 +56,7 @@ MY_OBJECTS = setup.o        \
              utilities.o    \
              library_util.o \
              gauge_info.o   \
-             congrad_multi_field.o
+             congrad_multi.o
 
 # Basic set from generic directory
 G_OBJECTS = io_helpers.o   \
@@ -148,11 +147,6 @@ susy_phase::
 	"LAPACK = -llapack -lblas " \
 	"EXTRA_OBJECTS = control_phase.o phase.o io_phase.o "
 
-susy_mode::
-	${MAKE} -f ${MAKEFILE} target "MYTARGET= $@" \
-	"DEFINES = ${DEFINES} -DPHI_ALGORITHM -DBILIN -DMODE " \
-	"EXTRA_OBJECTS = control_mode.o step_coeffs.o step.o "
-
 # Convert configuration into format the serial C++ code can read
 # for testing/debugging
 susy_spill::
@@ -165,16 +159,19 @@ susy_spill::
 susy_phi::
 	${MAKE} -f ${MAKEFILE} target "MYTARGET= $@" \
 	"DEFINES = ${DEFINES} -DPHI_ALGORITHM " \
+	"LAPACK = -llapack -lblas " \
 	"EXTRA_OBJECTS = control.o update_o.o update_h.o setup_rhmc.o det_force.o "
 
 susy_phi_pg::
 	${MAKE} -f ${MAKEFILE} target "MYTARGET= $@" \
 	"DEFINES = ${DEFINES} -DPHI_ALGORITHM -DPUREGAUGE " \
+	"LAPACK = -llapack -lblas " \
 	"EXTRA_OBJECTS = control.o update_o.o update_h.o setup_rhmc.o det_force.o "
 
 susy_hmc_pg::
 	${MAKE} -f ${MAKEFILE} target "MYTARGET= $@" \
 	"DEFINES = ${DEFINES} -DPHI_ALGORITHM -DHMC_ALGORITHM -DPUREGAUGE " \
+	"LAPACK = -llapack -lblas " \
 	"EXTRA_OBJECTS = control.o update_o.o update_h.o setup_rhmc.o det_force.o "
 
 clean:

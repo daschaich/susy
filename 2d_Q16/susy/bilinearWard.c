@@ -61,22 +61,26 @@ void bilinear_src(Twist_Fermion *g_rand, Twist_Fermion *src, int N) {
         c_scalar_mult_sum_mat(&(Lambda[j]), &grn, &(g_rand[i].Flink[mu]));
       }
     }
-    for (j = 0; j < DIMF; j++) {           // Plaquette fermions
+    for (mu = 0; mu < NPLAQ; mu++) {         // Plaquette fermions
+      for (j = 0; j < DIMF; j++) {
 #ifdef SITERAND
-      grn.real = gaussian_rand_no(&(s->site_prn));
-      grn.imag = gaussian_rand_no(&(s->site_prn));
+        grn.real = gaussian_rand_no(&(s->site_prn));
+        grn.imag = gaussian_rand_no(&(s->site_prn));
 #else
-      grn.real = gaussian_rand_no(&node_prn);
-      grn.imag = gaussian_rand_no(&node_prn);
+        grn.real = gaussian_rand_no(&node_prn);
+        grn.imag = gaussian_rand_no(&node_prn);
 #endif
-      c_scalar_mult_sum_mat(&(Lambda[j]), &grn, &(g_rand[i].Fplaq));
+        c_scalar_mult_sum_mat(&(Lambda[j]), &grn, &(g_rand[i].Fplaq[mu]));
+      }
     }
   }
 
   // Set up src = Mdag g_rand
   fermion_op(g_rand, src, MINUS);
-  FORALLSITES(i, s)
-    scalar_mult_sum_TF(&(g_rand[i]), fmass, &(src[i]));
+  if (fmass > IMAG_TOL) {           // Assume fmass non-negative
+    FORALLSITES(i, s)
+      scalar_mult_sum_TF(&(g_rand[i]), fmass, &(src[i]));
+  }
 
 #ifdef DEBUG_CHECK
 //  dump_TF(&(src[10]));
@@ -112,13 +116,13 @@ int bilinearWard() {
   matrix tmat;
   Twist_Fermion *g_rand, *src, **psim;
 
-  g_rand = malloc(sites_on_node * sizeof(*g_rand));
-  src = malloc(sites_on_node * sizeof(*src));
+  g_rand = malloc(sizeof *g_rand * sites_on_node);
+  src = malloc(sizeof *src * sites_on_node);
 
   // Hack a basic CG out of the multi-mass CG
   Norder = 1;
-  psim = malloc(sizeof(**psim));
-  psim[0] = malloc(sites_on_node * sizeof(Twist_Fermion));
+  psim = malloc(sizeof(Twist_Fermion*));
+  psim[0] = malloc(sizeof(Twist_Fermion) * sites_on_node);
   shift[0] = 0;
 
   // Normalization: sum over NUMLINK but divide by volume
@@ -176,7 +180,7 @@ int bilinearWard() {
 
   // Now add gauge piece, including plaquette determinant term
   // Accumulate sum_a U_a Udag_a in tmat
-  // Multiply by DmuUmu into tmat and trace
+  // Multiply by DmuUmu and trace
   FORALLSITES(i, s) {
     mult_na(&(s->link[0]), &(s->link[0]), &tmat);   // Initialize
     for (mu = 1; mu < NUMLINK; mu++)

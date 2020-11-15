@@ -60,7 +60,6 @@ void scalar_eig(int project, double *ave_eigs, double *eig_widths,
 // Action routines
 double action(Twist_Fermion **source, Twist_Fermion ***sol);
 double gauge_action(int do_det);
-double fermion_action();
 
 // Force routines
 double gauge_force(Real eps);
@@ -77,7 +76,7 @@ int congrad_multi(Twist_Fermion *src, Twist_Fermion **psim,
 double link_trace(double *linktr, double *linktr_width,
                   double *dets, double *det_ave, double *det_width);
 
-// Basic Twist_Fermion and gauge field manipulations
+// Basic Twist_Fermion utilities
 // May eventually move to libraries
 void dump_TF(Twist_Fermion *in);
 void copy_TF(Twist_Fermion *src, Twist_Fermion *dest);
