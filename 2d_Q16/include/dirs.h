@@ -1,7 +1,7 @@
 // -----------------------------------------------------------------
 // Directions, links, and macros to give their opposites
 // MPI communications assume directions from 0 to 3
-// So TDOWN is the same as DIR_3 -- use each only in its own context
+// !!! TDOWN is the same as DIR_3 -- use goffset to be safe
 #ifndef _DIRS_H
 #define _DIRS_H
 

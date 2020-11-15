@@ -133,44 +133,86 @@ void compute_Uinv() {
 // Separate routines for each term in the fermion operator
 // All called by fermion_op at the bottom of the file
 #ifdef VP
-void Dplus(matrix *src[NUMLINK], matrix *dest) {
+void Dplus(matrix *src[NUMLINK], matrix *dest[NPLAQ]) {
   register int i;
   register site *s;
-  msg_tag *tag[4];
+  char **local_pt[2][4];
+  int mu, nu, index, gather, flip = 0, a, b;
+  msg_tag *tag0[2], *tag1[2], *tag2[2], *tag3[2];
 
-  // Only have one set of gathers (mu = 0 and nu = 1)
-  tag[0] = start_gather_field(src[1], sizeof(matrix),
-                              goffset[0], EVENANDODD, gen_pt[0]);
-
-  tag[1] = start_gather_site(F_OFFSET(link[0]), sizeof(matrix),
-                             goffset[1], EVENANDODD, gen_pt[1]);
-
-  tag[2] = start_gather_field(src[0], sizeof(matrix),
-                              goffset[1], EVENANDODD, gen_pt[2]);
-
-  tag[3] = start_gather_site(F_OFFSET(link[1]), sizeof(matrix),
-                             goffset[0], EVENANDODD, gen_pt[3]);
-
-  wait_gather(tag[0]);
-  wait_gather(tag[1]);
-  wait_gather(tag[2]);
-  wait_gather(tag[3]);
-  FORALLSITES(i, s) {
-    // Initialize dest[i]
-    scalar_mult_nn(&(s->link[0]), (matrix *)(gen_pt[0][i]),
-                   s->bc[0], &(plaq_dest[i]));
-
-    // Add or subtract the other three terms
-    mult_nn_dif(&(src[1][i]), (matrix *)(gen_pt[1][i]), &(plaq_dest[i]));
-    scalar_mult_nn_dif(&(s->link[1]), (matrix *)(gen_pt[2][i]),
-                       s->bc[1], &(plaq_dest[i]));
-
-    mult_nn_sum(&(src[0][i]), (matrix *)(gen_pt[3][i]), &(plaq_dest[i]));
+  for (mu = 0; mu < 4; mu++) {
+    local_pt[0][mu] = gen_pt[mu];
+    local_pt[1][mu] = gen_pt[4 + mu];
   }
-  cleanup_gather(tag[0]);
-  cleanup_gather(tag[1]);
-  cleanup_gather(tag[2]);
-  cleanup_gather(tag[3]);
+
+  // Start first set of gathers (mu = 0 and nu = 1)
+  tag0[0] = start_gather_field(src[1], sizeof(matrix),
+                               goffset[0], EVENANDODD, local_pt[0][0]);
+
+  tag1[0] = start_gather_site(F_OFFSET(link[0]), sizeof(matrix),
+                              goffset[1], EVENANDODD, local_pt[0][1]);
+
+  tag2[0] = start_gather_field(src[0], sizeof(matrix),
+                               goffset[1], EVENANDODD, local_pt[0][2]);
+
+  tag3[0] = start_gather_site(F_OFFSET(link[1]), sizeof(matrix),
+                              goffset[0], EVENANDODD, local_pt[0][3]);
+
+  // Main loop
+  FORALLDIR(mu) {
+    for (nu = mu + 1; nu < NUMLINK; nu++) {
+      index = plaq_index[mu][nu];
+      gather = (flip + 1) % 2;
+      if (index < NPLAQ - 1) {               // Start next set of gathers
+        if (nu == NUMLINK - 1) {
+          a = mu + 1;
+          b = a + 1;
+        }
+        else {
+          a = mu;
+          b = nu + 1;
+        }
+        tag0[gather] = start_gather_field(src[b], sizeof(matrix), goffset[a],
+                                          EVENANDODD, local_pt[gather][0]);
+
+        tag1[gather] = start_gather_site(F_OFFSET(link[a]), sizeof(matrix),
+                                         goffset[b], EVENANDODD,
+                                         local_pt[gather][1]);
+
+        tag2[gather] = start_gather_field(src[a], sizeof(matrix), goffset[b],
+                                          EVENANDODD, local_pt[gather][2]);
+
+        tag3[gather] = start_gather_site(F_OFFSET(link[b]), sizeof(matrix),
+                                         goffset[a], EVENANDODD,
+                                         local_pt[gather][3]);
+      }
+
+      wait_gather(tag0[flip]);
+      wait_gather(tag1[flip]);
+      wait_gather(tag2[flip]);
+      wait_gather(tag3[flip]);
+      FORALLSITES(i, s) {
+        // Initialize dest[index][i]
+        scalar_mult_nn(&(s->link[mu]), (matrix *)(local_pt[flip][0][i]),
+                       s->bc[mu], &(plaq_dest[index][i]));
+
+        // Add or subtract the other three terms
+        mult_nn_dif(&(src[nu][i]), (matrix *)(local_pt[flip][1][i]),
+                    &(plaq_dest[index][i]));
+
+        scalar_mult_nn_dif(&(s->link[nu]), (matrix *)(local_pt[flip][2][i]),
+                           s->bc[nu], &(plaq_dest[index][i]));
+
+        mult_nn_sum(&(src[mu][i]), (matrix *)(local_pt[flip][3][i]),
+                    &(plaq_dest[index][i]));
+      }
+      cleanup_gather(tag0[flip]);
+      cleanup_gather(tag1[flip]);
+      cleanup_gather(tag2[flip]);
+      cleanup_gather(tag3[flip]);
+      flip = gather;
+    }
+  }
 }
 #endif
 // -----------------------------------------------------------------
@@ -180,28 +222,32 @@ void Dplus(matrix *src[NUMLINK], matrix *dest) {
 // -----------------------------------------------------------------
 // Use tempmat and tempmat2 for temporary storage
 #ifdef VP
-void Dminus(matrix *src, matrix *dest[NUMLINK]) {
+void Dminus(matrix *src[NPLAQ], matrix *dest[NUMLINK]) {
   register int i;
   register site *s;
   char **local_pt[2][2];
-  int mu, nu, flip = 0, opp_mu;
+  int mu, nu, index, gather, flip = 0, a, b, next, opp_mu;
+  matrix *mat[2];
   msg_tag *tag0[2], *tag1[2];
 
   for (mu = 0; mu < 2; mu++) {
     local_pt[0][mu] = gen_pt[mu];
     local_pt[1][mu] = gen_pt[2 + mu];
   }
+  mat[0] = tempmat;
+  mat[1] = tempmat2;
 
-  // Start first set of gathers (nu = 0 and mu = 1)
+  // Start first set of gathers (mu = 1 and nu = 0)
+  index = plaq_index[1][0];
   tag0[0] = start_gather_site(F_OFFSET(link[1]), sizeof(matrix),
                               goffset[0], EVENANDODD, local_pt[0][0]);
 
   FORALLSITES(i, s) {   // mu = 1 > nu = 0
-    scalar_mult_nn(&(src[i]), &(s->link[1]), -1.0, &(tempmat[i]));
+    scalar_mult_nn(&(src[index][i]), &(s->link[1]), -1.0, &(mat[0][i]));
     FORALLDIR(mu)
       clear_mat(&(dest[mu][i]));        // Initialize
   }
-  tag1[0] = start_gather_field(tempmat, sizeof(matrix),
+  tag1[0] = start_gather_field(mat[0], sizeof(matrix),
                                goffset[1] + 1, EVENANDODD, local_pt[0][1]);
 
   // Main loop
@@ -210,25 +256,49 @@ void Dminus(matrix *src, matrix *dest[NUMLINK]) {
       if (mu == nu)
         continue;
 
-      if (nu == 0) {        // Start other set of gathers (nu = 1 and mu = 0)
-        tag0[1] = start_gather_site(F_OFFSET(link[0]), sizeof(matrix),
-                                    goffset[1], EVENANDODD, local_pt[1][0]);
+      gather = (flip + 1) % 2;
+      if (nu < NUMLINK - 1 || mu < NUMLINK - 2) { // Start next set of gathers
+        if (mu == NUMLINK - 1) {
+          a = 0;
+          b = nu + 1;
+        }
+        else if (mu == nu - 1) {
+          a = mu + 2;
+          b = nu;
+        }
+        else {
+          a = mu + 1;
+          b = nu;
+        }
+        next = plaq_index[a][b];
+        tag0[gather] = start_gather_site(F_OFFSET(link[a]), sizeof(matrix),
+                                         goffset[b], EVENANDODD,
+                                         local_pt[gather][0]);
 
-        FORALLSITES(i, s)   // mu = 0 < nu = 1
-          mult_nn(&(src[i]), &(s->link[0]), &(tempmat2[i]));
-        tag1[1] = start_gather_field(tempmat2, sizeof(matrix),
-                                     goffset[0] + 1, EVENANDODD, local_pt[1][1]);
+        FORALLSITES(i, s) {
+          if (a > b) {      // src is anti-symmetric under a <--> b
+            scalar_mult_nn(&(src[next][i]), &(s->link[a]), -1.0,
+                           &(mat[gather][i]));
+          }
+          else {
+            mult_nn(&(src[next][i]), &(s->link[a]), &(mat[gather][i]));
+          }
+        }
+        tag1[gather] = start_gather_field(mat[gather], sizeof(matrix),
+                                          goffset[a] + 1, EVENANDODD,
+                                          local_pt[gather][1]);
       }
 
+      index = plaq_index[mu][nu];
       opp_mu = OPP_LDIR(mu);
       wait_gather(tag0[flip]);
       wait_gather(tag1[flip]);
       FORALLSITES(i, s) {
         if (mu > nu)      // src is anti-symmetric under mu <--> nu
-          mult_nn_dif((matrix *)(local_pt[flip][0][i]), &(src[i]),
+          mult_nn_dif((matrix *)(local_pt[flip][0][i]), &(src[index][i]),
                       &(dest[nu][i]));
         else
-          mult_nn_sum((matrix *)(local_pt[flip][0][i]), &(src[i]),
+          mult_nn_sum((matrix *)(local_pt[flip][0][i]), &(src[index][i]),
                       &(dest[nu][i]));
 
         scalar_mult_dif_matrix((matrix *)(local_pt[flip][1][i]),
@@ -236,7 +306,7 @@ void Dminus(matrix *src, matrix *dest[NUMLINK]) {
       }
       cleanup_gather(tag0[flip]);
       cleanup_gather(tag1[flip]);
-      flip++;
+      flip = gather;
     }
   }
 }
@@ -487,7 +557,8 @@ void fermion_op(Twist_Fermion *src, Twist_Fermion *dest, int sign) {
       mat_copy(&(src[i].Fsite), &(site_src[i]));
       FORALLDIR(mu)
         mat_copy(&(src[i].Flink[mu]), &(link_src[mu][i]));
-      mat_copy(&(src[i].Fplaq), &(plaq_src[i]));
+      for (mu = 0; mu < NPLAQ; mu++)
+        mat_copy(&(src[i].Fplaq[mu]), &(plaq_src[mu][i]));
     }
   }
   else if (sign == -1) {
@@ -495,7 +566,8 @@ void fermion_op(Twist_Fermion *src, Twist_Fermion *dest, int sign) {
       adjoint(&(src[i].Fsite), &(site_src[i]));
       FORALLDIR(mu)
         adjoint(&(src[i].Flink[mu]), &(link_src[mu][i]));
-      adjoint(&(src[i].Fplaq), &(plaq_src[i]));
+      for (mu = 0; mu < NPLAQ; mu++)
+        adjoint(&(src[i].Fplaq[mu]), &(plaq_src[mu][i]));
     }
   }
   else {
@@ -509,6 +581,13 @@ void fermion_op(Twist_Fermion *src, Twist_Fermion *dest, int sign) {
 #ifdef VP
   Dplus(link_src, plaq_dest);             // Overwrites plaq_dest
   Dminus(plaq_src, link_dest);            // Overwrites link_dest
+#else
+  FORALLSITES(i, s) {                     // Zero link_dest and plaq_dest
+    FORALLDIR(mu)
+      clear_mat(&(link_dest[mu][i]));
+    for (mu = 0; mu < NPLAQ; mu++)
+      clear_mat(&(plaq_dest[mu][i]));
+  }
 #endif
 
 #ifdef SV
@@ -524,6 +603,9 @@ void fermion_op(Twist_Fermion *src, Twist_Fermion *dest, int sign) {
   // Link-to-site plaquette determinant contribution if G is non-zero
   if (doG)
     detLtoS(link_src, site_dest);         // Adds to site_dest
+#else
+  FORALLSITES(i, s)                       // Zero site_dest
+    clear_mat(&(site_dest[i]));
 #endif
 
 #ifdef QCLOSED
@@ -537,7 +619,8 @@ void fermion_op(Twist_Fermion *src, Twist_Fermion *dest, int sign) {
       mat_copy(&(site_dest[i]), &(dest[i].Fsite));
       FORALLDIR(mu)
         mat_copy(&(link_dest[mu][i]), &(dest[i].Flink[mu]));
-      mat_copy(&(plaq_dest[i]), &(dest[i].Fplaq));
+      for (mu = 0; mu < NPLAQ; mu++)
+        mat_copy(&(plaq_dest[mu][i]), &(dest[i].Fplaq[mu]));
     }
   }
   else if (sign == -1) {    // Both negate and conjugate
@@ -545,7 +628,8 @@ void fermion_op(Twist_Fermion *src, Twist_Fermion *dest, int sign) {
       neg_adjoint(&(site_dest[i]), &(dest[i].Fsite));
       FORALLDIR(mu)
         neg_adjoint(&(link_dest[mu][i]), &(dest[i].Flink[mu]));
-      neg_adjoint(&(plaq_dest[i]), &(dest[i].Fplaq));
+      for (mu = 0; mu < NPLAQ; mu++)
+        neg_adjoint(&(plaq_dest[mu][i]), &(dest[i].Fplaq[mu]));
     }
   }
 }
@@ -563,7 +647,7 @@ void DSq(Twist_Fermion *src, Twist_Fermion *dest) {
 
   fermion_op(src, tempTF, PLUS);
   fermion_op(tempTF, dest, MINUS);
-  if (fmass > IMAG_TOL) {
+  if (fmass > IMAG_TOL) {           // Assume fmass non-negative
     Real fmass2 = fmass * fmass;
     FORALLSITES(i, s)
       scalar_mult_sum_TF(&(src[i]), fmass2, &(dest[i]));
