@@ -206,18 +206,5 @@ EXTERN long int Nmatvecs;           // For timing/counting
 EXTERN int ckpt_load, ckpt_save;    // For checkpointing
 #endif
 
-#ifdef MODE
-// Mode number (and associated step function) stuff
-EXTERN int Npts;
-EXTERN Real M, spacing;
-EXTERN Twist_Fermion **source;
-
-EXTERN int step_order;  // Selects between options hard-coded in coeffs.c
-EXTERN double eps;
-EXTERN double delta;    // Unused, but may be useful to record in the output
-EXTERN double starSq, star;     // Ratio (Omega / Omega_*)^2 and its sqrt
-EXTERN double *coeffs;
-#endif
-
 #endif // _LATTICE_H
 // -----------------------------------------------------------------

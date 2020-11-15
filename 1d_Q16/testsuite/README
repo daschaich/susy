@@ -1,4 +1,4 @@
-This directory provides a suite of tests for the SUSY LATTICE code to simulate one-dimensional 16-supercharge BFSS or BMN theories.
+This directory provides a suite of tests for the SUSY LATTICE code to simulate one-dimensional 16-supercharge Yang--Mills (BFSS/BMN) theories
 
 Reference input and output files are provided for the following compilation targets (which are described in ../susy/README):
 susy_hmc

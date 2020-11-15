@@ -16,8 +16,8 @@ susy_hmc_pg and susy_phi_pg for testing with gauge fields only (no fermions)
 susy_spill for printing out configuration in format expected by serial C++ code
 
 # Dependences:
-LAPACK is now required for all targets
-Eigenvalue measurements (susy_eig) require PRIMME (https://github.com/primme/primme) as well
+LAPACK is required for all targets
+Eigenvalue measurements (susy_eig) require PRIMME v1.2.2 (https://github.com/primme/primme) as well
 
 # Defines for compilation:
 -DPHI_ALGORITHM for the basic phi algorithm (REQUIRED)
@@ -48,8 +48,8 @@ Input parameter PBC = +/-1 chooses periodic or anti-periodic temporal BCs
 # ------------------------------------------------------------------
 # Sample input file with explanations:
 prompt 0    # If non-zero, prompt user to manually input each parameter
-nx 6        # Lattice volume is nx*ny*nz*nt and must be even
-ny 6        # (in fact, each processor must get an even number of sites)
+nx 6        # Lattice volume is nx*ny*nz*nt and must divide to an even number per processor
+ny 6
 nz 6
 nt 6
 PBC -1      # Anti-periodic temporal boundary conditions for the fermions
@@ -117,37 +117,38 @@ forget    # What to do with lattice at end: forget or save_serial
 
 
 # ------------------------------------------------------------------
-# 0) Header files in this directory:
+# Summary of files in this directory
+# 0) Header files
 defines.h       -- Define Omelyan parameters, numbers of offsets and terms in the action, tunable parameter C2 and some other useful quantities
 lattice.h       -- Define Twist_Fermions, the site struct, global variables and fields
 params.h        -- Define a struct for reading input parameters
 susy_includes.h -- Define lots of routines, some of which are discussed below
 
-# 1) Summary of files in this directory:
-# 1a) Files used by all executables
-setup.c               -- Read in parameters, initialize variables and allocate global fields
-setup_lambda.c        -- Set up U(N) generators, epsilon tensor and lookup tables for nested loops
-setup_offset.c        -- Set up gathers for terms in the action, especially Qclosed terms
-action.c              -- Compute the action, including related routines also needed by forces
-plaq.c                -- Compute the average plaquette
-ploop.c               -- Compute the average Polyakov loop or Wilson lines
-link_trace.c          -- Compute average link, Tr[U_a Ubar_a] / NCOL
-widths.c              -- Calculate sqrt(<P^2> - <P>^2) for the plaquette and plaquette determinant
-determinant.c         -- Utilities for finding the determinant of NCOL x NCOL link matrices, using LAPACK
-grsource.c            -- Generate gaussian random pseudofermions and momenta for the RHMC
-congrad_multi_field.c -- Multi-mass CG inverter
-utilities.c           -- Twist_Fermion matrix--vector operator and related routines also needed by forces
-library_util.c        -- Helper routines, many of which might be better suited to ../libraries/
-gauge_info.c          -- Put information into configuration files
+# 1) Other files used by all executables
+setup.c         -- Read in parameters, initialize variables and allocate global fields
+setup_lambda.c  -- Set up U(N) generators, epsilon tensor and lookup tables for nested loops
+setup_offset.c  -- Set up gathers for terms in the action, especially Qclosed terms
+action.c        -- Compute the action, including related routines also needed by forces
+plaq.c          -- Compute the average plaquette
+ploop.c         -- Compute the average Polyakov loop or Wilson lines
+link_trace.c    -- Compute average link, Tr[U_a Ubar_a] / NCOL
+unit.c          -- Polar projection (unitarization) using LAPACK
+widths.c        -- Calculate sqrt(<P^2> - <P>^2) for the plaquette and plaquette determinant
+determinant.c   -- Utilities for finding the determinant of NCOL x NCOL link matrices, using LAPACK
+grsource.c      -- Generate gaussian random pseudofermions and momenta for the RHMC
+congrad_multi.c -- Multi-mass CG inverter
+utilities.c     -- Twist_Fermion matrix--vector operator and related routines also needed by forces
+library_util.c  -- Helper routines, many of which might be better suited to ../libraries/
+gauge_info.c    -- Put information into configuration files
 
-# 1b) Files mainly used by RHMC evolution targets (susy_hmc and susy_hmc_meas)
+# 2) Files mainly used by RHMC evolution targets (susy_hmc and susy_hmc_meas)
 control.c    -- Main program for evolution, optionally including additional measurements
 setup_rhmc.c -- Initializes RHMC poles and residues, values copied from ./remez/ output
 update_o.c   -- Omelyan RHMC evolution
 update_h.c   -- Update gauge momenta with forces from both gauge and fermion fields
 det_force.c  -- Contribution to force from determinant term
 
-# 1c) Files used mainly by standard measurement targets (susy_meas and susy_hmc_meas)
+# 3) Files used mainly by standard measurement targets (susy_meas and susy_hmc_meas)
 control_meas.c       -- Main program for standard measurements only
 smear.c              -- A4* lattice smearing routines: stout and APE-like
                         (NB: Unlike standard APE smearing, we don't project after adding staple sum)
@@ -160,7 +161,6 @@ monopole.c           -- Measure density of U(1) monopole world lines in doubled 
 hvy_pot.c            -- Compute correlators of gauge-fixed temporal links to determine the static potential
 hvy_pot_polar.c      -- Compute correlators of polar-projected gauge-fixed temporal links
                         (NB: overwrites links, which have to be saved and restored if they will be used further)
-unit.c               -- Polar projection (unitarization) using LAPACK
 hvy_pot_loop.c       -- Compute more standard on-axis Wilson loops to determine the static potential
 hvy_pot_polar_loop.c -- Compute more standard on-axis Wilson loops of polar-projected links
                         (NB: overwrites links, as above)
@@ -168,7 +168,7 @@ path.c               -- Used to construct Wilson loops for hvy_pot_loop.c and hv
 rsymm.c              -- Compute modified Wilson loops related to R symmetry transformations
 scalar_eig.c         -- Compute eigenvalues of scalar fields
 
-# 1d) Additional files used only by MCRG target (susy_mcrg)
+# 4) Additional files used only by MCRG target (susy_mcrg)
 control_mcrg.c       -- Main program for RG blocking and blocked measurements
 block_mcrg.c         -- RG blocking function, overwrites links and needs lattice volume divisible by 2^d
 blocked_smear.c      -- Stout and APE-like smearing with strides to accommodate blocked lattices
@@ -178,50 +178,30 @@ blocked_ploop.c      -- Compute the average Polyakov loop, with strides to accom
 blocked_ops.c        -- Compute Konishi and SUGRA operators summed over the (blocked) lattice volume
 blocked_rsymm.c      -- Compute modified Wilson loops related to R symmetry transformations, with strides to accommodate blocked lattices
 
-# 1e) Additional files used only by fermion eigenvalue target (susy_eig)
+# 5) Additional files used only by fermion eigenvalue target (susy_eig)
 control_eig.c -- Main program for eigenvalues measurements only
 eig.c         -- Eigenvalue measurements using PRIMME, LAPACK and BLAS
                  (NB: User may need to modify path to primme.h)
                  (NB: User may need to modify PLIB in makefile to provide libzprimme.a)
 
-# 1f) Additional files used only by eigenmode number target (susy_cheb)
+# 6) Additional files used only by eigenmode number target (susy_cheb)
 control_cheb.c -- Main program for Chebyshev spectral density computation only
 chebshev.c     -- Compute coefficients in the Chebyshev approximation to the spectral density
 z2source.c     -- Generate Z2 random pseudofermion (also used by susy_mode)
 
-# 1g) Additional files used only by eigenmode number target (susy_mode)
+# 7) Additional files used only by eigenmode number target (susy_mode)
 control_mode.c -- Main program for Giust--Luescher stochastic mode number computation only
 mode_coeffs.c  -- Coefficients in minmax polynomial approximation to the step function,  copied from ./mode_polynomial/ output
 modenumber.c   -- Compute the Giusti--Luescher stochastic mode number
 
-# 1h) Additional files used only by pfaffian target (susy_phase)
+# 8) Additional files used only by pfaffian target (susy_phase)
 control_phase.c -- Main program for pfaffian measurements only
 phase.c         -- Phase and (log of) magnitude of the pfaffian
 
-# 1i) Files not currently used, retained for potential future testing
+# 9) Files not currently used, retained for potential future testing
 ploop_corr.c      -- Find Polyakov loop on every spatial site to be fed into FFT
 ploop_eig.c       -- Compute eigenvalues of Polyakov loops or Wilson lines
 print_var3.c      -- Print out results for all spatial sites (used with ploop_corr.c)
 update_leapfrog.c -- Leapfrog RHMC evolution
 phase_serial.c    -- A serial gaussian elimination pfaffian algorithm, to check the parallel computation
-
-# 2) Summary of files in the ../generic directory:
-# 2a) Files used by all executables
-com_vanilla.c           -- Serial communications, selected by Makefile
-com_mpi.c               -- Parallel communications, selected by Makefile
-io_lat.c                -- I/O modified to handle five-link lattice
-io_lat_utils.c          -- Lower-level utilities for lattice I/O
-io_helpers.c            -- Higher-level interface for lattice I/O
-make_lattice.c          -- Set up lattice, neighbors, etc.
-nersc_cksum.c           -- Compute link trace sum for lattice I/O (cksum itself set to zero)
-ranstuff.c              -- Random number stuff, both for serial and parallel running
-gaugefix.c              -- Fix to Coulomb gauge, requiring even number of sites in all directions
-remap_stdio_from_args.c -- For reading input parameters
-layout_hyper_prime.c    -- Handle the distribution of lattice sites across processors
-
-# 2b) Additional files used only by pfaffian target (susy_phase)
-io_phase.c -- Primitive (for now) dump and load routines for checkpointing pfaffian computations
-
-# 2c) Files not currently used, retained for potential future testing
-restrict_fourier.c -- Fast Fourier transform (FFT) routine used with ploop_corr.c
 # ------------------------------------------------------------------

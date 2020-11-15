@@ -1,0 +1,20 @@
+One-dimensional 16-supercharge Yang--Mills (BFSS/BMN) theories
+Procedures common to most applications: communications, I/O, data layout, etc.
+
+# Summary of files in this directory (ignoring symlinks to ../../4d_Q16/susy)
+# 0) Files used by all executables
+com_vanilla.c        -- Serial communications, selected by Makefile
+com_mpi.c            -- Parallel communications, selected by Makefile
+io_lat.c             -- I/O modified to handle five-link lattice
+io_lat_utils.c       -- Lower-level utilities for lattice I/O
+io_helpers.c         -- Higher-level interface for lattice I/O
+make_lattice.c       -- Set up lattice, neighbors, etc.
+nersc_cksum.c        -- Compute link trace sum for lattice I/O (cksum itself set to zero)
+layout_hyper_prime.c -- Handle the distribution of lattice sites across processors
+check_antihermity.c  -- Check anti-hermiticity of the scalar matrices
+reantihermize.c      -- Reanti-hermitize the scalar matrices
+check_unitarity.c    -- Check unitarity of the link matrices
+reunitarize.c        -- Reunitarize the link matrices
+
+# 1) Additional files used only by pfaffian target (susy_phase)
+io_phase.c -- Primitive (for now) dump and load routines for checkpointing pfaffian computations

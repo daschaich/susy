@@ -1,7 +1,6 @@
 // -----------------------------------------------------------------
 // Update the momentum matrices
 // Uncomment to print out debugging messages
-//#define FORCE_DEBUG
 #include "susy_includes.h"
 // -----------------------------------------------------------------
 
@@ -228,16 +227,13 @@ double gauge_force(Real eps) {
   // Compute average gauge force in same loop
   tr = kappa * eps;
   FORALLSITES(i, s) {
-    FORALLDIR(mu)
-      scalar_mult_dif_adj_matrix(&(s->f_U[mu]), eps, &(s->mom[mu]));
-  }
-
-  // Compute average gauge force
-  FORALLSITES(i, s) {
-    FORALLDIR(mu)
+    FORALLDIR(mu) {
+      scalar_mult_dif_adj_matrix(&(s->f_U[mu]), tr, &(s->mom[mu]));
       returnit += realtrace(&(s->f_U[mu]), &(s->f_U[mu]));
+    }
   }
   g_doublesum(&returnit);
+  returnit *= kappa * kappa;
 
   // Add in force from separate determinant term if kappa_u1 non-zero
   if (kappa_u1 > IMAG_TOL)
@@ -250,6 +246,7 @@ double gauge_force(Real eps) {
 
 
 // -----------------------------------------------------------------
+// Separate routines for each term in the fermion force
 // Plaquette determinant contributions to the fermion force
 // Use Uinv, Udag_inv, UpsiU, Tr_Uinv and tr_dest for temporary storage
 // Also use tempdet for temporary storage
@@ -257,6 +254,7 @@ double gauge_force(Real eps) {
 // Assume compute_plaqdet() has already been run
 // Appropriate adjoints set up in assemble_fermion_force
 // A bit more code reuse may be possible
+#ifdef SV
 void detF(matrix *eta, matrix *psi[NUMLINK], int sign) {
   register int i;
   register site *s;
@@ -432,6 +430,7 @@ void detF(matrix *eta, matrix *psi[NUMLINK], int sign) {
   free(inv_term);
   free(adj_term);
 }
+#endif
 // -----------------------------------------------------------------
 
 
@@ -519,6 +518,11 @@ void assemble_fermion_force(Twist_Fermion *sol, Twist_Fermion *psol) {
     }
     cleanup_gather(mtag[mu]);
   }
+#else
+  FORALLDIR(mu) {                         // Zero force collectors
+    FORALLSITES(i, s)
+      clear_mat(&(s->f_U[mu]));
+  }
 #endif
 #ifdef VP
   // Now calculate DU on chi_{munu} D_mu(U) psi_nu
@@ -529,7 +533,7 @@ void assemble_fermion_force(Twist_Fermion *sol, Twist_Fermion *psol) {
   // Prepare and gather other term in tempmat*
   index = plaq_index[0][1];
   FORALLSITES(i, s)     // mu = 0 < nu = 1
-    mult_nn(&(plaq_dest[i]), &(link_src[1][i]), &(mat[0][i]));
+    mult_nn(&(plaq_dest[index][i]), &(link_src[1][i]), &(mat[0][i]));
   tag1[0] = start_gather_field(mat[0], sizeof(matrix),
                                goffset[1] + 1, EVENANDODD, local_pt[0][1]);
 
@@ -561,10 +565,10 @@ void assemble_fermion_force(Twist_Fermion *sol, Twist_Fermion *psol) {
         next = plaq_index[a][b];
         FORALLSITES(i, s) {
           if (a > b) {      // plaq_dest is anti-symmetric under a <--> b
-            scalar_mult_matrix(&(plaq_dest[i]), -1.0, &tmat);
+            scalar_mult_matrix(&(plaq_dest[next][i]), -1.0, &tmat);
           }                 // Suppress compiler error
           else
-            mat_copy(&(plaq_dest[i]), &tmat);
+            mat_copy(&(plaq_dest[next][i]), &tmat);
           mult_nn(&tmat, &(link_src[b][i]), &(mat[gather][i]));
         }
         tag1[gather] = start_gather_field(mat[gather], sizeof(matrix),
@@ -664,6 +668,7 @@ void assemble_fermion_force(Twist_Fermion *sol, Twist_Fermion *psol) {
   }
 #endif
 
+#ifdef SV
   // Plaquette determinant contributions if G is non-zero
   if (doG) {
     // First connect link_src with site_dest[DIMF - 1]^dag (LtoS)
@@ -672,6 +677,7 @@ void assemble_fermion_force(Twist_Fermion *sol, Twist_Fermion *psol) {
     // Second connect site_src[DIMF - 1] with link_dest^dag (StoL)
     detF(site_src, link_dest, MINUS);
   }
+#endif
 }
 // -----------------------------------------------------------------
 
@@ -682,26 +688,17 @@ void assemble_fermion_force(Twist_Fermion *sol, Twist_Fermion *psol) {
 // Update the momenta with the fermion force
 // Assume that the multiCG has been run, with the solution in sol[j]
 // Accumulate f_U for each pole into fullforce, add to momenta
-// Allocate fullforce while using tempTF for temporary storage
+// Use fullforce-->Fmunu and tempTF for temporary storage
 // (Calls assemble_fermion_force, which uses many more temporaries)
 double fermion_force(Real eps, Twist_Fermion *src, Twist_Fermion **sol) {
   register int i;
   register site *s;
   int mu, n;
   double returnit = 0.0;
-  matrix *fullforce[NUMLINK];
-
-#ifdef FORCE_DEBUG
-  int kick, ii, jj, iters = 0;
-  Real final_rsq;
-  double individ_force, old_action, new_action = 0.0;
-  matrix tmat, tprint, tprint2;
-  clear_mat(&tprint);
-  clear_mat(&tmat);
-#endif
+  matrix **fullforce = malloc(sizeof(matrix*) * NUMLINK);
 
   FORALLDIR(mu)
-    fullforce[mu] = malloc(sites_on_node * sizeof(matrix));
+    fullforce[mu] = Fmunu[mu];    // Use Fmunu for temporary storage
 
   // Initialize fullforce[mu]
   fermion_op(sol[0], tempTF, PLUS);
@@ -719,86 +716,11 @@ double fermion_force(Real eps, Twist_Fermion *src, Twist_Fermion **sol) {
       scalar_mult_TF(&(tempTF[i]), amp4[n], &(tempTF[i]));
 
     assemble_fermion_force(sol[n], tempTF);
-#ifdef FORCE_DEBUG
-    individ_force = 0.0;
-#endif
+    // Take adjoint but don't negate yet...
     FORALLDIR(mu) {
-      FORALLSITES(i, s) {
-        // Take adjoint but don't negate yet...
+      FORALLSITES(i, s)
         sum_adj_matrix(&(s->f_U[mu]), &(fullforce[mu][i]));
-#ifdef FORCE_DEBUG
-//      if (s->x == 0 && s->t == 0 && mu == 3) {
-//        printf("Fermion force mu=%d on site (%d, %d)\n", mu, s->x, s->t);
-//        dumpmat(&(s->f_U[mu]));
-//      }
-        // Compute average gauge force
-        individ_force += realtrace(&(s->f_U[mu]), &(s->f_U[mu]));
-#endif
-      }
     }
-#ifdef FORCE_DEBUG
-    g_doublesum(&individ_force);
-    node0_printf("Individ_force %d %.4g\n",
-                 n, eps * sqrt(individ_force) / volume);
-
-    // Check that force syncs with fermion action
-    old_action = fermion_action(src, sol);
-    iters += congrad_multi(src, sol, niter, rsqmin, &final_rsq);
-    new_action = fermion_action(src, sol);
-    node0_printf("EXITING  %.4g\n", new_action - old_action);
-    if (fabs(new_action - old_action) > 1e-3)
-      terminate(1);                             // Don't go further for now
-
-#if 0
-    // Do a scan of the fermion action
-    for (mu = XUP; mu < NUMLINK; mu++) {
-      FORALLSITES(i, s) {
-        node0_printf("mu=%d on site (%d, %d)\n", mu, s->x, s->t);
-        tmat = s->link[mu];
-        dumpmat(&(s->f_U[mu]));
-
-        for (ii = 0; ii < NCOL; ii++) {
-          for (jj = 0; jj < NCOL; jj++) {
-            for (kick = -1; kick <= 1; kick += 2) {
-              s->link[mu] = tmat;
-              s->link[mu].e[ii][jj].real += 0.001 * (Real)kick;
-
-              iters += congrad_multi(src, sol, niter, rsqmin, &final_rsq);
-              if (kick == -1)
-                new_action -= fermion_action(src, sol);
-              if (kick == 1) {
-                new_action += fermion_action(src, sol);
-                tprint.e[ii][jj].real = -250.0 * new_action;
-              }
-            }
-
-            for (kick = -1; kick <= 1; kick += 2) {
-              s->link[mu] = tmat;
-              s->link[mu].e[ii][jj].imag += 0.001 * (Real)kick;
-
-              iters += congrad_multi(src, sol, niter, rsqmin, &final_rsq);
-              if (kick == -1)
-                new_action -= fermion_action(src, sol);
-              if (kick == 1) {
-                new_action += fermion_action(src, sol);
-                node0_printf("XXXG%d%dI %.4g %.4g\n",
-                             ii, jj, 0.001 * (Real)kick, 500 * new_action);
-                tprint.e[ii][jj].imag = -250 * new_action;
-              }
-            }
-          }
-        }
-        sub_matrix(&tprint, &(s->f_U[mu]), &tprint2);
-        node0_printf("mu=%d on site (%d, %d): %.4g\n", mu, s->x, s->t,
-                     realtrace(&tprint2, &tprint2));
-        dumpmat(&tprint);
-        s->link[mu] = tmat;
-
-        iters += congrad_multi(src, sol, niter, rsqmin, &final_rsq);
-      }
-    }   // End scan of the fermion action
-#endif
-#endif
   }
 
   // Update the momentum from the fermion force -- sum or eps
@@ -813,8 +735,7 @@ double fermion_force(Real eps, Twist_Fermion *src, Twist_Fermion **sol) {
   }
   g_doublesum(&returnit);
 
-  FORALLDIR(mu)
-    free(fullforce[mu]);
+  free(fullforce);
 
   // Reset Fmunu
   compute_Fmunu();

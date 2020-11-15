@@ -1,4 +1,4 @@
-# One-dimensional 16-supercharge supersymmetric (BFSS/BMN) theory
+# One-dimensional 16-supercharge Yang--Mills (BFSS/BMN) theories
 # Generic make-include file
 # This template file defines rules and macros common to all architectures
 # It is intended to be an include file for other Makefiles
