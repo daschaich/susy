@@ -1,1 +1,0 @@
-../../2d_Q04/susy/setup_lambda.c
