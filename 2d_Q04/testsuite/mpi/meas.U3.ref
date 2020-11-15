@@ -2,7 +2,7 @@ N=(2,2) SYM, Nc = 3, DIMF = 9, fermion rep = adjoint
 Microcanonical simulation with refreshing
 Machine = MPI (portable), with 2 nodes
 Phi algorithm
-start: Tue Oct 10 04:14:06 2017
+start: Sun Nov 15 15:39:50 2020
 
 type 0 for no prompts or 1 for prompts
 nx 4
@@ -11,7 +11,7 @@ PBC -1
 iseed 41
 Nroot 1
 Norder 15
-LAYOUT = Hypercubes, options = hyper_prime,
+LAYOUT = Hypercubes, options = hyper_prime
 ON EACH NODE 2 x 4
 Mallocing 0.0 MBytes per core for lattice
 Antiperiodic temporal boundary conditions
@@ -44,7 +44,7 @@ C2=1
 Restored binary gauge configuration serially from file config.U3.44
 Time stamp Tue Oct 10 01:09:04 2017
 Checksums 459cef92 ab23f244 OK
-Time to reload gauge configuration = 2.297163e-03
+Time to reload gauge configuration = 3.418922e-04
 CHECK PLAQ: 3.2052412633093277e+00
 CHECK NERSC LINKTR: -3.6629817526166633e-02 CKSUM: 0
 START 3.2052413 13.275174
@@ -144,10 +144,10 @@ CORR_S 2 1.41421 1 2 0.036517817
 CORR_S 2 1.41421 2 0 0.017105516
 CORR_S 2 1.41421 2 1 0.039154498
 CORR_S 2 1.41421 2 2 0.070456925
-susy 3.37767 0.0228327 -3.13776 -0.0120837 ( 1 of 3 ) 108
-susy 2.70444 0.103175 -2.86967 -0.268568 ( 2 of 3 ) 110
-susy 2.91565 -0.327357 -3.07355 0.389561 ( 3 of 3 ) 109
-SUSY 3.01312 -0.0517097 3.1162 0.103079 ( ave over 3 )
+susy 3.37767 0.0228326 -3.13776 -0.0120837 ( 1 of 3 ) 108
+susy 2.70444 0.103176 -2.86967 -0.268568 ( 2 of 3 ) 110
+susy 2.91565 -0.327359 -3.07356 0.389551 ( 3 of 3 ) 111
+SUSY 3.01313 -0.0517084 3.1162 0.103076 ( ave over 3 )
 rsymm: MAX = 2
 INVLINK 17.7732 1.53901 9.65609 32.028
 RSYMM 1 [0] 1 [1] 3.7440252 6.196528
@@ -161,7 +161,7 @@ RSYMM 2 [1] 2 [0] 2.534037 149.72614
 MONOPOLE 2 -2    0 4
 Fixing to Coulomb gauge...
 GFIX ended at step 12. Ave gf action 0.854867, delta 2.9e-08
-GFIX time = 0.00019 seconds
+GFIX time = 0.0003009 seconds
 BEFORE 3.7440252
 AFTER  3.7440252
 hvy_pot: MAX_T = 2, MAX_X = 1
@@ -180,7 +180,9 @@ POLAR_LOOP 1 1 2.0837
 POLAR_LOOP 0 2 3
 POLAR_LOOP 1 2 1.71789
 RUNNING COMPLETED
-CG iters for measurements: 327
-total_iters = 327
+CG iters for measurements: 329
+total_iters = 329
 
-Time = 0.01331 seconds
+Time = 0.02674 seconds
+exit: Sun Nov 15 15:39:50 2020
+

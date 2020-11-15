@@ -2,7 +2,7 @@ N=(2,2) SYM, Nc = 4, DIMF = 16, fermion rep = adjoint
 Microcanonical simulation with refreshing
 Machine = Scalar processor, with 1 nodes
 Phi algorithm
-start: Tue Oct 10 04:11:04 2017
+start: Sun Nov 15 15:39:24 2020
 
 type 0 for no prompts or 1 for prompts
 nx 4
@@ -11,7 +11,7 @@ PBC -1
 iseed 41
 Nroot 1
 Norder 15
-LAYOUT = Hypercubes, options = hyper_prime,
+LAYOUT = Hypercubes, options = hyper_prime
 ON EACH NODE 4 x 4
 Mallocing 0.0 MBytes per core for lattice
 Antiperiodic temporal boundary conditions
@@ -44,7 +44,7 @@ C2=1
 Restored binary gauge configuration serially from file config.U4.44
 Time stamp Mon Oct  9 07:35:02 2017
 Checksums d1599319 9ae91c1 OK
-Time to reload gauge configuration = 1.959801e-03
+Time to reload gauge configuration = 8.912086e-04
 CHECK PLAQ: 6.6551237541205781e+00
 CHECK NERSC LINKTR: -2.4700885481252044e-02 CKSUM: 0
 START 6.6551238 21.626233
@@ -146,10 +146,10 @@ CORR_S 2 1.41421 1 2 0.0094365534
 CORR_S 2 1.41421 2 0 0.0041268608
 CORR_S 2 1.41421 2 1 0.0087068984
 CORR_S 2 1.41421 2 2 0.021405646
-susy 4.1483 -0.0996388 -3.97698 0.197942 ( 1 of 3 ) 112
+susy 4.1483 -0.0996389 -3.97698 0.197942 ( 1 of 3 ) 112
 susy 3.49847 0.21584 -4.2685 0.184841 ( 2 of 3 ) 112
 susy 4.25374 0.115255 -3.90369 -0.344423 ( 3 of 3 ) 113
-SUSY 4.00828 0.0321828 3.25704 -0.75124 ( ave over 3 )
+SUSY 4.00828 0.0321827 3.25704 -0.75124 ( ave over 3 )
 rsymm: MAX = 2
 INVLINK 10.4834 1.60263 6.04301 9.12907
 RSYMM 1 [0] 1 [1] 7.3242251 7.7803134
@@ -163,7 +163,7 @@ RSYMM 2 [1] 2 [0] 22.756384 660.72498
 MONOPOLE 3 -3    0 6
 Fixing to Coulomb gauge...
 GFIX ended at step 47. Ave gf action 0.928124, delta 7.45e-08
-GFIX time = 0.0007839 seconds
+GFIX time = 0.0006371 seconds
 BEFORE 7.3242251
 AFTER  7.3242251
 hvy_pot: MAX_T = 2, MAX_X = 1
@@ -185,4 +185,6 @@ RUNNING COMPLETED
 CG iters for measurements: 337
 total_iters = 337
 
-Time = 0.03592 seconds
+Time = 0.04055 seconds
+exit: Sun Nov 15 15:39:24 2020
+
