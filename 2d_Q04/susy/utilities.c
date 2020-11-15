@@ -529,7 +529,7 @@ void DSq(Twist_Fermion *src, Twist_Fermion *dest) {
 
   fermion_op(src, tempTF, PLUS);
   fermion_op(tempTF, dest, MINUS);
-  if (fmass > IMAG_TOL) {
+  if (fmass > IMAG_TOL) {           // Assume fmass non-negative
     Real fmass2 = fmass * fmass;
     FORALLSITES(i, s)
       scalar_mult_sum_TF(&(src[i]), fmass2, &(dest[i]));
