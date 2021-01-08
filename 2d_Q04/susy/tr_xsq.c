@@ -1,6 +1,6 @@
 // -----------------------------------------------------------------
-// Measure Tr X^2 where X is the scalar field from
-// the polar decomposition
+// Measure Tr[X^2] / N, where X is the scalar field
+// from the polar decomposition
 #include "susy_includes.h"
 
 void measure_tr_xsq() {
@@ -20,9 +20,7 @@ void measure_tr_xsq() {
       CSUM(tr_xsq, tc);
     }
   }
-  
   CMULREAL(tr_xsq, norm, tr_xsq);
-  
   g_complexsum(&tr_xsq);
   
   if (fabs(tr_xsq.imag) > IMAG_TOL)
