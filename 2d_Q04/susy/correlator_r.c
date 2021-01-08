@@ -13,7 +13,7 @@
 // -----------------------------------------------------------------
 // Map (x, t) to r on Nx x Nt square lattice
 // Check all possible periodic shifts to find true r
-Real r_map(x_in, t_in) {
+Real r_map(int x_in, int t_in) {
   int x, t, xSq;
   Real r = 100.0 * MAX_X, tr;   // r to be overwritten
 
