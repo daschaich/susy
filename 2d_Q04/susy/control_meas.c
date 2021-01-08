@@ -151,6 +151,9 @@ int main(int argc, char *argv[]) {
                  j, ave_eigs[j], eig_widths[j], min_eigs[j], max_eigs[j]);
   }
 
+  // Measure Tr X^2
+  measure_tr_xsq();
+
 #ifdef CORR
   // Konishi and SUGRA correlators
   konishi();
