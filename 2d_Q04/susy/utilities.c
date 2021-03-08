@@ -480,6 +480,12 @@ void fermion_op(Twist_Fermion *src, Twist_Fermion *dest, int sign) {
 #ifdef VP
   Dplus(link_src, plaq_dest);             // Overwrites plaq_dest
   Dminus(plaq_src, link_dest);            // Overwrites link_dest
+#else
+  FORALLSITES(i, s) {                     // Zero link_dest and plaq_dest
+    FORALLDIR(mu)
+      clear_mat(&(link_dest[mu][i]));
+    clear_mat(&(plaq_dest[i]));
+  }
 #endif
 
 #ifdef SV
@@ -495,6 +501,9 @@ void fermion_op(Twist_Fermion *src, Twist_Fermion *dest, int sign) {
   // Link-to-site plaquette determinant contribution if G is non-zero
   if (doG)
     detLtoS(link_src, site_dest);         // Adds to site_dest
+#else
+  FORALLSITES(i, s)                       // Zero site_dest
+    clear_mat(&(site_dest[i]));
 #endif
 
   // Copy local plaquette, link and site fermions into dest TwistFermion
