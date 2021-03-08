@@ -130,6 +130,12 @@ susy_phase::
 	"LAPACK = -llapack -lblas " \
 	"EXTRA_OBJECTS = control_phase.o phase.o io_phase.o "
 
+susy_hmc_ung::
+	${MAKE} -f ${MAKEFILE} target "MYTARGET= $@" \
+	"DEFINES = ${DEFINES} -DPHI_ALGORITHM -DHMC_ALGORITHM -DUNGAUGED " \
+	"LAPACK = -llapack -lblas " \
+	"EXTRA_OBJECTS = control.o update_o.o update_h.o setup_rhmc.o "
+
 # The targets below have not been used/tested recently
 susy_phi::
 	${MAKE} -f ${MAKEFILE} target "MYTARGET= $@" \
