@@ -16,7 +16,10 @@ double bosonic_action(double *so3_sq, double *so6_sq,
   register site *s;
   int j, k;
   double b_action = 0.0;
-  matrix tmat, tmat2;
+  matrix tmat;
+#ifndef UNGAUGED
+  matrix tmat2;
+#endif
   msg_tag *tag[NSCALAR];
 
   // Initialize
@@ -48,10 +51,13 @@ double bosonic_action(double *so3_sq, double *so6_sq,
   for (j = 0; j < NSCALAR; j++) {
     wait_gather(tag[j]);
     FORALLSITES(i, s) {
-
+#ifndef UNGAUGED
       mult_nn(&(s->link), (matrix *)(gen_pt[j][i]), &tmat);
       mult_na(&tmat, &(s->link), &tmat2);
       b_action += (double)realtrace_nn(&(s->X[j]), &tmat2);
+#else
+      b_action += (double)realtrace_nn(&(s->X[j]), (matrix *)(gen_pt[j][i]));
+#endif
     }
     cleanup_gather(tag[j]);
   }
@@ -184,6 +190,7 @@ Real ahmat_mag_sq(anti_hermitmat *ah) {
   return sum;
 }
 
+#ifndef UNGAUGED
 double gauge_mom_action() {
   register int i;
   register site *s;
@@ -195,6 +202,7 @@ double gauge_mom_action() {
   g_doublesum(&sum);
   return sum;
 }
+#endif
 
 double scalar_mom_action() {
   register int i, j;
@@ -215,7 +223,7 @@ double scalar_mom_action() {
 // -----------------------------------------------------------------
 // Print out zeros for pieces of the action that aren't included
 double action(matrix ***src, matrix ****sol) {
-  double p_act, so3_act, so6_act, comm_act, Myers_act, total;
+  double p_act = 0.0, so3_act, so6_act, comm_act, Myers_act, total;
 
   // Includes so3, so6, Myers and kinetic
   total = bosonic_action(&so3_act, &so6_act, &comm_act, &Myers_act);
@@ -233,7 +241,9 @@ double action(matrix ***src, matrix ****sol) {
   }
 #endif
 
+#ifndef UNGAUGED
   p_act = gauge_mom_action();
+#endif
   node0_printf("Umom %.8g ", p_act);
   total += p_act;
   p_act = scalar_mom_action();

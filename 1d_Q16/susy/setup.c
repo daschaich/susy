@@ -24,6 +24,12 @@ int initial_set() {
     printf("BFSS, Nc = %d, DIMF = %d, fermion rep = adjoint\n",
            NCOL, DIMF);
 #endif
+#ifdef PUREGAUGE
+    printf("Bosonic system\n");
+#endif
+#ifdef UNGAUGED
+    printf("Ungauged system\n");
+#endif
     printf("Microcanonical simulation with refreshing\n");
     printf("Machine = %s, with %d nodes\n", machine_type(), numnodes());
 #ifdef HMC_ALGORITHM
@@ -341,6 +347,21 @@ nsrc = par_buf.nsrc;
 
   // Do whatever is needed to get lattice
   startlat_p = reload_lattice(startflag, startfile);
+
+  // For ungauged case, set each link to a unit matrix
+#ifdef UNGAUGED
+  register int k, m, n;
+  register site *s;
+  FORALLSITES(k, s) {
+    for (m = 0; m < NCOL; m++) {
+      s->link.e[m][m] = cmplx(1.0, 0.0);
+      for (n = m + 1; n < NCOL; n++) {
+        s->link.e[m][n] = cmplx(0.0, 0.0);
+        s->link.e[n][m] = cmplx(0.0, 0.0);
+      }
+    }
+  }
+#endif
 
   return 0;
 }

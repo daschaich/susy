@@ -15,10 +15,12 @@ void ranmom() {
   anti_hermitmat tah;
 
   FORALLSITES(i, s) {
+#ifndef UNGAUGED
 #ifdef SITERAND
     random_anti_hermitian(&(s->mom), &(s->site_prn));
 #else
     random_anti_hermitian(&(s->mom), &(s->node_prn));
+#endif
 #endif
 
     for (j = 0; j < NSCALAR; j++) {

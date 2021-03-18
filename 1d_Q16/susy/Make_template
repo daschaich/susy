@@ -130,9 +130,17 @@ susy_phase::
 	"LAPACK = -llapack -lblas " \
 	"EXTRA_OBJECTS = control_phase.o phase.o io_phase.o "
 
+# Gauge links set to unit matrices, retaining fermions
 susy_hmc_ung::
 	${MAKE} -f ${MAKEFILE} target "MYTARGET= $@" \
 	"DEFINES = ${DEFINES} -DPHI_ALGORITHM -DHMC_ALGORITHM -DUNGAUGED " \
+	"LAPACK = -llapack -lblas " \
+	"EXTRA_OBJECTS = control.o update_o.o update_h.o setup_rhmc.o "
+
+# Gauge links set to unit matrices for the purely bosonic case
+susy_hmc_pg_ung::
+	${MAKE} -f ${MAKEFILE} target "MYTARGET= $@" \
+	"DEFINES = ${DEFINES} -DPHI_ALGORITHM -DHMC_ALGORITHM -DPUREGAUGE -DUNGAUGED " \
 	"LAPACK = -llapack -lblas " \
 	"EXTRA_OBJECTS = control.o update_o.o update_h.o setup_rhmc.o "
 
