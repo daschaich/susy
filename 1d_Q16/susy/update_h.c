@@ -56,16 +56,18 @@ double bosonic_force(Real eps) {
                                  TDOWN, EVENANDODD, gen_pt[NSCALAR + j]);
   }
 
-#ifndef UNGAUGED
   for (j = 0; j < NSCALAR; j++) {   // X(n+1) = gen_pt[j]
     wait_gather(tag[j]);
+#ifndef UNGAUGED
     FORALLSITES(i, s) {
       mult_na((matrix *)(gen_pt[j][i]), &(s->link), &tmat);
       mult_nn(&(s->link), &tmat, &tmat2);
       mult_nn_sum(&(s->X[j]), &tmat2, &(s->f_U));
     }
+#endif
   }
 
+#ifndef UNGAUGED
   // Take adjoint and update the gauge momenta
   // Make them anti-hermitian following non-susy code
   // Include overall factor of kappa = N / (4lambda), and factor of 2
