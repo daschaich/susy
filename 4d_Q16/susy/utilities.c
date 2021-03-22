@@ -132,6 +132,11 @@ void compute_Uinv() {
 // -----------------------------------------------------------------
 // Separate routines for each term in the fermion operator
 // All called by fermion_op at the bottom of the file
+// This term connects the link fermions to the plaquette fermions
+// Given src psi_a,
+//   dest_ab(n) = bc[a] U_a(n) psi_b(n+a) - psi_b(n) U_a(n+b)
+//              - bc[b] U_b(n) psi_a(n+b) + psi_a(n) U_b(n+a)
+// Initialize dest; absorb factor of 1/2 by keeping b > a
 #ifdef VP
 void Dplus(matrix *src[NUMLINK], matrix *dest[NPLAQ]) {
   register int i;
@@ -220,6 +225,10 @@ void Dplus(matrix *src[NUMLINK], matrix *dest[NPLAQ]) {
 
 
 // -----------------------------------------------------------------
+// Term in action connecting the plaquette fermions to the link fermions
+// Given src chi_ab,
+//   dest_b(n) = U_a(n+b) chi_ab(n) - bc(opp_a) chi_ab(n-a) U_a(n-a)
+// Initialize dest
 // Use tempmat and tempmat2 for temporary storage
 #ifdef VP
 void Dminus(matrix *src[NPLAQ], matrix *dest[NUMLINK]) {
@@ -316,6 +325,10 @@ void Dminus(matrix *src[NPLAQ], matrix *dest[NUMLINK]) {
 
 
 // -----------------------------------------------------------------
+// Term in action connecting the plaquette fermions amongst themselves
+// Given src chi_de and recalling a + b = -c - d - e,
+//   dest_ab(n) = bc3[a][b][c] chi_de(n+a+b+c) Ubar_c(n+a+b)
+//              - bc2[a][b] Ubar_c(n-c) chi_de(n+a+b)
 // Add to dest instead of overwriting; note factor of 1/2
 #ifdef QCLOSED
 void DbplusPtoP(matrix *src[NPLAQ], matrix *dest[NPLAQ]) {
@@ -405,6 +418,10 @@ void DbplusPtoP(matrix *src[NPLAQ], matrix *dest[NPLAQ]) {
 
 
 // -----------------------------------------------------------------
+// Term in action connecting the plaquette fermions amongst themselves
+// Given src chi_ab and recalling d + e = -a - b - c,
+//   dest_de(n) = bc2[opp_a][opp_b] chi_ab(n-a-b) Ubar_c(n-a-b-c)
+//              - bc3[opp_a][opp_b][opp_c] Ubar_c(n-c) chi_ab(n-a-b-c)
 // Add to dest instead of overwriting; note factor of 1/2
 #ifdef QCLOSED
 void DbminusPtoP(matrix *src[NPLAQ], matrix *dest[NPLAQ]) {
@@ -497,8 +514,9 @@ void DbminusPtoP(matrix *src[NPLAQ], matrix *dest[NPLAQ]) {
 
 
 // -----------------------------------------------------------------
-// Term in action connecting site fermion to the link fermions
-// bc[mu](x) on psi_mu(x) eta(x + mu)
+// Term in action connecting the site fermions to the link fermions
+// Given src eta,
+//   dest_a(n) = bc[a] eta(n+a) Ubar_a(n) - Ubar_a(n) eta(n)
 // Add to dest instead of overwriting; note factor of 1/2
 #ifdef SV
 void DbplusStoL(matrix *src, matrix *dest[NUMLINK]) {
@@ -615,10 +633,10 @@ void detStoL(matrix *dest[NUMLINK]) {
 
 // -----------------------------------------------------------------
 // Term in action connecting the link fermions to the site fermion
-// Given src psi_a, dest is Dbar_a psi_a (Eq. 63 in the arXiv:1108.1503)
-// Use tempmat and tempmat2 for temporary storage
-// bc[OPP_LDIR(mu)](x) on eta(x - mu) psi_mu(x - mu)
+// Given src psi_a
+//   dest(n) = psi_a(n) Ubar_a(n) - bc[opp_a] Ubar_a(n-a) psi_a(n-a)
 // Initialize dest; note factor of 1/2
+// Use tempmat and tempmat2 for temporary storage
 #ifdef SV
 void DbminusLtoS(matrix *src[NUMLINK], matrix *dest) {
   register int i, mu, nu, opp_mu;
@@ -782,6 +800,7 @@ void fermion_op(Twist_Fermion *src, Twist_Fermion *dest, int sign) {
 
   // Assemble separate routines for each term in the fermion operator
 #ifdef VP
+  // Plaquette-to-link and link-to-plaquette contribution
   Dplus(link_src, plaq_dest);             // Overwrites plaq_dest
   Dminus(plaq_src, link_dest);            // Overwrites link_dest
 #else
@@ -794,6 +813,7 @@ void fermion_op(Twist_Fermion *src, Twist_Fermion *dest, int sign) {
 #endif
 
 #ifdef SV
+  // Site-to-link and link-to-site contribution
   DbplusStoL(site_src, link_dest);        // Adds to link_dest
 
   // Site-to-link plaquette determinant contribution if G is non-zero
@@ -812,6 +832,7 @@ void fermion_op(Twist_Fermion *src, Twist_Fermion *dest, int sign) {
 #endif
 
 #ifdef QCLOSED
+  // Plaquette-to-plaquette contributions
   DbminusPtoP(plaq_src, plaq_dest);       // Adds to plaq_dest
   DbplusPtoP(plaq_src, plaq_dest);        // Adds to plaq_dest
 #endif
