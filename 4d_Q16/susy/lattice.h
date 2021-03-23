@@ -148,6 +148,12 @@ EXTERN complex *ZWstar[NUMLINK][NUMLINK], *tempdet[NUMLINK][NUMLINK];
 EXTERN matrix *DmuUmu, *Fmunu[NPLAQ];
 EXTERN matrix *Uinv[NUMLINK], *Udag_inv[NUMLINK], *UpsiU[NUMLINK];
 
+// NUMLINK x NUMLINK matrix struct to simplify gathering
+typedef struct {
+  complex dat[NUMLINK][NUMLINK];
+} gather_mat;
+EXTERN gather_mat *tempgathmat;
+
 // CG Twist_Fermions
 EXTERN Twist_Fermion *mpm, *pm0, *rm;
 

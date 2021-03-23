@@ -536,7 +536,7 @@ void DbplusStoL(matrix *src, matrix *dest[NUMLINK]) {
 // D is Tr[eta] * plaqdet, Tr[eta] = i sqrt(N) eta^D
 // T is Tr[U^{-1} Lambda]
 // Assume compute_plaqdet() has already been run
-// Use tr_dest and tempdet for temporary storage
+// Use tr_dest and tempgathmat for temporary storage
 // bc[b](x - b) = bc[-b](x) on eta(x - b) psi_a(x)
 // Add negative to dest instead of overwriting
 // Negative sign is due to anti-commuting eta past psi
@@ -546,46 +546,43 @@ void detStoL(matrix *dest[NUMLINK]) {
   register site *s;
   int a, b, opp_b;
   Real localG = -0.5 * C2 * G;
-  complex tc, **tdet;
+  complex tc;
   msg_tag *tag[NUMLINK];
 
   // Save Tr[eta(x)] plaqdet[a][b](x)
-  //   or Tr[eta(x)] ZWstar[a][b](x) in tempdet[a][b]
-  tdet = malloc(NUMLINK * sizeof(complex*));
+  //   or Tr[eta(x)] ZWstar[a][b](x) in tempgathmat[a][b]
   FORALLDIR(a) {
-    tdet[a] = malloc(NUMLINK * sizeof(complex));
     for (b = a + 1; b < NUMLINK; b++) {
       FORALLSITES(i, s) {
-        CMUL(tr_eta[i], plaqdet[a][b][i], tempdet[a][b][i]);
-        CMUL(tr_eta[i], plaqdet[b][a][i], tempdet[b][a][i]);
+        CMUL(tr_eta[i], plaqdet[a][b][i], tempgathmat[i].dat[a][b]);
+        CMUL(tr_eta[i], plaqdet[b][a][i], tempgathmat[i].dat[b][a]);
       }
     }
   }
 
-  // Start gathering the 5x5 tempdet matrix from site x-a
-  FORALLDIR(a) {
-    tag[a] = start_gather_field(tempdet, 5 * 5 * sizeof(complex),
-                                goffset[a] + 1, EVENANDODD, gen_pt[a]);
-
-    // Initialize accumulator for sum over b
-    FORALLSITES(i, s)
-      tr_dest[i] = cmplx(0.0, 0.0);
+  // Start gathering the NUMLINK x NUMLINK tempgathmat from site x-a
+  FORALLDIR(b) {
+    tag[b] = start_gather_field(tempgathmat, sizeof(gather_mat),
+                                goffset[b] + 1, EVENANDODD, gen_pt[b]);
   }
 
   FORALLDIR(a) {
+    // Initialize accumulator for sum over b
+    FORALLSITES(i, s)
+      tr_dest[i] = cmplx(0.0, 0.0);
+
     FORALLDIR(b) {
       if (a == b)
         continue;
 
-      // Accumulate tempdet[b][a](x) + tempdet[a][b](x - b)
+      // Accumulate tempgathmat[b][a](x) + tempgathmat[a][b](x - b)
       opp_b = OPP_LDIR(b);
       wait_gather(tag[b]);
       FORALLSITES(i, s) {
-//        tdet = (complex **)(gen_pt[b][i]);
-        tc = ((complex **)(gen_pt[b][i]))[a][b];
+        tc = ((gather_mat *)(gen_pt[b][i]))->dat[a][b];
         tr_dest[i].real += s->bc[opp_b] * tc.real;
         tr_dest[i].imag += s->bc[opp_b] * tc.imag;
-        CSUM(tr_dest[i], tempdet[b][a][i]);
+        CSUM(tr_dest[i], tempgathmat[i].dat[b][a]);
       }
     }
 
@@ -593,14 +590,11 @@ void detStoL(matrix *dest[NUMLINK]) {
     FORALLSITES(i, s) {
       CMULREAL(tr_dest[i], localG, tc);
       c_scalar_mult_sum_mat(&(Uinv[a][i]), &tc, &(dest[a][i]));
-
-      // Reset accumulator for sum over b
-      tr_dest[i] = cmplx(0.0, 0.0);
     }
   }
 
-  FORALLDIR(a)
-    cleanup_gather(tag[a]);
+  FORALLDIR(b)
+    cleanup_gather(tag[b]);
 }
 #endif
 // -----------------------------------------------------------------
