@@ -544,14 +544,16 @@ void DbplusStoL(matrix *src, matrix *dest[NUMLINK]) {
 void detStoL(matrix *dest[NUMLINK]) {
   register int i;
   register site *s;
-  int a, b, opp_b, next;
+  int a, b, opp_b;
   Real localG = -0.5 * C2 * G;
-  complex tc;
+  complex tc, **tdet;
   msg_tag *tag[NUMLINK];
 
   // Save Tr[eta(x)] plaqdet[a][b](x)
   //   or Tr[eta(x)] ZWstar[a][b](x) in tempdet[a][b]
+  tdet = malloc(NUMLINK * sizeof(complex*));
   FORALLDIR(a) {
+    tdet[a] = malloc(NUMLINK * sizeof(complex));
     for (b = a + 1; b < NUMLINK; b++) {
       FORALLSITES(i, s) {
         CMUL(tr_eta[i], plaqdet[a][b][i], tempdet[a][b][i]);
@@ -560,53 +562,45 @@ void detStoL(matrix *dest[NUMLINK]) {
     }
   }
 
-  // Now we gather tempdet in both cases
-  // Start first gather for (a, b) = (0, 1)
-  tag[1] = start_gather_field(tempdet[0][1], sizeof(complex),
-                              goffset[1] + 1, EVENANDODD, gen_pt[1]);
-
+  // Start gathering the 5x5 tempdet matrix from site x-a
   FORALLDIR(a) {
+    tag[a] = start_gather_field(tempdet, 5 * 5 * sizeof(complex),
+                                goffset[a] + 1, EVENANDODD, gen_pt[a]);
+
     // Initialize accumulator for sum over b
     FORALLSITES(i, s)
       tr_dest[i] = cmplx(0.0, 0.0);
+  }
 
+  FORALLDIR(a) {
     FORALLDIR(b) {
       if (a == b)
         continue;
-
-      // Start next gather unless we're doing the last (a=4, b=3)
-      next = b + 1;
-      if (next < NUMLINK && a + b < 2 * NUMLINK - 3) {
-        if (next == a)              // Next gather is actually (a, b + 2)
-          next++;
-
-        tag[next] = start_gather_field(tempdet[a][next], sizeof(complex),
-                                       goffset[next] + 1, EVENANDODD,
-                                       gen_pt[next]);
-      }
-      else if (next == NUMLINK) {   // Start next gather (a + 1, 0)
-        tag[0] = start_gather_field(tempdet[a + 1][0], sizeof(complex),
-                                    goffset[0] + 1, EVENANDODD, gen_pt[0]);
-      }
 
       // Accumulate tempdet[b][a](x) + tempdet[a][b](x - b)
       opp_b = OPP_LDIR(b);
       wait_gather(tag[b]);
       FORALLSITES(i, s) {
-        tc = *((complex *)(gen_pt[b][i]));
+//        tdet = (complex **)(gen_pt[b][i]);
+        tc = ((complex **)(gen_pt[b][i]))[a][b];
         tr_dest[i].real += s->bc[opp_b] * tc.real;
         tr_dest[i].imag += s->bc[opp_b] * tc.imag;
         CSUM(tr_dest[i], tempdet[b][a][i]);
       }
-      cleanup_gather(tag[b]);
     }
 
     // Multiply U_a^{-1} by sum, add to dest[a][i]
     FORALLSITES(i, s) {
       CMULREAL(tr_dest[i], localG, tc);
       c_scalar_mult_sum_mat(&(Uinv[a][i]), &tc, &(dest[a][i]));
+
+      // Reset accumulator for sum over b
+      tr_dest[i] = cmplx(0.0, 0.0);
     }
   }
+
+  FORALLDIR(a)
+    cleanup_gather(tag[a]);
 }
 #endif
 // -----------------------------------------------------------------
