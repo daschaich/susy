@@ -229,93 +229,58 @@ void Dplus(matrix *src[NUMLINK], matrix *dest[NPLAQ]) {
 // Given src chi_ab,
 //   dest_b(n) = U_a(n+b) chi_ab(n) - bc(opp_a) chi_ab(n-a) U_a(n-a)
 // Initialize dest
-// Use tempmat and tempmat2 for temporary storage
+// Use tempmat for temporary storage
 #ifdef VP
 void Dminus(matrix *src[NPLAQ], matrix *dest[NUMLINK]) {
   register int i;
   register site *s;
-  char **local_pt[2][2];
-  int mu, nu, index, gather, flip = 0, a, b, next, opp_mu;
-  matrix *mat[2];
-  msg_tag *tag0[2], *tag1[2];
+  int mu, nu, index, opp_mu;
+  msg_tag *tag0, *tag1;
 
-  for (mu = 0; mu < 2; mu++) {
-    local_pt[0][mu] = gen_pt[mu];
-    local_pt[1][mu] = gen_pt[2 + mu];
+  // Initialize dest
+  FORALLDIR(mu) {
+    FORALLSITES(i, s)
+      clear_mat(&(dest[mu][i]));
   }
-  mat[0] = tempmat;
-  mat[1] = tempmat2;
 
-  // Start first set of gathers (mu = 1 and nu = 0)
-  index = plaq_index[1][0];
-  tag0[0] = start_gather_site(F_OFFSET(link[1]), sizeof(matrix),
-                              goffset[0], EVENANDODD, local_pt[0][0]);
-
-  FORALLSITES(i, s) {   // mu = 1 > nu = 0
-    scalar_mult_nn(&(src[index][i]), &(s->link[1]), -1.0, &(mat[0][i]));
-    FORALLDIR(mu)
-      clear_mat(&(dest[mu][i]));        // Initialize
-  }
-  tag1[0] = start_gather_field(mat[0], sizeof(matrix),
-                               goffset[1] + 1, EVENANDODD, local_pt[0][1]);
-
-  // Main loop
   FORALLDIR(nu) {
     FORALLDIR(mu) {
       if (mu == nu)
         continue;
 
-      gather = (flip + 1) % 2;
-      if (nu < NUMLINK - 1 || mu < NUMLINK - 2) { // Start next set of gathers
-        if (mu == NUMLINK - 1) {
-          a = 0;
-          b = nu + 1;
-        }
-        else if (mu == nu - 1) {
-          a = mu + 2;
-          b = nu;
-        }
-        else {
-          a = mu + 1;
-          b = nu;
-        }
-        next = plaq_index[a][b];
-        tag0[gather] = start_gather_site(F_OFFSET(link[a]), sizeof(matrix),
-                                         goffset[b], EVENANDODD,
-                                         local_pt[gather][0]);
-
-        FORALLSITES(i, s) {
-          if (a > b) {      // src is anti-symmetric under a <--> b
-            scalar_mult_nn(&(src[next][i]), &(s->link[a]), -1.0,
-                           &(mat[gather][i]));
-          }
-          else {
-            mult_nn(&(src[next][i]), &(s->link[a]), &(mat[gather][i]));
-          }
-        }
-        tag1[gather] = start_gather_field(mat[gather], sizeof(matrix),
-                                          goffset[a] + 1, EVENANDODD,
-                                          local_pt[gather][1]);
-      }
+      // Start gathers
+      tag0 = start_gather_site(F_OFFSET(link[mu]), sizeof(matrix),
+                               goffset[nu], EVENANDODD, gen_pt[0]);
 
       index = plaq_index[mu][nu];
+      FORALLSITES(i, s) {
+        if (mu > nu) {      // src is anti-symmetric under mu <--> nu
+          scalar_mult_nn(&(src[index][i]), &(s->link[mu]), -1.0,
+                         &(tempmat[i]));
+        }
+        else {
+          mult_nn(&(src[index][i]), &(s->link[mu]), &(tempmat[i]));
+        }
+      }
+      tag1 = start_gather_field(tempmat, sizeof(matrix),
+                                goffset[mu] + 1, EVENANDODD, gen_pt[1]);
+
       opp_mu = OPP_LDIR(mu);
-      wait_gather(tag0[flip]);
-      wait_gather(tag1[flip]);
+      wait_gather(tag0);
+      wait_gather(tag1);
       FORALLSITES(i, s) {
         if (mu > nu)      // src is anti-symmetric under mu <--> nu
-          mult_nn_dif((matrix *)(local_pt[flip][0][i]), &(src[index][i]),
+          mult_nn_dif((matrix *)(gen_pt[0][i]), &(src[index][i]),
                       &(dest[nu][i]));
         else
-          mult_nn_sum((matrix *)(local_pt[flip][0][i]), &(src[index][i]),
+          mult_nn_sum((matrix *)(gen_pt[0][i]), &(src[index][i]),
                       &(dest[nu][i]));
 
-        scalar_mult_dif_matrix((matrix *)(local_pt[flip][1][i]),
+        scalar_mult_dif_matrix((matrix *)(gen_pt[1][i]),
                                s->bc[opp_mu], &(dest[nu][i]));
       }
-      cleanup_gather(tag0[flip]);
-      cleanup_gather(tag1[flip]);
-      flip = gather;
+      cleanup_gather(tag0);
+      cleanup_gather(tag1);
     }
   }
 }
