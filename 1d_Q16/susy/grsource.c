@@ -15,12 +15,19 @@ void ranmom() {
   anti_hermitmat tah;
 
   FORALLSITES(i, s) {
-#ifndef UNGAUGED
 #ifdef SITERAND
     random_anti_hermitian(&(s->mom), &(s->site_prn));
 #else
     random_anti_hermitian(&(s->mom), &(s->node_prn));
 #endif
+
+#ifdef UNGAUGED
+    // Strange PRNG issue if above is turned off
+    // Instead just zero out gauge momenta
+    for (j = 0; j < NCOL; j++)
+      s->mom.im_diag[j] = 0.0;
+    for (j = 0; j < N_OFFDIAG; j++)
+      s->mom.m[j] = cmplx(0.0, 0.0);
 #endif
 
     for (j = 0; j < NSCALAR; j++) {
