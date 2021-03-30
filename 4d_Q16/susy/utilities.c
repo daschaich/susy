@@ -235,7 +235,8 @@ void Dminus(matrix *src[NPLAQ], matrix *dest[NUMLINK]) {
   register int i;
   register site *s;
   int mu, nu, index, opp_mu;
-  msg_tag *tag0, *tag1;
+  matrix *tmat;
+  msg_tag *tag[NUMLINK], *tag1;
 
   // Initialize dest
   FORALLDIR(mu) {
@@ -243,14 +244,20 @@ void Dminus(matrix *src[NPLAQ], matrix *dest[NUMLINK]) {
       clear_mat(&(dest[mu][i]));
   }
 
+  // Start gathers, with link[nu] copied into tempgathvec[nu]
+  FORALLDIR(nu) {
+    FORALLSITES(i, s)
+      mat_copy(&(s->link[nu]), &(tempgathvec[i].dat[nu]));
+  }
+  FORALLDIR(nu) {
+    tag[nu] = start_gather_field(tempgathvec, sizeof(gather_vec),
+                                 goffset[nu], EVENANDODD, gen_pt[nu]);
+  }
+
   FORALLDIR(nu) {
     FORALLDIR(mu) {
       if (mu == nu)
         continue;
-
-      // Start gathers
-      tag0 = start_gather_site(F_OFFSET(link[mu]), sizeof(matrix),
-                               goffset[nu], EVENANDODD, gen_pt[0]);
 
       index = plaq_index[mu][nu];
       FORALLSITES(i, s) {
@@ -263,26 +270,26 @@ void Dminus(matrix *src[NPLAQ], matrix *dest[NUMLINK]) {
         }
       }
       tag1 = start_gather_field(tempmat, sizeof(matrix),
-                                goffset[mu] + 1, EVENANDODD, gen_pt[1]);
+                                goffset[mu] + 1, EVENANDODD, gen_pt[5]);
 
       opp_mu = OPP_LDIR(mu);
-      wait_gather(tag0);
+      wait_gather(tag[nu]);
       wait_gather(tag1);
       FORALLSITES(i, s) {
+        tmat = &(((gather_vec *)(gen_pt[nu][i]))->dat[mu]);
         if (mu > nu)      // src is anti-symmetric under mu <--> nu
-          mult_nn_dif((matrix *)(gen_pt[0][i]), &(src[index][i]),
-                      &(dest[nu][i]));
+          mult_nn_dif(tmat, &(src[index][i]), &(dest[nu][i]));
         else
-          mult_nn_sum((matrix *)(gen_pt[0][i]), &(src[index][i]),
-                      &(dest[nu][i]));
+          mult_nn_sum(tmat, &(src[index][i]), &(dest[nu][i]));
 
-        scalar_mult_dif_matrix((matrix *)(gen_pt[1][i]),
+        scalar_mult_dif_matrix((matrix *)(gen_pt[5][i]),
                                s->bc[opp_mu], &(dest[nu][i]));
       }
-      cleanup_gather(tag0);
       cleanup_gather(tag1);
     }
   }
+  FORALLDIR(nu)
+    cleanup_gather(tag[nu]);
 }
 #endif
 // -----------------------------------------------------------------

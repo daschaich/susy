@@ -162,11 +162,13 @@ void make_fields() {
   // Temporary matrices and Twist_Fermion
   size += (Real)(3.0 * sizeof(matrix));
   size += (Real)(sizeof(gather_mat));
+  size += (Real)(sizeof(gather_vec));
   size += (Real)(sizeof(Twist_Fermion));
   FIELD_ALLOC(tempmat, matrix);
   FIELD_ALLOC(tempmat2, matrix);
   FIELD_ALLOC(staple, matrix);
   FIELD_ALLOC(tempgathmat, gather_mat);
+  FIELD_ALLOC(tempgathvec, gather_vec);
   FIELD_ALLOC(tempTF, Twist_Fermion);
 
 #ifdef CORR
