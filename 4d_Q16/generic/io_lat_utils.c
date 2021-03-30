@@ -420,10 +420,12 @@ void read_checksum(gauge_file *gf, gauge_check *test_gc) {
     terminate(1);
 
   if (gf->check.sum29 != test_gc->sum29 ||
-      gf->check.sum31 != test_gc->sum31)
+      gf->check.sum31 != test_gc->sum31) {
     printf("read_checksum: Checksum violation. Computed %x %x.  Read %x %x.\n",
            test_gc->sum29, test_gc->sum31,
            gf->check.sum29, gf->check.sum31);
+    terminate(1);
+  }
   else {
     printf("Checksums %x %x OK\n", gf->check.sum29, gf->check.sum31);
     fflush(stdout);
