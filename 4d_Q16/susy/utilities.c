@@ -294,54 +294,87 @@ void Dminus(matrix *src[NPLAQ], matrix *dest[NUMLINK]) {
 // Given src chi_de and recalling a + b = -c - d - e,
 //   dest_ab(n) = bc3[a][b][c] chi_de(n+a+b+c) Ubar_c(n+a+b)
 //              - bc2[a][b] Ubar_c(n-c) chi_de(n+a+b)
-// From setup_lambda.c, we see b > a and e > d
 // Add to dest instead of overwriting; note factor of 1/2
 #ifdef QCLOSED
 void DbplusPtoP(matrix *src[NPLAQ], matrix *dest[NPLAQ]) {
   register int i;
   register site *s;
-  int a, b, c, d, e, j, i_ab, i_de;
+  char **local_pt[2][4];
+  int a, b, c, d, e, j, gather, next, flip = 0, i_ab, i_de;
   Real tr;
-  msg_tag *tag0, *tag1, *tag2, *tag3;
+  msg_tag *tag0[2], *tag1[2], *tag2[2], *tag3[2];
+
+  for (a = 0; a < 4; a++) {
+    local_pt[0][a] = gen_pt[a];
+    local_pt[1][a] = gen_pt[4 + a];
+  }
+
+  // Start first set of gathers
+  // From setup_lambda.c, we see b > a and e > d
+  c = DbplusPtoP_lookup[0][2];
+  d = DbplusPtoP_lookup[0][3];
+  e = DbplusPtoP_lookup[0][4];
+  i_de = plaq_index[d][e];
+  tag0[0] = start_gather_site(F_OFFSET(link[c]), sizeof(matrix),
+                              DbpP_d1[0], EVENANDODD, local_pt[0][0]);
+  tag1[0] = start_gather_field(src[i_de], sizeof(matrix),
+                               DbpP_d2[0], EVENANDODD, local_pt[0][1]);
+  tag2[0] = start_gather_field(src[i_de], sizeof(matrix),
+                               DbpP_d1[0], EVENANDODD, local_pt[0][2]);
+  tag3[0] = start_gather_site(F_OFFSET(link[c]), sizeof(matrix),
+                              goffset[c] + 1, EVENANDODD, local_pt[0][3]);
 
   // Loop over lookup table
   for (j = 0; j < NTERMS; j++) {
+    gather = (flip + 1) % 2;
+    if (j < NTERMS - 1) {               // Start next set of gathers
+      next = j + 1;
+      c = DbplusPtoP_lookup[next][2];
+      d = DbplusPtoP_lookup[next][3];
+      e = DbplusPtoP_lookup[next][4];
+      i_de = plaq_index[d][e];
+
+      tag0[gather] = start_gather_site(F_OFFSET(link[c]), sizeof(matrix),
+                                       DbpP_d1[next], EVENANDODD,
+                                       local_pt[gather][0]);
+      tag1[gather] = start_gather_field(src[i_de], sizeof(matrix),
+                                        DbpP_d2[next], EVENANDODD,
+                                        local_pt[gather][1]);
+      tag2[gather] = start_gather_field(src[i_de], sizeof(matrix),
+                                        DbpP_d1[next], EVENANDODD,
+                                        local_pt[gather][2]);
+      tag3[gather] = start_gather_site(F_OFFSET(link[c]), sizeof(matrix),
+                                       goffset[c] + 1, EVENANDODD,
+                                       local_pt[gather][3]);
+    }
+
+    // Do this set of computations while next set of gathers runs
+    a = DbplusPtoP_lookup[j][0];
+    b = DbplusPtoP_lookup[j][1];
     c = DbplusPtoP_lookup[j][2];
     d = DbplusPtoP_lookup[j][3];
     e = DbplusPtoP_lookup[j][4];
-    i_de = plaq_index[d][e];
-
-    // Start gathers
-    tag0 = start_gather_site(F_OFFSET(link[c]), sizeof(matrix),
-                             DbpP_d1[j], EVENANDODD, gen_pt[0]);
-    tag1 = start_gather_field(src[i_de], sizeof(matrix),
-                              DbpP_d2[j], EVENANDODD, gen_pt[1]);
-    tag2 = start_gather_field(src[i_de], sizeof(matrix),
-                              DbpP_d1[j], EVENANDODD, gen_pt[2]);
-    tag3 = start_gather_site(F_OFFSET(link[c]), sizeof(matrix),
-                             goffset[c] + 1, EVENANDODD, gen_pt[3]);
-
-    // Do a little while waiting for gathers
-    a = DbplusPtoP_lookup[j][0];
-    b = DbplusPtoP_lookup[j][1];
-    i_ab = plaq_index[a][b];
     tr = 0.5 * perm[a][b][c][d][e];
+    i_ab = plaq_index[a][b];
 
-    wait_gather(tag0);
-    wait_gather(tag1);
-    wait_gather(tag2);
-    wait_gather(tag3);
+    wait_gather(tag0[flip]);
+    wait_gather(tag1[flip]);
+    wait_gather(tag2[flip]);
+    wait_gather(tag3[flip]);
     FORALLSITES(i, s) {
-      scalar_mult_na_sum((matrix *)(gen_pt[1][i]), (matrix *)(gen_pt[0][i]),
+      scalar_mult_na_sum((matrix *)(local_pt[flip][1][i]),
+                         (matrix *)(local_pt[flip][0][i]),
                          tr * s->bc3[a][b][c], &(dest[i_ab][i]));
 
-      scalar_mult_an_dif((matrix *)(gen_pt[3][i]), (matrix *)(gen_pt[2][i]),
+      scalar_mult_an_dif((matrix *)(local_pt[flip][3][i]),
+                         (matrix *)(local_pt[flip][2][i]),
                          tr * s->bc2[a][b], &(dest[i_ab][i]));
     }
-    cleanup_gather(tag0);
-    cleanup_gather(tag1);
-    cleanup_gather(tag2);
-    cleanup_gather(tag3);
+    cleanup_gather(tag0[flip]);
+    cleanup_gather(tag1[flip]);
+    cleanup_gather(tag2[flip]);
+    cleanup_gather(tag3[flip]);
+    flip = gather;
   }
 }
 #endif
