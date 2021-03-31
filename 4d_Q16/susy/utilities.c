@@ -538,8 +538,7 @@ void detStoL(matrix *dest[NUMLINK]) {
       }
     }
   }
-
-  // Start gathering the NUMLINK x NUMLINK tempgathmat from site x-a
+  // Start gathering the NUMLINK x NUMLINK tempgathmat from site x-b
   FORALLDIR(b) {
     tag[b] = start_gather_field(tempgathmat, sizeof(gather_mat),
                                 goffset[b] + 1, EVENANDODD, gen_pt[b]);
@@ -640,55 +639,52 @@ void DbminusLtoS(matrix *src[NUMLINK], matrix *dest) {
 // D is plaqdet and T is Tr[U^{-1} psi]
 // Assume compute_plaqdet() has already been run
 // bc[b](x) on eta(x) psi_a(x + b)
-// Use Tr_Uinv and tr_dest for temporary storage
+// Use tr_dest and tempgathmat for temporary storage
 // Add to dest instead of overwriting
 // Has same sign as DbminusLtoS (negative comes from generator normalization)
 #ifdef SV
 void detLtoS(matrix *src[NUMLINK], matrix *dest) {
   register int i;
   register site *s;
-  int a, b, next;
+  int a, b;
   Real localG = 0.5 * C2 * G * sqrt((Real)NCOL);
   complex tc, tc2;
   msg_tag *tag[NUMLINK];
 
   // Prepare Tr[U_a^{-1} psi_a] = sum_j Tr[U_a^{-1} Lambda^j] psi_a^j
   // and save in tempgathmat[a][0]
+  // TODO: New struct with just NUMLINK complex numbers?...
   FORALLSITES(i, s) {
     tr_dest[i] = cmplx(0.0, 0.0);   // Initialize
     FORALLDIR(a)
-      Tr_Uinv[a][i] = complextrace_nn(&(Uinv[a][i]), &(src[a][i]));
+      tempgathmat[i].dat[a][0] = complextrace_nn(&(Uinv[a][i]), &(src[a][i]));
+  }
+  // Start gathering the NUMLINK x NUMLINK tempgathmat from site x-b
+  FORALLDIR(b) {
+    tag[b] = start_gather_field(tempgathmat, sizeof(gather_mat),
+                                goffset[b], EVENANDODD, gen_pt[b]);
   }
 
-  // Start first gather of Tr[U_a^{-1} psi_a] from x + b for (0, 1)
-  tag[1] = start_gather_field(Tr_Uinv[0], sizeof(complex),
-                              goffset[1], EVENANDODD, gen_pt[1]);
-
-  // Main loop
+  // Accumulate D[a][b](x) {T[b](x) + T[a](x + b)} in tr_dest
   FORALLDIR(a) {
     FORALLDIR(b) {
       if (a == b)
         continue;
 
-      // Start gathering the NUMLINK x NUMLINK tempgathmat from site x-b
-      tag[b] = start_gather_field(Tr_Uinv[a], sizeof(complex),
-                                  goffset[b], EVENANDODD,
-                                  gen_pt[b]);
-
-      // Accumulate D[a][b](x) {T[b](x) + T[a](x + b)} in tr_dest
       wait_gather(tag[b]);
       FORALLSITES(i, s) {
-        tc = *((complex *)(gen_pt[b][i]));
-        tc2.real = Tr_Uinv[b][i].real + s->bc[b] * tc.real;
-        tc2.imag = Tr_Uinv[b][i].imag + s->bc[b] * tc.imag;
+        tc = ((gather_mat *)(gen_pt[b][i]))->dat[a][0];
+        tc2.real = tempgathmat[i].dat[b][0].real + s->bc[b] * tc.real;
+        tc2.imag = tempgathmat[i].dat[b][0].imag + s->bc[b] * tc.imag;
         CMUL(plaqdet[a][b][i], tc2, tc);
         // localG is purely imaginary...
         tr_dest[i].real -= tc.imag * localG;
         tr_dest[i].imag += tc.real * localG;
       }
-      cleanup_gather(tag[b]);
     }
   }
+  FORALLDIR(b)
+    cleanup_gather(tag[b]);
 
   // Add to dest (negative comes from generator normalization)
   FORALLSITES(i, s)
