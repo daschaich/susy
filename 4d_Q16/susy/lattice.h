@@ -187,6 +187,10 @@ EXTERN site *lattice;
 #define N_POINTERS 15
 EXTERN char **gen_pt[N_POINTERS];
 
+#ifdef WLOOP
+EXTERN su2_matrix *gfix_u;      // For gauge fixing
+#endif
+
 #ifdef CORR
 #define N_B 2
 #define N_K 3    // N_B * (N_B + 1) / 2

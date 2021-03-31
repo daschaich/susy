@@ -120,11 +120,11 @@ void accum_gauge_hit(int gauge_dir, int parity) {
 // Do optimum SU(2) gauge hit for p, q subspace
 // Store the gauge transformation matrix
 // in order to deal with the diagonal link
+// su2_matrix gfix_u must be allocated by the application!
 void do_hit(int gauge_dir, int parity, int p, int q, Real relax_boost) {
   register int dir, i;
   register site *s;
   Real a0, a1, a2, a3, asq, a0sq, x, r, xdr;
-  su2_matrix *u = malloc(sizeof *u * sites_on_node);
   msg_tag *mtag = NULL;
 
   // Accumulate sums for determining optimum gauge hit
@@ -181,13 +181,13 @@ void do_hit(int gauge_dir, int parity, int p, int q, Real relax_boost) {
     a3 = a3 * xdr;
 
     // Elements of SU(2) matrix
-    u[i].e[0][0] = cmplx(a0, a3);
-    u[i].e[0][1] = cmplx(a2, a1);
-    u[i].e[1][0] = cmplx(-a2, a1);
-    u[i].e[1][1] = cmplx(a0, -a3);
+    gfix_u[i].e[0][0] = cmplx(a0, a3);
+    gfix_u[i].e[0][1] = cmplx(a2, a1);
+    gfix_u[i].e[1][0] = cmplx(-a2, a1);
+    gfix_u[i].e[1][1] = cmplx(a0, -a3);
     // Check
 //    printf("U %d %d %d %d %d\n", i, s->x, s->y, s->z, s->t);
-//    dumpsu2(&u[i]);
+//    dumpsu2(&gfix_u[i]);
   } // End of loop building the gauge transformation
 
   // We just saved the gauge transformations on every site
@@ -196,7 +196,7 @@ void do_hit(int gauge_dir, int parity, int p, int q, Real relax_boost) {
   // Gather from direction DIR_5 to transform the diagonal link
   // This link stays on its own parity
   // rather than respecting the red--black checkerboard of the other links
-  mtag = start_gather_field(u, sizeof(su2_matrix),
+  mtag = start_gather_field(gfix_u, sizeof(su2_matrix),
                             goffset[DIR_5], EVENANDODD, gen_pt[9]);
   wait_gather(mtag);
 
@@ -207,19 +207,18 @@ void do_hit(int gauge_dir, int parity, int p, int q, Real relax_boost) {
     // and we must not touch the DIR_5 link on the other checkerboard
     // Do SU(2) hit on all upward non-diagonal links
     FORALLUPDIR(dir)
-      left_su2_hit_n(&(u[i]), p, q, &(s->link[dir]));
+      left_su2_hit_n(&(gfix_u[i]), p, q, &(s->link[dir]));
 
     // Now deal with the diagonal link, hitting it on right, too
-    left_su2_hit_n(&(u[i]), p, q, &(s->link[DIR_5]));
+    left_su2_hit_n(&(gfix_u[i]), p, q, &(s->link[DIR_5]));
     right_su2_hit_a((su2_matrix *)(gen_pt[9][i]), p, q, &(s->link[DIR_5]));
 
     // Do SU(2) hit on all downward links, don't touch the diagonal one
     FORALLUPDIR(dir)
-      right_su2_hit_a(&(u[i]), p, q, (matrix *)gen_pt[dir][i]);
+      right_su2_hit_a(&(gfix_u[i]), p, q, (matrix *)gen_pt[dir][i]);
   }
   // Exit with modified downward links left in communications buffer
   cleanup_gather(mtag);
-  free(u);
 }
 // -----------------------------------------------------------------
 

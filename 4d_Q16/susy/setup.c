@@ -452,6 +452,11 @@ int readin(int prompt) {
                lambda, kappa);
   node0_printf("C2=%.4g\n", C2);    // Currently hardwired in defines.h
 
+#ifdef WLOOP
+  if (fixflag != NO_GAUGE_FIX)
+    FIELD_ALLOC(gfix_u, su2_matrix);
+#endif
+
 #ifdef SMEAR
   smearflag = par_buf.smearflag;
   Nsmear = par_buf.Nsmear;
