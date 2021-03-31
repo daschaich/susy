@@ -156,7 +156,8 @@ EXTERN gather_mat *tempgathmat;
 typedef struct {
   matrix dat[NUMLINK];
 } gather_vec;
-EXTERN gather_vec *tempgathvec;
+EXTERN gather_vec *tempgathvec, *tempgathvec2;
+EXTERN gather_vec *tempgathvec3[NUMLINK];
 
 // CG Twist_Fermions
 EXTERN Twist_Fermion *mpm, *pm0, *rm;

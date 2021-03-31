@@ -229,14 +229,14 @@ void Dplus(matrix *src[NUMLINK], matrix *dest[NPLAQ]) {
 // Given src chi_ab,
 //   dest_b(n) = U_a(n+b) chi_ab(n) - bc(opp_a) chi_ab(n-a) U_a(n-a)
 // Initialize dest
-// Use tempmat and tempgathvec for temporary storage
+// Use tempgathvec and tempgathvec2 for temporary storage
 #ifdef VP
 void Dminus(matrix *src[NPLAQ], matrix *dest[NUMLINK]) {
   register int i;
   register site *s;
   int mu, nu, index, opp_mu;
   matrix *tmat;
-  msg_tag *tag[NUMLINK], *tag1;
+  msg_tag *tag[NUMLINK], *tag2[NUMLINK];
 
   // Initialize dest
   FORALLDIR(mu) {
@@ -254,42 +254,54 @@ void Dminus(matrix *src[NPLAQ], matrix *dest[NUMLINK]) {
                                  goffset[nu], EVENANDODD, gen_pt[nu]);
   }
 
+  // Second set of gathers needs different tempgathvec3[mu]
+  // for each src[mu][nu](n-mu) link[mu](n-mu)
+  FORALLDIR(mu) {
+    FORALLDIR(nu) {
+      if (mu == nu)
+        continue;
+
+      index = plaq_index[mu][nu];
+      FORALLSITES(i, s) {
+        tmat = &(tempgathvec3[mu][i].dat[nu]);
+        if (mu > nu)      // src is anti-symmetric under mu <--> nu
+          scalar_mult_nn(&(src[index][i]), &(s->link[mu]), -1.0, tmat);
+        else
+          mult_nn(&(src[index][i]), &(s->link[mu]), tmat);
+      }
+    }
+    tag2[mu] = start_gather_field(tempgathvec3[mu], sizeof(gather_vec),
+                                  goffset[mu] + 1, EVENANDODD,
+                                  gen_pt[NUMLINK + mu]);
+  }
+
   FORALLDIR(nu) {
     FORALLDIR(mu) {
       if (mu == nu)
         continue;
 
       index = plaq_index[mu][nu];
-      FORALLSITES(i, s) {
-        if (mu > nu) {      // src is anti-symmetric under mu <--> nu
-          scalar_mult_nn(&(src[index][i]), &(s->link[mu]), -1.0,
-                         &(tempmat[i]));
-        }
-        else {
-          mult_nn(&(src[index][i]), &(s->link[mu]), &(tempmat[i]));
-        }
-      }
-      tag1 = start_gather_field(tempmat, sizeof(matrix),
-                                goffset[mu] + 1, EVENANDODD, gen_pt[5]);
-
-      opp_mu = OPP_LDIR(mu);
       wait_gather(tag[nu]);
-      wait_gather(tag1);
       FORALLSITES(i, s) {
         tmat = &(((gather_vec *)(gen_pt[nu][i]))->dat[mu]);
         if (mu > nu)      // src is anti-symmetric under mu <--> nu
           mult_nn_dif(tmat, &(src[index][i]), &(dest[nu][i]));
         else
           mult_nn_sum(tmat, &(src[index][i]), &(dest[nu][i]));
-
-        scalar_mult_dif_matrix((matrix *)(gen_pt[5][i]),
-                               s->bc[opp_mu], &(dest[nu][i]));
       }
-      cleanup_gather(tag1);
+
+      opp_mu = OPP_LDIR(mu);
+      wait_gather(tag2[mu]);
+      FORALLSITES(i, s) {
+        tmat = &(((gather_vec *)(gen_pt[NUMLINK + mu][i]))->dat[nu]);
+        scalar_mult_dif_matrix(tmat, s->bc[opp_mu], &(dest[nu][i]));
+      }
     }
   }
-  FORALLDIR(nu)
+  FORALLDIR(nu) {
     cleanup_gather(tag[nu]);
+    cleanup_gather(tag2[nu]);
+  }
 }
 #endif
 // -----------------------------------------------------------------
