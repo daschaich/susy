@@ -137,86 +137,74 @@ void compute_Uinv() {
 //   dest_ab(n) = bc[a] U_a(n) psi_b(n+a) - psi_b(n) U_a(n+b)
 //              - bc[b] U_b(n) psi_a(n+b) + psi_a(n) U_b(n+a)
 // Initialize dest; absorb factor of 1/2 by keeping b > a
+// Use tempgathvec and tempgathvec2 for temporary storage
 #ifdef VP
 void Dplus(matrix *src[NUMLINK], matrix *dest[NPLAQ]) {
   register int i;
   register site *s;
-  char **local_pt[2][4];
-  int mu, nu, index, gather, flip = 0, a, b;
-  msg_tag *tag0[2], *tag1[2], *tag2[2], *tag3[2];
+  int mu, nu, index;
+  matrix *tmat;
+  msg_tag *tag[NUMLINK], *tag2[NUMLINK];
 
-  for (mu = 0; mu < 4; mu++) {
-    local_pt[0][mu] = gen_pt[mu];
-    local_pt[1][mu] = gen_pt[4 + mu];
+  // Start gathers, with link[mu] copied into tempgathvec[mu]
+  // and src[mu] copied into tempgathvec2[mu]
+  FORALLDIR(mu) {
+    FORALLSITES(i, s)
+      mat_copy(&(s->link[mu]), &(tempgathvec[i].dat[mu]));
+  }
+  FORALLDIR(mu) {
+    tag[mu] = start_gather_field(tempgathvec, sizeof(gather_vec),
+                                 goffset[mu], EVENANDODD, gen_pt[mu]);
+  }
+  FORALLDIR(mu) {
+    FORALLSITES(i, s)
+      mat_copy(&(src[mu][i]), &(tempgathvec2[i].dat[mu]));
+  }
+  FORALLDIR(mu) {
+    tag2[mu] = start_gather_field(tempgathvec2, sizeof(gather_vec),
+                                  goffset[mu], EVENANDODD,
+                                  gen_pt[NUMLINK + mu]);
   }
 
-  // Start first set of gathers (mu = 0 and nu = 1)
-  tag0[0] = start_gather_field(src[1], sizeof(matrix),
-                               goffset[0], EVENANDODD, local_pt[0][0]);
-
-  tag1[0] = start_gather_site(F_OFFSET(link[0]), sizeof(matrix),
-                              goffset[1], EVENANDODD, local_pt[0][1]);
-
-  tag2[0] = start_gather_field(src[0], sizeof(matrix),
-                               goffset[1], EVENANDODD, local_pt[0][2]);
-
-  tag3[0] = start_gather_site(F_OFFSET(link[1]), sizeof(matrix),
-                              goffset[0], EVENANDODD, local_pt[0][3]);
-
-  // Main loop
+  // Now put it all together
   FORALLDIR(mu) {
     for (nu = mu + 1; nu < NUMLINK; nu++) {
       index = plaq_index[mu][nu];
-      gather = (flip + 1) % 2;
-      if (index < NPLAQ - 1) {               // Start next set of gathers
-        if (nu == NUMLINK - 1) {
-          a = mu + 1;
-          b = a + 1;
-        }
-        else {
-          a = mu;
-          b = nu + 1;
-        }
-        tag0[gather] = start_gather_field(src[b], sizeof(matrix), goffset[a],
-                                          EVENANDODD, local_pt[gather][0]);
 
-        tag1[gather] = start_gather_site(F_OFFSET(link[a]), sizeof(matrix),
-                                         goffset[b], EVENANDODD,
-                                         local_pt[gather][1]);
-
-        tag2[gather] = start_gather_field(src[a], sizeof(matrix), goffset[b],
-                                          EVENANDODD, local_pt[gather][2]);
-
-        tag3[gather] = start_gather_site(F_OFFSET(link[b]), sizeof(matrix),
-                                         goffset[a], EVENANDODD,
-                                         local_pt[gather][3]);
-      }
-
-      wait_gather(tag0[flip]);
-      wait_gather(tag1[flip]);
-      wait_gather(tag2[flip]);
-      wait_gather(tag3[flip]);
+      // Initialize dest[index][i] with link[mu](n) src[nu](x+mu)
+      wait_gather(tag2[mu]);
       FORALLSITES(i, s) {
-        // Initialize dest[index][i]
-        scalar_mult_nn(&(s->link[mu]), (matrix *)(local_pt[flip][0][i]),
-                       s->bc[mu], &(plaq_dest[index][i]));
-
-        // Add or subtract the other three terms
-        mult_nn_dif(&(src[nu][i]), (matrix *)(local_pt[flip][1][i]),
-                    &(plaq_dest[index][i]));
-
-        scalar_mult_nn_dif(&(s->link[nu]), (matrix *)(local_pt[flip][2][i]),
-                           s->bc[nu], &(plaq_dest[index][i]));
-
-        mult_nn_sum(&(src[mu][i]), (matrix *)(local_pt[flip][3][i]),
-                    &(plaq_dest[index][i]));
+        tmat = &(((gather_vec *)(gen_pt[NUMLINK + mu][i]))->dat[nu]);
+        scalar_mult_nn(&(s->link[mu]), tmat, s->bc[mu],
+                       &(plaq_dest[index][i]));
       }
-      cleanup_gather(tag0[flip]);
-      cleanup_gather(tag1[flip]);
-      cleanup_gather(tag2[flip]);
-      cleanup_gather(tag3[flip]);
-      flip = gather;
+
+      // Subtract src[nu](n) link[mu](x+nu)
+      wait_gather(tag[nu]);
+      FORALLSITES(i, s) {
+        tmat = &(((gather_vec *)(gen_pt[nu][i]))->dat[mu]);
+        mult_nn_dif(&(src[nu][i]), tmat, &(plaq_dest[index][i]));
+      }
+
+      // Subtract link[nu](n) src[mu](x+nu)
+      wait_gather(tag2[nu]);
+      FORALLSITES(i, s) {
+        tmat = &(((gather_vec *)(gen_pt[NUMLINK + nu][i]))->dat[mu]);
+        scalar_mult_nn_dif(&(s->link[nu]), tmat, s->bc[nu],
+                           &(plaq_dest[index][i]));
+      }
+
+      // Finally add src[mu](n) link[nu](x+mu)
+      wait_gather(tag[mu]);
+      FORALLSITES(i, s) {
+        tmat = &(((gather_vec *)(gen_pt[mu][i]))->dat[nu]);
+        mult_nn_sum(&(src[mu][i]), tmat, &(plaq_dest[index][i]));
+      }
     }
+  }
+  FORALLDIR(mu) {
+    cleanup_gather(tag[mu]);
+    cleanup_gather(tag2[mu]);
   }
 }
 #endif
@@ -229,7 +217,7 @@ void Dplus(matrix *src[NUMLINK], matrix *dest[NPLAQ]) {
 // Given src chi_ab,
 //   dest_b(n) = U_a(n+b) chi_ab(n) - bc(opp_a) chi_ab(n-a) U_a(n-a)
 // Initialize dest
-// Use tempgathvec and tempgathvec2 for temporary storage
+// Use tempgathvec and tempgathvec3 for temporary storage
 #ifdef VP
 void Dminus(matrix *src[NPLAQ], matrix *dest[NUMLINK]) {
   register int i;
@@ -275,6 +263,7 @@ void Dminus(matrix *src[NPLAQ], matrix *dest[NUMLINK]) {
                                   gen_pt[NUMLINK + mu]);
   }
 
+  // Now put it all together
   FORALLDIR(nu) {
     FORALLDIR(mu) {
       if (mu == nu)
