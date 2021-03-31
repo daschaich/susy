@@ -182,7 +182,8 @@ EXTERN site *lattice;
 // Vectors for addressing
 // Generic pointers, for gather routines
 // Need 10 for gauge-fixing, 9 for Q-invariant determinant force
-#define N_POINTERS 10
+// TODO: Temporarily saving last five for shifted links in fermion_op
+#define N_POINTERS 15
 EXTERN char **gen_pt[N_POINTERS];
 
 #ifdef CORR

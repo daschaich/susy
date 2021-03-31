@@ -229,7 +229,7 @@ void Dplus(matrix *src[NUMLINK], matrix *dest[NPLAQ]) {
 // Given src chi_ab,
 //   dest_b(n) = U_a(n+b) chi_ab(n) - bc(opp_a) chi_ab(n-a) U_a(n-a)
 // Initialize dest
-// Use tempmat for temporary storage
+// Use tempmat and tempgathvec for temporary storage
 #ifdef VP
 void Dminus(matrix *src[NPLAQ], matrix *dest[NUMLINK]) {
   register int i;
@@ -301,6 +301,7 @@ void Dminus(matrix *src[NPLAQ], matrix *dest[NUMLINK]) {
 // Given src chi_de and recalling a + b = -c - d - e,
 //   dest_ab(n) = bc3[a][b][c] chi_de(n+a+b+c) Ubar_c(n+a+b)
 //              - bc2[a][b] Ubar_c(n-c) chi_de(n+a+b)
+// Use gen_pt[10 + mu]
 // Add to dest instead of overwriting; note factor of 1/2
 #ifdef QCLOSED
 void DbplusPtoP(matrix *src[NPLAQ], matrix *dest[NPLAQ]) {
@@ -309,11 +310,11 @@ void DbplusPtoP(matrix *src[NPLAQ], matrix *dest[NPLAQ]) {
   char **local_pt[2][4];
   int a, b, c, d, e, j, gather, next, flip = 0, i_ab, i_de;
   Real tr;
-  msg_tag *tag0[2], *tag1[2], *tag2[2], *tag3[2];
+  msg_tag *tag0[2], *tag1[2], *tag2[2];
 
-  for (a = 0; a < 4; a++) {
+  for (a = 0; a < 3; a++) {
     local_pt[0][a] = gen_pt[a];
-    local_pt[1][a] = gen_pt[4 + a];
+    local_pt[1][a] = gen_pt[3 + a];
   }
 
   // Start first set of gathers
@@ -328,8 +329,6 @@ void DbplusPtoP(matrix *src[NPLAQ], matrix *dest[NPLAQ]) {
                                DbpP_d2[0], EVENANDODD, local_pt[0][1]);
   tag2[0] = start_gather_field(src[i_de], sizeof(matrix),
                                DbpP_d1[0], EVENANDODD, local_pt[0][2]);
-  tag3[0] = start_gather_site(F_OFFSET(link[c]), sizeof(matrix),
-                              goffset[c] + 1, EVENANDODD, local_pt[0][3]);
 
   // Loop over lookup table
   for (j = 0; j < NTERMS; j++) {
@@ -350,9 +349,6 @@ void DbplusPtoP(matrix *src[NPLAQ], matrix *dest[NPLAQ]) {
       tag2[gather] = start_gather_field(src[i_de], sizeof(matrix),
                                         DbpP_d1[next], EVENANDODD,
                                         local_pt[gather][2]);
-      tag3[gather] = start_gather_site(F_OFFSET(link[c]), sizeof(matrix),
-                                       goffset[c] + 1, EVENANDODD,
-                                       local_pt[gather][3]);
     }
 
     // Do this set of computations while next set of gathers runs
@@ -367,20 +363,18 @@ void DbplusPtoP(matrix *src[NPLAQ], matrix *dest[NPLAQ]) {
     wait_gather(tag0[flip]);
     wait_gather(tag1[flip]);
     wait_gather(tag2[flip]);
-    wait_gather(tag3[flip]);
     FORALLSITES(i, s) {
       scalar_mult_na_sum((matrix *)(local_pt[flip][1][i]),
                          (matrix *)(local_pt[flip][0][i]),
                          tr * s->bc3[a][b][c], &(dest[i_ab][i]));
 
-      scalar_mult_an_dif((matrix *)(local_pt[flip][3][i]),
+      scalar_mult_an_dif((matrix *)(gen_pt[10 + c][i]),
                          (matrix *)(local_pt[flip][2][i]),
                          tr * s->bc2[a][b], &(dest[i_ab][i]));
     }
     cleanup_gather(tag0[flip]);
     cleanup_gather(tag1[flip]);
     cleanup_gather(tag2[flip]);
-    cleanup_gather(tag3[flip]);
     flip = gather;
   }
 }
@@ -394,6 +388,7 @@ void DbplusPtoP(matrix *src[NPLAQ], matrix *dest[NPLAQ]) {
 // Given src chi_ab and recalling d + e = -a - b - c,
 //   dest_de(n) = bc2[opp_a][opp_b] chi_ab(n-a-b) Ubar_c(n-a-b-c)
 //              - bc3[opp_a][opp_b][opp_c] Ubar_c(n-c) chi_ab(n-a-b-c)
+// Use gen_pt[10 + mu]
 // Add to dest instead of overwriting; note factor of 1/2
 #ifdef QCLOSED
 void DbminusPtoP(matrix *src[NPLAQ], matrix *dest[NPLAQ]) {
@@ -402,11 +397,11 @@ void DbminusPtoP(matrix *src[NPLAQ], matrix *dest[NPLAQ]) {
   char **local_pt[2][4];
   int a, b, c, d, e, j, gather, next, flip = 0, i_ab, i_de;
   Real tr;
-  msg_tag *tag0[2], *tag1[2], *tag2[2], *tag3[2];
+  msg_tag *tag0[2], *tag1[2], *tag2[2];
 
-  for (a = 0; a < 4; a++) {
+  for (a = 0; a < 3; a++) {
     local_pt[0][a] = gen_pt[a];
-    local_pt[1][a] = gen_pt[4 + a];
+    local_pt[1][a] = gen_pt[3 + a];
   }
 
   // Start first set of gathers
@@ -422,8 +417,6 @@ void DbminusPtoP(matrix *src[NPLAQ], matrix *dest[NPLAQ]) {
                                DbmP_d2[0], EVENANDODD, local_pt[0][1]);
   tag2[0] = start_gather_field(src[i_ab], sizeof(matrix),
                                DbmP_d1[0], EVENANDODD, local_pt[0][2]);
-  tag3[0] = start_gather_site(F_OFFSET(link[c]), sizeof(matrix),
-                              goffset[c] + 1, EVENANDODD, local_pt[0][3]);
 
   // Loop over lookup table
   for (j = 0; j < NTERMS; j++) {
@@ -443,9 +436,6 @@ void DbminusPtoP(matrix *src[NPLAQ], matrix *dest[NPLAQ]) {
       tag2[gather] = start_gather_field(src[i_ab], sizeof(matrix),
                                         DbmP_d1[next], EVENANDODD,
                                         local_pt[gather][2]);
-      tag3[gather] = start_gather_site(F_OFFSET(link[c]), sizeof(matrix),
-                                       goffset[c] + 1, EVENANDODD,
-                                       local_pt[gather][3]);
     }
 
     // Do this set of computations while next set of gathers runs
@@ -463,20 +453,18 @@ void DbminusPtoP(matrix *src[NPLAQ], matrix *dest[NPLAQ]) {
     wait_gather(tag0[flip]);
     wait_gather(tag1[flip]);
     wait_gather(tag2[flip]);
-    wait_gather(tag3[flip]);
     FORALLSITES(i, s) {
       scalar_mult_na_sum((matrix *)(local_pt[flip][1][i]),
                          (matrix *)(local_pt[flip][0][i]),
                          tr * s->bc2[opp_a][opp_b], &(dest[i_de][i]));
 
-      scalar_mult_an_dif((matrix *)(local_pt[flip][3][i]),
+      scalar_mult_an_dif((matrix *)(gen_pt[10 + c][i]),
                          (matrix *)(local_pt[flip][2][i]),
                          tr * s->bc3[opp_a][opp_b][opp_c], &(dest[i_de][i]));
     }
     cleanup_gather(tag0[flip]);
     cleanup_gather(tag1[flip]);
     cleanup_gather(tag2[flip]);
-    cleanup_gather(tag3[flip]);
     flip = gather;
   }
 }
@@ -725,6 +713,16 @@ void detLtoS(matrix *src[NUMLINK], matrix *dest) {
 void fermion_op(Twist_Fermion *src, Twist_Fermion *dest, int sign) {
   register int i, mu;
   register site *s;
+  msg_tag *tag[NUMLINK];
+
+#ifdef QCLOSED
+  // Start gathering U_a(x-a) for Q-closed terms
+  FORALLDIR(mu) {
+    tag[mu] = start_gather_site(F_OFFSET(link[mu]), sizeof(matrix),
+                                goffset[mu] + 1, EVENANDODD,
+                                gen_pt[10 + mu]);
+  }
+#endif
 
   // Copy src TwistFermion into fieldwise site, link and plaq fermions,
   // overwriting all of the latter
@@ -793,6 +791,9 @@ void fermion_op(Twist_Fermion *src, Twist_Fermion *dest, int sign) {
 
 #ifdef QCLOSED
   // Plaquette-to-plaquette contributions
+  FORALLDIR(mu)
+    wait_gather(tag[mu]);
+
   DbminusPtoP(plaq_src, plaq_dest);       // Adds to plaq_dest
   DbplusPtoP(plaq_src, plaq_dest);        // Adds to plaq_dest
 #endif
@@ -801,6 +802,12 @@ void fermion_op(Twist_Fermion *src, Twist_Fermion *dest, int sign) {
 #ifdef RESCALE
   FORALLSITES(i, s)
     scalar_mult_matrix(&(site_dest[i]), 2.0, &(site_dest[i]));
+#endif
+
+#ifdef QCLOSED
+  // Done with U_a(x-a) for Q-closed terms
+  FORALLDIR(mu)
+    cleanup_gather(tag[mu]);
 #endif
 
   // Copy local plaquette, link and site fermions into dest TwistFermion
