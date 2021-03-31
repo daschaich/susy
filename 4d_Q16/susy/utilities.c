@@ -653,7 +653,7 @@ void detLtoS(matrix *src[NUMLINK], matrix *dest) {
   msg_tag *tag[NUMLINK];
 
   // Prepare Tr[U_a^{-1} psi_a] = sum_j Tr[U_a^{-1} Lambda^j] psi_a^j
-  // and save in Tr_Uinv[a]
+  // and save in tempgathmat[a][0]
   FORALLSITES(i, s) {
     tr_dest[i] = cmplx(0.0, 0.0);   // Initialize
     FORALLDIR(a)
@@ -670,19 +670,10 @@ void detLtoS(matrix *src[NUMLINK], matrix *dest) {
       if (a == b)
         continue;
 
-      // Start next gather unless we're doing the last (a=4, b=3)
-      next = b + 1;
-      if (next < NUMLINK && a + b < 2 * NUMLINK - 3) {
-        if (next == a)              // Next gather is actually (a, b + 2)
-          next++;
-        tag[next] = start_gather_field(Tr_Uinv[a], sizeof(complex),
-                                       goffset[next], EVENANDODD,
-                                       gen_pt[next]);
-      }
-      else if (next == NUMLINK) {   // Start next gather (a + 1, 0)
-        tag[0] = start_gather_field(Tr_Uinv[a + 1], sizeof(complex),
-                                    goffset[0], EVENANDODD, gen_pt[0]);
-      }
+      // Start gathering the NUMLINK x NUMLINK tempgathmat from site x-b
+      tag[b] = start_gather_field(Tr_Uinv[a], sizeof(complex),
+                                  goffset[b], EVENANDODD,
+                                  gen_pt[b]);
 
       // Accumulate D[a][b](x) {T[b](x) + T[a](x + b)} in tr_dest
       wait_gather(tag[b]);
