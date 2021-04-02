@@ -1371,21 +1371,18 @@ void do_gather(msg_tag *mtag) {
 
 // Wait for gather to finish
 void wait_gather(msg_tag *mtag) {
+  MPI_Status status;
   int i;
-  MPI_Request recv_req[mtag->nrecvs];
-  MPI_Request send_req[mtag->nsends];
-  MPI_Status recv_status[mtag->nrecvs];
-  MPI_Status send_status[mtag->nsends];
 
-  // Wait for all receive messages
-  for (i = 0; i < mtag->nrecvs; i++)
-    recv_req[i] = mtag->recv_msgs[i].msg_req;
-  MPI_Waitall(mtag->nrecvs, recv_req, recv_status);
+  /* wait for all receive messages */
+  for (i = 0; i < mtag->nrecvs; i++) {
+    MPI_Wait(&mtag->recv_msgs[i].msg_req, &status);
+  }
 
-  // Wait for all send messages
-  for (i = 0; i < mtag->nsends; i++)
-    send_req[i] = mtag->send_msgs[i].msg_req;
-  MPI_Waitall(mtag->nsends, send_req, send_status);
+  /* wait for all send messages */
+  for (i = 0; i < mtag->nsends; i++) {
+    MPI_Wait(&mtag->send_msgs[i].msg_req, &status);
+  }
 }
 
 // Free buffers associated with message tag
