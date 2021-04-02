@@ -8,7 +8,7 @@
 
 MAKEFILE = Make_mpi
 
-CC       = mpicc
+CC       = mpiicc
 OPT      = -O3 -Wall
 CODETYPE = # -DFAST # Only works if NCOL=DIMF=3
 AR = ar
