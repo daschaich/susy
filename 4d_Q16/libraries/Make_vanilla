@@ -7,7 +7,7 @@
 
 MAKEFILE = Make_vanilla
 
-CC       = icc
+CC       = gcc
 OPT      = -O3 -Wall
 CODETYPE = # -DFAST # Only works if NCOL=DIMF=3
 AR = ar
