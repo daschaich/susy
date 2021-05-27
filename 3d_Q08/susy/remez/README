@@ -1,0 +1,24 @@
+This directory contains a lattice N=4 SYM interface to an implementation of the
+Remez algorithm.  It is based on an interface written by Doug Toussaint (dated
+5/10/06) based on ``test'' code by Mike Clark, using Mike Clark's alg_remez.C.
+A more recent version of this code may be found at
+https://github.com/mikeaclark/AlgRemez
+That's where you should go if you're interested in the algorithm and
+implementation itself, including its current caveats and limitations.
+
+This software requires GMP, the GNU Multiple Precision Library.  The Makefile
+may need to be modified to link against GMP.
+
+The main program is in poly.C, and calls the function generateApprox in
+alg_remez.C.  As detailed by the inline documentation poly.C calculates and
+prints rational approximations to the fourth and eighth root functions needed
+by N=4 SYM, divided into Nroot number of additional roots.
+
+Compilation: Run `make`.  Only compile and run in serial.
+
+Usage: poly < [params_in_file] > [params_rhmc_file]
+
+Where params_in_file contains
+  Nroot  MD_order  action_order  eval_min  eval_max precision
+Example:
+  2      15        15            0.0000001 1500     65

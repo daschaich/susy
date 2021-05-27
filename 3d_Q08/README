@@ -1,4 +1,4 @@
-This directory of SUSY LATTICE contains parallel code for RHMC simulations of N=4 supersymmetric Yang--Mills theory in four dimensions, including related measurements.
+This directory of SUSY LATTICE contains parallel code for RHMC simulations of N=3 supersymmetric Yang--Mills theory in four dimensions, including related measurements.
 
 See susy/README for the real README!
 

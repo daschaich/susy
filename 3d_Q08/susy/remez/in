@@ -1,0 +1,5 @@
+1  13  13  0.00005  5000  65
+# The numbers are
+#   Nroot  MD_order  action_order  eval_min  eval_max  precision
+# Run ./poly < in > out.N...
+# Try to keep the printed errors below 2e-5
