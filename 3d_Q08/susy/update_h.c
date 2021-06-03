@@ -257,16 +257,10 @@ void F1Q(matrix *plaq_sol[NPLAQ], matrix *plaq_psol[NPLAQ],
          matrix *vol_sol, matrix *vol_psol) {
   register int i;
   register site *s;
-  char **local_pt[2][4];
   int a, b, c, j, i_ab;
   Real permm, tr;
-  msg_tag *tag0[2], *tag1[2];
+  msg_tag *tag0, *tag1;
   matrix tmat;
-
-  for (a = 0; a < 2; a++) {
-    local_pt[0][a] = gen_pt[a];
-    local_pt[1][a] = gen_pt[2 + a];
-  }
 
   // Start first set of gathers
   // From setup_lamba.c, we see b > a and c!=a, c!=b
@@ -275,29 +269,32 @@ void F1Q(matrix *plaq_sol[NPLAQ], matrix *plaq_psol[NPLAQ],
     a = FQ_lookup[j][0];
     b = FQ_lookup[j][1];
     c = FQ_lookup[j][2];
-    permm = perm[a][b][c];
     i_ab = plaq_index[a][b];
 
-    tag0[0] = start_gather_field(plaq_sol[i_ab], sizeof(matrix),
-                                 goffset[c], EVENANDODD, local_pt[0][0]);
-    FORALLSITES(i, s) mult_nn(&(plaq_psol[i_ab][i]), &(vol_sol[i]), &(tempmat2[i]));
-    tag1[0] = start_gather_field(tempmat2, sizeof(matrix),
-                                 FQ_d1[j], EVENANDODD, local_pt[0][1]);//d1=-mu_a-mu_b
+    tag0 = start_gather_field(plaq_sol[i_ab], sizeof(matrix),
+                              goffset[c], EVENANDODD, gen_pt[0]);
+
+    FORALLSITES(i, s)
+      mult_nn(&(plaq_psol[i_ab][i]), &(vol_sol[i]), &(tempmat2[i]));
+
+    tag1 = start_gather_field(tempmat2, sizeof(matrix),
+                              FQ_d1[j], EVENANDODD, gen_pt[1]);//d1=-mu_a-mu_b
 
 
-    wait_gather(tag0[0]);
-    wait_gather(tag1[0]);
+    permm = perm[a][b][c] / 2.0;
+    wait_gather(tag0);
+    wait_gather(tag1);
     FORALLSITES(i, s) {
-      tr = 0.5 * permm * (s->bc[c]);//Original - no minus
-      scalar_mult_matrix((matrix *)(local_pt[0][0][i]), tr, &tmat);
+      tr = permm * s->bc[c];//Original - no minus
+      scalar_mult_matrix((matrix *)(gen_pt[0][i]), tr, &tmat);
       mult_nn(&(vol_psol[i]), &tmat, &(tempmat[i]));
 
-      tr = -0.5 * permm;//Original - minus,  //bc(-a-b)^2 = 1
-      scalar_mult_sum_matrix((matrix *)(local_pt[0][1][i]), tr, &(tempmat[i]));
+      // Negative sign absorbed below
+      scalar_mult_dif_matrix((matrix *)(gen_pt[1][i]), permm, &(tempmat[i]));
       scalar_mult_sum_adj_matrix(&(tempmat[i]), -0.5, &(s->f_U[c]));//Original -0.5
     }
-    cleanup_gather(tag0[0]);
-    cleanup_gather(tag1[0]);
+    cleanup_gather(tag0);
+    cleanup_gather(tag1);
   }
 }
 
@@ -316,16 +313,10 @@ void F2Q(matrix *plaq_sol[NPLAQ], matrix *plaq_psol[NPLAQ],
 
   register int i;
   register site *s;
-  char **local_pt[2][4];
   int a, b, c, j, i_ab;
   Real permm, tr;
-  msg_tag *tag0[2], *tag1[2];
+  msg_tag *tag0, *tag1;
   matrix tmat;
-
-  for (a = 0; a < 2; a++) {
-    local_pt[0][a] = gen_pt[a];
-    local_pt[1][a] = gen_pt[2 + a];
-  }
 
   // Start first set of gathers
   // From setup_lamba.c, we see b > a and c!=a, c!=b
@@ -336,26 +327,28 @@ void F2Q(matrix *plaq_sol[NPLAQ], matrix *plaq_psol[NPLAQ],
     c = FQ_lookup[j][2];
     i_ab = plaq_index[a][b];
 
-    tag0[0] = start_gather_field(plaq_psol[i_ab], sizeof(matrix),
-                                 goffset[c], EVENANDODD, local_pt[0][0]);
-    FORALLSITES(i, s) mult_nn(&(plaq_sol[i_ab][i]), &(vol_psol[i]), &(tempmat2[i]));
-    tag1[0] = start_gather_field(tempmat2, sizeof(matrix),
-                                 FQ_d1[j], EVENANDODD, local_pt[0][1]);//d1=-mu_a-mu_b
-    permm = perm[a][b][c];
-    
-    wait_gather(tag0[0]);
-    wait_gather(tag1[0]);
-    FORALLSITES(i, s) {
-      tr = 0.5 * permm;//Original - no minus, //bc2^2 = 1
-      scalar_mult_matrix((matrix *)(local_pt[0][1][i]), tr, &(tempmat[i]));
+    tag0 = start_gather_field(plaq_psol[i_ab], sizeof(matrix),
+                              goffset[c], EVENANDODD, gen_pt[0]);
 
-      tr = -0.5 * permm * (s->bc[c]);//Original - minus
+    FORALLSITES(i, s)
+      mult_nn(&(plaq_sol[i_ab][i]), &(vol_psol[i]), &(tempmat2[i]));
+
+    tag1 = start_gather_field(tempmat2, sizeof(matrix),
+                              FQ_d1[j], EVENANDODD, gen_pt[1]);//d1=-mu_a-mu_b
+
+    permm = perm[a][b][c] / 2.0;
+    wait_gather(tag0);
+    wait_gather(tag1);
+    FORALLSITES(i, s) {
+      scalar_mult_matrix((matrix *)(gen_pt[1][i]), permm, &(tempmat[i]));
+
+      tr = -permm * s->bc[c];//Original - minus
       scalar_mult_matrix(&(vol_sol[i]), tr, &tmat);
-      mult_nn_sum(&tmat, (matrix *)(local_pt[0][0][i]), &(tempmat[i]));
+      mult_nn_sum(&tmat, (matrix *)(gen_pt[0][i]), &(tempmat[i]));
       scalar_mult_sum_adj_matrix(&(tempmat[i]), -0.5, &(s->f_U[c]));//Original -0.5
     }
-    cleanup_gather(tag0[0]);
-    cleanup_gather(tag1[0]);
+    cleanup_gather(tag0);
+    cleanup_gather(tag1);
   }
 }
 #endif

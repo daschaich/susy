@@ -367,7 +367,7 @@ void DbminusVtoP(matrix *src, matrix *dest[NPLAQ]) {
     a = DbVtoP_lookup[j][0];
     b = DbVtoP_lookup[j][1];
     c = DbVtoP_lookup[j][2];
-    tr = (1.0 / 3.0) * perm[a][b][c];// !CHECK!
+    tr = perm[a][b][c] / 3.0;// !CHECK!
     i_ab = plaq_index[a][b];
     opp_c = OPP_LDIR(c);
 
@@ -444,7 +444,7 @@ void DbplusPtoV(matrix *src[NPLAQ], matrix *dest) {
     a = DbVtoP_lookup[j][0];
     b = DbVtoP_lookup[j][1];
     c = DbVtoP_lookup[j][2];
-    tr = (1.0 / 3.0) * perm[a][b][c];// !CHECK!
+    tr = perm[a][b][c] / 3.0;// !CHECK!
     i_ab = plaq_index[a][b];
 
     wait_gather(tag0[flip]);
@@ -760,7 +760,7 @@ void fermion_op(Twist_Fermion *src, Twist_Fermion *dest, int sign) {
       clear_mat(&(link_dest[mu][i]));
     for (mu = 0; mu < NPLAQ; mu++)
       clear_mat(&(plaq_dest[mu][i]));
-  } 
+  }
 #endif
 
 #ifdef SV
@@ -782,8 +782,8 @@ void fermion_op(Twist_Fermion *src, Twist_Fermion *dest, int sign) {
 #endif
 
 #ifdef THREEDIM
-  DbplusPtoV(plaq_src, volume_dest);       // Adds to volume_dest
-  DbminusVtoP(volume_src, plaq_dest);        // Adds to plaq_dest
+  DbplusPtoV(plaq_src, volume_dest);       // Overwrites volume_dest
+  DbminusVtoP(volume_src, plaq_dest);      // Adds to plaq_dest
 #else
   FORALLSITES(i, s)
     clear_mat(&(volume_dest[i]));
