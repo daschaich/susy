@@ -242,21 +242,20 @@ double gauge_force(Real eps) {
   return (eps * sqrt(returnit) / volume);
 }
 // -----------------------------------------------------------------
-
-
-
-// -----------------------------------------------------------------
 // Separate routines for each term in the fermion force
 // All called by assemble_fermion_force below
 // First Q-closed piece: chi_ab D_c chi_de epsilon_{abcde}
 // Note factor of -1/2
 // Should become epsilon_{cde}theta D^+_c chi_de
 // -----------------------------------------------------------------
+
+// -----------------------------------------------------------------
 #ifdef THREEDIM
 void F1Q(matrix *plaq_sol[NPLAQ], matrix *plaq_psol[NPLAQ],
          matrix *vol_sol, matrix *vol_psol) {
   register int i;
   register site *s;
+<<<<<<< HEAD
   int a, b, c, j, i_ab;
   Real permm, tr;
   msg_tag *tag0, *tag1;
@@ -295,24 +294,60 @@ void F1Q(matrix *plaq_sol[NPLAQ], matrix *plaq_psol[NPLAQ],
     }
     cleanup_gather(tag0);
     cleanup_gather(tag1);
+=======
+  char **local_pt[3];
+  int a, b, c, j, i_ab;
+  msg_tag *tag0, *tag1, *tag2;
+  matrix tmat;
+
+
+  local_pt[0] = gen_pt[0];
+  local_pt[1] = gen_pt[1];
+  local_pt[2] = gen_pt[2];
+
+  for(a = 0; a < 3; a++) {
+    for(b = a+1; b < 3; b++) {
+      for(c = 0; c < 3; c++) {
+        if(a == c || b == c)
+          continue;
+        i_ab = plaq_index[a][b];
+        tag0 = start_gather_field(plaq_sol[i_ab], sizeof(matrix),
+                                  goffset[c], EVENANDODD, local_pt[0]);
+        FORALLSITES(i, s) mult_nn(&(plaq_psol[i_ab][i]), &(vol_sol[i]), &(tempmat2[i]));
+        tag2 = start_gather_field(tempmat2, sizeof(matrix),
+                                  goffset[a]+1, EVENANDODD, local_pt[2]);
+        
+        wait_gather(tag2);
+        //tag1 = start_gather_field(*local_pt[2], sizeof(matrix),
+        //                          goffset[b]+1, EVENANDODD, local_pt[1]);
+        
+        tag1 = start_gather_field(tempmat2, sizeof(matrix), FQ_d1[a+b-1], EVENANDODD, local_pt[1]);
+
+        wait_gather(tag0);
+        wait_gather(tag1);
+
+        FORALLSITES(i, s) {
+          scalar_mult_matrix((matrix *)(local_pt[0][i]), 0.5 * perm[a][b][c] * s->bc[c], &(tmat));
+          mult_nn(&(vol_psol[i]),&(tmat),&(tempmat[i]));
+
+          scalar_mult_sum_matrix((matrix *)(local_pt[1][i]), -0.5 * perm[a][b][c], &(tempmat[i]));
+          scalar_mult_sum_adj_matrix(&(tempmat[i]), -0.5, &(s->f_U[c]));//Original -0.5
+        }
+        cleanup_gather(tag0);
+        cleanup_gather(tag1);
+        cleanup_gather(tag2);
+      }
+    }
+>>>>>>> 4ac167b (Removing some precomputations for now)
   }
 }
 
-/*
-   start_gather_field(
-   void *field - source
-   int size - size of field
-   int index - direction to gather from
-   int parity
-   char **dest)
 
-   */
-
-void F2Q(matrix *plaq_sol[NPLAQ], matrix *plaq_psol[NPLAQ], 
-    matrix *vol_sol, matrix *vol_psol){
-
+void F2Q(matrix *plaq_sol[NPLAQ], matrix *plaq_psol[NPLAQ],
+         matrix *vol_sol, matrix *vol_psol) {
   register int i;
   register site *s;
+<<<<<<< HEAD
   int a, b, c, j, i_ab;
   Real permm, tr;
   msg_tag *tag0, *tag1;
@@ -349,6 +384,50 @@ void F2Q(matrix *plaq_sol[NPLAQ], matrix *plaq_psol[NPLAQ],
     }
     cleanup_gather(tag0);
     cleanup_gather(tag1);
+=======
+  char **local_pt[3];
+  int a, b, c, j, i_ab;
+  msg_tag *tag0, *tag1, *tag2;
+  matrix tmat;
+
+
+  local_pt[0] = gen_pt[0];
+  local_pt[1] = gen_pt[1];
+  local_pt[2] = gen_pt[2];
+
+  for(a = 0; a < 3; a++) {
+    for(b = a+1; b < 3; b++) {
+      for(c = 0; c < 3; c++) {
+        if(a == c || b == c)
+          continue;
+        i_ab = plaq_index[a][b];
+        tag0 = start_gather_field(plaq_psol[i_ab], sizeof(matrix),
+                                  goffset[c], EVENANDODD, local_pt[0]);
+        FORALLSITES(i, s) mult_nn(&(plaq_sol[i_ab][i]), &(vol_psol[i]), &(tempmat2[i]));
+        tag2 = start_gather_field(tempmat2, sizeof(matrix),
+                                  goffset[a]+1, EVENANDODD, local_pt[2]);
+        
+        wait_gather(tag2);
+        //tag1 = start_gather_field(*local_pt[2], sizeof(matrix),
+        //                          goffset[b]+1, EVENANDODD, local_pt[1]);
+        
+        tag1 = start_gather_field(tempmat2, sizeof(matrix), FQ_d1[a+b-1], EVENANDODD, local_pt[1]);
+        
+        wait_gather(tag0);
+        wait_gather(tag1);
+        FORALLSITES(i, s) {
+          scalar_mult_matrix((matrix *)(local_pt[1][i]), 0.5 * perm[a][b][c], &(tempmat[i]));
+
+          scalar_mult_matrix(&(vol_sol[i]), -0.5 * perm[a][b][c] * (s->bc[c]), &tmat);
+          mult_nn_sum(&tmat, (matrix *)(local_pt[0][i]), &(tempmat[i]));
+          scalar_mult_sum_adj_matrix(&(tempmat[i]), -0.5, &(s->f_U[c]));//Original -0.5
+        }
+        cleanup_gather(tag0);
+        cleanup_gather(tag1);
+        cleanup_gather(tag2);
+      }
+    }
+>>>>>>> 4ac167b (Removing some precomputations for now)
   }
 }
 #endif

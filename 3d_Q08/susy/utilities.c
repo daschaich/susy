@@ -322,9 +322,10 @@ void Dminus(matrix *src[NPLAQ], matrix *dest[NUMLINK]) {
 void DbminusVtoP(matrix *src, matrix *dest[NPLAQ]) {
   register int i, opp_c;
   register site *s;
-  char **local_pt[2][4];
-  int a, b, c, j, gather, next, flip = 0, i_ab;
+  char **local_pt[4];
+  int a, b, c, i_ab;
   Real tr;
+<<<<<<< HEAD
   msg_tag *tag0[2], *tag1[2], *tag2[2];
 
   for (a = 0; a < 3; a++) {
@@ -377,35 +378,66 @@ void DbminusVtoP(matrix *src, matrix *dest[NPLAQ]) {
     FORALLSITES(i, s) {
       scalar_mult_na_sum(&(src[i]), (matrix *)(local_pt[flip][0][i]),
                          tr, &(dest[i_ab][i]));
+=======
+  msg_tag *tag0, *tag1, *tag2, *tag3;
 
-      scalar_mult_an_dif((matrix *)(local_pt[flip][1][i]),
-                         (matrix *)(local_pt[flip][2][i]),
-                         tr * s->bc[opp_c], &(dest[i_ab][i]));
+  for(a = 0; a < 4; a++) local_pt[a] = gen_pt[a];
+
+  for(a = 0; a < 3; a++){
+    for(b = a + 1; b < 3; b++){
+      for(c = 0; c < 3; c++){
+        if(c == a || c == b)
+          continue;
+        tag3 = start_gather_site(F_OFFSET(link[c]), sizeof(matrix),
+                                 goffset[a], EVENANDODD, local_pt[3]);
+        tag1 = start_gather_site(F_OFFSET(link[c]), sizeof(matrix),
+                                 goffset[c] + 1, EVENANDODD, local_pt[1]);
+        tag2 = start_gather_field(src, sizeof(matrix),
+                                  goffset[c] + 1, EVENANDODD, local_pt[2]);
+        wait_gather(tag3);
+        //tag0 = start_gather_field(*local_pt[3], sizeof(matrix),
+        //                          goffset[b], EVENANDODD, local_pt[0]);
+
+        tag0 = start_gather_site(F_OFFSET(link[c]), sizeof(matrix),
+                                 DbVP_d1[a+b-1], EVENANDODD, local_pt[0]);
+
+        wait_gather(tag0);
+        wait_gather(tag1);
+        wait_gather(tag2);
+        opp_c = OPP_LDIR(c);
+        i_ab = plaq_index[a][b];
+        tr = (1.0 / 2.0) * perm[a][b][c];
+        FORALLSITES(i, s) {
+          scalar_mult_na_sum(&(src[i]), (matrix *)(local_pt[0][i]),
+                            tr, &(dest[i_ab][i]));
+>>>>>>> 4ac167b (Removing some precomputations for now)
+
+          scalar_mult_an_dif((matrix *)(local_pt[1][i]),
+                             (matrix *)(local_pt[2][i]),
+                             tr * s->bc[opp_c], &(dest[i_ab][i]));
+        }
+        cleanup_gather(tag0);
+        cleanup_gather(tag1);
+        cleanup_gather(tag2);
+        cleanup_gather(tag3);
+      }
     }
-    cleanup_gather(tag0[flip]);
-    cleanup_gather(tag1[flip]);
-    cleanup_gather(tag2[flip]);
-    flip = gather;
   }
 }
-#endif
-// -----------------------------------------------------------------
 
-// -----------------------------------------------------------------
-// Init dest; note factor of 1/2
-#ifdef THREEDIM
 void DbplusPtoV(matrix *src[NPLAQ], matrix *dest) {
   register int i;
   register site *s;
-  char **local_pt[2][2];
-  int a, b, c, j, gather, next, flip = 0, i_ab;
+  char **local_pt[3];
+  int a, b, c, i_ab;
   Real tr;
-  msg_tag *tag0[2], *tag1[2];
+  msg_tag *tag0, *tag1, *tag2;
 
   FORALLSITES(i, s){ //Initialise
     clear_mat(&(dest[i]));
   }
 
+<<<<<<< HEAD
   for (a = 0; a < 2; a++) {
     local_pt[0][a] = gen_pt[a];
     local_pt[1][a] = gen_pt[2 + a];
@@ -453,14 +485,44 @@ void DbplusPtoV(matrix *src[NPLAQ], matrix *dest) {
       scalar_mult_na_sum((matrix *)(local_pt[flip][0][i]),
                          &(s->link[c]),
                          tr * s->bc[c], &(dest[i]));
+=======
+  for (a = 0; a < 3; a++) local_pt[a] = gen_pt[a];
 
-      scalar_mult_an_dif((matrix *)(local_pt[flip][1][i]),
-                         &(src[i_ab][i]),
-                         tr , &(dest[i]));
+  for(a = 0; a < 3; a++){
+    for(b = a + 1; b < 3; b++){
+      for(c = 0; c < 3; c++){
+        if(c == a || c == b)
+          continue;
+        i_ab = plaq_index[a][b];
+        tag0 = start_gather_field(src[i_ab], sizeof(matrix),
+                                  goffset[c], EVENANDODD, local_pt[0]);
+        tag2 = start_gather_site(F_OFFSET(link[c]), sizeof(matrix),
+                                 goffset[a], EVENANDODD, local_pt[2]);
+        wait_gather(tag2);
+        //tag1 = start_gather_field(*local_pt[2], sizeof(matrix),
+        //                          goffset[b], EVENANDODD, local_pt[1]);
+        
+        tag1 = start_gather_site(F_OFFSET(link[c]), sizeof(matrix),
+                                 DbVP_d1[a+b-1], EVENANDODD, local_pt[1]);
+
+        wait_gather(tag0);
+        wait_gather(tag1);
+        tr = perm[a][b][c] * (1.0/2.0);
+        FORALLSITES(i, s) {
+          scalar_mult_na_sum((matrix *)(local_pt[0][i]),
+                             &(s->link[c]),
+                             tr * s->bc[c], &(dest[i]));
+>>>>>>> 4ac167b (Removing some precomputations for now)
+
+          scalar_mult_an_dif((matrix *)(local_pt[1][i]),
+                             &(src[i_ab][i]),
+                             tr , &(dest[i]));
+        }
+        cleanup_gather(tag0);
+        cleanup_gather(tag1);
+        cleanup_gather(tag2);
+      }
     }
-    cleanup_gather(tag0[flip]);
-    cleanup_gather(tag1[flip]);
-    flip = gather;
   }
 }
 #endif
