@@ -401,7 +401,7 @@ void DbplusPtoV(matrix *src[NPLAQ], matrix *dest) {
         FORALLSITES(i, s)
           mat_copy((matrix *)(gen_pt[2][i]), &(tempmat[i]));
 
-        tag0 = start_gather_field(tempmat, sizeof(matrix),
+        tag1 = start_gather_field(tempmat, sizeof(matrix),
                                   goffset[b], EVENANDODD, gen_pt[1]);
 
         wait_gather(tag0);
