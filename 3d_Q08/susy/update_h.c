@@ -248,29 +248,30 @@ double gauge_force(Real eps) {
 // -----------------------------------------------------------------
 // Separate routines for each term in the fermion force
 // All called by assemble_fermion_force below
-// First  piece: epsilon_{cde} theta D_c^+ chi_de
+// First plaq--vol piece: epsilon_{cde} theta D_c^+ chi_de
 // Use tempmat and tempmat2 for temporary storage
-// TODO: Check factors of -1/2...
+// TODO: Checking factors of -1/2...
 #ifdef THREEDIM
 void F1Q(matrix *plaq_sol[NPLAQ], matrix *plaq_psol[NPLAQ],
          matrix *vol_sol, matrix *vol_psol) {
 
   register int i;
   register site *s;
-  int a, b, c, j, i_ab;
-  Real permm, tr;
+  int a, b, c, i_ab;
+  Real tr;
   msg_tag *tag0, *tag1, *tag2;
   matrix tmat;
 
   // Gather and compute with no lookup
   for (a = 0; a < 3; a++) {
-    for (b = a+1; b < 3; b++) {
+    for (b = a + 1; b < 3; b++) {
+      i_ab = plaq_index[a][b];
       for (c = 0; c < 3; c++) {
         if (a == c || b == c)
           continue;
-        i_ab = plaq_index[a][b];
+
         tag0 = start_gather_field(plaq_sol[i_ab], sizeof(matrix),
-                                  goffset[c], EVENANDODD, get_pt[0]);
+                                  goffset[c], EVENANDODD, gen_pt[0]);
 
         FORALLSITES(i, s)
           mult_nn(&(plaq_psol[i_ab][i]), &(vol_sol[i]), &(tempmat2[i]));
@@ -280,20 +281,19 @@ void F1Q(matrix *plaq_sol[NPLAQ], matrix *plaq_psol[NPLAQ],
 
         wait_gather(tag2);
         FORALLSITES(i, s)   // TODO: Overwriting tempmat2 may cause problems...
-          mat_copy((matrix *)(gen_pt[0][i]), &(tempmat2[i]))
+          mat_copy((matrix *)(gen_pt[0][i]), &(tempmat2[i]));
 
         tag1 = start_gather_field(tempmat2, sizeof(matrix),
                                   goffset[b] + 1, EVENANDODD, gen_pt[1]);
 
+        tr = 0.5 * perm[a][b][c];
         wait_gather(tag0);
         wait_gather(tag1);
         FORALLSITES(i, s) {
-          scalar_mult_matrix((matrix *)(gen_pt[0][i]),
-                             0.5 * perm[a][b][c] * s->bc[c], &(tmat));
-          mult_nn(&(vol_psol[i]), &(tmat), &(tempmat[i]));
+          scalar_mult_matrix((matrix *)(gen_pt[0][i]), tr * s->bc[c], &tmat);
+          mult_nn(&(vol_psol[i]), &tmat, &(tempmat[i]));
 
-          scalar_mult_sum_matrix((matrix *)(gen_pt[1][i]),
-                                 -0.5 * perm[a][b][c], &(tempmat[i]));
+          scalar_mult_sum_matrix((matrix *)(gen_pt[1][i]), -tr, &(tempmat[i]));
           scalar_mult_sum_adj_matrix(&(tempmat[i]), -0.5, &(s->f_U[c]));
         }
         cleanup_gather(tag0);
@@ -308,12 +308,16 @@ void F1Q(matrix *plaq_sol[NPLAQ], matrix *plaq_psol[NPLAQ],
 
 
 // -----------------------------------------------------------------
+// First plaq--vol piece: epsilon_{cde} theta D_c^+ chi_de
+// Use tempmat and tempmat2 for temporary storage
+// TODO: Checking factors of -1/2...
 void F2Q(matrix *plaq_sol[NPLAQ], matrix *plaq_psol[NPLAQ],
          matrix *vol_sol, matrix *vol_psol) {
 
   register int i;
   register site *s;
-  int a, b, c, j, i_ab;
+  int a, b, c, i_ab;
+  Real tr;
   msg_tag *tag0, *tag1, *tag2;
   matrix tmat;
 
@@ -331,20 +335,23 @@ void F2Q(matrix *plaq_sol[NPLAQ], matrix *plaq_psol[NPLAQ],
           mult_nn(&(plaq_sol[i_ab][i]), &(vol_psol[i]), &(tempmat2[i]));
 
         tag2 = start_gather_field(tempmat2, sizeof(matrix),
-                                  goffset[a]+1, EVENANDODD, gen_pt[2]);
+                                  goffset[a] + 1, EVENANDODD, gen_pt[2]);
 
         wait_gather(tag2);
+        FORALLSITES(i, s)   // TODO: Overwriting tempmat2 may cause problems...
+          mat_copy((matrix *)(gen_pt[2][i]), &(tempmat2[i]));
         tag1 = start_gather_field(tempmat2, sizeof(matrix),
-                                  ...FQ_d1[a+b-1], EVENANDODD, gen_pt[1]);
+                                  goffset[b] + 1, EVENANDODD, gen_pt[1]);
 
+        tr = 0.5 * perm[a][b][c];
         wait_gather(tag0);
         wait_gather(tag1);
         FORALLSITES(i, s) {
-          scalar_mult_matrix((matrix *)(gen_pt[1][i]), 0.5 * perm[a][b][c], &(tempmat[i]));
+          scalar_mult_matrix((matrix *)(gen_pt[1][i]), tr, &(tempmat[i]));
 
-          scalar_mult_matrix(&(vol_sol[i]), -0.5 * perm[a][b][c] * (s->bc[c]), &tmat);
+          scalar_mult_matrix(&(vol_sol[i]), -tr * s->bc[c], &tmat);
           mult_nn_sum(&tmat, (matrix *)(gen_pt[0][i]), &(tempmat[i]));
-          scalar_mult_sum_adj_matrix(&(tempmat[i]), -0.5, &(s->f_U[c]));//Original -0.5
+          scalar_mult_sum_adj_matrix(&(tempmat[i]), -0.5, &(s->f_U[c]));
         }
         cleanup_gather(tag0);
         cleanup_gather(tag1);
@@ -354,6 +361,8 @@ void F2Q(matrix *plaq_sol[NPLAQ], matrix *plaq_psol[NPLAQ],
   }
 }
 #endif
+// -----------------------------------------------------------------
+
 
 
 // -----------------------------------------------------------------

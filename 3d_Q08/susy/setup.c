@@ -112,7 +112,7 @@ void make_fields() {
   FIELD_ALLOC(tr_eta, complex);
   FIELD_ALLOC(tr_dest, complex);
 
-  size += (Real)(2.0 * (1.0 + NUMLINK + NPLAQ + 1.0) * sizeof(matrix));
+  size += (Real)(2.0 * (2.0 + NUMLINK + NPLAQ) * sizeof(matrix));
   FIELD_ALLOC(site_src, matrix);
   FIELD_ALLOC(site_dest, matrix);
   FIELD_ALLOC_VEC(link_src, matrix, NUMLINK);
