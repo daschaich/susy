@@ -249,7 +249,7 @@ double gauge_force(Real eps) {
 // Separate routines for each term in the fermion force
 // All called by assemble_fermion_force below
 // First plaq--vol piece: epsilon_{cde} theta D_c^+ chi_de
-// Use tempmat and tempmat2 for temporary storage
+// Use tempmat, tempmat2 and UpsiU[0] for temporary storage
 // TODO: Checking factors of -1/2...
 #ifdef THREEDIM
 void F1Q(matrix *plaq_sol[NPLAQ], matrix *plaq_psol[NPLAQ],
@@ -280,10 +280,10 @@ void F1Q(matrix *plaq_sol[NPLAQ], matrix *plaq_psol[NPLAQ],
                                   goffset[a] + 1, EVENANDODD, gen_pt[2]);
 
         wait_gather(tag2);
-        FORALLSITES(i, s)   // TODO: Overwriting tempmat2 may cause problems...
-          mat_copy((matrix *)(gen_pt[0][i]), &(tempmat2[i]));
+        FORALLSITES(i, s)
+          mat_copy((matrix *)(gen_pt[2][i]), &(UpsiU[0][i]));
 
-        tag1 = start_gather_field(tempmat2, sizeof(matrix),
+        tag1 = start_gather_field(UpsiU[0], sizeof(matrix),
                                   goffset[b] + 1, EVENANDODD, gen_pt[1]);
 
         tr = 0.5 * perm[a][b][c];
