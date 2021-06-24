@@ -25,10 +25,9 @@
 //#define PUREGAUGE           //Only gauge fields for testing
 //#define EIG_POT           // Single rather than double-trace scalar potential
                           // Single-trace case is minimally tested!!!
-#define SV                // Site/vector terms in action
-#define VP                // Vector/plaquette terms in action
-//#define QCLOSED           // Q-closed terms in action
-#define THREEDIM          // Q-closed 3d terms, different defines to dif from above
+#define SL                // Site--link terms in action
+#define LP                // Link--plaquette terms in action
+#define PV                // Plaquette--volume terms in action
 //#define DEBUG_CHECK       // Print lambdas, offsets, etc.
 
 #define NQLINK 28         // Number of offsets for Q-closed terms

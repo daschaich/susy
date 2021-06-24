@@ -251,7 +251,7 @@ double gauge_force(Real eps) {
 // First plaq--vol piece: epsilon_{cde} theta D_c^+ chi_de
 // Use tempmat, tempmat2 and UpsiU[0] for temporary storage
 // TODO: Checking factors of -1/2...
-#ifdef THREEDIM
+#ifdef PV
 void F_PtoV(matrix *plaq_sol[NPLAQ], matrix *vol_psol) {
   register int i;
   register site *s;
@@ -261,10 +261,10 @@ void F_PtoV(matrix *plaq_sol[NPLAQ], matrix *vol_psol) {
   matrix tmat;
 
   // Gather and compute with no lookup
-  for (a = 0; a < 3; a++) {
-    for (b = a + 1; b < 3; b++) {
+  for (a = 0; a < NDIMS; a++) {
+    for (b = a + 1; b < NDIMS; b++) {
       i_ab = plaq_index[a][b];
-      for (c = 0; c < 3; c++) {
+      for (c = 0; c < NDIMS; c++) {
         if (a == c || b == c)
           continue;
 
@@ -317,10 +317,10 @@ void F_VtoP(matrix *plaq_psol[NPLAQ], matrix *vol_sol) {
   msg_tag *tag0, *tag1, *tag2;
   matrix tmat;
 
-  for (a = 0; a < 3; a++) {
-    for (b = a + 1; b < 3; b++) {
+  for (a = 0; a < NDIMS; a++) {
+    for (b = a + 1; b < NDIMS; b++) {
       i_ab = plaq_index[a][b];
-      for (c = 0; c < 3; c++) {
+      for (c = 0; c < NDIMS; c++) {
         if (a == c || b == c)
           continue;
 
@@ -370,7 +370,7 @@ void F_VtoP(matrix *plaq_psol[NPLAQ], matrix *vol_sol) {
 // Assume compute_plaqdet() has already been run
 // Appropriate adjoints set up in assemble_fermion_force
 // A bit more code reuse may be possible
-#ifdef SV
+#ifdef SL
 void detF(matrix *eta, matrix *psi[NUMLINK], int sign) {
   register int i;
   register site *s;
@@ -595,7 +595,7 @@ void assemble_fermion_force(Twist_Fermion *sol, Twist_Fermion *psol) {
     }
   }
 
-#ifdef SV
+#ifdef SL
   // Accumulate both terms in UpsiU[mu], use to initialize f_U[mu]
   // First calculate DUbar on eta Dbar_mu psi_mu (LtoS)
   // [psi_mu(x) eta(x + mu) - eta(x) psi_mu(x)]^dag
@@ -638,7 +638,7 @@ void assemble_fermion_force(Twist_Fermion *sol, Twist_Fermion *psol) {
     cleanup_gather(mtag[mu]);
   }
 #endif
-#ifdef VP
+#ifdef LP
   // Now calculate DU on chi_{munu} D_mu(U) psi_nu
   // Start first set of gathers (mu = 0 and nu = 1)
   tag0[0] = start_gather_field(link_src[1], sizeof(matrix),
@@ -781,7 +781,7 @@ void assemble_fermion_force(Twist_Fermion *sol, Twist_Fermion *psol) {
     }
   }
 #endif
-#ifdef SV
+#ifdef SL
   // Plaquette determinant contributions if G is non-zero
   if (doG) {
     // First connect link_src with site_dest[DIMF - 1]^dag (LtoS)
@@ -792,7 +792,7 @@ void assemble_fermion_force(Twist_Fermion *sol, Twist_Fermion *psol) {
   }
 #endif
 
-#ifdef THREEDIM
+#ifdef PV
   if (NUMLINK != 3) {
     node0_printf("ERROR: NUMLINK IS %d != 3\n", NUMLINK);
     terminate(1);

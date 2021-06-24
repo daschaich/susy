@@ -132,7 +132,7 @@ void compute_Uinv() {
 // -----------------------------------------------------------------
 // Separate routines for each term in the fermion operator
 // All called by fermion_op at the bottom of the file
-#ifdef VP
+#ifdef LP
 void Dplus(matrix *src[NUMLINK], matrix *dest[NPLAQ]) {
   register int i;
   register site *s;
@@ -221,7 +221,7 @@ void Dplus(matrix *src[NUMLINK], matrix *dest[NPLAQ]) {
 
 // -----------------------------------------------------------------
 // Use tempmat and tempmat2 for temporary storage
-#ifdef VP
+#ifdef LP
 void Dminus(matrix *src[NPLAQ], matrix *dest[NUMLINK]) {
   register int i;
   register site *s;
@@ -318,7 +318,7 @@ void Dminus(matrix *src[NPLAQ], matrix *dest[NUMLINK]) {
 // -----------------------------------------------------------------
 // Add to dest instead of overwriting; note factor of 1/2
 // TODO: Still checking...
-#ifdef THREEDIM
+#ifdef PV
 void DbminusVtoP(matrix *src, matrix *dest[NPLAQ]) {
   register int i, opp_c;
   register site *s;
@@ -430,7 +430,7 @@ void DbplusPtoV(matrix *src[NPLAQ], matrix *dest) {
 // Term in action connecting site fermion to the link fermions
 // bc[mu](x) ta(x + mu)
 // Add to dest instead of overwriting; note factor of 1/2
-#ifdef SV
+#ifdef SL
 void DbplusStoL(matrix *src, matrix *dest[NUMLINK]) {
   register int i;
   register site *s;
@@ -470,7 +470,7 @@ void DbplusStoL(matrix *src, matrix *dest[NUMLINK]) {
 // bc[b](x - b) = bc[-b](x) on eta(x - b) psi_a(x)
 // Add negative to dest instead of overwriting
 // Negative sign is due to anti-commuting eta past psi
-#ifdef SV
+#ifdef SL
 void detStoL(matrix *dest[NUMLINK]) {
   register int i;
   register site *s;
@@ -549,7 +549,7 @@ void detStoL(matrix *dest[NUMLINK]) {
 // Use tempmat and tempmat2 for temporary storage
 // bc[OPP_LDIR(mu)](x) on eta(x - mu) psi_mu(x - mu)
 // Initialize dest; note factor of 1/2
-#ifdef SV
+#ifdef SL
 void DbminusLtoS(matrix *src[NUMLINK], matrix *dest) {
   register int i, mu, nu, opp_mu;
   register site *s;
@@ -606,7 +606,7 @@ void DbminusLtoS(matrix *src[NUMLINK], matrix *dest) {
 // Use Tr_Uinv and tr_dest for temporary storage
 // Add to dest instead of overwriting
 // Has same sign as DbminusLtoS (negative comes from generator normalization)
-#ifdef SV
+#ifdef SL
 void detLtoS(matrix *src[NUMLINK], matrix *dest) {
   register int i;
   register site *s;
@@ -708,7 +708,7 @@ void fermion_op(Twist_Fermion *src, Twist_Fermion *dest, int sign) {
     tr_eta[i] = trace(&(site_src[i]));
 
   // Assemble separate routines for each term in the fermion operator
-#ifdef VP
+#ifdef LP
   Dplus(link_src, plaq_dest);             // Overwrites plaq_dest
   Dminus(plaq_src, link_dest);            // Overwrites link_dest
 #else
@@ -720,7 +720,7 @@ void fermion_op(Twist_Fermion *src, Twist_Fermion *dest, int sign) {
   }
 #endif
 
-#ifdef SV
+#ifdef SL
   DbplusStoL(site_src, link_dest);        // Adds to link_dest
 
   // Site-to-link plaquette determinant contribution if G is non-zero
@@ -738,7 +738,7 @@ void fermion_op(Twist_Fermion *src, Twist_Fermion *dest, int sign) {
     clear_mat(&(site_dest[i]));
 #endif
 
-#ifdef THREEDIM
+#ifdef PV
   DbplusPtoV(plaq_src, volume_dest);       // Overwrites volume_dest
   DbminusVtoP(volume_src, plaq_dest);      // Adds to plaq_dest
 #else
