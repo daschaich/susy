@@ -1,0 +1,115 @@
+#!/bin/bash
+# This script needs to be run from the 4d_Q16/testsuite/scalar directory
+
+# Allow user to specify particular target
+if [ $# -gt 1 ]; then
+  N=$1
+  target=$2
+
+  # Change N
+  cd ../../susy/
+  sed -i -E "s/(#define NCOL) .*/\1 $N/" ../include/susy.h
+
+  # Compile
+  echo "Compiling susy_$target..."
+  if ! make -f Make_scalar susy_$target >& /dev/null ; then
+    echo "ERROR: susy_$target compilation failed"
+    make -f Make_scalar susy_$target
+    exit
+  fi
+
+  # Reset to N=2
+  sed -i -E "s/(#define NCOL) .*/\1 2/" ../include/susy.h
+
+  # Run
+  cd ../testsuite/
+  rm -f scalar/$target.U$N.out
+  echo "Running susy_$target..."
+  ../susy/susy_$target < in.U$N.$target > scalar/$target.U$N.out
+
+  # Check
+  cd scalar/
+  d="`diff -I'Time' -I'time' -I'seconds' -I'^start' -I'^exit' $target.U$N.ref $target.U$N.out`"
+  if [ -n "$d" ] ; then   # Non-zero string length
+    echo "$target.U$N.ref and $target.U$N.out differ:"
+    echo "$d"
+  else
+    echo "PASS: susy_$target reproduces reference output"
+  fi
+  exit
+fi
+
+# Otherwise consider all active targets
+# This can take a while!
+for N in 2 3 4 ; do
+  echo "N=$N"
+
+  # Change N
+  cd ../../susy/
+  sed -i -E "s/(#define NCOL) .*/\1 $N/" ../include/susy.h
+
+  # Compile all targets
+  for target in hmc meas hmc_meas mcrg eig cheb mode phase ; do
+    echo "Compiling susy_$target..."
+    if ! make -f Make_scalar susy_$target >& /dev/null ; then
+      echo "ERROR: susy_$target compilation failed"
+      make -f Make_scalar susy_$target
+      exit
+    fi
+  done
+
+  # Reset to N=2
+  sed -i -E "s/(#define NCOL) .*/\1 2/" ../include/susy.h
+
+  # Run
+  cd ../testsuite/
+  for target in hmc meas hmc_meas mcrg eig cheb mode phase ; do
+    rm -f scalar/$target.U$N.out
+    echo "Running susy_$target..."
+    ../susy/susy_$target < in.U$N.$target > scalar/$target.U$N.out
+  done
+
+  # Checkpointed pfaffian computation
+  rm -f scalar/phase_part1.U$N.out scalar/phase_part2.U$N.out
+  sed -i -E "s/(ckpt_save) 0/\1 256/" in.U$N.phase
+  echo "Running checkpointed susy_phase part 1 of 2..."
+  ../susy/susy_phase < in.U$N.phase > scalar/phase_part1.U$N.out
+  sed -i -E "s/(ckpt_load) 0/\1 256/" in.U$N.phase
+  sed -i -E "s/(ckpt_save) 256/\1 0/" in.U$N.phase
+  echo "Running checkpointed susy_phase part 2 of 2..."
+  ../susy/susy_phase < in.U$N.phase > scalar/phase_part2.U$N.out
+  sed -i -E "s/(ckpt_load) 256/\1 0/" in.U$N.phase
+  rm -f config*diag* config*Q*
+
+  # Check
+  cd scalar/
+  for target in hmc meas hmc_meas mcrg eig cheb mode phase phase_part1 phase_part2 ; do
+    d="`diff -I'Time' -I'time' -I'seconds' -I'^start' -I'^exit' $target.U$N.ref $target.U$N.out`"
+    if [ -n "$d" ] ; then   # Non-zero string length
+      echo "$target.U$N.ref and $target.U$N.out differ:"
+      echo "$d"
+      echo
+    else
+      echo "PASS: susy_$target reproduces reference output"
+    fi
+  done
+done
+
+# This can be useful to check whether intermediate steps of the pfaffian computation have changed
+exit 0  # For now it is not included in the standard checks
+for N in 2 3 4 ; do
+  for target in phase phase_part1 phase_part2 ; do
+    grep Column $target.U$N.out | awk '{print $10}' > TEMP.out
+    grep Column $target.U$N.ref | awk '{print $10}' > TEMP.ref
+    paste TEMP.out TEMP.ref > TEMP
+    d="`awk '{if(($1-$2)^2>1e-12)print $1, $2}' TEMP`"
+    if [ -n "$d" ] ; then   # Non-zero string length
+      echo "$target.U$N.ref and $target.U$N.out differ:"
+      echo "$d"
+      echo
+    else
+      echo "PASS: susy_$target reproduces reference output"
+    fi
+    rm -f TEMP TEMP.out TEMP.ref
+  done
+done
