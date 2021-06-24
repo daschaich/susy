@@ -252,9 +252,7 @@ double gauge_force(Real eps) {
 // Use tempmat, tempmat2 and UpsiU[0] for temporary storage
 // TODO: Checking factors of -1/2...
 #ifdef THREEDIM
-void F1Q(matrix *plaq_sol[NPLAQ], matrix *plaq_psol[NPLAQ],
-         matrix *vol_sol, matrix *vol_psol) {
-
+void F_PtoV(matrix *plaq_sol[NPLAQ], matrix *vol_psol) {
   register int i;
   register site *s;
   int a, b, c, i_ab;
@@ -274,7 +272,7 @@ void F1Q(matrix *plaq_sol[NPLAQ], matrix *plaq_psol[NPLAQ],
                                   goffset[c], EVENANDODD, gen_pt[0]);
 
         FORALLSITES(i, s)
-          mult_nn(&(plaq_psol[i_ab][i]), &(vol_sol[i]), &(tempmat2[i]));
+          mult_nn(&(plaq_sol[i_ab][i]), &(vol_psol[i]), &(tempmat2[i]));
 
         tag2 = start_gather_field(tempmat2, sizeof(matrix),
                                   goffset[a] + 1, EVENANDODD, gen_pt[2]);
@@ -286,7 +284,7 @@ void F1Q(matrix *plaq_sol[NPLAQ], matrix *plaq_psol[NPLAQ],
         tag1 = start_gather_field(UpsiU[0], sizeof(matrix),
                                   goffset[b] + 1, EVENANDODD, gen_pt[1]);
 
-        tr = 0.5 * perm[a][b][c];
+        tr = perm[a][b][c];
         wait_gather(tag0);
         wait_gather(tag1);
         FORALLSITES(i, s) {
@@ -309,11 +307,9 @@ void F1Q(matrix *plaq_sol[NPLAQ], matrix *plaq_psol[NPLAQ],
 
 // -----------------------------------------------------------------
 // First plaq--vol piece: epsilon_{cde} theta D_c^+ chi_de
-// Use tempmat and tempmat2 for temporary storage
+// Use tempmat, tempmat2 and UpsiU[0] for temporary storage
 // TODO: Checking factors of -1/2...
-void F2Q(matrix *plaq_sol[NPLAQ], matrix *plaq_psol[NPLAQ],
-         matrix *vol_sol, matrix *vol_psol) {
-
+void F_VtoP(matrix *plaq_psol[NPLAQ], matrix *vol_sol) {
   register int i;
   register site *s;
   int a, b, c, i_ab;
@@ -332,18 +328,19 @@ void F2Q(matrix *plaq_sol[NPLAQ], matrix *plaq_psol[NPLAQ],
                                   goffset[c], EVENANDODD, gen_pt[0]);
 
         FORALLSITES(i, s)
-          mult_nn(&(plaq_sol[i_ab][i]), &(vol_psol[i]), &(tempmat2[i]));
+          mult_nn(&(plaq_psol[i_ab][i]), &(vol_sol[i]), &(tempmat2[i]));
 
         tag2 = start_gather_field(tempmat2, sizeof(matrix),
                                   goffset[a] + 1, EVENANDODD, gen_pt[2]);
 
         wait_gather(tag2);
-        FORALLSITES(i, s)   // TODO: Overwriting tempmat2 may cause problems...
-          mat_copy((matrix *)(gen_pt[2][i]), &(tempmat2[i]));
-        tag1 = start_gather_field(tempmat2, sizeof(matrix),
+        FORALLSITES(i, s)
+          mat_copy((matrix *)(gen_pt[2][i]), &(UpsiU[0][i]));
+
+        tag1 = start_gather_field(UpsiU[0], sizeof(matrix),
                                   goffset[b] + 1, EVENANDODD, gen_pt[1]);
 
-        tr = 0.5 * perm[a][b][c];
+        tr = perm[a][b][c];
         wait_gather(tag0);
         wait_gather(tag1);
         FORALLSITES(i, s) {
@@ -800,8 +797,8 @@ void assemble_fermion_force(Twist_Fermion *sol, Twist_Fermion *psol) {
     node0_printf("ERROR: NUMLINK IS %d != 3\n", NUMLINK);
     terminate(1);
   }
-  F1Q(plaq_src, plaq_dest, volume_src, volume_dest);
-  F2Q(plaq_src, plaq_dest, volume_src, volume_dest);
+  F_PtoV(plaq_src, volume_dest);
+  F_VtoP(plaq_dest, volume_src);
 #endif
 }
 // -----------------------------------------------------------------
