@@ -112,7 +112,7 @@ susy_meas::
 	${MAKE} -f ${MAKEFILE} target "MYTARGET= $@" \
 	"DEFINES = ${DEFINES} -DPHI_ALGORITHM -DSMEAR -DCORR -DWLOOP -DBILIN " \
 	"LAPACK = -llapack -lblas " \
-	"EXTRA_OBJECTS = control_meas.o konishi.o correlator_r.o rsymm.o monopole.o \
+	"EXTRA_OBJECTS = control_meas.o konishi.o rsymm.o monopole.o \
 	                 bilinearWard.o hvy_pot.o hvy_pot_polar.o hvy_pot_loop.o \
 	                 hvy_pot_polar_loop.o path.o smear.o local_plaq.o "
 
@@ -122,7 +122,7 @@ susy_hmc_meas::
 	           -DBILIN -DSMEAR " \
 	"LAPACK = -llapack -lblas " \
 	"EXTRA_OBJECTS = control.o update_o.o update_h.o setup_rhmc.o det_force.o \
-	                 konishi.o correlator_r.o rsymm.o hvy_pot.o monopole.o \
+	                 konishi.o rsymm.o hvy_pot.o monopole.o \
 	                 hvy_pot_polar.o path.o bilinearWard.o hvy_pot_loop.o \
 	                 hvy_pot_polar_loop.o smear.o local_plaq.o "
 

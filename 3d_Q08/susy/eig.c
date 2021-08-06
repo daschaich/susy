@@ -2,7 +2,7 @@
 // Eigenvalue computation and helper functions
 // !!!Path to primme.h may need local customization
 #include "susy_includes.h"
-#include "../PRIMME/PRIMMESRC/COMMONSRC/primme.h"
+#include "../../../primme/PRIMMESRC/COMMONSRC/primme.h"
 // -----------------------------------------------------------------
 
 
