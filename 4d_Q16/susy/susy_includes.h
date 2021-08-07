@@ -128,7 +128,7 @@ void zgetrf_(int *N1, int *N2, double *store, int *lda, int *ipiv, int *stat);
 // First four and last arguments are defined above
 // Fifth argument is real workspace of size given by the sixth argument
 void zgetri_(int *N, double *store, int *lda, int *ipiv,
-             double *work, int *Nwork, int* stat);
+             double *work, int *Nwork, int *stat);
 
 // Matrix inverse via LAPACK
 void invert(matrix *in, matrix *out);
