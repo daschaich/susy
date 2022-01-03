@@ -49,6 +49,10 @@ typedef struct {
   Real alpha;
 #endif
 
+#ifdef WFLOW
+  Real wflow_eps, tmax;         // Wilson flow step size and max flow time
+#endif
+
 #ifdef EIG
   // Eigenvalue parameters
   int Nvec, maxIter;

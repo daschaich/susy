@@ -4,6 +4,7 @@ Reference input and output files are provided for the following compilation targ
 susy_hmc
 susy_meas
 susy_hmc_meas
+susy_wflow
 susy_eig
 susy_phase
 

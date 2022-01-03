@@ -275,3 +275,15 @@ void compute_mode();
 void phase();
 #endif
 // -----------------------------------------------------------------
+
+
+
+// -----------------------------------------------------------------
+// Wilson flow
+#ifdef WFLOW
+void wflow();
+void make_field_strength();
+void directional_staple(int dir, int dir2);   // In smear.c
+void exp_mult();                              // In smear.c
+#endif
+// -----------------------------------------------------------------

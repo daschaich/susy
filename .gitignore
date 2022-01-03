@@ -5,6 +5,7 @@
 *.sw[op]
 .DS_Store
 .lastmake*
+Make_*
 gmon.out
 localmake
 serial*
@@ -13,6 +14,7 @@ susy_phi
 susy_eig
 susy_meas
 susy_corr
+susy_wflow
 susy_mcrg
 susy_flow
 susy_cheb

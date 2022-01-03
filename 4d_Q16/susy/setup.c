@@ -186,6 +186,12 @@ void make_fields() {
   FIELD_ALLOC_VEC(Q, anti_hermitmat, NUMLINK);    // To be exponentiated
 #endif
 
+#ifdef WFLOW
+  size += (Real)((NUMLINK + NPLAQ) * sizeof(matrix));
+  FIELD_ALLOC_VEC(FS, matrix, NPLAQ);
+  FIELD_ALLOC_VEC(S, matrix, NUMLINK);
+#endif
+
 #if defined(EIG) || defined(PHASE)
   size += (Real)(2.0 * sizeof(Twist_Fermion));
   FIELD_ALLOC(src, Twist_Fermion);
@@ -350,6 +356,12 @@ int readin(int prompt) {
     IF_OK status += get_i(stdin, prompt, "nsrc", &par_buf.nsrc);
 #endif
 
+#ifdef WFLOW
+    // Wilson flow step size and maximum flow time
+    IF_OK status += get_f(stdin, prompt, "wflow_eps", &par_buf.wflow_eps);
+    IF_OK status += get_f(stdin, prompt, "tmax", &par_buf.tmax);
+#endif
+
 #ifdef EIG
     // Number of eigenvalues to calculate
     IF_OK status += get_i(stdin, prompt, "Nvec", &par_buf.Nvec);
@@ -458,6 +470,11 @@ int readin(int prompt) {
 
 #ifdef BILIN
   nsrc = par_buf.nsrc;
+#endif
+
+#ifdef WFLOW
+  wflow_eps = par_buf.wflow_eps;
+  tmax = par_buf.tmax;
 #endif
 
 #ifdef EIG

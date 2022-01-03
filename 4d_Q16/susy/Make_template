@@ -9,6 +9,7 @@
 #   susy_hmc uses hybrid Monte Carlo algorithm, i.e., phi + accept/reject
 #   susy_meas measures Wilson loops, scalar correlators and fermion bilinear
 #             with optional APE smearing
+#   susy_wflow runs the Wilson flow (UNDER DEVELOPMENT)
 #   susy_mcrg calculates observables after RG blocking (UNDER DEVELOPMENT)
 #   susy_eig calculates eigenvalues using PRIMME
 #   susy_cheb calculates the spectral density via Chebyshev expansion
@@ -126,6 +127,12 @@ susy_hmc_meas::
 	                 konishi.o correlator_r.o rsymm.o hvy_pot.o monopole.o \
 	                 hvy_pot_polar.o path.o bilinearWard.o hvy_pot_loop.o \
 	                 hvy_pot_polar_loop.o smear.o local_plaq.o "
+
+susy_wflow::
+	${MAKE} -f ${MAKEFILE} target "MYTARGET= $@" \
+	"DEFINES = ${DEFINES} -DPHI_ALGORITHM -DSMEAR -DWFLOW " \
+	"LAPACK = -llapack -lblas " \
+	"EXTRA_OBJECTS = control_wflow.o wflow.o field_strength.o smear.o "
 
 susy_mcrg::
 	${MAKE} -f ${MAKEFILE} target "MYTARGET= $@" \

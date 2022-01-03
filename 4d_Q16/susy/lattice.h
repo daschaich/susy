@@ -193,6 +193,10 @@ typedef struct {
 EXTERN Kops *tempops, *tempops2;
 #endif
 
+#ifdef BILIN
+EXTERN int nsrc;                      // Number of stochastic sources
+#endif
+
 #ifdef SMEAR
 // APE or stout smearing stuff
 EXTERN int smearflag;                 // NONE, STOUT, APE
@@ -201,8 +205,9 @@ EXTERN double alpha;
 EXTERN anti_hermitmat *Q[NUMLINK];    // To be exponentiated
 #endif
 
-#ifdef BILIN
-EXTERN int nsrc;
+#ifdef WFLOW
+EXTERN Real wflow_eps, tmax;
+EXTERN matrix *FS[NPLAQ], *S[NUMLINK];
 #endif
 
 #ifdef EIG
