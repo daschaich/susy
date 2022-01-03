@@ -197,7 +197,7 @@ void monopole();
 #ifdef SMEAR
 // Stout and APE-like smearing, the latter with no final SU(N) projections
 // APE-like smearing optionally builds staples from projected links
-void exp_mult();
+void exp_mult(Real eps);
 void stout_smear(int Nsmear, double alpha);
 void APE_smear(int Nsmear, double alpha, int project);
 #endif
@@ -284,6 +284,5 @@ void phase();
 void wflow();
 void make_field_strength();
 void directional_staple(int dir, int dir2);   // In smear.c
-void exp_mult();                              // In smear.c
 #endif
 // -----------------------------------------------------------------
