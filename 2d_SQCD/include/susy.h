@@ -22,6 +22,8 @@
 // for consistency all field will be represented as NCOL * NCOLF
 // however the vector field should be understood as the transpose
 // NCOLF is the number of flavours
+// funmatrix are the NCOL x NCOLF matrices
+// funamatrix are the NCOLF x NCOL matrices
 #define NCOLF 2
 #define DIMFUND (NCOL * NCOLF)
 
@@ -35,6 +37,7 @@ typedef struct {
 } fanti_hermitmat;
 
 typedef struct { fcomplex e[NCOL][NCOLF] } ffunmatrix;
+typedef struct { fcomplex e[NCOLF][NCOL] } ffunamatrix;
 
 typedef struct { dcomplex e[NCOL][NCOL]; } dmatrix;
 typedef struct { dcomplex c[NCOL]; } dvector;
@@ -44,17 +47,20 @@ typedef struct {
 } danti_hermitmat;
 
 typedef struct { dcomplex e[NCOL][NCOLF] } dfunmatrix;
+typedef struct { dcomplex e[NCOLF][NCOL] } dfunamatrix;
 
 #if (PRECISION == 1)
 #define matrix    fmatrix
 #define vector    fvector
 #define anti_hermitmat  fanti_hermitmat
 #define funmatrix       ffunmatrix
+#define funamtrix       ffunamatrix
 #else
 #define matrix    dmatrix
 #define vector    dvector
 #define anti_hermitmat  danti_hermitmat
 #define funmatrix       dfunmatrix
+#define funamtrix       dfunamatrix
 #endif
 
 // Need SU(2) matrices for any U(N), e.g. for gauge hits when gauge-fixing

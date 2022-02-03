@@ -20,7 +20,7 @@ typedef struct {
   matrix Flink[NUMLINK];
   matrix Fplaq;
   funmatrix Funsite;
-  funmatrix Funlink[NUMLINK];
+  funamatrix Funlink[NUMLINK];
   funmatrix Funplaq;
 } Twist_Fermion;
 // -----------------------------------------------------------------
