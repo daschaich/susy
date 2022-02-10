@@ -27,6 +27,7 @@
 #define SV                // Site/vector terms in action
 #define VP                // Vector/plaquette terms in action
 //#define DEBUG_CHECK       // Print lambdas, offsets, etc.
+#define SPHI		  // Phi-phi terms
 
 // Tunable parameter in gauge action
 #define C2 1.0
