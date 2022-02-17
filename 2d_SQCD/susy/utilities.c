@@ -443,33 +443,6 @@ void detLtoS(matrix *src[NUMLINK], matrix *dest) {
 // -----------------------------------------------------------------
 
 // -----------------------------------------------------------------
-#ifdef SPHI
-// src is phi
-// dest if Dphi
-void phitophi(funmatrix *src, funmatrix *dest){
-  register i,j;
-  register site *s;
-  funamatrix adj;//adjoint of src
-  matrix inter;
-
-  fun_adjoint(&src, adj);
-
-  //init
-  FORALLSITES(i, s) clear_mat(&(dest[i]));
-
-  fun_scalar_mult_nn(&src, adj, 0.5, inter); //not certain about signs
-  fun_mat_prod(&src, inter, &dest);
-
-  //fun_scalar_mult_dif_matrix(adj, r, &dest); //talk about r
-
-  //Use DmuUmu for now, change it later so that it doesn't change with G
-  fun_mat_prod_diff(adj, DmuUmu, &dest); 
-}
-
-#endif
-// -----------------------------------------------------------------
-
-// -----------------------------------------------------------------
 // Twist_Fermion matrix--vector operation
 // Applies either the operator (sign = 1) or its adjoint (sign = -1)
 void fermion_op(Twist_Fermion *src, Twist_Fermion *dest, int sign) {

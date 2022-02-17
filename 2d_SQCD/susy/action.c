@@ -90,6 +90,52 @@ void compute_Fmunu() {
 // -----------------------------------------------------------------
 
 
+// -----------------------------------------------------------------
+// For the gauge action, compute at each site
+// phi(x)*phibar(x)-r*I
+// Use tempmat for temporary storage
+void compute_PhiSq() {
+  register int i;
+  register site *s;
+
+  FORALLSITES(i, s) {
+    fun_mult_na(&(s->funlink), &(s->funlink), &(PhiSq[i]));
+    scalar_mult_dif_matrix(&(Identity), R, &(PhiSq[i]));
+  }
+}
+
+// -----------------------------------------------------------------
+
+
+// -----------------------------------------------------------------
+// For the gauge action, compute at each site
+// Dmu phi = U_mu(x) phu(x+mu) - phi(x) U_mu(x+z)
+// where U_mu(x+z) = FIdentity for both mu values
+
+void compute_DmuPhi() {
+  register int i;
+  register site *s;
+  msg_tag *mtag0 = NULL, *mtag1 = NULL;
+
+  mtag0 = start_gather_site(F_OFFSET(funlink), sizeof(funmatrix),
+                            goffset[0], EVENANDODD, gen_pt[0]);
+  mtag0 = start_gather_site(F_OFFSET(funlink), sizeof(funmatrix),
+                            goffset[1], EVENANDODD, gen_pt[1]);
+  wait_gather(mtag0);
+  wait_gather(mtag1);
+
+  FORALLSITES(i, s){
+    fun_mat_mult(&(s->link[0]), (matrix *)(gen_pt[0][i]), &(tempmat[i]));
+    fun_sub_matrix(&(tempmat[i]), &(s->funlink), DmuPhi[0][i]);
+
+    fun_mat_mult(&(s->link[1]), (matrix *)(gen_pt[1][i]), &(tempmat[i]));
+    fun_sub_matrix(&(tempmat[i]), &(s->funlink), DmuPhi[1][i]);
+  }
+  cleanup_gather(mtag0);
+  cleanup_gather(mtag1);
+}
+// -----------------------------------------------------------------
+
 
 // -----------------------------------------------------------------
 // Standard gauge contribution to the action
@@ -99,7 +145,7 @@ double gauge_action(int do_det) {
   register site *s;
   double g_action = 0.0, norm = 0.5 * C2;
   complex tc;
-  matrix tmat, tmat2;
+  matrix tmat, tmat2, tmat3;
 
   FORALLSITES(i, s) {
     // d^2 term normalized by C2 / 2
@@ -110,6 +156,28 @@ double gauge_action(int do_det) {
     // F^2 term
     mult_an(&(Fmunu[i]), &(Fmunu[i]), &tmat2);
     scalar_mult_sum_matrix(&tmat2, 2.0, &tmat);
+
+#ifdef SPHI
+    // SQCD part of the gauge action
+    // not certain about signs, numeric factors
+    // phi^4 term
+    mult_nn(&(PhiSq[i]), &(PhiSq[i]), &tmat3);
+    scalar_mult_sum_matrix(&tmat3, 0.5, &tmat);
+
+    // DmuUmu phi^2 term
+    mult_nn(&(DmuUmu[i]), &(PhiSq[i]), &tmat3);
+    scalar_mult_dif_matrix(&tmat3, 1.0, &tmat);
+
+    // DmuPhi^2 term
+    // in 1505.00467 this term is given as
+    // bar(DmuPhi)DmuPhi but this is a NCOLF NCOLF matrix
+    // so here we calculate DmuPhi bar(DmuPhi)
+    fun_mult_na(&(DmuPhi[0][i]), &(DmuPhi[0][i]), &tmat3);
+    scalar_mult_sum_matrix(&tmat3, 1.0, &tmat);
+    fun_mult_na(&(DmuPhi[1][i]), &(DmuPhi[1][i]), &tmat3);
+    scalar_mult_sum_matrix(&tmat3, 1.0, &tmat);
+#endif
+
 
     if (do_det == 1) {
       det_project(&tmat, &tmat2);
@@ -129,7 +197,6 @@ double gauge_action(int do_det) {
   return g_action;
 }
 // -----------------------------------------------------------------
-
 
 
 // -----------------------------------------------------------------

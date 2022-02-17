@@ -29,6 +29,9 @@
 //#define DEBUG_CHECK       // Print lambdas, offsets, etc.
 #define SPHI		  // Phi-phi terms
 
+#define DEBUGFUNMATRIX
+
+
 // Tunable parameter in gauge action
 #define C2 1.0
 

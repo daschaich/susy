@@ -26,12 +26,14 @@ void update_u(Real eps) {
       scalar_mult_sum_matrix(&(s->mom[mu]), eps, &(s->link[mu]));
   }
 
-  // Update plaquette determinants, DmuUmu and Fmunu with new links
+  // Update plaquette determinants, DmuUmu, Fmunu and PhiSq with new links
   // (Needs to be done before calling gauge_force)
   compute_plaqdet();
   compute_Uinv();
   compute_DmuUmu();
   compute_Fmunu();
+  compute_PhiSq();
+  compute_DmuPhi();
 }
 // -----------------------------------------------------------------
 
@@ -217,6 +219,8 @@ int update() {
       compute_Uinv();
       compute_DmuUmu();
       compute_Fmunu();
+      compute_PhiSq();
+      compute_DmuPhi();
     }
     node0_printf("REJECT: delta S = %.4g start S = %.12g end S = %.12g\n",
                  change, startaction, endaction);

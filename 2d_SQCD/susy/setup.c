@@ -123,6 +123,7 @@ void make_fields() {
   size += (Real)(NUMLINK + 3.0 * Noffdiag) * sizeof(complex);
   FIELD_ALLOC(DmuUmu, matrix);
   FIELD_ALLOC(Fmunu, matrix);
+  FIELD_ALLOC(PhiSq, matrix);
   FIELD_ALLOC_VEC(Uinv, matrix, NUMLINK);
   FIELD_ALLOC_VEC(Udag_inv, matrix, NUMLINK);
   FIELD_ALLOC_VEC(UpsiU, matrix, NUMLINK);
@@ -256,9 +257,9 @@ int ask_smear_type(FILE *fp, int prompt, int *flag) {
 // prompt=1 indicates prompts are to be given for input
 int readin(int prompt) {
   int status;
-#ifdef EIG
-  int i;
-#endif
+//#ifdef EIG
+  int i,j;
+//#endif
   Real x;
 
   // On node zero, read parameters and send to all other nodes
@@ -285,6 +286,7 @@ int readin(int prompt) {
     IF_OK status += get_f(stdin, prompt, "bmass", &par_buf.bmass);
     IF_OK status += get_f(stdin, prompt, "fmass", &par_buf.fmass);
     IF_OK status += get_f(stdin, prompt, "G", &par_buf.G);
+    R = 1; //TODO: make it a read in parameter
 
 #ifdef SMEAR
     // Smearing stuff -- passed to either APE or stout routines by application
@@ -421,11 +423,22 @@ int readin(int prompt) {
   Rwork = malloc(sizeof *Rwork * (3 * NCOL - 2));
   eigs = malloc(sizeof *eigs * NCOL);
 
+  // Initiliase identity matrix
+
+  for (i = 0; i < NCOL; i++){
+    for (j = 0; j < NCOL; j++){
+      if(i == j)  {Identity.e[i][j].real=1; Identity.e[i][j].imag=0;}
+      else        {Identity.e[i][j].real=0; Identity.e[i][j].imag=0;}
+    }
+  }
+
   // Compute initial plaqdet, DmuUmu and Fmunu
   compute_plaqdet();
   compute_Uinv();
   compute_DmuUmu();
   compute_Fmunu();
+  compute_PhiSq();
+  compute_DmuPhi();
   return 0;
 }
 // -----------------------------------------------------------------

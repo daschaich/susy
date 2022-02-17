@@ -41,6 +41,8 @@ void compute_plaqdet();
 void compute_Uinv();
 void compute_DmuUmu();
 void compute_Fmunu();
+void compute_PhiSq();
+void compute_DmuPhi();
 
 // Gaussian random momentum matrices and pseudofermions
 void ranmom();

@@ -24,7 +24,7 @@
 // NCOLF is the number of flavours
 // funmatrix are the NCOL x NCOLF matrices
 // funamatrix are the NCOLF x NCOL matrices
-#define NCOLF 2
+#define NCOLF 3
 #define DIMFUND (NCOL * NCOLF)
 
 typedef struct { fcomplex e[NCOL][NCOL]; } fmatrix;
@@ -36,8 +36,8 @@ typedef struct {
   float im_diag[NCOL];
 } fanti_hermitmat;
 
-typedef struct { fcomplex e[NCOL][NCOLF] } ffunmatrix;
-typedef struct { fcomplex e[NCOLF][NCOL] } ffunamatrix;
+typedef struct { fcomplex e[NCOL][NCOLF]; } ffunmatrix;
+typedef struct { fcomplex e[NCOLF][NCOL]; } ffunamatrix;
 
 typedef struct { dcomplex e[NCOL][NCOL]; } dmatrix;
 typedef struct { dcomplex c[NCOL]; } dvector;
@@ -46,21 +46,21 @@ typedef struct {
   double im_diag[NCOL];
 } danti_hermitmat;
 
-typedef struct { dcomplex e[NCOL][NCOLF] } dfunmatrix;
-typedef struct { dcomplex e[NCOLF][NCOL] } dfunamatrix;
+typedef struct { dcomplex e[NCOL][NCOLF]; } dfunmatrix;
+typedef struct { dcomplex e[NCOLF][NCOL]; } dfunamatrix;
 
 #if (PRECISION == 1)
 #define matrix    fmatrix
 #define vector    fvector
 #define anti_hermitmat  fanti_hermitmat
 #define funmatrix       ffunmatrix
-#define funamtrix       ffunamatrix
+#define funamatrix       ffunamatrix
 #else
 #define matrix    dmatrix
 #define vector    dvector
 #define anti_hermitmat  danti_hermitmat
 #define funmatrix       dfunmatrix
-#define funamtrix       dfunamatrix
+#define funamatrix       dfunamatrix
 #endif
 
 // Need SU(2) matrices for any U(N), e.g. for gauge hits when gauge-fixing

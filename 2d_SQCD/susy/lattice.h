@@ -80,7 +80,7 @@ EXTERN Real traj_length;
 // U(N) generators
 EXTERN matrix Lambda[DIMF];
 
-EXTERN Real rsqmin, lambda, kappa, bmass, fmass, kappa_u1, G;
+EXTERN Real rsqmin, lambda, kappa, bmass, fmass, kappa_u1, G, R;
 EXTERN int doG;
 EXTERN double g_plaq;     // Global plaq for I/O
 EXTERN double_complex linktrsum;
@@ -129,8 +129,10 @@ EXTERN Real one_ov_N;
 EXTERN complex minus1, *tr_eta;
 EXTERN complex *tr_dest, *Tr_Uinv[NUMLINK], *plaqdet[NUMLINK][NUMLINK];
 EXTERN complex *ZWstar[NUMLINK][NUMLINK], *tempdet[NUMLINK][NUMLINK];
-EXTERN matrix *DmuUmu, *Fmunu;
+EXTERN matrix *DmuUmu, *Fmunu, *PhiSq;
+EXTERN funmatrix *DmuPhi[NUMLINK];
 EXTERN matrix *Uinv[NUMLINK], *Udag_inv[NUMLINK], *UpsiU[NUMLINK];
+EXTERN matrix Identity;//Identity matrix for NCOL NCOL
 
 // CG Twist_Fermions
 EXTERN Twist_Fermion *mpm, *pm0, *rm;
