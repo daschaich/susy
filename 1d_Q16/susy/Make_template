@@ -62,7 +62,6 @@ G_OBJECTS = check_antihermity.o \
             make_lattice.o      \
             nersc_cksum.o       \
             ranstuff.o          \
-            reantihermize.o     \
             reunitarize.o       \
             remap_stdio_from_args.o
 
