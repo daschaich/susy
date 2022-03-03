@@ -75,7 +75,7 @@ void setup_restrict_fourier( int *key, int *slice) {
       pfactor[dir] = i;
       notbase2 |= (i != 1);  /* If dim[dir] != 2^k and key[dir] != 1 */
       logdim[dir]=j;
-      butterfly_dir[dir] = malloc(sizeof int * j);
+      butterfly_dir[dir] = malloc(j * sizeof(int));
       if (butterfly_dir[dir]==NULL) {
   printf("restrict_fourier: NODE %d: no room for butterfly_dir\n",
          this_node);
@@ -327,7 +327,7 @@ void restrict_fourier(
   int ndivp,nmodp,ncycmodp,dimdirdivp;
   int jcycle;
 
-  ncomp = size / sizeof complex;
+  ncomp = size / sizeof(complex);
   /* Danielson-Lanczos section for factor of 2 levels */
   /* loop over all directions, and if we are supposed to transform in
      that direction, do it */
@@ -336,7 +336,7 @@ void restrict_fourier(
     dimdirdivp = dim[dir]/pfactor[dir];
     theta_0 = -isign*2*PI/dimdirdivp;
     /* Make an array of phase factors */
-    phase = malloc(sizeof complex * (dim[dir] / 2));
+    phase = malloc((dim[dir] / 2) * sizeof(complex));
     if (phase == NULL) {
             printf("restrict_fourier: NODE %d: no room for 2's phase\n",
        this_node);
@@ -474,7 +474,7 @@ void restrict_fourier(
     /* The fundamental angle, others are multiples of this */
     theta_0 = -isign*2*PI/dim[dir];
     /* Make an array of phase factors */
-    phase = malloc(sizeof complex * dim[dir]);
+    phase = malloc(dim[dir] * sizeof(complex));
     if (phase == NULL) {
       printf("restrict_fourier: Node%d: no room for odd phase\n", this_node);
       terminate(1);
