@@ -258,7 +258,7 @@ double gauge_force(Real eps) {
     cleanup_gather(tag0[0]);
     cleanup_gather(tag1[0]);
   }
-  FORALLSITES(i, s) {
+  FORALLSITES(i, s) { // TODO!!!
     funa_mat_prod_an_sum(&(s->funlink), &(PhiSq), &(s->f_phi));
     funa_mat_prod_an_dif(&(s->funlink), &(DmuUmu), &(s->f_phi));
   }
@@ -267,10 +267,13 @@ double gauge_force(Real eps) {
 #ifdef SPHI
   // Update phi momentum
   // use the same overall factor as below - N/(4lambda)
-  // Subtracy to reproduce -f_phi
+  // Subtract to reproduce -f_phi
 
   tr = kappa * eps;
-  FORALLSITES(i, s) funa_scalar_mult_dif_matrix(&(s->f_phi), tr, &(s->funmom));
+  FORALLSITES(i, s) {
+    funa_scalar_mult_dif_matrix(&(s->f_phi), tr, &(s->funmom));
+    returnit += 0.0; // TODO: trace of &(s->f_phi), &(s->f_phi) contraction...
+  }
 #endif
 
   // Finally take adjoint and update the momentum

@@ -1,6 +1,6 @@
 // -----------------------------------------------------------------
-// Routines for susy gauge configuration input/output
-// Loop over mu = 0 to NUMLINK
+// Routines for susy gauge and scalar configuration input/output
+// Loop over mu = 0 to NUMLINK and add single NxF matrix
 // Works for most machines
 // Wrappers for I/O are in io_ansi.c
 
@@ -63,7 +63,7 @@
 
 
 // -----------------------------------------------------------------
-// Copy NUMLINK single precision fundamental matrices to generic precision
+// Copy NUMLINK single precision NxN matrices to generic precision
 void f2d_mat(fmatrix *a, matrix *b) {
   int dir, i, j;
 
@@ -75,7 +75,17 @@ void f2d_mat(fmatrix *a, matrix *b) {
   }
 }
 
-// Copy NUMLINK generic precision fundamental matrices to single precision
+// Copy a single precision NxF matrix to generic precision
+void f2d_funmat(ffunmatrix *a, funmatrix *b) {
+  int i, j;
+
+  for (i = 0; i < NCOL; i++) {
+    for (j = 0; j < NCOLF; j++)
+      set_complex_equal(&(a->e[i][j]), &(b->e[i][j]));
+  }
+}
+
+// Copy NUMLINK generic precision NxN matrices to single precision
 void d2f_mat(matrix *a, fmatrix *b) {
   int dir, i, j;
 
@@ -84,6 +94,16 @@ void d2f_mat(matrix *a, fmatrix *b) {
       for (j = 0; j < NCOL; j++)
         set_complex_equal(&(a[dir].e[i][j]), &(b[dir].e[i][j]));
     }
+  }
+}
+
+// Copy a generic precision NxF matrix to single precision
+void d2f_funmat(funmatrix *a, ffunmatrix *b) {
+  int i, j;
+
+  for (i = 0; i < NCOL; i++) {
+    for (j = 0; j < NCOLF; j++)
+      set_complex_equal(&(a->e[i][j]), &(b->e[i][j]));
   }
 }
 // -----------------------------------------------------------------
@@ -374,6 +394,7 @@ void r_serial(gauge_file *gf) {
   off_t offset = 0;           // File stream pointer
   off_t gauge_check_size;     // Size of gauge configuration checksum record
   off_t coord_list_size;      // Size of coordinate list in bytes
+  off_t data_size;            // Size of NxN + NxF matrices in bytes
   off_t head_size;            // Size of header plus coordinate list
   off_t checksum_offset = 0;  // Where we put the checksum
   int rcv_rank, rcv_coords, destnode, stat, idest = 0;
@@ -381,9 +402,10 @@ void r_serial(gauge_file *gf) {
   int buf_length = 0, where_in_buf = 0;
   gauge_check test_gc;
   u_int32type *val;
-  int rank29, rank31;
+  int rank29 = 0, rank31 = 0;
   fmatrix *lbuf = NULL;   // Only allocate on node0
   fmatrix tmat[NUMLINK];
+  ffunmatrix tfunmat;
 
   if (this_node == 0) {
     // Compute offset for reading gauge configuration
@@ -400,14 +422,14 @@ void r_serial(gauge_file *gf) {
     head_size = checksum_offset + gauge_check_size;
 
     // Allocate single-precision read buffer
-    lbuf = malloc(sizeof *lbuf * MAX_BUF_LENGTH * NUMLINK);
+    lbuf = malloc(sizeof *lbuf * MAX_BUF_LENGTH * (NUMLINK + 1));
     if (lbuf == NULL) {
       printf("r_serial: node%d can't malloc lbuf\n", this_node);
       fflush(stdout);
       terminate(1);
     }
 
-    /* Position file for reading gauge configuration */
+    // Position file for reading gauge configuration
     offset = head_size;
 
     if (fseeko(fp, offset, SEEK_SET) < 0) {
@@ -421,16 +443,16 @@ void r_serial(gauge_file *gf) {
   }
 
   // All nodes initialize checksums
+  // Will count 32-bit words mod 29 and mod 31 in order of appearance in file
+  // All nodes see the same sequence because we read serially
   test_gc.sum29 = 0;
   test_gc.sum31 = 0;
-  // Count 32-bit words mod 29 and mod 31 in order of appearance on file
-  // Here all nodes see the same sequence because we read serially
-  rank29 = 0;
-  rank31 = 0;
 
   g_sync();
 
   // node0 reads and deals out the values
+  // Reuse standard size of data to read and communicate
+  data_size = NUMLINK * sizeof(fmatrix) + sizeof(ffunmatrix);
   for (rcv_rank = 0; rcv_rank < volume; rcv_rank++) {
     /* If file is in coordinate natural order, receiving coordinate
        is given by rank. Otherwise, it is found in the table */
@@ -456,7 +478,7 @@ void r_serial(gauge_file *gf) {
           buf_length = MAX_BUF_LENGTH;
 
         // Now do read
-        stat = (int)fread(lbuf, NUMLINK * sizeof(fmatrix), buf_length, fp);
+        stat = (int)fread(lbuf, data_size, buf_length, fp);
         if (stat != buf_length) {
           printf("r_serial: node%d gauge configuration read error %d file %s\n",
                  this_node, errno, filename);
@@ -468,13 +490,15 @@ void r_serial(gauge_file *gf) {
 
       if (destnode == 0) {  // Just copy links
         idest = node_index(x, t);
-        // Save NUMLINK matrices in tmat for further processing
-        memcpy(tmat, &lbuf[NUMLINK * where_in_buf],
+        // Save matrices + funmatrix in tmat for further processing
+        memcpy(tmat, &lbuf[(NUMLINK + 1) * where_in_buf],
                NUMLINK * sizeof(fmatrix));
+        memcpy(&tfunmat, &lbuf[(NUMLINK + 1) * where_in_buf + NUMLINK],
+               sizeof(funmatrix));
       }
       else {                // Send to correct node
-        send_field((char *)&lbuf[NUMLINK * where_in_buf],
-                   NUMLINK * sizeof(fmatrix), destnode);
+        send_field((char *)&lbuf[(NUMLINK + 1) * where_in_buf],
+                   data_size, destnode);
       }
       where_in_buf++;
     }
@@ -483,8 +507,8 @@ void r_serial(gauge_file *gf) {
     else {  // All nodes other than node 0
       if (this_node == destnode) {
         idest = node_index(x, t);
-        // Receive NUMLINK matrices in temporary space for further processing
-        get_field((char *)tmat, NUMLINK * sizeof(fmatrix), 0);
+        // Receive matrices+funmatrix in temporary space for further processing
+        get_field((char *)tmat, data_size, 0);
       }
     }
 
@@ -493,11 +517,10 @@ void r_serial(gauge_file *gf) {
        and idest points to the destination site structure. */
     if (this_node == destnode) {
       if (byterevflag == 1)
-        byterevn((int32type *)tmat,
-                 NUMLINK * sizeof(fmatrix) / sizeof(int32type));
+        byterevn((int32type *)tmat, data_size / sizeof(int32type));
       // Accumulate checksums
       for (k = 0, val = (u_int32type *)tmat;
-           k < NUMLINK * (int)sizeof(fmatrix) / (int)sizeof(int32type);
+           k < (int)data_size / (int)sizeof(int32type);
            k++, val++) {
         test_gc.sum29 ^= (*val)<<rank29 | (*val)>>(32 - rank29);
         test_gc.sum31 ^= (*val)<<rank31 | (*val)>>(32 - rank31);
@@ -508,12 +531,13 @@ void r_serial(gauge_file *gf) {
         if (rank31 >= 31)
           rank31 = 0;
       }
-      // Copy NUMLINK matrices to generic-precision lattice[idest]
+      // Copy matrices + funmatrix to generic-precision lattice[idest]
       f2d_mat(tmat, &lattice[idest].link[0]);
+      f2d_funmat(&tfunmat, &lattice[idest].funlink);
     }
     else {
-      rank29 += NUMLINK * sizeof(fmatrix) / sizeof(int32type);
-      rank31 += NUMLINK * sizeof(fmatrix) / sizeof(int32type);
+      rank29 += data_size / sizeof(int32type);
+      rank31 += data_size / sizeof(int32type);
       rank29 %= 29;
       rank31 %= 31;
     }
