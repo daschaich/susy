@@ -10,7 +10,7 @@
 // Construct gaussian random momentum matrices
 // as sum of U(N) generators with gaussian random coefficients
 void ranmom() {
-  register int i, j, mu;
+  register int i, j, k, mu;
   register site *s;
   complex grn;
 
@@ -26,6 +26,21 @@ void ranmom() {
         grn.imag = gaussian_rand_no(&(s->node_prn));
 #endif
         c_scalar_mult_sum_mat(&(Lambda[j]), &grn, &(s->mom[mu]));
+      }
+    }
+    //TODO:use generator matrices for funmom
+    funa_clear_mat(&(s->funmom));
+    for(j = 0; j < NCOLF; j++) {
+      for (k = 0; k < NCOL; k++) {
+#ifdef SITERAND
+        grn.real = gaussian_rand_no(&(s->site_prn));
+        grn.imag = gaussian_rand_no(&(s->site_prn));
+#else
+        grn.real = gaussian_rand_no(&(s->node_prn));
+        grn.imag = gaussian_rand_no(&(s->node_prn));
+#endif
+        s->funmom.e[j][k].real = grn.real;
+        s->funmom.e[j][k].imag = grn.imag;
       }
     }
   }

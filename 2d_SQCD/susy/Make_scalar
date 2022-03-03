@@ -3,7 +3,7 @@ MAKEFILE = Make_scalar
 
 MPP            =
 PRECISION      = 2
-CC             = gcc #-pg
+CC             = gcc -pg
 #OPT            = -O3 -DP4 -Wall -fno-strict-aliasing
 OPT            = -O0 -ggdb -DP4 -Wall -fno-strict-aliasing
 CLFS           = -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE64

@@ -63,6 +63,12 @@ void coldlat() {
           s->link[dir].e[j][k] = cmplx(0.0, 0.0);
           s->link[dir].e[k][j] = cmplx(0.0, 0.0);
         }
+#ifndef DEBUGFUNACTION
+        for (k = 0; k < NCOLF ; k++) s->funlink.e[j][k] = cmplx(0.0, 0.0);
+#endif
+#ifdef DEBUGFUNACTION
+        for (k = 0; k < NCOLF ; k++) s->funlink.e[j][k] = cmplx(myrand(&(s->site_prn)),myrand(&(s->site_prn)));
+#endif
       }
     }
   }

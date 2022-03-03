@@ -48,7 +48,10 @@ typedef struct {
 
   // Momentum matrices in each direction are just U(N) matrices
   // as opposed to anti-hermitian matrices
-  matrix mom[NUMLINK], f_U[NUMLINK];        // Force matrices
+  matrix mom[NUMLINK], f_U[NUMLINK];        // Force matrices for U
+  // TODO: Talk about funmom and f_phi
+  funamatrix funmom, f_phi;                 // Force matrices for phi
+  // Forces and momenta are funamtrices
 
   // Boundary conditions -- many unused
   Real bc[2 * NUMLINK];

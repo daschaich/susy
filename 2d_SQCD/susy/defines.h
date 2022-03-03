@@ -30,6 +30,7 @@
 #define SPHI		  // Phi-phi terms
 
 #define DEBUGFUNMATRIX
+#define DEBUGFUNACTION
 
 
 // Tunable parameter in gauge action

@@ -124,6 +124,7 @@ void make_fields() {
   FIELD_ALLOC(DmuUmu, matrix);
   FIELD_ALLOC(Fmunu, matrix);
   FIELD_ALLOC(PhiSq, matrix);
+  FIELD_ALLOC_VEC(DmuPhi, funmatrix, NUMLINK);
   FIELD_ALLOC_VEC(Uinv, matrix, NUMLINK);
   FIELD_ALLOC_VEC(Udag_inv, matrix, NUMLINK);
   FIELD_ALLOC_VEC(UpsiU, matrix, NUMLINK);

@@ -46,8 +46,8 @@ void fun_add_matrix(funmatrix *a, funmatrix *b, funmatrix *c) {
 
 void funa_sum_matrix(funamatrix *b, funamatrix *c) {
   register int i, j;
-  for (i = 0; i < NCOL; i++) {
-    for (j = 0; j < NCOLF; j++) {
+  for (i = 0; i < NCOLF; i++) {
+    for (j = 0; j < NCOL; j++) {
       c->e[i][j].real += b->e[i][j].real;
       c->e[i][j].imag += b->e[i][j].imag;
     }
@@ -167,7 +167,7 @@ void fun_c_scalar_mult_dif_adj_mat(funmatrix *b, complex *s, funamatrix *c) {
 
 // Add or subtract result of adjoint of complex scalar multiplication on funamatrix
 
-void funa_c_scalar_mult_sum_adj_mat(funamatrix *b, complex *s, funamatrix *c) {
+void funa_c_scalar_mult_sum_adj_mat(funamatrix *b, complex *s, funmatrix *c) {
   register int i, j;
   for (i = 0; i < NCOL; i++) {
     for (j = 0; j < NCOLF; j++) {
@@ -177,7 +177,7 @@ void funa_c_scalar_mult_sum_adj_mat(funamatrix *b, complex *s, funamatrix *c) {
   }
 }
 
-void funa_c_scalar_mult_dif_adj_mat(funamatrix *b, complex *s, funamatrix *c) {
+void funa_c_scalar_mult_dif_adj_mat(funamatrix *b, complex *s, funmatrix *c) {
   register int i, j;
   for (i = 0; i < NCOL; i++) {
     for (j = 0; j < NCOLF; j++) {
@@ -970,6 +970,7 @@ void fun_mat_prod_dif(funmatrix *a, matrix *b, funmatrix *c){
 // c <-- c*b
 // c <-- s*c*b
 // c <-- a*b
+// c <-- c + a*b
 // c <-- c - a*b
 
 void funa_mat_mult( matrix *b, funamatrix *c) {
@@ -1008,6 +1009,18 @@ void funa_mat_prod( funamatrix *a, matrix *b, funamatrix *c){
       }
 }
 
+void funa_mat_prod_sum( funamatrix *a, matrix *b, funamatrix *c){
+  register int i, j, k;
+  for(i = 0; i < NCOLF; i++)
+    for(j = 0; j < NCOL; j++)
+      for( k = 0; k < NCOL; k++){
+        c->e[i][j].real += a->e[i][k].real * b->e[k][j].real
+                              - a->e[i][k].imag * b->e[k][j].imag;
+        c->e[i][j].imag += a->e[i][k].imag * b->e[k][j].real
+                                + a->e[i][k].real * b->e[k][j].imag;
+      }
+}
+
 void funa_mat_prod_dif( funamatrix *a, matrix *b, funamatrix *c){
   register int i, j, k;
   for(i = 0; i < NCOLF; i++)
@@ -1019,6 +1032,48 @@ void funa_mat_prod_dif( funamatrix *a, matrix *b, funamatrix *c){
                                 + a->e[i][k].real * b->e[k][j].imag;
       }
 }
+
+void funa_mat_prod_an_sum( funamatrix *a, matrix *b, funamatrix *c){
+  register int i, j, k;
+  for(i = 0; i < NCOLF; i++)
+    for(j = 0; j < NCOL; j++)
+      for( k = 0; k < NCOL; k++){
+        c->e[i][j].real += a->e[k][i].real * b->e[k][j].real
+                              + a->e[i][k].imag * b->e[k][j].imag;
+        c->e[i][j].imag -= a->e[k][i].imag * b->e[k][j].real
+                                - a->e[i][k].real * b->e[k][j].imag;
+      }
+}
+
+void funa_mat_prod_an_dif( funamatrix *a, matrix *b, funamatrix *c){
+  register int i, j, k;
+  for(i = 0; i < NCOLF; i++)
+    for(j = 0; j < NCOL; j++)
+      for( k = 0; k < NCOL; k++){
+        c->e[i][j].real -= a->e[i][k].real * b->e[k][j].real
+                              + a->e[i][k].imag * b->e[k][j].imag;
+        c->e[i][j].imag += a->e[i][k].imag * b->e[k][j].real
+                                - a->e[i][k].real * b->e[k][j].imag;
+      }
+}
+
+
+// -----------------------------------------------------------------
+// Real trace of funamatrix * adj funamatrix
+Real funa_realtrace(funamatrix *a, funamatrix *b) {
+  register int i, j;
+  register Real sum = 0.0;
+
+  for (i = 0; i < NCOLF; i++) {
+    for(j = 0; j < NCOL; j++) {
+      sum += a->e[i][j].real * b->e[i][j].real
+           + a->e[i][j].imag * b->e[i][j].imag;
+    }
+  }
+  return sum;
+}
+// -----------------------------------------------------------------
+
 // -----------------------------------------------------------------
 
 // -----------------------------------------------------------------

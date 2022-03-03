@@ -218,6 +218,61 @@ double gauge_force(Real eps) {
     }
   }
 
+#ifdef SPHI
+  // Phi phi term
+  // TODO: make more efficent gathers
+  FORALLDIR(mu) {
+    tag0[0] = start_gather_field(PhiSq, sizeof(matrix),
+                                 goffset[mu], EVENANDODD, gen_pt[0]);
+    wait_gather(tag0[0]);
+    FORALLSITES(i, s) {
+      //phi(x)*D+_a phi(x)
+      fun_mult_na_sum(&(s->funlink), &DmuPhi[mu][i], &(s->f_U[mu]));
+      //-Ubar_a(x) phi(x) phibar(x)
+      mult_an_dif(&(s->link[mu]), &PhiSq[i], &(s->f_U[mu]));
+      // phi(x+a) phibar(x+a) Ubar_a(x)
+      mult_na_sum((matrix *)(gen_pt[0][i]), &(s->link[mu]), &(s->f_U[mu]));
+    }
+    cleanup_gather(tag0[0]);
+  }
+#endif
+
+#ifdef SPHI
+  // Phi force terms
+  // F_phi = bar(D^+_a phi(x-a)) U_a(x-a)
+  //       - I_a bar(D^+_a phi(x)) 
+  //       + bar(phi(x)) PhiSq(x)
+  //       - bar(phi(x)(bar(D)^-_a U_a(x))
+
+  FORALLSITES(i, s) funa_clear_mat(&(s->f_phi));
+  FORALLDIR(mu) {
+    tag0[0] = start_gather_field(DmuPhi[mu], sizeof(funmatrix),
+                                 goffset[mu]+1, EVENANDODD, gen_pt[0]);
+    tag1[0] = start_gather_site(F_OFFSET(link[mu]), sizeof(matrix),
+                                 goffset[mu]+1, EVENANDODD, gen_pt[1]);
+    wait_gather(tag0[0]);
+    FORALLSITES(i, s) {
+      funa_mat_prod_sum((funmatrix *) gen_pt[0], (matrix *) gen_pt[0], &(s->f_phi));
+      funa_dif_matrix(&(DmuPhi[mu]), &(s->f_phi));
+   }
+    cleanup_gather(tag0[0]);
+    cleanup_gather(tag1[0]);
+  }
+  FORALLSITES(i, s) {
+    funa_mat_prod_an_sum(&(s->funlink), &(PhiSq), &(s->f_phi));
+    funa_mat_prod_an_dif(&(s->funlink), &(DmuUmu), &(s->f_phi));
+  }
+#endif
+
+#ifdef SPHI
+  // Update phi momentum
+  // use the same overall factor as below - N/(4lambda)
+  // Subtracy to reproduce -f_phi
+
+  tr = kappa * eps;
+  FORALLSITES(i, s) funa_scalar_mult_dif_matrix(&(s->f_phi), tr, &(s->funmom));
+#endif
+
   // Finally take adjoint and update the momentum
   // Include overall factor of kappa = N / (4lambda)
   // Subtract to reproduce -Adj(f_U)

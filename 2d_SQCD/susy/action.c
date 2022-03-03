@@ -116,20 +116,43 @@ void compute_DmuPhi() {
   register int i;
   register site *s;
   msg_tag *mtag0 = NULL, *mtag1 = NULL;
+  //TODO:fix it so that F_OFFSET could be used for funlink
+  //mtag0 = start_gather_site(F_OFFSET(funlink), sizeof(funmatrix),
+  //                          goffset[0], EVENANDODD, gen_pt[0]);
+  //mtag1 = start_gather_site(F_OFFSET(funlink), sizeof(funmatrix),
+  //                          goffset[2], EVENANDODD, gen_pt[1]);
+  
+  mtag0 = start_gather_site(F_OFFSET(link[0]), sizeof(matrix),
+                            goffset[1], EVENANDODD, gen_pt[0]);
+  mtag1 = start_gather_site(F_OFFSET(link[0]), sizeof(matrix),
+                            goffset[3], EVENANDODD, gen_pt[1]);
 
-  mtag0 = start_gather_site(F_OFFSET(funlink), sizeof(funmatrix),
-                            goffset[0], EVENANDODD, gen_pt[0]);
-  mtag0 = start_gather_site(F_OFFSET(funlink), sizeof(funmatrix),
-                            goffset[1], EVENANDODD, gen_pt[1]);
   wait_gather(mtag0);
   wait_gather(mtag1);
 
   FORALLSITES(i, s){
-    fun_mat_mult(&(s->link[0]), (matrix *)(gen_pt[0][i]), &(tempmat[i]));
-    fun_sub_matrix(&(tempmat[i]), &(s->funlink), DmuPhi[0][i]);
+    fun_mat_mult((matrix *)(gen_pt[0][i]), &(s->funlink), &(tempmat[i]));
+    fun_mat_mult((matrix *)(gen_pt[1][i]), &(s->funlink), &(tempmat2[i]));
+  }
 
-    fun_mat_mult(&(s->link[1]), (matrix *)(gen_pt[1][i]), &(tempmat[i]));
-    fun_sub_matrix(&(tempmat[i]), &(s->funlink), DmuPhi[1][i]);
+  mtag0 = start_gather_field(tempmat, sizeof(funmatrix),
+                             goffset[0], EVENANDODD, gen_pt[0]);
+  mtag1 = start_gather_field(tempmat, sizeof(funmatrix),
+                             goffset[2], EVENANDODD, gen_pt[1]);
+
+
+  wait_gather(mtag0);
+  wait_gather(mtag1);
+
+  FORALLSITES(i, s){
+    //fun_mat_mult(&(s->link[0]), (matrix *)(gen_pt[0][i]), &(tempmat[i]));
+    //fun_sub_matrix(&(tempmat[i]), &(s->funlink), DmuPhi[0][i]);
+
+    //fun_mat_mult(&(s->link[1]), (matrix *)(gen_pt[1][i]), &(tempmat[i]));
+    //fun_sub_matrix(&(tempmat[i]), &(s->funlink), DmuPhi[1][i]);
+
+    fun_sub_matrix((funmatrix *)(gen_pt[0][i]), &(s->funlink), DmuPhi[0][i]);
+    fun_sub_matrix((funmatrix *)(gen_pt[1][i]), &(s->funlink), DmuPhi[1][i]);
   }
   cleanup_gather(mtag0);
   cleanup_gather(mtag1);
@@ -303,9 +326,11 @@ double mom_action() {
   register site *s;
   double sum = 0.0;
 
+  //TODO:talk about phi momenta
   FORALLSITES(i, s) {
     FORALLDIR(mu)
       sum += (double)realtrace(&(s->mom[mu]), &(s->mom[mu]));
+    sum += (double)funa_realtrace(&(s->funmom), &(s->funmom));
   }
   g_doublesum(&sum);
   return sum;
