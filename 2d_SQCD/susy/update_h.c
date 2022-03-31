@@ -226,12 +226,16 @@ double gauge_force(Real eps) {
                                  goffset[mu], EVENANDODD, gen_pt[0]);
     wait_gather(tag0[0]);
     FORALLSITES(i, s) {
+#ifdef PHITERM1
       //phi(x)*D+_a phi(x)
       fun_mult_na_sum(&(s->funlink), &DmuPhi[mu][i], &(s->f_U[mu]));
+#endif
+#ifdef PHITERM3
       //-Ubar_a(x) phi(x) phibar(x)
       mult_an_dif(&(s->link[mu]), &PhiSq[i], &(s->f_U[mu]));
       // phi(x+a) phibar(x+a) Ubar_a(x)
       mult_na_sum((matrix *)(gen_pt[0][i]), &(s->link[mu]), &(s->f_U[mu]));
+#endif
     }
     cleanup_gather(tag0[0]);
   }
@@ -245,34 +249,41 @@ double gauge_force(Real eps) {
   //       - bar(phi(x)(bar(D)^-_a U_a(x))
 
   FORALLSITES(i, s) funa_clear_mat(&(s->f_phi));
+#ifdef PHITERM1
   FORALLDIR(mu) {
     tag0[0] = start_gather_field(DmuPhi[mu], sizeof(funmatrix),
                                  goffset[mu]+1, EVENANDODD, gen_pt[0]);
     tag1[0] = start_gather_site(F_OFFSET(link[mu]), sizeof(matrix),
                                  goffset[mu]+1, EVENANDODD, gen_pt[1]);
     wait_gather(tag0[0]);
+    wait_gather(tag1[0]);
     FORALLSITES(i, s) {
-      funa_mat_prod_sum((funmatrix *) gen_pt[0], (matrix *) gen_pt[0], &(s->f_phi));
+      funa_mat_prod_sum((funmatrix *) gen_pt[0], (matrix *) gen_pt[1], &(s->f_phi));
       funa_dif_matrix(&(DmuPhi[mu]), &(s->f_phi));
    }
     cleanup_gather(tag0[0]);
     cleanup_gather(tag1[0]);
   }
+#endif
   FORALLSITES(i, s) { // TODO!!!
-    funa_mat_prod_an_sum(&(s->funlink), &(PhiSq), &(s->f_phi));
-    funa_mat_prod_an_dif(&(s->funlink), &(DmuUmu), &(s->f_phi));
+#ifdef PHITERM2
+    funa_mat_prod_an_sum(&(s->funlink), &(PhiSq[i]), &(s->f_phi));
+#endif
+#ifdef PHITERM3
+    funa_mat_prod_an_dif(&(s->funlink), &(DmuUmu[i]), &(s->f_phi));
+#endif
   }
 #endif
 
 #ifdef SPHI
   // Update phi momentum
   // use the same overall factor as below - N/(4lambda)
-  // Subtract to reproduce -f_phi
+  // Subtract to reproduce +f_phi
 
   tr = kappa * eps;
   FORALLSITES(i, s) {
-    funa_scalar_mult_dif_matrix(&(s->f_phi), tr, &(s->funmom));
-    returnit += 0.0; // TODO: trace of &(s->f_phi), &(s->f_phi) contraction...
+    funa_scalar_mult_sum_matrix(&(s->f_phi), tr, &(s->funmom));
+    returnit += funa_realtrace(&(s->f_phi), &(s->f_phi));
   }
 #endif
 

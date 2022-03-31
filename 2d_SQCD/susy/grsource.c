@@ -28,7 +28,8 @@ void ranmom() {
         c_scalar_mult_sum_mat(&(Lambda[j]), &grn, &(s->mom[mu]));
       }
     }
-    //TODO:use generator matrices for funmom
+    //maybe use generator matrices for funmom
+    //but this should be correct
     funa_clear_mat(&(s->funmom));
     for(j = 0; j < NCOLF; j++) {
       for (k = 0; k < NCOL; k++) {

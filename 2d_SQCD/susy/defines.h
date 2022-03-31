@@ -29,6 +29,11 @@
 //#define DEBUG_CHECK       // Print lambdas, offsets, etc.
 #define SPHI		  // Phi-phi terms
 
+//Gauge terms split into three
+#define PHITERM1
+//#define PHITERM2
+//#define PHITERM3
+
 #define DEBUGFUNMATRIX
 #define DEBUGFUNACTION
 

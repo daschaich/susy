@@ -65,8 +65,7 @@ void coldlat() {
         }
 #ifndef DEBUGFUNACTION
         for (k = 0; k < NCOLF ; k++) s->funlink.e[j][k] = cmplx(0.0, 0.0);
-#endif
-#ifdef DEBUGFUNACTION
+#else
         for (k = 0; k < NCOLF ; k++) s->funlink.e[j][k] = cmplx(myrand(&(s->site_prn)),myrand(&(s->site_prn)));
 #endif
       }

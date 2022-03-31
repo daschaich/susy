@@ -24,7 +24,9 @@ void update_u(Real eps) {
   FORALLSITES(i, s) {
     FORALLDIR(mu)
       scalar_mult_sum_matrix(&(s->mom[mu]), eps, &(s->link[mu]));
+#ifdef SPHI
     funa_scalar_mult_sum_adj_matrix(&(s->funmom), eps, &(s->funlink));
+#endif
   }
 
   // Update plaquette determinants, DmuUmu, Fmunu and PhiSq with new links

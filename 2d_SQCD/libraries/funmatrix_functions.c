@@ -1033,7 +1033,7 @@ void funa_mat_prod_dif( funamatrix *a, matrix *b, funamatrix *c){
       }
 }
 
-void funa_mat_prod_an_sum( funamatrix *a, matrix *b, funamatrix *c){
+void funa_mat_prod_an_sum( funmatrix *a, matrix *b, funamatrix *c){
   register int i, j, k;
   for(i = 0; i < NCOLF; i++)
     for(j = 0; j < NCOL; j++)
@@ -1045,7 +1045,7 @@ void funa_mat_prod_an_sum( funamatrix *a, matrix *b, funamatrix *c){
       }
 }
 
-void funa_mat_prod_an_dif( funamatrix *a, matrix *b, funamatrix *c){
+void funa_mat_prod_an_dif( funmatrix *a, matrix *b, funamatrix *c){
   register int i, j, k;
   for(i = 0; i < NCOLF; i++)
     for(j = 0; j < NCOL; j++)
@@ -1056,8 +1056,6 @@ void funa_mat_prod_an_dif( funamatrix *a, matrix *b, funamatrix *c){
                                 - a->e[i][k].real * b->e[k][j].imag;
       }
 }
-
-
 // -----------------------------------------------------------------
 // Real trace of funamatrix * adj funamatrix
 Real funa_realtrace(funamatrix *a, funamatrix *b) {

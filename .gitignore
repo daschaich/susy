@@ -5,6 +5,7 @@
 *.sw[op]
 .DS_Store
 .lastmake*
+*debug*
 gmon.out
 localmake
 serial*

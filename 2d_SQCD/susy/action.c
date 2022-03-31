@@ -184,13 +184,16 @@ double gauge_action(int do_det) {
     // SQCD part of the gauge action
     // not certain about signs, numeric factors
     // phi^4 term
+#ifdef PHITERM2
     mult_nn(&(PhiSq[i]), &(PhiSq[i]), &tmat3);
     scalar_mult_sum_matrix(&tmat3, 0.5, &tmat);
-
+#endif
+#ifdef PHITERM3
     // DmuUmu phi^2 term
     mult_nn(&(DmuUmu[i]), &(PhiSq[i]), &tmat3);
     scalar_mult_dif_matrix(&tmat3, 1.0, &tmat);
-
+#endif
+#ifdef PHITERM1
     // DmuPhi^2 term
     // in 1505.00467 this term is given as
     // bar(DmuPhi)DmuPhi but this is a NCOLF NCOLF matrix
@@ -199,6 +202,7 @@ double gauge_action(int do_det) {
     scalar_mult_sum_matrix(&tmat3, 1.0, &tmat);
     fun_mult_na(&(DmuPhi[1][i]), &(DmuPhi[1][i]), &tmat3);
     scalar_mult_sum_matrix(&tmat3, 1.0, &tmat);
+#endif
 #endif
 
 
@@ -326,7 +330,6 @@ double mom_action() {
   register site *s;
   double sum = 0.0;
 
-  //TODO:talk about phi momenta
   FORALLSITES(i, s) {
     FORALLDIR(mu)
       sum += (double)realtrace(&(s->mom[mu]), &(s->mom[mu]));

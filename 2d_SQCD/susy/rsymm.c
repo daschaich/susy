@@ -5,8 +5,6 @@
 #include "susy_includes.h"
 // -----------------------------------------------------------------
 
-//TODO: Add the funmom functionality
-
 
 // -----------------------------------------------------------------
 // Walk around path of fundamental links specified by dir, sign and kind
