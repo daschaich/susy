@@ -155,7 +155,7 @@ gauge_file *w_serial_i(char *filename) {
 // -----------------------------------------------------------------
 // Flush lbuf to output, resetting buf_length
 static void flush_lbuf_to_file(gauge_file *gf, fmatrix *lbuf,
-                               ffunmatrix *funlbuf, int *buf_length) {
+                               int *buf_length) {
 
   FILE *fp = gf->fp;
   int stat;
@@ -164,8 +164,25 @@ static void flush_lbuf_to_file(gauge_file *gf, fmatrix *lbuf,
     return;
 
   stat = (int)fwrite(lbuf, NUMLINK * sizeof(fmatrix), *buf_length, fp);
-  stat += (int)fwrite(funlbuf, sizeof(ffunmatrix), *buf_length, fp);
-  if (stat != 2 * *buf_length) {
+  if (stat != *buf_length) {
+    printf("w_serial: node%d gauge configuration write error %d file %s\n",
+           this_node, errno, gf->filename);
+    fflush(stdout);
+    terminate(1);
+  }
+  *buf_length = 0;
+}
+
+static void flush_funlbuf_to_file(gauge_file *gf, ffunmatrix *funlbuf,
+                               int *buf_length) {
+  FILE *fp = gf->fp;
+  int stat;
+
+  if (*buf_length <= 0)
+    return;
+
+  stat = (int)fwrite(funlbuf, sizeof(ffunmatrix), *buf_length, fp);
+  if (stat != *buf_length) {
     printf("w_serial: node%d gauge configuration write error %d file %s\n",
            this_node, errno, gf->filename);
     fflush(stdout);
@@ -203,9 +220,8 @@ static void accum_cksums(gauge_file *gf, int *rank29, int *rank31,
 // -----------------------------------------------------------------
 // Flush tbuf to lbuf and accumulate checksums without resetting tbuf_length
 static void flush_tbuf_to_lbuf(gauge_file *gf, int *rank29, int *rank31,
-                               fmatrix *lbuf, ffunmatrix *funlbuf,
-                               int *buf_length, fmatrix *tbuf,
-                               ffunmatrix *funtbuf, int tbuf_length) {
+                               fmatrix *lbuf, int *buf_length,
+                               fmatrix *tbuf, int tbuf_length) {
 
   int nword;
   u_int32type *buf;
@@ -213,10 +229,8 @@ static void flush_tbuf_to_lbuf(gauge_file *gf, int *rank29, int *rank31,
   if (tbuf_length > 0) {
     memcpy((void *)&lbuf[NUMLINK * (*buf_length)],
            (void *)tbuf, NUMLINK * tbuf_length * sizeof(fmatrix));
-    memcpy((void *)&funlbuf[(*buf_length)],
-           (void *)funtbuf, tbuf_length * sizeof(ffunmatrix));
 
-    nword = ( NUMLINK * (int)sizeof(fmatrix) + (int)sizeof(ffunmatrix) )
+    nword = NUMLINK * (int)sizeof(fmatrix)
                     / (int)sizeof(int32type) * tbuf_length;
     buf = (u_int32type *)&lbuf[NUMLINK * (*buf_length)];
     accum_cksums(gf, rank29, rank31, buf, nword);
@@ -225,20 +239,46 @@ static void flush_tbuf_to_lbuf(gauge_file *gf, int *rank29, int *rank31,
   }
 }
 
-static void send_buf_to_node0(fmatrix *tbuf, ffunmatrix *funtbuf,
-                              int tbuf_length, int currentnode) {
+static void flush_funtbuf_to_funlbuf(gauge_file *gf, int *rank29, int *rank31,
+                                     ffunmatrix *funlbuf, int *buf_length,
+                                     ffunmatrix *funtbuf, int tbuf_length) {
+
+  int nword;
+  u_int32type *buf;
+
+  if (tbuf_length > 0) {
+    memcpy((void *)&funlbuf[*buf_length],
+           (void *)funtbuf, tbuf_length * sizeof(ffunmatrix));
+
+    nword = (int)sizeof(ffunmatrix) / (int)sizeof(int32type) * tbuf_length;
+    buf = (u_int32type *)&funlbuf[*buf_length];
+    accum_cksums(gf, rank29, rank31, buf, nword);
+
+    *buf_length += tbuf_length;
+  }
+}
+
+static void send_buf_to_node0(fmatrix *tbuf, int tbuf_length,
+                              int currentnode) {
 
   if (this_node == currentnode) {
     send_field((char *)tbuf,
                NUMLINK * tbuf_length * sizeof(fmatrix), 0);
-    send_field((char *)funtbuf,
-               tbuf_length * sizeof(ffunmatrix), 0);
   }
   else if (this_node == 0) {
     get_field((char *)tbuf,
               NUMLINK * tbuf_length * sizeof(fmatrix), currentnode);
-    get_field((char *)funtbuf,
-              tbuf_length * sizeof(ffunmatrix), currentnode);
+  }
+}
+
+static void send_funbuf_to_node0(ffunmatrix *funtbuf, int tbuf_length,
+                              int currentnode) {
+
+  if (this_node == currentnode) {
+    send_field((char *)funtbuf, tbuf_length * sizeof(ffunmatrix), 0);
+  }
+  else if (this_node == 0) {
+    get_field((char *)funtbuf, tbuf_length * sizeof(ffunmatrix), currentnode);
   }
 }
 // -----------------------------------------------------------------
@@ -333,15 +373,15 @@ void w_serial(gauge_file *gf) {
         // Sweep any data in the retiring node's tbuf to the node0 lbuf
         if (tbuf_length > 0) {
           if (currentnode != 0)
-            send_buf_to_node0(tbuf, funtbuf, tbuf_length, currentnode);
+            send_buf_to_node0(tbuf, tbuf_length, currentnode);
 
           // node0 flushes tbuf, accumulates checksum
           // and writes lbuf if it is full
           if (this_node == 0) {
-            flush_tbuf_to_lbuf(gf, &rank29, &rank31, lbuf, funlbuf,
-                               &buf_length, tbuf, funtbuf, tbuf_length);
+            flush_tbuf_to_lbuf(gf, &rank29, &rank31, lbuf,
+                               &buf_length, tbuf, tbuf_length);
             if (buf_length > MAX_BUF_LENGTH - nx)
-              flush_lbuf_to_file(gf, lbuf, funlbuf, &buf_length);
+              flush_lbuf_to_file(gf, lbuf, &buf_length);
           }
           tbuf_length = 0;
         }
@@ -360,7 +400,12 @@ void w_serial(gauge_file *gf) {
       if (this_node == currentnode) {
         i = node_index(x, t);
         d2f_mat(lattice[i].link, &tbuf[NUMLINK * tbuf_length]);
-        d2f_funmat(&(lattice[i].funlink), &funtbuf[tbuf_length]);
+        // !!!
+        if (this_node == 0) {
+          printf("(%d, %d) --> %d\n", x, t, i);
+          dumpmat(&(lattice[i].link[0]));
+          dumpmat(&(lattice[i].link[1]));
+        }
       }
 
       if (this_node == currentnode || this_node == 0)
@@ -371,20 +416,86 @@ void w_serial(gauge_file *gf) {
   // Purge any remaining data
   if (tbuf_length > 0) {
     if (currentnode != 0)
-      send_buf_to_node0(tbuf, funtbuf, tbuf_length, currentnode);
+      send_buf_to_node0(tbuf, tbuf_length, currentnode);
   }
 
   if (this_node == 0) {
-    flush_tbuf_to_lbuf(gf, &rank29, &rank31, lbuf, funlbuf, &buf_length,
-                       tbuf, funtbuf, tbuf_length);
-    flush_lbuf_to_file(gf, lbuf, funlbuf, &buf_length);
+    flush_tbuf_to_lbuf(gf, &rank29, &rank31, lbuf, &buf_length,
+                       tbuf, tbuf_length);
+    flush_lbuf_to_file(gf, lbuf, &buf_length);
   }
 
   g_sync();
   free(tbuf);
 
+  currentnode = 0;  // The node delivering data
+  buf_length = 0;
+  tbuf_length = 0;
+  for (t = 0; t < nt; t++) {
+    for (x = 0; x < nx; x++) {
+      newnode = node_number(x, t);  // The node providing the next site
+      if (newnode != currentnode || x == 0) {
+        // We are switching to a new node or have exhausted a line of nx
+        // Sweep any data in the retiring node's tbuf to the node0 lbuf
+        if (tbuf_length > 0) {
+          if (currentnode != 0)
+            send_funbuf_to_node0(funtbuf, tbuf_length, currentnode);
+
+          // node0 flushes tbuf, accumulates checksum
+          // and writes lbuf if it is full
+          if (this_node == 0) {
+            flush_funtbuf_to_funlbuf(gf, &rank29, &rank31, funlbuf,
+                               &buf_length, funtbuf, tbuf_length);
+            if (buf_length > MAX_BUF_LENGTH - nx)
+              flush_funlbuf_to_file(gf, funlbuf, &buf_length);
+          }
+          tbuf_length = 0;
+        }
+
+        // node0 sends a few bytes to newnode as a clear to send signal
+        if (newnode != currentnode) {
+          if (this_node == 0 && newnode != 0)
+            send_field((char *)tbuf, NUMLINK, newnode);
+          if (this_node == newnode && newnode != 0)
+            get_field((char *)tbuf, NUMLINK, 0);
+          currentnode = newnode;
+        }
+      }
+
+      // The node with the data just appends to its tbuf
+      if (this_node == currentnode) {
+        i = node_index(x, t);
+        d2f_funmat(&(lattice[i].funlink), &funtbuf[tbuf_length]);
+        // !!!
+        if (this_node == 0) {
+          printf("(%d, %d) --> %d\n", x, t, i);
+          fun_dumpmat(&(lattice[i].funlink));
+        }
+      }
+
+      if (this_node == currentnode || this_node == 0)
+        tbuf_length++;
+    }
+  }
+
+  // Purge any remaining data
+  if (tbuf_length > 0) {
+    if (currentnode != 0)
+      send_funbuf_to_node0(funtbuf, tbuf_length, currentnode);
+  }
+
+  if (this_node == 0) {
+    flush_funtbuf_to_funlbuf(gf, &rank29, &rank31, funlbuf, &buf_length,
+                       funtbuf, tbuf_length);
+    flush_funlbuf_to_file(gf, funlbuf, &buf_length);
+  }
+
+  g_sync();
+  free(funtbuf);
+
   if (this_node == 0) {
     free(lbuf);
+    free(funlbuf);
     printf("Saved gauge configuration serially to binary file %s\n",
            gf->filename);
     printf("Time stamp %s\n", gh->time_stamp);
@@ -501,11 +612,12 @@ void r_serial(gauge_file *gf) {
           buf_length = MAX_BUF_LENGTH;
 
         // Now do read
+        // !!!
+        node0_printf("reading buf_length = %d\n", buf_length);
         stat =  (int)fread(lbuf, NUMLINK * sizeof(fmatrix), buf_length, fp);
-        stat += (int)fread(funlbuf, sizeof(ffunmatrix), buf_length, fp);
-        if (stat != 2 * buf_length) {
-          //printf("r_serial: node%d gauge configuration read error %d file %s\n",
-          //       this_node, errno, filename);//Gives segmentation errors
+        if (stat != buf_length) {
+          printf("r_serial: node%d gauge configuration read error %d file %s\n",
+                 this_node, errno, filename);//Gives segmentation errors
           fflush(stdout);
           terminate(1);
         }
@@ -514,17 +626,13 @@ void r_serial(gauge_file *gf) {
 
       if (destnode == 0) {  // Just copy links
         idest = node_index(x, t);
-        // Save matrices + funmatrix in tmat for further processing
+        // Save matrices in tmat for further processing
         memcpy(tmat, &lbuf[NUMLINK * where_in_buf],
                NUMLINK * sizeof(fmatrix));
-        memcpy(&tfunmat, &funlbuf[where_in_buf],
-               sizeof(funmatrix));
       }
       else {                // Send to correct node
         send_field((char *)&lbuf[NUMLINK * where_in_buf],
                    NUMLINK * sizeof(fmatrix), destnode);
-        send_field((char *)&funlbuf[where_in_buf],
-                   sizeof(ffunmatrix), destnode);
       }
       where_in_buf++;
     }
@@ -535,7 +643,6 @@ void r_serial(gauge_file *gf) {
         idest = node_index(x, t);
         // Receive matrices+funmatrix in temporary space for further processing
         get_field((char *)tmat, NUMLINK * sizeof(fmatrix), 0);
-        get_field((char *)&tfunmat, sizeof(ffunmatrix), 0);
       }
     }
 
@@ -546,12 +653,10 @@ void r_serial(gauge_file *gf) {
       if (byterevflag == 1) {
         byterevn((int32type *)tmat,
                  NUMLINK * sizeof(fmatrix) / sizeof(int32type));
-        byterevn((int32type *)&tfunmat,
-                 sizeof(ffunmatrix) / sizeof(int32type));
       }
       // Accumulate checksums
       for (k = 0, val = (u_int32type *)tmat;
-           k < (int)data_size / (int)sizeof(int32type);
+           k < NUMLINK * (int)sizeof(fmatrix) / (int)sizeof(int32type);
            k++, val++) {
         test_gc.sum29 ^= (*val)<<rank29 | (*val)>>(32 - rank29);
         test_gc.sum31 ^= (*val)<<rank31 | (*val)>>(32 - rank31);
@@ -564,7 +669,12 @@ void r_serial(gauge_file *gf) {
       }
       // Copy matrices + funmatrix to generic-precision lattice[idest]
       f2d_mat(tmat, &lattice[idest].link[0]);
-      f2d_funmat(&tfunmat, &lattice[idest].funlink);
+      // !!!
+      if (this_node == 0) {
+        printf("(%d, %d) --> %d\n", x, t, idest);
+        dumpmat(&(lattice[idest].link[0]));
+        dumpmat(&(lattice[idest].link[1]));
+      }
     }
     else {
       rank29 += data_size / sizeof(int32type);
@@ -574,6 +684,102 @@ void r_serial(gauge_file *gf) {
     }
   }
   // Combine node checksum contributions with global exclusive or
+  for (rcv_rank = 0; rcv_rank < volume; rcv_rank++) {
+    /* If file is in coordinate natural order, receiving coordinate
+       is given by rank. Otherwise, it is found in the table */
+    if (gf->header->order == NATURAL_ORDER)
+      rcv_coords = rcv_rank;
+    else
+      rcv_coords = gf->rank2rcv[rcv_rank];
+
+    x = rcv_coords % nx;
+    rcv_coords /= nx;
+    t = rcv_coords % nt;
+
+    // The node that gets the next set of gauge links
+    destnode = node_number(x, t);
+
+    // node0 fills its buffer, if necessary
+    if (this_node == 0) {
+      if (where_in_buf == buf_length) {  /* get new buffer */
+        /* new buffer length  = remaining sites, but never bigger
+           than MAX_BUF_LENGTH */
+        buf_length = volume - rcv_rank;
+        if (buf_length > MAX_BUF_LENGTH)
+          buf_length = MAX_BUF_LENGTH;
+
+        // Now do read
+        // !!!
+        node0_printf("reading buf_length = %d\n", buf_length);
+        stat = (int)fread(funlbuf, sizeof(ffunmatrix), buf_length, fp);
+        if (stat != buf_length) {
+          printf("r_serial: node%d gauge configuration read error %d file %s\n",
+                 this_node, errno, filename);//Gives segmentation errors
+          fflush(stdout);
+          terminate(1);
+        }
+        where_in_buf = 0;  // Reset counter
+      }  // End of the buffer read
+
+      if (destnode == 0) {  // Just copy links
+        idest = node_index(x, t);
+        // Save funmatrix in tmat for further processing
+        memcpy(&tfunmat, &funlbuf[where_in_buf],
+               sizeof(funmatrix));
+      }
+      else {                // Send to correct node
+        send_field((char *)&funlbuf[where_in_buf],
+                   sizeof(ffunmatrix), destnode);
+      }
+      where_in_buf++;
+    }
+
+    // The node that contains this site reads the message
+    else {  // All nodes other than node 0
+      if (this_node == destnode) {
+        idest = node_index(x, t);
+        // Receive matrices+funmatrix in temporary space for further processing
+        get_field((char *)&tfunmat, sizeof(ffunmatrix), 0);
+      }
+    }
+
+    /* The receiving node does the byte reversal and then checksum,
+       if needed.  At this point tmat contains the input matrices
+       and idest points to the destination site structure. */
+    if (this_node == destnode) {
+      if (byterevflag == 1) {
+        byterevn((int32type *)&tfunmat,
+                 sizeof(ffunmatrix) / sizeof(int32type));
+      }
+      //checksumns for tfunmat
+       for (k = 0, val = (u_int32type *)&tfunmat;
+           k < (int)sizeof(ffunmatrix) / (int)sizeof(int32type);
+           k++, val++) {
+        test_gc.sum29 ^= (*val)<<rank29 | (*val)>>(32 - rank29);
+        test_gc.sum31 ^= (*val)<<rank31 | (*val)>>(32 - rank31);
+        rank29++;
+        if (rank29 >= 29)
+          rank29 = 0;
+        rank31++;
+        if (rank31 >= 31)
+          rank31 = 0;
+      }
+      // Copy matrices + funmatrix to generic-precision lattice[idest]
+      f2d_funmat(&tfunmat, &lattice[idest].funlink);
+      // !!!
+      if (this_node == 0) {
+        printf("(%d, %d) --> %d\n", x, t, idest);
+        fun_dumpmat(&(lattice[idest].funlink));
+      }
+    }
+    else {
+      rank29 += data_size / sizeof(int32type);
+      rank31 += data_size / sizeof(int32type);
+      rank29 %= 29;
+      rank31 %= 31;
+    }
+  }
+ 
   g_xor32(&test_gc.sum29);
   g_xor32(&test_gc.sum31);
 
