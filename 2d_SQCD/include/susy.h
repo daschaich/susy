@@ -237,6 +237,120 @@ void mult_su2_mat_vec_elem_a(su2_matrix *u, complex *x0, complex *x1);
 // -----------------------------------------------------------------
 
 
+// -----------------------------------------------------------------
+// Routines for funmatrices
+// For now all in funmatrix_functions.c but plan to split the file
+
+void fun_sum_matrix(funmatrix *b, funmatrix *c);
+void fun_add_matrix(funmatrix *a, funmatrix *b, funmatrix *c);
+
+void funa_sum_matrix(funamatrix *b, funamatrix *c);
+void funa_add_matrix(funamatrix *a, funamatrix *b, funamatrix *c);
+
+void fun_adjoint(funmatrix *a, funamatrix *b); 
+void fun_neg_adjoint(funmatrix *a, funamatrix *b); 
+
+void funa_adjoint(funamatrix *a, funmatrix *b); 
+void funa_neg_adjoint(funamatrix *a, funmatrix *b); 
+
+void fun_clear_mat(funmatrix *m); 
+void funa_clear_mat(funamatrix *m); 
+
+void fun_c_scalar_mult_sum_adj_mat(funmatrix *b, complex *s, funamatrix *c); 
+void fun_c_scalar_mult_dif_adj_mat(funmatrix *b, complex *s, funamatrix *c); 
+
+void funa_c_scalar_mult_sum_adj_mat(funamatrix *b, complex *s, funmatrix *c); 
+void funa_c_scalar_mult_dif_adj_mat(funamatrix *b, complex *s, funmatrix *c); 
+
+void fun_c_scalar_mult_sum_mat(funmatrix *b, complex *s, funmatrix *c); 
+void funa_c_scalar_mult_sum_mat(funamatrix *b, complex *s, funamatrix *c); 
+
+void fun_c_scalar_mult_sum_mat_adj(funmatrix *b, complex *s, funamatrix *c); 
+void funa_c_scalar_mult_sum_mat_adj(funamatrix *b, complex *s, funmatrix *c); 
+
+void fun_c_scalar_mult_mat(funmatrix *b, complex *s, funmatrix *c); 
+void funa_c_scalar_mult_mat(funamatrix *b, complex *s, funamatrix *c); 
+
+void fun_c_scalar_mult_dif_mat(funmatrix *b, complex *s, funmatrix *c); 
+void funa_c_scalar_mult_dif_mat(funamatrix *b, complex *s, funamatrix *c); 
+
+void fun_dumpmat(funmatrix *m); 
+void funa_dumpmat(funamatrix *m); 
+
+void funa_mult_an_sum(funamatrix *a, funamatrix *b, matrix *c); 
+void funa_mult_an_dif(funamatrix *a, funamatrix *b, matrix *c); 
+void funa_mult_an(funamatrix *a, funamatrix *b, matrix *c); 
+
+void fun_mult_na_sum(funmatrix *a, funmatrix *b, matrix *c); 
+void fun_mult_na_dif(funmatrix *a, funmatrix *b, matrix *c); 
+void fun_mult_na(funmatrix *a, funmatrix *b, matrix *c); 
+
+void fun_mult_nn_sum(funmatrix *a, funamatrix *b, matrix *c); 
+void fun_mult_nn_dif(funmatrix *a, funamatrix *b, matrix *c); 
+void fun_mult_nn(funmatrix *a, funamatrix *b, matrix *c); 
+
+void fun_mat_copy(funmatrix *src, funmatrix *dest); 
+void funa_mat_copy(funamatrix *src, funamatrix *dest); 
+
+void fun_scalar_mult_sum_adj_matrix(funmatrix *b, Real s, funamatrix *c); 
+void funa_scalar_mult_sum_adj_matrix(funamatrix *b, Real s, funmatrix *c); 
+
+void fun_scalar_mult_sum_matrix(funmatrix *b, Real s, funmatrix *c); 
+void fun_scalar_mult_add_matrix(funmatrix *a, funmatrix *b, Real s, funmatrix *c); 
+
+void funa_scalar_mult_sum_matrix(funamatrix *b, Real s, funamatrix *c); 
+void funa_scalar_mult_add_matrix(funamatrix *a, funamatrix *b, Real s, funamatrix *c); 
+
+void fun_scalar_mult_adj_matrix(funmatrix *a, Real s, funamatrix *b); 
+void funa_scalar_mult_adj_matrix(funamatrix *a, Real s, funmatrix *b); 
+
+void fun_scalar_mult_matrix(funmatrix *a, Real s, funmatrix *b); 
+void funa_scalar_mult_matrix(funamatrix *a, Real s, funamatrix *b); 
+
+void funa_scalar_mult_an_sum(funamatrix *a, funamatrix *b, Real s, matrix *c); 
+void funa_scalar_mult_an_dif(funamatrix *a, funamatrix *b, Real s, matrix *c); 
+void funa_scalar_mult_an(funamatrix *a, funamatrix *b, Real s, matrix *c); 
+
+void fun_scalar_mult_na_sum(funmatrix *a, funmatrix *b, Real s, matrix *c); 
+void fun_scalar_mult_na_dif(funmatrix *a, funmatrix *b, Real s, matrix *c); 
+void fun_scalar_mult_na(funmatrix *a, funmatrix *b, Real s, matrix *c); 
+
+void fun_scalar_mult_nn_sum(funmatrix *a, funamatrix *b, Real s, matrix *c); 
+void fun_scalar_mult_nn_dif(funmatrix *a, funamatrix *b, Real s, matrix *c); 
+void fun_scalar_mult_nn(funmatrix *a, funamatrix *b, Real s, matrix *c); 
+
+void fun_scalar_mult_dif_adj_matrix(funmatrix *b, Real s, funamatrix *c); 
+void funa_scalar_mult_dif_adj_matrix(funamatrix *b, Real s, funmatrix *c); 
+
+void fun_scalar_mult_dif_matrix(funmatrix *b, Real s, funmatrix *c); 
+void funa_scalar_mult_dif_matrix(funamatrix *b, Real s, funamatrix *c); 
+
+void fun_dif_matrix(funmatrix *b, funmatrix *c); 
+void fun_sub_matrix(funmatrix *a, funmatrix *b, funmatrix *c); 
+
+void funa_dif_matrix(funamatrix *b, funamatrix *c); 
+void funa_sub_matrix(funamatrix *a, funamatrix *b, funamatrix *c); 
+
+void fun_mat_mult( matrix *b, funmatrix *c); 
+void fun_mat_scalar_mult( matrix *b, Real s, funmatrix *c); 
+void fun_mat_prod(funmatrix *a, matrix *b, funmatrix *c); 
+void fun_mat_prod_dif(funmatrix *a, matrix *b, funmatrix *c);
+
+void funa_mat_mult( matrix *b, funamatrix *c); 
+void funa_mat_scalar_mult( matrix *b, Real s, funmatrix *c); 
+void funa_mat_prod( funamatrix *a, matrix *b, funamatrix *c);
+void funa_mat_prod_sum( funamatrix *a, matrix *b, funamatrix *c);
+void funa_mat_prod_dif( funamatrix *a, matrix *b, funamatrix *c);
+void funa_mat_prod_an_sum( funmatrix *a, matrix *b, funamatrix *c);
+void funa_mat_prod_an_dif( funmatrix *a, matrix *b, funamatrix *c);
+
+Real funa_realtrace(funamatrix *a, funamatrix *b); 
+
+
+void funa_dif_an_matrix(funmatrix *b, funamatrix *c);
+
+
+// -----------------------------------------------------------------
 
 // -----------------------------------------------------------------
 // Miscellaneous routines

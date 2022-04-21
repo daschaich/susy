@@ -139,11 +139,13 @@ void make_fields() {
   FIELD_ALLOC(pm0, Twist_Fermion);
   FIELD_ALLOC(rm, Twist_Fermion);
 
-  // Temporary matrices and Twist_Fermion
+  // Temporary matrices, funmatrices and Twist_Fermion
   size += (Real)(3.0 * sizeof(matrix));
   size += (Real)(sizeof(Twist_Fermion));
   FIELD_ALLOC(tempmat, matrix);
   FIELD_ALLOC(tempmat2, matrix);
+  FIELD_ALLOC(tempfunmat, funmatrix);
+  FIELD_ALLOC(tempfunmat2, funmatrix);
   FIELD_ALLOC(staple, matrix);
   FIELD_ALLOC(tempTF, Twist_Fermion);
 

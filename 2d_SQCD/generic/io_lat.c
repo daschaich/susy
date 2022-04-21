@@ -60,7 +60,7 @@
 #define TOL 0.0000001   // Tolerance for floating point checks
 // -----------------------------------------------------------------
 
-
+//TODO:better documentation
 
 // -----------------------------------------------------------------
 // Copy NUMLINK single precision NxN matrices to generic precision

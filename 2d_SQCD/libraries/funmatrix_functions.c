@@ -427,7 +427,7 @@ void fun_mult_na(funmatrix *a, funmatrix *b, matrix *c) {
                       + a->e[i][0].imag * b->e[j][0].imag;
       c->e[i][j].imag = a->e[i][0].imag * b->e[j][0].real
                       - a->e[i][0].real * b->e[j][0].imag;
-      for (k = 1; k < NCOL; k++) {
+      for (k = 1; k < NCOLF; k++) {
         c->e[i][j].real += a->e[i][k].real * b->e[j][k].real
                          + a->e[i][k].imag * b->e[j][k].imag;
         c->e[i][j].imag += a->e[i][k].imag * b->e[j][k].real
@@ -892,8 +892,8 @@ void fun_sub_matrix(funmatrix *a, funmatrix *b, funmatrix *c) {
 
 void funa_dif_matrix(funamatrix *b, funamatrix *c) {
   register int i, j;
-  for (i = 0; i < NCOL; i++) {
-    for (j = 0; j < NCOLF; j++) {
+  for (i = 0; i < NCOLF; i++) {
+    for (j = 0; j < NCOL; j++) {
       c->e[i][j].real -= b->e[i][j].real;
       c->e[i][j].imag -= b->e[i][j].imag;
     }
@@ -906,6 +906,16 @@ void funa_sub_matrix(funamatrix *a, funamatrix *b, funamatrix *c) {
     for (j = 0; j < NCOL; j++) {
       c->e[i][j].real = a->e[i][j].real - b->e[i][j].real;
       c->e[i][j].imag = a->e[i][j].imag - b->e[i][j].imag;
+    }
+  }
+}
+
+void funa_dif_an_matrix(funmatrix *b, funamatrix *c) {
+  register int i, j;
+  for (i = 0; i < NCOLF; i++) {
+    for (j = 0; j < NCOL; j++) {
+      c->e[i][j].real -= b->e[j][i].real;
+      c->e[i][j].imag += b->e[j][i].imag;
     }
   }
 }
@@ -959,9 +969,9 @@ void fun_mat_prod_dif(funmatrix *a, matrix *b, funmatrix *c){
     for(j = 0; j < NCOLF; j++)
       for( k = 0; k < NCOL; k++){
         c->e[i][j].real -= b->e[i][k].real * a->e[k][j].real
-                              - a->e[i][k].imag * b->e[k][j].imag;
+                              - b->e[i][k].imag * a->e[k][j].imag;
         c->e[i][j].imag -= b->e[i][k].imag * a->e[k][j].real
-                                + a->e[i][k].real * b->e[k][j].imag;
+                                + b->e[i][k].real * a->e[k][j].imag;
       }
 }
 // -----------------------------------------------------------------
@@ -987,8 +997,8 @@ void funa_mat_mult( matrix *b, funamatrix *c) {
 
 void funa_mat_scalar_mult( matrix *b, Real s, funmatrix *c) {
   register int i, j, k;
-  for(i = 0; i < NCOL; i++)
-    for(j = 0; j < NCOLF; j++)
+  for(i = 0; i < NCOLF; i++)
+    for(j = 0; j < NCOL; j++)
       for( k = 0; k < NCOL; k++){
         c->e[i][j].real = s * (c->e[i][k].real * b->e[k][j].real
                               - c->e[i][k].imag * b->e[k][j].imag);
@@ -1039,9 +1049,9 @@ void funa_mat_prod_an_sum( funmatrix *a, matrix *b, funamatrix *c){
     for(j = 0; j < NCOL; j++)
       for( k = 0; k < NCOL; k++){
         c->e[i][j].real += a->e[k][i].real * b->e[k][j].real
-                              + a->e[i][k].imag * b->e[k][j].imag;
+                              + a->e[k][i].imag * b->e[k][j].imag;
         c->e[i][j].imag -= a->e[k][i].imag * b->e[k][j].real
-                                - a->e[i][k].real * b->e[k][j].imag;
+                                - a->e[k][i].real * b->e[k][j].imag;
       }
 }
 
@@ -1050,10 +1060,10 @@ void funa_mat_prod_an_dif( funmatrix *a, matrix *b, funamatrix *c){
   for(i = 0; i < NCOLF; i++)
     for(j = 0; j < NCOL; j++)
       for( k = 0; k < NCOL; k++){
-        c->e[i][j].real -= a->e[i][k].real * b->e[k][j].real
-                              + a->e[i][k].imag * b->e[k][j].imag;
-        c->e[i][j].imag += a->e[i][k].imag * b->e[k][j].real
-                                - a->e[i][k].real * b->e[k][j].imag;
+        c->e[i][j].real -= a->e[k][i].real * b->e[k][j].real
+                              + a->e[k][i].imag * b->e[k][j].imag;
+        c->e[i][j].imag += a->e[k][i].imag * b->e[k][j].real
+                                - a->e[k][i].real * b->e[k][j].imag;
       }
 }
 // -----------------------------------------------------------------

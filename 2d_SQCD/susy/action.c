@@ -108,10 +108,9 @@ void compute_PhiSq() {
 
 
 // -----------------------------------------------------------------
-// For the gauge action, compute at each site
-// Dmu phi = U_mu(x) phu(x+mu) - phi(x) U_mu(x+z)
+// For the gauge action and scalar action, compute at each site
+// Dmu phi = U_mu(x) phi(x+mu) - phi(x) U_mu(x+z)
 // where U_mu(x+z) = FIdentity for both mu values
-
 void compute_DmuPhi() {
   register int i;
   register site *s;
@@ -131,13 +130,13 @@ void compute_DmuPhi() {
   wait_gather(mtag1);
 
   FORALLSITES(i, s){
-    fun_mat_mult((matrix *)(gen_pt[0][i]), &(s->funlink), &(tempmat[i]));
-    fun_mat_mult((matrix *)(gen_pt[1][i]), &(s->funlink), &(tempmat2[i]));
+    fun_mat_prod(&(s->funlink), (matrix *)(gen_pt[0][i]), &(tempfunmat[i]));
+    fun_mat_prod(&(s->funlink), (matrix *)(gen_pt[1][i]), &(tempfunmat2[i]));
   }
 
-  mtag0 = start_gather_field(tempmat, sizeof(funmatrix),
+  mtag0 = start_gather_field(tempfunmat, sizeof(funmatrix),
                              goffset[0], EVENANDODD, gen_pt[0]);
-  mtag1 = start_gather_field(tempmat, sizeof(funmatrix),
+  mtag1 = start_gather_field(tempfunmat2, sizeof(funmatrix),
                              goffset[2], EVENANDODD, gen_pt[1]);
 
 
@@ -145,14 +144,14 @@ void compute_DmuPhi() {
   wait_gather(mtag1);
 
   FORALLSITES(i, s){
-    //fun_mat_mult(&(s->link[0]), (matrix *)(gen_pt[0][i]), &(tempmat[i]));
-    //fun_sub_matrix(&(tempmat[i]), &(s->funlink), DmuPhi[0][i]);
+    //fun_mat_mult(&(s->link[0]), (matrix *)(gen_pt[0][i]), &(tempfunmat[i]));
+    //fun_sub_matrix(&(tempfunmat[i]), &(s->funlink), DmuPhi[0][i]);
 
-    //fun_mat_mult(&(s->link[1]), (matrix *)(gen_pt[1][i]), &(tempmat[i]));
-    //fun_sub_matrix(&(tempmat[i]), &(s->funlink), DmuPhi[1][i]);
+    //fun_mat_mult(&(s->link[1]), (matrix *)(gen_pt[1][i]), &(tempfunmat[i]));
+    //fun_sub_matrix(&(tempfunmat[i]), &(s->funlink), DmuPhi[1][i]);
 
-    fun_sub_matrix((funmatrix *)(gen_pt[0][i]), &(s->funlink), DmuPhi[0][i]);
-    fun_sub_matrix((funmatrix *)(gen_pt[1][i]), &(s->funlink), DmuPhi[1][i]);
+    fun_sub_matrix((funmatrix *)(gen_pt[0][i]), &(s->funlink), &(DmuPhi[0][i]));
+    fun_sub_matrix((funmatrix *)(gen_pt[1][i]), &(s->funlink), &(DmuPhi[1][i]));
   }
   cleanup_gather(mtag0);
   cleanup_gather(mtag1);

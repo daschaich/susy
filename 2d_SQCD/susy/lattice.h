@@ -107,7 +107,7 @@ EXTERN Real ampdeg, *amp, *shift;
 EXTERN Real ampdeg4, *amp4, *shift4;
 EXTERN Real ampdeg8, *amp8, *shift8;
 EXTERN int Nroot, Norder;
-EXTERN Real gnorm, *fnorm, max_gf, *max_ff;
+EXTERN Real gnorm, phi_norm, *fnorm, max_gf, max_phif, *max_ff;
 
 // Each node maintains a structure with the pseudorandom number
 // generator state
@@ -139,8 +139,9 @@ EXTERN matrix Identity;//Identity matrix for NCOL NCOL
 // CG Twist_Fermions
 EXTERN Twist_Fermion *mpm, *pm0, *rm;
 
-// Temporary matrices and Twist_Fermion
+// Temporary matrices, funmatrices and Twist_Fermion
 EXTERN matrix *tempmat, *tempmat2, *staple;
+EXTERN funmatrix *tempfunmat, *tempfunmat2;
 EXTERN Twist_Fermion *tempTF;
 
 // Arrays to be used by LAPACK in determinant.c

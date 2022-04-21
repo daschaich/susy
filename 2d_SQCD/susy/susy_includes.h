@@ -68,6 +68,7 @@ double gauge_action(int do_det);
 
 // Force routines
 double gauge_force(Real eps);
+double scalar_force(Real eps);
 double fermion_force(Real eps, Twist_Fermion *source, Twist_Fermion **psim);
 double det_force(Real eps);
 

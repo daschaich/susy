@@ -30,7 +30,7 @@ void update_u(Real eps) {
   }
 
   // Update plaquette determinants, DmuUmu, Fmunu and PhiSq with new links
-  // (Needs to be done before calling gauge_force)
+  // (Needs to be done before calling gauge_force and scalar_force)
   compute_plaqdet();
   compute_Uinv();
   compute_DmuUmu();
@@ -44,23 +44,28 @@ void update_u(Real eps) {
 
 // -----------------------------------------------------------------
 // Omelyan version; ``dirty'' speeded-up version
-double update_gauge_step(Real eps) {
+double update_boson_step(Real eps, Real *norm_phi) {
   int n = nsteps[1], i;
   double norm;
 
 #ifdef UPDATE_DEBUG
-  node0_printf("gauge %d steps %.4g dt\n", n, eps);
+  node0_printf("boson %d steps %.4g dt\n", n, eps);
 #endif
   norm = gauge_force(eps * LAMBDA);
+  *norm_phi = scalar_force(eps * LAMBDA);
   for (i = 1; i <= n; i++) {
     update_u(0.5 * eps);
     norm += gauge_force(eps * LAMBDA_MID);
+    *norm_phi += scalar_force(eps * LAMBDA_MID);
     update_u(0.5 * eps);
-    if (i < n)
+    if (i < n) {
       norm += gauge_force(eps * TWO_LAMBDA);
-
-    else
+      *norm_phi += scalar_force(eps * TWO_LAMBDA);
+    }
+    else {
       norm += gauge_force(eps * LAMBDA);
+      *norm_phi += scalar_force(eps * LAMBDA);
+    }
   }
   return (norm / n);
 }
@@ -71,7 +76,7 @@ double update_gauge_step(Real eps) {
 // -----------------------------------------------------------------
 int update_step(Twist_Fermion **src, Twist_Fermion ***psim) {
   int iters = 0, i_multi0, n;
-  Real final_rsq, f_eps, g_eps, tr;
+  Real final_rsq, f_eps, g_eps, tr, tr_phi;
 
   f_eps = traj_length / (Real)nsteps[0];
   g_eps = f_eps / (Real)(2.0 * nsteps[1]);
@@ -87,10 +92,13 @@ int update_step(Twist_Fermion **src, Twist_Fermion ***psim) {
 #endif
 
   for (i_multi0 = 1; i_multi0 <= nsteps[0]; i_multi0++) {
-    tr = update_gauge_step(g_eps);
+    tr = update_boson_step(g_eps, &tr_phi);
     gnorm += tr;
+    phi_norm += tr_phi;
     if (tr > max_gf)
       max_gf = tr;
+    if (tr_phi > max_phif)
+      max_phif = tr_phi;
 
 #ifndef PUREGAUGE
     for (n = 0; n < Nroot; n++) {
@@ -102,10 +110,13 @@ int update_step(Twist_Fermion **src, Twist_Fermion ***psim) {
         max_ff[n] = tr;
     }
 #endif
-    tr = update_gauge_step(g_eps);
+    tr = update_boson_step(g_eps, &tr_phi);
     gnorm += tr;
+    phi_norm += tr_phi;
     if (tr > max_gf)
       max_gf = tr;
+    if (tr_phi > max_phif)
+      max_phif = tr_phi;
 
 #ifndef PUREGAUGE
     for (n = 0; n < Nroot; n++) {
@@ -167,7 +178,9 @@ int update() {
   // Find initial action
   startaction = action(src, psim);
   gnorm = 0.0;
+  phi_norm = 0.0;
   max_gf = 0.0;
+  max_phif = 0.0;
   for (n = 0; n < Nroot; n++) {
     fnorm[n] = 0.0;
     max_ff[n] = 0.0;
@@ -250,6 +263,8 @@ int update() {
     node0_printf("IT_PER_TRAJ %d\n", iters);
     node0_printf("MONITOR_FORCE_GAUGE    %.4g %.4g\n",
                  gnorm / (double)(2 * nsteps[0]), max_gf);
+    node0_printf("MONITOR_FORCE_SCALAR   %.4g %.4g\n",
+                 phi_norm / (double)(2 * nsteps[0]), max_phif);
     for (n = 0; n < Nroot; n++) {
       node0_printf("MONITOR_FORCE_FERMION%d %.4g %.4g\n",
                    n, fnorm[n] / (double)(2 * nsteps[0]), max_ff[n]);

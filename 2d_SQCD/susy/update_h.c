@@ -10,8 +10,8 @@
 // Update mom[NUMLINK] with the gauge force
 // Include tunable coefficient C2 in the d^2 term of the action
 // Use tr_dest, tempmat and tempdet for temporary storage
-// Assume compute_plaqdet(), compute_DmuUmu()
-// and compute_Fmunu() have already been run
+// Assume compute_plaqdet(), compute_DmuUmu(), compute_Fmunu()
+// compute_PhiSq() and compute_DmuPhi() have already been run
 double gauge_force(Real eps) {
   register int i, mu, nu;
   register site *s;
@@ -219,6 +219,7 @@ double gauge_force(Real eps) {
   }
 
 #ifdef SPHI
+  // Contributions of scalar terms to gauge force
   // Phi phi term
   // TODO: make more efficent gathers
   FORALLDIR(mu) {
@@ -241,52 +242,6 @@ double gauge_force(Real eps) {
   }
 #endif
 
-#ifdef SPHI
-  // Phi force terms
-  // F_phi = bar(D^+_a phi(x-a)) U_a(x-a)
-  //       - I_a bar(D^+_a phi(x)) 
-  //       + bar(phi(x)) PhiSq(x)
-  //       - bar(phi(x)(bar(D)^-_a U_a(x))
-
-  FORALLSITES(i, s) funa_clear_mat(&(s->f_phi));
-#ifdef PHITERM1
-  FORALLDIR(mu) {
-    tag0[0] = start_gather_field(DmuPhi[mu], sizeof(funmatrix),
-                                 goffset[mu]+1, EVENANDODD, gen_pt[0]);
-    tag1[0] = start_gather_site(F_OFFSET(link[mu]), sizeof(matrix),
-                                 goffset[mu]+1, EVENANDODD, gen_pt[1]);
-    wait_gather(tag0[0]);
-    wait_gather(tag1[0]);
-    FORALLSITES(i, s) {
-      funa_mat_prod_sum((funmatrix *) gen_pt[0], (matrix *) gen_pt[1], &(s->f_phi));
-      funa_dif_matrix(&(DmuPhi[mu]), &(s->f_phi));
-   }
-    cleanup_gather(tag0[0]);
-    cleanup_gather(tag1[0]);
-  }
-#endif
-  FORALLSITES(i, s) { // TODO!!!
-#ifdef PHITERM2
-    funa_mat_prod_an_sum(&(s->funlink), &(PhiSq[i]), &(s->f_phi));
-#endif
-#ifdef PHITERM3
-    funa_mat_prod_an_dif(&(s->funlink), &(DmuUmu[i]), &(s->f_phi));
-#endif
-  }
-#endif
-
-#ifdef SPHI
-  // Update phi momentum
-  // use the same overall factor as below - N/(4lambda)
-  // Subtract to reproduce +f_phi
-
-  tr = kappa * eps;
-  FORALLSITES(i, s) {
-    funa_scalar_mult_sum_matrix(&(s->f_phi), tr, &(s->funmom));
-    returnit += funa_realtrace(&(s->f_phi), &(s->f_phi));
-  }
-#endif
-
   // Finally take adjoint and update the momentum
   // Include overall factor of kappa = N / (4lambda)
   // Subtract to reproduce -Adj(f_U)
@@ -306,6 +261,69 @@ double gauge_force(Real eps) {
     returnit += det_force(eps);
 
   return (eps * sqrt(returnit) / volume);
+}
+// -----------------------------------------------------------------
+
+
+
+// -----------------------------------------------------------------
+// Update scalar momuntem with the scalar force
+// Use TODO... for temporary storage
+// Assume compute_PhiSq() and compute_DmuPhi() have already been run
+double scalar_force(Real eps) {
+#ifdef SPHI
+  register int i, mu;
+  register site *s;
+  double returnit = 0.0, tr;
+  msg_tag *tag, *tag2;
+
+  // Phi force terms
+  // F_phi = bar(D^+_a phi(x-a)) U_a(x-a)
+  //       - I_a bar(D^+_a phi(x)) 
+  //       + bar(phi(x)) PhiSq(x)
+  //       - bar(phi(x)(bar(D)^-_a U_a(x))
+  FORALLSITES(i, s) funa_clear_mat(&(s->f_phi));
+#ifdef PHITERM1
+  FORALLDIR(mu) {
+    tag = start_gather_field(DmuPhi[mu], sizeof(funmatrix),
+                             goffset[mu]+1, EVENANDODD, gen_pt[0]);
+    tag2 = start_gather_site(F_OFFSET(link[mu]), sizeof(matrix),
+                             goffset[mu]+1, EVENANDODD, gen_pt[1]);
+    wait_gather(tag);
+    wait_gather(tag2);
+    FORALLSITES(i, s) {
+      funa_mat_prod_an_sum((funmatrix *) gen_pt[0][i], (matrix *) gen_pt[1][i], &(s->f_phi));
+      funa_dif_an_matrix(&(DmuPhi[mu][i]), &(s->f_phi));
+   }
+    cleanup_gather(tag);
+    cleanup_gather(tag2);
+  }
+#endif
+  FORALLSITES(i, s) { // TODO!!!
+#ifdef PHITERM2
+    funa_mat_prod_an_sum(&(s->funlink), &(PhiSq[i]), &(s->f_phi));
+#endif
+#ifdef PHITERM3
+    funa_mat_prod_an_dif(&(s->funlink), &(DmuUmu[i]), &(s->f_phi));
+#endif
+  }
+
+  // Update phi momentum
+  // use the same overall factor as below - N/(4lambda)
+  // Subtract to reproduce +f_phi
+
+  tr = kappa * eps;
+  FORALLSITES(i, s) {
+    funa_scalar_mult_dif_matrix(&(s->f_phi), tr, &(s->funmom));
+    returnit += funa_realtrace(&(s->f_phi), &(s->f_phi));
+  }
+  g_doublesum(&returnit);
+  returnit *= kappa * kappa;
+
+  return (eps * sqrt(returnit) / volume);
+#else
+  return 0.0;
+#endif
 }
 // -----------------------------------------------------------------
 
