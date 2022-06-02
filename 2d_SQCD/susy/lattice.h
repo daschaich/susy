@@ -44,13 +44,15 @@ typedef struct {
 
 #ifdef HMC_ALGORITHM
   matrix old_link[NUMLINK];   // For accept/reject
+  funmatrix old_funlink;      // For accept/reject
 #endif
 
   // Momentum matrices in each direction are just U(N) matrices
   // as opposed to anti-hermitian matrices
   matrix mom[NUMLINK], f_U[NUMLINK];        // Force matrices for U
   // Forces and momenta are FxN funamtrices
-  funamatrix funmom, f_phi;                 // Force matrices for phi
+  funamatrix f_phi;                 // Force matrices for phi
+  funmatrix funmom; //rewriting code with funmom a funmatrix as a check
 
   // Boundary conditions -- many unused
   Real bc[2 * NUMLINK];
@@ -123,7 +125,11 @@ EXTERN int goffset[2 * NUMLINK];
 // Persistent site, link and plaq fermions for matrix--vector operation
 // Used in fermion_op and assemble_fermion_force
 EXTERN matrix *site_src, *link_src[NUMLINK], *plaq_src;
+EXTERN funmatrix *funsite_src, *funplaq_src;
+EXTERN funamatrix *funlink_src[NUMLINK];
 EXTERN matrix *site_dest, *link_dest[NUMLINK], *plaq_dest;
+EXTERN funamatrix *funsite_dest, *funplaq_dest; //dest is adjoint of src
+EXTERN funmatrix *funlink_dest[NUMLINK];
 
 // For convenience in calculating action and force
 // May be wasteful of space

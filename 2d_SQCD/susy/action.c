@@ -114,44 +114,22 @@ void compute_PhiSq() {
 void compute_DmuPhi() {
   register int i;
   register site *s;
+  funmatrix temp;
   msg_tag *mtag0 = NULL, *mtag1 = NULL;
-  //TODO:fix it so that F_OFFSET could be used for funlink
-  //mtag0 = start_gather_site(F_OFFSET(funlink), sizeof(funmatrix),
-  //                          goffset[0], EVENANDODD, gen_pt[0]);
-  //mtag1 = start_gather_site(F_OFFSET(funlink), sizeof(funmatrix),
-  //                          goffset[2], EVENANDODD, gen_pt[1]);
-  
-  mtag0 = start_gather_site(F_OFFSET(link[0]), sizeof(matrix),
-                            goffset[1], EVENANDODD, gen_pt[0]);
-  mtag1 = start_gather_site(F_OFFSET(link[0]), sizeof(matrix),
-                            goffset[3], EVENANDODD, gen_pt[1]);
+  mtag0 = start_gather_site(F_OFFSET(funlink), sizeof(funmatrix),
+                            goffset[0], EVENANDODD, gen_pt[0]);
+  mtag1 = start_gather_site(F_OFFSET(funlink), sizeof(funmatrix),
+                            goffset[1], EVENANDODD, gen_pt[1]);
 
   wait_gather(mtag0);
   wait_gather(mtag1);
 
   FORALLSITES(i, s){
-    fun_mat_prod(&(s->funlink), (matrix *)(gen_pt[0][i]), &(tempfunmat[i]));
-    fun_mat_prod(&(s->funlink), (matrix *)(gen_pt[1][i]), &(tempfunmat2[i]));
-  }
+    fun_mat_prod((funmatrix *)(gen_pt[0]), &(s->link[0]), &(temp));
+    fun_sub_matrix(&(temp), &(s->funlink), &(DmuPhi[0][i]));
 
-  mtag0 = start_gather_field(tempfunmat, sizeof(funmatrix),
-                             goffset[0], EVENANDODD, gen_pt[0]);
-  mtag1 = start_gather_field(tempfunmat2, sizeof(funmatrix),
-                             goffset[2], EVENANDODD, gen_pt[1]);
-
-
-  wait_gather(mtag0);
-  wait_gather(mtag1);
-
-  FORALLSITES(i, s){
-    //fun_mat_mult(&(s->link[0]), (matrix *)(gen_pt[0][i]), &(tempfunmat[i]));
-    //fun_sub_matrix(&(tempfunmat[i]), &(s->funlink), DmuPhi[0][i]);
-
-    //fun_mat_mult(&(s->link[1]), (matrix *)(gen_pt[1][i]), &(tempfunmat[i]));
-    //fun_sub_matrix(&(tempfunmat[i]), &(s->funlink), DmuPhi[1][i]);
-
-    fun_sub_matrix((funmatrix *)(gen_pt[0][i]), &(s->funlink), &(DmuPhi[0][i]));
-    fun_sub_matrix((funmatrix *)(gen_pt[1][i]), &(s->funlink), &(DmuPhi[1][i]));
+    fun_mat_prod((funmatrix *)(gen_pt[1]), &(s->link[1]), &(temp));
+    fun_sub_matrix(&(temp), &(s->funlink), &(DmuPhi[1][i]));
   }
   cleanup_gather(mtag0);
   cleanup_gather(mtag1);
@@ -167,7 +145,7 @@ double gauge_action(int do_det) {
   register site *s;
   double g_action = 0.0, norm = 0.5 * C2;
   complex tc;
-  matrix tmat, tmat2, tmat3;
+  matrix tmat, tmat2;
 
   FORALLSITES(i, s) {
     // d^2 term normalized by C2 / 2
@@ -178,32 +156,6 @@ double gauge_action(int do_det) {
     // F^2 term
     mult_an(&(Fmunu[i]), &(Fmunu[i]), &tmat2);
     scalar_mult_sum_matrix(&tmat2, 2.0, &tmat);
-
-#ifdef SPHI
-    // SQCD part of the gauge action
-    // not certain about signs, numeric factors
-    // phi^4 term
-#ifdef PHITERM2
-    mult_nn(&(PhiSq[i]), &(PhiSq[i]), &tmat3);
-    scalar_mult_sum_matrix(&tmat3, 0.5, &tmat);
-#endif
-#ifdef PHITERM3
-    // DmuUmu phi^2 term
-    mult_nn(&(DmuUmu[i]), &(PhiSq[i]), &tmat3);
-    scalar_mult_dif_matrix(&tmat3, 1.0, &tmat);
-#endif
-#ifdef PHITERM1
-    // DmuPhi^2 term
-    // in 1505.00467 this term is given as
-    // bar(DmuPhi)DmuPhi but this is a NCOLF NCOLF matrix
-    // so here we calculate DmuPhi bar(DmuPhi)
-    fun_mult_na(&(DmuPhi[0][i]), &(DmuPhi[0][i]), &tmat3);
-    scalar_mult_sum_matrix(&tmat3, 1.0, &tmat);
-    fun_mult_na(&(DmuPhi[1][i]), &(DmuPhi[1][i]), &tmat3);
-    scalar_mult_sum_matrix(&tmat3, 1.0, &tmat);
-#endif
-#endif
-
 
     if (do_det == 1) {
       det_project(&tmat, &tmat2);
@@ -223,6 +175,66 @@ double gauge_action(int do_det) {
   return g_action;
 }
 // -----------------------------------------------------------------
+
+
+// -----------------------------------------------------------------
+// Fundamental scalar contribution to the action
+double scalar_action(int do_det) {
+#ifdef SPHI
+  register int i;
+  register site *s;
+  double s_action = 0.0;
+  complex tc;
+  matrix tmat, tmat2;
+
+  FORALLSITES(i, s) {
+    // SQCD part of the gauge action
+    // not certain about signs, numeric factors
+    // phi^4 term
+    clear_mat(&tmat);//For now don't know which terms is on so start with clear
+#ifdef PHITERM2
+    mult_nn(&(PhiSq[i]), &(PhiSq[i]), &tmat2);
+    scalar_mult_sum_matrix(&tmat2, 0.5, &tmat);
+#endif
+#ifdef PHITERM3
+    // DmuUmu phi^2 term
+    mult_nn(&(DmuUmu[i]), &(PhiSq[i]), &tmat2);
+    scalar_mult_dif_matrix(&tmat2, 1.0, &tmat);
+#endif
+#ifdef PHITERM1
+    // DmuPhi^2 term
+    // in 1505.00467 this term is given as
+    // bar(DmuPhi)DmuPhi but this is a NCOLF NCOLF matrix
+    // so here we calculate DmuPhi bar(DmuPhi)
+    fun_mult_na(&(DmuPhi[0][i]), &(DmuPhi[0][i]), &tmat2);
+    scalar_mult_sum_matrix(&tmat2, 1.0, &tmat);
+    fun_mult_na(&(DmuPhi[1][i]), &(DmuPhi[1][i]), &tmat2);
+    scalar_mult_sum_matrix(&tmat2, 1.0, &tmat);
+#endif
+
+
+    if (do_det == 1) {
+      det_project(&tmat, &tmat2);
+      tc = trace(&tmat2);
+    }
+    else
+      tc = trace(&tmat);
+
+    s_action += tc.real;
+#ifdef DEBUG_CHECK
+    if (fabs(tc.imag) > IMAG_TOL)
+      printf("node%d WARNING: Im[s_B[%d]] = %.4g\n", this_node, i, tc.imag);
+#endif
+  }
+  s_action *= kappa;
+  g_doublesum(&s_action);
+  return s_action;
+#else
+  return -99.0;
+#endif
+}
+// -----------------------------------------------------------------
+
 
 
 // -----------------------------------------------------------------
@@ -332,7 +344,7 @@ double mom_action() {
   FORALLSITES(i, s) {
     FORALLDIR(mu)
       sum += (double)realtrace(&(s->mom[mu]), &(s->mom[mu]));
-    sum += (double)funa_realtrace(&(s->funmom), &(s->funmom));
+    sum += (double)fun_realtrace(&(s->funmom), &(s->funmom));
   }
   g_doublesum(&sum);
   return sum;
@@ -344,20 +356,21 @@ double mom_action() {
 // -----------------------------------------------------------------
 // Print out zeros for pieces of the action that aren't included
 double action(Twist_Fermion **src, Twist_Fermion ***sol) {
-  double g_act, bmass_act = 0.0, p_act, f_act, det_act = 0.0;
+  double g_act, s_act, bmass_act = 0.0, p_act, f_act, det_act = 0.0;
   double total;
 
   g_act = gauge_action(NODET);
+  s_act = scalar_action(NODET);
   if (bmass > IMAG_TOL)
     bmass_act = bmass_action();
   if (kappa_u1 > IMAG_TOL)
     det_act = det_action();
 
   node0_printf("action: ");
-  node0_printf("gauge %.8g bmass %.8g ", g_act, bmass_act);
+  node0_printf("gauge %.8g scalar %.8g bmass %.8g ", g_act, s_act, bmass_act);
   node0_printf("det %.8g ", det_act);
 
-  total = g_act + bmass_act + det_act;
+  total = g_act + s_act + bmass_act + det_act;
 #ifndef PUREGAUGE
   int n;
   for (n = 0; n < Nroot; n++) {

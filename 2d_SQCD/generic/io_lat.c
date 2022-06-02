@@ -400,12 +400,6 @@ void w_serial(gauge_file *gf) {
       if (this_node == currentnode) {
         i = node_index(x, t);
         d2f_mat(lattice[i].link, &tbuf[NUMLINK * tbuf_length]);
-        // !!!
-        if (this_node == 0) {
-          printf("(%d, %d) --> %d\n", x, t, i);
-          dumpmat(&(lattice[i].link[0]));
-          dumpmat(&(lattice[i].link[1]));
-        }
       }
 
       if (this_node == currentnode || this_node == 0)
@@ -466,11 +460,6 @@ void w_serial(gauge_file *gf) {
       if (this_node == currentnode) {
         i = node_index(x, t);
         d2f_funmat(&(lattice[i].funlink), &funtbuf[tbuf_length]);
-        // !!!
-        if (this_node == 0) {
-          printf("(%d, %d) --> %d\n", x, t, i);
-          fun_dumpmat(&(lattice[i].funlink));
-        }
       }
 
       if (this_node == currentnode || this_node == 0)
@@ -669,12 +658,6 @@ void r_serial(gauge_file *gf) {
       }
       // Copy matrices + funmatrix to generic-precision lattice[idest]
       f2d_mat(tmat, &lattice[idest].link[0]);
-      // !!!
-      if (this_node == 0) {
-        printf("(%d, %d) --> %d\n", x, t, idest);
-        dumpmat(&(lattice[idest].link[0]));
-        dumpmat(&(lattice[idest].link[1]));
-      }
     }
     else {
       rank29 += data_size / sizeof(int32type);
@@ -766,11 +749,6 @@ void r_serial(gauge_file *gf) {
       }
       // Copy matrices + funmatrix to generic-precision lattice[idest]
       f2d_funmat(&tfunmat, &lattice[idest].funlink);
-      // !!!
-      if (this_node == 0) {
-        printf("(%d, %d) --> %d\n", x, t, idest);
-        fun_dumpmat(&(lattice[idest].funlink));
-      }
     }
     else {
       rank29 += data_size / sizeof(int32type);

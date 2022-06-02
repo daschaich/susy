@@ -341,11 +341,20 @@ void funa_mat_scalar_mult( matrix *b, Real s, funmatrix *c);
 void funa_mat_prod( funamatrix *a, matrix *b, funamatrix *c);
 void funa_mat_prod_sum( funamatrix *a, matrix *b, funamatrix *c);
 void funa_mat_prod_dif( funamatrix *a, matrix *b, funamatrix *c);
+void funa_mat_mult_an( funmatrix *a, matrix *b, funamatrix *c);
 void funa_mat_prod_an_sum( funmatrix *a, matrix *b, funamatrix *c);
 void funa_mat_prod_an_dif( funmatrix *a, matrix *b, funamatrix *c);
 
+void funa_scalar_mat_prod_an_dif(funmatrix *a,matrix *b,Real s,funamatrix *c);
+
+Real fun_realtrace(funmatrix *a, funmatrix *b);
 Real funa_realtrace(funamatrix *a, funamatrix *b); 
 
+complex fun_complextrace_an(funmatrix *a, funmatrix *b);
+complex fun_complextrace_na(funmatrix *a, funmatrix *b);
+
+complex funa_complextrace_an(funamatrix *a, funamatrix *b);
+complex funa_complextrace_na(funamatrix *a, funamatrix *b);
 
 void funa_dif_an_matrix(funmatrix *b, funamatrix *c);
 

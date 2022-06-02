@@ -442,6 +442,12 @@ void detLtoS(matrix *src[NUMLINK], matrix *dest) {
 #endif
 // -----------------------------------------------------------------
 
+
+
+// -----------------------------------------------------------------
+// -----------------------------------------------------------------
+
+
 // -----------------------------------------------------------------
 // Twist_Fermion matrix--vector operation
 // Applies either the operator (sign = 1) or its adjoint (sign = -1)
@@ -451,12 +457,16 @@ void fermion_op(Twist_Fermion *src, Twist_Fermion *dest, int sign) {
 
   // Copy src TwistFermion into fieldwise site, link and plaq fermions,
   // overwriting all of the latter
+  // NOTE: for fundamental fermions the result is saved in adjoint form
   if (sign == 1) {
     FORALLSITES(i, s) {
       mat_copy(&(src[i].Fsite), &(site_src[i]));
       FORALLDIR(mu)
         mat_copy(&(src[i].Flink[mu]), &(link_src[mu][i]));
       mat_copy(&(src[i].Fplaq), &(plaq_src[i]));
+#ifdef FUNSITE
+      fun_mat_copy(&(src[i].Funsite), &(funsite_src[i]));
+#endif
     }
   }
   else if (sign == -1) {
@@ -465,6 +475,9 @@ void fermion_op(Twist_Fermion *src, Twist_Fermion *dest, int sign) {
       FORALLDIR(mu)
         adjoint(&(src[i].Flink[mu]), &(link_src[mu][i]));
       adjoint(&(src[i].Fplaq), &(plaq_src[i]));
+#ifdef FUNSITE
+      fun_mat_copy(&(src[i].Funsite), &(funsite_src[i]));
+#endif
     }
   }
   else {
@@ -504,6 +517,16 @@ void fermion_op(Twist_Fermion *src, Twist_Fermion *dest, int sign) {
     clear_mat(&(site_dest[i]));
 #endif
 
+#ifdef SFUNS
+  FORALLSITES(i, s)//adds to site_dest
+    fun_mult_na_sum(&(funsite_src[i]), &(s->funlink), &(site_dest[i]));
+  FORALLSITES(i, s)// Overwrites funsite_dest;NOTE: funsite_dest is funamatrix
+    funa_mat_mult_an(&(s->funlink), &(site_src[i]), &(funsite_dest[i]));
+#else
+  FORALLSITES(i, s)
+    fun_clear_mat(&(funsite_dest[i]));
+#endif
+
   // Copy local plaquette, link and site fermions into dest TwistFermion
   if (sign == 1) {
     FORALLSITES(i, s) {
@@ -511,6 +534,9 @@ void fermion_op(Twist_Fermion *src, Twist_Fermion *dest, int sign) {
       FORALLDIR(mu)
         mat_copy(&(link_dest[mu][i]), &(dest[i].Flink[mu]));
       mat_copy(&(plaq_dest[i]), &(dest[i].Fplaq));
+#ifdef FUNSITE
+      funa_adjoint(&(funsite_dest[i]), &(dest[i].Funsite));
+#endif
     }
   }
   else if (sign == -1) {    // Both negate and conjugate
@@ -519,6 +545,9 @@ void fermion_op(Twist_Fermion *src, Twist_Fermion *dest, int sign) {
       FORALLDIR(mu)
         neg_adjoint(&(link_dest[mu][i]), &(dest[i].Flink[mu]));
       neg_adjoint(&(plaq_dest[i]), &(dest[i].Fplaq));
+#ifdef FUNSITE
+      funa_neg_adjoint(&(funsite_dest[i]), &(dest[i].Funsite));
+#endif
     }
   }
 }

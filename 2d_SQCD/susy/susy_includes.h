@@ -65,6 +65,7 @@ void scalar_eig(int project, double *ave_eigs, double *eig_widths,
 // Action routines
 double action(Twist_Fermion **source, Twist_Fermion ***sol);
 double gauge_action(int do_det);
+double scalar_action(int do_det);
 
 // Force routines
 double gauge_force(Real eps);
@@ -99,6 +100,7 @@ void scalar_mult_TF(Twist_Fermion *src, Real s, Twist_Fermion *dest);
 
 // Other routines in library_util.c that loop over all sites
 void gauge_field_copy(field_offset src, field_offset dest);
+void scalar_field_copy(field_offset src, field_offset dest);
 void shiftmat(matrix *dat, matrix *temp, int dir);
 
 // Random gauge transformation for testing gauge invariance

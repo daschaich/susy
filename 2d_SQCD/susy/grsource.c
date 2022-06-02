@@ -30,9 +30,9 @@ void ranmom() {
     }
     //maybe use generator matrices for funmom
     //but this should be correct
-    funa_clear_mat(&(s->funmom));
-    for(j = 0; j < NCOLF; j++) {
-      for (k = 0; k < NCOL; k++) {
+    fun_clear_mat(&(s->funmom));
+    for(j = 0; j < NCOL; j++) {
+      for (k = 0; k < NCOLF; k++) {
 #ifdef SITERAND
         grn.real = gaussian_rand_no(&(s->site_prn));
         grn.imag = gaussian_rand_no(&(s->site_prn));
@@ -56,7 +56,7 @@ void ranmom() {
 // Return the number of iterations from the inversion
 #ifndef PUREGAUGE
 int grsource(Twist_Fermion *src) {
-  register int i, j, mu;
+  register int i, j, k, mu;
   register site *s;
   int avs_iters;
   Real size_r;
@@ -99,6 +99,41 @@ int grsource(Twist_Fermion *src) {
 #endif
       c_scalar_mult_sum_mat(&(Lambda[j]), &grn, &(src[i].Fplaq));
     }
+#ifdef FUNFERMION
+    for (j = 0; j < NCOL; j++) {
+      for (k = 0; k < NCOLF; k++) {
+#ifdef FUNSITE
+#ifdef SITERAND
+        src[i].Funsite.e[j][k].real = gaussian_rand_no(&(s->site_prn));
+        src[i].Funsite.e[j][k].imag = gaussian_rand_no(&(s->site_prn));
+#else
+        src[i].Funsite.e[j][k].real = gaussian_rand_no(&node_prn);
+        src[i].Funsite.e[j][k].imag = gaussian_rand_no(&node_prn);
+#endif
+#endif
+#ifdef FUNLINK
+        FORALLDIR(mu) {
+#ifdef SITERAND
+          src[i].Funlink[mu].e[k][j].real = gaussian_rand_no(&(s->site_prn));
+          src[i].Funlink[mu].e[k][j].imag = gaussian_rand_no(&(s->site_prn));
+#else
+          src[i].Funlink[mu].e[k][j].real = gaussian_rand_no(&node_prn);
+          src[i].Funlink[mu].e[k][j].imag = gaussian_rand_no(&node_prn);
+#endif
+        }
+#endif
+#ifdef FUNPLAQ
+#ifdef SITERAND
+        src[i].Funsplaq.e[j][k].real = gaussian_rand_no(&(s->site_prn));
+        src[i].Funsplaq.e[j][k].imag = gaussian_rand_no(&(s->site_prn));
+#else
+        src[i].Funplaq.e[j][k].real = gaussian_rand_no(&node_prn);
+        src[i].Funplaq.e[j][k].imag = gaussian_rand_no(&node_prn);
+#endif
+#endif
+      }
+    }
+#endif
   }
 
 #ifdef DEBUG_CHECK

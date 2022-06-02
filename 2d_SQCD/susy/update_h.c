@@ -4,6 +4,84 @@
 #include "susy_includes.h"
 // -----------------------------------------------------------------
 
+#ifdef DEBUGFUNMATRIX
+
+void dumpforce() {
+  register int i, mu, nu;
+  register site *s;
+  FORALLSITES(i, s) {
+    printf("\nSite %d U(0):", i);
+    FORALLDIR(mu)
+      FORALLDIR(nu){
+        if(nu==0) printf("\n");
+        printf("(%4e, %4e) ", s->link[0].e[mu][nu].real,
+                                s->link[0].e[mu][nu].imag);
+      }
+  }
+  FORALLSITES(i, s) {
+    printf("\nSite %d DU(0):", i);
+    FORALLDIR(mu)
+      FORALLDIR(nu){
+        if(nu==0) printf("\n");
+        printf("(%4e, %4e) ", DmuUmu[i].e[mu][nu].real,
+                              DmuUmu[i].e[mu][nu].imag);
+      }
+  }
+
+  FORALLSITES(i, s){
+    printf("\nSite %d U(1):", i);
+    FORALLDIR(mu)
+      FORALLDIR(nu){
+        if(nu==0) printf("\n");
+        printf("(%4e, %4e) ", s->link[1].e[mu][nu].real,
+                                s->link[1].e[mu][nu].imag);
+      }
+  }
+  FORALLSITES(i, s){
+    printf("\nSite %d Phi:", i);
+    for(mu = 0; mu < NCOL; mu++)
+      for(nu = 0; nu < NCOLF; nu++){
+        if(nu==0) printf("\n");
+        printf("(%4e, %4e) ", s->funlink.e[mu][nu].real,
+                                s->funlink.e[mu][nu].imag);
+      }
+  }
+
+
+  FORALLSITES(i, s) {
+    printf("\nSite %d f_U(0):", i);
+    FORALLDIR(mu)
+      FORALLDIR(nu){
+        if(nu==0) printf("\n");
+        printf("(%4e, %4e) ", s->f_U[0].e[mu][nu].real,
+                                s->f_U[0].e[mu][nu].imag);
+      }
+  }
+  FORALLSITES(i, s){
+    printf("\nSite %d f_U(1):", i);
+    FORALLDIR(mu)
+      FORALLDIR(nu){
+        if(nu==0) printf("\n");
+        printf("(%4e, %4e) ", s->f_U[1].e[mu][nu].real,
+                                s->f_U[1].e[mu][nu].imag);
+      }
+  }
+  FORALLSITES(i, s){
+    printf("\nSite %d f_phi:", i);
+    for(mu = 0; mu < NCOL; mu++)
+      for(nu = 0; nu < NCOLF; nu++){
+        if(nu==0) printf("\n");
+        printf("(%4e, %4e) ", s->f_phi.e[mu][nu].real,
+                                s->f_phi.e[mu][nu].imag);
+      }
+  }
+
+}
+
+
+#endif
+
+
 
 
 // -----------------------------------------------------------------
@@ -21,7 +99,10 @@ double gauge_force(Real eps) {
   complex tc;
   matrix tmat, tmat2, *mat[2];
   msg_tag *tag[NUMLINK], *tag0[2], *tag1[2];
-
+#ifdef DEBUGFUNMATRIX
+  printf("\nBEFORE\n");
+  dumpforce();
+#endif
   // All contributions from d^2 term need a factor of C2
   // First we have the finite difference operator derivative times DmuUmu
   // Ubar_a(x) DmuUmu(x) - DmuUmu(x + a) Ubar_a(x)
@@ -40,7 +121,10 @@ double gauge_force(Real eps) {
     }
     cleanup_gather(tag[mu]);
   }
-
+#ifdef DEBUGFUNMATRIX
+  printf("\nAFTER DU U\n");
+  dumpforce();
+#endif
   // Next we have the plaquette determinant derivative contribution
   //   U_mu^{-1}(x) 2G sum_nu {D[nu][mu](x) + D[mu][nu](x-nu)}
   // D is Tr[DmuUmu] plaqdet[mu][nu], saved in tempdet[mu][nu]
@@ -108,7 +192,10 @@ double gauge_force(Real eps) {
       }
     }
   }
-
+#ifdef DEBUGFUNMATRIX
+  printf("\nAFTER DETFORCE\n");
+  dumpforce();
+#endif
   // Overall factor of C2 on all d^2 contributions
   if (C2 - 1.0 > IMAG_TOL) {
     FORALLSITES(i, s) {
@@ -116,6 +203,10 @@ double gauge_force(Real eps) {
         scalar_mult_matrix(&(s->f_U[mu]), C2, &(s->f_U[mu]));
     }
   }
+#ifdef DEBUGFUNMATRIX
+  printf("\nAFTER C2\n");
+  dumpforce();
+#endif
 
   // Contribution from Fbar_{ab} F_{ab} term
   // Start first set of gathers (mu = 0 and nu = 1)
@@ -190,7 +281,10 @@ double gauge_force(Real eps) {
       flip = gather;
     }
   }
-
+#ifdef DEBUGFUNMATRIX
+  printf("\nAFTER FBAR F\n");
+  dumpforce();
+#endif
   // Only compute susy-breaking scalar potential term if bmass non-zero
   if (bmass > IMAG_TOL) {
     Real dmu;
@@ -222,24 +316,36 @@ double gauge_force(Real eps) {
   // Contributions of scalar terms to gauge force
   // Phi phi term
   // TODO: make more efficent gathers
+#ifdef DEBUGFUNMATRIX
+  printf("\nAFTER BMASS\n");
+  dumpforce();
+#endif
   FORALLDIR(mu) {
     tag0[0] = start_gather_field(PhiSq, sizeof(matrix),
                                  goffset[mu], EVENANDODD, gen_pt[0]);
+    tag1[0] = start_gather_site(F_OFFSET(funlink), sizeof(funmatrix),
+                                 goffset[mu], EVENANDODD, gen_pt[1]);
     wait_gather(tag0[0]);
+    wait_gather(tag1[0]);
     FORALLSITES(i, s) {
 #ifdef PHITERM1
-      //phi(x)*D+_a phi(x)
-      fun_mult_na_sum(&(s->funlink), &DmuPhi[mu][i], &(s->f_U[mu]));
+      //phi(x+a)*bar(D+_a phi(x))
+      fun_mult_na_sum((funmatrix *)(gen_pt[1][i]), &DmuPhi[mu][i], &(s->f_U[mu]));
 #endif
 #ifdef PHITERM3
       //-Ubar_a(x) phi(x) phibar(x)
-      mult_an_dif(&(s->link[mu]), &PhiSq[i], &(s->f_U[mu]));
+      scalar_mult_an_dif(&(s->link[mu]), &PhiSq[i], 1.0, &(s->f_U[mu]));
       // phi(x+a) phibar(x+a) Ubar_a(x)
-      mult_na_sum((matrix *)(gen_pt[0][i]), &(s->link[mu]), &(s->f_U[mu]));
+      scalar_mult_na_sum((matrix *)(gen_pt[0][i]), &(s->link[mu]), 1.0, &(s->f_U[mu]));
 #endif
     }
     cleanup_gather(tag0[0]);
+    cleanup_gather(tag1[0]);
   }
+#ifdef DEBUGFUNMATRIX
+  printf("\nAFTER PHIFORCE\n");
+  dumpforce();
+#endif 
 #endif
 
   // Finally take adjoint and update the momentum
@@ -304,7 +410,7 @@ double scalar_force(Real eps) {
     funa_mat_prod_an_sum(&(s->funlink), &(PhiSq[i]), &(s->f_phi));
 #endif
 #ifdef PHITERM3
-    funa_mat_prod_an_dif(&(s->funlink), &(DmuUmu[i]), &(s->f_phi));
+    funa_scalar_mat_prod_an_dif(&(s->funlink), &(DmuUmu[i]), 1.0, &(s->f_phi));
 #endif
   }
 
@@ -314,7 +420,7 @@ double scalar_force(Real eps) {
 
   tr = kappa * eps;
   FORALLSITES(i, s) {
-    funa_scalar_mult_dif_matrix(&(s->f_phi), tr, &(s->funmom));
+    funa_scalar_mult_dif_adj_matrix(&(s->f_phi), tr, &(s->funmom));
     returnit += funa_realtrace(&(s->f_phi), &(s->f_phi));
   }
   g_doublesum(&returnit);

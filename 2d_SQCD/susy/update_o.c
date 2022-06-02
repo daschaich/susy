@@ -25,7 +25,7 @@ void update_u(Real eps) {
     FORALLDIR(mu)
       scalar_mult_sum_matrix(&(s->mom[mu]), eps, &(s->link[mu]));
 #ifdef SPHI
-    funa_scalar_mult_sum_adj_matrix(&(s->funmom), eps, &(s->funlink));
+    fun_scalar_mult_sum_matrix(&(s->funmom), eps, &(s->funlink));
 #endif
   }
 
@@ -67,6 +67,7 @@ double update_boson_step(Real eps, Real *norm_phi) {
       *norm_phi += scalar_force(eps * LAMBDA);
     }
   }
+
   return (norm / n);
 }
 // -----------------------------------------------------------------
@@ -93,6 +94,7 @@ int update_step(Twist_Fermion **src, Twist_Fermion ***psim) {
 
   for (i_multi0 = 1; i_multi0 <= nsteps[0]; i_multi0++) {
     tr = update_boson_step(g_eps, &tr_phi);
+
     gnorm += tr;
     phi_norm += tr_phi;
     if (tr > max_gf)
@@ -199,9 +201,11 @@ int update() {
 //  terminate(1);
 
 #ifdef HMC_ALGORITHM
+
   Real xrandom;   // For accept/reject test
   // Copy link field to old_link
   gauge_field_copy(F_OFFSET(link[0]), F_OFFSET(old_link[0]));
+  scalar_field_copy(F_OFFSET(funlink), F_OFFSET(old_funlink));
 #endif
   // Do microcanonical updating
   iters += update_step(src, psim);
@@ -231,6 +235,7 @@ int update() {
   if (exp(-change) < (double)xrandom) {
     if (traj_length > 0.0) {
       gauge_field_copy(F_OFFSET(old_link[0]), F_OFFSET(link[0]));
+      scalar_field_copy(F_OFFSET(old_funlink), F_OFFSET(funlink));
       compute_plaqdet();
       compute_Uinv();
       compute_DmuUmu();

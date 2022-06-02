@@ -18,6 +18,20 @@ void dump_TF(Twist_Fermion *in) {
   }
   node0_printf("Fplaq:   ");
   dumpmat(&(in->Fplaq));
+#ifdef FUNSITE
+  node0_printf("FFunsite:   ");
+  fun_dumpmat(&(in->Funsite));
+#endif
+#ifdef FUNLINK
+  FORALLDIR(mu) {
+    node0_printf("FFunlink %d: ", mu);
+    funa_dumpmat(&(in->Funlink[mu]));
+  }
+#endif
+#ifdef FUNPLAQ
+  node0_printf("FFunplaq:   ");
+  fun_dumpmat(&(in->Funplaq));
+#endif
 }
 // -----------------------------------------------------------------
 
@@ -40,6 +54,17 @@ void clear_TF(Twist_Fermion *in) {
   FORALLDIR(i)
     clear_mat(&(in->Flink[i]));
   clear_mat(&(in->Fplaq));
+#ifdef FUNSITE
+  fun_clear_mat(&(in->Funsite));
+#endif
+#ifdef FUNLINK
+  FORALLDIR(i) {
+    funa_clear_mat(&(in->Funlink[i]));
+  }
+#endif
+#ifdef FUNPLAQ
+  fun_clear_mat(&(in->Funplaq));
+#endif
 }
 // -----------------------------------------------------------------
 
@@ -54,6 +79,18 @@ Real magsq_TF(Twist_Fermion *in) {
   FORALLDIR(i)
     sum += realtrace(&(in->Flink[i]), &(in->Flink[i]));
   sum += realtrace(&(in->Fplaq), &(in->Fplaq));
+#ifdef FUNSITE
+  sum += fun_realtrace(&(in->Funsite), &(in->Funsite));
+#endif
+#ifdef FUNLINK
+  FORALLDIR(i) {
+    sum += funa_realtrace(&(in->Funlink[i]),
+                          &(in->Funlink[i]));
+  }
+#endif
+#ifdef FUNPLAQ
+  sum += fun_realtrace(&(in->Funplaq), &(in->Funplaq));
+#endif
   return sum;
 }
 // -----------------------------------------------------------------
@@ -72,6 +109,21 @@ complex TF_dot(Twist_Fermion *a, Twist_Fermion *b) {
   }
   tc = complextrace_an(&(a->Fplaq), &(b->Fplaq));
   CSUM(sum, tc);
+#ifdef FUNSITE
+  tc = fun_complextrace_an(&(a->Funsite), &(b->Funsite));
+  CSUM(sum, tc);
+#endif
+#ifdef FUNLINK
+  FORALLDIR(i) {
+    tc = funa_complextrace_an(&(a->Funlink[i]),
+                              &(b->Funlink[i]));
+    CSUM(sum, tc);
+  }
+#endif
+#ifdef FUNPLAQ
+  tc = fun_complextrace(&(a->Funplaq), &(b->Funplaq));
+  CSUM(sum, tc);
+#endif
   return sum;
 }
 
@@ -82,6 +134,18 @@ void TF_rdot_sum(Twist_Fermion *a, Twist_Fermion *b, Real *c) {
   FORALLDIR(i)
     *c += realtrace(&(a->Flink[i]), &(b->Flink[i]));
   *c += realtrace(&(a->Fplaq), &(b->Fplaq));
+#ifdef FUNSITE
+  *c += fun_realtrace(&(a->Funsite), &(b->Funsite));
+#endif
+#ifdef FUNLINK
+  FORALLDIR(i) {
+    *c += funa_realtrace(&(a->Funlink[i]),
+                         &(b->Funlink[i]));
+  }
+#endif
+#ifdef FUNPLAQ
+  *c += fun_realtrace(&(a->Funplaq), &(b->Funplaq));
+#endif
 }
 // -----------------------------------------------------------------
 
@@ -95,6 +159,17 @@ void sum_TF(Twist_Fermion *b, Twist_Fermion *c) {
   FORALLDIR(i)
     sum_matrix(&(b->Flink[i]), &(c->Flink[i]));
   sum_matrix(&(b->Fplaq), &(c->Fplaq));
+#ifdef FUNSITE
+  fun_sum_matrix(&(b->Funsite), &(c->Funsite));
+#endif
+#ifdef FUNLINK
+  FORALLDIR(i) {
+    funa_sum_matrix(&(b->Funlink[i]), &(c->Funlink[i]));
+  }
+#endif
+#ifdef FUNPLAQ
+  fun_sum_matrix(&(b->Funplaq), &(c->Funplaq));
+#endif
 }
 
 // c <-- s * b
@@ -104,6 +179,17 @@ void scalar_mult_TF(Twist_Fermion *b, Real s, Twist_Fermion *c) {
   FORALLDIR(i)
     scalar_mult_matrix(&(b->Flink[i]), s, &(c->Flink[i]));
   scalar_mult_matrix(&(b->Fplaq), s, &(c->Fplaq));
+#ifdef FUNSITE
+  fun_scalar_mult_matrix(&(b->Funsite), s, &(c->Funsite));
+#endif
+#ifdef FUNLINK
+  FORALLDIR(i) {
+    funa_scalar_mult_matrix(&(b->Funlink[i]), s, &(c->Funlink[i]));
+  }
+#endif
+#ifdef FUNPLAQ
+  fun_scalar_mult_matrix(&(b->Funplaq), s, &(c->Funplaq));
+#endif
 }
 
 // c <-- c + s * b
@@ -113,6 +199,17 @@ void scalar_mult_sum_TF(Twist_Fermion *b, Real s, Twist_Fermion *c) {
   FORALLDIR(i)
     scalar_mult_sum_matrix(&(b->Flink[i]), s, &(c->Flink[i]));
   scalar_mult_sum_matrix(&(b->Fplaq), s, &(c->Fplaq));
+#ifdef FUNSITE
+  fun_scalar_mult_sum_matrix(&(b->Funsite), s, &(c->Funsite));
+#endif
+#ifdef FUNLINK
+  FORALLDIR(i) {
+    funa_scalar_mult_sum_matrix(&(b->Funlink[i]), s, &(c->Funlink[i]));
+  }
+#endif
+#ifdef FUNPLAQ
+  fun_scalar_mult_sum_matrix(&(b->Funplaq), s, &(c->Funplaq));
+#endif
 }
 
 // c <-- a + s * b
@@ -124,6 +221,18 @@ void scalar_mult_add_TF(Twist_Fermion *a, Twist_Fermion *b,
   FORALLDIR(i)
     scalar_mult_add_matrix(&(a->Flink[i]), &(b->Flink[i]), s, &(c->Flink[i]));
   scalar_mult_add_matrix(&(a->Fplaq), &(b->Fplaq), s, &(c->Fplaq));
+#ifdef FUNSITE
+  fun_scalar_mult_add_matrix(&(a->Funsite), &(b->Funsite), s, &(c->Funsite));
+#endif
+#ifdef FUNLINK
+  FORALLDIR(i) {
+    funa_scalar_mult_add_matrix(&(a->Funsite),
+                                &(b->funlink[i]), s, &(c->Funlink[i]));
+  }
+#endif
+#ifdef FUNPLAQ
+  fun_scalar_mult_add_matrix(&(b->Funplaq), &(b->Funplaq), s, &(c->Funplaq));
+#endif
 }
 
 // c <-- c - s * b
@@ -133,6 +242,17 @@ void scalar_mult_dif_TF(Twist_Fermion *b, Real s, Twist_Fermion *c) {
   FORALLDIR(i)
     scalar_mult_dif_matrix(&(b->Flink[i]), s, &(c->Flink[i]));
   scalar_mult_dif_matrix(&(b->Fplaq), s, &(c->Fplaq));
+#ifdef FUNSITE
+  fun_scalar_mult_dif_matrix(&(b->Funsite), s, &(c->Funsite));
+#endif
+#ifdef FUNLINK
+  FORALLDIR(i) {
+    funa_scalar_mult_dif_matrix(&(b->funlink[i]), s, &(c->Funlink[i]));
+  }
+#endif
+#ifdef FUNPLAQ
+  fun_scalar_mult_dif_matrix(&(b->Funplaq), s, &(c->Funplaq));
+#endif
 }
 // -----------------------------------------------------------------
 
@@ -152,6 +272,16 @@ void gauge_field_copy(field_offset src, field_offset dest) {
       src2 += sizeof(matrix);
       dest2 += sizeof(matrix);
     }
+  }
+}
+
+// Copy a scalar fields
+void scalar_field_copy(field_offset src, field_offset dest) {
+  register int i;
+  register site *s;
+
+  FORALLSITES(i, s) {
+    fun_mat_copy((funmatrix *)F_PT(s, src), (funmatrix *)F_PT(s, dest));
   }
 }
 // -----------------------------------------------------------------

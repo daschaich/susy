@@ -34,8 +34,13 @@
 #define PHITERM2
 //#define PHITERM3
 
-#define DEBUGFUNMATRIX
-#define DEBUGFUNACTION
+#define FUNFERMION
+#define FUNSITE
+#define SFUNS
+//Splitting fermion terms
+
+//#define DEBUGFUNMATRIX
+//#define DEBUGFUNACTION
 
 
 // Tunable parameter in gauge action

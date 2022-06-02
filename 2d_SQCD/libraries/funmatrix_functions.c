@@ -1043,15 +1043,34 @@ void funa_mat_prod_dif( funamatrix *a, matrix *b, funamatrix *c){
       }
 }
 
+void funa_mat_mult_an(funmatrix *a, matrix *b, funamatrix *c){
+  register int i, j, k;
+  for(i = 0; i < NCOLF; i++) {
+    for(j = 0; j < NCOL; j++) {
+      // Init
+      c->e[i][j].real = a->e[0][i].real * b->e[0][j].real
+                      + a->e[0][i].imag * b->e[0][j].imag;
+      c->e[i][j].imag = a->e[0][i].real * b->e[0][j].imag
+                      - a->e[0][i].imag * b->e[0][j].real;     
+      for( k = 1; k < NCOL; k++){
+        c->e[i][j].real = a->e[k][i].real * b->e[k][j].real
+                        + a->e[k][i].imag * b->e[k][j].imag;
+        c->e[i][j].imag = a->e[k][i].real * b->e[k][j].imag
+                        - a->e[k][i].imag * b->e[k][j].real;
+      }
+    }
+  }
+}
+
 void funa_mat_prod_an_sum( funmatrix *a, matrix *b, funamatrix *c){
   register int i, j, k;
   for(i = 0; i < NCOLF; i++)
     for(j = 0; j < NCOL; j++)
       for( k = 0; k < NCOL; k++){
         c->e[i][j].real += a->e[k][i].real * b->e[k][j].real
-                              + a->e[k][i].imag * b->e[k][j].imag;
+                         + a->e[k][i].imag * b->e[k][j].imag;
         c->e[i][j].imag -= a->e[k][i].imag * b->e[k][j].real
-                                - a->e[k][i].real * b->e[k][j].imag;
+                         - a->e[k][i].real * b->e[k][j].imag;
       }
 }
 
@@ -1061,11 +1080,41 @@ void funa_mat_prod_an_dif( funmatrix *a, matrix *b, funamatrix *c){
     for(j = 0; j < NCOL; j++)
       for( k = 0; k < NCOL; k++){
         c->e[i][j].real -= a->e[k][i].real * b->e[k][j].real
-                              + a->e[k][i].imag * b->e[k][j].imag;
+                         + a->e[k][i].imag * b->e[k][j].imag;
         c->e[i][j].imag += a->e[k][i].imag * b->e[k][j].real
-                                - a->e[k][i].real * b->e[k][j].imag;
+                         - a->e[k][i].real * b->e[k][j].imag;
       }
 }
+
+void funa_scalar_mat_prod_an_dif( funmatrix *a, matrix *b, Real s, funamatrix *c){
+  register int i, j, k;
+  for(i = 0; i < NCOLF; i++)
+    for(j = 0; j < NCOL; j++)
+      for( k = 0; k < NCOL; k++){
+        c->e[i][j].real -= s * (a->e[k][i].real * b->e[k][j].real
+                             +  a->e[k][i].imag * b->e[k][j].imag);
+        c->e[i][j].imag += s * (a->e[k][i].imag * b->e[k][j].real
+                             -  a->e[k][i].real * b->e[k][j].imag);
+      }
+}
+
+// -----------------------------------------------------------------
+// Real trace of funmatrix * adj funmatrix
+Real fun_realtrace(funmatrix *a, funmatrix *b) {
+  register int i, j;
+  register Real sum = 0.0;
+
+  for (i = 0; i < NCOL; i++) {
+    for(j = 0; j < NCOLF; j++) {
+      sum += a->e[i][j].real * b->e[i][j].real
+           + a->e[i][j].imag * b->e[i][j].imag;
+    }
+  }
+  return sum;
+}
+// -----------------------------------------------------------------
+
+
 // -----------------------------------------------------------------
 // Real trace of funamatrix * adj funamatrix
 Real funa_realtrace(funamatrix *a, funamatrix *b) {
@@ -1082,13 +1131,96 @@ Real funa_realtrace(funamatrix *a, funamatrix *b) {
 }
 // -----------------------------------------------------------------
 
+
+// -----------------------------------------------------------------
+// Complex trace of adj funmatrix adj funmatrix
+complex fun_complextrace_an(funmatrix *a, funmatrix *b) {
+  register int i, j;
+  register Real sumr = 0.0, sumi = 0.0;
+  complex sum;
+
+  for (i = 0; i < NCOL; i++) {
+    for(j = 0; j < NCOLF; j++) {
+      sumr += a->e[i][j].real * b->e[i][j].real
+            + a->e[i][j].imag * b->e[i][j].imag;
+      sumi += a->e[i][j].real * b->e[i][j].imag
+            - a->e[i][j].imag * b->e[i][j].real;
+    }
+  }
+  sum.real = sumr;
+  sum.imag = sumi;
+  return sum;
+}
+
+// Complex trace of funmatrix * adj funmatrix
+complex fun_complextrace_na(funmatrix *a, funmatrix *b) {
+  register int i, j;
+  register Real sumr = 0.0, sumi = 0.0;
+  complex sum;
+
+  for (i = 0; i < NCOL; i++) {
+    for(j = 0; j < NCOLF; j++) {
+      sumr += a->e[i][j].real * b->e[i][j].real
+            + a->e[i][j].imag * b->e[i][j].imag;
+      sumi += a->e[i][j].imag * b->e[i][j].real
+            - a->e[i][j].real * b->e[i][j].imag;
+    }
+  }
+  sum.real = sumr;
+  sum.imag = sumi;
+  return sum;
+}
+// -----------------------------------------------------------------
+
+
+// -----------------------------------------------------------------
+// Complex trace of adj funamatrix * adj funamatrix
+complex funa_complextrace_an(funamatrix *a, funamatrix *b) {
+  register int i, j;
+  register Real sumr = 0.0, sumi = 0.0;
+  complex sum;
+
+  for (i = 0; i < NCOLF; i++) {
+    for(j = 0; j < NCOL; j++) {
+      sumr += a->e[i][j].real * b->e[i][j].real
+            + a->e[i][j].imag * b->e[i][j].imag;
+      sumi += a->e[i][j].real * b->e[i][j].imag
+            - a->e[i][j].imag * b->e[i][j].real;
+    }
+  }
+  sum.real = sumr;
+  sum.imag = sumi;
+  return sum;
+}
+
+// Complex trace of funmatrix * adj funmatrix
+complex funa_complextrace_na(funamatrix *a, funamatrix *b) {
+  register int i, j;
+  register Real sumr = 0.0, sumi = 0.0;
+  complex sum;
+
+  for (i = 0; i < NCOLF; i++) {
+    for(j = 0; j < NCOL; j++) {
+      sumr += a->e[i][j].real * b->e[i][j].real
+            + a->e[i][j].imag * b->e[i][j].imag;
+      sumi += a->e[i][j].imag * b->e[i][j].real
+            - a->e[i][j].real * b->e[i][j].imag;
+    }
+  }
+  sum.real = sumr;
+  sum.imag = sumi;
+  return sum;
+}
+// -----------------------------------------------------------------
+
+
+
+
 // -----------------------------------------------------------------
 
 // -----------------------------------------------------------------
 // Debug functions
 #ifdef DEBUGFUNMATRIX
-
-
 void init_debug_funmatrix(funmatrix *debugFun, funamatrix *debugFuna,
                           matrix *debugMat){
   int i,j;
