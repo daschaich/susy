@@ -16,14 +16,14 @@
 // -----------------------------------------------------------------
 
 
-
 // -----------------------------------------------------------------
 void update_u(Real eps) {
   register int i, j;
   register site *s;
+
+#ifndef UNGAUGED
   register Real t2, t3, t4, t5, t6, t7, t8;
   matrix tmat, tmat2, tmp_mom;
-
   // Calculate newU = exp(p).U
   // Go to eighth order in the exponential:
   //   exp(p) * U = (1 + p + p^2/2 + p^3/6 ...) * U
@@ -62,14 +62,17 @@ void update_u(Real eps) {
 
     mult_nn(&tmp_mom, &tmat2, &tmat);
     scalar_mult_sum_matrix(&tmat, eps, &(s->link));
+  }
+#endif
 
+  FORALLSITES(i, s) {
     for (j = 0; j < NSCALAR; j++)
       scalar_mult_sum_matrix(&(s->mom_X[j]), eps, &(s->X[j]));
   }
+
 }
+
 // -----------------------------------------------------------------
-
-
 
 // -----------------------------------------------------------------
 // Omelyan version; ``dirty'' speeded-up version

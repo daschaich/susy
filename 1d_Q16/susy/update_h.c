@@ -14,7 +14,10 @@ double bosonic_force(Real eps) {
   register site *s;
   Real tr;
   double returnit = 0.0, tmp_so3 = 2.0 * mass_so3, tmp_so6 = 2.0 * mass_so6;
-  matrix tmat, tmat2;
+  matrix tmat;
+#ifndef UNGAUGED
+  matrix tmat2;
+#endif
   msg_tag *tag[NSCALAR], *tag2[NSCALAR];
 #ifdef DEBUG_CHECK
   anti_hermitmat tah;
@@ -22,7 +25,9 @@ double bosonic_force(Real eps) {
 
   // Clear the force collectors
   FORALLSITES(i, s) {
+#ifndef UNGAUGED
     clear_mat(&(s->f_U));
+#endif
     for (j = 0; j < NSCALAR; j++)
       clear_mat(&(s->f_X[j]));
   }
@@ -31,6 +36,7 @@ double bosonic_force(Real eps) {
   // Must transform as site variable so momenta can be exponentiated
   //   U(n) d/dU(n) Tr[2 U(t) X(t+1) Udag(t) X(t) - X(t+1) X(t+1) - X(t) X(t)]
   //     = 2 delta_{nt} U(n) X(t+1) Udag(t) X(t) = 2 U(n) X(n+1) Udag(n) X(n)
+  // Also used in scalar force, so gather even if ungauged
   for (j = 0; j < NSCALAR; j++) {
     tag[j] = start_gather_site(F_OFFSET(X[j]), sizeof(matrix),
                                TUP, EVENANDODD, gen_pt[j]);
@@ -39,8 +45,12 @@ double bosonic_force(Real eps) {
   for (j = 0; j < NSCALAR; j++) {
     // For scalar force term, compute and gather Udag(n-1) X(n-1) U(n-1)
     FORALLSITES(i, s) {
+#ifndef UNGAUGED
       mult_nn(&(s->X[j]), &(s->link), &tmat);
       mult_an(&(s->link), &tmat, &(temp_X[j][i]));
+#else
+      mat_copy(&(s->X[j]), &(temp_X[j][i]));
+#endif
     }
     tag2[j] = start_gather_field(temp_X[j], sizeof(matrix),
                                  TDOWN, EVENANDODD, gen_pt[NSCALAR + j]);
@@ -48,13 +58,16 @@ double bosonic_force(Real eps) {
 
   for (j = 0; j < NSCALAR; j++) {   // X(n+1) = gen_pt[j]
     wait_gather(tag[j]);
+#ifndef UNGAUGED
     FORALLSITES(i, s) {
       mult_na((matrix *)(gen_pt[j][i]), &(s->link), &tmat);
       mult_nn(&(s->link), &tmat, &tmat2);
       mult_nn_sum(&(s->X[j]), &tmat2, &(s->f_U));
     }
+#endif
   }
 
+#ifndef UNGAUGED
   // Take adjoint and update the gauge momenta
   // Make them anti-hermitian following non-susy code
   // Include overall factor of kappa = N / (4lambda), and factor of 2
@@ -67,6 +80,7 @@ double bosonic_force(Real eps) {
     make_anti_hermitian(&tmat, &(s->mom));
     returnit += realtrace(&(s->f_U), &(s->f_U));
   }
+#endif
 
   // This is the finite difference operator scalar derivative
   //   d/dX(n) Tr[X(t) U(t) X(t+1) Udag(t) + X(t+1) Udag(t) X(t) U(t)
@@ -82,8 +96,12 @@ double bosonic_force(Real eps) {
       scalar_mult_matrix(&(s->X[j]), -2.0, &(s->f_X[j]));
 
       // Add forward hopping term using X(n+1) = gen_pt[j]
+#ifndef UNGAUGED
       mult_na((matrix *)(gen_pt[j][i]), &(s->link), &tmat);
       mult_nn_sum(&(s->link), &tmat, &(s->f_X[j]));
+#else
+      sum_matrix((matrix *)(gen_pt[j][i]), &(s->f_X[j]));
+#endif
 
       // Add backward hopping term
       //   Udag(n-1) X(n-1) U(n-1) = gen_pt[NSCALAR + j]
@@ -204,8 +222,11 @@ void assemble_fermion_force(matrix **sol, matrix *psol[NFERMION]) {
   Real tr;
   // sqrt(2) factor from Eq. 14 of 2 Jun 2019 notes
   complex tc = cmplx(0.0, -1.0 / sqrt(2.0));
-  matrix tmat, tmat2;
+  matrix tmat;
+#ifndef UNGAUGED
+  matrix tmat2;
   msg_tag *tag[NCHIRAL_FERMION], *tag2[NCHIRAL_FERMION];
+#endif
 
   // First gauge force s->f_U
   // For gathering it is convenient to overwrite psol by its adjoint
@@ -215,6 +236,7 @@ void assemble_fermion_force(matrix **sol, matrix *psol[NFERMION]) {
       mat_copy(&tmat, &(psol[j][i]));
     }
   }
+#ifndef UNGAUGED
   for (j = 0; j < NCHIRAL_FERMION; j++) {
     k = j + NCHIRAL_FERMION;
     tag[j] = start_gather_field(sol[k], sizeof(matrix),
@@ -243,6 +265,7 @@ void assemble_fermion_force(matrix **sol, matrix *psol[NFERMION]) {
     }
     cleanup_gather(tag2[j]);
   }
+#endif
 
   // Now scalar forces s->f_X[k] from Yukawa terms
   // Sqrt factor from Eq. 14 in 2 Jun 2019 notes
@@ -308,12 +331,16 @@ double fermion_force(Real eps, matrix **src, matrix ***sol) {
   register int i, k, n;
   register site *s;
   double returnit = 0.0;
+#ifndef UNGAUGED
   matrix tmat;
+#endif
   anti_hermitmat tah;
 
   // Clear the force collectors
   FORALLSITES(i, s) {
+#ifndef UNGAUGED
     clear_mat(&(s->f_U));
+#endif
     for (k = 0; k < NSCALAR; k++)
       clear_mat(&(s->f_X[k]));
   }
@@ -331,8 +358,10 @@ double fermion_force(Real eps, matrix **src, matrix ***sol) {
 
   // Make sure forces are traceless anti-hermitian
   FORALLSITES(i, s) {
+#ifndef UNGAUGED
     make_anti_hermitian(&(s->f_U), &tah);
     uncompress_anti_hermitian(&tah, &(s->f_U));
+#endif
     for (k = 0; k < NSCALAR; k++) {
       make_anti_hermitian(&(s->f_X[k]), &tah);
       uncompress_anti_hermitian(&tah, &(s->f_X[k]));
@@ -344,10 +373,12 @@ double fermion_force(Real eps, matrix **src, matrix ***sol) {
   // because dS_G / dU = 2F_g while ds_F / dU = -2F_f
   // Move negation here as well, though adjoint remains above
   FORALLSITES(i, s) {
+#ifndef UNGAUGED
     uncompress_anti_hermitian(&(s->mom), &tmat);
     scalar_mult_sum_matrix(&(s->f_U), eps, &tmat);
     make_anti_hermitian(&tmat, &(s->mom));
     returnit += realtrace(&(s->f_U), &(s->f_U));
+#endif
     for (k = 0; k < NSCALAR; k++) {
       scalar_mult_sum_matrix(&(s->f_X[k]), eps, &(s->mom_X[k]));
       returnit += realtrace(&(s->f_X[k]), &(s->f_X[k]));

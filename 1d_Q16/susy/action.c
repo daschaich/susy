@@ -9,14 +9,16 @@
 
 // -----------------------------------------------------------------
 // Bosonic contribution to the action
-double bosonic_action(double *so3_sq, double *so6_sq,
-                      double *comm, double *Myers) {
+double bosonic_action(double *so3_sq, double *so6_sq, double *comm, double *Myers, double *Fadeev) {
 
   register int i,l;
   register site *s;
   int j, k;
   double b_action = 0.0;
-  matrix tmat, tmat2;
+  matrix tmat;
+#ifndef UNGAUGED
+  matrix tmat2;
+#endif
   msg_tag *tag[NSCALAR];
 
   // Initialize
@@ -24,6 +26,7 @@ double bosonic_action(double *so3_sq, double *so6_sq,
   *so6_sq = 0.0;
   *comm = 0.0;
   *Myers = 0.0;
+  *Fadeev = 0.0;
 
   // Scalar kinetic term -Tr[D_t X(t)]^2
   //   -Tr[U(t) X(t+1) Udag(t) - X(t)]^2
@@ -37,10 +40,12 @@ double bosonic_action(double *so3_sq, double *so6_sq,
   // On-site piece of scalar kinetic term
   // (Has same form as some scalar potential terms, so will re-use below)
   FORALLSITES(i, s) {
-    for (j = 0; j < 3; j++)
+    for (j = 0; j < 3; j++){
       *so3_sq -= (double)realtrace_nn(&(s->X[j]), &(s->X[j]));
-    for (j = 3; j < NSCALAR; j++)
-      *so6_sq -= (double)realtrace_nn(&(s->X[j]), &(s->X[j]));
+    }
+    for (j = 3; j < NSCALAR; j++){
+      *so6_sq -= (double)realtrace_nn(&(s->X[j]), &(s->X[j]));    
+    }
   }
   b_action = *so3_sq + *so6_sq;
 
@@ -48,10 +53,13 @@ double bosonic_action(double *so3_sq, double *so6_sq,
   for (j = 0; j < NSCALAR; j++) {
     wait_gather(tag[j]);
     FORALLSITES(i, s) {
-
+#ifndef UNGAUGED
       mult_nn(&(s->link), (matrix *)(gen_pt[j][i]), &tmat);
       mult_na(&tmat, &(s->link), &tmat2);
       b_action += (double)realtrace_nn(&(s->X[j]), &tmat2);
+#else
+      b_action += (double)realtrace_nn(&(s->X[j]), (matrix *)(gen_pt[j][i]));
+#endif
     }
     cleanup_gather(tag[j]);
   }
@@ -106,17 +114,29 @@ double bosonic_action(double *so3_sq, double *so6_sq,
   b_action += *Myers;
 #endif
 
+// Fadeev Popov Term
+FORALLSITES(i,s) {
+  for (j = 0; j < NCOL; j++){
+    for (k = 0; k < NCOL; k++){
+      if (j != k){
+        *Fadeev += (double)-0.5*log((sin((&(s->link.e[j][j]) - &(s->link.e[k][k]))/2.0))*(sin((&(s->link.e[j][j]) - &(s->link.e[k][k]))/2.0)));
+      }
+    }
+  }
+}
   b_action *= kappa;
   *so3_sq *= kappa;
   *so6_sq *= kappa;
   *comm *= kappa;
   *Myers *= kappa;
+  b_action += *Fadeev;
+  
   g_doublesum(&b_action);
   g_doublesum(so3_sq);
   g_doublesum(so6_sq);
   g_doublesum(comm);
   g_doublesum(Myers);
-
+  g_doublesum(Fadeev);
   return b_action;
 }
 // -----------------------------------------------------------------
@@ -184,6 +204,7 @@ Real ahmat_mag_sq(anti_hermitmat *ah) {
   return sum;
 }
 
+#ifndef UNGAUGED
 double gauge_mom_action() {
   register int i;
   register site *s;
@@ -195,6 +216,7 @@ double gauge_mom_action() {
   g_doublesum(&sum);
   return sum;
 }
+#endif
 
 double scalar_mom_action() {
   register int i, j;
@@ -215,12 +237,12 @@ double scalar_mom_action() {
 // -----------------------------------------------------------------
 // Print out zeros for pieces of the action that aren't included
 double action(matrix ***src, matrix ****sol) {
-  double p_act, so3_act, so6_act, comm_act, Myers_act, total;
+  double p_act = 0.0, so3_act, so6_act, comm_act, Myers_act, Fadeev_act, total;
 
   // Includes so3, so6, Myers and kinetic
-  total = bosonic_action(&so3_act, &so6_act, &comm_act, &Myers_act);
-  node0_printf("action: so3 %.8g so6 %.8g comm %.8g Myers %.8g boson %.8g ",
-               so3_act, so6_act, comm_act, Myers_act, total);
+  total = bosonic_action(&so3_act, &so6_act, &comm_act, &Myers_act, &Fadeev_act);
+  node0_printf("action: so3 %.8g so6 %.8g comm %.8g Myers %.8g Fadeev %.8g boson %.8g ",
+               so3_act, so6_act, comm_act, Myers_act, Fadeev_act, total);
 
 #ifndef PUREGAUGE
   int n;
@@ -233,7 +255,9 @@ double action(matrix ***src, matrix ****sol) {
   }
 #endif
 
+#ifndef UNGAUGED
   p_act = gauge_mom_action();
+#endif
   node0_printf("Umom %.8g ", p_act);
   total += p_act;
   p_act = scalar_mom_action();

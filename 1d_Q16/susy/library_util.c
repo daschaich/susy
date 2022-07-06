@@ -14,14 +14,18 @@ void copy_bosons(int sign) {
 
   if (sign == 1) {
     FORALLSITES(i, s) {
+#ifndef UNGAUGED
       mat_copy(&(s->link), &(s->old_link));
+#endif
       for (j = 0; j < NSCALAR; j++)
         mat_copy(&(s->X[j]), &(s->old_X[j]));
     }
   }
   else if (sign == -1) {
     FORALLSITES(i, s) {
+#ifndef UNGAUGED
       mat_copy(&(s->old_link), &(s->link));
+#endif
       for (j = 0; j < NSCALAR; j++)
         mat_copy(&(s->old_X[j]), &(s->X[j]));
     }

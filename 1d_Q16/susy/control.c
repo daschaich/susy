@@ -30,9 +30,37 @@ int main(int argc, char *argv[]) {
     terminate(1);
   }
   dtime = -dclock();
+  
+  // Diagonal Gauge Fixing
+  int i,k;
+  site *s;
+  int seed = 123;      // seed for random number generation
+  Real x[NCOL];        // random number array
+  Real aveg = 0.0;     // stores sum of theta values
+  
+  for(int a = 0; a < NCOL; a++){
+			 Real theta;
+			 theta = (myrand(&(s->site_prn)) - 0.5)*2.0*PI;         // theta belons to the range [-PI, PI]
+			 x[a] = theta;       
+			 aveg += theta;
+		 }
+	aveg /= (Real) NCOL;      // average value of thetas
+
+  FORALLSITES(i,s){
+	 // generating random value for theta
+	  for(j = 0; j < NCOL; j++){
+		 // keep a check, sum of thetas must be zero
+		 s->link.e[j][j] = cmplx((x[j] - aveg), 0.0); // diagonal element = theta - avergae_theta
+		
+		  for(k = j+1; k < NCOL; k++){
+			  s->link.e[j][k] = cmplx(0.0, 0.0);
+			  s->link.e[k][j] = cmplx(0.0, 0.0);
+		  }
+	  }
+  }
 
   // Check: compute initial bosonic action and scalar squares
-  b_act = bosonic_action(&(Xtr[0]), &(Xtr[1]), &(Xtr[2]), &(Xtr[3]));
+  b_act = bosonic_action(&(Xtr[0]), &(Xtr[1]), &(Xtr[2]), &(Xtr[3]), &(Xtr[4]));
   node0_printf("START %.8g\n", b_act / (double)nt);
 
   Xtr_ave = scalar_trace(Xtr, &Xtr_width);
@@ -68,7 +96,7 @@ int main(int argc, char *argv[]) {
     node0_printf("GMES %.8g %.8g %d ", plp.real, plp.imag, s_iters);
 
     // Bosonic action
-    b_act = bosonic_action(&(Xtr[0]), &(Xtr[1]), &(Xtr[2]), &(Xtr[3]));
+    b_act = bosonic_action(&(Xtr[0]), &(Xtr[1]), &(Xtr[2]), &(Xtr[3]), &(Xtr[4]));
     node0_printf("%.8g %.8g %.8g %.8g\n",
                  b_act / (double)nt, Xtr[0] / (double)nt,
                  Xtr[1] / (double)nt, Xtr[2] / (double)nt);
@@ -90,7 +118,7 @@ int main(int argc, char *argv[]) {
   node0_printf("RUNNING COMPLETED\n");
 
   // Check: compute final bosonic action
-  b_act = bosonic_action(&(Xtr[0]), &(Xtr[1]), &(Xtr[2]), &(Xtr[3]));
+  b_act = bosonic_action(&(Xtr[0]), &(Xtr[1]), &(Xtr[2]), &(Xtr[3]), &(Xtr[4]));
   node0_printf("STOP %.8g\n", b_act / (double)nt);
 
   node0_printf("Average CG iters for steps: %.4g\n",

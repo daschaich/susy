@@ -1,8 +1,8 @@
 // -----------------------------------------------------------------
-// Print out all eigenvalues of Polyakov loop
+// Print out all eigenvalues of Polyakov loop on corresponding slice
 // Might as well continue to return Polyakov loop itself and its magnitude
 // Use repeated single-timeslice gathers to construct Polyakov loop
-// Use tempmat and tempmat2 for temporary storage
+// Use tempmat, tempmat2, staple and UpsiU[0] for temporary storage
 #include "susy_includes.h"
 // -----------------------------------------------------------------
 
@@ -28,7 +28,7 @@ complex ploop_eig() {
     terminate(1);
   }
 
-  // Compute line by steadily shifting links to site 0
+  // Compute line by steadily shifting links to hyperplane 0
   FORALLSITES(i, s)
     mat_copy(&(s->link), &(tempmat[i]));
 
