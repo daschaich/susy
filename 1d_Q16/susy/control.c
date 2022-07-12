@@ -6,7 +6,7 @@
 int main(int argc, char *argv[]) {
   int prompt, j;
   int traj_done, s_iters, avs_iters = 0, avm_iters = 0, Nmeas = 0;
-  Real f_eps, b_eps;
+  Real f_eps, b_eps, ave_theta = 0.0;
   double b_act, dtime, Xtr[NSCALAR], Xtr_ave, Xtr_width;
   double ave_eigs[NCOL], eig_widths[NCOL], min_eigs[NCOL], max_eigs[NCOL];
   complex plp = cmplx(99.0, 99.0);
@@ -30,34 +30,15 @@ int main(int argc, char *argv[]) {
     terminate(1);
   }
   dtime = -dclock();
-  
-  // Diagonal Gauge Fixing
-  int i,k;
-  site *s;
-  int seed = 123;      // seed for random number generation
-  Real x[NCOL];        // random number array
-  Real aveg = 0.0;     // stores sum of theta values
-  
-  for(int a = 0; a < NCOL; a++){
-			 Real theta;
-			 theta = (myrand(&(s->site_prn)) - 0.5)*2.0*PI;         // theta belons to the range [-PI, PI]
-			 x[a] = theta;       
-			 aveg += theta;
-		 }
-	aveg /= (Real) NCOL;      // average value of thetas
 
-  FORALLSITES(i,s){
-	 // generating random value for theta
-	  for(j = 0; j < NCOL; j++){
-		 // keep a check, sum of thetas must be zero
-		 s->link.e[j][j] = cmplx((x[j] - aveg), 0.0); // diagonal element = theta - avergae_theta
-		
-		  for(k = j+1; k < NCOL; k++){
-			  s->link.e[j][k] = cmplx(0.0, 0.0);
-			  s->link.e[k][j] = cmplx(0.0, 0.0);
-		  }
-	  }
+  // Static diagonal gauge fixing
+  for (j = 0; j < NCOL; j++) {
+    // Array of random numbers all in the range [-PI, PI]
+    // Use site 0 PRNG
+    theta[j] = (myrand(&(lattice[0].site_prn)) - 0.5) * TWOPI;
+    ave_theta += theta[j];
   }
+  ave_theta *= one_ov_N;     // average value of thetas
 
   // Check: compute initial bosonic action and scalar squares
   b_act = bosonic_action(&(Xtr[0]), &(Xtr[1]), &(Xtr[2]), &(Xtr[3]), &(Xtr[4]));

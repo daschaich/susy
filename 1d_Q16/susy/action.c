@@ -9,12 +9,13 @@
 
 // -----------------------------------------------------------------
 // Bosonic contribution to the action
-double bosonic_action(double *so3_sq, double *so6_sq, double *comm, double *Myers, double *Fadeev) {
+double bosonic_action(double *so3_sq, double *so6_sq, double *comm,
+                      double *Myers, double *FP) {
 
   register int i,l;
   register site *s;
   int j, k;
-  double b_action = 0.0;
+  double td, b_action = 0.0;
   matrix tmat;
 #ifndef UNGAUGED
   matrix tmat2;
@@ -26,7 +27,7 @@ double bosonic_action(double *so3_sq, double *so6_sq, double *comm, double *Myer
   *so6_sq = 0.0;
   *comm = 0.0;
   *Myers = 0.0;
-  *Fadeev = 0.0;
+  *FP = 0.0;
 
   // Scalar kinetic term -Tr[D_t X(t)]^2
   //   -Tr[U(t) X(t+1) Udag(t) - X(t)]^2
@@ -40,11 +41,11 @@ double bosonic_action(double *so3_sq, double *so6_sq, double *comm, double *Myer
   // On-site piece of scalar kinetic term
   // (Has same form as some scalar potential terms, so will re-use below)
   FORALLSITES(i, s) {
-    for (j = 0; j < 3; j++){
+    for (j = 0; j < 3; j++) {
       *so3_sq -= (double)realtrace_nn(&(s->X[j]), &(s->X[j]));
     }
-    for (j = 3; j < NSCALAR; j++){
-      *so6_sq -= (double)realtrace_nn(&(s->X[j]), &(s->X[j]));    
+    for (j = 3; j < NSCALAR; j++) {
+      *so6_sq -= (double)realtrace_nn(&(s->X[j]), &(s->X[j]));
     }
   }
   b_action = *so3_sq + *so6_sq;
@@ -114,29 +115,27 @@ double bosonic_action(double *so3_sq, double *so6_sq, double *comm, double *Myer
   b_action += *Myers;
 #endif
 
-// Fadeev Popov Term
-FORALLSITES(i,s) {
-  for (j = 0; j < NCOL; j++){
-    for (k = 0; k < NCOL; k++){
-      if (j != k){
-        *Fadeev += (double)-0.5*log((sin((&(s->link.e[j][j]) - &(s->link.e[k][k]))/2.0))*(sin((&(s->link.e[j][j]) - &(s->link.e[k][k]))/2.0)));
-      }
+  // Faddeev--Popov (FP) term
+  for (j = 0; j < NCOL; j++) {
+    for (k = j + 1; k < NCOL; k++) {
+      td = sin(0.5 * (theta[j] - theta[k]));
+      *FP -= log(td * td);
     }
   }
-}
+
   b_action *= kappa;
   *so3_sq *= kappa;
   *so6_sq *= kappa;
   *comm *= kappa;
   *Myers *= kappa;
-  b_action += *Fadeev;
-  
+  b_action += *FP;
+
   g_doublesum(&b_action);
   g_doublesum(so3_sq);
   g_doublesum(so6_sq);
   g_doublesum(comm);
   g_doublesum(Myers);
-  g_doublesum(Fadeev);
+  g_doublesum(FP);
   return b_action;
 }
 // -----------------------------------------------------------------
@@ -237,12 +236,12 @@ double scalar_mom_action() {
 // -----------------------------------------------------------------
 // Print out zeros for pieces of the action that aren't included
 double action(matrix ***src, matrix ****sol) {
-  double p_act = 0.0, so3_act, so6_act, comm_act, Myers_act, Fadeev_act, total;
+  double p_act = 0.0, so3_act, so6_act, comm_act, Myers_act, FP_act, total;
 
   // Includes so3, so6, Myers and kinetic
-  total = bosonic_action(&so3_act, &so6_act, &comm_act, &Myers_act, &Fadeev_act);
-  node0_printf("action: so3 %.8g so6 %.8g comm %.8g Myers %.8g Fadeev %.8g boson %.8g ",
-               so3_act, so6_act, comm_act, Myers_act, Fadeev_act, total);
+  total = bosonic_action(&so3_act, &so6_act, &comm_act, &Myers_act, &FP_act);
+  node0_printf("action: so3 %.8g so6 %.8g comm %.8g Myers %.8g FP %.8g boson %.8g ",
+               so3_act, so6_act, comm_act, Myers_act, FP_act, total);
 
 #ifndef PUREGAUGE
   int n;

@@ -81,6 +81,9 @@ EXTERN int odd_sites_on_node;   // Number of odd sites on this node
 EXTERN int number_of_nodes;     // Number of nodes in use
 EXTERN int this_node;           // Node number of this node
 
+// Thetas for static diagonal gauge
+EXTERN Real theta[NCOL];
+
 // Stuff for multi-mass CG and RHMC
 EXTERN int nsteps[2];           // Fermion and gauge steps
 EXTERN Real ampdeg, *amp, *shift;
