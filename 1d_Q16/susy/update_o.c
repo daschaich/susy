@@ -15,6 +15,18 @@
 #endif
 // -----------------------------------------------------------------
 
+Real make_periodic(Real x){
+  // Makes the given value fall within the periodic boundaries
+  while((x < -(0.5*TWOPI)) || (x > (0.5*TWOPI))){
+        if (x >= 0.0){
+            x -= TWOPI;
+        }
+        else{
+            x += TWOPI;
+        }
+    }
+    return x;
+}
 
 
 // -----------------------------------------------------------------
@@ -70,7 +82,23 @@ void update_u(Real eps) {
     for (j = 0; j < NSCALAR; j++)
       scalar_mult_sum_matrix(&(s->mom_X[j]), eps, &(s->X[j]));
   }
+
+  // Update for thetas
+  for(j = 0; j < NCOL; j++){
+    Real update_force_term = 0.0;
+    for (int k = 0; k != j; k++){
+      update_force_term += 0.5*cot(0.5*(theta[j] - theta[k]));
+    }
+    theta[j] += eps * update_force_term;
+    
+    // apply pbc conditions
+    theta[j] = make_periodic(theta[j]);
+  }
+
+  // Need to Ask David for determinant zero condition as in control.c
 }
+
+  
 // -----------------------------------------------------------------
 
 

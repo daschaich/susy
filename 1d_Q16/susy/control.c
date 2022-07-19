@@ -40,6 +40,10 @@ int main(int argc, char *argv[]) {
   }
   ave_theta *= one_ov_N;     // average value of thetas
 
+  // We have to add the initialsiation to all the lattice sites here!
+
+  // Also determinant zero condition needs to be added here
+
   // Check: compute initial bosonic action and scalar squares
   b_act = bosonic_action(&(Xtr[0]), &(Xtr[1]), &(Xtr[2]), &(Xtr[3]), &(Xtr[4]));
   node0_printf("START %.8g\n", b_act / (double)nt);
