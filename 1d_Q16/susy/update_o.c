@@ -83,19 +83,30 @@ void update_u(Real eps) {
       scalar_mult_sum_matrix(&(s->mom_X[j]), eps, &(s->X[j]));
   }
 
+  Real aveg_theta = 0.0;
+
   // Update for thetas
   for(j = 0; j < NCOL; j++){
     Real update_force_term = 0.0;
-    for (int k = 0; k != j; k++){
-      update_force_term += 0.5*cot(0.5*(theta[j] - theta[k]));
+    for (int k = 0; k < NCOL; k++){
+      if(k != j){
+        update_force_term += 0.5*(1.0/tan(0.5*(theta[j] - theta[k])));
+      }
     }
     theta[j] += eps * update_force_term;
     
     // apply pbc conditions
     theta[j] = make_periodic(theta[j]);
+    aveg_theta += theta[j];
   }
 
-  // Need to Ask David for determinant zero condition as in control.c
+  aveg_theta *= one_ov_N;
+
+  // Determinant Condition
+  for(j = 0; j < NCOL; j++){
+    theta[j] -= aveg_theta;
+  }
+
 }
 
   

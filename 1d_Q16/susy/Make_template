@@ -159,7 +159,7 @@ susy_phi_pg::
 susy_hmc_pg::
 	${MAKE} -f ${MAKEFILE} target "MYTARGET= $@" \
 	"DEFINES = ${DEFINES} -DPHI_ALGORITHM -DHMC_ALGORITHM -DPUREGAUGE " \
-	"LAPACK = -L/home/drabs/Packages/Mathematical/lapack-3.10.1/ -llapack -lrefblas -lgfortran" \
+	"LAPACK = -L/home/drabs/Packages/Mathematics/lapack-3.10.1/ -llapack -lrefblas -lgfortran" \
 	"EXTRA_OBJECTS = control.o update_o.o update_h.o setup_rhmc.o "
 
 clean:

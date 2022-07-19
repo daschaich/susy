@@ -40,9 +40,12 @@ int main(int argc, char *argv[]) {
   }
   ave_theta *= one_ov_N;     // average value of thetas
 
-  // We have to add the initialsiation to all the lattice sites here!
+  // We have to add the initialsiation to all the lattice sites here! --> sorted - check for parallel excecution
 
-  // Also determinant zero condition needs to be added here
+  // Determinant Condition
+  for(j = 0; j < NCOL; j++){
+    theta[j] -= ave_theta;
+  }
 
   // Check: compute initial bosonic action and scalar squares
   b_act = bosonic_action(&(Xtr[0]), &(Xtr[1]), &(Xtr[2]), &(Xtr[3]), &(Xtr[4]));
