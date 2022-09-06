@@ -7,31 +7,23 @@ void measure_tr_xsq() {
   register int i, dir;
   register site *s;
   double norm = 1.0 / ((double)(NUMLINK * volume * NCOL));
-  complex tc, tc_comm, tr_xsq = cmplx(0.0, 0.0), tr_x_comm = cmplx(0.0, 0.0);
-  matrix X, tmat, tmat2, tmat3,  tmat4, X_one, X_two;
+  complex tc, tr_xsq = cmplx(0.0, 0.0), tr_x_comm = cmplx(0.0, 0.0);
+  matrix X[NDIMS], tmat;
 
   FORALLSITES(i, s) {
     FORALLDIR(dir) {
-      polar(&(s->link[dir]), &X, &tmat);
-      matrix_log(&tmat, &X);
-      if(dir==TUP){
-      mat_copy(&X,&X_one);
-      }
-      if(dir==XUP){
-      mat_copy(&X,&X_two);
-      }
+      polar(&(s->link[dir]), &(X[dir]), &tmat);
+      matrix_log(&tmat, &(X[dir]));
 
       // Note that we sum over both links
       // and don't normalize by 2 below...
-      tc = complextrace_nn(&X, &X);
+      tc = complextrace_nn(&(X[dir]), &(X[dir]));
       CSUM(tr_xsq, tc);
     }
-   //mult_nn_diff(&X_one,&X_two,&tmat4);
-   mult_nn(&X_one,&X_two,&tmat2);
-   mult_nn(&X_two,&X_one,&tmat3);
-   sub_matrix(&tmat2,&tmat3,&tmat4);
-   tc_comm = complextrace_nn(&tmat4,&tmat4);
-   CSUM(tr_x_comm,tc_comm);
+    mult_nn(&(X[0]), &(X[1]), &tmat);
+    mult_nn_dif(&(X[1]), &(X[0]), &tmat);
+    tc = complextrace_nn(&tmat, &tmat);
+    CSUM(tr_x_comm, tc);
   }
   CMULREAL(tr_xsq, norm, tr_xsq);
   g_complexsum(&tr_xsq);
@@ -46,4 +38,3 @@ void measure_tr_xsq() {
   node0_printf("TR_X_COMM %.8g\n", tr_x_comm.real);
 }
 // -----------------------------------------------------------------
-
