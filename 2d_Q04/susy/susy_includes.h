@@ -52,8 +52,8 @@ void plaquette(double *plaq);
 double local_plaquette(double *plaq);                 // Return max plaq
 complex ploop(int dir, int project, double *plpMod);
 
-// Measure Tr X^2
-void measure_tr_xsq();
+// Measure Tr[X^2] / N and Tr([X_t, X_x]^2) / N
+void tr_xsq();
 
 // Scalar eigenvalues: averages, extrema and width
 // #define SCALAR_EIG_DIST to print all eigenvalues in serial

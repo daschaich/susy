@@ -1,12 +1,15 @@
 // -----------------------------------------------------------------
-// Measure Tr[X^2] / N, where X is the scalar field
+// Measure Tr[X^2] / N and Tr([X_t, X_x]^2) / N
+// Here X is the scalar field
 // from the log of hermitian part of the polar decomposition
+// Seems surprisingly sensitive to stout smearing
 #include "susy_includes.h"
 
-void measure_tr_xsq() {
+void tr_xsq() {
   register int i, dir;
   register site *s;
   double norm = 1.0 / ((double)(NUMLINK * volume * NCOL));
+  double norm_comm = 1.0 / ((double)(volume * NCOL));
   complex tc, tr_xsq = cmplx(0.0, 0.0), tr_x_comm = cmplx(0.0, 0.0);
   matrix X[NDIMS], tmat;
 
@@ -14,9 +17,6 @@ void measure_tr_xsq() {
     FORALLDIR(dir) {
       polar(&(s->link[dir]), &(X[dir]), &tmat);
       matrix_log(&tmat, &(X[dir]));
-
-      // Note that we sum over both links
-      // and don't normalize by 2 below...
       tc = complextrace_nn(&(X[dir]), &(X[dir]));
       CSUM(tr_xsq, tc);
     }
@@ -27,6 +27,7 @@ void measure_tr_xsq() {
   }
   CMULREAL(tr_xsq, norm, tr_xsq);
   g_complexsum(&tr_xsq);
+  CMULREAL(tr_x_comm, norm_comm, tr_x_comm);
   g_complexsum(&tr_x_comm);
 
   if (fabs(tr_xsq.imag) > IMAG_TOL)

@@ -50,6 +50,7 @@ MY_OBJECTS = setup.o        \
              unit.o         \
              scalar_eig.o   \
              link_trace.o   \
+             tr_xsq.o       \
              widths.o       \
              determinant.o  \
              grsource.o     \
@@ -113,7 +114,7 @@ susy_meas::
 	"LAPACK = -llapack -lblas " \
 	"EXTRA_OBJECTS = control_meas.o konishi.o correlator_r.o rsymm.o monopole.o \
 	                 bilinearWard.o hvy_pot.o hvy_pot_polar.o hvy_pot_loop.o \
-	                 hvy_pot_polar_loop.o path.o smear.o local_plaq.o tr_xsq.o "
+	                 hvy_pot_polar_loop.o path.o smear.o local_plaq.o "
 
 susy_hmc_meas::
 	${MAKE} -f ${MAKEFILE} target "MYTARGET= $@" \
@@ -123,7 +124,7 @@ susy_hmc_meas::
 	"EXTRA_OBJECTS = control.o update_o.o update_h.o setup_rhmc.o det_force.o \
 	                 konishi.o correlator_r.o rsymm.o hvy_pot.o monopole.o \
 	                 hvy_pot_polar.o path.o bilinearWard.o hvy_pot_loop.o \
-	                 hvy_pot_polar_loop.o smear.o local_plaq.o tr_xsq.o "
+	                 hvy_pot_polar_loop.o smear.o local_plaq.o "
 
 susy_mcrg::
 	${MAKE} -f ${MAKEFILE} target "MYTARGET= $@" \
