@@ -119,12 +119,6 @@ void make_fields() {
   FIELD_ALLOC_VEC(link_dest, matrix, NUMLINK);
   FIELD_ALLOC(plaq_src, matrix);
   FIELD_ALLOC(plaq_dest, matrix);
-  FIELD_ALLOC(funsite_src, funmatrix);
-  FIELD_ALLOC(funsite_dest, funamatrix);
-  FIELD_ALLOC_VEC(funlink_src, funamatrix, NUMLINK);
-  FIELD_ALLOC_VEC(funlink_dest, funmatrix, NUMLINK);
-  FIELD_ALLOC(funplaq_src, funmatrix);
-  FIELD_ALLOC(funplaq_dest, funamatrix);
 
   size += (Real)((2.0 + NUMLINK) * sizeof(funmatrix));
   size += (Real)((2.0 + NUMLINK) * sizeof(funamatrix));
