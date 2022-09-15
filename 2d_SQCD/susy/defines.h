@@ -27,21 +27,19 @@
 #define SV                // Site/vector terms in action
 #define VP                // Vector/plaquette terms in action
 //#define DEBUG_CHECK       // Print lambdas, offsets, etc.
-#define SPHI		  // Phi-phi terms
+#define SPHI              // Phi-phi terms
 
-//Gauge terms split into three
+// Gauge terms split into three
 //#define PHITERM1
-//#define PHITERM2
-#define PHITERM3
+#define PHITERM2
+//#define PHITERM3
 
-#define FUNFERMION
-#define FUNSITE
-#define SFUNS //site to fundamental site
-//Splitting fermion terms
-
+// Fermion terms split into three
+//#define FUNFERMION
+//#define FUNSITE
+//#define SFUNS
 //#define DEBUGFUNMATRIX
 //#define DEBUGFUNACTION
-
 
 // Tunable parameter in gauge action
 #define C2 1.0

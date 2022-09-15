@@ -875,7 +875,7 @@ void assemble_fermion_force(Twist_Fermion *sol, Twist_Fermion *psol) {
     fun_scalar_mult_sum_adj_matrix(&(tfunmat), -1.0, &(s->f_phi));
   }
 #else
-  FORALLSITES(i, s) funa_clear_mat(s->f_phi);
+  FORALLSITES(i, s) funa_clear_mat(&(s->f_phi));
 #endif
 }
 // -----------------------------------------------------------------

@@ -9,7 +9,6 @@
 #   susy_hmc uses hybrid Monte Carlo algorithm, i.e., phi + accept/reject
 #   susy_meas measures Wilson loops, scalar correlators and fermion bilinear
 #             with optional APE smearing
-#   susy_mcrg calculates observables after RG blocking (UNDER DEVELOPMENT)
 #   susy_eig calculates eigenvalues using PRIMME
 #   susy_phase calculates the pfaffian phase
 # Edit the Makefiles to change this.
@@ -125,15 +124,6 @@ susy_hmc_meas::
 	                 konishi.o correlator_r.o rsymm.o hvy_pot.o monopole.o \
 	                 hvy_pot_polar.o path.o bilinearWard.o hvy_pot_loop.o \
 	                 hvy_pot_polar_loop.o smear.o local_plaq.o tr_xsq.o "
-
-susy_mcrg::
-	${MAKE} -f ${MAKEFILE} target "MYTARGET= $@" \
-	"DEFINES = ${DEFINES} -DPHI_ALGORITHM -DSMEAR -DCORR -DMCRG" \
-	"LAPACK = -llapack -lblas " \
-	"EXTRA_OBJECTS = control_mcrg.o block_mcrg.o rsymm.o blocked_plaq.o \
-	                 blocked_ops.o blocked_ploop.o blocked_rsymm.o path.o \
-	                 blocked_smear.o blocked_local_plaq.o konishi.o \
-	                 smear.o local_plaq.o "
 
 susy_eig::
 	${MAKE} -f ${MAKEFILE} target "MYTARGET= $@" \
