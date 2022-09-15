@@ -1,5 +1,5 @@
 // -----------------------------------------------------------------
-// N=(2,2) SYM setup
+// N=(2,2) SCQD setup
 #include "susy_includes.h"
 
 #define IF_OK if (status == 0)
@@ -17,8 +17,10 @@ int initial_set() {
   int prompt = 0, status = 0, dir;
   if (mynode() == 0) {
     // Print banner
-    printf("N=(2,2) SYM, Nc = %d, DIMF = %d, fermion rep = adjoint\n",
+    printf("N=(2,2) SQCD, Nc = %d, DIMF = %d, fermion rep = adjoint\n",
            NCOL, DIMF);
+    printf("              Nf = %d, DIMF = %d, fermion rep = fund\n",
+           NCOLF, NCOL);
     printf("Microcanonical simulation with refreshing\n");
     printf("Machine = %s, with %d nodes\n", machine_type(), numnodes());
 #ifdef HMC_ALGORITHM
@@ -118,6 +120,15 @@ void make_fields() {
   FIELD_ALLOC(plaq_src, matrix);
   FIELD_ALLOC(plaq_dest, matrix);
 
+  size += (Real)((2.0 + NUMLINK) * sizeof(funmatrix));
+  size += (Real)((2.0 + NUMLINK) * sizeof(funamatrix));
+  FIELD_ALLOC(funsite_src, funmatrix);
+  FIELD_ALLOC(funsite_dest, funamatrix);
+  FIELD_ALLOC_VEC(funlink_src, funamatrix, NUMLINK);
+  FIELD_ALLOC_VEC(funlink_dest, funmatrix, NUMLINK);
+  FIELD_ALLOC(funplaq_src, funmatrix);
+  FIELD_ALLOC(funplaq_dest, funamatrix);
+
   // For convenience in calculating action and force
   size += (Real)(2.0 + 3.0 * NUMLINK) * sizeof(matrix);
   size += (Real)(NUMLINK + 3.0 * Noffdiag) * sizeof(complex);
@@ -141,6 +152,7 @@ void make_fields() {
 
   // Temporary matrices, funmatrices and Twist_Fermion
   size += (Real)(3.0 * sizeof(matrix));
+  size += (Real)(2.0 * sizeof(funmatrix));
   size += (Real)(sizeof(Twist_Fermion));
   FIELD_ALLOC(tempmat, matrix);
   FIELD_ALLOC(tempmat2, matrix);

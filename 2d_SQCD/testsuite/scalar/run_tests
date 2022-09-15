@@ -1,14 +1,16 @@
 #!/bin/bash
-# This script needs to be run from the 2d_Q04/testsuite/scalar directory
+# This script needs to be run from the 2d_SQCD/testsuite/scalar directory
 
 # Allow user to specify particular target
 if [ $# -gt 1 ]; then
   N=$1
-  target=$2
+  F=$2
+  target=$3
 
   # Change N
   cd ../../susy/
   sed -i -E "s/(#define NCOL) .*/\1 $N/" ../../4d_Q16/include/susy.h
+  sed -i -E "s/(#define NCOLF) .*/\1 $F/" ../../4d_Q16/include/susy.h
 
   # Compile
   echo "Compiling susy_$target..."
@@ -18,20 +20,21 @@ if [ $# -gt 1 ]; then
     exit
   fi
 
-  # Reset to N=2
+  # Reset to N=2 with F=3
   sed -i -E "s/(#define NCOL) .*/\1 2/" ../../4d_Q16/include/susy.h
+  sed -i -E "s/(#define NCOLF) .*/\1 3/" ../../4d_Q16/include/susy.h
 
   # Run
   cd ../testsuite/
   rm -f scalar/$target.U$N.out
   echo "Running susy_$target..."
-  ../susy/susy_$target < in.U$N.$target > scalar/$target.U$N.out
+  ../susy/susy_$target < in.U$N.F$F.$target > scalar/$target.U$N.F$F.out
 
   # Check
   cd scalar/
   d="`diff -I'Time' -I'time' -I'seconds' -I'^start' -I'^exit' $target.U$N.ref $target.U$N.out`"
   if [ -n "$d" ] ; then   # Non-zero string length
-    echo "$target.U$N.ref and $target.U$N.out differ:"
+    echo "$target.U$N.F$F.ref and $target.U$N.F$F.out differ:"
     echo "$d"
   else
     echo "PASS: susy_$target reproduces reference output"
