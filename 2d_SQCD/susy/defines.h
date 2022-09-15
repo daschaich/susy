@@ -31,12 +31,12 @@
 
 //Gauge terms split into three
 //#define PHITERM1
-#define PHITERM2
-//#define PHITERM3
+//#define PHITERM2
+#define PHITERM3
 
 #define FUNFERMION
 #define FUNSITE
-#define SFUNS
+#define SFUNS //site to fundamental site
 //Splitting fermion terms
 
 //#define DEBUGFUNMATRIX

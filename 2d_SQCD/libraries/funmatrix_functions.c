@@ -1062,6 +1062,25 @@ void funa_mat_mult_an(funmatrix *a, matrix *b, funamatrix *c){
   }
 }
 
+void funa_scalar_mat_mult_an(funmatrix *a, matrix *b, Real s, funamatrix *c){
+  register int i, j, k;
+  for(i = 0; i < NCOLF; i++) {
+    for(j = 0; j < NCOL; j++) {
+      // Init
+      c->e[i][j].real = s * (a->e[0][i].real * b->e[0][j].real
+                          + a->e[0][i].imag * b->e[0][j].imag);
+      c->e[i][j].imag = s * (a->e[0][i].real * b->e[0][j].imag
+                          - a->e[0][i].imag * b->e[0][j].real);     
+      for( k = 1; k < NCOL; k++){
+        c->e[i][j].real = s * (a->e[k][i].real * b->e[k][j].real
+                            + a->e[k][i].imag * b->e[k][j].imag);
+        c->e[i][j].imag = s * (a->e[k][i].real * b->e[k][j].imag
+                            - a->e[k][i].imag * b->e[k][j].real);
+      }
+    }
+  }
+}
+
 void funa_mat_prod_an_sum( funmatrix *a, matrix *b, funamatrix *c){
   register int i, j, k;
   for(i = 0; i < NCOLF; i++)

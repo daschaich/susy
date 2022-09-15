@@ -521,10 +521,10 @@ void fermion_op(Twist_Fermion *src, Twist_Fermion *dest, int sign) {
   FORALLSITES(i, s)//adds to site_dest
     fun_mult_na_sum(&(funsite_src[i]), &(s->funlink), &(site_dest[i]));
   FORALLSITES(i, s)// Overwrites funsite_dest;NOTE: funsite_dest is funamatrix
-    funa_mat_mult_an(&(s->funlink), &(site_src[i]), &(funsite_dest[i]));
+    funa_scalar_mat_mult_an(&(s->funlink), &(site_src[i]), -1.0,&(funsite_dest[i]));
 #else
   FORALLSITES(i, s)
-    fun_clear_mat(&(funsite_dest[i]));
+    funa_clear_mat(&(funsite_dest[i]));
 #endif
 
   // Copy local plaquette, link and site fermions into dest TwistFermion

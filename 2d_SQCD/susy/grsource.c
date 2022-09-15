@@ -25,6 +25,8 @@ void ranmom() {
         grn.real = gaussian_rand_no(&(s->node_prn));
         grn.imag = gaussian_rand_no(&(s->node_prn));
 #endif
+        //grn.real = 0; //Debug
+        //grn.imag = 0;
         c_scalar_mult_sum_mat(&(Lambda[j]), &grn, &(s->mom[mu]));
       }
     }
@@ -40,8 +42,8 @@ void ranmom() {
         grn.real = gaussian_rand_no(&(s->node_prn));
         grn.imag = gaussian_rand_no(&(s->node_prn));
 #endif
-        s->funmom.e[j][k].real = grn.real;
-        s->funmom.e[j][k].imag = grn.imag;
+        s->funmom.e[j][k].real = 0;//grn.real;
+        s->funmom.e[j][k].imag = 0;//grn.imag;//Debug
       }
     }
   }
@@ -61,6 +63,10 @@ int grsource(Twist_Fermion *src) {
   int avs_iters;
   Real size_r;
   complex grn;
+  //Debug
+  grn.real = 1;
+  grn.imag = 0;
+  //
   Twist_Fermion **psim = malloc(sizeof(Twist_Fermion*) * Norder);
 
   // Allocate psim (will be zeroed in congrad_multi)
@@ -104,31 +110,31 @@ int grsource(Twist_Fermion *src) {
       for (k = 0; k < NCOLF; k++) {
 #ifdef FUNSITE
 #ifdef SITERAND
-        src[i].Funsite.e[j][k].real = gaussian_rand_no(&(s->site_prn));
-        src[i].Funsite.e[j][k].imag = gaussian_rand_no(&(s->site_prn));
+        src[i].Funsite.e[j][k].real = 0;//gaussian_rand_no(&(s->site_prn));
+        src[i].Funsite.e[j][k].imag = 0;//gaussian_rand_no(&(s->site_prn));
 #else
-        src[i].Funsite.e[j][k].real = gaussian_rand_no(&node_prn);
-        src[i].Funsite.e[j][k].imag = gaussian_rand_no(&node_prn);
+        src[i].Funsite.e[j][k].real = 0;//gaussian_rand_no(&node_prn);
+        src[i].Funsite.e[j][k].imag = 0;//gaussian_rand_no(&node_prn);
 #endif
 #endif
 #ifdef FUNLINK
         FORALLDIR(mu) {
 #ifdef SITERAND
-          src[i].Funlink[mu].e[k][j].real = gaussian_rand_no(&(s->site_prn));
-          src[i].Funlink[mu].e[k][j].imag = gaussian_rand_no(&(s->site_prn));
+          src[i].Funlink[mu].e[k][j].real = 0;//gaussian_rand_no(&(s->site_prn));
+          src[i].Funlink[mu].e[k][j].imag = 0;//gaussian_rand_no(&(s->site_prn));
 #else
-          src[i].Funlink[mu].e[k][j].real = gaussian_rand_no(&node_prn);
-          src[i].Funlink[mu].e[k][j].imag = gaussian_rand_no(&node_prn);
+          src[i].Funlink[mu].e[k][j].real = 0;//gaussian_rand_no(&node_prn);
+          src[i].Funlink[mu].e[k][j].imag = 0;//gaussian_rand_no(&node_prn);
 #endif
         }
 #endif
 #ifdef FUNPLAQ
 #ifdef SITERAND
-        src[i].Funsplaq.e[j][k].real = gaussian_rand_no(&(s->site_prn));
-        src[i].Funsplaq.e[j][k].imag = gaussian_rand_no(&(s->site_prn));
+        src[i].Funsplaq.e[j][k].real = 0;//gaussian_rand_no(&(s->site_prn));
+        src[i].Funsplaq.e[j][k].imag = 0;//gaussian_rand_no(&(s->site_prn));
 #else
-        src[i].Funplaq.e[j][k].real = gaussian_rand_no(&node_prn);
-        src[i].Funplaq.e[j][k].imag = gaussian_rand_no(&node_prn);
+        src[i].Funplaq.e[j][k].real = 0;//gaussian_rand_no(&node_prn);
+        src[i].Funplaq.e[j][k].imag = 0;//gaussian_rand_no(&node_prn);
 #endif
 #endif
       }

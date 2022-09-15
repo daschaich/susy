@@ -641,6 +641,7 @@ void assemble_fermion_force(Twist_Fermion *sol, Twist_Fermion *psol) {
   int mu, nu, a, b, gather, flip = 0;
   msg_tag *mtag[NUMLINK], *tag0[2], *tag1[2];
   matrix *mat[2], tmat;
+  funmatrix tfunmat;
 
   for (mu = 0; mu < 2; mu++) {
     local_pt[0][mu] = gen_pt[mu];
@@ -662,6 +663,10 @@ void assemble_fermion_force(Twist_Fermion *sol, Twist_Fermion *psol) {
     }
     mat_copy(&(sol[i].Fplaq), &(plaq_src[i]));
     adjoint(&(psol[i].Fplaq), &(plaq_dest[i]));
+#ifdef FUNSITE
+    fun_mat_copy(&(sol[i].Funsite), &(funsite_src[i]));
+    fun_adjoint(&(psol[i].Funsite), &(funsite_dest[i]));
+#endif
   }
 
 #ifdef SV
@@ -860,6 +865,18 @@ void assemble_fermion_force(Twist_Fermion *sol, Twist_Fermion *psol) {
     detF(site_src, link_dest, MINUS);
   }
 #endif
+
+#ifdef SFUNS
+  FORALLSITES(i, s) {
+    //funsite_dest * site_src
+    funa_mat_prod(&(funsite_dest[i]), &(site_src[i]), &(s->f_phi));
+    //site_dest * funsite_src
+    fun_mat_prod(&(funsite_src[i]), &(site_dest[i]), &(tfunmat));
+    fun_scalar_mult_sum_adj_matrix(&(tfunmat), -1.0, &(s->f_phi));
+  }
+#else
+  FORALLSITES(i, s) funa_clear_mat(s->f_phi);
+#endif
 }
 // -----------------------------------------------------------------
 
@@ -878,6 +895,7 @@ double fermion_force(Real eps, Twist_Fermion *src, Twist_Fermion **sol) {
   int mu, n;
   double returnit = 0.0;
   matrix **fullforce = malloc(sizeof(matrix*) * NUMLINK);
+  funamatrix *funfullforce = malloc(sizeof(funamatrix) * volume);
 
   // Use DmuUmu and Fmunu for temporary storage
   fullforce[0] = DmuUmu;
@@ -892,6 +910,7 @@ double fermion_force(Real eps, Twist_Fermion *src, Twist_Fermion **sol) {
     FORALLSITES(i, s)
       adjoint(&(s->f_U[mu]), &(fullforce[mu][i]));
   }
+  FORALLSITES(i, s) funa_mat_copy(&(s->f_phi), &(funfullforce[i]));
   for (n = 1; n < Norder; n++) {
     fermion_op(sol[n], tempTF, PLUS);
     // Makes sense to multiply here by amp4[n]...
@@ -904,6 +923,7 @@ double fermion_force(Real eps, Twist_Fermion *src, Twist_Fermion **sol) {
       FORALLSITES(i, s)
         sum_adj_matrix(&(s->f_U[mu]), &(fullforce[mu][i]));
     }
+    FORALLSITES(i, s) funa_sum_matrix(&(s->f_phi), &(funfullforce[i]));
   }
 
   // Update the momentum from the fermion force -- sum or eps
@@ -916,9 +936,14 @@ double fermion_force(Real eps, Twist_Fermion *src, Twist_Fermion **sol) {
       returnit += realtrace(&(fullforce[mu][i]), &(fullforce[mu][i]));
     }
   }
+  FORALLSITES(i, s) {
+    funa_scalar_mult_dif_adj_matrix(&(funfullforce[i]), eps, &(s->funmom));
+    returnit += funa_realtrace(&(funfullforce[i]), &(funfullforce[i]));
+  }
   g_doublesum(&returnit);
 
   free(fullforce);
+  free(funfullforce);
 
   // Reset DmuUmu and Fmunu
   compute_DmuUmu();

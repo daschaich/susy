@@ -342,6 +342,7 @@ void funa_mat_prod( funamatrix *a, matrix *b, funamatrix *c);
 void funa_mat_prod_sum( funamatrix *a, matrix *b, funamatrix *c);
 void funa_mat_prod_dif( funamatrix *a, matrix *b, funamatrix *c);
 void funa_mat_mult_an( funmatrix *a, matrix *b, funamatrix *c);
+void funa_scalar_mat_mult_an( funmatrix *a, matrix *b, Real s, funamatrix *c);
 void funa_mat_prod_an_sum( funmatrix *a, matrix *b, funamatrix *c);
 void funa_mat_prod_an_dif( funmatrix *a, matrix *b, funamatrix *c);
 
