@@ -52,6 +52,9 @@ void plaquette(double *plaq);
 double local_plaquette(double *plaq);                 // Return max plaq
 complex ploop(int dir, int project, double *plpMod);
 
+// Measure Tr[X^2] / N and Tr([X_t, X_x]^2) / N
+void tr_xsq();
+
 // Scalar eigenvalues: averages, extrema and width
 // #define SCALAR_EIG_DIST to print all eigenvalues in serial
 void scalar_eig(int project, double *ave_eigs, double *eig_widths,
@@ -83,9 +86,12 @@ void copy_TF(Twist_Fermion *src, Twist_Fermion *dest);
 void clear_TF(Twist_Fermion *dest);
 Real magsq_TF(Twist_Fermion *in);
 complex TF_dot(Twist_Fermion *a, Twist_Fermion *b);
+void TF_rdot_sum(Twist_Fermion *a, Twist_Fermion *b, Real *c);
+void sum_TF(Twist_Fermion *b, Twist_Fermion *c);
 void scalar_mult_sum_TF(Twist_Fermion *b, Real s, Twist_Fermion *c);
 void scalar_mult_add_TF(Twist_Fermion *a, Twist_Fermion *b, Real s,
                         Twist_Fermion *c);
+void scalar_mult_dif_TF(Twist_Fermion *b, Real s, Twist_Fermion *c);
 void scalar_mult_TF(Twist_Fermion *src, Real s, Twist_Fermion *dest);
 
 // Other routines in library_util.c that loop over all sites

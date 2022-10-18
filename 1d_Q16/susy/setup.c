@@ -120,7 +120,8 @@ void make_fields() {
   node0_printf("Mallocing %.1f MBytes per core for fields\n", size / 1e6);
 #ifdef PHASE
   // Total number of matvecs is (nt * NFERMION * DIMF)^2 / 4
-  Nmatvecs = nt * NFERMION * DIMF * nt * DIMF;
+  // Hard-code NFERMION=16 since Nmatvecs is long int
+  Nmatvecs = nt * NFERMION * DIMF * nt * 4 * DIMF;
 
   // Total size of matrix is (nt * NFERMION * DIMF) x (sites_on_node * NFERMION * DIMF)
   size = (Real)(nt * NFERMION * DIMF * NFERMION * DIMF * sizeof(complex));

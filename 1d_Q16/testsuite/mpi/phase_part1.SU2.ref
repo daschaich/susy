@@ -15,7 +15,7 @@ ON EACH NODE 2
 Mallocing 0.0 MBytes per core for lattice
 Antiperiodic temporal boundary conditions
 Mallocing 0.0 MBytes per core for fields
-Q has 192 columns --> 2304 matvecs and 0.3 MBytes per core...
+Q has 192 columns --> 9216 matvecs and 0.3 MBytes per core...
 
 warms 0
 trajecs 3

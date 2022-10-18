@@ -50,6 +50,7 @@ MY_OBJECTS = setup.o        \
              unit.o         \
              scalar_eig.o   \
              link_trace.o   \
+             tr_xsq.o       \
              widths.o       \
              determinant.o  \
              grsource.o     \
