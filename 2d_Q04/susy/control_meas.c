@@ -151,8 +151,8 @@ int main(int argc, char *argv[]) {
                  j, ave_eigs[j], eig_widths[j], min_eigs[j], max_eigs[j]);
   }
 
-  // Measure Tr[X^2] / N
-  measure_tr_xsq();
+  // Monitor Tr[X^2] / N and Tr([X_t, X_x]^2) / N
+  tr_xsq();
 
 #ifdef CORR
   // Konishi and SUGRA correlators
