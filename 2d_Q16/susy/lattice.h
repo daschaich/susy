@@ -67,6 +67,7 @@ typedef struct {
 
 // Global variables
 EXTERN int nx, nt;          // Lattice dimensions
+EXTERN int length[2];       // Duplicate lattice dimensions for loops
 EXTERN int PBC;             // Temporal fermion boundary condition
 EXTERN int volume;          // Volume of lattice
 EXTERN int iseed;           // Random number seed
@@ -76,7 +77,11 @@ EXTERN Real traj_length;
 // U(N) generators
 EXTERN matrix Lambda[DIMF];
 
-EXTERN Real rsqmin, rsqprop;
+// Translate (mu, nu) to linear index of anti-symmetric matrix
+EXTERN int plaq_index[NUMLINK][NUMLINK];
+EXTERN Real perm[NUMLINK][NUMLINK][NUMLINK];
+
+EXTERN Real rsqmin;
 EXTERN Real lambda, kappa, bmass, fmass, kappa_u1, G, B;
 EXTERN int doG, doB;
 EXTERN double g_plaq;     // Global plaq for I/O
@@ -131,6 +136,9 @@ EXTERN complex *tempZW[NUMLINK][NUMLINK];
 #endif
 EXTERN matrix *DmuUmu, *Fmunu;
 EXTERN matrix *Uinv[NUMLINK], *Udag_inv[NUMLINK], *UpsiU[NUMLINK];
+
+// CG Twist_Fermions
+EXTERN Twist_Fermion *mpm, *pm0, *rm;
 
 // Temporary matrices and Twist_Fermion
 EXTERN matrix *tempmat, *tempmat2, *staple;
