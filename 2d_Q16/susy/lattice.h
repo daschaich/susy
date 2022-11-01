@@ -18,7 +18,7 @@
 typedef struct {
   matrix Fsite;
   matrix Flink[NUMLINK];
-  matrix Fplaq;
+  matrix Fplaq[NPLAQ];
 } Twist_Fermion;
 // -----------------------------------------------------------------
 
@@ -83,8 +83,8 @@ EXTERN Real perm[NUMLINK][NUMLINK][NUMLINK];
 
 EXTERN Real rsqmin;
 EXTERN Real lambda, kappa, bmass, fmass, kappa_u1, G, B;
-EXTERN int doG, doB;
-EXTERN double g_plaq;     // Global plaq for I/O
+EXTERN int doG, doB; // !!!TODO: REVIEW doB...
+EXTERN double g_ssplaq, g_stplaq;   // Global plaqs for I/O
 EXTERN double_complex linktrsum;
 EXTERN u_int32type nersc_checksum;
 EXTERN char startfile[MAXFILENAME], savefile[MAXFILENAME];
@@ -122,8 +122,8 @@ EXTERN int goffset[2 * NUMLINK];
 
 // Persistent site, link and plaq fermions for matrix--vector operation
 // Used in fermion_op and assemble_fermion_force
-EXTERN matrix *site_src, *link_src[NUMLINK], *plaq_src;
-EXTERN matrix *site_dest, *link_dest[NUMLINK], *plaq_dest;
+EXTERN matrix *site_src, *link_src[NUMLINK], *plaq_src[NPLAQ];
+EXTERN matrix *site_dest, *link_dest[NUMLINK], *plaq_dest[NPLAQ];
 
 // For convenience in calculating action and force
 // May be wasteful of space
@@ -131,10 +131,10 @@ EXTERN Real one_ov_N;
 EXTERN complex minus1, *tr_eta;
 EXTERN complex *tr_dest, *Tr_Uinv[NUMLINK], *plaqdet[NUMLINK][NUMLINK];
 EXTERN complex *ZWstar[NUMLINK][NUMLINK], *tempdet[NUMLINK][NUMLINK];
-#ifndef LINEAR_DET
+#ifndef LINEAR_DET // !!!TODO: REVIEW...
 EXTERN complex *tempZW[NUMLINK][NUMLINK];
 #endif
-EXTERN matrix *DmuUmu, *Fmunu;
+EXTERN matrix *DmuUmu, *Fmunu[NPLAQ];
 EXTERN matrix *Uinv[NUMLINK], *Udag_inv[NUMLINK], *UpsiU[NUMLINK];
 
 // CG Twist_Fermions

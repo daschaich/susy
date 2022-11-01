@@ -16,8 +16,10 @@ void dump_TF(Twist_Fermion *in) {
     node0_printf("Flink %d: ", mu);
     dumpmat(&(in->Flink[mu]));
   }
-  node0_printf("Fplaq:   ");
-  dumpmat(&(in->Fplaq));
+  for (mu = 0; mu < NPLAQ; mu++) {
+    node0_printf("Fplaq %d: ", mu);
+    dumpmat(&(in->Fplaq[mu]));
+  }
 }
 // -----------------------------------------------------------------
 
@@ -39,7 +41,8 @@ void clear_TF(Twist_Fermion *in) {
   clear_mat(&(in->Fsite));
   FORALLDIR(i)
     clear_mat(&(in->Flink[i]));
-  clear_mat(&(in->Fplaq));
+  for (i = 0; i < NPLAQ; i++)
+    clear_mat(&(in->Fplaq[i]));
 }
 // -----------------------------------------------------------------
 
@@ -53,7 +56,8 @@ Real magsq_TF(Twist_Fermion *in) {
   sum = realtrace(&(in->Fsite), &(in->Fsite));
   FORALLDIR(i)
     sum += realtrace(&(in->Flink[i]), &(in->Flink[i]));
-  sum += realtrace(&(in->Fplaq), &(in->Fplaq));
+  for (i = 0; i < NPLAQ; i++)
+    sum += realtrace(&(in->Fplaq[i]), &(in->Fplaq[i]));
   return sum;
 }
 // -----------------------------------------------------------------
@@ -70,8 +74,10 @@ complex TF_dot(Twist_Fermion *a, Twist_Fermion *b) {
     tc = complextrace_an(&(a->Flink[i]), &(b->Flink[i]));
     CSUM(sum, tc);
   }
-  tc = complextrace_an(&(a->Fplaq), &(b->Fplaq));
-  CSUM(sum, tc);
+  for (i = 0; i < NPLAQ; i++) {
+    tc = complextrace_an(&(a->Fplaq[i]), &(b->Fplaq[i]));
+    CSUM(sum, tc);
+  }
   return sum;
 }
 // -----------------------------------------------------------------
@@ -79,13 +85,24 @@ complex TF_dot(Twist_Fermion *a, Twist_Fermion *b) {
 
 
 // -----------------------------------------------------------------
+// c <-- s * b
+void scalar_mult_TF(Twist_Fermion *b, Real s, Twist_Fermion *c) {
+  register int i;
+  scalar_mult_matrix(&(b->Fsite), s, &(c->Fsite));
+  FORALLDIR(i)
+    scalar_mult_matrix(&(b->Flink[i]), s, &(c->Flink[i]));
+  for (i = 0; i < NPLAQ; i++)
+    scalar_mult_matrix(&(b->Fplaq[i]), s, &(c->Fplaq[i]));
+}
+
 // c <-- c + s * b
 void scalar_mult_sum_TF(Twist_Fermion *b, Real s, Twist_Fermion *c) {
   register int i;
   scalar_mult_sum_matrix(&(b->Fsite), s, &(c->Fsite));
   FORALLDIR(i)
     scalar_mult_sum_matrix(&(b->Flink[i]), s, &(c->Flink[i]));
-  scalar_mult_sum_matrix(&(b->Fplaq), s, &(c->Fplaq));
+  for (i = 0; i < NPLAQ; i++)
+    scalar_mult_sum_matrix(&(b->Fplaq[i]), s, &(c->Fplaq[i]));
 }
 
 // c <-- a + s * b
@@ -96,15 +113,8 @@ void scalar_mult_add_TF(Twist_Fermion *a, Twist_Fermion *b,
   scalar_mult_add_matrix(&(a->Fsite), &(b->Fsite), s, &(c->Fsite));
   FORALLDIR(i)
     scalar_mult_add_matrix(&(a->Flink[i]), &(b->Flink[i]), s, &(c->Flink[i]));
-  scalar_mult_add_matrix(&(a->Fplaq), &(b->Fplaq), s, &(c->Fplaq));
-}
-
-void scalar_mult_TF(Twist_Fermion *src, Real s, Twist_Fermion *dest) {
-  register int i;
-  scalar_mult_matrix(&(src->Fsite), s, &(dest->Fsite));
-  FORALLDIR(i)
-    scalar_mult_matrix(&(src->Flink[i]), s, &(dest->Flink[i]));
-  scalar_mult_matrix(&(src->Fplaq), s, &(dest->Fplaq));
+  for (i = 0; i < NPLAQ; i++)
+    scalar_mult_add_matrix(&(a->Fplaq[i]), &(b->Fplaq[i]), s, &(c->Fplaq[i]));
 }
 // -----------------------------------------------------------------
 
