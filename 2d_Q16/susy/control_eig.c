@@ -5,7 +5,7 @@
 
 int main(int argc, char *argv[]) {
   int prompt, dir;
-  double plaq, dtime, plpMod = 0.0;
+  double ss_plaq, st_plaq, dtime, plpMod = 0.0;
   double linktr[NUMLINK], linktr_ave, linktr_width;
   double link_det[NUMLINK], det_ave, det_width;
   complex plp = cmplx(99.0, 99.0);
@@ -34,10 +34,10 @@ int main(int argc, char *argv[]) {
   dtime = -dclock();
 
   // Check: compute initial plaquette and bosonic action
-  plaquette(&plaq);
-  node0_printf("START %.8g ", plaq);
-  plaq = gauge_action(NODET);
-  node0_printf("%.8g\n", plaq / (double)volume);
+  plaquette(&ss_plaq, &st_plaq);
+  node0_printf("START %.8g %.8g %.8g ", ss_plaq, st_plaq, ss_plaq + st_plaq);
+  ss_plaq = gauge_action(NODET);
+  node0_printf("%.8g\n", ss_plaq / (double)volume);
 
   // Do "local" measurements to check configuration
   // Tr[Udag.U] / N
@@ -53,18 +53,18 @@ int main(int argc, char *argv[]) {
   node0_printf(" %.6g %.6g\n", det_ave, det_width);
 
   // Polyakov loop and plaquette measurements
-  // Format: GMES Re(Polyakov) Im(Poyakov) cg_iters plaq
+  // Format: GMES Re(Polyakov) Im(Poyakov) cg_iters ss_plaq st_plaq
   plp = ploop(TUP, NODET, &plpMod);
-  plaquette(&plaq);
-  node0_printf("GMES %.8g %.8g 0 %.8g ",
-               plp.real, plp.imag, plaq);
+  plaquette(&ss_plaq, &st_plaq);
+  node0_printf("GMES %.8g %.8g 0 %.8g %.8g ",
+               plp.real, plp.imag, ss_plaq, st_plaq);
 
   // Bosonic action (printed twice by request)
   // Might as well spit out volume average of Polyakov loop modulus
-  plaq = gauge_action(NODET) / (double)volume;
-  node0_printf("%.8g ", plaq);
+  ss_plaq = gauge_action(NODET) / (double)volume;
+  node0_printf("%.8g ", ss_plaq);
   node0_printf("%.8g\n", plpMod);
-  node0_printf("BACTION %.8g\n", plaq);
+  node0_printf("BACTION %.8g\n", ss_plaq);
 
   // Main measurement: PRIMME eigenvalues
   // Allocate eigenvectors
