@@ -11,23 +11,13 @@
 // For the gauge action and force, compute at each site
 //   sum_mu [U_mu(x) * Udag_mu(x) - Udag_mu(x - mu) * U_mu(x - mu)]
 // Add plaquette determinant contribution if G is non-zero
-// Add scalar potential contribution if B is non-zero
 // Use tempmat and tempmat2 as temporary storage
 void compute_DmuUmu() {
   register int i;
   register site *s;
   int mu, nu, j;
-  Real tr;
   complex tc;
   msg_tag *mtag0 = NULL;
-
-#ifdef TR_DIST
-  if (this_node != 0) {
-    printf("compute_DmuUmu: don't run TR_DIST in parallel\n");
-    fflush(stdout);
-    terminate(1);
-  }
-#endif
 
   FORALLDIR(mu) {
     FORALLSITES(i, s) {
@@ -62,31 +52,10 @@ void compute_DmuUmu() {
             continue;
 
           CADD(plaqdet[mu][nu][i], minus1, tc);
-#ifdef LINEAR_DET
           CMULREAL(tc, G, tc);
           for (j = 0; j < NCOL; j++)
             CSUM(DmuUmu[i].e[j][j], tc);
-#else
-          tr = G * cabs_sq(&tc);
-          for (j = 0; j < NCOL; j++)
-            DmuUmu[i].e[j][j].real += tr;
-#endif
         }
-      }
-    }
-  }
-
-  // Add scalar potential contribution if B is non-zero
-  if (doB) {
-    FORALLSITES(i, s) {
-      FORALLDIR(mu) {
-        tr = one_ov_N * realtrace(&(s->link[mu]), &(s->link[mu])) - 1.0;
-        for (j = 0; j < NCOL; j++)
-          DmuUmu[i].e[j][j].real += B * B * tr * tr;
-#ifdef TR_DIST
-          printf("TR_DIST %d %d %d %d %d %.4g\n",
-                 s->x, s->y, s->z, s->t, mu, tr);
-#endif
       }
     }
   }
@@ -102,21 +71,27 @@ void compute_DmuUmu() {
 void compute_Fmunu() {
   register int i;
   register site *s;
+  int mu, nu, index;
   msg_tag *mtag0 = NULL, *mtag1 = NULL;
 
-  mtag0 = start_gather_site(F_OFFSET(link[1]), sizeof(matrix),
-                            goffset[0], EVENANDODD, gen_pt[0]);
-  mtag1 = start_gather_site(F_OFFSET(link[0]), sizeof(matrix),
-                            goffset[1], EVENANDODD, gen_pt[1]);
-  wait_gather(mtag0);
-  wait_gather(mtag1);
-  FORALLSITES(i, s) {
-    mult_nn(&(s->link[0]), (matrix *)(gen_pt[0][i]), &(tempmat[i]));
-    mult_nn(&(s->link[1]), (matrix *)(gen_pt[1][i]), &(tempmat2[i]));
-    sub_matrix(&(tempmat[i]), &(tempmat2[i]), &(Fmunu[i]));
+  FORALLDIR(mu) {
+    for (nu = mu + 1; nu < NUMLINK; nu++) {
+      index = plaq_index[mu][nu];
+      mtag0 = start_gather_site(F_OFFSET(link[nu]), sizeof(matrix),
+                                goffset[mu], EVENANDODD, gen_pt[0]);
+      mtag1 = start_gather_site(F_OFFSET(link[mu]), sizeof(matrix),
+                                goffset[nu], EVENANDODD, gen_pt[1]);
+      wait_gather(mtag0);
+      wait_gather(mtag1);
+      FORALLSITES(i, s) {
+        mult_nn(&(s->link[mu]), (matrix *)(gen_pt[0][i]), &(tempmat[i]));
+        mult_nn(&(s->link[nu]), (matrix *)(gen_pt[1][i]), &(tempmat2[i]));
+        sub_matrix(&(tempmat[i]), &(tempmat2[i]), &(Fmunu[index][i]));
+      }
+      cleanup_gather(mtag0);
+      cleanup_gather(mtag1);
+    }
   }
-  cleanup_gather(mtag0);
-  cleanup_gather(mtag1);
 }
 // -----------------------------------------------------------------
 
@@ -128,6 +103,7 @@ void compute_Fmunu() {
 double gauge_action(int do_det) {
   register int i;
   register site *s;
+  int index;
   double g_action = 0.0, norm = 0.5 * C2;
   complex tc;
   matrix tmat, tmat2;
@@ -135,13 +111,14 @@ double gauge_action(int do_det) {
   FORALLSITES(i, s) {
     // d^2 term normalized by C2 / 2
     // DmuUmu includes the plaquette determinant contribution if G is non-zero
-    // and the scalar potential contribution if B is non-zero
     mult_nn(&(DmuUmu[i]), &(DmuUmu[i]), &tmat);
     scalar_mult_matrix(&tmat, norm, &tmat);
 
     // F^2 term
-    mult_an(&(Fmunu[i]), &(Fmunu[i]), &tmat2);
-    scalar_mult_sum_matrix(&tmat2, 2.0, &tmat);
+    for (index = 0; index < NPLAQ; index++) {
+      mult_an(&(Fmunu[index][i]), &(Fmunu[index][i]), &tmat2);
+      scalar_mult_sum_matrix(&tmat2, 2.0, &tmat);
+    }
 
     if (do_det == 1) {
       det_project(&tmat, &tmat2);
@@ -170,7 +147,7 @@ double gauge_action(int do_det) {
 double bmass_action() {
   register int i, a;
   register site *s;
-  double sum = 0.0, kappa_muSq = kappa * bmass * bmass;
+  double sum = 0.0;
 #ifdef EIG_POT
   matrix tmat;
 #else
@@ -182,13 +159,14 @@ double bmass_action() {
 #ifdef EIG_POT
       mult_na(&(s->link[a]), &(s->link[a]), &tmat);
       scalar_add_diag(&tmat, -1.0);
-      sum += kappa_muSq * realtrace(&tmat, &tmat);
+      sum += realtrace(&tmat, &tmat);
 #else
       tr = one_ov_N * realtrace(&(s->link[a]), &(s->link[a])) - 1.0;
-      sum += kappa_muSq * tr * tr;
+      sum += tr * tr;
 #endif
     }
   }
+  sum *= kappa * bmass * bmass;
   g_doublesum(&sum);
   return sum;
 }
@@ -226,7 +204,7 @@ double det_action() {
 // -----------------------------------------------------------------
 // Fermion contribution to the action
 // Include the ampdeg term to allow sanity check that the fermion action
-// is 4 DIMF volume on average
+// is 16 DIMF volume on average
 // Since the pseudofermion src is fixed throughout the trajectory,
 // ampdeg actually has no effect on Delta S (checked)
 // sol, however, depends on the gauge fields through the CG

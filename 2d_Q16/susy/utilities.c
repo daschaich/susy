@@ -608,11 +608,6 @@ void fermion_op(Twist_Fermion *src, Twist_Fermion *dest, int sign) {
     clear_mat(&(site_dest[i]));
 #endif
 
-#ifdef QCLOSED
-  DbminusPtoP(plaq_src, plaq_dest);       // Adds to plaq_dest
-  DbplusPtoP(plaq_src, plaq_dest);        // Adds to plaq_dest
-#endif
-
   // Copy local plaquette, link and site fermions into dest TwistFermion
   if (sign == 1) {
     FORALLSITES(i, s) {
