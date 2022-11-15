@@ -6,7 +6,7 @@
 int main(int argc, char *argv[]) {
   int prompt, j;
   int traj_done, s_iters, avs_iters = 0, avm_iters = 0, Nmeas = 0;
-  Real f_eps, b_eps, ave_theta = 0.0;
+  Real f_eps, b_eps;
   double b_act, dtime, Xtr[NSCALAR], Xtr_ave, Xtr_width;
   double ave_eigs[NCOL], eig_widths[NCOL], min_eigs[NCOL], max_eigs[NCOL];
   complex plp = cmplx(99.0, 99.0);
@@ -31,24 +31,8 @@ int main(int argc, char *argv[]) {
   }
   dtime = -dclock();
 
-  // Static diagonal gauge fixing
-  for (j = 0; j < NCOL; j++) {
-    // Array of random numbers all in the range [-PI, PI]
-    // Use site 0 PRNG
-    theta[j] = (myrand(&(lattice[0].site_prn)) - 0.5) * TWOPI;
-    ave_theta += theta[j];
-  }
-  ave_theta *= one_ov_N;     // average value of thetas
-
-  // We have to add the initialsiation to all the lattice sites here! --> sorted - check for parallel excecution
-
-  // Determinant Condition
-  for(j = 0; j < NCOL; j++){
-    theta[j] -= ave_theta;
-  }
-
   // Check: compute initial bosonic action and scalar squares
-  b_act = bosonic_action(&(Xtr[0]), &(Xtr[1]), &(Xtr[2]), &(Xtr[3]), &(Xtr[4]));
+  b_act = bosonic_action(&(Xtr[0]), &(Xtr[1]), &(Xtr[2]), &(Xtr[3]));
   node0_printf("START %.8g\n", b_act / (double)nt);
 
   Xtr_ave = scalar_trace(Xtr, &Xtr_width);
@@ -84,7 +68,7 @@ int main(int argc, char *argv[]) {
     node0_printf("GMES %.8g %.8g %d ", plp.real, plp.imag, s_iters);
 
     // Bosonic action
-    b_act = bosonic_action(&(Xtr[0]), &(Xtr[1]), &(Xtr[2]), &(Xtr[3]), &(Xtr[4]));
+    b_act = bosonic_action(&(Xtr[0]), &(Xtr[1]), &(Xtr[2]), &(Xtr[3]));
     node0_printf("%.8g %.8g %.8g %.8g\n",
                  b_act / (double)nt, Xtr[0] / (double)nt,
                  Xtr[1] / (double)nt, Xtr[2] / (double)nt);
@@ -106,7 +90,7 @@ int main(int argc, char *argv[]) {
   node0_printf("RUNNING COMPLETED\n");
 
   // Check: compute final bosonic action
-  b_act = bosonic_action(&(Xtr[0]), &(Xtr[1]), &(Xtr[2]), &(Xtr[3]), &(Xtr[4]));
+  b_act = bosonic_action(&(Xtr[0]), &(Xtr[1]), &(Xtr[2]), &(Xtr[3]));
   node0_printf("STOP %.8g\n", b_act / (double)nt);
 
   node0_printf("Average CG iters for steps: %.4g\n",
@@ -123,8 +107,25 @@ int main(int argc, char *argv[]) {
   fflush(stdout);
 
   // Save lattice if requested
-  if (saveflag != FORGET)
+  if (saveflag != FORGET) {
+#ifdef STATIC_GAUGE
+    // Copy thetas into links for saving
+    // Overwrite all gauge links just to be safe
+    int i, k;
+    site *s;
+    FORALLSITES(i, s) {
+      for (j = 0; j < NCOL; j++) {
+        s->link.e[j][j].real = theta[j];
+        s->link.e[j][j].imag = 0.0;
+        for (k = j + 1; k < NCOL; k++) {
+          s->link.e[j][k] = cmplx(0.0, 0.0);
+          s->link.e[k][j] = cmplx(0.0, 0.0);
+        }
+      }
+    }
+#endif
     save_lattice(saveflag, savefile);
+  }
   normal_exit(0);         // Needed by at least some clusters
   return 0;
 }

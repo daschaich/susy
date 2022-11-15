@@ -129,18 +129,30 @@ susy_phase::
 	"LAPACK = -llapack -lblas " \
 	"EXTRA_OBJECTS = control_phase.o phase.o io_phase.o "
 
-# Gauge links set to unit matrices, retaining fermions
+# Gauged-fixd targets with static diagonal links
+susy_hmc_gf::
+	${MAKE} -f ${MAKEFILE} target "MYTARGET= $@" \
+	"DEFINES = ${DEFINES} -DPHI_ALGORITHM -DHMC_ALGORITHM -DSTATIC_GAUGE " \
+	"LAPACK = -llapack -lblas " \
+	"EXTRA_OBJECTS = control.o update_o.o update_h.o setup_rhmc.o "
+
+susy_hmc_pg_gf::
+	${MAKE} -f ${MAKEFILE} target "MYTARGET= $@" \
+	"DEFINES = ${DEFINES} -DPHI_ALGORITHM -DHMC_ALGORITHM -DPUREGAUGE -DSTATIC_GAUGE " \
+	"LAPACK = -llapack -lblas " \
+	"EXTRA_OBJECTS = control.o update_o.o update_h.o setup_rhmc.o "
+
+# 'Ungauged' targets with links set to unit matrices
 susy_hmc_ung::
 	${MAKE} -f ${MAKEFILE} target "MYTARGET= $@" \
 	"DEFINES = ${DEFINES} -DPHI_ALGORITHM -DHMC_ALGORITHM -DUNGAUGED " \
-	"LAPACK = -L/home/sami/Packages/lapack-3.10.1/ -llapack -lrefblas -lgfortran " \
+	"LAPACK = -llapack -lblas " \
 	"EXTRA_OBJECTS = control.o update_o.o update_h.o setup_rhmc.o "
 
-# Gauge links set to unit matrices for the purely bosonic case
 susy_hmc_pg_ung::
 	${MAKE} -f ${MAKEFILE} target "MYTARGET= $@" \
 	"DEFINES = ${DEFINES} -DPHI_ALGORITHM -DHMC_ALGORITHM -DPUREGAUGE -DUNGAUGED " \
-	"LAPACK = -L/home/sami/Packages/lapack-3.10.1/ -llapack -lrefblas -lgfortran " \
+	"LAPACK = -llapack -lblas " \
 	"EXTRA_OBJECTS = control.o update_o.o update_h.o setup_rhmc.o "
 
 # The targets below have not been used/tested recently

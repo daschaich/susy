@@ -81,9 +81,6 @@ EXTERN int odd_sites_on_node;   // Number of odd sites on this node
 EXTERN int number_of_nodes;     // Number of nodes in use
 EXTERN int this_node;           // Node number of this node
 
-// Thetas for static diagonal gauge
-EXTERN Real theta[NCOL];
-
 // Stuff for multi-mass CG and RHMC
 EXTERN int nsteps[2];           // Fermion and gauge steps
 EXTERN Real ampdeg, *amp, *shift;
@@ -143,6 +140,11 @@ EXTERN int maxIter;           // Maximum iterations
 EXTERN long int Nmatvecs;           // For timing/counting
 EXTERN int ckpt_load, ckpt_save;    // For checkpointing
 EXTERN matrix *src[NFERMION], *res[NFERMION];    // For fieldwise matvec
+#endif
+
+#ifdef STATIC_GAUGE
+// Stuff for static diagonal gauge-fixed calculations
+EXTERN Real theta[NCOL];   // Thetas replace gauge links
 #endif
 
 #endif // _LATTICE_H

@@ -35,6 +35,7 @@ void update_u(Real eps) {
   register site *s;
 
 #ifndef UNGAUGED
+#ifndef STATIC_GAUGE
   register Real t2, t3, t4, t5, t6, t7, t8;
   matrix tmat, tmat2, tmp_mom;
   // Calculate newU = exp(p).U
@@ -77,39 +78,37 @@ void update_u(Real eps) {
     scalar_mult_sum_matrix(&tmat, eps, &(s->link));
   }
 #endif
+#endif
 
+#ifdef STATIC_GAUGE
+  // Update static diagonal phases
+  int k;
+  Real theta_force, ave_theta = 0.0;
+  for (j = 0; j < NCOL; j++){
+    theta_force = 0.0;
+    for (k = 0; k < NCOL; k++) {
+      if (k != j)
+        theta_force += 1.0 / tan(0.5 * (theta[j] - theta[k]));
+    }
+    theta[j] += 0.5 * eps * theta_force;
+    
+    // Apply periodic boundary conditions
+    theta[j] = make_periodic(theta[j]);
+    ave_theta += theta[j];
+  }
+
+  // Determinant condition
+  ave_theta *= one_ov_N;
+  for (j = 0; j < NCOL; j++)
+    theta[j] -= ave_theta;
+#endif
+
+  // Scalar updates
   FORALLSITES(i, s) {
     for (j = 0; j < NSCALAR; j++)
       scalar_mult_sum_matrix(&(s->mom_X[j]), eps, &(s->X[j]));
   }
-
-  Real aveg_theta = 0.0;
-
-  // Update for thetas
-  for(j = 0; j < NCOL; j++){
-    Real update_force_term = 0.0;
-    for (int k = 0; k < NCOL; k++){
-      if(k != j){
-        update_force_term += 0.5*(1.0/tan(0.5*(theta[j] - theta[k])));
-      }
-    }
-    theta[j] += eps * update_force_term;
-    
-    // apply pbc conditions
-    theta[j] = make_periodic(theta[j]);
-    aveg_theta += theta[j];
-  }
-
-  aveg_theta *= one_ov_N;
-
-  // Determinant Condition
-  for(j = 0; j < NCOL; j++){
-    theta[j] -= aveg_theta;
-  }
-
 }
-
-  
 // -----------------------------------------------------------------
 
 

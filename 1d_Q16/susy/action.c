@@ -9,13 +9,12 @@
 
 // -----------------------------------------------------------------
 // Bosonic contribution to the action
-double bosonic_action(double *so3_sq, double *so6_sq, double *comm,
-                      double *Myers, double *FP) {
+double bosonic_action(double *so3_sq, double *so6_sq,
+                      double *comm, double *Myers) {
 
-  register int i,l;
+  register int i, j, k, l;
   register site *s;
-  int j, k;
-  double td, b_action = 0.0;
+  double b_action = 0.0;
   matrix tmat;
 #ifndef UNGAUGED
   matrix tmat2;
@@ -27,7 +26,6 @@ double bosonic_action(double *so3_sq, double *so6_sq, double *comm,
   *so6_sq = 0.0;
   *comm = 0.0;
   *Myers = 0.0;
-  *FP = 0.0;
 
   // Scalar kinetic term -Tr[D_t X(t)]^2
   //   -Tr[U(t) X(t+1) Udag(t) - X(t)]^2
@@ -115,29 +113,41 @@ double bosonic_action(double *so3_sq, double *so6_sq, double *comm,
   b_action += *Myers;
 #endif
 
-  // Faddeev--Popov (FP) term
-  for (j = 0; j < NCOL; j++) {
-    for (k = j + 1; k < NCOL; k++) {
-      td = sin(0.5 * (theta[j] - theta[k]));
-      *FP -= log(td * td);
-    }
-  }
-
   b_action *= kappa;
   *so3_sq *= kappa;
   *so6_sq *= kappa;
   *comm *= kappa;
   *Myers *= kappa;
-  b_action += *FP;
 
   g_doublesum(&b_action);
   g_doublesum(so3_sq);
   g_doublesum(so6_sq);
   g_doublesum(comm);
   g_doublesum(Myers);
-  g_doublesum(FP);
   return b_action;
 }
+// -----------------------------------------------------------------
+
+
+
+// -----------------------------------------------------------------
+// Faddeev--Popov (FP) gauge-fixing contribution to the action
+#ifdef STATIC_GAUGE
+double FP_action() {
+  register int j, k;
+  double td, FP = 0.0;
+
+  for (j = 0; j < NCOL; j++) {
+    for (k = j + 1; k < NCOL; k++) {
+      td = sin(0.5 * (theta[j] - theta[k]));
+      FP -= log(td * td);
+    }
+  }
+  g_doublesum(&FP);
+
+  return FP;
+}
+#endif
 // -----------------------------------------------------------------
 
 
@@ -236,12 +246,20 @@ double scalar_mom_action() {
 // -----------------------------------------------------------------
 // Print out zeros for pieces of the action that aren't included
 double action(matrix ***src, matrix ****sol) {
-  double p_act = 0.0, so3_act, so6_act, comm_act, Myers_act, FP_act, total;
+  double p_act = 0.0, so3_act, so6_act, comm_act, Myers_act, total;
 
   // Includes so3, so6, Myers and kinetic
-  total = bosonic_action(&so3_act, &so6_act, &comm_act, &Myers_act, &FP_act);
-  node0_printf("action: so3 %.8g so6 %.8g comm %.8g Myers %.8g FP %.8g boson %.8g ",
-               so3_act, so6_act, comm_act, Myers_act, FP_act, total);
+  total = bosonic_action(&so3_act, &so6_act, &comm_act, &Myers_act);
+#ifdef STATIC_GAUGE
+  double FP_act = FP_action();
+  total += FP_act;
+#endif
+  node0_printf("action: so3 %.8g so6 %.8g comm %.8g Myers %.8g ",
+               so3_act, so6_act, comm_act, Myers_act);
+#ifdef STATIC_GAUGE
+  node0_printf("FP %.8g ", FP_act);
+#endif
+  node0_printf("boson %.8g ", total);
 
 #ifndef PUREGAUGE
   int n;

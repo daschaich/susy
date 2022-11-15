@@ -27,6 +27,13 @@ int initial_set() {
 #ifdef PUREGAUGE
     printf("Bosonic system\n");
 #endif
+#ifdef STATIC_GAUGE
+    printf("Gauge-fixed to static diagonal gauge\n");
+#ifdef UNGAUGED   // Quit!
+    printf("Error: Can't gauge-fix ungauged system!\n");
+    exit(1);
+#endif
+#endif
 #ifdef UNGAUGED
     printf("Ungauged system\n");
 #endif
@@ -205,8 +212,15 @@ int setup() {
 // prompt=1 indicates prompts are to be given for input
 int readin(int prompt) {
   int status;
-#ifdef EIG
-  int i, j;
+#if defined(EIG) || defined(STATIC_GAUGE) || defined(UNGAUGED)
+  int j;
+#endif
+#if defined(EIG) || defined(UNGAUGED)
+  int i;
+#endif
+#ifdef UNGAUGED
+  int k;
+  register site *s;
 #endif
   Real x;
 
@@ -349,16 +363,41 @@ nsrc = par_buf.nsrc;
   // Do whatever is needed to get lattice
   startlat_p = reload_lattice(startflag, startfile);
 
+#ifdef STATIC_GAUGE
+  // Static diagonal gauge fixing
+  // Array of thetas (same for all sites) rather than links
+  if (this_node == 0) {
+    if (startflag == FRESH) {  // Set theta to random values
+      theta[0] = (myrand(&(lattice[0].site_prn)) - 0.5) * TWOPI;
+      x = theta[0];   // Initialize average
+      for (j = 1; j < NCOL; j++) {
+        // Array of random numbers all in the range [-PI, PI]
+        // Use site 0 PRNG
+        // !!!TODO: Looks like different thetas on different cores
+        theta[j] = (myrand(&(lattice[0].site_prn)) - 0.5) * TWOPI;
+        x += theta[j];
+      }
+      x *= one_ov_N;        // Average theta
+      for (j = 0; j < NCOL; j++)
+        theta[j] -= x;      // Determinant condition
+    }
+    else {  // Reloading lattice
+      for (j = 0; j < NCOL; j++)
+        theta[j] = lattice[0].link.e[j][j].real;
+    }
+  }
+  // Broadcast thetas from node0 to all other nodes
+  broadcast_bytes((char *)&theta, NCOL * sizeof(Real));
+#endif 
+
   // For ungauged case, set each link to a unit matrix
 #ifdef UNGAUGED
-  register int k, m, n;
-  register site *s;
-  FORALLSITES(k, s) {
-    for (m = 0; m < NCOL; m++) {
-      s->link.e[m][m] = cmplx(1.0, 0.0);
-      for (n = m + 1; n < NCOL; n++) {
-        s->link.e[m][n] = cmplx(0.0, 0.0);
-        s->link.e[n][m] = cmplx(0.0, 0.0);
+  FORALLSITES(i, s) {
+    for (j = 0; j < NCOL; j++) {
+      s->link.e[j][j] = cmplx(1.0, 0.0);
+      for (k = j + 1; k < NCOL; k++) {
+        s->link.e[j][k] = cmplx(0.0, 0.0);
+        s->link.e[k][j] = cmplx(0.0, 0.0);
       }
     }
   }
