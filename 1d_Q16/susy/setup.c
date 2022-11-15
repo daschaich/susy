@@ -373,7 +373,6 @@ nsrc = par_buf.nsrc;
       for (j = 1; j < NCOL; j++) {
         // Array of random numbers all in the range [-PI, PI]
         // Use site 0 PRNG
-        // !!!TODO: Looks like different thetas on different cores
         theta[j] = (myrand(&(lattice[0].site_prn)) - 0.5) * TWOPI;
         x += theta[j];
       }
