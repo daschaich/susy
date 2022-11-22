@@ -159,6 +159,7 @@ double FP_action() {
 // Since the pseudofermion src is fixed throughout the trajectory,
 // ampdeg actually has no effect on Delta S (checked)
 // sol, however, depends on the gauge fields through the CG
+#ifndef PUREGAUGE
 double fermion_action(matrix **src, matrix ***sol) {
   register int i, j, k;
   register site *s;
@@ -188,6 +189,7 @@ double fermion_action(matrix **src, matrix ***sol) {
 #endif
   return sum;
 }
+#endif
 // -----------------------------------------------------------------
 
 

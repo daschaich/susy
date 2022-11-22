@@ -367,9 +367,22 @@ nsrc = par_buf.nsrc;
   // Static diagonal gauge fixing
   // Array of thetas (same for all sites) rather than links
   if (this_node == 0) {
-    if (startflag == FRESH) {  // Set theta to random values
+    if (startflag != FRESH) {  // Reload theta from config
+      for (j = 0; j < NCOL; j++)
+        theta[j] = lattice[0].link.e[j][j].real;
+
+      // Catch potential issue with loading unfixed config
+      // that didn't save thetas to diag(link)
+      x = lattice[1].link.e[0][0].real;
+      if (fabs(theta[0] - x) > IMAG_TOL) {
+        printf("Something's not right loading theta... ");
+        printf("Compare %.4g vs. %.4g\n", theta[0], x);
+        exit(1);
+      }
+    }
+    else { // startflag == FRESH --> set to random values
       theta[0] = (myrand(&(lattice[0].site_prn)) - 0.5) * TWOPI;
-      x = theta[0];   // Initialize average
+      x = theta[0];         // Initialize average
       for (j = 1; j < NCOL; j++) {
         // Array of random numbers all in the range [-PI, PI]
         // Use site 0 PRNG
@@ -380,11 +393,8 @@ nsrc = par_buf.nsrc;
       for (j = 0; j < NCOL; j++)
         theta[j] -= x;      // Determinant condition
     }
-    else {  // Reloading lattice
-      for (j = 0; j < NCOL; j++)
-        theta[j] = lattice[0].link.e[j][j].real;
-    }
   }
+
   // Broadcast thetas from node0 to all other nodes
   broadcast_bytes((char *)&theta, NCOL * sizeof(Real));
 #endif 

@@ -39,6 +39,31 @@ void ranmom() {
       uncompress_anti_hermitian(&tah, &(s->mom_X[j]));
     }
   }
+
+#ifdef STATIC_GAUGE
+  // Careful -- must generate only one random array for whole lattice
+  if (this_node == 0) {
+    Real ave = 0.0;
+    for (j = 0; j < NCOL; j++) {
+#ifdef SITERAND
+      theta_mom[j] = gaussian_rand_no(&(lattice[0].site_prn));
+#else
+      node0_printf("Error: Need to #define SITERAND\n");
+      exit(1);
+#endif
+      node0_printf("theta_mom[%d] = %.4g\n", j, theta_mom[j]);
+      make_periodic(&(theta_mom[j]));
+      ave += theta_mom[j];
+    }
+
+    // Determinant condition
+    ave *= one_ov_N;
+    for (j = 0; j < NCOL; j++)
+      theta_mom[j] -= ave;
+  }
+  // Broadcast thetas from node0 to all other nodes
+  broadcast_bytes((char *)&theta_mom, NCOL * sizeof(Real));
+#endif
 }
 // -----------------------------------------------------------------
 

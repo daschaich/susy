@@ -15,18 +15,26 @@
 #endif
 // -----------------------------------------------------------------
 
-Real make_periodic(Real x){
-  // Makes the given value fall within the periodic boundaries
-  while((x < -(0.5*TWOPI)) || (x > (0.5*TWOPI))){
-        if (x >= 0.0){
-            x -= TWOPI;
-        }
-        else{
-            x += TWOPI;
-        }
-    }
-    return x;
+
+
+// -----------------------------------------------------------------
+// Make the given value fall within [-pi, pi]
+void make_periodic(Real *x) {
+  // Sanity check to catch unreasonable overflow...
+  // TODO: Can probably be removed given check in setup.c...
+  if (fabs(*x) > 1e4) {
+    node0_printf("Something's not right in make_periodic: %.4g\n", *x);
+    exit(1);
+  }
+  while (fabs(*x) > PI) {
+    if (*x >= 0.0)
+      *x -= TWOPI;
+    else
+      *x += TWOPI;
+  }
 }
+// -----------------------------------------------------------------
+
 
 
 // -----------------------------------------------------------------
@@ -80,20 +88,20 @@ void update_u(Real eps) {
 #endif
 #endif
 
+  // Scalar updates
+  FORALLSITES(i, s) {
+    for (j = 0; j < NSCALAR; j++)
+      scalar_mult_sum_matrix(&(s->mom_X[j]), eps, &(s->X[j]));
+  }
+
 #ifdef STATIC_GAUGE
   // Update static diagonal phases
-  int k;
-  Real theta_force, ave_theta = 0.0;
-  for (j = 0; j < NCOL; j++){
-    theta_force = 0.0;
-    for (k = 0; k < NCOL; k++) {
-      if (k != j)
-        theta_force += 1.0 / tan(0.5 * (theta[j] - theta[k]));
-    }
-    theta[j] += 0.5 * eps * theta_force;
+  Real ave_theta = 0.0;
+  for (j = 0; j < NCOL; j++) {
+    theta[j] = eps * theta_mom[j];
     
     // Apply periodic boundary conditions
-    theta[j] = make_periodic(theta[j]);
+    make_periodic(&(theta[j]));
     ave_theta += theta[j];
   }
 
@@ -102,12 +110,6 @@ void update_u(Real eps) {
   for (j = 0; j < NCOL; j++)
     theta[j] -= ave_theta;
 #endif
-
-  // Scalar updates
-  FORALLSITES(i, s) {
-    for (j = 0; j < NSCALAR; j++)
-      scalar_mult_sum_matrix(&(s->mom_X[j]), eps, &(s->X[j]));
-  }
 }
 // -----------------------------------------------------------------
 

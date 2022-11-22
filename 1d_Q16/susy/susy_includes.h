@@ -67,16 +67,26 @@ void scalar_eig(double *ave_eigs, double *eig_widths,
 // Action routines
 double action(matrix ***source, matrix ****sol);
 double bosonic_action(double *so3, double *so6, double *comm, double *Myers);
+#ifdef STATIC_GAUGE
+double FP_action();
+#endif
 
 // Force routines
 double bosonic_force(Real eps);
+#ifdef STATIC_GAUGE
+void make_periodic(Real *x);
+#endif
+#ifndef PUREGAUGE
 double fermion_force(Real eps, matrix **source, matrix ***psim);
+#endif
 
+#ifndef PUREGAUGE
 // Fermion matrix--vector operators (D & D^2) and multi-mass CG
 void fermion_op(matrix *src[NFERMION], matrix *dest[NFERMION], int sign);
 void DSq(matrix *src[NFERMION], matrix *dest[NFERMION]);
 int congrad_multi(matrix **src, matrix ***psim,
                   int MaxCG, Real RsdCG, Real *size_r);
+#endif
 
 // Compute average Tr[X[i] X[i]] / N_c
 double scalar_trace(double *Xtr, double *Xwidth);

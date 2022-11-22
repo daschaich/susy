@@ -5,11 +5,15 @@
 
 int main(int argc, char *argv[]) {
   int prompt, j;
-  int traj_done, s_iters, avs_iters = 0, avm_iters = 0, Nmeas = 0;
+  int traj_done, s_iters, avs_iters = 0;
   Real f_eps, b_eps;
   double b_act, dtime, Xtr[NSCALAR], Xtr_ave, Xtr_width;
   double ave_eigs[NCOL], eig_widths[NCOL], min_eigs[NCOL], max_eigs[NCOL];
   complex plp = cmplx(99.0, 99.0);
+
+#ifndef PUREGAUGE
+  int avm_iters = 0, Nmeas = 0;
+#endif
 
   // Setup
   setlinebuf(stdout); // DEBUG
@@ -33,7 +37,11 @@ int main(int argc, char *argv[]) {
 
   // Check: compute initial bosonic action and scalar squares
   b_act = bosonic_action(&(Xtr[0]), &(Xtr[1]), &(Xtr[2]), &(Xtr[3]));
-  node0_printf("START %.8g\n", b_act / (double)nt);
+  b_act /= (double)nt;
+#ifdef STATIC_GAUGE
+  b_act += FP_action();
+#endif
+  node0_printf("START %.8g\n", b_act);
 
   Xtr_ave = scalar_trace(Xtr, &Xtr_width);
   node0_printf("SCALAR SQUARES");
@@ -91,14 +99,21 @@ int main(int argc, char *argv[]) {
 
   // Check: compute final bosonic action
   b_act = bosonic_action(&(Xtr[0]), &(Xtr[1]), &(Xtr[2]), &(Xtr[3]));
-  node0_printf("STOP %.8g\n", b_act / (double)nt);
+  b_act /= (double)nt;
+#ifdef STATIC_GAUGE
+  b_act += FP_action();
+#endif
+  node0_printf("STOP %.8g\n", b_act);
 
+#ifndef PUREGAUGE
   node0_printf("Average CG iters for steps: %.4g\n",
                (double)avs_iters / trajecs);
   if (Nmeas > 0) {
     node0_printf("Average CG iters for measurements: %.4g\n",
                  (double)avm_iters / Nmeas);
   }
+#endif
+
   dtime += dclock();
   node0_printf("\nTime = %.4g seconds\n", dtime);
   // total_iters is accumulated in the multiCG itself

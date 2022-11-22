@@ -1,7 +1,7 @@
 // -----------------------------------------------------------------
 // Update the momentum matrices
 // Uncomment to print out debugging messages
-//#define FORCE_DEBUG
+//#define DEBUG_CHECK
 #include "susy_includes.h"
 // -----------------------------------------------------------------
 
@@ -201,6 +201,30 @@ double bosonic_force(Real eps) {
   }
   g_doublesum(&returnit);
   returnit *= kappa * kappa;
+
+#ifdef STATIC_GAUGE
+  // Update static diagonal momenta
+  Real theta_force, ave_theta_mom = 0.0;
+  for (j = 0; j < NCOL; j++) {
+    theta_force = 0.0;
+    for (k = 0; k < NCOL; k++) {
+      if (k != j)
+        theta_force += 1.0 / tan(0.5 * (theta[j] - theta[k]));
+    }
+    tr = 0.5 * eps * theta_force;
+    theta_mom[j] += tr;
+    returnit += tr * tr;
+    
+    // Apply periodic boundary conditions
+    make_periodic(&(theta_mom[j]));
+    ave_theta_mom += theta_mom[j];
+  }
+
+  // Determinant condition
+  ave_theta_mom *= one_ov_N;
+  for (j = 0; j < NCOL; j++)
+    theta_mom[j] -= ave_theta_mom;
+#endif
 
   return (eps * sqrt(returnit) / (double)nt);
 }

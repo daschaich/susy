@@ -144,7 +144,7 @@ EXTERN matrix *src[NFERMION], *res[NFERMION];    // For fieldwise matvec
 
 #ifdef STATIC_GAUGE
 // Stuff for static diagonal gauge-fixed calculations
-EXTERN Real theta[NCOL];   // Thetas replace gauge links
+EXTERN Real theta[NCOL], theta_mom[NCOL];   // Thetas replace gauge links
 #endif
 
 #endif // _LATTICE_H
