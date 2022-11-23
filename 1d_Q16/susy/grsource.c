@@ -7,50 +7,29 @@
 
 
 // -----------------------------------------------------------------
-// Construct gaussian random momentum matrices
-// All need to be anti-hermitian
+// Construct gaussian random momenta
+// Either anti-hermitian matrices or conjugate to static diagonal phases
+// Impose SITERAND rather than leaving this as a compile-time option
 void ranmom() {
   register int i, j;
   register site *s;
   anti_hermitmat tah;
 
-  FORALLSITES(i, s) {
-#ifdef SITERAND
+#ifndef SITERAND
+  node0_printf("Error: Need to #define SITERAND\n");
+  exit(1);
+#endif
+
+#ifndef UNGAUGED
+#ifndef STATIC_GAUGE
+  FORALLSITES(i, s)
     random_anti_hermitian(&(s->mom), &(s->site_prn));
 #else
-    random_anti_hermitian(&(s->mom), &(s->node_prn));
-#endif
-
-#ifdef UNGAUGED
-    // Strange PRNG issue if above is turned off
-    // Instead just zero out gauge momenta
-    for (j = 0; j < NCOL; j++)
-      s->mom.im_diag[j] = 0.0;
-    for (j = 0; j < N_OFFDIAG; j++)
-      s->mom.m[j] = cmplx(0.0, 0.0);
-#endif
-
-    for (j = 0; j < NSCALAR; j++) {
-#ifdef SITERAND
-      random_anti_hermitian(&tah, &(s->site_prn));
-#else
-      random_anti_hermitian(&tah, &(s->node_prn));
-#endif
-      uncompress_anti_hermitian(&tah, &(s->mom_X[j]));
-    }
-  }
-
-#ifdef STATIC_GAUGE
   // Careful -- must generate only one random array for whole lattice
   if (this_node == 0) {
     Real ave = 0.0;
     for (j = 0; j < NCOL; j++) {
-#ifdef SITERAND
       theta_mom[j] = gaussian_rand_no(&(lattice[0].site_prn));
-#else
-      node0_printf("Error: Need to #define SITERAND\n");
-      exit(1);
-#endif
       node0_printf("theta_mom[%d] = %.4g\n", j, theta_mom[j]);
       make_periodic(&(theta_mom[j]));
       ave += theta_mom[j];
@@ -64,6 +43,15 @@ void ranmom() {
   // Broadcast thetas from node0 to all other nodes
   broadcast_bytes((char *)&theta_mom, NCOL * sizeof(Real));
 #endif
+#endif
+
+  // Scalar momenta
+  FORALLSITES(i, s) {
+    for (j = 0; j < NSCALAR; j++) {
+      random_anti_hermitian(&tah, &(s->site_prn));
+      uncompress_anti_hermitian(&tah, &(s->mom_X[j]));
+    }
+  }
 }
 // -----------------------------------------------------------------
 

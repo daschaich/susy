@@ -16,7 +16,9 @@ double bosonic_force(Real eps) {
   double returnit = 0.0, tmp_so3 = 2.0 * mass_so3, tmp_so6 = 2.0 * mass_so6;
   matrix tmat;
 #ifndef UNGAUGED
+#ifndef STATIC_GAUGE
   matrix tmat2;
+#endif
 #endif
   msg_tag *tag[NSCALAR], *tag2[NSCALAR];
 #ifdef DEBUG_CHECK
@@ -26,7 +28,9 @@ double bosonic_force(Real eps) {
   // Clear the force collectors
   FORALLSITES(i, s) {
 #ifndef UNGAUGED
+#ifndef STATIC_GAUGE
     clear_mat(&(s->f_U));
+#endif
 #endif
     for (j = 0; j < NSCALAR; j++)
       clear_mat(&(s->f_X[j]));
@@ -46,8 +50,12 @@ double bosonic_force(Real eps) {
     // For scalar force term, compute and gather Udag(n-1) X(n-1) U(n-1)
     FORALLSITES(i, s) {
 #ifndef UNGAUGED
+#ifndef STATIC_GAUGE
       mult_nn(&(s->X[j]), &(s->link), &tmat);
       mult_an(&(s->link), &tmat, &(temp_X[j][i]));
+#else
+      // TODO: Replace link --> theta...
+#endif
 #else
       mat_copy(&(s->X[j]), &(temp_X[j][i]));
 #endif
@@ -59,15 +67,18 @@ double bosonic_force(Real eps) {
   for (j = 0; j < NSCALAR; j++) {   // X(n+1) = gen_pt[j]
     wait_gather(tag[j]);
 #ifndef UNGAUGED
+#ifndef STATIC_GAUGE
     FORALLSITES(i, s) {
       mult_na((matrix *)(gen_pt[j][i]), &(s->link), &tmat);
       mult_nn(&(s->link), &tmat, &tmat2);
       mult_nn_sum(&(s->X[j]), &tmat2, &(s->f_U));
     }
 #endif
+#endif
   }
 
 #ifndef UNGAUGED
+#ifndef STATIC_GAUGE
   // Take adjoint and update the gauge momenta
   // Make them anti-hermitian following non-susy code
   // Include overall factor of kappa = N / (4lambda), and factor of 2
@@ -80,6 +91,7 @@ double bosonic_force(Real eps) {
     make_anti_hermitian(&tmat, &(s->mom));
     returnit += realtrace(&(s->f_U), &(s->f_U));
   }
+#endif
 #endif
 
   // This is the finite difference operator scalar derivative
@@ -97,8 +109,12 @@ double bosonic_force(Real eps) {
 
       // Add forward hopping term using X(n+1) = gen_pt[j]
 #ifndef UNGAUGED
+#ifndef STATIC_GAUGE
       mult_na((matrix *)(gen_pt[j][i]), &(s->link), &tmat);
       mult_nn_sum(&(s->link), &tmat, &(s->f_X[j]));
+#else
+      // TODO: Replace link --> theta...
+#endif
 #else
       sum_matrix((matrix *)(gen_pt[j][i]), &(s->f_X[j]));
 #endif
@@ -213,7 +229,7 @@ double bosonic_force(Real eps) {
     }
     tr = 0.5 * eps * theta_force;
     theta_mom[j] += tr;
-    returnit += tr * tr;
+    returnit += tr * tr;    // No factor of kappa
     
     // Apply periodic boundary conditions
     make_periodic(&(theta_mom[j]));
@@ -248,8 +264,10 @@ void assemble_fermion_force(matrix **sol, matrix *psol[NFERMION]) {
   complex tc = cmplx(0.0, -1.0 / sqrt(2.0));
   matrix tmat;
 #ifndef UNGAUGED
+#ifndef STATIC_GAUGE
   matrix tmat2;
   msg_tag *tag[NCHIRAL_FERMION], *tag2[NCHIRAL_FERMION];
+#endif
 #endif
 
   // First gauge force s->f_U
@@ -261,6 +279,7 @@ void assemble_fermion_force(matrix **sol, matrix *psol[NFERMION]) {
     }
   }
 #ifndef UNGAUGED
+#ifndef STATIC_GAUGE
   for (j = 0; j < NCHIRAL_FERMION; j++) {
     k = j + NCHIRAL_FERMION;
     tag[j] = start_gather_field(sol[k], sizeof(matrix),
@@ -289,6 +308,7 @@ void assemble_fermion_force(matrix **sol, matrix *psol[NFERMION]) {
     }
     cleanup_gather(tag2[j]);
   }
+#endif
 #endif
 
   // Now scalar forces s->f_X[k] from Yukawa terms
@@ -356,14 +376,18 @@ double fermion_force(Real eps, matrix **src, matrix ***sol) {
   register site *s;
   double returnit = 0.0;
 #ifndef UNGAUGED
+#ifndef STATIC_GAUGE
   matrix tmat;
+#endif
 #endif
   anti_hermitmat tah;
 
   // Clear the force collectors
   FORALLSITES(i, s) {
 #ifndef UNGAUGED
+#ifndef STATIC_GAUGE
     clear_mat(&(s->f_U));
+#endif
 #endif
     for (k = 0; k < NSCALAR; k++)
       clear_mat(&(s->f_X[k]));
@@ -383,8 +407,10 @@ double fermion_force(Real eps, matrix **src, matrix ***sol) {
   // Make sure forces are traceless anti-hermitian
   FORALLSITES(i, s) {
 #ifndef UNGAUGED
+#ifndef STATIC_GAUGE
     make_anti_hermitian(&(s->f_U), &tah);
     uncompress_anti_hermitian(&tah, &(s->f_U));
+#endif
 #endif
     for (k = 0; k < NSCALAR; k++) {
       make_anti_hermitian(&(s->f_X[k]), &tah);
@@ -398,10 +424,14 @@ double fermion_force(Real eps, matrix **src, matrix ***sol) {
   // Move negation here as well, though adjoint remains above
   FORALLSITES(i, s) {
 #ifndef UNGAUGED
+#ifndef STATIC_GAUGE
     uncompress_anti_hermitian(&(s->mom), &tmat);
     scalar_mult_sum_matrix(&(s->f_U), eps, &tmat);
     make_anti_hermitian(&tmat, &(s->mom));
     returnit += realtrace(&(s->f_U), &(s->f_U));
+#else
+    // TODO: Force contributions from static diagonal phases?
+#endif
 #endif
     for (k = 0; k < NSCALAR; k++) {
       scalar_mult_sum_matrix(&(s->f_X[k]), eps, &(s->mom_X[k]));

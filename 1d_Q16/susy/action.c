@@ -218,13 +218,19 @@ Real ahmat_mag_sq(anti_hermitmat *ah) {
 #ifndef UNGAUGED
 double gauge_mom_action() {
   register int i;
-  register site *s;
   double sum = 0.0;
 
+#ifndef STATIC_GAUGE
+  register site *s;
   FORALLSITES(i, s)
     sum += (double)ahmat_mag_sq(&(s->mom));
 
   g_doublesum(&sum);
+#else
+  for (i = 0; i < NCOL; i++)
+    sum += theta_mom[i] * theta_mom[i];
+#endif
+
   return sum;
 }
 #endif

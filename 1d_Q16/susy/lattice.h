@@ -33,10 +33,16 @@ typedef struct {
 #endif
 
   // All momenta should be anti-hermitian matrices
+#ifndef UNGAUGED
+#ifndef STATIC_GAUGE
+  anti_hermitmat mom;
+  matrix f_U;
+#endif
+#endif
+
   // Since scalars are anti-hermitian but stored as full matrices,
   // simplest to treat their momenta the same way
-  anti_hermitmat mom;
-  matrix f_U, mom_X[NSCALAR], f_X[NSCALAR];
+  matrix mom_X[NSCALAR], f_X[NSCALAR];
 
   // Boundary conditions -- many unused
   Real bc[2];
