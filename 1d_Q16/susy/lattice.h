@@ -25,6 +25,7 @@ typedef struct {
   double_prn site_prn;
 #endif
 
+  // Retain with STATIC_GAUGE for I/O
   matrix link;          // Gauge link (in group)
   matrix X[NSCALAR];    // Scalars (in algebra)
 
