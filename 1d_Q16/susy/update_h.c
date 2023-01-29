@@ -3,6 +3,7 @@
 // Uncomment to print out debugging messages
 //#define DEBUG_CHECK
 #include "susy_includes.h"
+#include "lattice.h"
 // -----------------------------------------------------------------
 
 
@@ -26,6 +27,20 @@ double bosonic_force(Real eps) {
 #endif
 
   // Clear the force collectors
+  #ifdef STATIC_GAUGE
+  // TODO - copy and load from links
+  dmatrix THETA;
+      for (int row = 0; row < NCOL; row++){
+        for (int col = 0; col < NCOL; col++){
+          if (row != col) {
+            THETA.e[row][col] = cmplx(0.0,0.0);
+          }
+          else{
+            THETA.e[row][col] = cmplx(cos(theta[row]),sin(theta[row]));
+          }
+        }
+      }
+    #endif
   FORALLSITES(i, s) {
 #ifndef UNGAUGED
 #ifndef STATIC_GAUGE
@@ -54,7 +69,10 @@ double bosonic_force(Real eps) {
       mult_nn(&(s->X[j]), &(s->link), &tmat);
       mult_an(&(s->link), &tmat, &(temp_X[j][i]));
 #else
-      // TODO: Replace link --> theta...
+      // When Static Gauge is Defined 
+      // Check Hamiltonian Conservation and Force Form for the thetas
+      mult_nn(&(s->X[j]), &(THETA), &tmat);
+      mult_an(&(THETA), &tmat, &(temp_X[j][i]));
 #endif
 #else
       mat_copy(&(s->X[j]), &(temp_X[j][i]));
@@ -110,10 +128,13 @@ double bosonic_force(Real eps) {
       // Add forward hopping term using X(n+1) = gen_pt[j]
 #ifndef UNGAUGED
 #ifndef STATIC_GAUGE
-      mult_na((matrix *)(gen_pt[j][i]), &(s->link), &tmat);
+      mult_na((matrix *)(gen_pt[j][i]), &(s->link), &tmat);   // replace thetas here instead of links -- by next week @ line 117
+                                                              // look for other TODOs
       mult_nn_sum(&(s->link), &tmat, &(s->f_X[j]));
 #else
-      // TODO: Replace link --> theta...
+      mult_na((matrix *)(gen_pt[j][i]), &(THETA), &tmat);   // replace thetas here instead of links -- by next week @ line 117
+                                                              // look for other TODOs
+      mult_nn_sum(&(THETA), &tmat, &(s->f_X[j]));
 #endif
 #else
       sum_matrix((matrix *)(gen_pt[j][i]), &(s->f_X[j]));
@@ -225,7 +246,7 @@ double bosonic_force(Real eps) {
     theta_force = 0.0;
     for (k = 0; k < NCOL; k++) {
       if (k != j)
-        theta_force += 1.0 / tan(0.5 * (theta[j] - theta[k]));
+        theta_force += abs(1.0 / tan(0.5 * (theta[j] - theta[k])));
     }
     tr = 0.5 * eps * theta_force;
     theta_mom[j] += tr;

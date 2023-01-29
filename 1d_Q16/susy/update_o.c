@@ -98,8 +98,7 @@ void update_u(Real eps) {
   // Update static diagonal phases
   Real ave_theta = 0.0;
   for (j = 0; j < NCOL; j++) {
-    theta[j] = eps * theta_mom[j];
-    
+    theta[j] += eps * theta_mom[j];
     // Apply periodic boundary conditions
     make_periodic(&(theta[j]));
     ave_theta += theta[j];
@@ -107,8 +106,9 @@ void update_u(Real eps) {
 
   // Determinant condition
   ave_theta *= one_ov_N;
-  for (j = 0; j < NCOL; j++)
+  for (j = 0; j < NCOL; j++){
     theta[j] -= ave_theta;
+  }
 #endif
 }
 // -----------------------------------------------------------------

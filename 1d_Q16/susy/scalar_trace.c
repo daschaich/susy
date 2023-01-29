@@ -8,6 +8,7 @@ double scalar_trace(double *Xtr, double *Xwidth) {
   register site *s;
   double Xtr_ave = 0.0, XtrSq = 0.0, td;
 
+  //node0_printf("ScSq : \t");
   for (j = 0; j < NSCALAR; j++) {
     Xtr[j] = 0.0;
     FORALLSITES(i, s) {
@@ -17,6 +18,12 @@ double scalar_trace(double *Xtr, double *Xwidth) {
       XtrSq += td * td;
     }
     Xtr[j] *= one_ov_N / ((double)nt);
+    /*if (j==NSCALAR-1){
+      node0_printf("%lf\n", Xtr[j]);
+    }
+    else{
+      node0_printf("%lf\t", Xtr[j]);
+    }*/
     g_doublesum(&(Xtr[j]));
     Xtr_ave += Xtr[j];
   }
@@ -27,4 +34,6 @@ double scalar_trace(double *Xtr, double *Xwidth) {
 
   return Xtr_ave;
 }
+
+
 // -----------------------------------------------------------------

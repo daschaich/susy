@@ -383,15 +383,32 @@ nsrc = par_buf.nsrc;
     else { // startflag == FRESH --> set to random values
       theta[0] = (myrand(&(lattice[0].site_prn)) - 0.5) * TWOPI;
       x = theta[0];         // Initialize average
+      //printf("FRESH : \t %lf\t", theta[0]);
       for (j = 1; j < NCOL; j++) {
         // Array of random numbers all in the range [-PI, PI]
         // Use site 0 PRNG
         theta[j] = (myrand(&(lattice[0].site_prn)) - 0.5) * TWOPI;
+        /*if (j != (NCOL - 1)){
+        printf("%lf\t", theta[j]);
+        }
+        else{
+          printf("%lf\n", theta[j]);
+        }*/
         x += theta[j];
       }
       x *= one_ov_N;        // Average theta
-      for (j = 0; j < NCOL; j++)
+      //printf("x : %lf\n", x);
+      //printf("After minus : \t");
+      for (j = 0; j < NCOL; j++){
+        
         theta[j] -= x;      // Determinant condition
+        /*if (j != (NCOL - 1)){
+        printf("%lf\t", theta[j]);
+        }
+        else{
+          printf("%lf\n", theta[j]);
+        }*/
+      }
     }
   }
 

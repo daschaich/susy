@@ -5,12 +5,11 @@
 #include "susy_includes.h"
 // -----------------------------------------------------------------
 
-
-
 // -----------------------------------------------------------------
 // Bosonic contribution to the action
 double bosonic_action(double *so3_sq, double *so6_sq,
-                      double *comm, double *Myers) {
+                      double *comm, double *Myers)
+{
 
   register int i, j, k, l;
   register site *s;
@@ -31,27 +30,34 @@ double bosonic_action(double *so3_sq, double *so6_sq,
   //   -Tr[U(t) X(t+1) Udag(t) - X(t)]^2
   //     = Tr[2 X(t) U(t) X(t+1) Udag(t) - X(t+1) X(t+1) - X(t) X(t)]
   // Sum over t --> 2 Tr[Udag(t) X(t) U(t) X(t+1) - X(t) X(t)]
-  for (j = 0; j < NSCALAR; j++) {
+  for (j = 0; j < NSCALAR; j++)
+  {
     tag[j] = start_gather_site(F_OFFSET(X[j]), sizeof(matrix),
                                TUP, EVENANDODD, gen_pt[j]);
   }
 
   // On-site piece of scalar kinetic term
   // (Has same form as some scalar potential terms, so will re-use below)
-  FORALLSITES(i, s) {
-    for (j = 0; j < 3; j++) {
+  FORALLSITES(i, s)
+  {
+    for (j = 0; j < 3; j++)
+    {
       *so3_sq -= (double)realtrace_nn(&(s->X[j]), &(s->X[j]));
     }
-    for (j = 3; j < NSCALAR; j++) {
+    for (j = 3; j < NSCALAR; j++)
+    {
       *so6_sq -= (double)realtrace_nn(&(s->X[j]), &(s->X[j]));
     }
   }
+
   b_action = *so3_sq + *so6_sq;
 
   // Nearest-neighbor piece of scalar kinetic term
-  for (j = 0; j < NSCALAR; j++) {
+  for (j = 0; j < NSCALAR; j++)
+  {
     wait_gather(tag[j]);
-    FORALLSITES(i, s) {
+    FORALLSITES(i, s)
+    {
 #ifndef UNGAUGED
       mult_nn(&(s->link), (matrix *)(gen_pt[j][i]), &tmat);
       mult_na(&tmat, &(s->link), &tmat2);
@@ -70,9 +76,12 @@ double bosonic_action(double *so3_sq, double *so6_sq,
   //                     - X_j X_i X_i X_j + X_j X_i X_j X_i]
   //     = sum_{i<j} -2Tr[X_i X_j X_i X_j - X_i X_j X_j X_i]
   //     = sum_{i != j} -Tr[X_i X_j X_i X_j - X_i X_j X_j X_i]
-  FORALLSITES(i, s) {
-    for (j = 0; j < NSCALAR; j++) {
-      for (k = j + 1; k < NSCALAR; k++) {
+  FORALLSITES(i, s)
+  {
+    for (j = 0; j < NSCALAR; j++)
+    {
+      for (k = j + 1; k < NSCALAR; k++)
+      {
         mult_nn(&(s->X[j]), &(s->X[k]), &tmat);
         mult_nn_dif(&(s->X[k]), &(s->X[j]), &tmat);
         *comm -= realtrace_nn(&tmat, &tmat);
@@ -85,16 +94,19 @@ double bosonic_action(double *so3_sq, double *so6_sq,
   // Couplings are set differently in setup.c depending on BMN vs. BFSS
   *so3_sq *= mass_so3;
   *so6_sq *= mass_so6;
-  b_action += *so3_sq + *so6_sq + *comm;
-
+  b_action += ((*so3_sq) + (*so6_sq) + (*comm));
 #ifdef BMN
   // Myers term -Tr[epsilon_{jkl} X_j(t) X_k(t) X_l(t)]]
-  FORALLSITES(i, s) {
-    for (j = 0; j < 3; j++) {
-      for (k = 0; k < 3; k++) {
+  FORALLSITES(i, s)
+  {
+    for (j = 0; j < 3; j++)
+    {
+      for (k = 0; k < 3; k++)
+      {
         if (j == k)
           continue;
-        for (l = 0; l < 3; l++) {
+        for (l = 0; l < 3; l++)
+        {
           if ((j == l) || (k == l))
             continue;
 
@@ -128,17 +140,18 @@ double bosonic_action(double *so3_sq, double *so6_sq,
 }
 // -----------------------------------------------------------------
 
-
-
 // -----------------------------------------------------------------
 // Faddeev--Popov (FP) gauge-fixing contribution to the action
 #ifdef STATIC_GAUGE
-double FP_action() {
+double FP_action()
+{
   register int j, k;
   double td, FP = 0.0;
 
-  for (j = 0; j < NCOL; j++) {
-    for (k = j + 1; k < NCOL; k++) {
+  for (j = 0; j < NCOL; j++)
+  {
+    for (k = j + 1; k < NCOL; k++)
+    {
       td = sin(0.5 * (theta[j] - theta[k]));
       FP -= log(td * td);
     }
@@ -150,8 +163,6 @@ double FP_action() {
 #endif
 // -----------------------------------------------------------------
 
-
-
 // -----------------------------------------------------------------
 // Fermion contribution to the action
 // Include the ampdeg term to allow sanity check that the fermion action
@@ -160,7 +171,8 @@ double FP_action() {
 // ampdeg actually has no effect on Delta S (checked)
 // sol, however, depends on the gauge fields through the CG
 #ifndef PUREGAUGE
-double fermion_action(matrix **src, matrix ***sol) {
+double fermion_action(matrix **src, matrix ***sol)
+{
   register int i, j, k;
   register site *s;
   double sum = 0.0;
@@ -169,21 +181,24 @@ double fermion_action(matrix **src, matrix ***sol) {
   double im = 0.0;
 #endif
 
-  FORALLSITES(i, s) {
-    for (k = 0; k < NFERMION; k++) {
+  FORALLSITES(i, s)
+  {
+    for (k = 0; k < NFERMION; k++)
+    {
       sum += ampdeg4 * (double)realtrace(&(src[k][i]), &(src[k][i]));
-      for (j = 0; j < Norder; j++) {
+      for (j = 0; j < Norder; j++)
+      {
         // src^dag.sol[j]
         ctmp = complextrace_an(&(src[k][i]), &(sol[j][k][i]));
         sum += (double)(amp4[j] * ctmp.real);
-#ifdef DEBUG_CHECK  // Make sure imaginary part vanishes
+#ifdef DEBUG_CHECK // Make sure imaginary part vanishes
         im += (double)(amp4[j] * ctmp.imag);
 #endif
       }
     }
   }
   g_doublesum(&sum);
-#ifdef DEBUG_CHECK  // Make sure imaginary part vanishes
+#ifdef DEBUG_CHECK // Make sure imaginary part vanishes
   g_doublesum(&im);
   node0_printf("S_f = (%.4g, %.4g)\n", sum, im);
 #endif
@@ -192,13 +207,12 @@ double fermion_action(matrix **src, matrix ***sol) {
 #endif
 // -----------------------------------------------------------------
 
-
-
 // -----------------------------------------------------------------
 // Gauge and scalar momenta contribution to the action
 // Helper routine computes agnitude squared of an anti-hermition matrix
 // including the factor of 1/2 in the effective hamiltonian
-Real ahmat_mag_sq(anti_hermitmat *ah) {
+Real ahmat_mag_sq(anti_hermitmat *ah)
+{
   register int i;
   register Real sum;
 
@@ -207,7 +221,8 @@ Real ahmat_mag_sq(anti_hermitmat *ah) {
     sum += ah->im_diag[i] * ah->im_diag[i];
   sum *= 0.5;
 
-  for (i = 0; i < N_OFFDIAG; i++) {
+  for (i = 0; i < N_OFFDIAG; i++)
+  {
     sum += ah->m[i].real * ah->m[i].real;
     sum += ah->m[i].imag * ah->m[i].imag;
   }
@@ -216,14 +231,15 @@ Real ahmat_mag_sq(anti_hermitmat *ah) {
 }
 
 #ifndef UNGAUGED
-double gauge_mom_action() {
+double gauge_mom_action()
+{
   register int i;
   double sum = 0.0;
 
 #ifndef STATIC_GAUGE
   register site *s;
   FORALLSITES(i, s)
-    sum += (double)ahmat_mag_sq(&(s->mom));
+  sum += (double)ahmat_mag_sq(&(s->mom));
 
   g_doublesum(&sum);
 #else
@@ -235,12 +251,14 @@ double gauge_mom_action() {
 }
 #endif
 
-double scalar_mom_action() {
+double scalar_mom_action()
+{
   register int i, j;
   register site *s;
   double sum = 0.0;
 
-  FORALLSITES(i, s) {
+  FORALLSITES(i, s)
+  {
     for (j = 0; j < NSCALAR; j++)
       sum += (double)realtrace(&(s->mom_X[j]), &(s->mom_X[j]));
   }
@@ -249,15 +267,15 @@ double scalar_mom_action() {
 }
 // -----------------------------------------------------------------
 
-
-
 // -----------------------------------------------------------------
 // Print out zeros for pieces of the action that aren't included
-double action(matrix ***src, matrix ****sol) {
+double action(matrix ***src, matrix ****sol)
+{
   double p_act = 0.0, so3_act, so6_act, comm_act, Myers_act, total;
 
   // Includes so3, so6, Myers and kinetic
-  total = bosonic_action(&so3_act, &so6_act, &comm_act, &Myers_act);
+  total = 0.0;
+  total += bosonic_action(&so3_act, &so6_act, &comm_act, &Myers_act);
 #ifdef STATIC_GAUGE
   double FP_act = FP_action();
   total += FP_act;
@@ -272,7 +290,8 @@ double action(matrix ***src, matrix ****sol) {
 #ifndef PUREGAUGE
   int n;
   double f_act;
-  for (n = 0; n < Nroot; n++) {
+  for (n = 0; n < Nroot; n++)
+  {
     f_act = fermion_action(src[n], sol[n]);
 
     node0_printf("fermion%d %.8g ", n, f_act);
