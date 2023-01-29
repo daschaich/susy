@@ -36,7 +36,7 @@ double bosonic_force(Real eps) {
             THETA.e[row][col] = cmplx(0.0,0.0);
           }
           else{
-            THETA.e[row][col] = cmplx(cos(theta[row]),sin(theta[row]));
+            THETA.e[row][col] = cmplx(theta[row], 0.0); //cmplx(cos(theta[row]),sin(theta[row]));
           }
         }
       }
