@@ -30,17 +30,14 @@ double bosonic_force(Real eps) {
   #ifdef STATIC_GAUGE
   // TODO - copy and load from links
   dmatrix THETA;
-      for (int row = 0; row < NCOL; row++){
-        for (int col = 0; col < NCOL; col++){
-          if (row != col) {
-            THETA.e[row][col] = cmplx(0.0,0.0);
-          }
-          else{
-            THETA.e[row][col] = cmplx(cos(theta[row]*(1.0/nt)),sin(theta[row]*(1.0/nt)));
-          }
-        }
-      }
-    #endif
+  for (int row = 0; row < NCOL; row++){
+    THETA.e[row][row] = ce_itheta(theta[row] / (Real)nt);
+    for (int col = row + 1; col < NCOL; col++){
+      THETA.e[row][col] = cmplx(0.0,0.0);
+      THETA.e[col][row] = cmplx(0.0,0.0);
+    }
+  }
+#endif
   FORALLSITES(i, s) {
 #ifndef UNGAUGED
 #ifndef STATIC_GAUGE
@@ -128,15 +125,16 @@ double bosonic_force(Real eps) {
       // Add forward hopping term using X(n+1) = gen_pt[j]
 #ifndef UNGAUGED
 #ifndef STATIC_GAUGE
-      mult_na((matrix *)(gen_pt[j][i]), &(s->link), &tmat);   // replace thetas here instead of links -- by next week @ line 117
-                                                              // look for other TODOs
+      // F = U(n) X_j(n+1) Udag(n)
+      mult_na((matrix *)(gen_pt[j][i]), &(s->link), &tmat);
       mult_nn_sum(&(s->link), &tmat, &(s->f_X[j]));
 #else
-      mult_na((matrix *)(gen_pt[j][i]), &(THETA), &tmat);   // replace thetas here instead of links -- by next week @ line 117
-                                                              // look for other TODOs
+      // F = diag(exp[i.theta / Nt]) X_j(n+1) diag(exp[-i.theta / Nt])
+      mult_na((matrix *)(gen_pt[j][i]), &(THETA), &tmat);
       mult_nn_sum(&(THETA), &tmat, &(s->f_X[j]));
 #endif
 #else
+      // U --> 1 gives F = X_j(n+1)
       sum_matrix((matrix *)(gen_pt[j][i]), &(s->f_X[j]));
 #endif
 
@@ -237,7 +235,7 @@ double bosonic_force(Real eps) {
     }
   }
   g_doublesum(&returnit);
-  returnit *= kappa * kappa;
+  returnit *= kappa * kappa / (double)(nt * nt);
 
 #ifdef STATIC_GAUGE
   // Update static diagonal momenta
@@ -246,7 +244,7 @@ double bosonic_force(Real eps) {
     theta_force = 0.0;
     for (k = 0; k < NCOL; k++) {
       if (k != j)
-        theta_force += abs(1.0 / tan(0.5 * (theta[j] - theta[k])));
+        theta_force += 1.0 / tan(0.5 * (theta[j] - theta[k]));
     }
     tr = 0.5 * eps * theta_force;
     theta_mom[j] += tr;
@@ -263,7 +261,9 @@ double bosonic_force(Real eps) {
     theta_mom[j] -= ave_theta_mom;
 #endif
 
-  return (eps * sqrt(returnit) / (double)nt);
+  // returnit combines |f_U|^2 + |f_X|^2 + |f_theta|
+  // TODO: With some work, could print all three separately...
+  return (eps * sqrt(returnit));
 }
 // -----------------------------------------------------------------
 
@@ -451,7 +451,9 @@ double fermion_force(Real eps, matrix **src, matrix ***sol) {
     make_anti_hermitian(&tmat, &(s->mom));
     returnit += realtrace(&(s->f_U), &(s->f_U));
 #else
-    // TODO: Force contributions from static diagonal phases?
+    // TODO: Implement theta_force fermionic contributions
+    print("ERROR: Fermion force for thetas not yet implemented\n");
+    exit(1);
 #endif
 #endif
     for (k = 0; k < NSCALAR; k++) {

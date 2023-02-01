@@ -143,22 +143,19 @@ double bosonic_action(double *so3_sq, double *so6_sq,
 // -----------------------------------------------------------------
 // Faddeev--Popov (FP) gauge-fixing contribution to the action
 #ifdef STATIC_GAUGE
-double FP_action()
-{
+double FP_action() {
   register int j, k;
   double td, FP = 0.0;
 
-  for (j = 0; j < NCOL; j++)
-  {
-    for (k = j + 1; k < NCOL; k++)
-    {
+  for (j = 0; j < NCOL; j++) {
+    for (k = j + 1; k < NCOL; k++) {
       td = sin(0.5 * (theta[j] - theta[k]));
       FP -= log(td * td);
     }
   }
-  g_doublesum(&FP);
 
-  return FP;
+  // Overall factor of 1/2 to compensate sin^2 in log
+  return 0.5 * FP;
 }
 #endif
 // -----------------------------------------------------------------

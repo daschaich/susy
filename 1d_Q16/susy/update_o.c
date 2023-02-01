@@ -27,6 +27,8 @@ void make_periodic(Real *x) {
     exit(1);
   }
   while (fabs(*x) > PI) {
+    printf("Would have made periodic...");
+    return;
     if (*x >= 0.0)
       *x -= TWOPI;
     else
@@ -100,7 +102,7 @@ void update_u(Real eps) {
   for (j = 0; j < NCOL; j++) {
     theta[j] += eps * theta_mom[j];
     // Apply periodic boundary conditions
-    make_periodic(&(theta[j]));
+    make_periodic(&(theta[j]));   // !!! TODO: Remove???...
     ave_theta += theta[j];
   }
 

@@ -7,12 +7,15 @@
 
 void make_anti_hermitian(matrix *src, anti_hermitmat *dest) {
   int i, j, index = 0;
-  Real tr;
+  Real tr = 0.0;
 
+#ifndef WFLOW
+  // Don't subtract trace when doing Wilson flow
   tr = src->e[0][0].imag;
   for (i = 1; i < NCOL; i++)
     tr += src->e[i][i].imag;
   tr /= (Real)NCOL;
+#endif
 
   for (i = 0; i < NCOL; i++)
     dest->im_diag[i] = src->e[i][i].imag - tr;
