@@ -107,10 +107,10 @@ void update_u(Real eps) {
   }
 
   // Determinant condition
+  // !!! TODO: Has no effect???
   ave_theta *= one_ov_N;
-  for (j = 0; j < NCOL; j++){
+  for (j = 0; j < NCOL; j++)
     theta[j] -= ave_theta;
-  }
 #endif
 }
 // -----------------------------------------------------------------

@@ -26,19 +26,8 @@ double bosonic_force(Real eps) {
   anti_hermitmat tah;
 #endif
 
-  // Clear the force collectors
-  #ifdef STATIC_GAUGE
-  // TODO - copy and load from links
-  dmatrix THETA;
-  for (int row = 0; row < NCOL; row++){
-    THETA.e[row][row] = ce_itheta(theta[row] / (Real)nt);
-    for (int col = row + 1; col < NCOL; col++){
-      THETA.e[row][col] = cmplx(0.0,0.0);
-      THETA.e[col][row] = cmplx(0.0,0.0);
-    }
-  }
-#endif
   FORALLSITES(i, s) {
+  // Clear the force collectors
 #ifndef UNGAUGED
 #ifndef STATIC_GAUGE
     clear_mat(&(s->f_U));
@@ -46,6 +35,13 @@ double bosonic_force(Real eps) {
 #endif
     for (j = 0; j < NSCALAR; j++)
       clear_mat(&(s->f_X[j]));
+
+#ifdef STATIC_GAUGE
+    // Put current theta into every link to reuse code below
+    clear_mat(&(s->link));
+    for (j = 0; j < NCOL; j++)
+      s->link.e[j][j] = ce_itheta(theta[j] / (Real)nt);
+#endif
   }
 
   // First we have the finite difference operator gauge derivative
@@ -62,15 +58,9 @@ double bosonic_force(Real eps) {
     // For scalar force term, compute and gather Udag(n-1) X(n-1) U(n-1)
     FORALLSITES(i, s) {
 #ifndef UNGAUGED
-#ifndef STATIC_GAUGE
+      // When static gauge is defined, links are diag(exp[i theta / Nt])
       mult_nn(&(s->X[j]), &(s->link), &tmat);
       mult_an(&(s->link), &tmat, &(temp_X[j][i]));
-#else
-      // When Static Gauge is Defined 
-      // Check Hamiltonian Conservation and Force Form for the thetas
-      mult_nn(&(s->X[j]), &(THETA), &tmat);
-      mult_an(&(THETA), &tmat, &(temp_X[j][i]));
-#endif
 #else
       mat_copy(&(s->X[j]), &(temp_X[j][i]));
 #endif
@@ -124,15 +114,10 @@ double bosonic_force(Real eps) {
 
       // Add forward hopping term using X(n+1) = gen_pt[j]
 #ifndef UNGAUGED
-#ifndef STATIC_GAUGE
+      // When static gauge is defined, links are diag(exp[i theta / Nt])
       // F = U(n) X_j(n+1) Udag(n)
       mult_na((matrix *)(gen_pt[j][i]), &(s->link), &tmat);
       mult_nn_sum(&(s->link), &tmat, &(s->f_X[j]));
-#else
-      // F = diag(exp[i.theta / Nt]) X_j(n+1) diag(exp[-i.theta / Nt])
-      mult_na((matrix *)(gen_pt[j][i]), &(THETA), &tmat);
-      mult_nn_sum(&(THETA), &tmat, &(s->f_X[j]));
-#endif
 #else
       // U --> 1 gives F = X_j(n+1)
       sum_matrix((matrix *)(gen_pt[j][i]), &(s->f_X[j]));
@@ -256,6 +241,7 @@ double bosonic_force(Real eps) {
   }
 
   // Determinant condition
+  // !!! TODO: Has no effect???
   ave_theta_mom *= one_ov_N;
   for (j = 0; j < NCOL; j++)
     theta_mom[j] -= ave_theta_mom;
