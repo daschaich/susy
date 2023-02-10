@@ -109,6 +109,12 @@ susy_hmc::
 	"LAPACK = -llapack -lblas " \
 	"EXTRA_OBJECTS = control.o update_o.o update_h.o setup_rhmc.o det_force.o "
 
+susy_hmc_smd:: #keeping DHMC_ALGORITHM as it doesn't break anything
+	${MAKE} -f ${MAKEFILE} target "MYTARGET= $@" \
+	"DEFINES = ${DEFINES} -DPHI_ALGORITHM -DHMC_ALGORITHM -DSMD_ALGORITHM " \
+	"LAPACK = -llapack -lblas " \
+	"EXTRA_OBJECTS = control.o update_o.o update_h.o setup_rhmc.o det_force.o "
+
 susy_meas::
 	${MAKE} -f ${MAKEFILE} target "MYTARGET= $@" \
 	"DEFINES = ${DEFINES} -DPHI_ALGORITHM -DSMEAR -DCORR -DWLOOP -DBILIN " \
@@ -187,6 +193,14 @@ susy_hmc_pg::
 	"DEFINES = ${DEFINES} -DPHI_ALGORITHM -DHMC_ALGORITHM -DPUREGAUGE " \
 	"LAPACK = -llapack -lblas " \
 	"EXTRA_OBJECTS = control.o update_o.o update_h.o setup_rhmc.o det_force.o "
+
+susy_meas_pg::
+	${MAKE} -f ${MAKEFILE} target "MYTARGET= $@" \
+	"DEFINES = ${DEFINES} -DPHI_ALGORITHM -DSMEAR -DCORR -DWLOOP -DPUREGAUGE " \
+	"LAPACK = -llapack -lblas " \
+	"EXTRA_OBJECTS = control_meas.o konishi.o correlator_r.o rsymm.o monopole.o \
+	                 hvy_pot.o hvy_pot_polar.o hvy_pot_loop.o \
+	                 hvy_pot_polar_loop.o path.o smear.o local_plaq.o "
 
 clean:
 	-/bin/rm -f *.o

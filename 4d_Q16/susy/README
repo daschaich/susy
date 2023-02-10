@@ -22,6 +22,7 @@ Eigenvalue measurements (susy_eig) require PRIMME v1.2.2 (https://github.com/pri
 # Defines for compilation:
 -DPHI_ALGORITHM for the basic phi algorithm (REQUIRED)
 -DHMC_ALGORITHM switches on the accept/reject step
+-DSMD_ALGORTIHM for SMD evolution
 -DEIG_POT switches from a double-trace to a single-trace scalar potential (not actively tested)
 -DCORR switches on the Konishi and SUGRA correlator calculation
 -DSMEAR switches on optional smearing for measurements
@@ -110,8 +111,9 @@ ckpt_save -1    # If positive, checkpoint pfaffian computation
 # The next line must only be included when compiling with -DWLOOP
 coulomb_gauge_fix   # Gauge fixing: coulomb_gauge_fix or no_gauge_fix
 
-fresh     # What to do with lattice at start: fresh, continue or reload_serial
-forget    # What to do with lattice at end: forget or save_serial
+fresh     # What to do with lattice at start: fresh, continue, reload_serial or reload_serial_smd
+forget    # What to do with lattice at end: forget, save_serial or save_serial_smd
+# _smd versions save/load momenta and pf configurations as well
 # ------------------------------------------------------------------
 
 

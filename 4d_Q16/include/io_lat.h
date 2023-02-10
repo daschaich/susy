@@ -4,12 +4,14 @@
 #define _IO_LAT_H
 
 // Definitions of restore and save lattice flags used in io_helpers.c
-#define CONTINUE      10
-#define FRESH         11
-#define RANDOM        12
-#define RELOAD_SERIAL 13
-#define FORGET        40
-#define SAVE_SERIAL   42
+#define CONTINUE          10
+#define FRESH             11
+#define RANDOM            12
+#define RELOAD_SERIAL     13
+#define RELOAD_SERIAL_SMD 14
+#define FORGET            40
+#define SAVE_SERIAL       42
+#define SAVE_SERIAL_SMD   43
 
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>     // For write, close and off_t
@@ -101,6 +103,12 @@ typedef struct {
 // Prototypes for generic/io_lat4.c
 gauge_file *restore_serial(char *filename);
 gauge_file *save_serial(char *filename);
+#ifdef SMD_ALGORITHM
+gauge_file *restore_mom_serial(char *filename);
+gauge_file *restore_pf_serial(char *filename);
+gauge_file *save_mom_serial(char *filename);
+gauge_file *save_pf_serial(char *filename);
+#endif
 int write_gauge_info_item( FILE *fpout, /* ascii file pointer */
            char *keyword,   /* keyword */
            char *fmt,       /* output format -

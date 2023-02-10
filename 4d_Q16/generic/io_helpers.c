@@ -13,18 +13,59 @@ void plaquette(double *ss_plaq, double *st_plaq);
 gauge_file *save_lattice(int flag, char *filename) {
   double dtime;
   gauge_file *gf = NULL;
+#ifdef SMD_ALGORITHM
+  char momname[MAXFILENAME], pfname[MAXFILENAME];
+  gauge_file *mf = NULL, *pf = NULL;
+  int i;
+  for(i = 0;i < MAXFILENAME - 5; i++) {
+    //have a sanity check maybe
+    if(filename[i] == '\0') break;
+    momname[i] = filename[i];
+    pfname[i] = filename[i];
+  }
+  momname[i] = '.';
+  momname[i+1] = 'm';
+  momname[i+2] = 'o';
+  momname[i+3] = 'm';
+  momname[i+4] = '\0';
+
+  pfname[i] = '.';
+  pfname[i+1] = 'p';
+  pfname[i+2] = 'f';
+  pfname[i+3] = '\0';
+  //Could potentially use concat functions
+#endif
 
   plaquette(&g_ssplaq, &g_stplaq);
   sum_linktr(&linktrsum);
   nersc_checksum = nersc_cksum();
+  //TODO: checksums
 
   dtime = -dclock();
   switch(flag) {
+    case SAVE_SERIAL_SMD:
+#ifdef SMD_ALGORITHM
+      gf = save_serial(filename);
+      mf = save_mom_serial(momname);
+      pf = save_pf_serial(pfname);
+#else
+      node0_printf("save_serial_smd works only using SMD");
+      terminate(1);
+#endif
+      break;
     case SAVE_SERIAL:
       gf = save_serial(filename);
+#ifdef SMD_ALGORITHM
+      mf = NULL;
+      pf = NULL;
+#endif
       break;
     case FORGET:
       gf = NULL;
+#ifdef SMD_ALGORITHM
+      mf = NULL;
+      pf = NULL;
+#endif
       break;
     default:
       node0_printf("\nsave_lattice: ERROR: unknown type for saving lattice\n");
@@ -98,19 +139,63 @@ void funnylat() {
 gauge_file *reload_lattice(int flag, char *filename) {
   double dtime;
   gauge_file *gf = NULL;
+#ifdef SMD_ALGORITHM
+  char momname[MAXFILENAME], pfname[MAXFILENAME];
+  gauge_file *mf = NULL, *pf = NULL;
+  int i;
+  for(i = 0;i < MAXFILENAME - 5; i++) {
+    //have a sanity check maybe
+    if(filename[i] == '\0') break;
+    momname[i] = filename[i];
+    pfname[i] = filename[i];
+  }
+  momname[i] = '.';
+  momname[i+1] = 'm';
+  momname[i+2] = 'o';
+  momname[i+3] = 'm';
+  momname[i+4] = '\0';
+
+  pfname[i] = '.';
+  pfname[i+1] = 'p';
+  pfname[i+2] = 'f';
+  pfname[i+3] = '\0';
+  //Could potentially use concat functions
+#endif
 
   dtime = -dclock();
   switch(flag) {
     case CONTINUE:        // Do nothing
       gf = NULL;
+#ifdef SMD_ALGORITHM
+      mf = NULL;
+      pf = NULL;
+#endif
       break;
     case FRESH:           // Cold lattice
       coldlat();
       gf = NULL;
-      break;
-    case RELOAD_SERIAL:   // Read binary lattice serially
+#ifdef SMD_ALGORITHM
+      mf = NULL;
+      pf = NULL;
+#endif
+     break;
+    case RELOAD_SERIAL:
       gf = restore_serial(filename);
+#ifdef SMD_ALGORITHM
+      mf = NULL;
+      pf = NULL;
+#endif
       break;
+    case RELOAD_SERIAL_SMD:   // Read binary lattice serially
+#ifdef SMD_ALGORITHM
+      gf = restore_serial(filename);
+      mf = restore_mom_serial(momname);
+      pf = restore_pf_serial(pfname);
+#else
+      node0_printf("reload_lattice_smd works only with SMD");
+      terminate(1);
+#endif
+     break;
     default:
       node0_printf("reload_lattice: Bad startflag %d\n", flag);
       terminate(1);
@@ -148,7 +233,7 @@ int ask_starting_lattice(FILE *fp, int prompt, int *flag, char *filename) {
   int status;
 
   if (prompt!=0)
-    printf("enter 'continue', 'fresh' or 'reload_serial'\n");
+    printf("enter 'continue', 'fresh', 'reload_serial' or 'reload_serial_smd'(only when using SMD)\n");
   status = fscanf(fp, "%s", savebuf);
   if (status == EOF) {
     printf("ask_starting_lattice: EOF on STDIN.\n");
@@ -171,6 +256,8 @@ int ask_starting_lattice(FILE *fp, int prompt, int *flag, char *filename) {
   }
   else if (strcmp("reload_serial", savebuf) == 0)
     *flag = RELOAD_SERIAL;
+  else if (strcmp("reload_serial_smd", savebuf) == 0)
+    *flag = RELOAD_SERIAL_SMD;
   else {
     printf(" is not a valid starting lattice option. INPUT ERROR.\n");
     return 1;
@@ -202,7 +289,7 @@ int ask_ending_lattice(FILE *fp, int prompt, int *flag, char *filename) {
   int status;
 
   if (prompt!=0)
-    printf("'forget' lattice at end or 'save_serial'\n");
+    printf("'forget' lattice at end, 'save_serial' or 'save_serial_smd'(only when using SMD)\n");
   status = fscanf(fp,"%s", savebuf);
   if (status != 1) {
     printf("\nask_ending_lattice: ERROR IN INPUT: error reading ending lattice command\n");
@@ -211,6 +298,8 @@ int ask_ending_lattice(FILE *fp, int prompt, int *flag, char *filename) {
   printf("%s", savebuf);
   if (strcmp("save_serial", savebuf) == 0)
     *flag = SAVE_SERIAL;
+  else if (strcmp("save_serial_smd", savebuf) == 0)
+    *flag = SAVE_SERIAL_SMD;
   else if (strcmp("forget", savebuf) == 0) {
     *flag = FORGET;
     printf("\n");
