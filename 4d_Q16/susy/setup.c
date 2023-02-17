@@ -22,7 +22,10 @@ int initial_set() {
     printf("Microcanonical simulation with refreshing\n");
     printf("Machine = %s, with %d nodes\n", machine_type(), numnodes());
 #ifdef HMC_ALGORITHM
+#ifndef SMD_ALGORITHM
     printf("Hybrid Monte Carlo algorithm\n");
+#else
+    printf("Stochastic molecular dynamics algorithm\n");
 #endif
 #ifdef PHI_ALGORITHM
     printf("Phi algorithm\n");
@@ -316,7 +319,9 @@ int readin(int prompt) {
     IF_OK status += get_i(stdin, prompt, "warms", &par_buf.warms);
     IF_OK status += get_i(stdin, prompt, "trajecs", &par_buf.trajecs);
     IF_OK status += get_f(stdin, prompt, "traj_length", &par_buf.traj_length);
+#ifdef SMD_ALGORITHM
     IF_OK status += get_f(stdin, prompt, "friction", &par_buf.friction);
+#endif
 
     // Number of fermion and gauge steps
     IF_OK status += get_i(stdin, prompt, "nstep", &par_buf.nsteps[0]);

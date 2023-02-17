@@ -109,7 +109,7 @@ susy_hmc::
 	"LAPACK = -llapack -lblas " \
 	"EXTRA_OBJECTS = control.o update_o.o update_h.o setup_rhmc.o det_force.o "
 
-susy_hmc_smd:: #keeping DHMC_ALGORITHM as it doesn't break anything
+susy_smd::
 	${MAKE} -f ${MAKEFILE} target "MYTARGET= $@" \
 	"DEFINES = ${DEFINES} -DPHI_ALGORITHM -DHMC_ALGORITHM -DSMD_ALGORITHM " \
 	"LAPACK = -llapack -lblas " \
