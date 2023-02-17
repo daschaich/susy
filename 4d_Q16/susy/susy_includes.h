@@ -46,9 +46,13 @@ void compute_DmuUmu();
 void compute_Fmunu();
 
 // Gaussian random momentum matrices and pseudofermions
+#ifdef SMD_ALGORITHM
+void smdmom(Real eps);
+int smdgrsource(Twist_Fermion *source, Real eps);
+#else
 void ranmom();
 int grsource(Twist_Fermion *source);
-
+#endif
 // Basic observables
 // #define PLAQ_DIST in local_plaquette to print all plaquettes in serial
 void plaquette(double *ss_plaq, double *st_plaq);
@@ -128,7 +132,7 @@ void zgetrf_(int *N1, int *N2, double *store, int *lda, int *ipiv, int *stat);
 // First four and last arguments are defined above
 // Fifth argument is real workspace of size given by the sixth argument
 void zgetri_(int *N, double *store, int *lda, int *ipiv,
-             double *work, int *Nwork, int *stat);
+             double *work, int *Nwork, int* stat);
 
 // Matrix inverse via LAPACK
 void invert(matrix *in, matrix *out);
