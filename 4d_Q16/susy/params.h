@@ -19,6 +19,7 @@ typedef struct {
   int warms;              // The number of warmup trajectories
   int trajecs;            // The number of real trajectories
   Real traj_length;       // The length of each trajectory
+  Real friction;          // Parameter used for SMD algorithm
   int nsteps[2];          // Fermion and gauge steps
   int propinterval;       // Number of trajectories between measurements
   int startflag;          // What to do for beginning lattice
