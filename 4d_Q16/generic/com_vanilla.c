@@ -1,78 +1,77 @@
 // -----------------------------------------------------------------
-// Communications routines for single processor machines
-// Trivial version: there is only one node, every site is on node
-/* Exported Functions:
-   initialize_machine()   Do machine dependent setup at the very beginning
-   normal_exit()          Close communications and exit
-   terminate()            Halt program abruptly and exit
-   machine_type()         Return string describing communications architecture
-   mynode()               Return node number of this node
-   numnodes()             Return number of nodes
-   g_sync()               Provide a synchronization point for all nodes
-   g_floatsum()           Sum a Real over all nodes
-   g_vecfloatsum()        Sum a vector of Reals over all nodes
-   g_doublesum()          Sum a double over all nodes
-   g_vecdoublesum()       Sum a vector of doubles over all nodes
-   g_complexsum()         Sum a generic precision complex number over all nodes
-   g_veccomplexsum()      Sum a vector of generic precision complex numbers
-                            over all nodes
-   g_dcomplexsum()        Sum a double precision complex number over all nodes
-   g_vecdcomplexsum()     Sum a vector of double_complex over all nodes
-   g_xor32()              Find global exclusive or of 32-bit word
-   g_floatmax()           Find maximum Real over all nodes
-   g_doublemax()          Find maximum double over all nodes
-   broadcast_float()      Broadcast a generic precision number from
-                            node 0 to all nodes
-   broadcast_double()     Broadcast a double precision number
-   broadcast_complex()    Broadcast a generic precision complex number
-   broadcast_dcomplex()   Broadcast a double precision complex number
-   broadcast_bytes()      Broadcast a number of bytes
-   send_integer()         Send an integer to one other node
-   receive_integer()      Receive an integer
-   send_field()           Send a field to one other node
-   get_field()            Receive a field from some other node
-   dclock()               Return a double precision time, with arbitrary zero
-   time_stamp()           Print wall clock time with message
-   sort_eight_gathers()   Sort eight contiguous gathers
-                            from XUP, XDOWN, YUP, YDOWN, ...
-                            to XUP, YUP, ..., XDOWN, YDOWN, ...
-   make_nn_gathers()      Make all necessary lists for communications with
-                            nodes containing neighbor sites
-   make_gather()          Calculate and store necessary communications lists
-                            for a given gather mapping
-   declare_gather_site()  Create a message tag that defines specific details
-                            of a gather to be used later
-   declare_gather_field() Create a message tag that defines specific
-                            details of a gather from field to be used later
-   prepare_gather()       Optional call that allocates buffers for a previously
-                            declared gather.  Will automatically be called from
-                            do_gather() if not done before
-   do_gather()            Execute a previously declared gather
-   wait_gather()          Wait for receives to finish, insuring that the
-                            data has actually arrived
-   cleanup_gather()       Free all the buffers that were allocated, WHICH
-                            MEANS THAT THE GATHERED DATA MAY SOON DISAPPEAR
-   accumulate_gather()    Combine gathers into single message tag
-   declare_accumulate_gather_site()   Do declare_gather_site() and
-                                      accumulate_gather() in single step
-   declare_accumulate_gather_field()  Do declare_gather_field() and
-                                      accumulate_gather() in single step
-   start_gather_site()    Older function which does declare/prepare/do_gather
-                           in a single step
-   start_gather_field()   Older function which does
-                               declare/prepare/do_gather_field
-   start_general_gather_site()  starts asynchronous sends and receives required
-                             to gather fields at arbitrary displacement.
-   start_general_gather_field() starts asynchronous sends and receives
-                             required to gather neighbors from an
-                                array of fields
-   wait_general_gather()   waits for receives to finish, insuring that the
-                             data has actually arrived, and sets pointers to
-           received data.
-   cleanup_general_gather()  frees all the buffers that were allocated, WHICH
-                               MEANS THAT THE GATHERED DATA MAY SOON DISAPPEAR.
-*/
-
+// Communications routines for single-processor machines
+// Exported functions:
+// initialize_machine()   Do machine dependent setup at the very beginning
+// normal_exit()          Close communications and exit
+// terminate()            Halt program abruptly and exit
+// machine_type()         Return string describing communications architecture
+// mynode()               Return node number of this node
+// numnodes()             Return number of nodes
+// g_sync()               Provide a synchronization point for all nodes
+// g_floatsum()           Sum a Real over all nodes
+// g_vecfloatsum()        Sum a vector of Reals over all nodes
+// g_doublesum()          Sum a double over all nodes
+// g_vecdoublesum()       Sum a vector of doubles over all nodes
+// g_complexsum()         Sum a generic precision complex number over all nodes
+// g_veccomplexsum()      Sum a vector of generic precision complex numbers
+//                          over all nodes
+// g_dcomplexsum()        Sum a double precision complex number over all nodes
+// g_vecdcomplexsum()     Sum a vector of double_complex over all nodes
+// g_xor32()              Find global exclusive or of 32-bit word
+// g_floatmax()           Find maximum Real over all nodes
+// g_doublemax()          Find maximum double over all nodes
+// broadcast_float()      Broadcast a Real from node 0 to all nodes
+// broadcast_double()     Broadcast a double from node 0 to all nodes
+// broadcast_complex()    Broadcast a generic precision complex number
+// broadcast_dcomplex()   Broadcast a double precision complex number
+// broadcast_bytes()      Broadcast a number of bytes
+// send_integer()         Send an integer to one other node
+// receive_integer()      Receive an integer
+// send_field()           Send a field to one other node
+// get_field()            Receive a field from some other node
+// dclock()               Return a double precision time, with arbitrary zero
+// time_stamp()           Print wall clock time with message
+// sort_eight_gathers()   Sort eight contiguous gathers
+//                          from XUP, XDOWN, YUP, YDOWN, ...
+//                          to XUP, YUP, ..., XDOWN, YDOWN, ...
+// make_nn_gathers()      Make all necessary lists for communications with
+//                          nodes containing neighbor sites
+// make_gather()          Calculate and store necessary communications lists
+//                          for a given gather mapping
+// declare_gather_site()  Create a message tag that defines specific
+//                          details of a site gather to be used later
+// declare_gather_field() Create a message tag that defines specific
+//                          details of a field gather to be used later
+// prepare_gather()       Allocate buffers for a previously declared gather
+//                          Will automatically be called from do_gather()
+//                          if not done before
+// do_gather()            Execute a previously declared gather
+// wait_gather()          Wait for receives to finish,
+//                          ensuring that the data have actually arrived,
+//                          and set pointers to received data
+// cleanup_gather()       Free all the buffers that were allocated
+//                          NB: The gathered data may soon disappear
+// accumulate_gather()    Combine gathers into single message tag
+// declare_accumulate_gather_site()
+//                        Do declare_gather_site() and accumulate_gather()
+//                          in single step
+// declare_accumulate_gather_field()
+//                        Do declare_gather_field() and accumulate_gather()
+//                          in single step
+// start_gather_site()    Declare/prepare/do site gather in a single step
+// start_gather_field()   Declare/prepare/do field gather in a single step
+// start_general_gather_site()
+//                        Start asynchronous sends and receives required
+//                          to gather site data at arbitrary displacement
+// start_general_gather_field()
+//                        Start asynchronous sends and receives required to
+//                          gather field data at arbitrary displacement
+// wait_general_gather()  Wait for receives to finish, ensuring that the
+//                          data have actually arrived,
+//                          and set pointers to received data
+// cleanup_general_gather()
+//                        Free all the buffers that were allocated
+//                          NB: The gathered data may soon disappear
 #include <time.h>
 #include "generic_includes.h"
 

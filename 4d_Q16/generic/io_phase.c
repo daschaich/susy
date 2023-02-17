@@ -14,7 +14,7 @@
 // Only load completed diagonal elements on node0
 void load_diag(complex *diag, int ckpt_load) {
   int i;
-  char infile[80];
+  char infile[MAXFILENAME];
   FILE *fp = NULL;
 
   if (this_node == 0) {
@@ -44,7 +44,7 @@ void load_diag(complex *diag, int ckpt_load) {
 void loadQ(complex **Q, int ckpt_load) {
   int i, j, savi = 0, savj = 0, ret = 1, Ndat = 16 * DIMF, Qlen;
   int mynode = 0, destnode = 0, Nlines = 0, tot_dat = volume * Ndat;
-  char infile[80];
+  char infile[MAXFILENAME];
   Real re, im;
   complex **tbuf = NULL;   // Only malloc on node0 if numnodes() > 1
   FILE *fp = NULL;
@@ -166,7 +166,7 @@ void loadQ(complex **Q, int ckpt_load) {
 // Only save completed diagonal elements on node0
 void save_diag(complex *diag, int ckpt_save) {
   int i;
-  char outfile[80];
+  char outfile[MAXFILENAME];
   FILE *fp = NULL;
 
   if (this_node == 0) {
@@ -197,7 +197,7 @@ void save_diag(complex *diag, int ckpt_save) {
 void saveQ(complex **Q, int ckpt_save) {
   int i, j, mynode, Nlines = 0, Qlen;
   int Ndat = 16 * DIMF, tot_dat = volume * Ndat;
-  char outfile[80];
+  char outfile[MAXFILENAME];
   FILE *fp = NULL;
 
   // Total length of each column of Q
