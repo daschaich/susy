@@ -46,13 +46,9 @@ void compute_DmuUmu();
 void compute_Fmunu();
 
 // Gaussian random momentum matrices and pseudofermions
-#ifdef SMD_ALGORITHM
-void smdmom(Real eps);
-int smdgrsource(Twist_Fermion *source, Real eps);
-#else
 void ranmom();
 int grsource(Twist_Fermion *source);
-#endif
+
 // Basic observables
 // #define PLAQ_DIST in local_plaquette to print all plaquettes in serial
 void plaquette(double *ss_plaq, double *st_plaq);
