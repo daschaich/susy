@@ -26,7 +26,8 @@ int initial_set() {
     printf("Hybrid Monte Carlo algorithm\n");
 #else
     printf("Stochastic molecular dynamics algorithm\n");
-#endif
+#endif //end of ifndef
+#endif //end of ifdef
 #ifdef PHI_ALGORITHM
     printf("Phi algorithm\n");
 #else   // Quit!
