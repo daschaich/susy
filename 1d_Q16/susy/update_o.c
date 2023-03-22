@@ -110,7 +110,7 @@ void update_u(Real eps) {
   // !!! TODO: Has no effect???
   ave_theta *= one_ov_N;
   for (j = 0; j < NCOL; j++)
-    theta[j] -= ave_theta;
+    theta[j] -= ave_theta;                                            // QUESTION ---> Here we should write the updated thetas again to the s->link.e[j][j]   ??
 #endif
 }
 // -----------------------------------------------------------------

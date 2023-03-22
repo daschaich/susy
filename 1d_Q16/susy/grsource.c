@@ -35,7 +35,7 @@ void ranmom() {
       ave += theta_mom[j];
     }
 
-    // Determinant condition
+    // Determinant condition             QUESTION -----> why is there determinant condition on theta_mom? It should only be on thetas
     ave *= one_ov_N;
     for (j = 0; j < NCOL; j++)
       theta_mom[j] -= ave;

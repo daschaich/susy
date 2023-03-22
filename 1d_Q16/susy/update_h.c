@@ -243,7 +243,7 @@ double bosonic_force(Real eps) {
   // Determinant condition
   // !!! TODO: Has no effect???
   ave_theta_mom *= one_ov_N;
-  for (j = 0; j < NCOL; j++)
+  for (j = 0; j < NCOL; j++)                               // QUESTION ---> Why is the determinant condition on theta_mom, shouldn't it just be on theta?
     theta_mom[j] -= ave_theta_mom;
 #endif
 
