@@ -130,8 +130,8 @@ int main(int argc, char *argv[]) {
     site *s;
     FORALLSITES(i, s) {
       for (j = 0; j < NCOL; j++) {
-        //s->link.e[j][j].real = theta[j];                     //QUESTION ---> This should also be exp(i \theta)
-        s->link.e[j][j] = ce_itheta(theta[j] / (Real)nt);
+        s->link.e[j][j].real = theta[j];
+        s->link.e[j][j].imag = 0.0;
         for (k = j + 1; k < NCOL; k++) {
           s->link.e[j][k] = cmplx(0.0, 0.0);
           s->link.e[k][j] = cmplx(0.0, 0.0);

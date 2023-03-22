@@ -438,7 +438,7 @@ double fermion_force(Real eps, matrix **src, matrix ***sol) {
     returnit += realtrace(&(s->f_U), &(s->f_U));
 #else
     // TODO: Implement theta_force fermionic contributions
-    print("ERROR: Fermion force for thetas not yet implemented\n");
+    node0_printf("ERROR: Fermion force for thetas not yet implemented\n");
     exit(1);
 #endif
 #endif
