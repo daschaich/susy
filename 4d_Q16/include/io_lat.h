@@ -34,6 +34,8 @@
 // 1. Header
 typedef struct {
   int32type magic_number;               // Identifies file format
+  int32type Nroot;                      // Identifies numner of roots used
+  // Unlike others not read from byte file as that would break old configs
   char time_stamp[MAX_TIME_STAMP]; /* Date and time stamp - used to
           check consistency between the
           ASCII header file and the lattice file */
@@ -61,9 +63,12 @@ typedef struct {
 // Info file format
 // List of admissible keywords for info file
 // More can be added as desired
+// If updated check to see it doesn't break read_gauge_hdr
+// as it uses this array for string comparison
 #ifdef CONTROL
 char *gauge_info_keyword[] = {
       "magic_number",
+      "Nroot" ,
       "time_stamp",
       "checksums",
       "nx",
@@ -94,6 +99,9 @@ typedef struct {
   int byterevflag;      // Byte reverse flag, used only for reading
   int32type *rank2rcv;  // File site list, used only for serial reading
   gauge_check check;    // Checksum
+#ifdef SMD_ALGORITHM
+  int rootcheck;        // To check if Nroot is the same as the saved one
+#endif
 } gauge_file;
 // -----------------------------------------------------------------
 

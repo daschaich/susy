@@ -295,6 +295,9 @@ void write_gauge_info_file(gauge_file *gf) {
   }
 
   // Write required information
+#ifdef SMD_ALGORITHM
+  write_gauge_info_item(info_fp, "Nroot", "%d", (char *)&Nroot, 0, 0);
+#endif
   write_gauge_info_item(info_fp, "magic_number", "%d", (char *)&gh->magic_number, 0, 0);
   write_gauge_info_item(info_fp, "time_stamp", "\"%s\"", gh->time_stamp, 0, 0);
   sprintf(sums, "%x %x", gf->check.sum29, gf->check.sum31);
@@ -497,6 +500,12 @@ int read_gauge_hdr(gauge_file *gf) {
   int32type tmp, btmp;
   int j, stat, byterevflag = 0;
   char myname[] = "read_gauge_hdr";
+#ifdef SMD_ALGORITHM
+  FILE *info_fp;
+  char info_filename[256];
+  char compare_str[20];
+  char throwaway[5];
+#endif
 
   // Read header, do byte reversal, if necessary, and check consistency
   // Read and verify magic number
@@ -586,6 +595,44 @@ int read_gauge_hdr(gauge_file *gf) {
                          myname, "order parameter");
   if (stat != 0)
     terminate(1);
+  
+  //Reading from the .info file to not bread old configs
+#ifdef SMD_ALGORITHM
+  if(startflag == RELOAD_SERIAL_SMD) {
+    //Only need to check Nroot when using reload_serial_smd
+    strcpy(info_filename, gf->filename);
+    strcat(info_filename, ASCII_GAUGE_INFO_EXT);
+
+    if ((info_fp = fopen(info_filename,"r")) == NULL) {
+      printf("write_gauge_info_file: Can't open ascii info file %s\n",
+             info_filename);
+      fflush(stdout);
+      terminate(1);
+    }
+
+    if (fscanf(info_fp, "%s %s %d", compare_str, throwaway, &gh->Nroot) == 0) {
+      printf("Cant read Nroot, info file not formatted correctly \n");
+      fflush(stdout);
+      terminate(1);
+    }
+
+    fclose(info_fp);
+
+    if (strcmp(compare_str, gauge_info_keyword[1]) != 0) {
+      //If gauge_info_keyword is updated update this reference as well
+      //gauge_info_keyword[1] should be Nroot
+      printf("Nroot info not found in info file \n");
+      fflush(stdout);
+      terminate(1);
+    }
+
+    if (Nroot != gh->Nroot) {
+      printf("Nroot of saved configuration does not match Nroot requested\n");
+      fflush(stdout);
+      terminate(1);
+    }
+  }
+#endif
 
   return byterevflag;
 }
