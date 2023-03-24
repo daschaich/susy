@@ -99,9 +99,6 @@ typedef struct {
   int byterevflag;      // Byte reverse flag, used only for reading
   int32type *rank2rcv;  // File site list, used only for serial reading
   gauge_check check;    // Checksum
-#ifdef SMD_ALGORITHM
-  int rootcheck;        // To check if Nroot is the same as the saved one
-#endif
 } gauge_file;
 // -----------------------------------------------------------------
 
