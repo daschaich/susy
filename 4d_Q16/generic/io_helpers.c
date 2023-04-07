@@ -188,9 +188,10 @@ gauge_file *reload_lattice(int flag, char *filename) {
       break;
     case RELOAD_SERIAL_SMD:   // Read binary lattice serially
 #ifdef SMD_ALGORITHM
+      //Read pf first as it contains Nroot info
+      pf = restore_pf_serial(pfname);
       gf = restore_serial(filename);
       mf = restore_mom_serial(momname);
-      pf = restore_pf_serial(pfname);
 #else
       node0_printf("reload_lattice_smd works only with SMD");
       terminate(1);

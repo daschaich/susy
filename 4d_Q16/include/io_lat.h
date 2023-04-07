@@ -164,6 +164,9 @@ void swrite_data(FILE* fp, void *src, size_t size, char *myname, char *descrip);
 int sread_data(FILE* fp, void *src, size_t size, char *myname, char *descrip);
 int sread_byteorder(int byterevflag, FILE* fp, void *src, size_t size, char *myname, char *descrip);
 void swrite_gauge_hdr(FILE *fp, gauge_header *gh);
+#ifdef SMD_ALGORITHM
+void swrite_gauge_hdr_smd(FILE *fp, gauge_header *gh);
+#endif
 int write_gauge_info_item( FILE *fpout,    /* ascii file pointer */
            char *keyword,   /* keyword */
            char *fmt,       /* output format -
@@ -193,6 +196,10 @@ void read_checksum(gauge_file *gf, gauge_check *test_gc);
 void write_checksum(gauge_file *gf);
 void read_site_list(gauge_file *gf);
 int read_gauge_hdr(gauge_file *gf);
+#ifdef SMD_ALGORITHM
+int read_gauge_hdr_smd(gauge_file *gf);
+gauge_file *r_pf_serial_i(char *filename);
+#endif
 gauge_file *r_serial_i(char *filename);
 void w_serial_f(gauge_file *gf);
 void r_serial_f(gauge_file *gf);

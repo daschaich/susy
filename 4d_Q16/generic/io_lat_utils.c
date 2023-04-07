@@ -121,6 +121,26 @@ void swrite_gauge_hdr(FILE *fp, gauge_header *gh) {
   gh->header_bytes = sizeof(gh->magic_number) + sizeof(gh->dims)
                    + sizeof(gh->time_stamp) + sizeof(gh->order);
 }
+
+#ifdef SMD_ALGORITHM
+void swrite_gauge_hdr_smd(FILE *fp, gauge_header *gh) {
+  char myname[] = "swrite_gauge_hdr_smd";
+
+  swrite_data(fp, (void *)&gh->magic_number, sizeof(gh->magic_number),
+              myname, "magic_number");
+  swrite_data(fp, (void *)gh->dims, sizeof(gh->dims),
+              myname, "dimensions");
+  swrite_data(fp, (void *)gh->time_stamp, sizeof(gh->time_stamp),
+              myname, "time_stamp");
+  swrite_data(fp, &gh->order, sizeof(gh->order), myname, "order");
+  swrite_data(fp, (void *)&gh->Nroot, sizeof(gh->Nroot), myname, "Nroot");
+
+  // Header byte length
+  gh->header_bytes = sizeof(gh->magic_number) + sizeof(gh->dims)
+                   + sizeof(gh->time_stamp) + sizeof(gh->order)
+                   + sizeof(gh->Nroot);
+}
+#endif
 // -----------------------------------------------------------------
 
 
@@ -401,6 +421,8 @@ gauge_file* setup_output_gauge_file() {
   // Broadcast to all nodes
   broadcast_bytes(gh->time_stamp, sizeof(gh->time_stamp));
 
+  gh->Nroot = Nroot;
+
   return gf;
 }
 /*---------------------------------------------------------------------------*/
@@ -500,12 +522,6 @@ int read_gauge_hdr(gauge_file *gf) {
   int32type tmp, btmp;
   int j, stat, byterevflag = 0;
   char myname[] = "read_gauge_hdr";
-#ifdef SMD_ALGORITHM
-  FILE *info_fp;
-  char info_filename[256];
-  char compare_str[20];
-  char throwaway[5];
-#endif
 
   // Read header, do byte reversal, if necessary, and check consistency
   // Read and verify magic number
@@ -596,46 +612,122 @@ int read_gauge_hdr(gauge_file *gf) {
   if (stat != 0)
     terminate(1);
   
-  //Reading from the .info file to not bread old configs
+  return byterevflag;
+}
+
 #ifdef SMD_ALGORITHM
-  if(startflag == RELOAD_SERIAL_SMD) {
-    //Only need to check Nroot when using reload_serial_smd
-    strcpy(info_filename, gf->filename);
-    strcat(info_filename, ASCII_GAUGE_INFO_EXT);
+int read_gauge_hdr_smd(gauge_file *gf) {
+  FILE *fp = gf->fp;
+  gauge_header *gh = gf->header;
+  int32type tmp, btmp;
+  int j, stat, byterevflag = 0;
+  char myname[] = "read_gauge_hdr_smd";
 
-    if ((info_fp = fopen(info_filename,"r")) == NULL) {
-      printf("write_gauge_info_file: Can't open ascii info file %s\n",
-             info_filename);
-      fflush(stdout);
-      terminate(1);
-    }
 
-    if (fscanf(info_fp, "%s %s %d", compare_str, throwaway, &gh->Nroot) == 0) {
-      printf("Cant read Nroot, info file not formatted correctly \n");
-      fflush(stdout);
-      terminate(1);
-    }
+  // Read header, do byte reversal, if necessary, and check consistency
+  // Read and verify magic number
+  stat = sread_data(fp, &gh->magic_number, sizeof(gh->magic_number),
+                    myname, "magic number");
+  if (stat != 0)
+    terminate(1);
 
-    fclose(info_fp);
+  tmp = gh->magic_number;
+  btmp = gh->magic_number;
+  byterevn((int32type *)&btmp, 1);
 
-    if (strcmp(compare_str, gauge_info_keyword[1]) != 0) {
-      //If gauge_info_keyword is updated update this reference as well
-      //gauge_info_keyword[1] should be Nroot
-      printf("Nroot info not found in info file \n");
-      fflush(stdout);
-      terminate(1);
-    }
-
-    if (Nroot != gh->Nroot) {
-      printf("Nroot of saved configuration does not match Nroot requested\n");
-      fflush(stdout);
+  /** See if header chunk is BEGI = 1111836489 for big endian
+    or the byte reverse 1229407554 for little endian **/
+  if (tmp == GAUGE_VERSION_NUMBER)
+    byterevflag = 0;
+  else if (btmp == GAUGE_VERSION_NUMBER) {
+    byterevflag = 1;
+    gh->magic_number = btmp;
+//    printf("Reading with byte reversal\n");
+    if (sizeof(float) != sizeof(int32type)) {
+      printf("read_gauge_hdr: Can't byte reverse\n");
+      printf("requires size of int32type(%d) = size of float(%d)\n",
+             (int)sizeof(int32type), (int)sizeof(float));
       terminate(1);
     }
   }
-#endif
+  else if (tmp == LIME_MAGIC_NO || btmp == LIME_MAGIC_NO) {
+    // LIME format suggests a SciDAC file
+    // Print error, set flag and return
+    printf("%s: Looks like a SciDAC-formatted file\n", myname);
+    gh->magic_number = LIME_MAGIC_NO;
+    return 0;
+  }
+  else {
+    // End of the road
+    printf("read_gauge_hdr: Unrecognized magic number in gauge header\n");
+    printf("Expected %x but read %x\n", GAUGE_VERSION_NUMBER, tmp);
+    printf("Expected %s but read %d\n", (char *)GAUGE_VERSION_NUMBER, tmp);
+    terminate(1);
+    return byterevflag;
+  }
+
+  // Read and process header information
+  // Get lattice dimensions
+  stat = sread_byteorder(byterevflag, fp, gh->dims, sizeof(gh->dims),
+                         myname, "dimensions");
+  if (stat != 0)
+    terminate(1);
+
+  // Check lattice dimensions for consistency
+  if (gh->dims[0] != nx ||
+      gh->dims[1] != ny ||
+      gh->dims[2] != nz ||
+      gh->dims[3] != nt) {
+    /* So we can use this routine to discover the dimensions,
+       we provide that if nx = ny = nz = nt = -1 initially
+       we don't die */
+    if (nx != -1 || ny != -1 || nz != -1 || nt != -1) {
+      printf("%s: Incorrect lattice dimensions ",myname);
+      for (j = 0; j < NDIMS; j++)
+        printf("%d ", gh->dims[j]);
+      printf("\n");
+      fflush(stdout);
+      terminate(1);
+    }
+    else {
+      nx = gh->dims[0];
+      ny = gh->dims[1];
+      nz = gh->dims[2];
+      nt = gh->dims[3];
+      volume = nx * ny * nz * nt;
+    }
+  }
+  // Read date and time stamp
+  stat = sread_data(fp, gh->time_stamp, sizeof(gh->time_stamp),
+                    myname, "time stamp");
+  if (stat != 0)
+    terminate(1);
+
+  // Read header byte length
+  gh->header_bytes = sizeof(gh->magic_number) + sizeof(gh->dims)
+                   + sizeof(gh->time_stamp) + sizeof(gh->order)
+                   + sizeof(gh->Nroot);
+
+  // Read data order
+  stat = sread_byteorder(byterevflag, fp, &gh->order, sizeof(gh->order),
+                         myname, "order parameter");
+  if (stat != 0)
+    terminate(1);
+
+  // Read Nroot
+  stat = sread_byteorder(byterevflag, fp, &gh->Nroot, sizeof(gh->Nroot),
+                         myname, "Nroot");
+  if(stat != 0)
+    terminate(1);
+  if(gh->Nroot != Nroot) {
+    printf("%s: Nroot (%d) does not match saved configuration (%d)\n",myname, Nroot, gh->Nroot);
+    terminate(1);
+  }
+
 
   return byterevflag;
 }
+#endif
 // -----------------------------------------------------------------
 
 
@@ -709,6 +801,64 @@ gauge_file* r_serial_i(char *filename) {
 
   return gf;
 }
+
+#ifdef SMD_ALGORITHM
+//As above but also reads saved Nroot information
+gauge_file* r_pf_serial_i(char *filename) {
+  gauge_header *gh;
+  gauge_file *gf;
+  FILE *fp;
+  int byterevflag;
+  char editfilename[513];
+
+  /* All nodes set up a gauge file and gauge header structure for reading */
+  gf = setup_input_gauge_file(filename);
+  gh = gf->header;
+
+  /* Node 0 alone opens the file and reads the header */
+  g_sync();
+  if (this_node == 0) {
+    fp = fopen(filename, "rb");
+    if (fp == NULL) {
+      /* If this is a partition format SciDAC file the node0 name
+         has an extension ".vol0000".  So try again. */
+      printf("r_serial_i: Node %d can't open file %s, error %d\n",
+          this_node,filename,errno);fflush(stdout);
+      strncpy(editfilename,filename,504);
+      editfilename[504] = '\0';  /* Just in case of truncation */
+      strcat(editfilename,".vol0000");
+      printf("r_serial_i: Trying SciDAC partition volume %s\n",editfilename);
+      fp = fopen(editfilename, "rb");
+      if (fp == NULL) {
+        printf("r_serial_i: Node %d can't open file %s, error %d\n",
+               this_node,editfilename,errno);fflush(stdout);terminate(1);
+      }
+      printf("r_serial_i: Open succeeded\n");
+    }
+
+    gf->fp = fp;
+
+    byterevflag = read_gauge_hdr_smd(gf);
+  }
+
+  else gf->fp = NULL;  /* The other nodes don't know about this file */
+
+  // Broadcast the byterevflag and header structure from node0 to all nodes
+  broadcast_bytes((char *)&byterevflag, sizeof(byterevflag));
+  gf->byterevflag = byterevflag;
+  broadcast_bytes((char *)gh,sizeof(gauge_header));
+
+  // No further processing here if this is a SciDAC file
+  if (gh->magic_number == LIME_MAGIC_NO)
+    return gf;
+
+  // Read site list and broadcast to all nodes
+  read_site_list(gf);
+
+  return gf;
+}
+#endif
+
 // -----------------------------------------------------------------
 
 

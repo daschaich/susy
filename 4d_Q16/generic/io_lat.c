@@ -186,6 +186,45 @@ gauge_file *w_serial_i(char *filename) {
   gf->rank2rcv = NULL;    // Not used for writing
   return gf;
 }
+
+#ifdef SMD_ALGORITHM
+//Only difference from above is that it also writes Nroot into the config file
+gauge_file *w_pf_serial_i(char *filename) {
+  FILE *fp;
+  gauge_file *gf;
+  gauge_header *gh;
+
+  // Set up gauge file and gauge header structures and load header values
+  gf = setup_output_gauge_file();
+  gh = gf->header;
+
+  // Set number of nodes to zero to indicate coordinate natural ordering
+  gh->order = NATURAL_ORDER;
+
+  // Only node 0 opens the requested file
+  if (this_node == 0) {
+    fp = fopen(filename, "wb");
+    if (fp == NULL) {
+      printf("w_serial_i: node%d can't open file %s, error %d\n",
+             this_node, filename, errno);
+      fflush(stdout);
+      terminate(1);
+    }
+    swrite_gauge_hdr_smd(fp, gh);   // Write the header
+  }
+
+  // Assign values to file structure
+  if (this_node == 0)   // Only node 0 knows about this file
+    gf->fp = fp;
+  else
+    gf->fp = NULL;
+
+  gf->filename = filename;
+  gf->byterevflag = 0;    // Not used for writing
+  gf->rank2rcv = NULL;    // Not used for writing
+  return gf;
+}
+#endif
 // -----------------------------------------------------------------
 
 
@@ -1382,7 +1421,7 @@ gauge_file* restore_mom_serial(char *filename) {
 
 gauge_file* restore_pf_serial(char *filename) {
   gauge_file *gf;
-  gf = r_serial_i(filename);
+  gf = r_pf_serial_i(filename);
   if (gf->header->magic_number == LIME_MAGIC_NO) {
     r_serial_f(gf);
     // Close this reader and die with an error
@@ -1413,7 +1452,7 @@ gauge_file* save_serial(char *filename) {
 gauge_file* save_pf_serial(char *filename) {
   gauge_file *gf;
 
-  gf = w_serial_i(filename);
+  gf = w_pf_serial_i(filename);
   w_pf_serial(gf);
   w_serial_f(gf);
 
