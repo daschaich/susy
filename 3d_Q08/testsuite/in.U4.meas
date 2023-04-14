@@ -31,5 +31,5 @@ nsrc 3
 
 coulomb_gauge_fix
 
-reload_serial config.U2.444
+reload_serial config.U4.444
 forget

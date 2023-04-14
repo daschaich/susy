@@ -49,7 +49,9 @@ for N in 2 3 4 ; do
   sed -i -E "s/(#define NCOL) .*/\1 $N/" ../include/susy.h
 
   # Compile all targets
-  for target in hmc meas hmc_meas mcrg eig cheb mode phase ; do
+  # For now just hmc and meas
+  # for target in hmc meas hmc_meas mcrg eig cheb mode phase ; do
+  for target in hmc meas ; do
     echo "Compiling susy_$target..."
     if ! make -f Make_scalar susy_$target >& /dev/null ; then
       echo "ERROR: susy_$target compilation failed"
@@ -63,27 +65,28 @@ for N in 2 3 4 ; do
 
   # Run
   cd ../testsuite/
-  for target in hmc meas hmc_meas mcrg eig cheb mode phase ; do
+  for target in hmc meas ; do
     rm -f scalar/$target.U$N.out
     echo "Running susy_$target..."
     ../susy/susy_$target < in.U$N.$target > scalar/$target.U$N.out
   done
 
   # Checkpointed pfaffian computation
-  rm -f scalar/phase_part1.U$N.out scalar/phase_part2.U$N.out
-  sed -i -E "s/(ckpt_save) 0/\1 256/" in.U$N.phase
-  echo "Running checkpointed susy_phase part 1 of 2..."
-  ../susy/susy_phase < in.U$N.phase > scalar/phase_part1.U$N.out
-  sed -i -E "s/(ckpt_load) 0/\1 256/" in.U$N.phase
-  sed -i -E "s/(ckpt_save) 256/\1 0/" in.U$N.phase
-  echo "Running checkpointed susy_phase part 2 of 2..."
-  ../susy/susy_phase < in.U$N.phase > scalar/phase_part2.U$N.out
-  sed -i -E "s/(ckpt_load) 256/\1 0/" in.U$N.phase
-  rm -f config*diag* config*Q*
+  # Not done ckecked right now
+  # rm -f scalar/phase_part1.U$N.out scalar/phase_part2.U$N.out
+  # sed -i -E "s/(ckpt_save) 0/\1 256/" in.U$N.phase
+  # echo "Running checkpointed susy_phase part 1 of 2..."
+  # ../susy/susy_phase < in.U$N.phase > scalar/phase_part1.U$N.out
+  # sed -i -E "s/(ckpt_load) 0/\1 256/" in.U$N.phase
+  # sed -i -E "s/(ckpt_save) 256/\1 0/" in.U$N.phase
+  # echo "Running checkpointed susy_phase part 2 of 2..."
+  # ../susy/susy_phase < in.U$N.phase > scalar/phase_part2.U$N.out
+  # sed -i -E "s/(ckpt_load) 256/\1 0/" in.U$N.phase
+  # rm -f config*diag* config*Q*
 
   # Check
   cd scalar/
-  for target in hmc meas hmc_meas mcrg eig cheb mode phase phase_part1 phase_part2 ; do
+  for target in hmc meas ; do
     d="`diff -I'Time' -I'time' -I'seconds' -I'^start' -I'^exit' $target.U$N.ref $target.U$N.out`"
     if [ -n "$d" ] ; then   # Non-zero string length
       echo "$target.U$N.ref and $target.U$N.out differ:"

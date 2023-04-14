@@ -250,55 +250,77 @@ double gauge_force(Real eps) {
 // All called by assemble_fermion_force below
 // First plaq--vol piece: epsilon_{cde} theta D_c^+ chi_de
 // Use tempmat, tempmat2 and UpsiU[0] for temporary storage
-// TODO: Checking factors of -1/2...
 #ifdef PV
 void F_PtoV(matrix *plaq_sol[NPLAQ], matrix *vol_psol) {
   register int i;
   register site *s;
-  int a, b, c, i_ab;
+  char **local_pt[2][3];
+  int a, b, c, i_ab, j, gather, next, flip = 0;
   Real tr;
-  msg_tag *tag0, *tag1, *tag2;
-  matrix tmat;
+  msg_tag *tag0[2], *tag1[2], *tag2[2];
+  matrix tmat, tmat2;
 
-  // Gather and compute with no lookup
-  for (a = 0; a < NDIMS; a++) {
-    for (b = a + 1; b < NDIMS; b++) {
+  for (a = 0; a < 3; a++) {
+    local_pt[0][a] = gen_pt[a];
+    local_pt[1][a] = gen_pt[3 + a];
+  }
+
+  //Start first set of gathers
+  //From setup_lambda, b>a and b!=c, a!=c
+
+  a = FQ_lookup[0][0];
+  b = FQ_lookup[0][1];
+  c = FQ_lookup[0][2];
+  i_ab = plaq_index[a][b];
+
+  tag0[0] = start_gather_field(plaq_sol[i_ab], sizeof(matrix),
+                            goffset[c], EVENANDODD, local_pt[0][0]);
+  tag1[0] = start_gather_field(plaq_sol[i_ab], sizeof(matrix),
+                            FQ_d1[0], EVENANDODD, local_pt[0][1]);
+  tag2[0] = start_gather_field(vol_psol, sizeof(matrix),
+                            FQ_d1[0], EVENANDODD, local_pt[0][2]);
+
+  for (j = 0; j < NTERMS; j++) {
+    gather = (flip + 1) % 2;
+    if ( j < NTERMS - 1) {
+      next = j + 1;
+      a = FQ_lookup[next][0];
+      b = FQ_lookup[next][1];
+      c = FQ_lookup[next][2];
       i_ab = plaq_index[a][b];
-      for (c = 0; c < NDIMS; c++) {
-        if (a == c || b == c)
-          continue;
 
-        tag0 = start_gather_field(plaq_sol[i_ab], sizeof(matrix),
-                                  goffset[c], EVENANDODD, gen_pt[0]);
-
-        FORALLSITES(i, s)
-          mult_nn(&(plaq_sol[i_ab][i]), &(vol_psol[i]), &(tempmat2[i]));
-
-        tag2 = start_gather_field(tempmat2, sizeof(matrix),
-                                  goffset[a] + 1, EVENANDODD, gen_pt[2]);
-
-        wait_gather(tag2);
-        FORALLSITES(i, s)
-          mat_copy((matrix *)(gen_pt[2][i]), &(UpsiU[0][i]));
-
-        tag1 = start_gather_field(UpsiU[0], sizeof(matrix),
-                                  goffset[b] + 1, EVENANDODD, gen_pt[1]);
-
-        tr = perm[a][b][c];
-        wait_gather(tag0);
-        wait_gather(tag1);
-        FORALLSITES(i, s) {
-          scalar_mult_matrix((matrix *)(gen_pt[0][i]), tr * s->bc[c], &tmat);
-          mult_nn(&(vol_psol[i]), &tmat, &(tempmat[i]));
-
-          scalar_mult_sum_matrix((matrix *)(gen_pt[1][i]), -tr, &(tempmat[i]));
-          scalar_mult_sum_adj_matrix(&(tempmat[i]), -0.5, &(s->f_U[c]));
-        }
-        cleanup_gather(tag0);
-        cleanup_gather(tag1);
-        cleanup_gather(tag2);
-      }
+      tag0[gather] = start_gather_field(plaq_sol[i_ab], sizeof(matrix),
+                                goffset[c], EVENANDODD, local_pt[gather][0]);
+      tag1[gather] = start_gather_field(plaq_sol[i_ab], sizeof(matrix),
+                                FQ_d1[next], EVENANDODD, local_pt[gather][1]);
+      tag2[gather] = start_gather_field(vol_psol, sizeof(matrix),
+                                FQ_d1[next], EVENANDODD, local_pt[gather][2]);
     }
+
+    a = FQ_lookup[j][0];
+    b = FQ_lookup[j][1];
+    c = FQ_lookup[j][2];
+    i_ab = plaq_index[a][b];
+    tr = perm[a][b][c];
+
+    wait_gather(tag0[flip]);
+    wait_gather(tag1[flip]);
+    wait_gather(tag2[flip]);
+
+    FORALLSITES(i, s) {
+      mult_nn((matrix *)(local_pt[flip][1][i]),
+              (matrix *)(local_pt[flip][2][i]), &(tmat2));
+      scalar_mult_matrix((matrix *)(local_pt[flip][0][i]), tr * s->bc[c], &tmat);
+      mult_nn(&(vol_psol[i]), &tmat, &(tempmat[i]));
+
+      scalar_mult_sum_matrix(&(tmat2), -tr, &(tempmat[i]));
+      scalar_mult_sum_adj_matrix(&(tempmat[i]), -0.5, &(s->f_U[c]));
+    }
+
+    cleanup_gather(tag0[flip]);
+    cleanup_gather(tag1[flip]);
+    cleanup_gather(tag2[flip]);
+    flip   = (flip + 1) % 2;
   }
 }
 // -----------------------------------------------------------------
@@ -308,53 +330,77 @@ void F_PtoV(matrix *plaq_sol[NPLAQ], matrix *vol_psol) {
 // -----------------------------------------------------------------
 // First plaq--vol piece: epsilon_{cde} theta D_c^+ chi_de
 // Use tempmat, tempmat2 and UpsiU[0] for temporary storage
-// TODO: Checking factors of -1/2...
+// TODO:fix this, doesn't pass unit test
 void F_VtoP(matrix *plaq_psol[NPLAQ], matrix *vol_sol) {
   register int i;
   register site *s;
-  int a, b, c, i_ab;
+  int a, b, c, j, i_ab, next, gather, flip = 0;
   Real tr;
-  msg_tag *tag0, *tag1, *tag2;
-  matrix tmat;
+  msg_tag *tag0[2], *tag1[2], *tag2[2];
+  matrix tmat, tmat2;
+  char **local_pt[2][3];
 
-  for (a = 0; a < NDIMS; a++) {
-    for (b = a + 1; b < NDIMS; b++) {
+  for (a = 0; a < 3; a++) {
+    local_pt[0][a] = gen_pt[a];
+    local_pt[1][a] = gen_pt[3 + a];
+  }
+
+  //Start first set of gathers
+  //From setup_lambda, b>a and b!=c, a!=c
+
+  a = FQ_lookup[0][0];
+  b = FQ_lookup[0][1];
+  c = FQ_lookup[0][2];
+  i_ab = plaq_index[a][b];
+
+  tag0[0] = start_gather_field(plaq_psol[i_ab], sizeof(matrix),
+                            goffset[c], EVENANDODD, local_pt[0][0]);
+  tag1[0] = start_gather_field(plaq_psol[i_ab], sizeof(matrix),
+                            FQ_d1[0], EVENANDODD, local_pt[0][1]);
+  tag2[0] = start_gather_field(vol_sol, sizeof(matrix),
+                            FQ_d1[0], EVENANDODD, local_pt[0][2]);
+
+  for (j = 0; j < NTERMS; j++) {
+    gather = (flip + 1) % 2;
+    if (j < NTERMS - 1) {
+      next = j + 1;
+      a = FQ_lookup[next][0];
+      b = FQ_lookup[next][1];
+      c = FQ_lookup[next][2];
       i_ab = plaq_index[a][b];
-      for (c = 0; c < NDIMS; c++) {
-        if (a == c || b == c)
-          continue;
 
-        tag0 = start_gather_field(plaq_psol[i_ab], sizeof(matrix),
-                                  goffset[c], EVENANDODD, gen_pt[0]);
-
-        FORALLSITES(i, s)
-          mult_nn(&(plaq_psol[i_ab][i]), &(vol_sol[i]), &(tempmat2[i]));
-
-        tag2 = start_gather_field(tempmat2, sizeof(matrix),
-                                  goffset[a] + 1, EVENANDODD, gen_pt[2]);
-
-        wait_gather(tag2);
-        FORALLSITES(i, s)
-          mat_copy((matrix *)(gen_pt[2][i]), &(UpsiU[0][i]));
-
-        tag1 = start_gather_field(UpsiU[0], sizeof(matrix),
-                                  goffset[b] + 1, EVENANDODD, gen_pt[1]);
-
-        tr = perm[a][b][c];
-        wait_gather(tag0);
-        wait_gather(tag1);
-        FORALLSITES(i, s) {
-          scalar_mult_matrix((matrix *)(gen_pt[1][i]), tr, &(tempmat[i]));
-
-          scalar_mult_matrix(&(vol_sol[i]), -tr * s->bc[c], &tmat);
-          mult_nn_sum(&tmat, (matrix *)(gen_pt[0][i]), &(tempmat[i]));
-          scalar_mult_sum_adj_matrix(&(tempmat[i]), -0.5, &(s->f_U[c]));
-        }
-        cleanup_gather(tag0);
-        cleanup_gather(tag1);
-        cleanup_gather(tag2);
-      }
+      tag0[gather] = start_gather_field(plaq_psol[i_ab], sizeof(matrix),
+                                goffset[c], EVENANDODD, local_pt[gather][0]);
+      tag1[gather] = start_gather_field(plaq_psol[i_ab], sizeof(matrix),
+                                FQ_d1[next], EVENANDODD, local_pt[gather][1]);
+      tag2[gather] = start_gather_field(vol_sol, sizeof(matrix),
+                                FQ_d1[next], EVENANDODD, local_pt[gather][2]);
     }
+    a = FQ_lookup[j][0];
+    b = FQ_lookup[j][1];
+    c = FQ_lookup[j][2];
+    i_ab = plaq_index[a][b];
+
+    tr = perm[a][b][c];
+
+    wait_gather(tag0[flip]);
+    wait_gather(tag1[flip]);
+    wait_gather(tag2[flip]);
+
+    FORALLSITES(i, s) {
+      mult_nn((matrix *) local_pt[flip][1][i]
+            , (matrix *) local_pt[flip][2][i], &(tmat2));
+
+      scalar_mult_matrix(&(tmat2), tr, &(tempmat[i]));
+
+      scalar_mult_matrix(&(vol_sol[i]), -tr * s->bc[c], &tmat);
+      mult_nn_sum(&tmat, (matrix *)(local_pt[flip][0][i]), &(tempmat[i]));
+      scalar_mult_sum_adj_matrix(&(tempmat[i]), -0.5, &(s->f_U[c]));
+    }
+    cleanup_gather(tag0[flip]);
+    cleanup_gather(tag1[flip]);
+    cleanup_gather(tag2[flip]);
+    flip   = (flip + 1) % 2;
   }
 }
 #endif

@@ -317,55 +317,74 @@ void Dminus(matrix *src[NPLAQ], matrix *dest[NUMLINK]) {
 
 // -----------------------------------------------------------------
 // Add to dest instead of overwriting; note factor of 1/2
-// TODO: Still checking...
+// TODO: Add lookup table
 #ifdef PV
 void DbminusVtoP(matrix *src, matrix *dest[NPLAQ]) {
   register int i, opp_c;
   register site *s;
-  int a, b, c, i_ab;
+  char **local_pt[2][3];
+  int a, b, c, i_ab, j, gather, next, flip = 0;
   Real tr;
-  msg_tag *tag0, *tag1, *tag2, *tag3;
+  msg_tag *tag0[2], *tag1[2], *tag2[2];
+
 
   for (a = 0; a < 3; a++) {
-    for (b = a + 1; b < 3; b++) {
+    local_pt[0][a] = gen_pt[a];
+    local_pt[1][a] = gen_pt[3 + a];
+  }
+
+  //Start first set of gathers
+  a = DbVtoP_lookup[0][0];
+  b = DbVtoP_lookup[0][1];
+  c = DbVtoP_lookup[0][2];
+  i_ab = plaq_index[a][b];
+
+  tag0[0] = start_gather_site(F_OFFSET(link[c]), sizeof(matrix),
+                           DbVP_d1[0], EVENANDODD, local_pt[0][0]);
+  tag1[0] = start_gather_site(F_OFFSET(link[c]), sizeof(matrix),
+                           goffset[c] + 1, EVENANDODD, local_pt[0][1]);
+  tag2[0] = start_gather_field(src, sizeof(matrix),
+                            goffset[c] + 1, EVENANDODD, local_pt[0][2]);
+
+  for (j = 0; j < NTERMS ; j++) {
+    gather = (flip + 1) % 2;
+    if (j < NTERMS - 1) {
+      next = j + 1;
+      a = DbVtoP_lookup[next][0];
+      b = DbVtoP_lookup[next][1];
+      c = DbVtoP_lookup[next][2];
       i_ab = plaq_index[a][b];
-      for (c = 0; c < 3; c++) {
-        if (c == a || c == b)
-          continue;
 
-        tag3 = start_gather_site(F_OFFSET(link[c]), sizeof(matrix),
-                                 goffset[a], EVENANDODD, gen_pt[3]);
-        tag1 = start_gather_site(F_OFFSET(link[c]), sizeof(matrix),
-                                 goffset[c] + 1, EVENANDODD, gen_pt[1]);
-        tag2 = start_gather_field(src, sizeof(matrix),
-                                  goffset[c] + 1, EVENANDODD, gen_pt[2]);
-
-        wait_gather(tag3);
-        FORALLSITES(i, s)
-          mat_copy((matrix *)(gen_pt[3][i]), &(tempmat[i]));
-
-        tag0 = start_gather_field(tempmat, sizeof(matrix),
-                                  goffset[b], EVENANDODD, gen_pt[0]);
-
-        opp_c = OPP_LDIR(c);
-        tr = 0.5 * perm[a][b][c];
-        wait_gather(tag0);
-        wait_gather(tag1);
-        wait_gather(tag2);
-        FORALLSITES(i, s) {
-          scalar_mult_na_sum(&(src[i]), (matrix *)(gen_pt[0][i]),
-                             tr, &(dest[i_ab][i]));
-
-          scalar_mult_an_dif((matrix *)(gen_pt[1][i]),
-                             (matrix *)(gen_pt[2][i]),
-                             tr * s->bc[opp_c], &(dest[i_ab][i]));
-        }
-        cleanup_gather(tag0);
-        cleanup_gather(tag1);
-        cleanup_gather(tag2);
-        cleanup_gather(tag3);
-      }
+      tag0[gather] = start_gather_site(F_OFFSET(link[c]), sizeof(matrix),
+                              DbVP_d1[next], EVENANDODD, local_pt[gather][0]);
+      tag1[gather] = start_gather_site(F_OFFSET(link[c]), sizeof(matrix),
+                              goffset[c] + 1, EVENANDODD, local_pt[gather][1]);
+      tag2[gather] = start_gather_field(src, sizeof(matrix),
+                              goffset[c] + 1, EVENANDODD, local_pt[gather][2]);
     }
+    a = DbVtoP_lookup[j][0];
+    b = DbVtoP_lookup[j][1];
+    c = DbVtoP_lookup[j][2];
+    i_ab = plaq_index[a][b];
+    
+    opp_c = OPP_LDIR(c);
+    tr = 0.5 * perm[a][b][c];
+    wait_gather(tag0[flip]);
+    wait_gather(tag1[flip]);
+    wait_gather(tag2[flip]);
+
+    FORALLSITES(i, s) {
+      scalar_mult_na_sum(&(src[i]), (matrix *)(local_pt[flip][0][i]),
+                         tr, &(dest[i_ab][i]));
+
+      scalar_mult_an_dif((matrix *)(local_pt[flip][1][i]),
+                         (matrix *)(local_pt[flip][2][i]),
+                         tr * s->bc[opp_c], &(dest[i_ab][i]));
+    }
+    cleanup_gather(tag0[flip]);
+    cleanup_gather(tag1[flip]);
+    cleanup_gather(tag2[flip]);
+    flip = (flip + 1) % 2;
   }
 }
 // -----------------------------------------------------------------
@@ -377,48 +396,67 @@ void DbminusVtoP(matrix *src, matrix *dest[NPLAQ]) {
 void DbplusPtoV(matrix *src[NPLAQ], matrix *dest) {
   register int i;
   register site *s;
-  int a, b, c, i_ab;
+  char **local_pt[2][2];
+  int a, b, c, j, i_ab, gather, next, flip = 0;
   Real tr;
-  msg_tag *tag0, *tag1, *tag2;
+  msg_tag *tag0[2], *tag1[2];
 
   FORALLSITES(i, s)     //Initialise
     clear_mat(&(dest[i]));
 
-  for (a = 0; a < 3; a++) {
-    for (b = a + 1; b < 3; b++) {
+  for (a = 0; a < 2; a++) {
+    local_pt[0][a] = gen_pt[a];
+    local_pt[1][a] = gen_pt[2 + a];
+  }
+
+  //Start first set of gathers
+  a = DbVtoP_lookup[0][0];
+  b = DbVtoP_lookup[0][1];
+  c = DbVtoP_lookup[0][2];
+  i_ab = plaq_index[a][b];
+
+
+  tag0[0] = start_gather_field(src[i_ab], sizeof(matrix),
+                            goffset[c], EVENANDODD, local_pt[0][0]);
+
+  tag1[0] = start_gather_site(F_OFFSET(link[c]), sizeof(matrix),
+                           DbVP_d1[0], EVENANDODD, local_pt[0][1]);
+
+  for (j = 0; j < NTERMS ; j++) {
+    gather = (flip + 1) % 2;
+    if (j < NTERMS - 1) {
+      next = j + 1;
+      a = DbVtoP_lookup[next][0];
+      b = DbVtoP_lookup[next][1];
+      c = DbVtoP_lookup[next][2];
       i_ab = plaq_index[a][b];
-      for (c = 0; c < 3; c++) {
-        if (c == a || c == b)
-          continue;
 
-        tag2 = start_gather_site(F_OFFSET(link[c]), sizeof(matrix),
-                                 goffset[a], EVENANDODD, gen_pt[2]);
+      tag0[gather] = start_gather_field(src[i_ab], sizeof(matrix),
+                                goffset[c], EVENANDODD, local_pt[gather][0]);
 
-        tag0 = start_gather_field(src[i_ab], sizeof(matrix),
-                                  goffset[c], EVENANDODD, gen_pt[0]);
-
-        wait_gather(tag2);
-        FORALLSITES(i, s)
-          mat_copy((matrix *)(gen_pt[2][i]), &(tempmat[i]));
-
-        tag1 = start_gather_field(tempmat, sizeof(matrix),
-                                  goffset[b], EVENANDODD, gen_pt[1]);
-
-        wait_gather(tag0);
-        wait_gather(tag1);
-        tr = 0.5 * perm[a][b][c];
-        FORALLSITES(i, s) {
-          scalar_mult_na_sum((matrix *)(gen_pt[0][i]),
-                             &(s->link[c]), tr * s->bc[c], &(dest[i]));
-
-          scalar_mult_an_dif((matrix *)(gen_pt[1][i]),
-                             &(src[i_ab][i]), tr , &(dest[i]));
-        }
-        cleanup_gather(tag0);
-        cleanup_gather(tag1);
-        cleanup_gather(tag2);
-      }
+      tag1[gather] = start_gather_site(F_OFFSET(link[c]), sizeof(matrix),
+                               DbVP_d1[next], EVENANDODD, local_pt[gather][1]);
     }
+    a = DbVtoP_lookup[j][0];
+    b = DbVtoP_lookup[j][1];
+    c = DbVtoP_lookup[j][2];
+    i_ab = plaq_index[a][b];
+
+    tr = 0.5 * perm[a][b][c];
+    wait_gather(tag0[flip]);
+    wait_gather(tag0[flip]);
+
+
+    FORALLSITES(i, s) {
+      scalar_mult_na_sum((matrix *)(local_pt[flip][0][i]),
+                         &(s->link[c]), tr * s->bc[c], &(dest[i]));
+
+      scalar_mult_an_dif((matrix *)(local_pt[flip][1][i]),
+                         &(src[i_ab][i]), tr , &(dest[i]));
+    }
+    cleanup_gather(tag0[flip]);
+    cleanup_gather(tag1[flip]);
+    flip = (flip + 1) % 2;
   }
 }
 #endif
