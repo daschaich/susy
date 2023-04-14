@@ -187,7 +187,7 @@ int main(int argc, char *argv[]) {
   FORALLSITES(i, s)
     CDIVREAL((s->print_var), space_vol * space_vol, (s->print_var));
 
-  print_var3("PLCORR");
+  print_var2("PLCORR");
 #endif
 
 #ifdef CORR

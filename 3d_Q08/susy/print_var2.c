@@ -1,7 +1,7 @@
 // -----------------------------------------------------------------
 // Write out all values of NBPAVRG correlators
 // The label is the member of the site structure
-// The data is printed for each three-dimensional spatial separation
+// The data is printed for each two-dimensional spatial separation
 // Write only for t=0
 #include "susy_includes.h"
 // -----------------------------------------------------------------
@@ -9,7 +9,7 @@
 
 
 // -----------------------------------------------------------------
-void print_var3(char *label) {
+void print_var2(char *label) {
 #ifdef PL_CORR
   int currentnode = 0, newnode;
   int l, x, y, t, node0 = 0;
@@ -34,7 +34,7 @@ void print_var3(char *label) {
 
         // See defines for avg[] above
         // for the order of the output correlation values
-        if ((printf("%s %d %d  %.6g %.6g\n",label, x, y, 
+        if ((printf("%s %d %d  %.6g %.6g\n",label, x, y,
                     (double)lbuf.real, (double)lbuf.imag) == EOF)) {
           printf("print_var: Write error\n"); 
           terminate(1);
