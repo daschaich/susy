@@ -444,9 +444,7 @@ void DbplusPtoV(matrix *src[NPLAQ], matrix *dest) {
 
     tr = 0.5 * perm[a][b][c];
     wait_gather(tag0[flip]);
-    wait_gather(tag0[flip]);
-
-
+    wait_gather(tag1[flip]);
     FORALLSITES(i, s) {
       scalar_mult_na_sum((matrix *)(local_pt[flip][0][i]),
                          &(s->link[c]), tr * s->bc[c], &(dest[i]));
