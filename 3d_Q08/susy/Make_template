@@ -126,15 +126,6 @@ susy_hmc_meas::
 	                 hvy_pot_polar.o path.o bilinearWard.o hvy_pot_loop.o \
 	                 hvy_pot_polar_loop.o smear.o local_plaq.o "
 
-susy_mcrg::
-	${MAKE} -f ${MAKEFILE} target "MYTARGET= $@" \
-	"DEFINES = ${DEFINES} -DPHI_ALGORITHM -DSMEAR -DCORR -DMCRG" \
-	"LAPACK = -llapack -lblas " \
-	"EXTRA_OBJECTS = control_mcrg.o block_mcrg.o rsymm.o blocked_plaq.o \
-	                 blocked_ops.o blocked_ploop.o blocked_rsymm.o path.o \
-	                 blocked_smear.o blocked_local_plaq.o konishi.o \
-	                 smear.o local_plaq.o "
-
 susy_eig::
 	${MAKE} -f ${MAKEFILE} target "MYTARGET= $@" \
 	"DEFINES = ${DEFINES} -DPHI_ALGORITHM -DEIG " \
@@ -142,31 +133,11 @@ susy_eig::
 	"LAPACK = -llapack -lblas " \
 	"EXTRA_OBJECTS = control_eig.o eig.o "
 
-susy_cheb::
-	${MAKE} -f ${MAKEFILE} target "MYTARGET= $@" \
-	"DEFINES = ${DEFINES} -DPHI_ALGORITHM -DCHEB " \
-	"LAPACK = -llapack -lblas " \
-	"EXTRA_OBJECTS = control_cheb.o chebyshev.o z2source.o "
-
-susy_mode::
-	${MAKE} -f ${MAKEFILE} target "MYTARGET= $@" \
-	"DEFINES = ${DEFINES} -DPHI_ALGORITHM -DMODE " \
-	"LAPACK = -llapack -lblas " \
-	"EXTRA_OBJECTS = control_mode.o modenumber.o mode_coeffs.o z2source.o "
-
 susy_phase::
 	${MAKE} -f ${MAKEFILE} target "MYTARGET= $@" \
 	"DEFINES = ${DEFINES} -DPHI_ALGORITHM -DPHASE " \
 	"LAPACK = -llapack -lblas " \
 	"EXTRA_OBJECTS = control_phase.o phase.o io_phase.o "
-
-# Convert configuration into format the serial C++ code can read
-# for testing/debugging
-susy_spill::
-	${MAKE} -f ${MAKEFILE} target "MYTARGET= $@" \
-	"DEFINES = ${DEFINES} -DPHI_ALGORITHM " \
-	"LAPACK = -llapack -lblas " \
-	"EXTRA_OBJECTS = control_spill.o "
 
 # The targets below have not been used/tested recently
 susy_phi::
