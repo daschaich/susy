@@ -17,7 +17,6 @@
 
 #define NUMLINK 3
 #define NPLAQ 3                   // NUMLINK * (NUMLINK - 1 ) / 2
-//#define DIR_4 3 //shouldn't be neaded as we are in 3d now
 #define OPP_LDIR(dir) (5 - (dir)) // Opposite link direction
 
 #endif
