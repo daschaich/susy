@@ -2,7 +2,7 @@
 // Eigenvalue computation and helper functions
 // !!!Path to primme.h may need local customization
 #include "susy_includes.h"
-#include "../../../primme/PRIMMESRC/COMMONSRC/primme.h"
+#include "../PRIMME/PRIMMESRC/COMMONSRC/primme.h"
 // -----------------------------------------------------------------
 
 
@@ -57,7 +57,7 @@ void rand_TFsource(Twist_Fermion *src) {
 // Get Nvec vectors (stored consecutively) and hit them by the matrix
 void av_ov (void *x, void *y, int *Nvec, primme_params *primme) {
   register site *s;
-  int i, j, k, mu, iter, ivec, Ndat = 16 * NCOL * NCOL;
+  int i, j, k, mu, iter, ivec, Ndat = 8 * NCOL * NCOL;
   Complex_Z *xx;
 
   for (ivec = 0; ivec < *Nvec; ivec++) {
@@ -71,6 +71,9 @@ void av_ov (void *x, void *y, int *Nvec, primme_params *primme) {
         for (k = 0; k < NCOL; k++) {
           src[i].Fsite.e[j][k].real = xx[iter].r;
           src[i].Fsite.e[j][k].imag = xx[iter].i;
+          iter++;
+          src[i].Fvolume.e[j][k].real = xx[iter].r;
+          src[i].Fvolume.e[j][k].imag = xx[iter].i;
           iter++;
           FORALLDIR(mu) {
             src[i].Flink[mu].e[j][k].real = xx[iter].r;
@@ -121,6 +124,9 @@ void av_ov (void *x, void *y, int *Nvec, primme_params *primme) {
         for (k = 0; k < NCOL; k++) {
           xx[iter].r = (double)res[i].Fsite.e[j][k].real;
           xx[iter].i = (double)res[i].Fsite.e[j][k].imag;
+          iter++;
+          xx[iter].r = (double)res[i].Fvolume.e[j][k].real;
+          xx[iter].i = (double)res[i].Fvolume.e[j][k].imag;
           iter++;
           FORALLDIR(mu) {
             xx[iter].r = (double)res[i].Flink[mu].e[j][k].real;
@@ -180,7 +186,7 @@ void par_GlobalSumDouble(void *sendBuf, void *recvBuf,
 // If flag==-1 we calculate the largest eigenvalues
 int make_evs(int Nvec, Twist_Fermion **eigVec, double *eigVal, int flag) {
   register site *s;
-  int i, j, k, mu, ivec, iter = 0, ret, Ndat = 16 * NCOL * NCOL;
+  int i, j, k, mu, ivec, iter = 0, ret, Ndat = 8 * NCOL * NCOL;
   int maxn = sites_on_node * Ndat;
   double check, *rnorms = malloc(sizeof *rnorms * Nvec);
   Complex_Z *workVecs = malloc(sizeof *workVecs * Nvec * maxn);
@@ -212,6 +218,9 @@ int make_evs(int Nvec, Twist_Fermion **eigVec, double *eigVal, int flag) {
         for (k = 0; k < NCOL; k++) {
           workVecs[iter].r = eigVec[ivec][i].Fsite.e[j][k].real;
           workVecs[iter].i = eigVec[ivec][i].Fsite.e[j][k].imag;
+          iter++;
+          workVecs[iter].r = eigVec[ivec][i].Fvolume.e[j][k].real;
+          workVecs[iter].i = eigVec[ivec][i].Fvolume.e[j][k].imag;
           iter++;
           FORALLDIR(mu) {
             workVecs[iter].r = eigVec[ivec][i].Flink[mu].e[j][k].real;
@@ -276,6 +285,9 @@ int make_evs(int Nvec, Twist_Fermion **eigVec, double *eigVal, int flag) {
         for (k = 0; k < NCOL; k++) {
           eigVec[ivec][i].Fsite.e[j][k].real = workVecs[iter].r;
           eigVec[ivec][i].Fsite.e[j][k].imag = workVecs[iter].i;
+          iter++;
+          eigVec[ivec][i].Fvolume.e[j][k].real = workVecs[iter].r;
+          eigVec[ivec][i].Fvolume.e[j][k].imag = workVecs[iter].i;
           iter++;
           FORALLDIR(mu) {
             eigVec[ivec][i].Flink[mu].e[j][k].real = workVecs[iter].r;
