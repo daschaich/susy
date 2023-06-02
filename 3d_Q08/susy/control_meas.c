@@ -192,7 +192,6 @@ int main(int argc, char *argv[]) {
 
 #ifdef CORR
   // Konishi and SUGRA correlators
-  konishi();
   // correlator_r(); Not doing it for 3D, for now at least
 #endif
 

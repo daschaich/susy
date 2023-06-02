@@ -49,9 +49,9 @@ for N in 2 3 4 ; do
   sed -i -E "s/(#define NCOL) .*/\1 $N/" ../include/susy.h
 
   # Compile all targets
-  # For now just hmc and meas
+  # For now just hmc, meas, eig and phase
   # for target in hmc meas hmc_meas mcrg eig cheb mode phase ; do
-  for target in hmc meas ; do
+  for target in hmc meas eig phase ; do
     echo "Compiling susy_$target..."
     if ! make -f Make_scalar susy_$target >& /dev/null ; then
       echo "ERROR: susy_$target compilation failed"
@@ -65,7 +65,7 @@ for N in 2 3 4 ; do
 
   # Run
   cd ../testsuite/
-  for target in hmc meas ; do
+  for target in hmc meas eig phase ; do
     rm -f scalar/$target.U$N.out
     echo "Running susy_$target..."
     ../susy/susy_$target < in.U$N.$target > scalar/$target.U$N.out
@@ -86,7 +86,7 @@ for N in 2 3 4 ; do
 
   # Check
   cd scalar/
-  for target in hmc meas ; do
+  for target in hmc meas eig phase ; do
     d="`diff -I'Time' -I'time' -I'seconds' -I'^start' -I'^exit' $target.U$N.ref $target.U$N.out`"
     if [ -n "$d" ] ; then   # Non-zero string length
       echo "$target.U$N.ref and $target.U$N.out differ:"

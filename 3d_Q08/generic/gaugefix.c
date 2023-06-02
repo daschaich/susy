@@ -125,7 +125,6 @@ void do_hit(int gauge_dir, int parity, int p, int q, Real relax_boost) {
   register site *s;
   Real a0, a1, a2, a3, asq, a0sq, x, r, xdr;
   su2_matrix *u = malloc(sizeof *u * sites_on_node);
-  msg_tag *mtag = NULL;
 
   // Accumulate sums for determining optimum gauge hit
   accum_gauge_hit(gauge_dir, parity);
@@ -193,15 +192,6 @@ void do_hit(int gauge_dir, int parity, int p, int q, Real relax_boost) {
   // We just saved the gauge transformations on every site
   // Now re-loop and apply them
 
-/*DIR_5
-  // Gather from direction DIR_5 to transform the diagonal link
-  // This link stays on its own parity
-  // rather than respecting the red--black checkerboard of the other links
-  mtag = start_gather_field(u, sizeof(su2_matrix),
-                            goffset[DIR_5], EVENANDODD, gen_pt[9]);
-  wait_gather(mtag);
-*/
-
   FORSOMEPARITY(i, s, parity) {
     // Hit the links (on this checkerboard) on the left,
     // and the gathered links, from site (x - mu), on the right
@@ -211,18 +201,12 @@ void do_hit(int gauge_dir, int parity, int p, int q, Real relax_boost) {
     FORALLUPDIR(dir)
       left_su2_hit_n(&(u[i]), p, q, &(s->link[dir]));
 
-/*DIR_5
-    // Now deal with the diagonal link, hitting it on right, too
-    left_su2_hit_n(&(u[i]), p, q, &(s->link[DIR_5]));
-    right_su2_hit_a((su2_matrix *)(gen_pt[9][i]), p, q, &(s->link[DIR_5]));
-*/
 
     // Do SU(2) hit on all downward links, don't touch the diagonal one
     FORALLUPDIR(dir)
       right_su2_hit_a(&(u[i]), p, q, (matrix *)gen_pt[dir][i]);
   }
   // Exit with modified downward links left in communications buffer
-  cleanup_gather(mtag);
   free(u);
 }
 // -----------------------------------------------------------------

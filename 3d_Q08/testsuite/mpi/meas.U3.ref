@@ -1,8 +1,8 @@
 N=4 SYM, Nc = 3, DIMF = 9, fermion rep = adjoint
 Microcanonical simulation with refreshing
-Machine = Scalar processor, with 1 nodes
+Machine = MPI (portable), with 2 nodes
 Phi algorithm
-start: Fri Jun  2 07:49:53 2023
+start: Fri Jun  2 08:31:49 2023
 
 type 0 for no prompts or 1 for prompts
 nx 4
@@ -13,11 +13,11 @@ iseed 41
 Nroot 1
 Norder 15
 LAYOUT = Hypercubes, options = hyper_prime
-ON EACH NODE 4 x 4 x 4
-Mallocing 0.2 MBytes per core for lattice
+ON EACH NODE 2 x 4 x 4
+Mallocing 0.1 MBytes per core for lattice
 Antiperiodic temporal boundary conditions
 Double-trace scalar potential
-Mallocing 0.7 MBytes per core for fields
+Mallocing 0.4 MBytes per core for fields
 
 
 warms 0
@@ -45,8 +45,8 @@ C2=1
 Restored binary gauge configuration serially from file config.U3.444
 Time stamp Fri May 26 07:11:37 2023
 Checksums 8a7ea908 e9024c7 OK
-Time to reload gauge configuration = 1.528978e-03
-CHECK PLAQ: 3.6447491476474072e+00 4.0657519907437338e+00
+Time to reload gauge configuration = 1.874208e-03
+CHECK PLAQ: 3.6447491476474076e+00 4.0657519907437329e+00
 CHECK NERSC LINKTR: -5.3784374480023364e-02 CKSUM: 0
 START 3.6447491 4.065752 7.7105011 21.496791
 FLINK 1.36535 1.27919 1.64345 1.42933 0.288985
@@ -67,9 +67,9 @@ POLAR_EIG 0 -0.651815 0.510994 -3.06726 0.106532
 POLAR_EIG 1 0.0735507 0.185549 -0.660461 0.456189
 POLAR_EIG 2 0.47935 0.105549 0.204422 0.747827
 susy 5.57286 -0.317579 -5.90322 -0.0251064 ( 1 of 3 ) 139
-susy 5.79011 0.323556 -5.08269 0.0330581 ( 2 of 3 ) 146
-susy 5.76888 0.177701 -5.64259 0.177974 ( 3 of 3 ) 144
-SUSY 5.62673 -0.000374556 4.53279 -1.09393 ( ave over 3 )
+susy 5.79011 0.323556 -5.08269 0.0330575 ( 2 of 3 ) 146
+susy 5.76888 0.177698 -5.64259 0.177966 ( 3 of 3 ) 143
+SUSY 5.62673 -0.000373893 4.53279 -1.09393 ( ave over 3 )
 rsymm: MAX = 2
 INVLINK 6.39117 2.92913 1.12836 3.48289 11.6806
 RSYMM 1 [0] 1 [1] 4.2690582 4.0579452
@@ -99,7 +99,7 @@ RSYMM 2 [2] 2 [1] 6.7011982 18.24637
 MONOPOLE 8 -8    0 16
 Fixing to Coulomb gauge...
 GFIX ended at step 23. Ave gf action 0.796963, delta 7.82e-08
-GFIX time = 0.0008879 seconds
+GFIX time = 0.0006859 seconds
 BEFORE 4.2690582 4.7271469
 AFTER  4.2690582 4.7271469
 hvy_pot: MAX_T = 2, MAX_X = 1
@@ -136,9 +136,9 @@ POLAR_LOOP 1 -1 2 0.777797
 POLAR_LOOP 1 0 2 1.24845
 POLAR_LOOP 1 1 2 0.815715
 RUNNING COMPLETED
-CG iters for measurements: 429
-total_iters = 429
+CG iters for measurements: 428
+total_iters = 428
 
-Time = 0.1366 seconds
-exit: Fri Jun  2 07:49:54 2023
+Time = 0.08284 seconds
+exit: Fri Jun  2 08:31:49 2023
 

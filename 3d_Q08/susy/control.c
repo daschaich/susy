@@ -203,7 +203,6 @@ int main(int argc, char *argv[]) {
 
 #ifdef CORR
       // Konishi and SUGRA correlators
-      konishi();
       correlator_r();
 #endif
 

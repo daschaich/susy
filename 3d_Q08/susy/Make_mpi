@@ -11,7 +11,7 @@ CLFS           = -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE64
 MACHINE_DEP_IO = io_ansi.o
 
 LD             = ${CC}
-PLIB           = ../PRIMME/libzprimme.a
+PLIB           = ../../../primme/libzprimme.a
 LIBADD         =
 INLINEOPT      = -DINLINE # -DC_GLOBAL_INLINE # -DSSE_GLOBAL_INLINE -DC_INLINE
 CTIME          = # -DCGTIME -DFFTIME -DLLTIME -DGFTIME -DREMAP

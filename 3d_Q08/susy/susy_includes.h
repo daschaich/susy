@@ -145,7 +145,6 @@ void rsymm();
 #ifdef CORR
 // Konishi and SUGRA correlators
 void compute_Ba();
-void konishi();       // Operators averaged over each timeslice
 
 // Map (x, y, z, t) to scalar displacements r
 Real A4map(int x_in, int y_in, int z_in, int t_in);

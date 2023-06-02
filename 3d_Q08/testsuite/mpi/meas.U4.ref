@@ -1,8 +1,8 @@
 N=4 SYM, Nc = 4, DIMF = 16, fermion rep = adjoint
 Microcanonical simulation with refreshing
-Machine = Scalar processor, with 1 nodes
+Machine = MPI (portable), with 2 nodes
 Phi algorithm
-start: Fri Jun  2 07:50:22 2023
+start: Fri Jun  2 08:32:14 2023
 
 type 0 for no prompts or 1 for prompts
 nx 4
@@ -13,11 +13,11 @@ iseed 41
 Nroot 1
 Norder 15
 LAYOUT = Hypercubes, options = hyper_prime
-ON EACH NODE 4 x 4 x 4
-Mallocing 0.3 MBytes per core for lattice
+ON EACH NODE 2 x 4 x 4
+Mallocing 0.1 MBytes per core for lattice
 Antiperiodic temporal boundary conditions
 Double-trace scalar potential
-Mallocing 1.2 MBytes per core for fields
+Mallocing 0.6 MBytes per core for fields
 
 
 warms 0
@@ -45,8 +45,8 @@ C2=1
 Restored binary gauge configuration serially from file config.U4.444
 Time stamp Fri May 26 07:38:09 2023
 Checksums 8376fae9 c2569971 OK
-Time to reload gauge configuration = 1.384020e-03
-CHECK PLAQ: 4.2790256957652693e+00 5.7605593747661166e+00
+Time to reload gauge configuration = 1.480818e-03
+CHECK PLAQ: 4.2790256957652710e+00 5.7605593747661183e+00
 CHECK NERSC LINKTR: -2.5935429425809769e-02 CKSUM: 0
 START 4.2790257 5.7605594 10.039585 39.024212
 FLINK 1.29311 1.34538 1.65879 1.43243 0.270652
@@ -70,8 +70,8 @@ POLAR_EIG 2 0.260713 0.11587 -0.0713873 0.540529
 POLAR_EIG 3 0.500564 0.0961326 0.251136 0.772136
 susy 7.36917 -0.152992 -7.79978 0.748715 ( 1 of 3 ) 170
 susy 8.05612 0.176821 -7.6911 -0.219099 ( 2 of 3 ) 175
-susy 8.44373 -0.189118 -7.62877 -0.222847 ( 3 of 3 ) 170
-SUSY 7.83145 -0.0786763 9.89563 2.06419 ( ave over 3 )
+susy 8.44374 -0.189118 -7.62877 -0.222847 ( 3 of 3 ) 169
+SUSY 7.83145 -0.0786764 9.89563 2.06419 ( ave over 3 )
 rsymm: MAX = 2
 INVLINK 2.37469 2.74102 1.33483 2.15018 2.19021
 RSYMM 1 [0] 1 [1] 4.9944046 5.489373
@@ -101,7 +101,7 @@ RSYMM 2 [2] 2 [1] 12.866624 11.789061
 MONOPOLE 0 0    0 0
 Fixing to Coulomb gauge...
 GFIX ended at step 67. Ave gf action 0.84754, delta 9.75e-08
-GFIX time = 0.005486 seconds
+GFIX time = 0.003245 seconds
 BEFORE 4.9944046 6.6100572
 AFTER  4.9944046 6.6100572
 hvy_pot: MAX_T = 2, MAX_X = 1
@@ -138,9 +138,9 @@ POLAR_LOOP 1 -1 2 1.3198
 POLAR_LOOP 1 0 2 1.63533
 POLAR_LOOP 1 1 2 1.22163
 RUNNING COMPLETED
-CG iters for measurements: 515
-total_iters = 515
+CG iters for measurements: 514
+total_iters = 514
 
-Time = 0.276 seconds
-exit: Fri Jun  2 07:50:22 2023
+Time = 0.1835 seconds
+exit: Fri Jun  2 08:32:15 2023
 
