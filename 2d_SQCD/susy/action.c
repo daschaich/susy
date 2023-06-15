@@ -123,7 +123,6 @@ void compute_DmuPhi() {
 
   wait_gather(mtag0);
   wait_gather(mtag1);
-
   FORALLSITES(i, s){
     fun_mat_prod((funmatrix *)(gen_pt[0]), &(s->link[0]), &(temp));
     fun_sub_matrix(&(temp), &(s->funlink), &(DmuPhi[0][i]));
@@ -206,12 +205,9 @@ double scalar_action(int do_det) {
     // in 1505.00467 this term is given as
     // bar(DmuPhi)DmuPhi but this is a NCOLF NCOLF matrix
     // so here we calculate DmuPhi bar(DmuPhi)
-    fun_mult_na(&(DmuPhi[0][i]), &(DmuPhi[0][i]), &tmat2);
-    scalar_mult_sum_matrix(&tmat2, 1.0, &tmat);
-    fun_mult_na(&(DmuPhi[1][i]), &(DmuPhi[1][i]), &tmat2);
-    scalar_mult_sum_matrix(&tmat2, 1.0, &tmat);
+    fun_mult_na_sum(&(DmuPhi[0][i]), &(DmuPhi[0][i]), &tmat);
+    fun_mult_na_sum(&(DmuPhi[1][i]), &(DmuPhi[1][i]), &tmat);
 #endif
-
 
     if (do_det == 1) {
       det_project(&tmat, &tmat2);

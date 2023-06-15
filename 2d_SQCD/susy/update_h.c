@@ -388,21 +388,23 @@ double scalar_force(Real eps) {
   //       - I_a bar(D^+_a phi(x)) 
   //       + bar(phi(x)) PhiSq(x)
   //       - bar(phi(x)(bar(D)^-_a U_a(x))
-  FORALLSITES(i, s) funa_clear_mat(&(s->f_phi));
+  FORALLSITES(i, s)
+    funa_clear_mat(&(s->f_phi));
 #ifdef PHITERM1
   FORALLDIR(mu) {
-    tag = start_gather_field(DmuPhi[mu], sizeof(funmatrix),
-                             goffset[mu]+1, EVENANDODD, gen_pt[0]);
-    tag2 = start_gather_site(F_OFFSET(link[mu]), sizeof(matrix),
-                             goffset[mu]+1, EVENANDODD, gen_pt[1]);
-    wait_gather(tag);
-    wait_gather(tag2);
     FORALLSITES(i, s) {
-      funa_mat_prod_an_sum((funmatrix *) gen_pt[0][i], (matrix *) gen_pt[1][i], &(s->f_phi));
+      funa_clear_mat(&(tempfunamat[i]));
+      funa_mat_prod_an_sum(&(DmuPhi[mu][i]), &(s->link[mu]), &(tempfunamat[i]));
+    }
+
+    tag = start_gather_field(tempfunamat, sizeof(funmatrix),
+                             goffset[mu] + 1, EVENANDODD, gen_pt[0]);
+    wait_gather(tag);
+    FORALLSITES(i, s) {
+      funa_sum_matrix((funamatrix *)gen_pt[0][i], &(s->f_phi));
       funa_dif_an_matrix(&(DmuPhi[mu][i]), &(s->f_phi));
-   }
+    }
     cleanup_gather(tag);
-    cleanup_gather(tag2);
   }
 #endif
   FORALLSITES(i, s) { // TODO!!!
@@ -415,9 +417,9 @@ double scalar_force(Real eps) {
   }
 
   // Update phi momentum
-  // use the same overall factor as below - N/(4lambda)
-  // Subtract to reproduce +f_phi
-
+  // Include overall factor of kappa = N / (4lambda)
+  // Subtract to reproduce -Adj(f_phi)
+  // Compute average scalar force in same loop
   tr = kappa * eps;
   FORALLSITES(i, s) {
     funa_scalar_mult_dif_adj_matrix(&(s->f_phi), tr, &(s->funmom));

@@ -158,6 +158,7 @@ void make_fields() {
   FIELD_ALLOC(tempmat2, matrix);
   FIELD_ALLOC(tempfunmat, funmatrix);
   FIELD_ALLOC(tempfunmat2, funmatrix);
+  FIELD_ALLOC(tempfunamat, funamatrix);
   FIELD_ALLOC(staple, matrix);
   FIELD_ALLOC(tempTF, Twist_Fermion);
 

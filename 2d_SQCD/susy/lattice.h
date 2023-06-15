@@ -148,6 +148,7 @@ EXTERN Twist_Fermion *mpm, *pm0, *rm;
 // Temporary matrices, funmatrices and Twist_Fermion
 EXTERN matrix *tempmat, *tempmat2, *staple;
 EXTERN funmatrix *tempfunmat, *tempfunmat2;
+EXTERN funamatrix *tempfunamat;
 EXTERN Twist_Fermion *tempTF;
 
 // Arrays to be used by LAPACK in determinant.c
@@ -169,24 +170,6 @@ EXTERN site *lattice;
 // Need 10 for gauge-fixing, 9 for Q-invariant determinant force
 #define N_POINTERS 10
 EXTERN char **gen_pt[N_POINTERS];
-
-#ifdef CORR
-#define N_B 2
-#define N_K 3    // N_B * (N_B + 1) / 2
-// Multiple scalar fields and their bilinear traces
-EXTERN matrix *Ba[N_B][NUMLINK];
-EXTERN double *traceBB[N_K][NUMLINK][NUMLINK];
-
-// Structs for operators and correlators
-typedef struct {
-  double OK[N_K];
-  double OS[N_K];
-} Kops;
-typedef struct {
-  double C[N_K][N_K];
-} Kcorrs;
-EXTERN Kops *tempops, *tempops2;
-#endif
 
 #ifdef SMEAR
 // APE or stout smearing stuff

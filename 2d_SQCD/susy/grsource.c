@@ -42,8 +42,8 @@ void ranmom() {
         grn.real = gaussian_rand_no(&(s->node_prn));
         grn.imag = gaussian_rand_no(&(s->node_prn));
 #endif
-        s->funmom.e[j][k].real = 0;//grn.real;
-        s->funmom.e[j][k].imag = 0;//grn.imag;//Debug
+        s->funmom.e[j][k].real = grn.real;
+        s->funmom.e[j][k].imag = grn.imag;
       }
     }
   }

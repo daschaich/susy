@@ -922,8 +922,6 @@ void funa_dif_an_matrix(funmatrix *b, funamatrix *c) {
 // Multiply a matrix and a funmatrix
 // c <-- b*c
 // c <-- s*b*c
-// c <-- b*a
-
 void fun_mat_mult( matrix *b, funmatrix *c) {
   register int i, j, k;
   for (i = 0; i < NCOL; i++)
@@ -948,6 +946,7 @@ void fun_mat_scalar_mult( matrix *b, Real s, funmatrix *c) {
       }
 }
 
+// c <-- b.a
 void fun_mat_prod(funmatrix *a, matrix *b, funmatrix *c) {
   register int i, j, k;
   for (i = 0; i < NCOL; i++)
@@ -1078,7 +1077,7 @@ void funa_scalar_mat_mult_an(funmatrix *a, matrix *b, Real s, funamatrix *c) {
   }
 }
 
-void funa_mat_prod_an_sum( funmatrix *a, matrix *b, funamatrix *c){
+void funa_mat_prod_an_sum(funmatrix *a, matrix *b, funamatrix *c){
   register int i, j, k;
   for (i = 0; i < NCOLF; i++)
     for (j = 0; j < NCOL; j++)
