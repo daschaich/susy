@@ -179,6 +179,8 @@ int bilinearWard() {
   // Now add gauge piece, including plaquette determinant term
   // Accumulate sum_a U_a Udag_a in tmat
   // Multiply by DmuUmu and trace
+  // Note this should include tunable coefficient C2,
+  // which is omitted for compatibility with existing analysis scripts
   FORALLSITES(i, s) {
     mult_na(&(s->link[0]), &(s->link[0]), &tmat);   // Initialize
     for (mu = 1; mu < NUMLINK; mu++)
