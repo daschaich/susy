@@ -302,7 +302,7 @@ int readin(int prompt) {
     IF_OK status += get_f(stdin, prompt, "bmass", &par_buf.bmass);
     IF_OK status += get_f(stdin, prompt, "fmass", &par_buf.fmass);
     IF_OK status += get_f(stdin, prompt, "G", &par_buf.G);
-    R = 1; //TODO: make it a read in parameter
+    R = 0; //TODO: make it a read in parameter
 
 #ifdef SMEAR
     // Smearing stuff -- passed to either APE or stout routines by application

@@ -110,14 +110,15 @@ int grsource(Twist_Fermion *src) {
       for (k = 0; k < NCOLF; k++) {
 #ifdef FUNSITE
 #ifdef SITERAND
-        src[i].Funsite.e[j][k].real = 0;//gaussian_rand_no(&(s->site_prn));
-        src[i].Funsite.e[j][k].imag = 0;//gaussian_rand_no(&(s->site_prn));
+        src[i].Funsite.e[j][k].real = gaussian_rand_no(&(s->site_prn));
+        src[i].Funsite.e[j][k].imag = gaussian_rand_no(&(s->site_prn));
 #else
-        src[i].Funsite.e[j][k].real = 0;//gaussian_rand_no(&node_prn);
-        src[i].Funsite.e[j][k].imag = 0;//gaussian_rand_no(&node_prn);
+        src[i].Funsite.e[j][k].real = gaussian_rand_no(&node_prn);
+        src[i].Funsite.e[j][k].imag = gaussian_rand_no(&node_prn);
 #endif
 #endif
 #ifdef FUNLINK
+        //This and FUNPLAQ below are not used at the moment so kept as 0's
         FORALLDIR(mu) {
 #ifdef SITERAND
           src[i].Funlink[mu].e[k][j].real = 0;//gaussian_rand_no(&(s->site_prn));

@@ -378,7 +378,7 @@ double gauge_force(Real eps) {
 // Assume compute_PhiSq() and compute_DmuPhi() have already been run
 double scalar_force(Real eps) {
 #ifdef SPHI
-  register int i, mu;
+  register int i, j, k, l, c1, c2, mu;
   register site *s;
   double returnit = 0.0, tr;
   msg_tag *tag, *tag2;
@@ -410,6 +410,31 @@ double scalar_force(Real eps) {
   FORALLSITES(i, s) { // TODO!!!
 #ifdef PHITERM2
     funa_mat_prod_an_sum(&(s->funlink), &(PhiSq[i]), &(s->f_phi));
+    
+    /*
+    for (j = 0; j<NCOLF ; j++)
+      for (k = 0; k<NCOL ; k++) {
+        tempfunamat[i].e[j][k].real = 0;
+        tempfunamat[i].e[j][k].imag = 0;
+      }
+    for (j = 0; j<NCOLF ; j++)
+      for (k = 0; k<NCOL ; k++)
+        for (c1 = 0; c1<NCOL ; c1++)
+          for (c2 = 0; c2<NCOL ; c2++){
+            tempfunamat[i].e[j][k].real +=
+                s->funlink.e[c1][j].real * s->funlink.e[c1][c2].real * s->funlink.e[k][c2].real
+              + s->funlink.e[c1][j].imag * s->funlink.e[c1][c2].imag * s->funlink.e[k][c2].real
+              - s->funlink.e[c1][j].imag * s->funlink.e[c1][c2].real * s->funlink.e[k][c2].imag
+              + s->funlink.e[c1][j].real * s->funlink.e[c1][c2].imag * s->funlink.e[k][c2].imag;
+
+            tempfunamat[i].e[j][k].imag += 
+                s->funlink.e[c1][j].real * s->funlink.e[c1][c2].imag * s->funlink.e[k][c2].real
+              - s->funlink.e[c1][j].imag * s->funlink.e[c1][c2].real * s->funlink.e[k][c2].real
+              - s->funlink.e[c1][j].real * s->funlink.e[c1][c2].real * s->funlink.e[k][c2].imag
+              - s->funlink.e[c1][j].imag * s->funlink.e[c1][c2].imag * s->funlink.e[k][c2].imag;
+          }
+    funa_sum_matrix(&(tempfunamat[i]),&(s->f_phi));
+    */
 #endif
 #ifdef PHITERM3
     funa_scalar_mat_prod_an_dif(&(s->funlink), &(DmuUmu[i]), 1.0, &(s->f_phi));
@@ -666,6 +691,9 @@ void assemble_fermion_force(Twist_Fermion *sol, Twist_Fermion *psol) {
     mat_copy(&(sol[i].Fplaq), &(plaq_src[i]));
     adjoint(&(psol[i].Fplaq), &(plaq_dest[i]));
 #ifdef FUNSITE
+  //funsite_dest (and the rest of the fundamental _dest)
+  //are kept in adjoint form to conform to above
+  //this means that _dest and _src have adjoint types
     fun_mat_copy(&(sol[i].Funsite), &(funsite_src[i]));
     fun_adjoint(&(psol[i].Funsite), &(funsite_dest[i]));
 #endif
@@ -874,7 +902,13 @@ void assemble_fermion_force(Twist_Fermion *sol, Twist_Fermion *psol) {
     funa_mat_prod(&(funsite_dest[i]), &(site_src[i]), &(s->f_phi));
     //site_dest * funsite_src
     fun_mat_prod(&(funsite_src[i]), &(site_dest[i]), &(tfunmat));
-    fun_scalar_mult_sum_adj_matrix(&(tfunmat), -1.0, &(s->f_phi));
+    fun_scalar_mult_sum_adj_matrix(&(tfunmat),-1.0, &(s->f_phi));
+    for (a = 0; a < NCOLF; a++) {
+      for (b = 0; b < NCOL; b++) {
+        s->f_phi.e[a][b].real = -1.0 * s->f_phi.e[a][b].real;
+        s->f_phi.e[a][b].imag = -1.0 * s->f_phi.e[a][b].imag;
+      }
+    }
   }
 #else
   FORALLSITES(i, s) funa_clear_mat(&(s->f_phi));
