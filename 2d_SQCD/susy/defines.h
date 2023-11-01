@@ -31,8 +31,8 @@
 
 #define PUREGAUGE
 // Gauge terms split into three
-//#define PHITERM1
-#define PHITERM2
+#define PHITERM1
+//#define PHITERM2
 //#define PHITERM3
 
 // Fermion terms split into three

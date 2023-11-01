@@ -93,14 +93,13 @@ void compute_Fmunu() {
 // -----------------------------------------------------------------
 // For the gauge action, compute at each site
 // phi(x)*phibar(x)-r*I
-// Use tempmat for temporary storage
 void compute_PhiSq() {
   register int i;
   register site *s;
 
   FORALLSITES(i, s) {
     fun_mult_na(&(s->funlink), &(s->funlink), &(PhiSq[i]));
-    scalar_mult_dif_matrix(&(Identity), R, &(PhiSq[i]));
+    scalar_add_diag(&(PhiSq[i]), -1.0 * R);
   }
 }
 

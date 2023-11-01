@@ -420,7 +420,7 @@ double scalar_force(Real eps) {
     for (j = 0; j<NCOLF ; j++)
       for (k = 0; k<NCOL ; k++)
         for (c1 = 0; c1<NCOL ; c1++)
-          for (c2 = 0; c2<NCOL ; c2++){
+          for (c2 = 0; c2<NCOLF ; c2++){
             tempfunamat[i].e[j][k].real +=
                 s->funlink.e[c1][j].real * s->funlink.e[c1][c2].real * s->funlink.e[k][c2].real
               + s->funlink.e[c1][j].imag * s->funlink.e[c1][c2].imag * s->funlink.e[k][c2].real
