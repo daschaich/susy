@@ -29,16 +29,16 @@
 //#define DEBUG_CHECK       // Print lambdas, offsets, etc.
 #define SPHI              // Phi-phi terms
 
-#define PUREGAUGE
+//#define PUREGAUGE
 // Gauge terms split into three
-//#define PHITERM1
-#define PHITERM2
+#define PHITERM1
+//#define PHITERM2
 //#define PHITERM3
 
 // Fermion terms split into three
-#define FUNFERMION
-#define FUNSITE
-#define SFUNS
+//#define FUNFERMION
+//#define FUNSITE
+//#define SFUNS
 //#define DEBUGFUNMATRIX
 //#define DEBUGFUNACTION
 
