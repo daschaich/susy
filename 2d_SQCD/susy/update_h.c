@@ -94,7 +94,7 @@ double gauge_force(Real eps) {
   register int i, mu, nu;
   register site *s;
   char **local_pt[2][2];
-  int a, b, gather, flip = 0;
+  int a, b, c, d, e, k, gather, flip = 0;
   double returnit = 0.0, tr;
   complex tc;
   matrix tmat, tmat2, *mat[2];
@@ -331,6 +331,28 @@ double gauge_force(Real eps) {
 #ifdef PHITERM1
       //phi(x+a)*bar(D+_a phi(x))
       fun_mult_na_sum((funmatrix *)(gen_pt[1][i]), &DmuPhi[mu][i], &(s->f_U[mu]));
+      /*
+      for (a = 0; a < NCOL ; a++)
+        for (b = 0; b < NCOL ; b++)
+        {
+          tmat.e[a][b].real = 0;
+          tmat.e[a][b].imag = 0;
+          tmat2.e[a][b].real = 0;
+          tmat2.e[a][b].imag = 0;
+        }
+
+      for (k = 0; k < DIMF ; k++) // mu = a
+        for (a = 0; a < NCOL ; a++)
+          for (b = 0; b <NCOL ; b++)
+            for (c = 0; c <NCOLF ; c++)
+              for (d = 0; d < NCOL ; d++)
+                for (e = 0; e < NCOL ; e++)
+                {
+                  CMUL(Lambda[k].e[d][e], s->funlink.e[b][c], tmat2.e[d][e]);
+                  CMUL_J(tmat2.e[d][e], DmuPhi[mu][i].e[a][c], tmat.e[d][e]);
+                  CMULSUM(tmat.e[d][e], Lambda[k].e[a][b], s->f_U[mu].e[d][e]);
+                }
+      */
 #endif
 #ifdef PHITERM3
       //-Ubar_a(x) phi(x) phibar(x)
@@ -378,9 +400,12 @@ double gauge_force(Real eps) {
 // Assume compute_PhiSq() and compute_DmuPhi() have already been run
 double scalar_force(Real eps) {
 #ifdef SPHI
-  register int i, j, k, l, c1, c2, mu;
+  register int i, j, k, l, c1, c2, d1, d2, mu;
   register site *s;
+  complex temp;
   double returnit = 0.0, tr;
+  matrix* tmat;
+  funmatrix* tfunmat;
   msg_tag *tag, *tag2;
 
   // Phi force terms
@@ -405,6 +430,47 @@ double scalar_force(Real eps) {
       funa_dif_an_matrix(&(DmuPhi[mu][i]), &(s->f_phi));
     }
     cleanup_gather(tag);
+
+//------------------
+/*
+    tag = start_gather_field(DmuPhi[mu], sizeof(funmatrix),
+                             goffset[mu] + 1, EVENANDODD, gen_pt[0]);
+    tag2 = start_gather_site(F_OFFSET(link[mu]), sizeof(matrix),
+                             goffset[mu] + 1, EVENANDODD, gen_pt[1]);
+    FORALLSITES(i, s)
+      for(j = 0; j<NCOLF ; j++)
+        for(k = 0; k<NCOL; k++){
+          tempfunamat[i].e[j][k].real = 0;
+          tempfunamat[i].e[j][k].imag = 0;
+        }
+    wait_gather(tag);
+    wait_gather(tag2);
+
+    FORALLSITES(i, s) {
+      tfunmat = (funmatrix *)gen_pt[0][i];
+      tmat = (matrix *)(gen_pt[1][i]);
+       //temp = U^i = - Tr(U Lambda^i)
+        for (j = 0; j<NCOLF ; j++)
+          for (k = 0; k<NCOL ; k++)
+            for (c1 = 0; c1<NCOL ; c1++) {
+              for (l = 0; l<DIMF ; l++) {
+                temp.real = 0;
+                temp.imag = 0;
+                for (d1 = 0; d1<NCOL ; d1++)
+                  for (d2 = 0; d2<NCOL ; d2++) {
+                    CMULDIF(tmat->e[d1][d2], Lambda[l].e[d2][d1], temp);
+                  }
+                CMUL_J(temp, tfunmat->e[c1][j], tempfunamat->e[j][k]);
+                CMULSUM(tempfunamat->e[j][k], Lambda[l].e[c1][i], s->f_phi.e[j][k]);
+              }
+              CONJG(DmuPhi[mu]->e[k][j], temp);
+              CDIF(s->f_phi.e[j][k], temp);
+            }
+    }
+
+    cleanup_gather(tag);
+    cleanup_gather(tag2);
+    */
   }
 #endif
   FORALLSITES(i, s) { // TODO!!!
