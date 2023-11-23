@@ -320,6 +320,8 @@ double gauge_force(Real eps) {
   printf("\nAFTER BMASS\n");
   dumpforce();
 #endif
+  int k2;
+  complex tc2;
   FORALLDIR(mu) {
     tag0[0] = start_gather_field(PhiSq, sizeof(matrix),
                                  goffset[mu], EVENANDODD, gen_pt[0]);
@@ -330,29 +332,18 @@ double gauge_force(Real eps) {
     FORALLSITES(i, s) {
 #ifdef PHITERM1
       //phi(x+a)*bar(D+_a phi(x))
-      fun_mult_na_sum((funmatrix *)(gen_pt[1][i]), &DmuPhi[mu][i], &(s->f_U[mu]));
-      /*
-      for (a = 0; a < NCOL ; a++)
-        for (b = 0; b < NCOL ; b++)
-        {
-          tmat.e[a][b].real = 0;
-          tmat.e[a][b].imag = 0;
-          tmat2.e[a][b].real = 0;
-          tmat2.e[a][b].imag = 0;
-        }
-
+//      fun_mult_na_sum((funmatrix *)(gen_pt[1][i]), &DmuPhi[mu][i], &(s->f_U[mu]));
       for (k = 0; k < DIMF ; k++) // mu = a
-        for (a = 0; a < NCOL ; a++)
-          for (b = 0; b <NCOL ; b++)
-            for (c = 0; c <NCOLF ; c++)
+        for (b = 0; b < NCOL ; b++)
+          for (c = 0; c <NCOL ; c++)
+            for (k2 = 0; k2 <NCOLF ; k2++)
               for (d = 0; d < NCOL ; d++)
                 for (e = 0; e < NCOL ; e++)
                 {
-                  CMUL(Lambda[k].e[d][e], s->funlink.e[b][c], tmat2.e[d][e]);
-                  CMUL_J(tmat2.e[d][e], DmuPhi[mu][i].e[a][c], tmat.e[d][e]);
-                  CMULSUM(tmat.e[d][e], Lambda[k].e[a][b], s->f_U[mu].e[d][e]);
+                  CMUL(Lambda[k].e[d][e], ((funmatrix *)(gen_pt[1][i]))->e[c][k2], tc2);
+                  CMUL_J(tc2, DmuPhi[mu][i].e[b][k2], tc);
+                  CMULSUM(tc, Lambda[k].e[b][c], s->f_U[mu].e[d][e]);
                 }
-      */
 #endif
 #ifdef PHITERM3
       //-Ubar_a(x) phi(x) phibar(x)
@@ -417,6 +408,7 @@ double scalar_force(Real eps) {
     funa_clear_mat(&(s->f_phi));
 #ifdef PHITERM1
   FORALLDIR(mu) {
+/*
     FORALLSITES(i, s) {
       funa_clear_mat(&(tempfunamat[i]));
       funa_mat_prod_an_sum(&(DmuPhi[mu][i]), &(s->link[mu]), &(tempfunamat[i]));
@@ -430,9 +422,9 @@ double scalar_force(Real eps) {
       funa_dif_an_matrix(&(DmuPhi[mu][i]), &(s->f_phi));
     }
     cleanup_gather(tag);
+*/
 
 //------------------
-/*
     tag = start_gather_field(DmuPhi[mu], sizeof(funmatrix),
                              goffset[mu] + 1, EVENANDODD, gen_pt[0]);
     tag2 = start_gather_site(F_OFFSET(link[mu]), sizeof(matrix),
@@ -470,7 +462,6 @@ double scalar_force(Real eps) {
 
     cleanup_gather(tag);
     cleanup_gather(tag2);
-    */
   }
 #endif
   FORALLSITES(i, s) { // TODO!!!
