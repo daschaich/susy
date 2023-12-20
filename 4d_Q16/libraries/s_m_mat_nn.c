@@ -15,7 +15,7 @@ void scalar_mult_nn_sum(matrix *a, matrix *b, Real s, matrix *c) {
         c->e[i][j].real += s * (a->e[i][k].real * b->e[k][j].real
                               - a->e[i][k].imag * b->e[k][j].imag);
         c->e[i][j].imag += s * (a->e[i][k].imag * b->e[k][j].real
-                                + a->e[i][k].real * b->e[k][j].imag);
+                              + a->e[i][k].real * b->e[k][j].imag);
       }
     }
   }
@@ -29,7 +29,7 @@ void scalar_mult_nn_dif(matrix *a, matrix *b, Real s, matrix *c) {
         c->e[i][j].real -= s * (a->e[i][k].real * b->e[k][j].real
                               - a->e[i][k].imag * b->e[k][j].imag);
         c->e[i][j].imag -= s * (a->e[i][k].imag * b->e[k][j].real
-                                + a->e[i][k].real * b->e[k][j].imag);
+                              + a->e[i][k].real * b->e[k][j].imag);
       }
     }
   }
@@ -40,16 +40,18 @@ void scalar_mult_nn(matrix *a, matrix *b, Real s, matrix *c) {
   for (i = 0; i < NCOL; i++) {
     for (j = 0; j < NCOL; j++) {
       // Initialize
-      c->e[i][j].real = s * (a->e[i][0].real * b->e[0][j].real
-                           - a->e[i][0].imag * b->e[0][j].imag);
-      c->e[i][j].imag = s * (a->e[i][0].imag * b->e[0][j].real
-                           + a->e[i][0].real * b->e[0][j].imag);
+      c->e[i][j].real = a->e[i][0].real * b->e[0][j].real
+                      - a->e[i][0].imag * b->e[0][j].imag;
+      c->e[i][j].imag = a->e[i][0].imag * b->e[0][j].real
+                      + a->e[i][0].real * b->e[0][j].imag;
       for (k = 1; k < NCOL; k++) {
-        c->e[i][j].real += s * (a->e[i][k].real * b->e[k][j].real
-                              - a->e[i][k].imag * b->e[k][j].imag);
-        c->e[i][j].imag += s * (a->e[i][k].imag * b->e[k][j].real
-                                + a->e[i][k].real * b->e[k][j].imag);
+        c->e[i][j].real += a->e[i][k].real * b->e[k][j].real
+                         - a->e[i][k].imag * b->e[k][j].imag;
+        c->e[i][j].imag += a->e[i][k].imag * b->e[k][j].real
+                         + a->e[i][k].real * b->e[k][j].imag;
       }
+      c->e[i][j].real *= s;
+      c->e[i][j].imag *= s;
     }
   }
 }
