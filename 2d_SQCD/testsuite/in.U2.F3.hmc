@@ -15,6 +15,7 @@ nstep_gauge 4
 traj_between_meas 3
 
 lambda 0.5
+R 0.5
 kappa_u1 0.5
 bmass 0.5
 fmass 0.0

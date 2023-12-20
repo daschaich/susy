@@ -331,8 +331,9 @@ double gauge_force(Real eps) {
     wait_gather(tag1[0]);
     FORALLSITES(i, s) {
 #ifdef PHITERM1
-      //phi(x+a)*bar(D+_a phi(x))
-//      fun_mult_na_sum((funmatrix *)(gen_pt[1][i]), &DmuPhi[mu][i], &(s->f_U[mu]));
+      // phi(x+a) bar(D+_a phi(x))
+      fun_mult_na_sum((funmatrix *)(gen_pt[1][i]), &DmuPhi[mu][i], &(s->f_U[mu]));
+/*
       for (k = 0; k < DIMF ; k++) // mu = a
         for (b = 0; b < NCOL ; b++)
           for (c = 0; c <NCOL ; c++)
@@ -344,6 +345,7 @@ double gauge_force(Real eps) {
                   CMUL_J(tc2, DmuPhi[mu][i].e[b][k2], tc);
                   CMULSUM(tc, Lambda[k].e[b][c], s->f_U[mu].e[d][e]);
                 }
+*/
 #endif
 #ifdef PHITERM3
       //-Ubar_a(x) phi(x) phibar(x)
@@ -408,7 +410,6 @@ double scalar_force(Real eps) {
     funa_clear_mat(&(s->f_phi));
 #ifdef PHITERM1
   FORALLDIR(mu) {
-/*
     FORALLSITES(i, s) {
       funa_clear_mat(&(tempfunamat[i]));
       funa_mat_prod_an_sum(&(DmuPhi[mu][i]), &(s->link[mu]), &(tempfunamat[i]));
@@ -422,8 +423,9 @@ double scalar_force(Real eps) {
       funa_dif_an_matrix(&(DmuPhi[mu][i]), &(s->f_phi));
     }
     cleanup_gather(tag);
-*/
+  }
 
+/*
 //------------------
     tag = start_gather_field(DmuPhi[mu], sizeof(funmatrix),
                              goffset[mu] + 1, EVENANDODD, gen_pt[0]);
@@ -463,11 +465,12 @@ double scalar_force(Real eps) {
     cleanup_gather(tag);
     cleanup_gather(tag2);
   }
+*/
 #endif
   FORALLSITES(i, s) { // TODO!!!
 #ifdef PHITERM2
     funa_mat_prod_an_sum(&(s->funlink), &(PhiSq[i]), &(s->f_phi));
-    
+
     /*
     for (j = 0; j<NCOLF ; j++)
       for (k = 0; k<NCOL ; k++) {

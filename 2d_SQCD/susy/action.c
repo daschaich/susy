@@ -90,49 +90,48 @@ void compute_Fmunu() {
 // -----------------------------------------------------------------
 
 
+
 // -----------------------------------------------------------------
 // For the gauge action, compute at each site
-// phi(x)*phibar(x)-r*I
+// phi(x) phibar(x) - r*I
 void compute_PhiSq() {
   register int i;
   register site *s;
 
   FORALLSITES(i, s) {
     fun_mult_na(&(s->funlink), &(s->funlink), &(PhiSq[i]));
-    scalar_add_diag(&(PhiSq[i]), -1.0 * R);
+    scalar_sub_diag(&(PhiSq[i]), R);
   }
 }
-
 // -----------------------------------------------------------------
+
 
 
 // -----------------------------------------------------------------
 // For the gauge action and scalar action, compute at each site
-// Dmu phi = U_mu(x) phi(x+mu) - phi(x) U_mu(x+z)
-// where U_mu(x+z) = FIdentity for both mu values
+//   Dmu phi = U_mu(x) phi(x+mu) - phi(x) V_mu(x+z)
+// where V_mu(x+z) is the FxF unit matrix
 void compute_DmuPhi() {
-  register int i;
+  register int i, mu;
   register site *s;
-  funmatrix temp;
-  msg_tag *mtag0 = NULL, *mtag1 = NULL;
-  mtag0 = start_gather_site(F_OFFSET(funlink), sizeof(funmatrix),
-                            goffset[0], EVENANDODD, gen_pt[0]);
-  mtag1 = start_gather_site(F_OFFSET(funlink), sizeof(funmatrix),
-                            goffset[1], EVENANDODD, gen_pt[1]);
+  msg_tag *tag[NUMLINK];
 
-  wait_gather(mtag0);
-  wait_gather(mtag1);
-  FORALLSITES(i, s){
-    fun_mat_prod((funmatrix *)(gen_pt[0]), &(s->link[0]), &(temp));
-    fun_sub_matrix(&(temp), &(s->funlink), &(DmuPhi[0][i]));
-
-    fun_mat_prod((funmatrix *)(gen_pt[1]), &(s->link[1]), &(temp));
-    fun_sub_matrix(&(temp), &(s->funlink), &(DmuPhi[1][i]));
+  FORALLDIR(mu) {
+    tag[mu] = start_gather_site(F_OFFSET(funlink), sizeof(funmatrix),
+                                 goffset[mu], EVENANDODD, gen_pt[mu]);
   }
-  cleanup_gather(mtag0);
-  cleanup_gather(mtag1);
+
+  FORALLDIR(mu) {
+    wait_gather(tag[mu]);
+    FORALLSITES(i, s) {
+      fun_mat_prod((funmatrix *)(gen_pt[mu]), &(s->link[mu]), &(DmuPhi[mu][i]));
+      fun_dif_matrix(&(s->funlink), &(DmuPhi[mu][i]));
+    }
+    cleanup_gather(tag[mu]);
+  }
 }
 // -----------------------------------------------------------------
+
 
 
 // -----------------------------------------------------------------
@@ -188,9 +187,9 @@ double scalar_action(int do_det) {
   FORALLSITES(i, s) {
     // SQCD part of the gauge action
     // not certain about signs, numeric factors
-    // phi^4 term
     clear_mat(&tmat);//For now don't know which terms is on so start with clear
 #ifdef PHITERM2
+    // phi^4 and Fayet--Iliopoulos terms
     mult_nn(&(PhiSq[i]), &(PhiSq[i]), &tmat2);
     scalar_mult_sum_matrix(&tmat2, 0.5, &tmat);
 #endif
@@ -201,9 +200,9 @@ double scalar_action(int do_det) {
 #endif
 #ifdef PHITERM1
     // DmuPhi^2 term
-    // in 1505.00467 this term is given as
-    // bar(DmuPhi)DmuPhi but this is a NCOLF NCOLF matrix
-    // so here we calculate DmuPhi bar(DmuPhi)
+    // In 1505.00467 this term is written as bar(DmuPhi) DmuPhi
+    // but this would be an FxF matrix
+    // Use trace cyclic property to compute DmuPhi bar(DmuPhi) instead
     fun_mult_na_sum(&(DmuPhi[0][i]), &(DmuPhi[0][i]), &tmat);
     fun_mult_na_sum(&(DmuPhi[1][i]), &(DmuPhi[1][i]), &tmat);
 #endif
