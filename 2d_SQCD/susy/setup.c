@@ -298,11 +298,11 @@ int readin(int prompt) {
 
     // lambda, kappa_u1, bmass, fmass, G
     IF_OK status += get_f(stdin, prompt, "lambda", &par_buf.lambda);
+    IF_OK status += get_f(stdin, prompt, "R", &par_buf.R);
     IF_OK status += get_f(stdin, prompt, "kappa_u1", &par_buf.kappa_u1);
     IF_OK status += get_f(stdin, prompt, "bmass", &par_buf.bmass);
     IF_OK status += get_f(stdin, prompt, "fmass", &par_buf.fmass);
     IF_OK status += get_f(stdin, prompt, "G", &par_buf.G);
-    R = 0; //TODO: make it a read in parameter
 
 #ifdef SMEAR
     // Smearing stuff -- passed to either APE or stout routines by application
@@ -375,6 +375,7 @@ int readin(int prompt) {
   rsqmin = par_buf.rsqmin;
 
   lambda = par_buf.lambda;
+  R = par_buf.R;
   kappa_u1 = par_buf.kappa_u1;
   bmass = par_buf.bmass;
   fmass = par_buf.fmass;

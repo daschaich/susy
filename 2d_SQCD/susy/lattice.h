@@ -84,7 +84,7 @@ EXTERN Real traj_length;
 // U(N) generators
 EXTERN matrix Lambda[DIMF];
 
-EXTERN Real rsqmin, lambda, kappa, bmass, fmass, kappa_u1, G, R;
+EXTERN Real rsqmin, lambda, R, kappa, bmass, fmass, kappa_u1, G;
 EXTERN int doG;
 EXTERN double g_plaq;     // Global plaq for I/O
 EXTERN double_complex linktrsum;

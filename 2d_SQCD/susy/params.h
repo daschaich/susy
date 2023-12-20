@@ -25,6 +25,7 @@ typedef struct {
   int fixflag;            // Whether to gauge fix to Coulomb gauge
   int saveflag;           // What to do with lattice at end
   Real lambda, kappa;     // 't Hooft coupling and Nc/(4lambda)
+  Real R;                 // Coefficient of Fayet--Iliopoulos term
   Real bmass, fmass;      // Bosonic and fermion masses
   Real kappa_u1;          // Plaquette determinant coupling
   Real G;                 // Q-invariant plaquette determinant coupling

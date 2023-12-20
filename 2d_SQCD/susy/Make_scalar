@@ -4,8 +4,8 @@ MAKEFILE = Make_scalar
 MPP            =
 PRECISION      = 2
 CC             = gcc -pg
-#OPT            = -O3 -DP4 -Wall -fno-strict-aliasing
-OPT            = -O0 -ggdb -DP4 -Wall -fno-strict-aliasing
+OPT            = -O3 -DP4 -Wall -fno-strict-aliasing
+#OPT            = -O0 -ggdb -DP4 -Wall -fno-strict-aliasing
 CLFS           = -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE64
                  # Large files gcc only
 MACHINE_DEP_IO = io_ansi.o

@@ -126,6 +126,7 @@ void sub_adj_matrix(matrix *a, matrix *b, matrix *c);
 
 // In file s_a_d_mat.c
 void scalar_add_diag(matrix *a, Real s);
+void scalar_sub_diag(matrix *a, Real s);
 
 // In file s_m_mat.c
 void scalar_mult_matrix(matrix *src, Real s, matrix *c);
