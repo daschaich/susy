@@ -420,7 +420,7 @@ double scalar_force(Real eps) {
     wait_gather(tag);
     FORALLSITES(i, s) {
       funa_sum_matrix((funamatrix *)gen_pt[0][i], &(s->f_phi));
-      funa_dif_an_matrix(&(DmuPhi[mu][i]), &(s->f_phi));
+      funa_dif_adj_matrix(&(DmuPhi[mu][i]), &(s->f_phi));
     }
     cleanup_gather(tag);
   }

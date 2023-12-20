@@ -50,7 +50,8 @@ gauge_file *save_lattice(int flag, char *filename) {
 
 
 // -----------------------------------------------------------------
-// Set link to unit matrices
+// Set links to unit matrices
+// Embed unit sub-matrix into each NxF scalar
 void coldlat() {
   register int i, j, k, dir;
   register site *s;
@@ -63,11 +64,12 @@ void coldlat() {
           s->link[dir].e[j][k] = cmplx(0.0, 0.0);
           s->link[dir].e[k][j] = cmplx(0.0, 0.0);
         }
-#ifndef DEBUGFUNACTION
-        for (k = 0; k < NCOLF ; k++) s->funlink.e[j][k] = cmplx(0.0, 0.0);
-#else
-        for (k = 0; k < NCOLF ; k++) s->funlink.e[j][k] = cmplx(myrand(&(s->site_prn)),myrand(&(s->site_prn)));
-#endif
+        for (k = 0; k < NCOLF ; k++) {
+          if (j == k)
+            s->funlink.e[j][k] = cmplx(1.0, 0.0);
+          else
+            s->funlink.e[j][k] = cmplx(0.0, 0.0);
+        }
       }
     }
   }
@@ -78,7 +80,7 @@ void coldlat() {
 
 
 // -----------------------------------------------------------------
-// Set link to funny matrices for debugging
+// Set links to funny matrices for debugging
 void funnylat() {
   register int i, j, k, dir;
   register site *s;

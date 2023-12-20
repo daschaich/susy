@@ -241,7 +241,6 @@ void mult_su2_mat_vec_elem_a(su2_matrix *u, complex *x0, complex *x1);
 // -----------------------------------------------------------------
 // Routines for funmatrices
 // For now all in funmatrix_functions.c but plan to split the file
-
 void fun_sum_matrix(funmatrix *b, funmatrix *c);
 void fun_add_matrix(funmatrix *a, funmatrix *b, funmatrix *c);
 
@@ -332,20 +331,16 @@ void fun_sub_matrix(funmatrix *a, funmatrix *b, funmatrix *c);
 void funa_dif_matrix(funamatrix *b, funamatrix *c);
 void funa_sub_matrix(funamatrix *a, funamatrix *b, funamatrix *c);
 
-void fun_mat_mult( matrix *b, funmatrix *c);
-void fun_mat_scalar_mult( matrix *b, Real s, funmatrix *c);
 void fun_mat_prod(funmatrix *a, matrix *b, funmatrix *c);
 void fun_mat_prod_dif(funmatrix *a, matrix *b, funmatrix *c);
 
-void funa_mat_mult( matrix *b, funamatrix *c);
-void funa_mat_scalar_mult( matrix *b, Real s, funmatrix *c);
-void funa_mat_prod( funamatrix *a, matrix *b, funamatrix *c);
-void funa_mat_prod_sum( funamatrix *a, matrix *b, funamatrix *c);
-void funa_mat_prod_dif( funamatrix *a, matrix *b, funamatrix *c);
-void funa_mat_mult_an( funmatrix *a, matrix *b, funamatrix *c);
-void funa_scalar_mat_mult_an( funmatrix *a, matrix *b, Real s, funamatrix *c);
-void funa_mat_prod_an_sum( funmatrix *a, matrix *b, funamatrix *c);
-void funa_mat_prod_an_dif( funmatrix *a, matrix *b, funamatrix *c);
+void funa_mat_prod(funamatrix *a, matrix *b, funamatrix *c);
+void funa_mat_prod_sum(funamatrix *a, matrix *b, funamatrix *c);
+void funa_mat_prod_dif(funamatrix *a, matrix *b, funamatrix *c);
+void funa_mat_mult_an(funmatrix *a, matrix *b, funamatrix *c);
+void funa_scalar_mat_mult_an(funmatrix *a, matrix *b, Real s, funamatrix *c);
+void funa_mat_prod_an_sum(funmatrix *a, matrix *b, funamatrix *c);
+void funa_mat_prod_an_dif(funmatrix *a, matrix *b, funamatrix *c);
 
 void funa_scalar_mat_prod_an_dif(funmatrix *a,matrix *b,Real s,funamatrix *c);
 
@@ -358,9 +353,7 @@ complex fun_complextrace_na(funmatrix *a, funmatrix *b);
 complex funa_complextrace_an(funamatrix *a, funamatrix *b);
 complex funa_complextrace_na(funamatrix *a, funamatrix *b);
 
-void funa_dif_an_matrix(funmatrix *b, funamatrix *c);
-
-
+void funa_dif_adj_matrix(funmatrix *b, funamatrix *c);
 // -----------------------------------------------------------------
 
 // -----------------------------------------------------------------

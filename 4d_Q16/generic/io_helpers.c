@@ -50,7 +50,7 @@ gauge_file *save_lattice(int flag, char *filename) {
 
 
 // -----------------------------------------------------------------
-// Set link to unit matrices
+// Set links to unit matrices
 void coldlat() {
   register int i, j, k, dir;
   register site *s;
@@ -73,7 +73,7 @@ void coldlat() {
 
 
 // -----------------------------------------------------------------
-// Set link to funny matrices for debugging
+// Set links to funny matrices for debugging
 void funnylat() {
   register int i, j, k, dir;
   register site *s;
