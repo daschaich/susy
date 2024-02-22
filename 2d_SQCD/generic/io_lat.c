@@ -449,9 +449,9 @@ void w_serial(gauge_file *gf) {
         // node0 sends a few bytes to newnode as a clear to send signal
         if (newnode != currentnode) {
           if (this_node == 0 && newnode != 0)
-            send_field((char *)tbuf, NUMLINK, newnode);
+            send_field((char *)funtbuf, NUMLINK, newnode);
           if (this_node == newnode && newnode != 0)
-            get_field((char *)tbuf, NUMLINK, 0);
+            get_field((char *)funtbuf, NUMLINK, 0);
           currentnode = newnode;
         }
       }
@@ -708,7 +708,7 @@ void r_serial(gauge_file *gf) {
         idest = node_index(x, t);
         // Save funmatrix in tmat for further processing
         memcpy(&tfunmat, &funlbuf[where_in_buf],
-               sizeof(funmatrix));
+               sizeof(ffunmatrix));
       }
       else {                // Send to correct node
         send_field((char *)&funlbuf[where_in_buf],
