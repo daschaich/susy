@@ -236,8 +236,8 @@ double gauge_force(Real eps) {
       //tmat = &((matrix *) local_pt[0][0]);
 
       //fun_at_mult_an_sub(&(tmat), &(Fmu5[i]), &(s->f_var));
-      fun_at_mult_an_sub((matrix*) (local_pt[0][0]), &(Fmu5[i]), &(s->f_var));
-      fun_o_sum(&(Fmu5[i]), &(s->f_var));
+      fun_at_mult_na_sub((matrix*) (local_pt[0][0]), &(Fmu5[mu][i]), &(s->f_var));
+      fun_o_sum(&(Fmu5[mu][i]), &(s->f_var));
       cleanup_gather(tag0[0]);  
     }
   }

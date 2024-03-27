@@ -256,6 +256,9 @@ Real fun_nn_realtrace(funmatrix *a, funmatrix *b);
 // in file fun_ta_functions.c
 void fun_ta_mult_nn(funmatrix *a, matrix *b, funmatrix *c);
 
+// in file fun_at_function.c
+void fun_at_mult_na_sub(matrix *a, funmatrix *b, funmatrix *c);
+
 // in file fun_tt_functions.c
 void fun_tt_mult_an(funmatrix *a, funmatrix *b, matrix *c);
 void fun_tt_mult_an_sum(funmatrix *a, funmatrix *b, matrix *c);

@@ -449,7 +449,7 @@ void w_serial(gauge_file *gf) {
               flush_funtbuf_to_funlbuf(gf, &rank29, &rank31, funlbuf, 
                                   &buf_length, funtbuf, tbuf_length);
               if (buf_length > MAX_BUF_LENGTH - nx)
-                flush_funlbuf_to_file(gf, lbuf, &buf_length);
+                flush_funlbuf_to_file(gf, funlbuf, &buf_length);
             }
             tbuf_length = 0;
           }

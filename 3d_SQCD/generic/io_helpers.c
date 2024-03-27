@@ -65,10 +65,10 @@ void coldlat() {
             s->link[dir].e[j][k] = cmplx(1.0, 0.0);
         }
       }
-    }
-    for(j = 0; j< NCOL; j++) {
-      for(k = 0; k<NCOLF; k++) {
-        s->varlink.e[j][k] = cmplx(0.0, 0.0);
+      for(j = 0; j< NCOL; j++) {
+        for(k = 0; k<NCOLF; k++) {
+          s->varlink.e[j][k] = cmplx(0.01, 0.0);
+        }
       }
     }
   }
