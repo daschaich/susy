@@ -1,0 +1,261 @@
+N=4 SYM, Nc = 2, DIMF = 4, fermion rep = adjoint
+Microcanonical simulation with refreshing
+Machine = Scalar processor, with 1 nodes
+Hybrid Monte Carlo algorithm
+Phi algorithm
+start: Wed Mar  6 11:55:09 2024
+
+type 0 for no prompts or 1 for prompts
+nx 2
+ny 2
+nt 2
+PBC 1
+iseed 41
+Nroot 1
+Norder 15
+LAYOUT = Hypercubes, options = hyper_prime
+ON EACH NODE 2 x 2 x 2
+Mallocing 0.0 MBytes per core for lattice
+Periodic temporal boundary conditions
+Double-trace scalar potential
+Mallocing 0.0 MBytes per core for fields
+Using Nroot = 1
+RHMC Norder 15 for spectral range [1e-7, 1000]
+
+
+warms 0
+trajecs 3
+traj_length 1
+nstep 5
+nstep_gauge 4
+traj_between_meas 3
+lambda 0.5
+kappa_u1 0.5
+bmass 0.5
+fmass 0
+G 0.1
+max_cg_iterations 500
+error_per_site 1e-05
+fresh
+forget
+lambda=0.5 --> kappa=Nc/(4lambda)=1
+C2=1
+unit gauge NUMLINK configuration loaded
+CHECK PLAQ: 2.0000000000000000e+00 2.0000000000000000e+00
+CHECK NERSC LINKTR: 1.0000000000000000e+00 CKSUM: 0
+START 2 2 4 0
+f_eps 0.2 g_eps 0.025
+WARMUPS COMPLETED
+AFTER RANMOM:
+  (0.8877, 0.05937)  (0.8906, 0.8338)  (-0.1941, 0.4889)
+  (0.8661, 0.7484)  (0.4606, 0.2649)  (-0.08933, 1.661)
+action: gauge 0 varphi 0 bmass 0 det 0 mom 162.27604 sum 162.27604
+action: gauge 35.090242 varphi 237.51348 bmass 0.37782458 det 6.4940271 mom 140.0453 sum 419.52087
+REJECT: delta S = 257.2 start S = 162.276039847 end S = 419.520873323
+IT_PER_TRAJ 0
+MONITOR_FORCE_GAUGE    0.07188 0.1041
+MONITOR_FORCE_FERMION0 0 0
+FLINK 1 1 1 1 0
+GMES 2 0 0 2 2 0 2
+BACTION 0
+LINES       2 0 2 0 2 0
+LINES_POLARWARNING: w[0] = w[1] = 1
+WARNING: w[0] = w[1] = 1
+WARNING: w[0] = w[1] = 1
+WARNING: w[0] = w[1] = 1
+WARNING: w[0] = w[1] = 1
+WARNING: w[0] = w[1] = 1
+WARNING: w[0] = w[1] = 1
+WARNING: w[0] = w[1] = 1
+ 2 0WARNING: w[0] = w[1] = 1
+WARNING: w[0] = w[1] = 1
+WARNING: w[0] = w[1] = 1
+WARNING: w[0] = w[1] = 1
+WARNING: w[0] = w[1] = 1
+WARNING: w[0] = w[1] = 1
+WARNING: w[0] = w[1] = 1
+WARNING: w[0] = w[1] = 1
+ 2 0WARNING: w[0] = w[1] = 1
+WARNING: w[0] = w[1] = 1
+WARNING: w[0] = w[1] = 1
+WARNING: w[0] = w[1] = 1
+WARNING: w[0] = w[1] = 1
+WARNING: w[0] = w[1] = 1
+WARNING: w[0] = w[1] = 1
+WARNING: w[0] = w[1] = 1
+ 2 0
+DET 1 0 1 0 0
+WIDTHS 0.916515 0.458258 0
+UUBAR_EIG 0 0 0 0 0
+UUBAR_EIG 1 0 0 0 0
+WARNING: w[0] = w[1] = 1
+WARNING: w[0] = w[1] = 1
+WARNING: w[0] = w[1] = 1
+WARNING: w[0] = w[1] = 1
+WARNING: w[0] = w[1] = 1
+WARNING: w[0] = w[1] = 1
+WARNING: w[0] = w[1] = 1
+WARNING: w[0] = w[1] = 1
+WARNING: w[0] = w[1] = 1
+WARNING: w[0] = w[1] = 1
+WARNING: w[0] = w[1] = 1
+WARNING: w[0] = w[1] = 1
+WARNING: w[0] = w[1] = 1
+WARNING: w[0] = w[1] = 1
+WARNING: w[0] = w[1] = 1
+WARNING: w[0] = w[1] = 1
+WARNING: w[0] = w[1] = 1
+WARNING: w[0] = w[1] = 1
+WARNING: w[0] = w[1] = 1
+WARNING: w[0] = w[1] = 1
+WARNING: w[0] = w[1] = 1
+WARNING: w[0] = w[1] = 1
+WARNING: w[0] = w[1] = 1
+WARNING: w[0] = w[1] = 1
+POLAR_EIG 0 0 0 0 0
+POLAR_EIG 1 0 0 0 0
+AFTER RANMOM:
+  (-0.1053, -0.04722)  (0.2011, 0.7296)  (0.2707, 0.4076)
+  (-0.5654, 0.3417)  (-0.04245, 0.4004)  (1.004, -0.6278)
+action: gauge 0 varphi 237.51348 bmass 0 det 0 mom 134.50332 sum 372.0168
+action: gauge 38.269518 varphi 459.80792 bmass 0.86218385 det 6.463126 mom 108.36103 sum 613.76378
+REJECT: delta S = 241.7 start S = 372.016799922 end S = 613.763778902
+IT_PER_TRAJ 0
+MONITOR_FORCE_GAUGE    0.06629 0.09469
+MONITOR_FORCE_FERMION0 0 0
+FLINK 1 1 1 1 0
+GMES 2 0 0 2 2 0 2
+BACTION 0
+LINES       2 0 2 0 2 0
+LINES_POLARWARNING: w[0] = w[1] = 1
+WARNING: w[0] = w[1] = 1
+WARNING: w[0] = w[1] = 1
+WARNING: w[0] = w[1] = 1
+WARNING: w[0] = w[1] = 1
+WARNING: w[0] = w[1] = 1
+WARNING: w[0] = w[1] = 1
+WARNING: w[0] = w[1] = 1
+ 2 0WARNING: w[0] = w[1] = 1
+WARNING: w[0] = w[1] = 1
+WARNING: w[0] = w[1] = 1
+WARNING: w[0] = w[1] = 1
+WARNING: w[0] = w[1] = 1
+WARNING: w[0] = w[1] = 1
+WARNING: w[0] = w[1] = 1
+WARNING: w[0] = w[1] = 1
+ 2 0WARNING: w[0] = w[1] = 1
+WARNING: w[0] = w[1] = 1
+WARNING: w[0] = w[1] = 1
+WARNING: w[0] = w[1] = 1
+WARNING: w[0] = w[1] = 1
+WARNING: w[0] = w[1] = 1
+WARNING: w[0] = w[1] = 1
+WARNING: w[0] = w[1] = 1
+ 2 0
+DET 1 0 1 0 0
+WIDTHS 0.916515 0.458258 0
+UUBAR_EIG 0 0 0 0 0
+UUBAR_EIG 1 0 0 0 0
+WARNING: w[0] = w[1] = 1
+WARNING: w[0] = w[1] = 1
+WARNING: w[0] = w[1] = 1
+WARNING: w[0] = w[1] = 1
+WARNING: w[0] = w[1] = 1
+WARNING: w[0] = w[1] = 1
+WARNING: w[0] = w[1] = 1
+WARNING: w[0] = w[1] = 1
+WARNING: w[0] = w[1] = 1
+WARNING: w[0] = w[1] = 1
+WARNING: w[0] = w[1] = 1
+WARNING: w[0] = w[1] = 1
+WARNING: w[0] = w[1] = 1
+WARNING: w[0] = w[1] = 1
+WARNING: w[0] = w[1] = 1
+WARNING: w[0] = w[1] = 1
+WARNING: w[0] = w[1] = 1
+WARNING: w[0] = w[1] = 1
+WARNING: w[0] = w[1] = 1
+WARNING: w[0] = w[1] = 1
+WARNING: w[0] = w[1] = 1
+WARNING: w[0] = w[1] = 1
+WARNING: w[0] = w[1] = 1
+WARNING: w[0] = w[1] = 1
+POLAR_EIG 0 0 0 0 0
+POLAR_EIG 1 0 0 0 0
+AFTER RANMOM:
+  (0.3483, 0.3294)  (-0.1081, 0.5154)  (0.004755, 0.1302)
+  (-1.011, -0.6366)  (-0.2184, 1.216)  (-1.075, 1.667)
+action: gauge 0 varphi 459.80792 bmass 0 det 0 mom 163.55812 sum 623.36604
+action: gauge 39.815112 varphi 735.09422 bmass 0.94405296 det 8.7708885 mom 125.54697 sum 910.17125
+REJECT: delta S = 286.8 start S = 623.366040465 end S = 910.171248681
+IT_PER_TRAJ 0
+MONITOR_FORCE_GAUGE    0.07161 0.1035
+MONITOR_FORCE_FERMION0 0 0
+FLINK 1 1 1 1 0
+GMES 2 0 0 2 2 0 2
+BACTION 0
+LINES       2 0 2 0 2 0
+LINES_POLARWARNING: w[0] = w[1] = 1
+WARNING: w[0] = w[1] = 1
+WARNING: w[0] = w[1] = 1
+WARNING: w[0] = w[1] = 1
+WARNING: w[0] = w[1] = 1
+WARNING: w[0] = w[1] = 1
+WARNING: w[0] = w[1] = 1
+WARNING: w[0] = w[1] = 1
+ 2 0WARNING: w[0] = w[1] = 1
+WARNING: w[0] = w[1] = 1
+WARNING: w[0] = w[1] = 1
+WARNING: w[0] = w[1] = 1
+WARNING: w[0] = w[1] = 1
+WARNING: w[0] = w[1] = 1
+WARNING: w[0] = w[1] = 1
+WARNING: w[0] = w[1] = 1
+ 2 0WARNING: w[0] = w[1] = 1
+WARNING: w[0] = w[1] = 1
+WARNING: w[0] = w[1] = 1
+WARNING: w[0] = w[1] = 1
+WARNING: w[0] = w[1] = 1
+WARNING: w[0] = w[1] = 1
+WARNING: w[0] = w[1] = 1
+WARNING: w[0] = w[1] = 1
+ 2 0
+DET 1 0 1 0 0
+WIDTHS 0.916515 0.458258 0
+UUBAR_EIG 0 0 0 0 0
+UUBAR_EIG 1 0 0 0 0
+WARNING: w[0] = w[1] = 1
+WARNING: w[0] = w[1] = 1
+WARNING: w[0] = w[1] = 1
+WARNING: w[0] = w[1] = 1
+WARNING: w[0] = w[1] = 1
+WARNING: w[0] = w[1] = 1
+WARNING: w[0] = w[1] = 1
+WARNING: w[0] = w[1] = 1
+WARNING: w[0] = w[1] = 1
+WARNING: w[0] = w[1] = 1
+WARNING: w[0] = w[1] = 1
+WARNING: w[0] = w[1] = 1
+WARNING: w[0] = w[1] = 1
+WARNING: w[0] = w[1] = 1
+WARNING: w[0] = w[1] = 1
+WARNING: w[0] = w[1] = 1
+WARNING: w[0] = w[1] = 1
+WARNING: w[0] = w[1] = 1
+WARNING: w[0] = w[1] = 1
+WARNING: w[0] = w[1] = 1
+WARNING: w[0] = w[1] = 1
+WARNING: w[0] = w[1] = 1
+WARNING: w[0] = w[1] = 1
+WARNING: w[0] = w[1] = 1
+POLAR_EIG 0 0 0 0 0
+POLAR_EIG 1 0 0 0 0
+RUNNING COMPLETED
+STOP 2 2 4 0
+Average CG iters for steps: 0
+
+Time = 0.01157 seconds
+total_iters = 0
+
+exit: Wed Mar  6 11:55:09 2024
+

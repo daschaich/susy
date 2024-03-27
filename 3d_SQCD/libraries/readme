@@ -1,0 +1,10 @@
+fun_xy_functions contain binary operations between different types of functions:
+  x,y can be n,t,a
+  n - is take argument directly
+  t - first take transpose
+  a - adjoint representation (normal matrix)
+
+fun_adjoint contains simple functions doing adjoints - e.g. computing adjoint of something and saving it
+
+fun_o_function contain other functions where type of funmatrix is irrelevant
+  e.g multiply by scalar or sum same type funmatrices.
