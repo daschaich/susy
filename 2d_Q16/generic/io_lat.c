@@ -215,8 +215,8 @@ static void send_buf_to_node0(fmatrix *tbuf, int tbuf_length,
 // Only node 0 writes the gauge configuration to a binary file gf
 void w_serial(gauge_file *gf) {
   register int i;
-  int rank29, rank31, buf_length, tbuf_length;
-  int x, t, currentnode, newnode;
+  int rank29, rank31, buf_length, tbuf_length, index;
+  int j,x, t, currentnode, newnode;
   FILE *fp = NULL;
   gauge_header *gh = NULL;
   fmatrix *lbuf = NULL;
@@ -510,9 +510,10 @@ void r_serial(gauge_file *gf) {
       }
       // Copy (NUMLINK + 2) matrices to generic-precision lattice[idest]
       for (j = 0; j < NUMLINK; j++)
-        f2d_mat(tmat[j], &lattice[idest].link[j]);
-      f2d_mat(tmat[NUMLINK], &lattice[idest].phi);
-      f2d_mat(tmat[NUMLINK + 1], &lattice[idest].varphi);
+        f2d_mat(&tmat[j], &lattice[idest].link[j]);
+      f2d_mat(&tmat[NUMLINK], &lattice[idest].phi);
+      f2d_mat(&tmat[NUMLINK + 1], &lattice[idest].varphi);
+
     }
     else {
       rank29 += (NUMLINK + 2) * sizeof(fmatrix) / sizeof(int32type);
