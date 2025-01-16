@@ -510,9 +510,9 @@ void r_serial(gauge_file *gf) {
       }
       // Copy (NUMLINK + 2) matrices to generic-precision lattice[idest]
       for (j = 0; j < NUMLINK; j++)
-        f2d_mat(&tmat[j], &lattice[idest].link[j]);
-      f2d_mat(&tmat[NUMLINK], &lattice[idest].phi);
-      f2d_mat(&tmat[NUMLINK + 1], &lattice[idest].varphi);
+        f2d_mat(&(tmat[j]), &(lattice[idest].link[j]));
+      f2d_mat(&(tmat[NUMLINK]), &(lattice[idest].phi));
+      f2d_mat(&(tmat[NUMLINK + 1]), &(lattice[idest].varphi));
 
     }
     else {
