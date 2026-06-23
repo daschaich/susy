@@ -150,7 +150,7 @@ void wflow() {
     ssplaq = gauge_action(NODET) / ((double)volume * 4.5 * NCOL * NCOL);
 
     old_tSqE = tSqE;
-    node0_printf("WFLOW %g %g %g %g %g %g %g\n",
+    node0_printf("WFLOW %g %.8g %g %g %g %g %g\n",
                  t, plaq, E, tSqE, der_tSqE, check, ssplaq);
   }
 }

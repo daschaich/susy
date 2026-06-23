@@ -36,6 +36,31 @@ int main(int argc, char *argv[]) {
   }
   dtime = -dclock();
 
+  // !!! Test requested by GB:
+  // Starting from 'fresh' config (unit matrices),
+  // add gaussian fluctuations suppressed by tr<<1
+  register int i, j;
+  register site *s;
+  double tr = 0.10;
+  complex grn;
+
+  node0_printf("Adding noise suppressed by factor of %g\n", tr);
+  FORALLSITES(i, s) {
+    FORALLDIR(dir) {
+//      clear_mat(&(s->link[dir]));
+      for (j = 0; j < DIMF; j++) {
+#ifdef SITERAND
+        grn.real = tr * gaussian_rand_no(&(s->site_prn));
+        grn.imag = tr * gaussian_rand_no(&(s->site_prn));
+#else
+        grn.real = tr * gaussian_rand_no(&(s->node_prn));
+        grn.imag = tr * gaussian_rand_no(&(s->node_prn));
+#endif
+        c_scalar_mult_sum_mat(&(Lambda[j]), &grn, &(s->link[dir]));
+      }
+    }
+  }
+
   // Check: compute initial plaquette and bosonic action
   plaquette(&ss_plaq, &st_plaq);
   node0_printf("START %.8g %.8g %.8g ", ss_plaq, st_plaq, ss_plaq + st_plaq);
@@ -74,8 +99,8 @@ int main(int argc, char *argv[]) {
   wflow();
 
   node0_printf("Now consider unitarized links\n");
-  register int i;
-  register site *s;
+//  register int i;
+//  register site *s;
   matrix tmat, tmat2;
   FORALLDIR(dir) {
     FORALLSITES(i, s) {
