@@ -10,6 +10,7 @@ CLFS           = -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE64
 MACHINE_DEP_IO = io_ansi.o
 
 LD             = ${CC}
+LAPACK         = -llapack -lblas
 PLIB           = ../PRIMME/libzprimme.a
 LIBADD         =
 INLINEOPT      = # -DC_GLOBAL_INLINE # -DSSE_GLOBAL_INLINE -DC_INLINE

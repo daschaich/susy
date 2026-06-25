@@ -100,18 +100,14 @@ ALL_MAKES = Make_template \
 ${OBJECTS} : ${HEADERS} ${LASTMAKE} ${ALL_MAKES}
 
 ##### Targets:
-# lapack and blas needed for polar decomposition (scalar eigenvalues)
-# and also by -DEIG, -DWLOOP, -DSMEAR
 susy_hmc::
 	${MAKE} -f ${MAKEFILE} target "MYTARGET= $@" \
 	"DEFINES = ${DEFINES} -DPHI_ALGORITHM -DHMC_ALGORITHM " \
-	"LAPACK = -llapack -lblas " \
 	"EXTRA_OBJECTS = control.o update_o.o update_h.o setup_rhmc.o det_force.o "
 
 susy_meas::
 	${MAKE} -f ${MAKEFILE} target "MYTARGET= $@" \
 	"DEFINES = ${DEFINES} -DPHI_ALGORITHM -DSMEAR -DCORR -DWLOOP -DBILIN " \
-	"LAPACK = -llapack -lblas " \
 	"EXTRA_OBJECTS = control_meas.o rsymm.o monopole.o \
 	                 bilinearWard.o hvy_pot.o hvy_pot_polar.o hvy_pot_loop.o \
 	                 hvy_pot_polar_loop.o path.o smear.o local_plaq.o "
@@ -120,42 +116,38 @@ susy_hmc_meas::
 	${MAKE} -f ${MAKEFILE} target "MYTARGET= $@" \
 	"DEFINES = ${DEFINES} -DPHI_ALGORITHM -DHMC_ALGORITHM -DCORR -DWLOOP \
 	           -DBILIN -DSMEAR " \
-	"LAPACK = -llapack -lblas " \
 	"EXTRA_OBJECTS = control.o update_o.o update_h.o setup_rhmc.o det_force.o \
 	                 rsymm.o hvy_pot.o monopole.o \
 	                 hvy_pot_polar.o path.o bilinearWard.o hvy_pot_loop.o \
 	                 hvy_pot_polar_loop.o smear.o local_plaq.o "
 
+# Eigenvalues need PRIMME
+# Set ${PLIB} path in relevant Make_* file that includes this template
 susy_eig::
 	${MAKE} -f ${MAKEFILE} target "MYTARGET= $@" \
 	"DEFINES = ${DEFINES} -DPHI_ALGORITHM -DEIG " \
 	"LIBRARIES = ${LIBRARIES} ${PLIB} " \
-	"LAPACK = -llapack -lblas " \
 	"EXTRA_OBJECTS = control_eig.o eig.o "
 
 susy_phase::
 	${MAKE} -f ${MAKEFILE} target "MYTARGET= $@" \
 	"DEFINES = ${DEFINES} -DPHI_ALGORITHM -DPHASE " \
-	"LAPACK = -llapack -lblas " \
 	"EXTRA_OBJECTS = control_phase.o phase.o io_phase.o "
 
 # The targets below have not been used/tested recently
 susy_phi::
 	${MAKE} -f ${MAKEFILE} target "MYTARGET= $@" \
 	"DEFINES = ${DEFINES} -DPHI_ALGORITHM " \
-	"LAPACK = -llapack -lblas " \
 	"EXTRA_OBJECTS = control.o update_o.o update_h.o setup_rhmc.o det_force.o "
 
 susy_phi_pg::
 	${MAKE} -f ${MAKEFILE} target "MYTARGET= $@" \
 	"DEFINES = ${DEFINES} -DPHI_ALGORITHM -DPUREGAUGE " \
-	"LAPACK = -llapack -lblas " \
 	"EXTRA_OBJECTS = control.o update_o.o update_h.o setup_rhmc.o det_force.o "
 
 susy_hmc_pg::
 	${MAKE} -f ${MAKEFILE} target "MYTARGET= $@" \
 	"DEFINES = ${DEFINES} -DPHI_ALGORITHM -DHMC_ALGORITHM -DPUREGAUGE " \
-	"LAPACK = -llapack -lblas " \
 	"EXTRA_OBJECTS = control.o update_o.o update_h.o setup_rhmc.o det_force.o "
 
 clean:
@@ -169,9 +161,13 @@ libmake:
 	cd ${LIBDIR} ;\
 	${MAKE} -f ${MAKELIBRARIES} "APP_CC=${CC}" "PRECISION=${PRECISION}" all
 
+# All targets need lapack and blas for polar decomposition
+# (also needed for -DEIG, -DWLOOP, -DSMEAR)
+# Set flags in relevant Make_* file that includes this template
 localmake: ${OBJECTS} ${LIBRARIES}
 	${LD} -o ${MYTARGET} ${LDFLAGS} \
-	${OBJECTS} ${LIBRARIES} ${ILIB} -lm ${LAPACK}
+	${OBJECTS} ${LIBRARIES} ${ILIB} -lm \
+  ${LAPACK}
 	touch localmake
 
 target: libmake localmake
