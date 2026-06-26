@@ -167,7 +167,7 @@ libmake:
 localmake: ${OBJECTS} ${LIBRARIES}
 	${LD} -o ${MYTARGET} ${LDFLAGS} \
 	${OBJECTS} ${LIBRARIES} ${ILIB} -lm \
-  ${LAPACK}
+	${LAPACK}
 	touch localmake
 
 target: libmake localmake
