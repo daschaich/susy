@@ -18,7 +18,7 @@ zeta=$7
 target=$8
 
 nodes=1
-cpus=1
+cpus=8
 nx=4
 nt=4
 tag="N_${N}_${nx}x${nt}_rt_g_${rt}_${zeta}_${target}"
@@ -170,7 +170,7 @@ for(( i=$first ; $i<$last ; i+=$skip )); do
   echo "iseed 41" >> temp
 
   echo "Nroot 1" >> temp
-  echo "Norder 16" >> temp
+  echo "Norder 15" >> temp
 
   echo "warms 0" >> temp
   echo "trajecs $Ntraj" >> temp
@@ -185,7 +185,7 @@ for(( i=$first ; $i<$last ; i+=$skip )); do
   echo "fmass $fmass" >> temp
   echo "G $G" >> temp
 
-  echo "max_cg_iterations 25000" >> temp
+  echo "max_cg_iterations 15000" >> temp
   echo "error_per_site 1e-7" >> temp
   
   if $fresh_uncommented; then
