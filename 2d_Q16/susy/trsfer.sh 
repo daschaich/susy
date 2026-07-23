@@ -1,0 +1,22 @@
+#!/bin/bash
+
+# Define variables
+REMOTE_USER="vamika"
+REMOTE_HOST="paramsmriti.nabi.res.in"
+REMOTE_PORT="4422"
+REMOTE_PATH="/home/vamika/bana/susy/2d_Q16/susy/N_12_12x12_rt_g_0.8_0.1_hmc_pg"
+LOCAL_PATH="/home/bana/susy/2d_Q16/susy"
+
+# Print information
+echo "Transferring directory from $REMOTE_USER@$REMOTE_HOST:$REMOTE_PATH to $LOCAL_PATH..."
+
+# Execute the scp command
+scp -P "$REMOTE_PORT" -r "$REMOTE_USER@$REMOTE_HOST:$REMOTE_PATH" "$LOCAL_PATH"
+
+# Check if the transfer was successful
+if [ $? -eq 0 ]; then
+    echo "Transfer completed successfully."
+else
+    echo "Transfer failed. Please check your connection or input details."
+fi
+

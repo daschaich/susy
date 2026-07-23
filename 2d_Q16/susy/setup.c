@@ -111,9 +111,19 @@ void make_fields() {
 
   size += (Real)(2.0 * (1.0 + NUMLINK + NPLAQ) * sizeof(matrix));
   FIELD_ALLOC(site_src, matrix);
+  FIELD_ALLOC(siteeb_src, matrix);
+  FIELD_ALLOC(sitez_src, matrix);
+  FIELD_ALLOC(sitezb_src, matrix);
   FIELD_ALLOC(site_dest, matrix);
+  FIELD_ALLOC(siteeb_dest, matrix); 
+  FIELD_ALLOC(sitez_dest, matrix);
+  FIELD_ALLOC(sitezb_dest, matrix);
   FIELD_ALLOC_VEC(link_src, matrix, NUMLINK);
   FIELD_ALLOC_VEC(link_dest, matrix, NUMLINK);
+  FIELD_ALLOC_VEC(linkb_src, matrix, NUMLINK);
+  FIELD_ALLOC_VEC(linkb_dest, matrix, NUMLINK);
+  FIELD_ALLOC_VEC(thetab_src, matrix, NUMLINK);
+  FIELD_ALLOC_VEC(thetab_dest, matrix, NUMLINK);
   FIELD_ALLOC_VEC(plaq_src, matrix, NPLAQ);
   FIELD_ALLOC_VEC(plaq_dest, matrix, NPLAQ);
 
@@ -185,14 +195,14 @@ void make_fields() {
   size *= sites_on_node;
   node0_printf("Mallocing %.1f MBytes per core for fields\n", size / 1e6);
 #ifdef PHASE
-  // Total number of matvecs is (volume * 4 * DIMF)^2 / 4
-  Nmatvecs = volume * 4 * DIMF * volume * DIMF; // to be edited --- replace it with 4->16
+  // Total number of matvecs is (volume * 16 * DIMF)^2 / 4
+  Nmatvecs = volume * 16 * DIMF * volume * 4 * DIMF; 
 
-  // Total size of matrix is (volume * 4 * DIMF) x (sites_on_node * 4 * DIMF)
-  size = (Real)(volume * 4.0 * DIMF * 4.0 * DIMF * sizeof(complex));
+  // Total size of matrix is (volume * 16 * DIMF) x (sites_on_node * 16 * DIMF)
+  size = (Real)(volume * 16.0 * DIMF * 16.0 * DIMF * sizeof(complex));
   size *= sites_on_node;
   node0_printf("Q has %d columns --> %li matvecs and %.1f MBytes per core...",
-               volume * 4 * DIMF, Nmatvecs, size / 1e6);
+               volume * 16 * DIMF, Nmatvecs, size / 1e6);
 #endif
 }
 // -----------------------------------------------------------------

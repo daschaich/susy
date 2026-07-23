@@ -1,0 +1,38 @@
+#!/bin/bash
+# This script needs to be run from the 2d_Q16/testsuite/scalar directory
+
+# Allow user to specify particular target
+if [ $# -gt 1 ]; then
+  N=$1
+  target=$2
+  
+  # Change N in 4d
+
+  sed -i -E "s/(#define NCOL) .*/\1 $N/" ../../../4d_Q16/include/susy.h
+  echo "Change N in 4d with $PWD"
+
+  # Change N in 2d
+
+  sed -i -E "s/(#define NCOL) .*/\1 $N/" ../../../2d_Q16/include/susy.h
+  echo " Change N in 2d with $PWD "
+
+  cd ../../susy/
+
+  # Compile in 2d
+  echo "Compiling susy_$target..."
+  if ! make -f Make_scalar susy_$target >& /dev/null ; then
+    echo "ERROR: susy_$target compilation failed"
+    make -f Make_scalar susy_$target
+    exit
+  fi
+
+  # Run in 2d
+  cd ../testsuite/
+  rm -f scalar/$target.U$N.out
+  echo "Running susy_$target..."
+  ../susy/susy_$target < in.U$N.$target > scalar/$target.U$N.out
+
+  exit
+  
+fi
+

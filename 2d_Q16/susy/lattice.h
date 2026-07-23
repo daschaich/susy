@@ -17,7 +17,12 @@
 // Twist_Fermion struct
 typedef struct {
   matrix Fsite;
+  matrix Fsitez;
+  matrix Fsitezb;
+  matrix Fsiteeb;
   matrix Flink[NUMLINK];
+  matrix Flinkb[NUMLINK];
+  matrix Fthetab[NUMLINK];
   matrix Fplaq[NPLAQ];
 } Twist_Fermion;
 // -----------------------------------------------------------------
@@ -37,16 +42,24 @@ typedef struct {
 #endif
 
   matrix link[NUMLINK];       // Gauge links
-  matrix phi, varphi;         // Reduced scalar fields
+//-------7/9/23-----------  
+
+  matrix phi;               // Reduced scalar fields
+  
+  matrix varphi;            // Reduced scalar fields
  
+//-----edited-7/9/23------------
 #ifdef HMC_ALGORITHM
   matrix old_link[NUMLINK];   // For accept/reject
-  matrix old_phi, old_varphi;
+  matrix old_phi;
+  matrix old_varphi;
 #endif
 
   // Momentum matrices in each direction are just U(N) matrices
   // as opposed to anti-hermitian matrices
+  //--edited------
   matrix mom[NUMLINK], f_U[NUMLINK];        // Force matrices
+  
   matrix mom_phi, f_phi, mom_varphi, f_varphi; 
 
   // Boundary conditions -- many unused
@@ -125,8 +138,8 @@ EXTERN int goffset[2 * NUMLINK];
 
 // Persistent site, link and plaq fermions for matrix--vector operation
 // Used in fermion_op and assemble_fermion_force
-EXTERN matrix *site_src, *link_src[NUMLINK], *plaq_src[NPLAQ];
-EXTERN matrix *site_dest, *link_dest[NUMLINK], *plaq_dest[NPLAQ];
+EXTERN matrix *site_src,*sitez_src,*sitezb_src,*siteeb_src,*link_src[NUMLINK],*linkb_src[NUMLINK],*thetab_src[NUMLINK], *plaq_src[NPLAQ];
+EXTERN matrix *site_dest,*sitez_dest,*sitezb_dest,*siteeb_dest, *link_dest[NUMLINK],*linkb_dest[NUMLINK],*thetab_dest[NUMLINK], *plaq_dest[NPLAQ];
 
 // For convenience in calculating action and force
 // May be wasteful of space
@@ -162,7 +175,7 @@ EXTERN site *lattice;
 // Vectors for addressing
 // Generic pointers, for gather routines
 // Need 10 for gauge-fixing, 9 for Q-invariant determinant force
-#define N_POINTERS 10
+#define N_POINTERS 24 // edited from ---- 10
 EXTERN char **gen_pt[N_POINTERS];
 
 #ifdef CORR

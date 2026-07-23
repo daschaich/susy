@@ -1,6 +1,6 @@
 prompt 0
-nx 16
-nt 16
+nx 4
+nt 4
 PBC -1
 iseed 41
 
@@ -8,15 +8,15 @@ Nroot 1
 Norder 15
 
 warms 0
-trajecs 100
+trajecs 3
 traj_length 1
-nstep 80
-nstep_gauge 90
-traj_between_meas 50
+nstep 20
+nstep_gauge 10
+traj_between_meas 3
 
-lambda 1.0
+lambda 1
 kappa_u1 0.0
-bmass 0.5
+bmass 0.1
 fmass 0.0
 G 0.0
 
