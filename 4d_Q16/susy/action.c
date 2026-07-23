@@ -72,7 +72,6 @@ void compute_Fmunu() {
   register int i;
   register site *s;
   int mu, nu, index;
-  matrix *mat0, *mat1;
   msg_tag *mtag0 = NULL, *mtag1 = NULL;
 
   FORALLDIR(mu) {
@@ -85,10 +84,8 @@ void compute_Fmunu() {
       wait_gather(mtag0);
       wait_gather(mtag1);
       FORALLSITES(i, s) {
-        mat0 = (matrix *)(gen_pt[0][i]);
-        mat1 = (matrix *)(gen_pt[1][i]);
-        mult_nn(&(s->link[mu]), mat0, &(tempmat[i]));
-        mult_nn(&(s->link[nu]), mat1, &(tempmat2[i]));
+        mult_nn(&(s->link[mu]), (matrix *)(gen_pt[0][i]), &(tempmat[i]));
+        mult_nn(&(s->link[nu]), (matrix *)(gen_pt[1][i]), &(tempmat2[i]));
         sub_matrix(&(tempmat[i]), &(tempmat2[i]), &(Fmunu[index][i]));
       }
       cleanup_gather(mtag0);
