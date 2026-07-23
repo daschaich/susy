@@ -1,6 +1,6 @@
 prompt 0
-nx 16
-nt 16
+nx 4
+nt 4
 PBC -1
 iseed 41
 
@@ -8,20 +8,20 @@ Nroot 1
 Norder 15
 
 warms 0
-trajecs 100
+trajecs 10
 traj_length 1
-nstep 80
-nstep_gauge 90
-traj_between_meas 50
+nstep 30
+nstep_gauge 30
+traj_between_meas 10
 
 lambda 1.0
 kappa_u1 0.0
-bmass 0.5
+bmass 0.1
 fmass 0.0
 G 0.0
 
-max_cg_iterations 25000
-error_per_site 1e-5
+max_cg_iterations 15000
+error_per_site 1e-7
 
 fresh
 forget
