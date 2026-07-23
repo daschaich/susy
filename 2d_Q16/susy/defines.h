@@ -24,9 +24,14 @@
 // Susy stuff
 #define EIG_POT           // Single rather than double-trace scalar potential
                           // Single-trace case is minimally tested!!!
+#define SP                // Site/plaquette terms in action                         
 #define SV                // Site/vector terms in action
+#define VV                // vector/vector terms in action
+#define SS                // Site/site terms in action
+
+
 #define VP                // Vector/plaquette terms in action
-#define QCLOSED           // Q-closed terms in action
+//#define QCLOSED           // Q-closed terms in action
 //#define DEBUG_CHECK       // Print lambdas, offsets, etc.
 
 #define NQLINK 28         // Number of offsets for Q-closed terms

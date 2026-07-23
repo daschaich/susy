@@ -22,8 +22,12 @@ int initial_set() {
     printf("Microcanonical simulation with refreshing\n");
     printf("Machine = %s, with %d nodes\n", machine_type(), numnodes());
 #ifdef HMC_ALGORITHM
+#ifndef SMD_ALGORITHM
     printf("Hybrid Monte Carlo algorithm\n");
-#endif
+#else
+    printf("Stochastic molecular dynamics algorithm\n");
+#endif //end of ifndef
+#endif //end of ifdef
 #ifdef PHI_ALGORITHM
     printf("Phi algorithm\n");
 #else   // Quit!
@@ -152,6 +156,13 @@ void make_fields() {
   FIELD_ALLOC_MAT_OFFDIAG(plaqdet, complex, NUMLINK);
   FIELD_ALLOC_MAT_OFFDIAG(tempdet, complex, NUMLINK);
   FIELD_ALLOC_MAT_OFFDIAG(ZWstar, complex, NUMLINK);
+
+#ifdef SMD_ALGORITHM
+  int n;
+  // IO Twist Fermion
+  gsrc = malloc(sizeof(*gsrc) * Nroot);
+  for(n = 0; n < Nroot; n++) FIELD_ALLOC(gsrc[n], Twist_Fermion);
+#endif
 
   // CG Twist_Fermions
   size += (Real)(3.0 * sizeof(Twist_Fermion));
@@ -309,6 +320,9 @@ int readin(int prompt) {
     IF_OK status += get_i(stdin, prompt, "warms", &par_buf.warms);
     IF_OK status += get_i(stdin, prompt, "trajecs", &par_buf.trajecs);
     IF_OK status += get_f(stdin, prompt, "traj_length", &par_buf.traj_length);
+#ifdef SMD_ALGORITHM
+    IF_OK status += get_f(stdin, prompt, "friction", &par_buf.friction);
+#endif
 
     // Number of fermion and gauge steps
     IF_OK status += get_i(stdin, prompt, "nstep", &par_buf.nsteps[0]);
@@ -419,6 +433,7 @@ int readin(int prompt) {
   warms = par_buf.warms;
   trajecs = par_buf.trajecs;
   traj_length = par_buf.traj_length;
+  friction = par_buf.friction;
   nsteps[0] = par_buf.nsteps[0];
   nsteps[1] = par_buf.nsteps[1];
 

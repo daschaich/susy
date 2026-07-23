@@ -1,7 +1,7 @@
 prompt 0
 nt 4
 PBC -1
-iseed 42
+iseed 43
 
 Nroot 1
 Norder 15

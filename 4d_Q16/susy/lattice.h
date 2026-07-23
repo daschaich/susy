@@ -45,6 +45,9 @@ typedef struct {
   // Momentum matrices in each direction are just U(N) matrices
   // as opposed to anti-hermitian matrices
   matrix mom[NUMLINK], f_U[NUMLINK];        // Force matrices
+#ifdef HMC_ALGORITHM
+  matrix old_mom[NUMLINK];    // For Accept/reject
+#endif
 
   // Boundary conditions -- many unused
   Real bc[2 * NUMLINK], bc2[2 * NUMLINK][2 * NUMLINK];
@@ -73,6 +76,7 @@ EXTERN int volume;          // Volume of lattice
 EXTERN int iseed;           // Random number seed
 EXTERN int warms, trajecs, niter, propinterval;
 EXTERN Real traj_length;
+EXTERN Real friction;
 
 // U(N) generators, epsilon tensor
 EXTERN matrix Lambda[DIMF];
@@ -147,6 +151,11 @@ EXTERN complex *tr_dest, *Tr_Uinv[NUMLINK], *plaqdet[NUMLINK][NUMLINK];
 EXTERN complex *ZWstar[NUMLINK][NUMLINK], *tempdet[NUMLINK][NUMLINK];
 EXTERN matrix *DmuUmu, *Fmunu[NPLAQ];
 EXTERN matrix *Uinv[NUMLINK], *Udag_inv[NUMLINK], *UpsiU[NUMLINK];
+
+#ifdef SMD_ALGORITHM
+// IO Twist_Fermion
+EXTERN Twist_Fermion **gsrc;
+#endif
 
 // CG Twist_Fermions
 EXTERN Twist_Fermion *mpm, *pm0, *rm;

@@ -124,31 +124,48 @@ int update_step(Twist_Fermion **src, Twist_Fermion ***psim) {
 
 
 // -----------------------------------------------------------------
-int update() {
+int update() {//src -> gsrc as src is already defined for EIG,etc.
+              //Will check if possible to go back
   int j, n, iters = 0;
   Real final_rsq;
   double startaction, endaction, change;
-  Twist_Fermion **src = malloc(sizeof(Twist_Fermion*) * Nroot);
+#ifndef SMD_ALGORITHM
+  Twist_Fermion **gsrc = malloc(sizeof(Twist_Fermion*) * Nroot);
+#endif
   Twist_Fermion ***psim = malloc(sizeof(Twist_Fermion**) * Nroot);
 
+  register int i,mu;
+  register site *s; //For the accept/reject step
+
   for (n = 0; n < Nroot; n++) {
-    src[n] = malloc(sizeof(Twist_Fermion) * sites_on_node);
+#ifndef SMD_ALGORITHM
+    gsrc[n] = malloc(sizeof(Twist_Fermion) * sites_on_node);
+#endif
     psim[n] = malloc(sizeof(Twist_Fermion*) * Norder);
     for (j = 0; j < Norder; j++)
       psim[n][j] = malloc(sizeof(Twist_Fermion) * sites_on_node);
   }
 
+#ifdef SMD_ALGORITHM
   // Refresh the momenta
+  smdmom(traj_length);
+#else
   ranmom();
+#endif
 
   // Set up the fermion variables, if needed
 #ifndef PUREGAUGE
-  // Compute g and src = (Mdag M)^(1 / 8Nroot) g
-  for (n = 0; n < Nroot; n++)
-    iters += grsource(src[n]);
+  // Compute g and gsrc = (Mdag M)^(1 / 8Nroot) g
+  for (n = 0; n < Nroot; n++) {
+#ifdef SMD_ALGORITHM
+    iters += smdgrsource(gsrc[n], traj_length);
+#else
+    iters += grsource(gsrc[n]);
+#endif
+  }
 
   // Do a CG to get psim, rational approximation
-  // to (Mdag M)^(-1 / 4Nroot) src = (Mdag M)^(-1 / 8Nroot) g
+  // to (Mdag M)^(-1 / 4Nroot) gsrc = (Mdag M)^(-1 / 8Nroot) g
   for (j = 0; j < Norder; j++)
     shift[j] = shift4[j];
 #ifdef UPDATE_DEBUG
@@ -156,11 +173,11 @@ int update() {
 #endif
   // congrad_multi initializes psim
   for (n = 0; n < Nroot; n++)
-    iters += congrad_multi(src[n], psim[n], niter, rsqmin, &final_rsq);
+    iters += congrad_multi(gsrc[n], psim[n], niter, rsqmin, &final_rsq);
 #endif // ifndef PUREGAUGE
 
   // Find initial action
-  startaction = action(src, psim);
+  startaction = action(gsrc, psim);
   gnorm = 0.0;
   max_gf = 0.0;
   for (n = 0; n < Nroot; n++) {
@@ -173,34 +190,37 @@ int update() {
   // at a single site in a lattice with at least L=4 in all directions
 //  node0_printf("BEFORE GTRANS %.8g\n", startaction);
 //  for (n = 0; n < Nroot; n++) {
-//    random_gauge_trans(src[n]);
-//    congrad_multi(src[n], psim[n], niter, rsqmin, &final_rsq);
+//    random_gauge_trans(gsrc[n]);
+//    congrad_multi(gsrc[n], psim[n], niter, rsqmin, &final_rsq);
 //  }
-//  startaction = action(src, psim);
+//  startaction = action(gsrc, psim);
 //  node0_printf("AFTER  GTRANS %.8g\n", startaction);
 //  terminate(1);
 
-#ifdef HMC_ALGORITHM
+#if defined HMC_ALGORITHM || defined SMD_ALGORITHM
   Real xrandom;   // For accept/reject test
   // Copy link field to old_link
   gauge_field_copy(F_OFFSET(link[0]), F_OFFSET(old_link[0]));
+  FORALLSITES(i, s)
+    FORALLDIR(mu)
+      mat_copy(&(s->mom[mu]), &(s->old_mom[mu]));
 #endif
   // Do microcanonical updating
-  iters += update_step(src, psim);
+  iters += update_step(gsrc, psim);
 
   // Find ending action
   // Reuse (Mdag M)^(-1 / 4Nroot) chi from update_step, don't need CG
   // If the final step were a gauge update, CG would be necessary
-  endaction = action(src, psim);
+  endaction = action(gsrc, psim);
   change = endaction - startaction;
-#ifdef HMC_ALGORITHM
+#if defined HMC_ALGORITHM || defined SMD_ALGORITHM
   // Reject configurations giving overflow
 #ifndef HAVE_IEEEFP_H
   if (fabs((double)change) > 1e20) {
 #else
   if (!finite((double)change)) {
 #endif
-    node0_printf("WARNING: Correcting Apparent Overflow: Delta S = %.4g\n",
+    node0_printf("WARNING: Correcting `Apparent Overflow: Delta S = %.4g\n",
                  change);
     change = 1.0e20;
   }
@@ -213,6 +233,9 @@ int update() {
   if (exp(-change) < (double)xrandom) {
     if (traj_length > 0.0) {
       gauge_field_copy(F_OFFSET(old_link[0]), F_OFFSET(link[0]));
+      FORALLSITES(i,s)
+        FORALLDIR(mu)
+          scalar_mult_matrix(&(s->old_mom[mu]), -1, &(s->mom[mu]));//Reverse momentum
       compute_plaqdet();
       compute_Uinv();
       compute_DmuUmu();
@@ -220,23 +243,28 @@ int update() {
     }
     node0_printf("REJECT: delta S = %.4g start S = %.12g end S = %.12g\n",
                  change, startaction, endaction);
+
   }
   else {
     node0_printf("ACCEPT: delta S = %.4g start S = %.12g end S = %.12g\n",
                  change, startaction, endaction);
   }
 #else
-  // Only print check if not doing HMC
+  // Only print check if not doing HMC or SMD
   node0_printf("CHECK: delta S = %.4g\n", (double)(change));
-#endif // ifdef HMC
+#endif // ifdef HMC || SMD
 
   for (n = 0; n < Nroot; n++) {
-    free(src[n]);
+#ifndef SMD_ALGORITHM
+    free(gsrc[n]);
+#endif
     for (j = 0; j < Norder; j++)
       free(psim[n][j]);
     free(psim[n]);
   }
-  free(src);
+#ifndef SMD_ALGORITHM
+  free(gsrc);
+#endif
   free(psim);
 
   if (traj_length > 0) {

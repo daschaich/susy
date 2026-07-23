@@ -76,7 +76,7 @@ void random_anti_hermitian(anti_hermitmat *ahmat, double_prn *prn_pt) {
     // Check: Previously sqrt of 1, 1/3, 1/6 for i=1, 2, 3
     r15 = gaussian_rand_no(prn_pt);
     tr = (Real)i * (i + 1);
-    r15 *= sqrt((double)(1.0 / tr));
+    r15 *= sqrt((double)(2.0 / tr));
 
     // Add new r15 to i existing elements
     for (j = 0; j < i; j++)

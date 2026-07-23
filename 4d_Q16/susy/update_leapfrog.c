@@ -73,7 +73,7 @@ int update_step(Twist_Fermion **src, Twist_Fermion ***psim) {
 
 
 // -----------------------------------------------------------------
-int update() {
+int update() { //Doesn't work with SMD
   int j, n, iters = 0;
   Real final_rsq;
   double startaction, endaction, change;
@@ -94,7 +94,7 @@ int update() {
 #ifndef PUREGAUGE
   // Compute g and src = (Mdag M)^(1 / 8) g
   for (n = 0; n < Nroot; n++)
-    iters += grsource(src[n]);
+    iters += grsource(src[n], traj_length);
 
   // Do a CG to get psim,
   // rational approximation to (Mdag M)^(-1 / 4) src = (Mdag M)^(-1 / 8) g

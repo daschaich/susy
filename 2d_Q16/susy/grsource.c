@@ -107,6 +107,9 @@ int grsource(Twist_Fermion *src) {
       grn.imag = gaussian_rand_no(&node_prn);
 #endif
       c_scalar_mult_sum_mat(&(Lambda[j]), &grn, &(src[i].Fsite));
+      c_scalar_mult_sum_mat(&(Lambda[j]), &grn, &(src[i].Fsitez));
+      c_scalar_mult_sum_mat(&(Lambda[j]), &grn, &(src[i].Fsitezb));
+      c_scalar_mult_sum_mat(&(Lambda[j]), &grn, &(src[i].Fsiteeb));
       FORALLDIR(mu) {                           // Link fermions
 #ifdef SITERAND
         grn.real = gaussian_rand_no(&(s->site_prn));
@@ -116,6 +119,8 @@ int grsource(Twist_Fermion *src) {
         grn.imag = gaussian_rand_no(&node_prn);
 #endif
         c_scalar_mult_sum_mat(&(Lambda[j]), &grn, &(src[i].Flink[mu]));
+        c_scalar_mult_sum_mat(&(Lambda[j]), &grn, &(src[i].Flinkb[mu]));
+        c_scalar_mult_sum_mat(&(Lambda[j]), &grn, &(src[i].Fthetab[mu]));
       }
       for (mu = 0; mu < NPLAQ; mu++) {         // Plaquette fermions
 #ifdef SITERAND

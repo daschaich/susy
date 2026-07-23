@@ -114,6 +114,80 @@ void setup_lambda() {
 
 //-----edited--------
 
+
+
+// -----------------------------------------------------------------
+// Set up three-index totally anti-symmetric tensor
+// Initialize swap to avoid optimization dependence!!!
+Real order(int i, int j, int k) {
+  int seq[3] = {i, j, k};
+  int swap = 1, tmp, p, permutation = 1;
+  while (swap > 0) {
+    swap = 0;
+    for (p = 0; p < 2; p++) {
+      if (seq[p] > seq[p + 1]) {
+        tmp = seq[p];
+        seq[p] = seq[p + 1];
+        seq[p + 1] = tmp;
+        swap++;
+        permutation *= -1;
+      }
+    }
+  }
+  return (Real)permutation;
+}
+
+// Set up translation of (mu, nu) to linear index of anti-symmetric matrix
+void setup_plaq_index() {
+  int mu, nu, index;
+  FORALLDIR(mu) {
+    plaq_index[mu][mu] = -1;
+    for (nu = mu + 1; nu < NUMLINK; nu++) {
+      index = mu * (NUMLINK - 1) - mu * (mu + 1) / 2 + nu - 1;
+      plaq_index[mu][nu] = index;
+      plaq_index[nu][mu] = index;
+    }
+  }
+}
+
+void epsilon() {
+  int i, j, k;
+  setup_plaq_index();
+  FORALLDIR(i) {
+    FORALLDIR(j) {
+      FORALLDIR(k) {
+
+            perm[i][j][k] = 0;
+        }
+      }
+    }
+  
+
+  FORALLDIR(i) {
+    FORALLDIR(j) {
+      if (j == i)
+        continue;
+      FORALLDIR(k) {
+        if (k == j || k == i)
+          continue;
+        
+            perm[i][j][k] = order(i, j, k);
+#ifdef DEBUG_CHECK
+            if (perm[i][j][k] * perm[i][j][k] > 1e-4)
+              node0_printf("PERM(%d, %d, %d) = %.4g\n",
+                           i, j, k, perm[i][j][k]);
+#endif
+          }
+        }
+      }
+    
+ 
+  return;
+}
+// -----------------------------------------------------------------
+
+
+
 // Set up translation of (mu, nu) to linear index of anti-symmetric matrix
 
 /*

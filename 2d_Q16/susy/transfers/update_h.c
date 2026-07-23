@@ -904,11 +904,11 @@ void detF(matrix *eta, matrix *psi[NUMLINK], int sign) {
 // (many through calls to detF)
 #ifndef PUREGAUGE
 void assemble_fermion_force(Twist_Fermion *sol, Twist_Fermion *psol) {
-  register int i, opp_mu, opp_rho;
+  register int i;
   register site *s;
   char **local_pt[6][4]; // edited---- from local_pt[4][3]
   int mu, nu,rho, a, b, gather, flip = 0, index, next;
-
+// msg_tag *mtag[NUMLINK], *tag0[NUMLINK], *tag1[NUMLINK], *tag2[NUMLINK], *tag3[NUMLINK];
   msg_tag *mtag[NUMLINK], *tag0[6], *tag1[6], *tag2[6], *tag3[6];
  
   matrix *mat[2], tmat;
@@ -919,11 +919,18 @@ void assemble_fermion_force(Twist_Fermion *sol, Twist_Fermion *psol) {
     }
   }
   
-
+ /* 
+    for (mu = 0; mu < 4; mu++) {
+    local_pt[0][mu] = gen_pt[mu];
+    local_pt[1][mu] = gen_pt[4 + mu];
+    local_pt[2][mu] = gen_pt[8 + mu];
+    local_pt[3][mu] = gen_pt[12 + mu];
+  }*/
 
   mat[0] = tempmat;
   mat[1] = tempmat2;
   
+ //  Real SIGN_array[3] = {-1.0, 1.0, -1.0};
    Real SGN;
 
   // For gathering it is convenient to copy the input Twist_Fermions
@@ -1013,9 +1020,9 @@ void assemble_fermion_force(Twist_Fermion *sol, Twist_Fermion *psol) {
     }
     wait_gather(mtag[mu]);
     FORALLSITES(i, s) {
-      scalar_mult_matrix((matrix *)(gen_pt[mu][i]), s->bc[mu], &tmat);    // tmat = s->bc[mu]*sitezb_dest(n+mu)
-      mult_nn(&tmat,&(linkb_src[mu][i]), &(UpsiU[mu][i]));   // Initialize         UpsiU[mu][i] = s->bc[mu]zb(i+mu)*psi_mu(i)
-      mult_nn_dif(&(linkb_src[mu][i]), &(sitezb_dest[i]), &(UpsiU[mu][i])); // UpsiU[mu][x] = s->bc[mu]zb(i+mu)*psi_mu(i) - psi_mu(i)zb(i)
+      scalar_mult_matrix((matrix *)(gen_pt[mu][i]), 1.0, &tmat);    // tmat = 1*sitezb_dest(n+mu)
+      mult_nn(&tmat,&(linkb_src[mu][i]), &(UpsiU[mu][i]));   // Initialize         UpsiU[mu][i] =  zb(i+mu)*psi_mu(i)
+      mult_nn_dif(&(linkb_src[mu][i]), &(sitezb_dest[i]), &(UpsiU[mu][i])); // UpsiU[mu][x] = zb(i+mu)*psi_mu(i) - psi_mu(i)zb(i)
     }
     cleanup_gather(mtag[mu]);
   }
@@ -1030,10 +1037,9 @@ void assemble_fermion_force(Twist_Fermion *sol, Twist_Fermion *psol) {
                                         goffset[mu + 1], EVENANDODD,
                                         gen_pt[mu + 1]);                  //gen_pt[0]=zb(n+mu)
     }
-    opp_mu = OPP_LDIR(mu);
     wait_gather(mtag[mu]);
     FORALLSITES(i, s) {
-      scalar_mult_matrix((matrix *)(gen_pt[mu][i]), s->bc[mu]/*s->bc[opp_mu]*/, &tmat); // tmat = zb(n+mu)
+      scalar_mult_matrix((matrix *)(gen_pt[mu][i]), 1.0, &tmat); // tmat = zb(n+mu)
       mult_nn_dif(&tmat, &(linkb_dest[mu][i]), &(UpsiU[mu][i])); //  UpsiU[mu][i] = UpsiU[mu][i] - zb(n+mu)psi_mu(n)
       mult_nn_sum(&(linkb_dest[mu][i]), &(sitezb_src[i]), &(UpsiU[mu][i])); // UpsiU[mu][i] = UpsiU[mu][i] - zb(n+mu)psi_mu(n) +psi*zb
 
@@ -1060,7 +1066,7 @@ void assemble_fermion_force(Twist_Fermion *sol, Twist_Fermion *psol) {
     }
     wait_gather(mtag[mu]);
     FORALLSITES(i, s) {
-      scalar_mult_matrix((matrix *)(gen_pt[mu][i]), s->bc[mu], &tmat);    // tmat = 1*sitezb_dest(n+mu)
+      scalar_mult_matrix((matrix *)(gen_pt[mu][i]), 1.0, &tmat);    // tmat = 1*sitezb_dest(n+mu)
       mult_nn(&tmat,&(thetab_src[mu][i]), &(UpsiU[mu][i]));   // Initialize         UpsiU[mu][i] =  zb(i+mu)*psi_mu(i)
       mult_nn_dif(&(thetab_src[mu][i]), &(siteeb_dest[i]), &(UpsiU[mu][i])); // UpsiU[mu][x] = zb(i+mu)*psi_mu(i) - psi_mu(i)zb(i)
     }
@@ -1078,19 +1084,21 @@ void assemble_fermion_force(Twist_Fermion *sol, Twist_Fermion *psol) {
                                         gen_pt[mu + 1]);                  //gen_pt[0]=zb(n+mu)
     }
     wait_gather(mtag[mu]);
-    opp_mu = OPP_LDIR(mu);
     FORALLSITES(i, s) {
-      scalar_mult_matrix((matrix *)(gen_pt[mu][i]), s->bc[mu]/*s->bc[opp_mu]*/, &tmat); // tmat = zb(n+mu)
+      scalar_mult_matrix((matrix *)(gen_pt[mu][i]), 1.0, &tmat); // tmat = zb(n+mu)
       mult_nn_dif(&tmat, &(thetab_dest[mu][i]), &(UpsiU[mu][i])); //  UpsiU[mu][i] = UpsiU[mu][i] - zb(n+mu)psi_mu(n)
       mult_nn_sum(&(thetab_dest[mu][i]), &(siteeb_src[i]), &(UpsiU[mu][i])); // UpsiU[mu][i] = UpsiU[mu][i] - zb(n+mu)psi_mu(n) +psi*zb
 
-      scalar_mult_sum_matrix(&(UpsiU[mu][i]), 0.5, &(s->f_U[mu]));         //b <-- b + s * a
+      // Initialize the force collectors---done with UpsiU[mu]
+     // scalar_mult_adj_matrix(&(UpsiU[mu][i]), 0.5, &(s->f_U[mu]));
+    // scalar_mult_sum_adj_matrix(&(UpsiU[mu][i]), 0.5, &(s->f_U[mu]));         //b <-- b + s * a^dag
+     scalar_mult_sum_matrix(&(UpsiU[mu][i]), 0.5, &(s->f_U[mu]));         //b <-- b + s * a
     
     }
     cleanup_gather(mtag[mu]); 
   }
   
- 
+  
   
 #else
   FORALLDIR(mu) {                         // Zero force collectors
@@ -1251,7 +1259,8 @@ void assemble_fermion_force(Twist_Fermion *sol, Twist_Fermion *psol) {
   FORALLSITES(i, s)
     clear_mat(&(s->f_phi));  
    
-
+ // FORALLSITES(i, s)
+   // clear_mat(&(tempmat[i])); 
   
   FORALLDIR(mu) {
   
@@ -1271,14 +1280,16 @@ void assemble_fermion_force(Twist_Fermion *sol, Twist_Fermion *psol) {
 
       wait_gather(tag0[mu]);
       wait_gather(tag1[mu]);
-      opp_mu = OPP_LDIR(mu);
+      
       
       FORALLSITES(i, s) {
         
        mult_nn((matrix *)(local_pt[0][mu][i]),&(linkb_dest[mu][i]), &(UpsiU[mu][i]) );          // &(UpsiU[mu][i])  = chi_mu(n+mu)Lb(n)
-       scalar_mult_matrix(&(UpsiU[mu][i]), s->bc[mu], &(UpsiU[mu][i]));                         // &(UpsiU[mu][i])  = bc[mu]chi_mu(n+mu)Lb(n)
-       scalar_mult_nn_dif((matrix *)(local_pt[1][mu][i]),&(plaq_src[mu][i]),s->bc[opp_mu],&(UpsiU[mu][i]) );      // &(UpsiU[mu][i])  = bc[mu]chi_mu(n+mu)Lb(n) - bc[opp_mu]Lb_mu(n-mu)chi_mu(n)
-
+       mult_nn_dif((matrix *)(local_pt[1][mu][i]),&(plaq_src[mu][i]),&(UpsiU[mu][i]) );      // &(UpsiU[mu][i])  = chi_mu(n+mu)Lb(n) - Lb_mu(n-mu)chi_mu(n)
+     //  scalar_mult_matrix(&tmat , SIGN, &(UpsiU[mu][i]) );  // &(UpsiU[mu][i]) =  + SIGN[mu] * (chi_mu(n+mu)Lb(n) - Lb(n-mu)chi_mu(n))
+     //  scalar_mult_adj_matrix(&tmat, -1.0, &(s->f_phi));
+       
+      // scalar_mult_sum_adj_matrix(&tmat, -1.0, &(s->f_phi));
        
          
       }
@@ -1311,14 +1322,14 @@ void assemble_fermion_force(Twist_Fermion *sol, Twist_Fermion *psol) {
 
       wait_gather(tag0[mu]);
       wait_gather(tag1[mu]);
-      opp_mu = OPP_LDIR(mu);
+      
       
       FORALLSITES(i, s) {
         
-       scalar_mult_nn_sum((matrix *)(local_pt[1][mu][i]),&(plaq_dest[mu][i]),s->bc[opp_mu],&(UpsiU[mu][i]) );          // &(UpsiU[mu][i])  += bc[opp_mu]Lb(n-mu)chi_mu(n)
-       scalar_mult_nn_dif((matrix *)(local_pt[0][mu][i]),&(linkb_src[mu][i]),s->bc[mu],&(UpsiU[mu][i]) );      // &(UpsiU[mu][i])  = bc[opp_mu]Lb(n-mu)chi_mu(n) - bc[mu]chi_mu(n+mu)Lb_mu(n)
-       scalar_mult_matrix(&(UpsiU[mu][i]), SIGN, &(UpsiU[mu][i]) );                       // &(UpsiU[mu][i]) += SIGN[mu} * (bc[opp_mu]Lb(n-mu)chi_mu(n) - bc[mu]chi_mu(n+mu)Lb_mu(n))
-
+       mult_nn_sum((matrix *)(local_pt[1][mu][i]),&(plaq_dest[mu][i]),&(UpsiU[mu][i]) );          // &(UpsiU[mu][i])  += Lb(n-mu)chi_mu(n)
+       mult_nn_dif((matrix *)(local_pt[0][mu][i]),&(linkb_src[mu][i]),&(UpsiU[mu][i]) );      // &(UpsiU[mu][i])  = Lb(n-mu)chi_mu(n) - chi_mu(n+mu)Lb_mu(n)
+       scalar_mult_matrix(&(UpsiU[mu][i]), SIGN, &(UpsiU[mu][i]) );                       // &(UpsiU[mu][i]) += SIGN[mu} * (Lb(n-mu)chi_mu(n) - chi_mu(n+mu)Lb_mu(n))
+       //scalar_mult_matrix(&tmat , SIGN, &tmat );  // &(UpsiU[mu][i]) = SIGN * (Lb(n-mu)chi_mu(n) - chi_mu(n+mu)Lb_mu(n))
        
        scalar_mult_sum_adj_matrix(&(UpsiU[mu][i]), -1.0, &(s->f_phi));
        
@@ -1340,7 +1351,8 @@ void assemble_fermion_force(Twist_Fermion *sol, Twist_Fermion *psol) {
   FORALLSITES(i, s)
     clear_mat(&(s->f_varphi));  
    
-
+ // FORALLSITES(i, s)
+   // clear_mat(&(tempmat[i])); 
   
   FORALLDIR(mu) {
   
@@ -1360,13 +1372,12 @@ void assemble_fermion_force(Twist_Fermion *sol, Twist_Fermion *psol) {
 
       wait_gather(tag0[mu]);
       wait_gather(tag1[mu]);
-      opp_mu = OPP_LDIR(mu);
+      
       
       FORALLSITES(i, s) {
         
-       mult_nn((matrix *)(local_pt[0][mu][i]),&(thetab_dest[mu][i]), &(UpsiU[mu][i]) );      // &(UpsiU[mu][i])  = chi_mu(n+mu)Lb(n)
-       scalar_mult_matrix(&(UpsiU[mu][i]), s->bc[mu], &(UpsiU[mu][i]));                      // &(UpsiU[mu][i])  = bc[mu]chi_mu(n+mu)Lb(n)
-       scalar_mult_nn_dif((matrix *)(local_pt[1][mu][i]),&(plaq_src[mu][i]),s->bc[opp_mu],&(UpsiU[mu][i]) );      // &(UpsiU[mu][i])  = bc[mu]chi_mu(n+mu)Lb(n) - bc[op_mu]Lb_mu(n-mu)chi_mu(n)
+       mult_nn((matrix *)(local_pt[0][mu][i]),&(thetab_dest[mu][i]), &(UpsiU[mu][i]) );          // &(UpsiU[mu][i])  = chi_mu(n+mu)Lb(n)
+       mult_nn_dif((matrix *)(local_pt[1][mu][i]),&(plaq_src[mu][i]),&(UpsiU[mu][i]) );      // &(UpsiU[mu][i])  = chi_mu(n+mu)Lb(n) - Lb_mu(n-mu)chi_mu(n)
 
        
          
@@ -1400,14 +1411,14 @@ void assemble_fermion_force(Twist_Fermion *sol, Twist_Fermion *psol) {
 
       wait_gather(tag0[mu]);
       wait_gather(tag1[mu]);
-      opp_mu = OPP_LDIR(mu);
+      
       
       FORALLSITES(i, s) {
         
-       scalar_mult_nn_sum((matrix *)(local_pt[1][mu][i]),&(plaq_dest[mu][i]),s->bc[opp_mu],&(UpsiU[mu][i]) );          // &(UpsiU[mu][i])  += bc[opp_mu]Lb(n-mu)chi_mu(n)
-       scalar_mult_nn_dif((matrix *)(local_pt[0][mu][i]),&(thetab_src[mu][i]),s->bc[mu],&(UpsiU[mu][i]) );      // &(UpsiU[mu][i])  = bc[opp_mu]Lb(n-mu)chi_mu(n) - bc[mu]chi_mu(n+mu)Lb_mu(n)
-       scalar_mult_matrix(&(UpsiU[mu][i]), -1.0*SIGN, &(UpsiU[mu][i]) );                       //&(UpsiU[mu][i]) += SIGN[mu} * (bc[opp_mu]Lb(n-mu)chi_mu(n) - bc[mu]chi_mu(n+mu)Lb_mu(n))
-
+       mult_nn_sum((matrix *)(local_pt[1][mu][i]),&(plaq_dest[mu][i]),&(UpsiU[mu][i]) );          // &(UpsiU[mu][i])  += Lb(n-mu)chi_mu(n)
+       mult_nn_dif((matrix *)(local_pt[0][mu][i]),&(thetab_src[mu][i]),&(UpsiU[mu][i]) );      // &(UpsiU[mu][i])  = Lb(n-mu)chi_mu(n) - chi_mu(n+mu)Lb_mu(n)
+       scalar_mult_matrix(&(UpsiU[mu][i]), -1.0*SIGN, &(UpsiU[mu][i]) );                       //&(UpsiU[mu][i]) += SIGN[mu} * (Lb(n-mu)chi_mu(n) - chi_mu(n+mu)Lb_mu(n))
+       //scalar_mult_matrix(&tmat , SIGN, &tmat );  // &(UpsiU[mu][i]) = SIGN * (Lb(n-mu)chi_mu(n) - chi_mu(n+mu)Lb_mu(n))
        
        scalar_mult_sum_adj_matrix(&(UpsiU[mu][i]), -1.0, &(s->f_varphi));
        
@@ -1444,6 +1455,9 @@ void assemble_fermion_force(Twist_Fermion *sol, Twist_Fermion *psol) {
 
   // T1
 
+//  FORALLSITES(i, s)
+  //  clear_mat(&(s->f_varphi));
+  
 //(1)  
   // First calculate SztoSeb 
   // [zeta -> etab  ]
@@ -1492,7 +1506,8 @@ void assemble_fermion_force(Twist_Fermion *sol, Twist_Fermion *psol) {
     
     // T2
 
-
+/*  FORALLSITES(i, s)
+    clear_mat(&(s->f_phi));*/
   
 //(2)  
   // First calculate SztoSeb 
@@ -1503,7 +1518,7 @@ void assemble_fermion_force(Twist_Fermion *sol, Twist_Fermion *psol) {
       mult_nn(&(sitez_src[i]),&(sitezb_dest[i]),&tmat);   
       mult_nn_dif(&(sitezb_dest[i]),&(sitez_src[i]),&tmat);  
       
-
+     // scalar_mult_matrix(&tmat, -1.0, &tmat); 
       
      // 2nd calculate SebtoSz 
      // [zetab -> zeta ] 
@@ -1526,7 +1541,7 @@ void assemble_fermion_force(Twist_Fermion *sol, Twist_Fermion *psol) {
       mult_nn(&(site_src[i]),&(siteeb_dest[i]),&tmat);   
       mult_nn_dif(&(siteeb_dest[i]),&(site_src[i]),&tmat);  
       
- 
+     // scalar_mult_matrix(&tmat, -1.0, &tmat); 
       
      // 2nd calculate SebtoSz 
      // [etab -> eta ] 
@@ -1556,8 +1571,6 @@ void assemble_fermion_force(Twist_Fermion *sol, Twist_Fermion *psol) {
 
 
 #ifdef VV
-
-  
  
   // T1
 
@@ -1566,6 +1579,8 @@ void assemble_fermion_force(Twist_Fermion *sol, Twist_Fermion *psol) {
   // 1st calculate LtoLb 
   // [psi -> psib  ]
   
+ //  FORALLSITES(i, s)
+   // clear_mat(&(s->f_varphi)); 
 
   FORALLSITES(i, s) {           // Set up first gather
     mult_nn(&(linkb_dest[0][i]),&(link_src[0][i]), &(mat[0][i])); //mat[mu][i]=psib[mu]*psi[mu]
@@ -1585,12 +1600,11 @@ void assemble_fermion_force(Twist_Fermion *sol, Twist_Fermion *psol) {
     }
 
     wait_gather(mtag[mu]);
-    opp_mu = OPP_LDIR(mu);
-    
     FORALLSITES(i, s) {
     
-      mult_nn(&(link_src[mu][i]),&(linkb_dest[mu][i]), &(UpsiU[mu][i]));                                // UpsiU[mu] = psi_mu(n)psib_mu(n)
-      scalar_mult_dif_matrix((matrix *)(gen_pt[mu][i]),s->bc[opp_mu]*s->bc[opp_mu], &(UpsiU[mu][i])); // UpsiU[mu] = psi_mu(n)psib_mu(n) - bc[opp_mu]*bc[opp_mu]*psib[mu](n-mu)*psi[mu](n-mu)
+/***unnecessary***/      scalar_mult_matrix((matrix *)(gen_pt[mu][i]), 1.0, &tmat);    // tmat = -1.0 * psib[mu](n-mu)*psi[mu](n-mu)
+      mult_nn(&(link_src[mu][i]),&(linkb_dest[mu][i]), &(UpsiU[mu][i]));   // UpsiU[mu] = psi_mu(n)psib_mu(n)
+      scalar_mult_dif_matrix((matrix *)(gen_pt[mu][i]),1.0, &(UpsiU[mu][i])); // UpsiU[mu] = psi_mu(n)psib_mu(n) - 1.0*psib[mu](n-mu)*psi[mu](n-mu)
     }
     
     cleanup_gather(mtag[mu]);
@@ -1620,11 +1634,10 @@ void assemble_fermion_force(Twist_Fermion *sol, Twist_Fermion *psol) {
     }
 
     wait_gather(mtag[mu]);
-    opp_mu = OPP_LDIR(mu);
     FORALLSITES(i, s) {
     
       mult_nn_dif(&(link_dest[mu][i]),&(linkb_src[mu][i]), &(UpsiU[mu][i]));     // UpsiU[mu] = UpsiU - psi_mu(n)psib_mu(n)
-      scalar_mult_sum_matrix((matrix *)(gen_pt[mu][i]),s->bc[opp_mu]*s->bc[opp_mu], &(UpsiU[mu][i]));// UpsiU[mu] = UpsiU-psi_mu(n)psib_mu(n)+bc[opp_mu]*bc[opp_mu]*psib[mu](n-mu)*psi[mu](n-mu)
+      scalar_mult_sum_matrix((matrix *)(gen_pt[mu][i]), 1.0, &(UpsiU[mu][i]));   // UpsiU[mu] = UpsiU - psi_mu(n)psib_mu(n) + psib[mu](n-mu)*psi[mu](n-mu)
      
       scalar_mult_sum_matrix(&(UpsiU[mu][i]), 1.0, &(s->f_varphi));         //b <-- b + s * a
     }
@@ -1644,6 +1657,8 @@ void assemble_fermion_force(Twist_Fermion *sol, Twist_Fermion *psol) {
   // 1st calculate LtoTb 
   // [psi -> thetab  ]
   
+ //  FORALLSITES(i, s)
+   // clear_mat(&(s->f_phi)); 
 
   FORALLSITES(i, s) {           // Set up first gather
     mult_nn(&(thetab_dest[0][i]),&(link_src[0][i]), &(mat[0][i])); //mat[mu][i]=thetab[mu]*psi[mu]
@@ -1663,11 +1678,11 @@ void assemble_fermion_force(Twist_Fermion *sol, Twist_Fermion *psol) {
     }
 
     wait_gather(mtag[mu]);
-    opp_mu = OPP_LDIR(mu);
     FORALLSITES(i, s) {
     
+      scalar_mult_matrix((matrix *)(gen_pt[mu][i]), 1.0, &tmat);    // tmat = -1.0 * thetab[mu](n-mu)*psi[mu](n-mu)
       mult_nn(&(link_src[mu][i]),&(thetab_dest[mu][i]), &(UpsiU[mu][i]));   // UpsiU[mu] = psi_mu(n)thetab_mu(n)
-      scalar_mult_dif_matrix((matrix *)(gen_pt[mu][i]),s->bc[opp_mu]*s->bc[opp_mu], &(UpsiU[mu][i])); // UpsiU[mu] = psi_mu(n)thetab_mu(n) - bc[opp_mu]*bc[opp_mu]*thetab[mu](n-mu)*psi[mu](n-mu)
+      scalar_mult_dif_matrix((matrix *)(gen_pt[mu][i]),1.0, &(UpsiU[mu][i])); // UpsiU[mu] = psi_mu(n)thetab_mu(n) - 1.0*thetab[mu](n-mu)*psi[mu](n-mu)
     }
     
     cleanup_gather(mtag[mu]);
@@ -1698,11 +1713,10 @@ void assemble_fermion_force(Twist_Fermion *sol, Twist_Fermion *psol) {
     }
 
     wait_gather(mtag[mu]);
-    opp_mu = OPP_LDIR(mu);
     FORALLSITES(i, s) {
     
       mult_nn_dif(&(link_dest[mu][i]),&(thetab_src[mu][i]), &(UpsiU[mu][i]));     // UpsiU[mu] = UpsiU - psi_mu(n)thetab_mu(n)
-      scalar_mult_sum_matrix((matrix *)(gen_pt[mu][i]),s->bc[opp_mu]*s->bc[opp_mu], &(UpsiU[mu][i]));// UpsiU[mu]=UpsiU-psi_mu(n)thetab_mu(n) + bc[opp_mu]*bc[opp_mu]thetab[mu](n-mu)*psi[mu](n-mu)
+      scalar_mult_sum_matrix((matrix *)(gen_pt[mu][i]), 1.0, &(UpsiU[mu][i]));   // UpsiU[mu] = UpsiU - psi_mu(n)thetab_mu(n) + thetab[mu](n-mu)*psi[mu](n-mu)
      
       scalar_mult_sum_matrix(&(UpsiU[mu][i]), 1.0, &(s->f_phi));         //b <-- b + s * a
     }
@@ -1711,7 +1725,10 @@ void assemble_fermion_force(Twist_Fermion *sol, Twist_Fermion *psol) {
     flip = gather;
   }
   
-
+   ///// ** here it is
+ 
+  // work on **** tag[flip] & (UpsiU[nu][i]) scalar mult sum i.e. summation over nu & i-th lattice site ****
+  
   
     //(3) psib-D-thetab
   
@@ -1797,19 +1814,14 @@ void assemble_fermion_force(Twist_Fermion *sol, Twist_Fermion *psol) {
       wait_gather(tag2[j]);
       wait_gather(tag3[j]);
       
-      opp_rho = OPP_LDIR(rho);
-      opp_mu = OPP_LDIR(mu);
-      
       FORALLSITES(i, s) {
        
-       mult_nn((matrix *)(local_pt[j][2][i]),(matrix *)(local_pt[j][1][i]), &tmat);             // UpsiU = psib_mu(n-mu)*thetab_rho(n+nu)
-       scalar_mult_matrix(&tmat, s->bc[opp_mu], &tmat);                                         // UpsiU = bc[opp_mu]psib_mu(n-mu)*thetab_rho(n+nu)
-       scalar_mult_matrix(&tmat, s->bc[nu], &tmat);                                             // UpsiU = bc[opp_mu]bc[nu]*psib_mu(n-mu)*thetab_rho(n+nu)
-       scalar_mult_nn_dif((matrix *)(local_pt[j][0][i]),(matrix *)(local_pt[j][3][i]),s->bc[opp_rho] * s->bc[nu], &tmat);
-      
+       mult_nn((matrix *)(local_pt[j][2][i]),(matrix *)(local_pt[j][1][i]), &tmat);          // UpsiU = psib_mu(n-mu)*thetab_rho(n+nu)
+       mult_nn_dif((matrix *)(local_pt[j][0][i]),(matrix *)(local_pt[j][3][i]), &tmat);      // UpsiU[mu][i] = psib_mu(n-mu)*thetab_rho(n+nu) -thetab_rho(n-rho)psib_mu(n+nu)
+       
        
        scalar_mult_sum_matrix(&tmat,1.0*SGN, &(UpsiU[nu][i])); // dest[i] = dest[i] - 1.0*{psib_mu(n-mu)*thetab_rho(n+nu) -thetab_rho(n-rho)psib_mu(n+nu)}
-    
+     //  scalar_mult_sum_adj_matrix(&(UpsiU[nu][i]), -1.0, &(s->f_U[nu]));
 
       }
       
@@ -1898,20 +1910,14 @@ void assemble_fermion_force(Twist_Fermion *sol, Twist_Fermion *psol) {
       wait_gather(tag2[j]);
       wait_gather(tag3[j]);
       
-      opp_rho = OPP_LDIR(rho);
-      opp_mu = OPP_LDIR(mu);
-      
       FORALLSITES(i, s) {
        
        mult_nn((matrix *)(local_pt[j][2][i]),(matrix *)(local_pt[j][1][i]), &tmat);          // UpsiU = thetab_mu(n-mu)*Lb_rho(n+nu)
-       scalar_mult_matrix(&tmat, s->bc[opp_mu], &tmat);                                      // UpsiU = bc[opp_mu]thetab_mu(n-mu)*Lb_rho(n+nu)
-       scalar_mult_matrix(&tmat, s->bc[nu], &tmat);                                          // UpsiU = bc[opp_mu]bc[nu]thetab_mu(n-mu)*Lb_rho(n+nu)
-       scalar_mult_nn_dif((matrix *)(local_pt[j][0][i]),(matrix *)(local_pt[j][3][i]),s->bc[opp_rho] * s->bc[nu],&tmat); 
-       
+       mult_nn_dif((matrix *)(local_pt[j][0][i]),(matrix *)(local_pt[j][3][i]), &tmat);      // UpsiU[mu][i] = thetab_mu(n-mu)*Lb_rho(n+nu) -Lb_rho(n-rho)thetab_mu(n+nu)
        
        
        scalar_mult_sum_matrix(&tmat,1.0*SGN, &(UpsiU[nu][i])); // dest[i] = dest[i] - 1.0*{thetab_mu(n-mu)*Lb_rho(n+nu) -Lb_rho(n-rho)thetab_mu(n+nu)}
-      
+     //  scalar_mult_sum_adj_matrix(&(UpsiU[nu][i]), -1.0, &(s->f_U[nu])); // ****** outside ***************
 
       }
       
@@ -1937,7 +1943,9 @@ void assemble_fermion_force(Twist_Fermion *sol, Twist_Fermion *psol) {
   
     
  #else
-
+ //  FORALLSITES(i, s)
+   // clear_mat(&(s->f_varphi));
+   // clear_mat(&(s->f_phi));
 #endif
 
 
@@ -1970,9 +1978,8 @@ void assemble_fermion_force(Twist_Fermion *sol, Twist_Fermion *psol) {
       FORALLSITES(i, s) {
         
        mult_nn(&(sitez_dest[i]),(matrix *)(local_pt[0][mu][i]), &(UpsiU[mu][i]) );          // &(UpsiU[mu][i])  = Z(n)chi_mu(n+mu)
-       scalar_mult_matrix(&(UpsiU[mu][i]) , s->bc[mu], &(UpsiU[mu][i]) );                   // &(UpsiU[mu][i])  = bc[mu]Z(n)chi_mu(n+mu)
-       scalar_mult_nn_dif((matrix *)(local_pt[0][mu][i]), (matrix *)(local_pt[1][mu][i]),s->bc[mu] * s->bc[mu], &(UpsiU[mu][i]) ); 
- 
+       mult_nn_dif((matrix *)(local_pt[0][mu][i]), (matrix *)(local_pt[1][mu][i]), &(UpsiU[mu][i]) );      // &(UpsiU[mu][i])  = Z(n)chi_mu(n+mu) - chi_mu(n+mu)Z(n+mu)
+      // scalar_mult_matrix(&(UpsiU[mu][i]) , SIGN, &(UpsiU[mu][i]) );  // &(UpsiU[mu][i]) = SIGN * (Z(n)chi_mu(n+mu) - chi_mu(n+mu)Z(n+mu))
          
       }
       
@@ -2005,18 +2012,13 @@ void assemble_fermion_force(Twist_Fermion *sol, Twist_Fermion *psol) {
       wait_gather(tag0[mu]);
       wait_gather(tag1[mu]);
       
-      FORALLSITES(i, s) {
       
-       mult_nn(&(sitez_src[i]), (matrix *)(local_pt[0][mu][i]), &tmat ); // tmat = z(n)*chi_mu(n+mu)
-       scalar_mult_matrix(&tmat, s->bc[mu], &tmat);                      // tmat = bc[mu]z(n)*chi_mu(n+mu)
-  
-       scalar_mult_dif_matrix(&tmat,1.0,&(UpsiU[mu][i]));                // UpsiU[mu][i]=upsi -1.0*bc[mu]z(n)*chi_mu(n+mu)
+      FORALLSITES(i, s) {
         
-       mult_nn_sum((matrix *)(local_pt[0][mu][i]),(matrix *)(local_pt[1][mu][i]),&(UpsiU[mu][i]) );// (UpsiU[mu][i]) = upsi -bc[mu]z(n)*chi_mu(n+mu) + chi_mu(n+mu)*Z(n+mu)
+       mult_nn_sum((matrix *)(local_pt[0][mu][i]), (matrix *)(local_pt[1][mu][i]), &(UpsiU[mu][i]) );      // &(UpsiU[mu][i])  = upsi + chi_mu(n+mu)*Z(n+mu)
+       mult_nn_dif(&(sitez_src[i]), (matrix *)(local_pt[0][mu][i]), &(UpsiU[mu][i]) );      // (UpsiU[mu][i])  = upsi + chi_mu(n+mu)*Z(n+mu) - z(n)*chi_mu(n+mu)
        
-    
-       
-       scalar_mult_matrix(&(UpsiU[mu][i]) , SIGN, &(UpsiU[mu][i]) );     // (UpsiU[mu][i])  = SIGN*[upsi -bc[mu]z(n)*chi_mu(n+mu) + chi_mu(n+mu)*Z(n+mu)]
+       scalar_mult_matrix(&(UpsiU[mu][i]) , SIGN, &(UpsiU[mu][i]) );     // (UpsiU[mu][i])  = SIGN*[upsi + chi_mu(n+mu)*Z(n+mu) - z(n)*chi_mu(n+mu)]
        
        scalar_mult_sum_adj_matrix(&(UpsiU[mu][i]), -1.0, &(s->f_U[mu]));
         
@@ -2032,7 +2034,8 @@ void assemble_fermion_force(Twist_Fermion *sol, Twist_Fermion *psol) {
  
     
  #else
-
+ //  FORALLSITES(i, s)
+   // clear_mat(&(s->f_varphi));
 #endif
 
 

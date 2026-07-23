@@ -4,12 +4,14 @@
 #define _IO_LAT_H
 
 // Definitions of restore and save lattice flags used in io_helpers.c
-#define CONTINUE      10
-#define FRESH         11
-#define RANDOM        12
-#define RELOAD_SERIAL 13
-#define FORGET        40
-#define SAVE_SERIAL   42
+#define CONTINUE          10
+#define FRESH             11
+#define RANDOM            12
+#define RELOAD_SERIAL     13
+#define RELOAD_SERIAL_SMD 14
+#define FORGET            40
+#define SAVE_SERIAL       42
+#define SAVE_SERIAL_SMD   43
 
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>     // For write, close and off_t
@@ -32,6 +34,8 @@
 // 1. Header
 typedef struct {
   int32type magic_number;               // Identifies file format
+  int32type Nroot;                      // Identifies numner of roots used
+  // Unlike others not read from byte file as that would break old configs
   char time_stamp[MAX_TIME_STAMP]; /* Date and time stamp - used to
           check consistency between the
           ASCII header file and the lattice file */
@@ -59,9 +63,12 @@ typedef struct {
 // Info file format
 // List of admissible keywords for info file
 // More can be added as desired
+// If updated check to see it doesn't break read_gauge_hdr
+// as it uses this array for string comparison
 #ifdef CONTROL
 char *gauge_info_keyword[] = {
       "magic_number",
+      "Nroot" ,
       "time_stamp",
       "checksums",
       "nx",
@@ -101,6 +108,12 @@ typedef struct {
 // Prototypes for generic/io_lat4.c
 gauge_file *restore_serial(char *filename);
 gauge_file *save_serial(char *filename);
+#ifdef SMD_ALGORITHM
+gauge_file *restore_mom_serial(char *filename);
+gauge_file *restore_pf_serial(char *filename);
+gauge_file *save_mom_serial(char *filename);
+gauge_file *save_pf_serial(char *filename);
+#endif
 int write_gauge_info_item( FILE *fpout, /* ascii file pointer */
            char *keyword,   /* keyword */
            char *fmt,       /* output format -
@@ -151,6 +164,9 @@ void swrite_data(FILE* fp, void *src, size_t size, char *myname, char *descrip);
 int sread_data(FILE* fp, void *src, size_t size, char *myname, char *descrip);
 int sread_byteorder(int byterevflag, FILE* fp, void *src, size_t size, char *myname, char *descrip);
 void swrite_gauge_hdr(FILE *fp, gauge_header *gh);
+#ifdef SMD_ALGORITHM
+void swrite_gauge_hdr_smd(FILE *fp, gauge_header *gh);
+#endif
 int write_gauge_info_item( FILE *fpout,    /* ascii file pointer */
            char *keyword,   /* keyword */
            char *fmt,       /* output format -
@@ -180,6 +196,10 @@ void read_checksum(gauge_file *gf, gauge_check *test_gc);
 void write_checksum(gauge_file *gf);
 void read_site_list(gauge_file *gf);
 int read_gauge_hdr(gauge_file *gf);
+#ifdef SMD_ALGORITHM
+int read_gauge_hdr_smd(gauge_file *gf);
+gauge_file *r_pf_serial_i(char *filename);
+#endif
 gauge_file *r_serial_i(char *filename);
 void w_serial_f(gauge_file *gf);
 void r_serial_f(gauge_file *gf);

@@ -91,7 +91,7 @@ int main(int argc, char *argv[]) {
     // Might as well spit out volume average of Polyakov loop modulus
     //----edited-------
     
-    ss_plaq = gauge_action(NODET) /*+ sa(NODET)*/; // mpi will work here for sa(NODET)
+    ss_plaq = gauge_action(NODET) + sa(NODET); // mpi will work here for sa(NODET)
     
     //ss_plaq = gauge_action(NODET)+sa(NODET);//+bmass_action();
     node0_printf("%.8g ", ss_plaq / (double)volume);

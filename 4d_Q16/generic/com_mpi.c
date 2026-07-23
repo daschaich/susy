@@ -20,9 +20,8 @@
 // g_xor32()              Find global exclusive or of 32-bit word
 // g_floatmax()           Find maximum Real over all nodes
 // g_doublemax()          Find maximum double over all nodes
-// broadcast_float()      Broadcast a generic precision number from
-//                          node 0 to all nodes
-// broadcast_double()     Broadcast a double precision number
+// broadcast_float()      Broadcast a Real from node 0 to all nodes
+// broadcast_double()     Broadcast a double from node 0 to all nodes
 // broadcast_complex()    Broadcast a generic precision complex number
 // broadcast_dcomplex()   Broadcast a double precision complex number
 // broadcast_bytes()      Broadcast a number of bytes
@@ -67,12 +66,12 @@
 // start_general_gather_field()
 //                        Start asynchronous sends and receives required to
 //                          gather field data at arbitrary displacement
-// wait_general_gather()  Wait for receives to finish, insuring that the
+// wait_general_gather()  Wait for receives to finish, ensuring that the
 //                          data have actually arrived,
 //                          and set pointers to received data
 // cleanup_general_gather()
 //                        Free all the buffers that were allocated
-//                          NB: the gathered data may soon disappear
+//                          NB: The gathered data may soon disappear
 #include <time.h>
 #include "generic_includes.h"
 #include <mpi.h>
@@ -82,9 +81,9 @@
 #define OUR_MPI_REAL MPI_DOUBLE
 #endif
 
-#define NOWHERE -1  // Not an index in array of fields
+#define NOWHERE -1      // Not an index in array of fields
 
-/* message types used here */
+// Message types used here
 #define SEND_INTEGER_ID    1  /* send an integer to one other node */
 #define SEND_FIELD_ID      2  /* id of field sent from one node to another */
 #define GENERAL_GATHER_ID  3  /* id used by general_gather routines */
@@ -328,7 +327,7 @@ void g_vecfloatsum(Real *fpt, int length) {
   int i;
   Real *work = malloc(sizeof *work * length);
   MPI_Allreduce(fpt, work, length, OUR_MPI_REAL, MPI_SUM, MPI_COMM_WORLD);
-  for (i = 0; i<length; i++)
+  for (i = 0; i < length; i++)
     fpt[i] = work[i];
   free(work);
 }
