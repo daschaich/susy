@@ -297,7 +297,7 @@ int sprint_gauge_info_item(
 void write_gauge_info_file(gauge_file *gf) {
   FILE *info_fp;
   gauge_header *gh;
-  char info_filename[256];
+  char info_filename[MAXFILENAME];
   char sums[20];
 
   gh = gf->header;
@@ -305,11 +305,11 @@ void write_gauge_info_file(gauge_file *gf) {
   /* Construct header file name from lattice file name
    by adding filename extension to lattice file name */
   strcpy(info_filename, gf->filename);
-  strcat(info_filename, ASCII_GAUGE_INFO_EXT);
+  strcat(info_filename, GAUGE_INFO_EXT);
 
   // Open header file
   if ((info_fp = fopen(info_filename,"w")) == NULL) {
-    printf("write_gauge_info_file: Can't open ascii info file %s\n",
+    printf("write_gauge_info_file: Can't open info file %s\n",
            info_filename);
     return;
   }

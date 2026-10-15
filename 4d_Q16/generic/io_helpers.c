@@ -16,30 +16,16 @@ gauge_file *save_lattice(int flag, char *filename) {
 #ifdef SMD_ALGORITHM
   char momname[MAXFILENAME], pfname[MAXFILENAME];
   gauge_file *mf = NULL, *pf = NULL;
-  int i;
-  for(i = 0;i < MAXFILENAME - 5; i++) {
-    //have a sanity check maybe
-    if(filename[i] == '\0') break;
-    momname[i] = filename[i];
-    pfname[i] = filename[i];
-  }
-  momname[i] = '.';
-  momname[i+1] = 'm';
-  momname[i+2] = 'o';
-  momname[i+3] = 'm';
-  momname[i+4] = '\0';
-
-  pfname[i] = '.';
-  pfname[i+1] = 'p';
-  pfname[i+2] = 'f';
-  pfname[i+3] = '\0';
-  //Could potentially use concat functions
+  strcpy(momname, filename);
+  strcat(momname, MOM_EXT);
+  strcpy(pfname, filename);
+  strcat(pfname, PF_EXT);
 #endif
 
   plaquette(&g_ssplaq, &g_stplaq);
   sum_linktr(&linktrsum);
   nersc_checksum = nersc_cksum();
-  //TODO: checksums
+  //TODO: SMD checksums
 
   dtime = -dclock();
   switch(flag) {
@@ -142,24 +128,10 @@ gauge_file *reload_lattice(int flag, char *filename) {
 #ifdef SMD_ALGORITHM
   char momname[MAXFILENAME], pfname[MAXFILENAME];
   gauge_file *mf = NULL, *pf = NULL;
-  int i;
-  for(i = 0;i < MAXFILENAME - 5; i++) {
-    //have a sanity check maybe
-    if(filename[i] == '\0') break;
-    momname[i] = filename[i];
-    pfname[i] = filename[i];
-  }
-  momname[i] = '.';
-  momname[i+1] = 'm';
-  momname[i+2] = 'o';
-  momname[i+3] = 'm';
-  momname[i+4] = '\0';
-
-  pfname[i] = '.';
-  pfname[i+1] = 'p';
-  pfname[i+2] = 'f';
-  pfname[i+3] = '\0';
-  //Could potentially use concat functions
+  strcpy(momname, filename);
+  strcat(momname, MOM_EXT);
+  strcpy(pfname, filename);
+  strcat(pfname, PF_EXT);
 #endif
 
   dtime = -dclock();

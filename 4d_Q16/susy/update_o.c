@@ -201,9 +201,9 @@ int update() {//src -> gsrc as src is already defined for EIG,etc.
   Real xrandom;   // For accept/reject test
   // Copy link field to old_link
   gauge_field_copy(F_OFFSET(link[0]), F_OFFSET(old_link[0]));
-  FORALLSITES(i, s)
-    FORALLDIR(mu)
-      mat_copy(&(s->mom[mu]), &(s->old_mom[mu]));
+#endif
+#ifdef SMD_ALGORITHM
+  gauge_field_copy(F_OFFSET(mom[0]), F_OFFSET(old_mom[0]));
 #endif
   // Do microcanonical updating
   iters += update_step(gsrc, psim);
@@ -233,9 +233,9 @@ int update() {//src -> gsrc as src is already defined for EIG,etc.
   if (exp(-change) < (double)xrandom) {
     if (traj_length > 0.0) {
       gauge_field_copy(F_OFFSET(old_link[0]), F_OFFSET(link[0]));
-      FORALLSITES(i,s)
-        FORALLDIR(mu)
-          scalar_mult_matrix(&(s->old_mom[mu]), -1, &(s->mom[mu]));//Reverse momentum
+#ifdef SMD_ALGORITHM
+      gauge_field_copy(F_OFFSET(old_mom[0]), F_OFFSET(mom[0]));
+#endif
       compute_plaqdet();
       compute_Uinv();
       compute_DmuUmu();

@@ -85,7 +85,13 @@ extern char *gauge_info_keyword[];
 #endif
 
 // Used to create info file name
-#define ASCII_GAUGE_INFO_EXT ".info"
+#define GAUGE_INFO_EXT ".info"
+
+// Additional file extensions for SMD algorithm
+#ifdef SMD_ALGORITHM
+#define MOM_EXT ".mom"
+#define PF_EXT ".mom"
+#endif
 // -----------------------------------------------------------------
 
 
