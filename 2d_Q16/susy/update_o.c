@@ -20,36 +20,26 @@
 void update_u(Real eps) {
   register int i, mu;
   register site *s;
-  complex tcl[3];
-  complex tcp;
- 
- 
-  
 
   FORALLSITES(i, s) {
    FORALLDIR(mu)
-     scalar_mult_sum_matrix(&(s->mom[mu]), eps, &(s->link[mu])); // U_mu(n) = U_mu(n) +eps*mom_mu(n) 
+     scalar_mult_sum_matrix(&(s->mom[mu]), eps, &(s->link[mu])); // U_mu(n) = U_mu(n) +eps*mom_mu(n)
 
    scalar_mult_sum_matrix(&(s->mom_phi), eps, &(s->phi));        // phi(n) = phi(n) + eps*mom_phi(n)
    scalar_mult_sum_matrix(&(s->mom_varphi), eps, &(s->varphi));  // varphi(n) = varphi(n) + eps*mom_varphi(n)
-
   }
 
-
-     
   // Update plaquette determinants, DmuUmu and Fmunu,phi_commut with new links
   // (Needs to be done before calling gauge_force and scalar_force)
   compute_plaqdet();
   compute_Uinv();
   compute_DmuUmu();
   compute_Fmunu();
- //----edited------------- 
   compute_phi_commutator();
   compute_varphi_commutator();
   compute_varphi_phi_commutator();
   compute_Dmuphi();
   compute_Dmuvarphi();
-
 }
 // -----------------------------------------------------------------
 
@@ -60,16 +50,10 @@ void update_u(Real eps) {
 double update_gauge_step(Real eps, Real *norm_phi) {
   int n = nsteps[1], i;  // number of gauge steps
   double norm;
-  complex tcl,tcp;
-  register int m;
-  register site *s;
 
 #ifdef UPDATE_DEBUG
   node0_printf("gauge %d steps %.4g dt\n", n, eps);
 #endif
-
-
-
 
   norm = gauge_force(eps * LAMBDA);           //norm =  eps*(f_U[0]+f_U[1]+f_U[2]) = eps*(dS/dU1+....)
   *norm_phi = scalar_force(eps * LAMBDA);
@@ -86,9 +70,9 @@ double update_gauge_step(Real eps, Real *norm_phi) {
       norm += gauge_force(eps * LAMBDA);
       *norm_phi += scalar_force(eps * LAMBDA);
     }
-    
+
     //edited-----
-    
+
 
   }
   return (norm / n);                           // average sum of eps*force = eps*(dS/dU1+dS/dU2....)/n
@@ -123,7 +107,7 @@ int update_step(Twist_Fermion **src, Twist_Fermion ***psim) {
       max_gf = tr;
     if (tr_phi > max_phif)
       max_phif = tr_phi;
-//  ---------------------------------------------------------------------------------------------------      
+//  ---------------------------------------------------------------------------------------------------
 
 #ifndef PUREGAUGE
     for (n = 0; n < Nroot; n++) {
@@ -166,14 +150,10 @@ int update_step(Twist_Fermion **src, Twist_Fermion ***psim) {
 
 // -----------------------------------------------------------------
 int update() {
-
-  register site *s;//edited
   int j, n, iters = 0;
   Real final_rsq;
   double startaction, endaction, change;
-  
-  complex tcl,tcp;
-  
+
   Twist_Fermion **src = malloc(sizeof(Twist_Fermion*) * Nroot);
   Twist_Fermion ***psim = malloc(sizeof(Twist_Fermion**) * Nroot);
 
@@ -185,7 +165,7 @@ int update() {
   }
 
   // Refresh the momenta
-  ranmom();            
+  ranmom();
   //ranmom_phi();
   // Set up the fermion variables, if needed
 #ifndef PUREGAUGE
@@ -269,23 +249,16 @@ int update() {
       compute_Uinv();
       compute_DmuUmu();
       compute_Fmunu();
-      //edited--------------
       compute_phi_commutator();
       compute_varphi_commutator();
       compute_varphi_phi_commutator();
       compute_Dmuphi();
       compute_Dmuvarphi();
-
     }
-
-    
     node0_printf("REJECT: delta S = %.4g start S = %.12g end S = %.12g\n",
                  change, startaction, endaction);
   }
   else {
-  
-
-  
     node0_printf("ACCEPT: delta S = %.4g start S = %.12g end S = %.12g\n",
                  change, startaction, endaction);
   }

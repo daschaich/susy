@@ -135,14 +135,14 @@ void compute_Uinv() {
 #ifdef VP
 void Dplus(matrix *src[NUMLINK], matrix *dest[NPLAQ]) {
 
-//edited 
+//edited
       int p, q, indx;
  for (p = 0; p < NUMLINK; p++) {
     plaq_index[p][p] = -1;                                  // i,i=-1  ,  00=11=22=-1
     for (q = p + 1; q < NUMLINK; q++) {
-      indx = p * (NUMLINK - 1) - p * (p + 1) / 2 + q - 1;//              01=0,02=1,12=2 
+      indx = p * (NUMLINK - 1) - p * (p + 1) / 2 + q - 1;//              01=0,02=1,12=2
       plaq_index[p][q] = indx;
-      plaq_index[q][p] = indx;                             // i,j=j,i, 01=10=0,02=20=1,12=21=2 
+      plaq_index[q][p] = indx;                             // i,j=j,i, 01=10=0,02=20=1,12=21=2
     }
   }
 
@@ -241,51 +241,51 @@ void PtoLb(matrix *src[NPLAQ], matrix *dest[NUMLINK]) {
     local_pt[0][mu] = gen_pt[mu];
     local_pt[1][mu] = gen_pt[3 + mu];
   }
-  
+
   Real SIGN_array[3] = {-1.0, 1.0, -1.0};
-  
-  FORALLDIR(mu) {
-  FORALLSITES(i, s) {           // edited ----- to initialize otherwise lead to NAN
-    clear_mat(&(dest[mu][i])); } 
-  } 
-  
-//--------  
- 
 
   FORALLDIR(mu) {
-  
+  FORALLSITES(i, s) {           // edited ----- to initialize otherwise lead to NAN
+    clear_mat(&(dest[mu][i])); }
+  }
+
+//--------
+
+
+  FORALLDIR(mu) {
+
         Real SIGN = SIGN_array[mu];
 
         tag0[mu] = start_gather_site(F_OFFSET(phi), sizeof(matrix),
                                          goffset[mu] , EVENANDODD,
                                          local_pt[0][mu]);             //phi(n+mu)
-                                         
+                                   
         tag1[mu] = start_gather_field(src[mu], sizeof(matrix),
                                           goffset[mu], EVENANDODD,
-                                          local_pt[1][mu]);              // chi_mu(n+mu)                  
+                                          local_pt[1][mu]);              // chi_mu(n+mu)            
 
       wait_gather(tag0[mu]);
       wait_gather(tag1[mu]);
-      
-      
+
+
       FORALLSITES(i, s) {
-      
-      
+
+
        mult_an(&(s->phi),(matrix *)(local_pt[1][mu][i]), &tmat );          // tmat = phi^bar(n)*chi_mu(n+mu)
        scalar_mult_matrix(&tmat, s->bc[mu], &tmat);                        // tmat = bc[mu]phi^bar(n)*chi_mu(n+mu)
        scalar_mult_na_dif( (matrix *)(local_pt[1][mu][i]),(matrix *)(local_pt[0][mu][i]),s->bc[mu], &tmat );      // tmat = bc[mu]phi^bar(n)*chi_mu(n+mu) - bc[mu]chi_mu(n+mu) phi^bar(n+mu)
        scalar_mult_sum_matrix(&tmat,SIGN, &dest[mu][i]);    // dest[i] = dest[i] +SGN*{bc[mu]phi^bar(n)*chi_mu(n+mu) - bc[mu]chi_mu(n+mu) phi^bar(n+mu)}
-      
-      
+
+
 
       }
-      
+
       cleanup_gather(tag0[mu]);
       cleanup_gather(tag1[mu]);
-    
-      
+
+
     }
-   
+
 
  }
 
@@ -303,44 +303,44 @@ void LbtoP(matrix *src[NUMLINK], matrix *dest[NPLAQ]) {
     local_pt[0][mu] = gen_pt[mu];
     local_pt[1][mu] = gen_pt[3 + mu];
   }
-  
+
   Real SIGN_array[3] = {-1.0, 1.0, -1.0};
-  
-//--------  
- 
+
+//--------
+
 
   FORALLDIR(mu) {
-  
+
         Real SIGN = SIGN_array[mu];
 
         tag0[mu] = start_gather_site(F_OFFSET(phi), sizeof(matrix),
                                          goffset[mu] + 1, EVENANDODD,
                                          local_pt[0][mu]);             //phi(n-mu)
-                                         
+                                   
         tag1[mu] = start_gather_field(src[mu], sizeof(matrix),
                                           goffset[mu] + 1, EVENANDODD,
-                                          local_pt[1][mu]);              // psib_mu(n-mu)                  
+                                          local_pt[1][mu]);              // psib_mu(n-mu)            
 
       wait_gather(tag0[mu]);
       wait_gather(tag1[mu]);
       opp_mu = OPP_LDIR(mu);
-      
+
       FORALLSITES(i, s) {
-      
-      
+
+
        mult_an(&(s->phi),(matrix *)(local_pt[1][mu][i]), &tmat );          // tmat = phi^bar(n)*psib_mu(n-mu)
        scalar_mult_matrix(&tmat, s->bc[opp_mu], &tmat);                    // tmat = bc[opp_mu]phi^bar(n)*psib_mu(n-mu)
        scalar_mult_na_dif( (matrix *)(local_pt[1][mu][i]),(matrix *)(local_pt[0][mu][i]),s->bc[opp_mu],&tmat );// tmat = bc[opp_mu]phi^bar(n)*psib_mu(n-mu) - bc[opp_mu]psib_mu(n-mu) phi^bar(n-mu)
        scalar_mult_sum_matrix(&tmat,SIGN, &dest[mu][i]);    // dest[i] = dest[i] - 1.0*{bc[opp_mu]phi^bar(n)*psib_mu(n-mu) - bc[opp_mu]psib_mu(n-mu) phi^bar(n-mu)}
 
       }
-      
+
       cleanup_gather(tag0[mu]);
       cleanup_gather(tag1[mu]);
-    
-      
+
+
     }
-   
+
 
  }
 
@@ -360,51 +360,51 @@ void PtoTb(matrix *src[NPLAQ], matrix *dest[NUMLINK]) {
     local_pt[0][mu] = gen_pt[mu];
     local_pt[1][mu] = gen_pt[3 + mu];
   }
-  
+
   Real SIGN_array[3] = {-1.0, 1.0, -1.0};
-  
-  FORALLDIR(mu) {
-  FORALLSITES(i, s) {           // edited ----- to initialize otherwise lead to NAN
-    clear_mat(&(dest[mu][i])); } 
-  } 
-  
-//--------  
- 
 
   FORALLDIR(mu) {
-  
+  FORALLSITES(i, s) {           // edited ----- to initialize otherwise lead to NAN
+    clear_mat(&(dest[mu][i])); }
+  }
+
+//--------
+
+
+  FORALLDIR(mu) {
+
         Real SIGN = SIGN_array[mu];
 
         tag0[mu] = start_gather_site(F_OFFSET(varphi), sizeof(matrix),
                                          goffset[mu] , EVENANDODD,
                                          local_pt[0][mu]);             //varphi(n+mu)
-                                         
+                                   
         tag1[mu] = start_gather_field(src[mu], sizeof(matrix),
                                           goffset[mu], EVENANDODD,
-                                          local_pt[1][mu]);              // chi_mu(n+mu)                  
+                                          local_pt[1][mu]);              // chi_mu(n+mu)            
 
       wait_gather(tag0[mu]);
       wait_gather(tag1[mu]);
-      
-      
+
+
       FORALLSITES(i, s) {
-      
-      
+
+
        mult_an(&(s->varphi),(matrix *)(local_pt[1][mu][i]), &tmat );          // tmat = varphi^bar(n)*chi_mu(n+mu)
        scalar_mult_matrix(&tmat, s->bc[mu], &tmat);                           // tmat = bc[mu]varphi^bar(n)*chi_mu(n+mu)
        scalar_mult_na_dif( (matrix *)(local_pt[1][mu][i]),(matrix *)(local_pt[0][mu][i]),s->bc[mu], &tmat );      // tmat = bc[mu]varphi^bar(n)*chi_mu(n+mu) - bc[mu]chi_mu(n+mu) varphi(n+mu)
        scalar_mult_sum_matrix(&tmat,-1.0*SIGN, &dest[mu][i]);    // dest[i] = dest[i] +SGN*{bc[mu]varphi^bar(n)*chi_mu(n+mu) - bc[mu]chi_mu(n+mu) varphi(n+mu)}
-      
-      
+
+
 
       }
-      
+
       cleanup_gather(tag0[mu]);
       cleanup_gather(tag1[mu]);
-    
-      
+
+
     }
-   
+
 
  }
 
@@ -422,44 +422,44 @@ void TbtoP(matrix *src[NUMLINK], matrix *dest[NPLAQ]) {
     local_pt[0][mu] = gen_pt[mu];
     local_pt[1][mu] = gen_pt[3 + mu];
   }
-  
+
   Real SIGN_array[3] = {-1.0, 1.0, -1.0};
-  
-//--------  
- 
+
+//--------
+
 
   FORALLDIR(mu) {
-  
+
         Real SIGN = SIGN_array[mu];
 
         tag0[mu] = start_gather_site(F_OFFSET(varphi), sizeof(matrix),
                                          goffset[mu] + 1, EVENANDODD,
                                          local_pt[0][mu]);             //varphi(n-mu)
-                                         
+                                   
         tag1[mu] = start_gather_field(src[mu], sizeof(matrix),
                                           goffset[mu] + 1, EVENANDODD,
-                                          local_pt[1][mu]);              // psib_mu(n-mu)                  
+                                          local_pt[1][mu]);              // psib_mu(n-mu)            
 
       wait_gather(tag0[mu]);
       wait_gather(tag1[mu]);
       opp_mu = OPP_LDIR(mu);
-      
+
       FORALLSITES(i, s) {
-      
-      
+
+
        mult_an(&(s->varphi),(matrix *)(local_pt[1][mu][i]), &tmat );          // tmat = varphi^bar(n)*psib_mu(n-mu)
        scalar_mult_matrix(&tmat, s->bc[opp_mu], &tmat);                       // tmat = bc[opp_mu]varphi^bar(n)*psib_mu(n-mu)
        scalar_mult_na_dif( (matrix *)(local_pt[1][mu][i]),(matrix *)(local_pt[0][mu][i]),s->bc[opp_mu], &tmat );// tmat = bc[opp_mu]varphi^bar(n)*psib_mu(n-mu) - bc[opp_mu]psib_mu(n-mu) varphi(n-mu)
        scalar_mult_sum_matrix(&tmat,-1.0*SIGN, &dest[mu][i]);    // dest[i] = dest[i] - 1.0*{bc[opp_mu]varphi^bar(n)*psib_mu(n-mu) - bc[opp_mu]psib_mu(n-mu)}
 
       }
-      
+
       cleanup_gather(tag0[mu]);
       cleanup_gather(tag1[mu]);
-    
-      
+
+
     }
-   
+
 
  }
 
@@ -477,14 +477,14 @@ void TbtoP(matrix *src[NUMLINK], matrix *dest[NPLAQ]) {
 #ifdef VP
 void Dminus(matrix *src[NPLAQ], matrix *dest[NUMLINK]) {
 
-//edited 
+//edited
       int p, q, indx;
  for (p = 0; p < NUMLINK; p++) {
     plaq_index[p][p] = -1;                                  // i,i=-1  ,  00=11=22=-1
     for (q = p + 1; q < NUMLINK; q++) {
-      indx = p * (NUMLINK - 1) - p * (p + 1) / 2 + q - 1;//              01=0,02=1,12=2 
+      indx = p * (NUMLINK - 1) - p * (p + 1) / 2 + q - 1;//              01=0,02=1,12=2
       plaq_index[p][q] = indx;
-      plaq_index[q][p] = indx;                             // i,j=j,i, 01=10=0,02=20=1,12=21=2 
+      plaq_index[q][p] = indx;                             // i,j=j,i, 01=10=0,02=20=1,12=21=2
     }
   }
 
@@ -619,11 +619,11 @@ void DplusSzbtoLb(matrix *src, matrix *dest[NUMLINK]) {
   int mu;
   msg_tag *tag[NUMLINK];
   matrix tmat;
- /* 
+ /*
   FORALLDIR(mu) {
   FORALLSITES(i, s) {           // edited ----- to initialize otherwise lead to NAN
-    clear_mat(&(dest[mu][i])); } 
-  }  
+    clear_mat(&(dest[mu][i])); }
+  }
 */
   tag[0] = start_gather_field(src, sizeof(matrix), goffset[0],  // gen_pt[0]=zb(i+0)
                               EVENANDODD, gen_pt[0]);
@@ -655,7 +655,7 @@ void DplusSebtoTb(matrix *src, matrix *dest[NUMLINK]) {
   /*
   FORALLDIR(mu) {
   FORALLSITES(i, s) {           // edited ----- to initialize otherwise lead to NAN
-    clear_mat(&(dest[mu][i])); } 
+    clear_mat(&(dest[mu][i])); }
   }*/
 
   tag[0] = start_gather_field(src, sizeof(matrix), goffset[0],  // gen_pt[0]=zb(i+0)
@@ -834,7 +834,7 @@ void DminusLbtoSzb(matrix *src[NUMLINK], matrix *dest) {
     mult_nn(&(src[0][i]),&(s->link[0]), &(mat[0][i])); //mat[0][i]=psi_0 U_0
   }
   tag[0] = start_gather_field(mat[0], sizeof(matrix),
-                              goffset[0] + 1, EVENANDODD, gen_pt[0]);  //gen_pt[0]=psi_0(i-0)U_0(i-0) 
+                              goffset[0] + 1, EVENANDODD, gen_pt[0]);  //gen_pt[0]=psi_0(i-0)U_0(i-0)
 
   FORALLDIR(mu) {
     if (mu < NUMLINK - 1) {   // Start next gather
@@ -880,7 +880,7 @@ void DminusTbtoSeb(matrix *src[NUMLINK], matrix *dest) {
     mult_nn(&(src[0][i]),&(s->link[0]), &(mat[0][i])); //mat[0][i]=psi_0 U_0
   }
   tag[0] = start_gather_field(mat[0], sizeof(matrix),
-                              goffset[0] + 1, EVENANDODD, gen_pt[0]);  //gen_pt[0]=psi_0(i-0)U_0(i-0) 
+                              goffset[0] + 1, EVENANDODD, gen_pt[0]);  //gen_pt[0]=psi_0(i-0)U_0(i-0)
 
   FORALLDIR(mu) {
     if (mu < NUMLINK - 1) {   // Start next gather
@@ -907,44 +907,40 @@ void DminusTbtoSeb(matrix *src[NUMLINK], matrix *dest) {
   FORALLSITES(i, s)
     scalar_mult_matrix(&(dest[i]), 0.5, &(dest[i]));
 }
-
 #endif
 
 //*********** correction made here on 15/5/2026 #ifdef SV to #ifdef SS *********//
 //********** maybe not in use  ***************
-//#ifdef SV
 #ifdef SS
 void DplusSebtoSz(matrix *src, matrix *dest) {
   register int i;
   register site *s;
-  int mu;
   msg_tag *tag[0];
   matrix tmat;
-  
-  
+
+
   FORALLSITES(i, s) {           // edited ----- to initialize otherwise lead to NAN
-    clear_mat(&(dest[i])); } 
-    
+    clear_mat(&(dest[i])); }
+
 
   tag[0] = start_gather_field(src, sizeof(matrix), goffset[0],  // gen_pt[0]=eb(i+0)
                               EVENANDODD, gen_pt[0]);
- 
+
 
     wait_gather(tag[0]);
     FORALLSITES(i, s) {
       mult_nn( &(s->varphi),(matrix *)(gen_pt[0][i]), &tmat);           // tmat = varphi(i)eb(i+0)
-      //scalar_mult_matrix(&tmat, s->bc[mu], &tmat);                        
+      //scalar_mult_matrix(&tmat, s->bc[mu], &tmat);                  
       mult_nn_dif(&(src[i]), &(s->varphi), &tmat);                       // tmat = varphi(i)eb(i+0) - eb(i)varphi(i)
       scalar_mult_sum_matrix(&tmat, 0.5, &(dest[i]));                  // dest[mu][i] += 0.5 { varphi(i)eb(i+0) - eb(i)varphi(i) }
     }
     cleanup_gather(tag[0]);
-  
+
 }
 
 void DminusSztoSeb(matrix *src, matrix *dest) {
-  register int i, mu, nu, opp_mu;
+  register int i;
   register site *s;
-  int gather = 1, flip = 0;
   matrix *mat[2];
   msg_tag *tag[0];
 
@@ -968,8 +964,8 @@ void DminusSztoSeb(matrix *src, matrix *dest) {
       mult_nn_sum( &(s->varphi),&(src[i]), &(dest[i]));             // dest[i]= dest[i]-z(i-0)*varphi(i-0) + varphi(i)z(i)
     }
     cleanup_gather(tag[0]);
-    
-  
+
+
 
   // Overall factor of 1/2
   FORALLSITES(i, s)
@@ -1049,296 +1045,197 @@ void detLtoS(matrix *src[NUMLINK], matrix *dest) {
 }
 #endif
 
-
-
-
-
-
-
 #ifdef SS
-
-
+// TODO: These look like they can all be reduced to one that takes the scalar as an input argument...
 //(1)
-
 // Term1
 // zeta-etab
-// src = etab , dest = zeta   
-
-void SebtoSz(matrix *src, matrix *dest){
+// src = etab , dest = zeta
+void SebtoSz(matrix *src, matrix *dest) {
   register int i;
   register site *s;
-  int mu;
-
   matrix tmat;
-  
-   FORALLSITES(i, s){
-     clear_mat(&(dest[i])); 
-      } 
+  FORALLSITES(i, s)
+    clear_mat(&(dest[i]));
 
-     FORALLSITES(i, s) {
-
-       mult_nn(&(s->varphi), &(src[i]), &tmat );          // tmat = varphi(n)*etab(n)
-       mult_nn_dif(&(src[i]), &(s->varphi), &tmat );      // tmat = varphi(n)*etab(n) - etab(n)varphi(n)
-       scalar_mult_sum_matrix(&tmat,1.0, &dest[i]);    // dest[i] = dest[i] + 1.0*{ varphi(n)*etab(n) - etab(n)varphi }
-       
-      }
-
+  FORALLSITES(i, s) {
+    mult_nn(&(s->varphi), &(src[i]), &tmat );          // tmat = varphi(n)*etab(n)
+    mult_nn_dif(&(src[i]), &(s->varphi), &tmat );      // tmat = varphi(n)*etab(n) - etab(n)varphi(n)
+    scalar_mult_sum_matrix(&tmat,1.0, &dest[i]);    // dest[i] = dest[i] + 1.0*{ varphi(n)*etab(n) - etab(n)varphi }
+  }
 }
-
 
 // Term2
 // etab-zeta
 // src = zeta , dest = etab
-
-
-void SztoSeb(matrix *src, matrix *dest){
+void SztoSeb(matrix *src, matrix *dest) {
   register int i;
   register site *s;
-  int mu;
-
   matrix tmat;
-
-            
-     FORALLSITES(i, s) {
-
-       mult_nn(&(s->varphi), &(src[i]), &tmat );          // tmat = varphi(n)*etab(n)
-       mult_nn_dif(&(src[i]), &(s->varphi), &tmat );      // tmat = varphi(n)*etab(n) - etab(n)varphi
-       scalar_mult_sum_matrix(&tmat,1.0, &dest[i]);    // dest[i] = dest[i] + 1.0*{ varphi(n)*etab(n) - etab(n)varphi }
-       
-      } 
-
+  FORALLSITES(i, s) {
+    mult_nn(&(s->varphi), &(src[i]), &tmat );          // tmat = varphi(n)*etab(n)
+    mult_nn_dif(&(src[i]), &(s->varphi), &tmat );      // tmat = varphi(n)*etab(n) - etab(n)varphi
+    scalar_mult_sum_matrix(&tmat,1.0, &dest[i]);    // dest[i] = dest[i] + 1.0*{ varphi(n)*etab(n) - etab(n)varphi }
+  }
 }
-
 
 //(2)
-
 // Term1
 // zeta-ztab
-// src = ztab , dest = zeta   
-
-void SzbtoSz(matrix *src, matrix *dest){
+// src = ztab , dest = zeta
+void SzbtoSz(matrix *src, matrix *dest) {
   register int i;
   register site *s;
-  int mu;
-
   matrix tmat;
-  
-
-
-     FORALLSITES(i, s) {
-
-       mult_nn(&(s->phi), &(src[i]), &tmat );          // tmat = varphi(n)*etab(n)
-       mult_nn_dif(&(src[i]), &(s->phi), &tmat );      // tmat = varphi(n)*etab(n) - etab(n)varphi(n)
-       scalar_mult_sum_matrix(&tmat,-1.0, &dest[i]);    // dest[i] = dest[i] + 1.0*{ varphi(n)*etab(n) - etab(n)varphi }
-       
-      }
-
+  FORALLSITES(i, s) {
+    mult_nn(&(s->phi), &(src[i]), &tmat );          // tmat = varphi(n)*etab(n)
+    mult_nn_dif(&(src[i]), &(s->phi), &tmat );      // tmat = varphi(n)*etab(n) - etab(n)varphi(n)
+    scalar_mult_sum_matrix(&tmat,-1.0, &dest[i]);    // dest[i] = dest[i] + 1.0*{ varphi(n)*etab(n) - etab(n)varphi }
+  }
 }
-
 
 // Term2
 // zetab-zeta
 // src = zeta , dest = zetab
-
-
-
-void SztoSzb(matrix *src, matrix *dest){
+void SztoSzb(matrix *src, matrix *dest) {
   register int i;
   register site *s;
-  int mu;
-
   matrix tmat;
-
-            
-     FORALLSITES(i, s) {
-
-       mult_nn(&(s->phi), &(src[i]), &tmat );          // tmat = varphi(n)*etab(n)
-       mult_nn_dif(&(src[i]), &(s->phi), &tmat );      // tmat = varphi(n)*etab(n) - etab(n)varphi
-       scalar_mult_sum_matrix(&tmat,-1.0, &dest[i]);    // dest[i] = dest[i] + 1.0*{ varphi(n)*etab(n) - etab(n)varphi }
-       
-      } 
-
+  FORALLSITES(i, s) {
+    mult_nn(&(s->phi), &(src[i]), &tmat );          // tmat = varphi(n)*etab(n)
+    mult_nn_dif(&(src[i]), &(s->phi), &tmat );      // tmat = varphi(n)*etab(n) - etab(n)varphi
+    scalar_mult_sum_matrix(&tmat,-1.0, &dest[i]);    // dest[i] = dest[i] + 1.0*{ varphi(n)*etab(n) - etab(n)varphi }
+  }
 }
-
-
 
 //(3)
-
 // Term1
 // etab-eta
-// src = etab , dest = eta   
-
-void SebtoSe(matrix *src, matrix *dest){
+// src = etab , dest = eta
+void SebtoSe(matrix *src, matrix *dest) {
   register int i;
   register site *s;
-  int mu;
-
   matrix tmat;
-  
-
-
-     FORALLSITES(i, s) {
-
-       mult_an(&(s->phi), &(src[i]), &tmat );          // tmat = varphi(n)*etab(n)
-       mult_na_dif(&(src[i]), &(s->phi), &tmat );      // tmat = varphi(n)*etab(n) - etab(n)varphi(n)
-       scalar_mult_sum_matrix(&tmat,0.5, &dest[i]);    // dest[i] = dest[i] + 1.0*{ varphi(n)*etab(n) - etab(n)varphi }
-       
-      }
-
+  FORALLSITES(i, s) {
+    mult_an(&(s->phi), &(src[i]), &tmat );          // tmat = varphi(n)*etab(n)
+    mult_na_dif(&(src[i]), &(s->phi), &tmat );      // tmat = varphi(n)*etab(n) - etab(n)varphi(n)
+    scalar_mult_sum_matrix(&tmat,0.5, &dest[i]);    // dest[i] = dest[i] + 1.0*{ varphi(n)*etab(n) - etab(n)varphi }
+  }
 }
-
-
 
 // Term2
 // eta-etab
 // src = eta , dest = etab
-
-
-
-void SetoSeb(matrix *src, matrix *dest){
+void SetoSeb(matrix *src, matrix *dest) {
   register int i;
   register site *s;
-  int mu;
-
   matrix tmat;
-
-            
-     FORALLSITES(i, s) {
-
-       mult_an(&(s->phi), &(src[i]), &tmat );          // tmat = varphi(n)*etab(n)
-       mult_na_dif(&(src[i]), &(s->phi), &tmat );      // tmat = varphi(n)*etab(n) - etab(n)varphi
-       scalar_mult_sum_matrix(&tmat,0.5, &dest[i]);    // dest[i] = dest[i] + 1.0*{ varphi(n)*etab(n) - etab(n)varphi }
-       
-      } 
-
+  FORALLSITES(i, s) {
+    mult_an(&(s->phi), &(src[i]), &tmat );          // tmat = varphi(n)*etab(n)
+    mult_na_dif(&(src[i]), &(s->phi), &tmat );      // tmat = varphi(n)*etab(n) - etab(n)varphi
+    scalar_mult_sum_matrix(&tmat,0.5, &dest[i]);    // dest[i] = dest[i] + 1.0*{ varphi(n)*etab(n) - etab(n)varphi }
+  }
 }
-
 
 //(4)
-
 // Term1
 // zetab-eta
-// src = zetab , dest = eta   
-
-void SzbtoSe(matrix *src, matrix *dest){
+// src = zetab , dest = eta
+void SzbtoSe(matrix *src, matrix *dest) {
   register int i;
   register site *s;
-  int mu;
-
   matrix tmat;
-  
-
-
-     FORALLSITES(i, s) {
-
-       mult_an(&(s->varphi), &(src[i]), &tmat );          // tmat = varphi(n)*etab(n)
-       mult_na_dif(&(src[i]), &(s->varphi), &tmat );      // tmat = varphi(n)*etab(n) - etab(n)varphi(n)
-       scalar_mult_sum_matrix(&tmat,0.5, &dest[i]);    // dest[i] = dest[i] + 1.0*{ varphi(n)*etab(n) - etab(n)varphi }
-       
-      }
-
+  FORALLSITES(i, s) {
+    mult_an(&(s->varphi), &(src[i]), &tmat );          // tmat = varphi(n)*etab(n)
+    mult_na_dif(&(src[i]), &(s->varphi), &tmat );      // tmat = varphi(n)*etab(n) - etab(n)varphi(n)
+    scalar_mult_sum_matrix(&tmat,0.5, &dest[i]);    // dest[i] = dest[i] + 1.0*{ varphi(n)*etab(n) - etab(n)varphi }
+  }
 }
-
-
 
 // Term2
 // eta-zetab
 // src = eta , dest = zetab
-
-
-
-void SetoSzb(matrix *src, matrix *dest){
+void SetoSzb(matrix *src, matrix *dest) {
   register int i;
   register site *s;
-  int mu;
-
   matrix tmat;
-             
-            
-     FORALLSITES(i, s) {
-
-       mult_an(&(s->varphi), &(src[i]), &tmat );          // tmat = varphi(n)*etab(n)
-       mult_na_dif(&(src[i]), &(s->varphi), &tmat );      // tmat = varphi(n)*etab(n) - etab(n)varphi
-       scalar_mult_sum_matrix(&tmat,0.5, &dest[i]);    // dest[i] = dest[i] + 1.0*{ varphi(n)*etab(n) - etab(n)varphi }
-       
-      } 
-
+  FORALLSITES(i, s) {
+    mult_an(&(s->varphi), &(src[i]), &tmat );          // tmat = varphi(n)*etab(n)
+    mult_na_dif(&(src[i]), &(s->varphi), &tmat );      // tmat = varphi(n)*etab(n) - etab(n)varphi
+    scalar_mult_sum_matrix(&tmat,0.5, &dest[i]);    // dest[i] = dest[i] + 1.0*{ varphi(n)*etab(n) - etab(n)varphi }
+  }
 }
-
 #endif
 
-
-
 #ifdef VV
-
 //(1)
 
 // Term1
 // psi-psib
-// src = psi[NUMLINK] , dest = psib[NUMLINK]   
+// src = psi[NUMLINK] , dest = psib[NUMLINK]
 
-void LtoLb(matrix *src[NUMLINK], matrix *dest[NUMLINK]){
+void LtoLb(matrix *src[NUMLINK], matrix *dest[NUMLINK]) {
   register int i;
   register site *s;
   int mu;
   msg_tag *tag[NUMLINK];
   matrix tmat;
-  
-    
+
+
   tag[0] = start_gather_site(F_OFFSET(varphi), sizeof(matrix),
                               goffset[0], EVENANDODD, gen_pt[0]);  // gen_pt[0]= varphi(n+0)
-    
+
   FORALLDIR(mu) {
      if (mu < NUMLINK - 1)     // Start next gather
       tag[mu + 1] = start_gather_site(F_OFFSET(varphi), sizeof(matrix),
                               goffset[mu+1], EVENANDODD, gen_pt[mu+1]);  // gen_pt[mu]= varphi(n+mu)
 
     wait_gather(tag[mu]);
-    
+
      FORALLSITES(i, s) {
 
        mult_nn(&(s->varphi), &(src[mu][i]), &tmat );        // tmat = varphi(n)*psi_mu(n)
        mult_nn_dif(&(src[mu][i]), (matrix *)(gen_pt[mu][i]),&tmat );      // tmat = varphi(n)*psi_mu(n) - psi_mu(n)varphi(n+mu)
        scalar_mult_sum_matrix(&tmat,-1.0, &dest[mu][i]);    // dest[i] = dest[i] - 1.0*{varphi(n)*psi_mu(n) - bc[mu]psi_mu(n)varphi(n+mu) }
-       
+ 
       }
-    cleanup_gather(tag[mu]);   
-      
+    cleanup_gather(tag[mu]);
+
    }
 }
 
 
 // Term2
 // psib-psi
-// src = psib[NUMLINK] , dest = psi[NUMLINK]   
+// src = psib[NUMLINK] , dest = psi[NUMLINK]
 
-void LbtoL(matrix *src[NUMLINK], matrix *dest[NUMLINK]){
+void LbtoL(matrix *src[NUMLINK], matrix *dest[NUMLINK]) {
   register int i;
   register site *s;
   int mu;
   msg_tag *tag[NUMLINK];
   matrix tmat;
-  
-    
+
+
   tag[0] = start_gather_site(F_OFFSET(varphi), sizeof(matrix),
                               goffset[0], EVENANDODD, gen_pt[0]);  // gen_pt[0]= varphi(n+0)
-    
+
   FORALLDIR(mu) {
      if (mu < NUMLINK - 1)     // Start next gather
       tag[mu + 1] = start_gather_site(F_OFFSET(varphi), sizeof(matrix),
                               goffset[mu+1], EVENANDODD, gen_pt[mu+1]);  // gen_pt[mu]= varphi(n+mu)
 
     wait_gather(tag[mu]);
-    
+
      FORALLSITES(i, s) {
 
        mult_nn((matrix *)(gen_pt[mu][i]), &(src[mu][i]), &tmat );          // tmat = varphi(n+mu)*psib_mu(n)
        mult_nn_dif(&(src[mu][i]), &(s->varphi), &tmat );      // tmat = varphi(n+mu)*psib_mu(n) - psib_mu(n)varphi(n)
        scalar_mult_sum_matrix(&tmat,-1.0, &dest[mu][i]);    // dest[i] = dest[i] - 1.0*{varphi(n+i)*psib_mu(n) - psib_mu(n)varphi(n)}
-       
+ 
       }
-    cleanup_gather(tag[mu]);   
-      
+    cleanup_gather(tag[mu]);
+
    }
 }
 
@@ -1347,35 +1244,35 @@ void LbtoL(matrix *src[NUMLINK], matrix *dest[NUMLINK]){
 
 // Term1
 // psi-thetab
-// src = psi[NUMLINK] , dest = thetab[NUMLINK]   
+// src = psi[NUMLINK] , dest = thetab[NUMLINK]
 
-void LtoTb(matrix *src[NUMLINK], matrix *dest[NUMLINK]){
+void LtoTb(matrix *src[NUMLINK], matrix *dest[NUMLINK]) {
   register int i;
   register site *s;
   int mu;
   msg_tag *tag[NUMLINK];
   matrix tmat;
-  
-    
+
+
   tag[0] = start_gather_site(F_OFFSET(phi), sizeof(matrix),
                               goffset[0], EVENANDODD, gen_pt[0]);  // gen_pt[0]= varphi(n+0)
-    
+
   FORALLDIR(mu) {
      if (mu < NUMLINK - 1)     // Start next gather
       tag[mu + 1] = start_gather_site(F_OFFSET(phi), sizeof(matrix),
                               goffset[mu+1], EVENANDODD, gen_pt[mu+1]);  // gen_pt[mu]= varphi(n+mu)
 
     wait_gather(tag[mu]);
-    
+
      FORALLSITES(i, s) {
 
        mult_nn(&(s->phi), &(src[mu][i]), &tmat );          // tmat = varphi(n)*psi_mu(n)
        mult_nn_dif(&(src[mu][i]), (matrix *)(gen_pt[mu][i]), &tmat );      // tmat = varphi(n)*psi_mu(n) - psi_mu(n)varphi(n+mu)
        scalar_mult_sum_matrix(&tmat,-1.0, &dest[mu][i]);    // dest[i] = dest[i] - 1.0*{varphi(n)*psi_mu(n) - bc[mu]psi_mu(n)varphi(n+mu)}
-       
+ 
       }
-    cleanup_gather(tag[mu]);   
-      
+    cleanup_gather(tag[mu]);
+
    }
 }
 
@@ -1383,9 +1280,9 @@ void LtoTb(matrix *src[NUMLINK], matrix *dest[NUMLINK]){
 
 // Term2
 // thetab-psi
-// src = thetab[NUMLINK] , dest = psi[NUMLINK]   
+// src = thetab[NUMLINK] , dest = psi[NUMLINK]
 
-void TbtoL(matrix *src[NUMLINK], matrix *dest[NUMLINK]){
+void TbtoL(matrix *src[NUMLINK], matrix *dest[NUMLINK]) {
   register int i;
   register site *s;
   int mu;
@@ -1394,23 +1291,23 @@ void TbtoL(matrix *src[NUMLINK], matrix *dest[NUMLINK]){
 
   tag[0] = start_gather_site(F_OFFSET(phi), sizeof(matrix),
                               goffset[0], EVENANDODD, gen_pt[0]);  // gen_pt[0]= varphi(n+0)
-    
+
   FORALLDIR(mu) {
      if (mu < NUMLINK - 1)     // Start next gather
       tag[mu + 1] = start_gather_site(F_OFFSET(phi), sizeof(matrix),
                               goffset[mu+1], EVENANDODD, gen_pt[mu+1]);  // gen_pt[mu]= varphi(n+mu)
 
     wait_gather(tag[mu]);
-    
+
      FORALLSITES(i, s) {
 
        mult_nn((matrix *)(gen_pt[mu][i]), &(src[mu][i]), &tmat );          // tmat = varphi(n+mu)*psib_mu(n)
        mult_nn_dif(&(src[mu][i]), &(s->phi), &tmat );       // tmat = varphi(n+mu)*psib_mu(n) - psib_mu(n)varphi(n)
        scalar_mult_sum_matrix(&tmat,-1.0, &dest[mu][i]);    // dest[i] = dest[i] - 1.0*{varphi(n+mu)*psib_mu(n) - psib_mu(n)varphi(n)}
-       
+ 
       }
-    cleanup_gather(tag[mu]);   
-      
+    cleanup_gather(tag[mu]);
+
    }
 }
 
@@ -1433,111 +1330,111 @@ void TbtoL(matrix *src[NUMLINK], matrix *dest[NUMLINK]){
     }
   }
 
- 
- 
+
+
   int mu_vals[6]  = {0, 0, 1, 1, 2, 2};
   int nu_vals[6]  = {1, 2, 2, 0, 0, 1};
-  int rho_vals[6] = {2, 1, 0, 2, 1, 0}; 
+  int rho_vals[6] = {2, 1, 0, 2, 1, 0};
   Real sgn_val[6] = {-1,1,-1, 1,-1, 1};
   Real SGN;
-  
+
      mu  = mu_vals[0];
      nu  = nu_vals[0];
      rho = rho_vals[0];
-     
- 
+
+
         tag0[0] = start_gather_field(src[rho], sizeof(matrix),
                                           goffset[rho]+1, EVENANDODD,
-                                          local_pt[0][0]);              // thetab_rho(n-rho)      
-                                          
+                                          local_pt[0][0]);              // thetab_rho(n-rho)
+                                    
         tag1[0] = start_gather_field(src[rho], sizeof(matrix),
                                           goffset[mu], EVENANDODD,
-                                          local_pt[0][1]);              // thetab_rho(n+mu)      
-                                  
+                                          local_pt[0][1]);              // thetab_rho(n+mu)
+                            
 
-        tag2[0] = start_gather_site(F_OFFSET(link[nu]), sizeof(matrix),  
+        tag2[0] = start_gather_site(F_OFFSET(link[nu]), sizeof(matrix),
                                          goffset[nu] + 1, EVENANDODD,
                                          local_pt[0][2]);                // U_nu(n-nu)
-                                         
+                                   
         tag3[0] = start_gather_site(F_OFFSET(link[nu]), sizeof(matrix),
                                          goffset[mu], EVENANDODD,
-                                         local_pt[0][3]);                // U_nu(n+mu)  
- 
- 
+                                         local_pt[0][3]);                // U_nu(n+mu)
+
+
 
   for (int j = 0; j < 6; j++) {
-  
-    
-     
-     
 
-              
+
+
+
+
+        
      if(j<5)
 
-     { 
-        
+     {
+  
      mu  = mu_vals[j+1];
      nu  = nu_vals[j+1];
      rho = rho_vals[j+1];
-     
-     
-  
+
+
+
         tag0[j+1] = start_gather_field(src[rho], sizeof(matrix),
                                           goffset[rho]+1, EVENANDODD,
-                                          local_pt[j+1][0]);              // thetab_rho(n-rho)      
-                                          
+                                          local_pt[j+1][0]);              // thetab_rho(n-rho)
+                                    
         tag1[j+1] = start_gather_field(src[rho], sizeof(matrix),
                                           goffset[mu], EVENANDODD,
-                                          local_pt[j+1][1]);              // thetab_rho(n+mu)      
-                                  
+                                          local_pt[j+1][1]);              // thetab_rho(n+mu)
+                            
 
-        tag2[j+1] = start_gather_site(F_OFFSET(link[nu]), sizeof(matrix),  
+        tag2[j+1] = start_gather_site(F_OFFSET(link[nu]), sizeof(matrix),
                                          goffset[nu] + 1, EVENANDODD,
                                          local_pt[j+1][2]);                // U_nu(n-nu)
-                                         
+                                   
         tag3[j+1] = start_gather_site(F_OFFSET(link[nu]), sizeof(matrix),
                                          goffset[mu], EVENANDODD,
-                                         local_pt[j+1][3]);                // U_nu(n+mu)     
+                                         local_pt[j+1][3]);                // U_nu(n+mu)
       }
-      
+
      mu  = mu_vals[j];
      nu  = nu_vals[j];
-     rho = rho_vals[j];      
-     SGN = sgn_val[j];                                           
-                                                                          
+     rho = rho_vals[j];
+     SGN = sgn_val[j];                                     
+                                                                    
       wait_gather(tag0[j]);
       wait_gather(tag1[j]);
       wait_gather(tag2[j]);
       wait_gather(tag3[j]);
-      
-     
+
+
       opp_rho = OPP_LDIR(rho);
 
-      
+
       FORALLSITES(i, s) {
-       
+ 
        mult_na((matrix *)(local_pt[j][0][i]),(matrix *)(local_pt[j][3][i]), &tmat );          // tmat = thetab_rho(n-rho)*Ubar_nu(n+mu)
        scalar_mult_matrix(&tmat, s->bc[opp_rho], &tmat);                                      //  tmat = bc[opp_rho]thetab_rho(n-rho)*Ubar_nu(n+mu)
-       scalar_mult_an_dif((matrix *)(local_pt[j][2][i]),(matrix *)(local_pt[j][1][i]), s->bc[mu], &tmat );// tmat = bc[opp_rho]thetab_rho(n-rho)*Ubar_nu(n+mu) - bc[mu]Ubar_nu(n-nu)thetab_rho(n+mu) 
+       scalar_mult_an_dif((matrix *)(local_pt[j][2][i]),(matrix *)(local_pt[j][1][i]), s->bc[mu], &tmat );// tmat = bc[opp_rho]thetab_rho(n-rho)*Ubar_nu(n+mu) - bc[mu]Ubar_nu(n-nu)thetab_rho(n+mu)
        scalar_mult_sum_matrix(&tmat,1.0*SGN, &dest[mu][i]);                  // dest[i] = dest[i] - 1.0*{thetab_rho(n-rho)*Ubar_nu(n+mu) - Ubar_nu(n-nu)thetab_rho(n+mu)}
 
       }
-      
+
       cleanup_gather(tag0[j]);
       cleanup_gather(tag1[j]);
       cleanup_gather(tag2[j]);
       cleanup_gather(tag3[j]);
-    
-     
-              
-      
+
+
+        
+
     }
-   
+
 
  }
- 
- 
- 
+
+
+
  /////////////
  void DbminusLbtoTb(matrix *src[NUMLINK], matrix *dest[NUMLINK]) {
 
@@ -1547,7 +1444,7 @@ void TbtoL(matrix *src[NUMLINK], matrix *dest[NUMLINK]){
   char **local_pt[6][4];
   matrix tmat;
   msg_tag *tag0[6],*tag1[6],*tag2[6],*tag3[6];
- 
+
 
   for (int b = 0; b < 6; b++) {
     for (int a = 0; a < 4; a++) {
@@ -1555,112 +1452,112 @@ void TbtoL(matrix *src[NUMLINK], matrix *dest[NUMLINK]){
     }
   }
 
- 
- 
+
+
   int mu_vals[6]  = {0, 0, 1, 1, 2, 2};
   int nu_vals[6]  = {1, 2, 2, 0, 0, 1};
-  int rho_vals[6] = {2, 1, 0, 2, 1, 0}; 
+  int rho_vals[6] = {2, 1, 0, 2, 1, 0};
   Real sgn_val[6] = {1,-1, 1,-1, 1,-1};
   Real SGN;
 
 
-  
+
      mu  = mu_vals[0];
      nu  = nu_vals[0];
      rho = rho_vals[0];
-   
 
-          
- 
-         
+
+    
+
+   
         tag0[0] = start_gather_field(src[rho], sizeof(matrix),
                                           goffset[rho]+1, EVENANDODD,
-                                          local_pt[0][0]);              // Lb_rho(n-rho)      
-                                          
+                                          local_pt[0][0]);              // Lb_rho(n-rho)
+                                    
         tag1[0] = start_gather_field(src[rho], sizeof(matrix),
                                           goffset[mu], EVENANDODD,
-                                          local_pt[0][1]);              // Lb_rho(n+mu)      
-                                  
+                                          local_pt[0][1]);              // Lb_rho(n+mu)
+                            
 
-        tag2[0] = start_gather_site(F_OFFSET(link[nu]), sizeof(matrix),  
+        tag2[0] = start_gather_site(F_OFFSET(link[nu]), sizeof(matrix),
                                          goffset[nu] + 1, EVENANDODD,
                                          local_pt[0][2]);                // U_nu(n-nu)
-                                         
+                                   
         tag3[0] = start_gather_site(F_OFFSET(link[nu]), sizeof(matrix),
                                          goffset[mu], EVENANDODD,
-                                         local_pt[0][3]);                // U_nu(n+mu) 
-  
- 
+                                         local_pt[0][3]);                // U_nu(n+mu)
+
+
 
   for (int j = 0; j < 6; j++) {
-  
-  
-   if(j<5) 
-    
-   {  
-  
+
+
+   if(j<5)
+
+   {
+
      mu  = mu_vals[j+1];
      nu  = nu_vals[j+1];
      rho = rho_vals[j+1];
-     
-        
 
-    
- 
-         
+  
+
+
+
+   
         tag0[j+1] = start_gather_field(src[rho], sizeof(matrix),
                                           goffset[rho]+1, EVENANDODD,
-                                          local_pt[j+1][0]);              // Lb_rho(n-rho)      
-                                          
+                                          local_pt[j+1][0]);              // Lb_rho(n-rho)
+                                    
         tag1[j+1] = start_gather_field(src[rho], sizeof(matrix),
                                           goffset[mu], EVENANDODD,
-                                          local_pt[j+1][1]);              // Lb_rho(n+mu)      
-                                  
+                                          local_pt[j+1][1]);              // Lb_rho(n+mu)
+                            
 
-        tag2[j+1] = start_gather_site(F_OFFSET(link[nu]), sizeof(matrix),  
+        tag2[j+1] = start_gather_site(F_OFFSET(link[nu]), sizeof(matrix),
                                          goffset[nu] + 1, EVENANDODD,
                                          local_pt[j+1][2]);                // U_nu(n-nu)
-                                         
+                                   
         tag3[j+1] = start_gather_site(F_OFFSET(link[nu]), sizeof(matrix),
                                          goffset[mu], EVENANDODD,
-                                         local_pt[j+1][3]);                // U_nu(n+mu)     
-                                         
-    } 
-    
+                                         local_pt[j+1][3]);                // U_nu(n+mu)
+                                   
+    }
+
      mu  = mu_vals[j];
      nu  = nu_vals[j];
-     rho = rho_vals[j];    
-     SGN = sgn_val[j];                                            
-                                                                          
+     rho = rho_vals[j];
+     SGN = sgn_val[j];                                      
+                                                                    
       wait_gather(tag0[j]);
       wait_gather(tag1[j]);
       wait_gather(tag2[j]);
       wait_gather(tag3[j]);
-      
-      
+
+
       opp_rho = OPP_LDIR(rho);
-      
-      
+
+
       FORALLSITES(i, s) {
-       
+ 
        mult_na((matrix *)(local_pt[j][0][i]),(matrix *)(local_pt[j][3][i]), &tmat );           // tmat = Lb_rho(n-rho)*Ubar_nu(n+mu)
        scalar_mult_matrix(&tmat, s->bc[opp_rho], &tmat);                                       // tmat = bc[opp_rho]Lb_rho(n-rho)*Ubar_nu(n+mu)
-       scalar_mult_an_dif((matrix *)(local_pt[j][2][i]),(matrix *)(local_pt[j][1][i]),s->bc[mu], &tmat );// tmat = bc[opp_rho]Lb_rho(n-rho)*Ubar_nu(n+mu) - bc[mu]Ubar_nu(n-nu)Lb_rho(n+mu) 
+       scalar_mult_an_dif((matrix *)(local_pt[j][2][i]),(matrix *)(local_pt[j][1][i]),s->bc[mu], &tmat );// tmat = bc[opp_rho]Lb_rho(n-rho)*Ubar_nu(n+mu) - bc[mu]Ubar_nu(n-nu)Lb_rho(n+mu)
        scalar_mult_sum_matrix(&tmat,1.0*SGN, &dest[mu][i]);                        // dest[i] = dest[i] + 1.0*{bc[opp_rho]Lb_rho(n-rho)*Ubar_nu(n+mu) - bc[mu]Ubar_nu(n-nu)Lb_rho(n+mu)}
 
       }
-      
+
       cleanup_gather(tag0[j]);
       cleanup_gather(tag1[j]);
       cleanup_gather(tag2[j]);
       cleanup_gather(tag3[j]);
-      
 
-      
- 
-  
+
+
+
+
             }
-                  
+            
 
  }
 
@@ -1688,55 +1585,55 @@ void DbplusPtoSz(matrix *src[NPLAQ], matrix *dest) {
     local_pt[0][mu] = gen_pt[mu];
     local_pt[1][mu] = gen_pt[3 + mu];
   }
-  
+
   Real SIGN_array[3] = {-1.0, 1.0, -1.0};
-  
-//--------  
- 
+
+//--------
+
 
   FORALLDIR(mu) {
-  
+
         Real SIGN = SIGN_array[mu];
 
         tag0[mu] = start_gather_site(F_OFFSET(link[mu]), sizeof(matrix),
                                          goffset[mu] + 1, EVENANDODD,
                                          local_pt[0][mu]);             //U_a(n-a)
-                                         
+                                   
         tag1[mu] = start_gather_field(src[mu], sizeof(matrix),
                                           goffset[mu], EVENANDODD,
-                                          local_pt[1][mu]);              // chi_mu(n+mu)                  
+                                          local_pt[1][mu]);              // chi_mu(n+mu)            
 
       wait_gather(tag0[mu]);
       wait_gather(tag1[mu]);
-      
-      
+
+
       FORALLSITES(i, s) {
-      
-      
+
+
        mult_na((matrix *)(local_pt[1][mu][i]),&(s->link[mu]), &tmat );          // tmat = chi_mu(n+mu) *Ubar_mu(n)
        scalar_mult_matrix(&tmat, s->bc[mu], &tmat);                             // tmat = bc[mu]chi_mu(n+mu) *Ubar_mu(n)
        mult_an_dif( (matrix *)(local_pt[0][mu][i]), &(src[mu][i]), &tmat );     // tmat = bc[mu]chi_mu(n+mu) *Ubar_mu(n) - Ubar_mu(n-mu)chi_mu(n)
        scalar_mult_sum_matrix(&tmat,SIGN, &dest[i]);    // dest[i] = dest[i] - 1.0*{bc[mu]chi_mu(n+mu) *Ubar_mu(n) - Ubar_mu(n-mu)chi_mu(n)}
-      
-      
+
+
 
       }
-      
+
       cleanup_gather(tag0[mu]);
       cleanup_gather(tag1[mu]);
-  
-      
-      
+
+
+
     }
-   
- 
- 
-  
-  
-  
+
+
+
+
+
+
  }
- 
- 
+
+
  void DbminusSztoP(matrix *src, matrix *dest[NPLAQ]) {
 
   register int i,opp_mu;
@@ -1750,61 +1647,40 @@ void DbplusPtoSz(matrix *src[NPLAQ], matrix *dest) {
     local_pt[0][mu] = gen_pt[mu];
     local_pt[1][mu] = gen_pt[3 + mu];
   }
-  
+
   Real SIGN_array[3] = {-1.0, 1.0, -1.0};
-  
-//--------  
- 
+
+//--------
+
 
   FORALLDIR(mu) {
-  
+
         Real SIGN = SIGN_array[mu];
 
         tag0[mu] = start_gather_site(F_OFFSET(link[mu]), sizeof(matrix),
                                          goffset[mu] + 1, EVENANDODD,
                                          local_pt[0][mu]);             //U_a(n-a)
-                                         
+                                   
         tag1[mu] = start_gather_field(src, sizeof(matrix),
                                           goffset[mu]+1, EVENANDODD,
-                                          local_pt[1][mu]);              // zeta(n-mu)                  
+                                          local_pt[1][mu]);              // zeta(n-mu)            
 
       wait_gather(tag0[mu]);
       wait_gather(tag1[mu]);
-      
+
       opp_mu = OPP_LDIR(mu);
       FORALLSITES(i, s) {
-      
        mult_an( (matrix *)(local_pt[0][mu][i]), (matrix *)(local_pt[1][mu][i]), &tmat ); // tmat = Ubar_mu(n-mu)zeta(n-mu)
        scalar_mult_matrix(&tmat, s->bc[opp_mu], &tmat);                                  // tmat = bc[opp_mu]Ubar_mu(n-mu)zeta(n-mu)
        scalar_mult_matrix(&tmat, -1.0, &tmat);                                  // tmat = -bc[opp_mu]Ubar_mu(n-mu)zeta(n-mu)
        mult_na_sum(&(src[i]),(matrix *)(local_pt[0][mu][i]), &tmat );           // tmat = zeta(n)*Ubar_mu(n-mu) - bc[opp_mu]Ubar_mu(n-mu)zeta(n-mu)
        scalar_mult_sum_matrix(&tmat,SIGN, &dest[mu][i]);    // dest[i] = dest[i] - 1.0*{zeta(n)*Ubar_mu(n-mu) - bc[opp_mu]Ubar_mu(n-mu)zeta(n-mu)}
-      
-      
-
       }
-      
       cleanup_gather(tag0[mu]);
       cleanup_gather(tag1[mu]);
-  
-      
-      
     }
-   
- 
- 
-  
-  
-  
  }
- 
-
 #endif
-
-
-
-
-
 // -----------------------------------------------------------------
 
 
@@ -1824,7 +1700,7 @@ void fermion_op(Twist_Fermion *src, Twist_Fermion *dest, int sign) {
       mat_copy(&(src[i].Fsitezb), &(sitezb_src[i]));
       mat_copy(&(src[i].Fsiteeb), &(siteeb_src[i]));
       mat_copy(&(src[i].Fsitez), &(sitez_src[i]));
-      FORALLDIR(mu){
+      FORALLDIR(mu) {
         mat_copy(&(src[i].Flink[mu]), &(link_src[mu][i]));
         mat_copy(&(src[i].Flinkb[mu]), &(linkb_src[mu][i]));
         mat_copy(&(src[i].Fthetab[mu]), &(thetab_src[mu][i]));
@@ -1839,7 +1715,7 @@ void fermion_op(Twist_Fermion *src, Twist_Fermion *dest, int sign) {
       adjoint(&(src[i].Fsitezb), &(sitezb_src[i]));
       adjoint(&(src[i].Fsiteeb), &(siteeb_src[i]));
       adjoint(&(src[i].Fsitez), &(sitez_src[i]));
-      FORALLDIR(mu){
+      FORALLDIR(mu) {
         adjoint(&(src[i].Flink[mu]), &(link_src[mu][i]));
         adjoint(&(src[i].Flinkb[mu]), &(linkb_src[mu][i]));
         adjoint(&(src[i].Fthetab[mu]), &(thetab_src[mu][i]));
@@ -1859,14 +1735,14 @@ void fermion_op(Twist_Fermion *src, Twist_Fermion *dest, int sign) {
 #ifdef VP
   Dplus(link_src, plaq_dest);             // Overwrites plaq_dest
   Dminus(plaq_src, link_dest);            // Overwrites link_dest
-  
-  PtoLb(plaq_src,linkb_dest);             // Overwrites linkb_dest 
+
+  PtoLb(plaq_src,linkb_dest);             // Overwrites linkb_dest
   LbtoP(linkb_src,plaq_dest);             // Adds to plaq_dest
-  
-  PtoTb(plaq_src,thetab_dest);             // Overwrites thetab_dest 
+
+  PtoTb(plaq_src,thetab_dest);             // Overwrites thetab_dest
   TbtoP(thetab_src,plaq_dest);             // Adds to plaq_dest
-  
-  
+
+
 #else
   FORALLSITES(i, s) {                     // Zero link_dest and plaq_dest
     FORALLDIR(mu)
@@ -1889,69 +1765,54 @@ void fermion_op(Twist_Fermion *src, Twist_Fermion *dest, int sign) {
   // Link-to-site plaquette determinant contribution if G is non-zero
   if (doG)
     detLtoS(link_src, site_dest);         // Adds to site_dest
-    
+
   DplusSzbtoLb(sitezb_src, linkb_dest);        // overwrites -> Adds to linkb_dest
-  DminusLbtoSzb(linkb_src, sitezb_dest);       // Overwrites sitezb_dest  
-  
+  DminusLbtoSzb(linkb_src, sitezb_dest);       // Overwrites sitezb_dest
+
   DplusSebtoTb(siteeb_src, thetab_dest);        // overwrites -> Adds to thetab_dest
   DminusTbtoSeb(thetab_src, siteeb_dest);       // Overwrites siteeb_dest
-  
-  
+
+
 #else
   FORALLSITES(i, s)                       // Zero site_dest
     clear_mat(&(site_dest[i]));
   FORALLSITES(i, s)                       // Zero site_dest
-    clear_mat(&(sitezb_dest[i]));   
+    clear_mat(&(sitezb_dest[i]));
 #endif
 
 
 #ifdef SS
-
-
 //1
   SebtoSz(siteeb_src, sitez_dest);        // Overwrites sitez_dest
-  SztoSeb(sitez_src, siteeb_dest);        // Adds to siteeb_dest 
- 
-//2  
+  SztoSeb(sitez_src, siteeb_dest);        // Adds to siteeb_dest
+
+//2
   SzbtoSz(sitezb_src, sitez_dest);        // Adds to sitez_dest
   SztoSzb(sitez_src, sitezb_dest);        // Add to sitezb_dest
-  
-//3  
-  SebtoSe(siteeb_src, site_dest);        // Add to site_dest
-  SetoSeb(site_src, siteeb_dest);        // Add to siteeb_dest 
-//4  
-  SzbtoSe(sitezb_src, site_dest);        // Add to site_dest
-  SetoSzb(site_src, sitezb_dest);        // Add to sitezb_dest 
-  
-#else
 
-#endif 
+//3
+  SebtoSe(siteeb_src, site_dest);        // Add to site_dest
+  SetoSeb(site_src, siteeb_dest);        // Add to siteeb_dest
+//4
+  SzbtoSe(sitezb_src, site_dest);        // Add to site_dest
+  SetoSzb(site_src, sitezb_dest);        // Add to sitezb_dest
+#endif
 
 
 #ifdef VV
-
 LtoLb(link_src, linkb_dest);               // Adds to linkb_dest
 LbtoL(linkb_src, link_dest);               // Adds to link_dest
 
 LtoTb(link_src, thetab_dest);               // Adds to thetab_dest
-TbtoL(thetab_src, link_dest);               // Adds to link_dest  
+TbtoL(thetab_src, link_dest);               // Adds to link_dest
 
 DbplusTbtoLb(thetab_src,linkb_dest);       // Adds to linkb_dest
 DbminusLbtoTb(linkb_src,thetab_dest);      // Adds to thetab_dest
-
-#else
- 
-
-#endif 
-
+#endif
 
 #ifdef SP
-
 DbplusPtoSz(plaq_src,sitez_dest);        // Adds to sitez_dest
 DbminusSztoP(sitez_src,plaq_dest);       // Adds to plaq_dest
-
-#else
-
 #endif
 
 
@@ -1962,7 +1823,7 @@ DbminusSztoP(sitez_src,plaq_dest);       // Adds to plaq_dest
       mat_copy(&(sitezb_dest[i]), &(dest[i].Fsitezb));
       mat_copy(&(siteeb_dest[i]), &(dest[i].Fsiteeb));
       mat_copy(&(sitez_dest[i]), &(dest[i].Fsitez));
-      FORALLDIR(mu){
+      FORALLDIR(mu) {
         mat_copy(&(link_dest[mu][i]), &(dest[i].Flink[mu]));
         mat_copy(&(linkb_dest[mu][i]), &(dest[i].Flinkb[mu]));
         mat_copy(&(thetab_dest[mu][i]), &(dest[i].Fthetab[mu]));
@@ -1977,11 +1838,11 @@ DbminusSztoP(sitez_src,plaq_dest);       // Adds to plaq_dest
       neg_adjoint(&(sitezb_dest[i]), &(dest[i].Fsitezb));
       neg_adjoint(&(siteeb_dest[i]), &(dest[i].Fsiteeb));
       neg_adjoint(&(sitez_dest[i]), &(dest[i].Fsitez));
-      FORALLDIR(mu){
+      FORALLDIR(mu) {
         neg_adjoint(&(link_dest[mu][i]), &(dest[i].Flink[mu]));
         neg_adjoint(&(linkb_dest[mu][i]), &(dest[i].Flinkb[mu]));
         neg_adjoint(&(thetab_dest[mu][i]), &(dest[i].Fthetab[mu]));
-        }
+      }
       for (mu = 0; mu < NPLAQ; mu++)
         neg_adjoint(&(plaq_dest[mu][i]), &(dest[i].Fplaq[mu]));
     }
