@@ -17,7 +17,7 @@ void smdmom(Real eps) {
   complex grn;
   Real c1, c2;
 
-  if(friction < 0) //Easy way of getting ranmom for first few trajectories
+  if (friction < 0) //Easy way of getting ranmom for first few trajectories
     c1 = 0;
   else
     c1 = exp(-1 * eps * friction);
@@ -40,8 +40,7 @@ void smdmom(Real eps) {
   }
 }
 #else
-// -----------------------------------------------------------------
-void ranmom(Real eps) {
+void ranmom() {
   register int i, j, mu;
   register site *s;
   complex grn;
@@ -62,9 +61,10 @@ void ranmom(Real eps) {
     }
   }
 }
-
-
 #endif
+// -----------------------------------------------------------------
+
+
 // -----------------------------------------------------------------
 // Construct a gaussian random vector R
 // Return src = (Mdag M)^(1 / 8Nroot) R
