@@ -199,7 +199,7 @@ int congrad_multi(Twist_Fermion *src, Twist_Fermion **psim,
     source_norm = 0;                // Re-using for convenience
     FORALLSITES(i, s) {             // Add shift.psi and subtract src
       scalar_mult_sum_TF(&(psim[j][i]), shift[j], &(mpm[i]));
-      dif_TF(&(src[i]), &(mpm[i]));
+      scalar_mult_dif_TF(&(src[i]), 1.0, &(mpm[i]));
       source_norm += (double)magsq_TF(&(mpm[i]));
     }
     g_doublesum(&source_norm);

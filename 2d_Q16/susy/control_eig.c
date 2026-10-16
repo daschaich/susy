@@ -67,12 +67,6 @@ int main(int argc, char *argv[]) {
   node0_printf("BACTION %.8g\n", ss_plaq);
 
   // Main measurement: PRIMME eigenvalues
-  // Allocate eigenvectors
-  eigVal = malloc(Nvec * sizeof(*eigVal));
-  eigVec = malloc(Nvec * sizeof(*eigVec));
-  for (ivec = 0; ivec < Nvec; ivec++)
-    eigVec[ivec] = malloc(sites_on_node * sizeof(Twist_Fermion));
-
   // Calculate and print smallest eigenvalues,
   // checking |D^dag D phi - lambda phi|^2
   total_iters = make_evs(Nvec, eigVec, eigVal, 1);
@@ -86,18 +80,18 @@ int main(int argc, char *argv[]) {
 
   // Calculate and print largest eigenvalues, for tuning RHMC
   // Don't need to compute many here...
+  // (Initial eigVal/eigVec alloc moved to setup.c)
   if (Nvec > 12) {
-    Nvec = 12;
     free(eigVal);
-    eigVal = malloc(Nvec * sizeof(*eigVal));
-
     for (ivec = 0; ivec < Nvec; ivec++)
       free(eigVec[ivec]);
     free(eigVec);
 
-    eigVec = malloc(Nvec * sizeof(*eigVec));
+    Nvec = 12;
+    eigVal = malloc(sizeof *eigVal * Nvec);
+    eigVec = malloc(sizeof *eigVec * Nvec);
     for (ivec = 0; ivec < Nvec; ivec++)
-      eigVec[ivec] = malloc(sites_on_node * sizeof(Twist_Fermion));
+      FIELD_ALLOC(eigVec[ivec], Twist_Fermion);
   }
   total_iters += make_evs(Nvec, eigVec, eigVal, -1);
 
@@ -106,11 +100,6 @@ int main(int argc, char *argv[]) {
   node0_printf("\nTime = %.4g seconds\n", dtime);
   node0_printf("total_iters = %d\n", total_iters);
   fflush(stdout);
-
-  free(eigVal);
-  for (ivec = 0; ivec < Nvec; ivec++)
-    free(eigVec[ivec]);
-  free(eigVec);
   normal_exit(0);         // Needed by at least some clusters
   return 0;
 }

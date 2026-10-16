@@ -92,8 +92,6 @@ int main(int argc, char *argv[]) {
     //----edited-------
     
     ss_plaq = gauge_action(NODET) + sa(NODET); // mpi will work here for sa(NODET)
-    
-    //ss_plaq = gauge_action(NODET)+sa(NODET);//+bmass_action();
     node0_printf("%.8g ", ss_plaq / (double)volume);
     node0_printf("%.8g\n", plpMod);
     node0_printf("BACTION %.8g\n", (ss_plaq /*+ sa(NODET)*/)/ (double)volume);// edited with + sa(NODET) inside print[ss_plaq + sa(NODET))/ (double)volume)] mpi will not work
@@ -104,34 +102,26 @@ int main(int argc, char *argv[]) {
       plp = ploop(dir, NODET, &plpMod);
       node0_printf(" %.6g %.6g", plp.real, plp.imag);
     }
-    
     node0_printf("\nLINES_POLAR");
     FORALLDIR(dir) {
       plp = ploop(dir, YESDET, &plpMod);
       node0_printf(" %.6g %.6g", plp.real, plp.imag);
     }
-    
     node0_printf("\n");
 
     // Plaquette determinant
-    
     measure_det();
 
     // Monitor widths of plaquette and plaquette determinant distributions
-    
-  
     widths();
 
     // Monitor scalar eigenvalues
     // Format: SCALAR_EIG # ave width min max
-     
     scalar_eig(NODET, ave_eigs, eig_widths, min_eigs, max_eigs);
-   
     for (j = 0; j < NCOL; j++) {
       node0_printf("UUBAR_EIG %d %.6g %.6g %.6g %.6g\n",
                    j, ave_eigs[j], eig_widths[j], min_eigs[j], max_eigs[j]);
     }
-    
     scalar_eig(YESDET, ave_eigs, eig_widths, min_eigs, max_eigs);
     for (j = 0; j < NCOL; j++) {
       node0_printf("POLAR_EIG %d %.6g %.6g %.6g %.6g\n",
@@ -186,8 +176,6 @@ int main(int argc, char *argv[]) {
       compute_Trm1();
       compute_Trm2();
       */
-      
-      
 #endif
 
 #ifdef BILIN
