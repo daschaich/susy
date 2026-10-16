@@ -1,0 +1,123 @@
+N=(8,8) SYM, Nc = 2, DIMF = 4, fermion rep = adjoint
+Microcanonical simulation with refreshing
+Machine = MPI (portable), with 2 nodes
+Phi algorithm
+start: Fri Oct 16 14:47:34 2026
+
+type 0 for no prompts or 1 for prompts
+nx 4
+nt 4
+PBC -1
+iseed 41
+Nroot 1
+Norder 15
+LAYOUT = Hypercubes, options = hyper_prime
+ON EACH NODE 2 x 4
+Mallocing 0.0 MBytes per core for lattice
+Antiperiodic temporal boundary conditions
+Single-trace scalar potential
+Mallocing 0.1 MBytes per core for fields
+
+
+warms 0
+trajecs 3
+traj_length 1
+nstep 16
+nstep_gauge 30
+traj_between_meas 2
+lambda 0.5
+kappa_u1 0
+bmass 0.5
+fmass 0
+G 0
+stout_smear
+Nsmear 1
+alpha 0.1
+max_cg_iterations 5000
+error_per_site 1e-05
+nsrc 3
+coulomb_gauge_fix
+reload_serial config.U2.44
+forget
+lambda=0.5 --> kappa=Nc/(4lambda)=1
+C2=1
+Restored binary gauge and scalar configuration serially from file config.U2.44
+Time stamp Thu Oct 15 23:01:17 2026
+Checksums b0a72f29 8e0544ed OK
+Time to reload gauge configuration = 1.049042e-04
+CHECK PLAQ: 1.2739630524815184e+00 3.3516863136474693e+00
+CHECK NERSC LINKTR: -1.5660938457585871e-01 CKSUM: 0
+START 1.2739631 3.3516863 4.6256494 8.4983647
+FLINK 0.822077 1.92425 1.19846 1.31493 0.522343
+FLINK_DET -0.228058 -0.276622 -0.389221 -0.297967 0.285437
+GMES 0.23077336 4.2657608 0 1.2739631 3.3516863 8.4983647 4.6491186
+BACTION 8.4983647
+LINES       0.962552 0.0994349 0.230773 4.26576 0.671938 1.9485
+LINES_POLAR 1.64247 -0.295037 0.010708 1.24923 0.954955 0.475132
+Doing 1 stout smearing steps with rho=0.1
+BEFORE MIN_PLAQ 0.58602128 0.21232718 1.6758432 5.6042
+AFTER  MIN_PLAQ 0.81888932 0.242273 1.7762402 5.8230457
+DET 1.52338 -0.0151808 3.15655 0.437916 1.54771
+WIDTHS 0.759912 0.91426 0.661578
+UUBAR_EIG 0 -0.486931 0.246709 -1.17042 -0.0907759
+UUBAR_EIG 1 0.486931 0.246709 0.0907759 1.17042
+POLAR_EIG 0 -0.202814 0.348531 -0.998434 0.37576
+POLAR_EIG 1 0.257566 0.200758 -0.193502 0.570757
+susy 2.64023 -1.0852 0.175958 -0.981556 ( 1 of 3 ) 417
+susy 1.77166 -0.00948307 -1.26603 2.45175 ( 2 of 3 ) 417
+susy 1.78347 -0.584054 -3.85815 0.623531 ( 3 of 3 ) 416
+SUSY 1.85726 -0.628744 1.75114 -0.106123 ( ave over 3 )
+rsymm: MAX = 2
+INVLINK 1.99377 0.578001 1.30492 1.29223 0.824086
+RSYMM 1 [0] 1 [1] 2.8438388 0.80342958
+RSYMM 1 [0] 2 [1] 5.2123321 0.43390888
+RSYMM 2 [0] 1 [1] 2.2033492 0.63330305
+RSYMM 2 [0] 2 [1] 3.9217404 0.32659645
+RSYMM 1 [0] 1 [2] 1.453638 1.6815795
+RSYMM 1 [0] 2 [2] 1.6290361 2.2747676
+RSYMM 2 [0] 1 [2] 1.0267089 1.0671211
+RSYMM 2 [0] 2 [2] 1.0505932 1.4132953
+RSYMM 1 [1] 1 [0] 2.8438388 6.4351459
+RSYMM 1 [1] 2 [0] 2.2033492 11.307575
+RSYMM 2 [1] 1 [0] 5.2123321 11.507781
+RSYMM 2 [1] 2 [0] 3.9217404 19.773239
+RSYMM 1 [1] 1 [2] 4.261122 4.2013197
+RSYMM 1 [1] 2 [2] 5.3740743 5.3573088
+RSYMM 2 [1] 1 [2] 8.1321495 7.861008
+RSYMM 2 [1] 2 [2] 10.028665 9.7448228
+RSYMM 1 [2] 1 [0] 1.453638 3.6842133
+RSYMM 1 [2] 2 [0] 1.0267089 6.1232612
+RSYMM 2 [2] 1 [0] 1.6290361 5.0669203
+RSYMM 2 [2] 2 [0] 1.0505932 7.938397
+RSYMM 1 [2] 1 [1] 4.261122 1.2273403
+RSYMM 1 [2] 2 [1] 8.1321495 0.67870094
+RSYMM 2 [2] 1 [1] 5.3740743 1.5208587
+RSYMM 2 [2] 2 [1] 10.028665 0.83831282
+MONOPOLE 2 -2    0 4
+Fixing to Coulomb gauge...
+GFIX ended at step 10. Ave gf action 0.524503, delta 5.17e-08
+GFIX time = 0.0001349 seconds
+BEFORE 1.453638 3.5524804
+AFTER  -0.18603544 1.5148383
+hvy_pot: MAX_T = 2, MAX_X = 1
+POT_LOOP 0 1 3.8485
+POT_LOOP 1 1 1.52376
+POT_LOOP 0 2 7.61114
+POT_LOOP 1 2 1.93426
+hvy_pot: MAX_T = 2, MAX_X = 1
+D_LOOP   0 1 2.08696
+D_LOOP   1 1 0.938876
+D_LOOP   0 2 2.21524
+D_LOOP   1 2 0.467025
+hvy_pot_polar: MAX_T = 2, MAX_X = 1
+POLAR_LOOP 0 1 2
+POLAR_LOOP 1 1 0.719
+POLAR_LOOP 0 2 2
+POLAR_LOOP 1 2 0.449625
+RUNNING COMPLETED
+CG iters for measurements: 1250
+total_iters = 1250
+
+Time = 0.2896 seconds
+exit: Fri Oct 16 14:47:34 2026
+

@@ -7,7 +7,7 @@
 
 int main(int argc, char *argv[]) {
   int prompt, dir, j;
-  double plaq, dtime, plpMod = 0.0;
+  double ss_plaq, st_plaq, dtime, plpMod = 0.0;
   double linktr[NUMLINK], linktr_ave, linktr_width;
   double link_det[NUMLINK], det_ave, det_width;
   double ave_eigs[NCOL], eig_widths[NCOL], min_eigs[NCOL], max_eigs[NCOL];
@@ -42,7 +42,7 @@ int main(int argc, char *argv[]) {
 
   // Uncomment this block to print plaquette and determinant distributions
   // Be sure to uncomment PLAQ_DIST and DET_DIST, and run in serial
-//  local_plaquette(&plaq);
+//  local_plaquette(&ss_plaq, &st_plaq);
 //  node0_printf("\n");
 //  if (G < IMAG_TOL)
 //    G = 999;
@@ -53,10 +53,10 @@ int main(int argc, char *argv[]) {
 //  return 0;
 
   // Check: compute initial plaquette and bosonic action
-  plaquette(&plaq);
-  node0_printf("START %.8g ", plaq);
-  plaq = gauge_action(NODET);
-  node0_printf("%.8g\n", plaq / (double)volume);
+  plaquette(&ss_plaq, &st_plaq);
+  node0_printf("START %.8g %.8g %.8g ", ss_plaq, st_plaq, ss_plaq + st_plaq);
+  ss_plaq = gauge_action(NODET);
+  node0_printf("%.8g\n", ss_plaq / (double)volume);
 
   // Do "local" measurements to check configuration
   // Tr[Udag.U] / N
@@ -72,18 +72,18 @@ int main(int argc, char *argv[]) {
   node0_printf(" %.6g %.6g\n", det_ave, det_width);
 
   // Polyakov loop and plaquette measurements
-  // Format: GMES Re(Polyakov) Im(Poyakov) cg_iters plaq
+  // Format: GMES Re(Polyakov) Im(Poyakov) cg_iters ss_plaq st_plaq
   plp = ploop(TUP, NODET, &plpMod);
-  plaquette(&plaq);
-  node0_printf("GMES %.8g %.8g 0 %.8g ",
-               plp.real, plp.imag, plaq);
+  plaquette(&ss_plaq, &st_plaq);
+  node0_printf("GMES %.8g %.8g 0 %.8g %.8g ",
+               plp.real, plp.imag, ss_plaq, st_plaq);
 
   // Bosonic action (printed twice by request)
   // Might as well spit out volume average of Polyakov loop modulus
-  plaq = gauge_action(NODET) / (double)volume;
-  node0_printf("%.8g ", plaq);
+  ss_plaq = gauge_action(NODET) / (double)volume;
+  node0_printf("%.8g ", ss_plaq);
   node0_printf("%.8g\n", plpMod);
-  node0_printf("BACTION %.8g\n", plaq);
+  node0_printf("BACTION %.8g\n", ss_plaq);
 
   // Full and polar-projected Wilson lines in all basis dirs
   node0_printf("LINES      ");
@@ -112,8 +112,8 @@ int main(int argc, char *argv[]) {
 
   // Check minimum plaquette in addition to averages
   node0_printf("BEFORE ");
-  max_plaq = local_plaquette(&plaq);       // Prints out MIN_PLAQ
-  node0_printf(" %.8g %.8g\n", plaq, max_plaq);
+  max_plaq = local_plaquette(&ss_plaq, &st_plaq);     // Prints out MIN_PLAQ
+  node0_printf(" %.8g %.8g %.8g\n", ss_plaq, st_plaq, max_plaq);
 
   // Overwrite s->link
   if (smearflag == STOUT_SMEAR)
@@ -121,8 +121,8 @@ int main(int argc, char *argv[]) {
   else if (smearflag == APE_SMEAR)
     APE_smear(Nsmear, alpha, YESDET);
   node0_printf("AFTER  ");
-  max_plaq = local_plaquette(&plaq);      // Prints out MIN_PLAQ
-  node0_printf(" %.8g %.8g\n", plaq, max_plaq);
+  max_plaq = local_plaquette(&ss_plaq, &st_plaq);      // Prints out MIN_PLAQ
+  node0_printf(" %.8g %.8g %.8g\n", ss_plaq, st_plaq, max_plaq);
 
   // Update plaquette determinants, DmuUmu and Fmunu with smeared links
   compute_plaqdet();
@@ -151,12 +151,6 @@ int main(int argc, char *argv[]) {
                  j, ave_eigs[j], eig_widths[j], min_eigs[j], max_eigs[j]);
   }
 
-#ifdef CORR
-  // Konishi and SUGRA correlators
-  konishi();
-  correlator_r();
-#endif
-
 #ifdef BILIN
   // Ward identity involving eta.psi_a fermion bilinear
   int avm_iters = bilinearWard();
@@ -175,17 +169,17 @@ int main(int argc, char *argv[]) {
   // This lets us easily access arbitrary displacements
   // Gauge fixing arguments explained in generic/gaugefix.c
   // With first argument outside XUP or TUP,
-  // both links are included in gauge-fixing condition
+  // first two links are included in gauge-fixing condition
   if (fixflag == COULOMB_GAUGE_FIX) {
-    plaquette(&plaq);      // To be printed below
+    plaquette(&ss_plaq, &st_plaq);    // To be printed below
     node0_printf("Fixing to Coulomb gauge...\n");
     double gtime = -dclock();
     gaugefix(TUP, 1.5, 5000, GAUGE_FIX_TOL, -1, -1);
     gtime += dclock();
     node0_printf("GFIX time = %.4g seconds\n", gtime);
-    node0_printf("BEFORE %.8g\n", plaq);
-    plaquette(&plaq);
-    node0_printf("AFTER  %.8g\n", plaq);
+    node0_printf("BEFORE %.8g %.8g\n", ss_plaq, st_plaq);
+    plaquette(&ss_plaq, &st_plaq);
+    node0_printf("AFTER  %.8g %.8g\n", ss_plaq, st_plaq);
   }
   hvy_pot(NODET);
   hvy_pot(YESDET);

@@ -433,7 +433,9 @@ int readin(int prompt) {
   warms = par_buf.warms;
   trajecs = par_buf.trajecs;
   traj_length = par_buf.traj_length;
+#ifdef SMD_ALGORITHM
   friction = par_buf.friction;
+#endif
   nsteps[0] = par_buf.nsteps[0];
   nsteps[1] = par_buf.nsteps[1];
 

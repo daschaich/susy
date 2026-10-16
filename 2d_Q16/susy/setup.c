@@ -388,7 +388,7 @@ int readin(int prompt) {
   else
     doG = 0;
 
-  kappa = (Real)NCOL * 0.25/ lambda;
+  kappa = (Real)NCOL * 0.25 / lambda;
   node0_printf("lambda=%.4g --> kappa=Nc/(4lambda)=%.4g\n",
                lambda, kappa);
   node0_printf("C2=%.4g\n", C2);    // Currently hardwired in defines.h
@@ -447,15 +447,11 @@ int readin(int prompt) {
   compute_plaqdet();
   compute_Uinv();
   compute_DmuUmu();
-  //edited--13-9-23-----
   compute_Dmuphi();
   compute_Dmuvarphi();
   compute_varphi_phi_commutator();
   compute_phi_commutator();
   compute_varphi_commutator();
-
-  
-  //---end----
   compute_Fmunu();
   return 0;
 }

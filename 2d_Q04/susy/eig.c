@@ -56,7 +56,7 @@ void rand_TFsource(Twist_Fermion *src) {
 // Get Nvec vectors (stored consecutively) and hit them by the matrix
 void av_ov (void *x, void *y, int *Nvec, primme_params *primme) {
   register site *s;
-  int i, j, k, mu, iter, ivec, Ndat = 4 * NCOL * NCOL;
+  int i, j, k, mu, iter, ivec, Ndat = 4 * DIMF;
   Complex_Z *xx;
 
   for (ivec = 0; ivec < *Nvec; ivec++) {
@@ -175,12 +175,12 @@ void par_GlobalSumDouble(void *sendBuf, void *recvBuf,
 // If flag==-1 we calculate the largest eigenvalues
 int make_evs(int Nvec, Twist_Fermion **eigVec, double *eigVal, int flag) {
   register site *s;
-  int i, j, k, mu, ivec, iter = 0, ret, Ndat = 4 * NCOL * NCOL;
+  int i, j, k, mu, ivec, iter = 0, ret, Ndat = 4 * DIMF;
   int maxn = sites_on_node * Ndat;
   double check, *rnorms = malloc(sizeof *rnorms * Nvec);
   Complex_Z *workVecs = malloc(sizeof *workVecs * Nvec * maxn);
   static primme_params primme;
-  Twist_Fermion tTF, *tmpTF = malloc(sizeof *tmpTF * sites_on_node );
+  Twist_Fermion tTF, *tmpTF = malloc(sizeof *tmpTF * sites_on_node);
 
   // Check memory allocations
   if (workVecs == NULL) {
@@ -298,7 +298,7 @@ int make_evs(int Nvec, Twist_Fermion **eigVec, double *eigVal, int flag) {
       check += magsq_TF(&tTF);
     }
     g_doublesum(&check);    // Accumulate across all nodes
-    if (flag == 1)  {       // Braces suppress compiler warning
+    if (flag == 1) {        // Braces suppress compiler warning
       node0_printf("EIGENVALUE %d %.8g %.8g\n", ivec, eigVal[ivec], check);
     }
     else if (flag == -1)
