@@ -4,17 +4,6 @@
 #include "susy_includes.h"
 // -----------------------------------------------------------------
 
-//-----edited--------
-
-// Set up translation of (i, j) to linear index of anti-symmetric matrix
-
-
-//void setup_plaq_index() {
-
-
-
-
-//}
 
 
 // -----------------------------------------------------------------
@@ -23,25 +12,7 @@
 // Use tr_dest, tempmat and tempdet for temporary storage
 // Assume compute_plaqdet(), compute_DmuUmu()
 // and compute_Fmunu() have already been run
-
-int count;
-
 double gauge_force(Real eps) {
-
-  count=count+1;
- // printf("No of time pass = %d\n",count);
-
-//edited
-      int p, q, indx;
- for (p = 0; p < NUMLINK; p++) {
-    plaq_index[p][p] = -1;                                  // i,i=-1  ,  00=11=22=-1
-    for (q = p + 1; q < NUMLINK; q++) {
-      indx = p * (NUMLINK - 1) - p * (p + 1) / 2 + q - 1;//              01=0,02=1,12=2
-      plaq_index[p][q] = indx;
-      plaq_index[q][p] = indx;                             // i,j=j,i, 01=10=0,02=20=1,12=21=2
-    }
-  }
-
   register int i, mu, nu;
   register site *s;
   char **local_pt[2][2];

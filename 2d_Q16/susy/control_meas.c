@@ -23,6 +23,7 @@ int main(int argc, char *argv[]) {
   g_sync();
   prompt = setup();
   setup_lambda();
+  epsilon();
 
 #ifdef SMEAR
   double max_plaq = 0.0;

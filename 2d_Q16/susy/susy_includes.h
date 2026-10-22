@@ -92,6 +92,8 @@ int congrad_multi(Twist_Fermion *src, Twist_Fermion **psim,
 double link_trace(double *linktr, double *linktr_width,
                   double *dets, double *det_ave, double *det_width);
 
+void epsilon();
+
 // Basic Twist_Fermion utilities
 // May eventually move to libraries
 void dump_TF(Twist_Fermion *in);

@@ -66,19 +66,9 @@ void compute_DmuUmu() {
 
 // -----------------------------------------------------------------
 // For the gauge action and force, compute at each site
-//   U_mu(x) * U_mu(x + mu) - Udag_nu(x) * U_mu(x + nu)
+//   U_mu(x) * U_mu(x + mu) - U_nu(x) * U_mu(x + nu)
 // Use tempmat and tempmat2 as temporary storage
 void compute_Fmunu() {
-  int p, q, indx;
-  for (p = 0; p < NUMLINK; p++) {
-    plaq_index[p][p] = -1;
-    for (q = p + 1; q < NUMLINK; q++) {
-      indx = p * (NUMLINK - 1) - p * (p + 1) / 2 + q - 1;
-      plaq_index[p][q] = indx;
-      plaq_index[q][p] = indx;
-    }
-  }
-
   register int i;
   register site *s;
   int mu, nu, index;
@@ -87,17 +77,17 @@ void compute_Fmunu() {
   FORALLDIR(mu) {
     for (nu = mu + 1; nu < NUMLINK; nu++) {
       index = plaq_index[mu][nu];
-
       mtag0 = start_gather_site(F_OFFSET(link[nu]), sizeof(matrix),
-                                goffset[mu], EVENANDODD, gen_pt[0]); // U_nu(n+mu)
+                                goffset[mu], EVENANDODD, gen_pt[0]);
       mtag1 = start_gather_site(F_OFFSET(link[mu]), sizeof(matrix),
-                                goffset[nu], EVENANDODD, gen_pt[1]); // U_mu(n+nu)
+                                goffset[nu], EVENANDODD, gen_pt[1]);
 
       wait_gather(mtag0);
       wait_gather(mtag1);
       FORALLSITES(i, s) {
         mult_nn(&(s->link[mu]), (matrix *)(gen_pt[0][i]), &(Fmunu[index][i]));
-        mult_nn_dif(&(s->link[nu]), (matrix *)(gen_pt[1][i]), &(Fmunu[index][i]));
+        mult_nn_dif(&(s->link[nu]), (matrix *)(gen_pt[1][i]),
+                    &(Fmunu[index][i]));
       }
       cleanup_gather(mtag0);
       cleanup_gather(mtag1);

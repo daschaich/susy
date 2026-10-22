@@ -134,18 +134,6 @@ void compute_Uinv() {
 // All called by fermion_op at the bottom of the file
 #ifdef VP
 void Dplus(matrix *src[NUMLINK], matrix *dest[NPLAQ]) {
-
-//edited
-      int p, q, indx;
- for (p = 0; p < NUMLINK; p++) {
-    plaq_index[p][p] = -1;                                  // i,i=-1  ,  00=11=22=-1
-    for (q = p + 1; q < NUMLINK; q++) {
-      indx = p * (NUMLINK - 1) - p * (p + 1) / 2 + q - 1;//              01=0,02=1,12=2
-      plaq_index[p][q] = indx;
-      plaq_index[q][p] = indx;                             // i,j=j,i, 01=10=0,02=20=1,12=21=2
-    }
-  }
-
   register int i;
   register site *s;
   char **local_pt[2][4];
@@ -352,6 +340,7 @@ void PtoTb(matrix *src[NPLAQ], matrix *dest[NUMLINK]) {
   register int i;
   register site *s;
   int mu;
+  Real SIGN, SIGN_array[3] = {-1.0, 1.0, -1.0};
   char **local_pt[2][3];
   matrix tmat;
   msg_tag *tag0[NUMLINK], *tag1[NPLAQ];
@@ -361,19 +350,14 @@ void PtoTb(matrix *src[NPLAQ], matrix *dest[NUMLINK]) {
     local_pt[1][mu] = gen_pt[3 + mu];
   }
 
-  Real SIGN_array[3] = {-1.0, 1.0, -1.0};
 
   FORALLDIR(mu) {
   FORALLSITES(i, s) {           // edited ----- to initialize otherwise lead to NAN
     clear_mat(&(dest[mu][i])); }
   }
 
-//--------
-
-
   FORALLDIR(mu) {
-
-        Real SIGN = SIGN_array[mu];
+        SIGN = SIGN_array[mu];
 
         tag0[mu] = start_gather_site(F_OFFSET(varphi), sizeof(matrix),
                                          goffset[mu] , EVENANDODD,
@@ -385,53 +369,34 @@ void PtoTb(matrix *src[NPLAQ], matrix *dest[NUMLINK]) {
 
       wait_gather(tag0[mu]);
       wait_gather(tag1[mu]);
-
-
       FORALLSITES(i, s) {
-
-
        mult_an(&(s->varphi),(matrix *)(local_pt[1][mu][i]), &tmat);          // tmat = varphi^bar(n)*chi_mu(n+mu)
        scalar_mult_matrix(&tmat, s->bc[mu], &tmat);                           // tmat = bc[mu]varphi^bar(n)*chi_mu(n+mu)
        scalar_mult_na_dif( (matrix *)(local_pt[1][mu][i]),(matrix *)(local_pt[0][mu][i]),s->bc[mu], &tmat);      // tmat = bc[mu]varphi^bar(n)*chi_mu(n+mu) - bc[mu]chi_mu(n+mu) varphi(n+mu)
        scalar_mult_sum_matrix(&tmat,-1.0*SIGN, &dest[mu][i]);    // dest[i] = dest[i] +SGN*{bc[mu]varphi^bar(n)*chi_mu(n+mu) - bc[mu]chi_mu(n+mu) varphi(n+mu)}
-
-
-
       }
-
       cleanup_gather(tag0[mu]);
       cleanup_gather(tag1[mu]);
-
-
     }
+}
 
-
- }
 
 
 void TbtoP(matrix *src[NUMLINK], matrix *dest[NPLAQ]) {
-
   register int i,opp_mu;
   register site *s;
   int mu;
+  Real SIGN, SIGN_array[3] = {-1.0, 1.0, -1.0};
   char **local_pt[2][3];
   matrix tmat;
   msg_tag *tag0[NUMLINK], *tag1[NPLAQ];
 
-    for (mu = 0; mu < NPLAQ; mu++) {
+  for (mu = 0; mu < NPLAQ; mu++) {
     local_pt[0][mu] = gen_pt[mu];
     local_pt[1][mu] = gen_pt[3 + mu];
   }
 
-  Real SIGN_array[3] = {-1.0, 1.0, -1.0};
-
-//--------
-
-
   FORALLDIR(mu) {
-
-        Real SIGN = SIGN_array[mu];
-
         tag0[mu] = start_gather_site(F_OFFSET(varphi), sizeof(matrix),
                                          goffset[mu] + 1, EVENANDODD,
                                          local_pt[0][mu]);             //varphi(n-mu)
@@ -443,30 +408,18 @@ void TbtoP(matrix *src[NUMLINK], matrix *dest[NPLAQ]) {
       wait_gather(tag0[mu]);
       wait_gather(tag1[mu]);
       opp_mu = OPP_LDIR(mu);
-
+      SIGN = SIGN_array[mu];
       FORALLSITES(i, s) {
-
-
        mult_an(&(s->varphi),(matrix *)(local_pt[1][mu][i]), &tmat);          // tmat = varphi^bar(n)*psib_mu(n-mu)
        scalar_mult_matrix(&tmat, s->bc[opp_mu], &tmat);                       // tmat = bc[opp_mu]varphi^bar(n)*psib_mu(n-mu)
        scalar_mult_na_dif( (matrix *)(local_pt[1][mu][i]),(matrix *)(local_pt[0][mu][i]),s->bc[opp_mu], &tmat);// tmat = bc[opp_mu]varphi^bar(n)*psib_mu(n-mu) - bc[opp_mu]psib_mu(n-mu) varphi(n-mu)
        scalar_mult_sum_matrix(&tmat,-1.0*SIGN, &dest[mu][i]);    // dest[i] = dest[i] - 1.0*{bc[opp_mu]varphi^bar(n)*psib_mu(n-mu) - bc[opp_mu]psib_mu(n-mu)}
 
       }
-
       cleanup_gather(tag0[mu]);
       cleanup_gather(tag1[mu]);
-
-
     }
-
-
  }
-
-
-
-
-
 #endif
 // -----------------------------------------------------------------
 
@@ -476,18 +429,6 @@ void TbtoP(matrix *src[NUMLINK], matrix *dest[NPLAQ]) {
 // Use tempmat and tempmat2 for temporary storage
 #ifdef VP
 void Dminus(matrix *src[NPLAQ], matrix *dest[NUMLINK]) {
-
-//edited
-      int p, q, indx;
- for (p = 0; p < NUMLINK; p++) {
-    plaq_index[p][p] = -1;                                  // i,i=-1  ,  00=11=22=-1
-    for (q = p + 1; q < NUMLINK; q++) {
-      indx = p * (NUMLINK - 1) - p * (p + 1) / 2 + q - 1;//              01=0,02=1,12=2
-      plaq_index[p][q] = indx;
-      plaq_index[q][p] = indx;                             // i,j=j,i, 01=10=0,02=20=1,12=21=2
-    }
-  }
-
   register int i,opp_mu;
   register site *s;
   char **local_pt[2][2];

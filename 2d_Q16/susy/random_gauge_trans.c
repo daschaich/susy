@@ -6,18 +6,6 @@
 #include "susy_includes.h"
 
 void random_gauge_trans(Twist_Fermion *TF) {
-
-//edited 
-      int p, q, indx;
- for (p = 0; p < NUMLINK; p++) {
-    plaq_index[p][p] = -1;                                  // i,i=-1  ,  00=11=22=-1
-    for (q = p + 1; q < NUMLINK; q++) {
-      indx = p * (NUMLINK - 1) - p * (p + 1) / 2 + q - 1;//              01=0,02=1,12=2 
-      plaq_index[p][q] = indx;
-      plaq_index[q][p] = indx;                             // i,j=j,i, 01=10=0,02=20=1,12=21=2 
-    }
-  }
-
   int a, b, i, j, x = 1, t = 1, s = node_index(x, t);
   complex tc;
   matrix Gmat, tmat, etamat, psimat[NUMLINK], chimat;

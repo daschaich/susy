@@ -112,10 +112,6 @@ void setup_lambda() {
 
 
 
-//-----edited--------
-
-
-
 // -----------------------------------------------------------------
 // Set up three-index totally anti-symmetric tensor
 // Initialize swap to avoid optimization dependence!!!
@@ -150,17 +146,16 @@ void setup_plaq_index() {
   }
 }
 
+// Currently only used to call setup_plaq_index()
 void epsilon() {
   int i, j, k;
   setup_plaq_index();
   FORALLDIR(i) {
     FORALLDIR(j) {
-      FORALLDIR(k) {
-
-            perm[i][j][k] = 0;
-        }
-      }
+      FORALLDIR(k)
+        perm[i][j][k] = 0;
     }
+  }
   
 
   FORALLDIR(i) {
@@ -180,33 +175,6 @@ void epsilon() {
           }
         }
       }
-    
- 
   return;
 }
 // -----------------------------------------------------------------
-
-
-
-// Set up translation of (mu, nu) to linear index of anti-symmetric matrix
-
-/*
-void setup_plaq_index() {
-  int mu, nu, index;
-  FORALLDIR(mu) {
-    plaq_index[mu][mu] = -1;                                  // mu,mu=-1  ,  00=11=22=-1
-    for (nu = mu + 1; nu < NUMLINK; nu++) {
-      index = mu * (NUMLINK - 1) - mu * (mu + 1) / 2 + nu - 1;//              01=0,02=1,12=2 
-      plaq_index[mu][nu] = index;
-      plaq_index[nu][mu] = index;                             // mu,nu=nu,mu, 01=10=0,02=20=1,12=21=2 
-    }
-  }
-}
-*/
-
-
-
-
-
-
-//-----end------------
