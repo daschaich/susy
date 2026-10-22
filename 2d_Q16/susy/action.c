@@ -69,15 +69,13 @@ void compute_DmuUmu() {
 //   U_mu(x) * U_mu(x + mu) - Udag_nu(x) * U_mu(x + nu)
 // Use tempmat and tempmat2 as temporary storage
 void compute_Fmunu() {
-
-//edited
-      int p, q, indx;
- for (p = 0; p < NUMLINK; p++) {
-    plaq_index[p][p] = -1;                                  // i,i=-1  ,  00=11=22=-1
+  int p, q, indx;
+  for (p = 0; p < NUMLINK; p++) {
+    plaq_index[p][p] = -1;
     for (q = p + 1; q < NUMLINK; q++) {
-      indx = p * (NUMLINK - 1) - p * (p + 1) / 2 + q - 1;//              01=0,02=1,12=2
+      indx = p * (NUMLINK - 1) - p * (p + 1) / 2 + q - 1;
       plaq_index[p][q] = indx;
-      plaq_index[q][p] = indx;                             // i,j=j,i, 01=10=0,02=20=1,12=21=2
+      plaq_index[q][p] = indx;
     }
   }
 
@@ -91,17 +89,15 @@ void compute_Fmunu() {
       index = plaq_index[mu][nu];
 
       mtag0 = start_gather_site(F_OFFSET(link[nu]), sizeof(matrix),
-                                goffset[mu], EVENANDODD, gen_pt[0]); //gen_pt[0]=U_nu(n+mu)
+                                goffset[mu], EVENANDODD, gen_pt[0]); // U_nu(n+mu)
       mtag1 = start_gather_site(F_OFFSET(link[mu]), sizeof(matrix),
-                                goffset[nu], EVENANDODD, gen_pt[1]); //gen_pt[1]=U_mu(n+nu)
+                                goffset[nu], EVENANDODD, gen_pt[1]); // U_mu(n+nu)
+
       wait_gather(mtag0);
       wait_gather(mtag1);
       FORALLSITES(i, s) {
-        mult_nn(&(s->link[mu]), (matrix *)(gen_pt[0][i]), &(tempmat[i])); // U_mu(n)U_nu(n+mu)
-        mult_nn(&(s->link[nu]), (matrix *)(gen_pt[1][i]), &(tempmat2[i])); //U_nu(n) U_mu(n+nu)
-        sub_matrix(&(tempmat[i]), &(tempmat2[i]), &(Fmunu[index][i]));  // U_mu(n)U_nu(n+mu) - U_nu(n) U_mu(n+nu)
-
-
+        mult_nn(&(s->link[mu]), (matrix *)(gen_pt[0][i]), &(Fmunu[index][i]));
+        mult_nn_dif(&(s->link[nu]), (matrix *)(gen_pt[1][i]), &(Fmunu[index][i]));
       }
       cleanup_gather(mtag0);
       cleanup_gather(mtag1);
@@ -111,6 +107,9 @@ void compute_Fmunu() {
 // -----------------------------------------------------------------
 
 
+
+// -----------------------------------------------------------------
+// TODO: Should be able to combine both of these...
 // D+ original
 void compute_Dmuphi() {
   register int i, mu;
@@ -118,16 +117,15 @@ void compute_Dmuphi() {
   msg_tag *tag;
 
   FORALLDIR(mu) {
-   tag = start_gather_site(F_OFFSET(phi), sizeof(matrix),
-                              goffset[mu], EVENANDODD, gen_pt[0]);// gen_pt[0] = phi(n+mu)
+    tag = start_gather_site(F_OFFSET(phi), sizeof(matrix),
+                            goffset[mu], EVENANDODD, gen_pt[0]); // phi(n+mu)
+
     wait_gather(tag);
-      FORALLSITES(i, s) {
-       mult_nn(&(s->link[mu]), (matrix *)(gen_pt[0][i]), &(tempmat[i]));  // c <-- a * b => tempmat[i] = U_mu(i)phi(i+mu)
-       mult_nn(&(s->phi), &(s->link[mu]),&(tempmat2[i]));                  // c <-- a * b => tempmat2[i] = phi(i)U_mu(i)
-       sub_matrix(&(tempmat[i]), &(tempmat2[i]), &(Dmuphi[mu][i]));             // c <-- a - b => Dmuphi[mu][i] = U_mu(n)phi(n+mu) - phi(n)U_mu(n)
-                                                                            // not c <-- c - a - b
-       }
-      cleanup_gather(tag);
+    FORALLSITES(i, s) {
+      mult_nn(&(s->link[mu]), (matrix *)(gen_pt[0][i]), &(Dmuphi[mu][i]));
+      mult_nn_dif(&(s->phi), &(s->link[mu]), &(Dmuphi[mu][i]));
+    }
+    cleanup_gather(tag);
   }
 }
 
@@ -152,18 +150,22 @@ void compute_Dmuvarphi() {
       cleanup_gather(tag);
   }
 }
+// -----------------------------------------------------------------
 
+
+
+// -----------------------------------------------------------------
 // TODO: Looks like these could be merged into one that takes a site offset as input...
-//----[varphi,phi]
-
+// [varphi,phi]
 void compute_varphi_phi_commutator() {
   register int i;
   register site *s;
-      FORALLSITES(i, s){
-        mult_nn(&(s->varphi),&(s->phi), &(tempmat[i])) ;    // c <-- a * b = varphi(n)phi(n)
-        mult_nn(&(s->phi), &(s->varphi), &(tempmat2[i]));  // c <-- a * b = phi(n)varphi(n)
-        sub_matrix(&(tempmat[i]), &(tempmat2[i]),&(vp_commut[i]));  // c <-- a - b = phi(n)varphi(n) - varphi(n)phi(n)
-      }
+
+  FORALLSITES(i, s){
+    mult_nn(&(s->varphi),&(s->phi), &(tempmat[i])) ;    // c <-- a * b = varphi(n)phi(n)
+    mult_nn(&(s->phi), &(s->varphi), &(tempmat2[i]));  // c <-- a * b = phi(n)varphi(n)
+    sub_matrix(&(tempmat[i]), &(tempmat2[i]),&(vp_commut[i]));  // c <-- a - b = phi(n)varphi(n) - varphi(n)phi(n)
+  }
 }
 
 
@@ -173,47 +175,25 @@ void compute_phi_commutator() {
   register site *s;
 
   FORALLSITES(i, s) {
-    mult_an(&(s->phi), &(s->phi), &(tempmat[i]));  // c <-- adag * b  = phi^bar(n)phi(n)
-    mult_na(&(s->phi), &(s->phi), &(tempmat2[i]));  // c <-- a * bdag  = phi(n)phi^bar(n)
-    sub_matrix(&(tempmat[i]), &(tempmat2[i]),&(phi_commut[i]));  // c <-- a - b = phi^bar(n)phi(n) - phi(n)phi^bar(n)
+    mult_an(&(s->phi), &(s->phi), &(phi_commut[i]));
+    mult_na_dif(&(s->phi), &(s->phi), &(phi_commut[i]));
   }
 }
 
 
 
 //----[varphi^bar,varphi]
-
-void compute_varphi_commutator()
-{
+void compute_varphi_commutator() {
   register int i;
   register site *s;
 
-  //msg_tag *mtag0 = NULL, *mtag1 = NULL;
-
-
-      FORALLSITES(i, s)
-      {
-
-
-
-        mult_an(&(s->varphi), &(s->varphi), &(tempmat[i]));  // c <-- adag * b  = varphi^bar(n)varphi(n)
-
-        mult_na(&(s->varphi), &(s->varphi), &(tempmat2[i]));  // c <-- a * bdag  = varphi(n)varphi^bar(n)
-
-        sub_matrix(&(tempmat[i]), &(tempmat2[i]),&(varphi_commut[i]));  // c <-- a - b = varphi^bar(n)varphi(n) - varphi(n)varphi^bar(n)
-
-      }
-
-
-
+  FORALLSITES(i, s) {
+    mult_an(&(s->varphi), &(s->varphi), &(tempmat[i]));  // c <-- adag * b  = varphi^bar(n)varphi(n)
+    mult_na(&(s->varphi), &(s->varphi), &(tempmat2[i]));  // c <-- a * bdag  = varphi(n)varphi^bar(n)
+    sub_matrix(&(tempmat[i]), &(tempmat2[i]),&(varphi_commut[i]));  // c <-- a - b = varphi^bar(n)varphi(n) - varphi(n)varphi^bar(n)
+  }
 }
-
-
-
-
-//-----------------------------end 7/11/23--------------------------
-
-
+// -----------------------------------------------------------------
 
 
 
