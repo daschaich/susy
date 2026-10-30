@@ -19,14 +19,14 @@ target=$8
 
 nodes=1
 cpus=8
-nx=4
-nt=4
+nx=16
+nt=16
 tag="N_${N}_${nx}x${nt}_rt_g_${rt}_${zeta}_${target}"
 #subtag="nstep_${fsteps}"
 
 # Paths
-dir=/home/bana/susy/2d_Q16/susy/$tag  # /$subtag
-bin=/home/bana/susy/2d_Q16/susy/susy_$target
+dir=/home/bana/2dQ16_neww/susy/2d_Q16/susy/$tag  # /$subtag
+bin=/home/bana/2dQ16_neww/susy/2d_Q16/susy/susy_$target
 
 # Create the main directory and subdirectories
 mkdir -p "$dir/Out" "$dir/Configs"
@@ -58,8 +58,8 @@ fi
 
   # Change N in 4d
   #cd ../../../4d_Q16/susy/
-  sed -i -E "s/(#define NCOL) .*/\1 $N/" /home/bana/susy/4d_Q16/include/susy.h
-  echo "Changed N in 4d: $PWD"
+  #sed -i -E "s/(#define NCOL) .*/\1 $N/" /home/bana/2dQ16_neww/susy/4d_Q16/include/susy.h
+  #echo "Changed N in 4d: $PWD"
   
   # Compile in 4d
   # echo "Compiling susy_$target..."
@@ -70,9 +70,9 @@ fi
   # fi
   
 
-  # Change N in 2d
+  # Change N in 2d by 4d bcz susy.h in 2dq16 is symbolic link to 4d susy.h file
   #cd ../../susy/
-  sed -i -E "s/(#define NCOL) .*/\1 $N/" /home/bana/susy/2d_Q16/include/susy.h
+  sed -i -E "s/(#define NCOL) .*/\1 $N/" /home/bana/2dQ16_neww/susy/4d_Q16/include/susy.h
   echo "Changed N in 2d: $PWD"
 
   #cd to susy_hmc_pg from mpi
@@ -109,9 +109,9 @@ echo "bmass = $bmass"
 fmass=0.0
 kappa_u1=0.0
 G=0.0
-Ntraj=10
+Ntraj=1
 traj_length=1
-skip=10
+skip=1
 #skip=`echo $Ntraj | awk -v tau="$traj_length" '{print($1*tau)}'` # skip = Ntraj*traj_length
 # Common parameters for all jobs
 
@@ -186,7 +186,7 @@ for(( i=$first ; $i<$last ; i+=$skip )); do
   echo "G $G" >> temp
 
   echo "max_cg_iterations 15000" >> temp
-  echo "error_per_site 1e-7" >> temp
+  echo "error_per_site 1e-5" >> temp
   
   if $fresh_uncommented; then
     echo "fresh" >> temp

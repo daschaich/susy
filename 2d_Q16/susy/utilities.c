@@ -976,7 +976,9 @@ void detLtoS(matrix *src[NUMLINK], matrix *dest) {
 
 #ifdef SS
 // TODO: These look like they can all be reduced to one that takes the scalar and site offset as an input arguments...
-void StoS(matrix *src, matrix *dest, Real tr) {
+
+//(1)
+void StoS_ebz(matrix *src, matrix *dest, Real tr) {
   register int i;
   register site *s;
   matrix tmat;
@@ -988,91 +990,49 @@ void StoS(matrix *src, matrix *dest, Real tr) {
 }
 
 //(2)
-// Term1
-// zeta-ztab
-// src = ztab , dest = zeta
-void SzbtoSz(matrix *src, matrix *dest) {
+
+void StoS_zbz(matrix *src, matrix *dest, Real tr) {
   register int i;
   register site *s;
   matrix tmat;
   FORALLSITES(i, s) {
     mult_nn(&(s->phi), &(src[i]), &tmat);          // tmat = varphi(n)*etab(n)
     mult_nn_dif(&(src[i]), &(s->phi), &tmat);      // tmat = varphi(n)*etab(n) - etab(n)varphi(n)
-    scalar_mult_sum_matrix(&tmat,-1.0, &dest[i]);    // dest[i] = dest[i] + 1.0*{ varphi(n)*etab(n) - etab(n)varphi }
+    scalar_mult_sum_matrix(&tmat, tr, &dest[i]);    // dest[i] = dest[i] + 1.0*{ varphi(n)*etab(n) - etab(n)varphi }
   }
 }
 
-// Term2
-// zetab-zeta
-// src = zeta , dest = zetab
-void SztoSzb(matrix *src, matrix *dest) {
-  register int i;
-  register site *s;
-  matrix tmat;
-  FORALLSITES(i, s) {
-    mult_nn(&(s->phi), &(src[i]), &tmat);          // tmat = varphi(n)*etab(n)
-    mult_nn_dif(&(src[i]), &(s->phi), &tmat);      // tmat = varphi(n)*etab(n) - etab(n)varphi
-    scalar_mult_sum_matrix(&tmat,-1.0, &dest[i]);    // dest[i] = dest[i] + 1.0*{ varphi(n)*etab(n) - etab(n)varphi }
-  }
-}
+
 
 //(3)
-// Term1
-// etab-eta
-// src = etab , dest = eta
-void SebtoSe(matrix *src, matrix *dest) {
+
+void StoS_ebe(matrix *src, matrix *dest, Real tr) {
   register int i;
   register site *s;
   matrix tmat;
   FORALLSITES(i, s) {
     mult_an(&(s->phi), &(src[i]), &tmat);          // tmat = varphi(n)*etab(n)
     mult_na_dif(&(src[i]), &(s->phi), &tmat);      // tmat = varphi(n)*etab(n) - etab(n)varphi(n)
-    scalar_mult_sum_matrix(&tmat,0.5, &dest[i]);    // dest[i] = dest[i] + 1.0*{ varphi(n)*etab(n) - etab(n)varphi }
+    scalar_mult_sum_matrix(&tmat, tr, &dest[i]);    // dest[i] = dest[i] + 1.0*{ varphi(n)*etab(n) - etab(n)varphi }
   }
 }
 
-// Term2
-// eta-etab
-// src = eta , dest = etab
-void SetoSeb(matrix *src, matrix *dest) {
-  register int i;
-  register site *s;
-  matrix tmat;
-  FORALLSITES(i, s) {
-    mult_an(&(s->phi), &(src[i]), &tmat);          // tmat = varphi(n)*etab(n)
-    mult_na_dif(&(src[i]), &(s->phi), &tmat);      // tmat = varphi(n)*etab(n) - etab(n)varphi
-    scalar_mult_sum_matrix(&tmat,0.5, &dest[i]);    // dest[i] = dest[i] + 1.0*{ varphi(n)*etab(n) - etab(n)varphi }
-  }
-}
+
 
 //(4)
-// Term1
-// zetab-eta
-// src = zetab , dest = eta
-void SzbtoSe(matrix *src, matrix *dest) {
+
+void StoS_zbe(matrix *src, matrix *dest, Real tr) {
   register int i;
   register site *s;
   matrix tmat;
   FORALLSITES(i, s) {
     mult_an(&(s->varphi), &(src[i]), &tmat);          // tmat = varphi(n)*etab(n)
     mult_na_dif(&(src[i]), &(s->varphi), &tmat);      // tmat = varphi(n)*etab(n) - etab(n)varphi(n)
-    scalar_mult_sum_matrix(&tmat,0.5, &dest[i]);    // dest[i] = dest[i] + 1.0*{ varphi(n)*etab(n) - etab(n)varphi }
+    scalar_mult_sum_matrix(&tmat, tr, &dest[i]);    // dest[i] = dest[i] + 1.0*{ varphi(n)*etab(n) - etab(n)varphi }
   }
 }
 
-// Term2
-// eta-zetab
-// src = eta , dest = zetab
-void SetoSzb(matrix *src, matrix *dest) {
-  register int i;
-  register site *s;
-  matrix tmat;
-  FORALLSITES(i, s) {
-    mult_an(&(s->varphi), &(src[i]), &tmat);          // tmat = varphi(n)*etab(n)
-    mult_na_dif(&(src[i]), &(s->varphi), &tmat);      // tmat = varphi(n)*etab(n) - etab(n)varphi
-    scalar_mult_sum_matrix(&tmat,0.5, &dest[i]);    // dest[i] = dest[i] + 1.0*{ varphi(n)*etab(n) - etab(n)varphi }
-  }
-}
+
 #endif
 
 #ifdef VV
@@ -1609,19 +1569,17 @@ void fermion_op(Twist_Fermion *src, Twist_Fermion *dest, int sign) {
   FORALLSITES(i, s)                       // Zero sitez_dest
     clear_mat(&(sitez_dest[i]));
 
-  StoS(siteeb_src, sitez_dest, 1.0);        // Adds to sitez_dest
-  StoS(sitez_src, siteeb_dest, 1.0);        // Adds to siteeb_dest
+  StoS_ebz(siteeb_src, sitez_dest, 1.0);        // Adds to sitez_dest
+  StoS_ebz(sitez_src, siteeb_dest, 1.0);        // Adds to siteeb_dest
 
-//2
-  SzbtoSz(sitezb_src, sitez_dest);        // Adds to sitez_dest
-  SztoSzb(sitez_src, sitezb_dest);        // Add to sitezb_dest
+  StoS_zbz(sitezb_src, sitez_dest, -1.0);        // Adds to sitez_dest
+  StoS_zbz(sitez_src, sitezb_dest, -1.0);        // Add to sitezb_dest
 
-//3
-  SebtoSe(siteeb_src, site_dest);        // Add to site_dest
-  SetoSeb(site_src, siteeb_dest);        // Add to siteeb_dest
-//4
-  SzbtoSe(sitezb_src, site_dest);        // Add to site_dest
-  SetoSzb(site_src, sitezb_dest);        // Add to sitezb_dest
+  StoS_ebe(siteeb_src, site_dest, 0.5);        // Add to site_dest
+  StoS_ebe(site_src, siteeb_dest, 0.5);        // Add to siteeb_dest
+
+  StoS_zbe(sitezb_src, site_dest, 0.5);        // Add to site_dest
+  StoS_zbe(site_src, sitezb_dest, 0.5);        // Add to sitezb_dest
 #endif
 
 
