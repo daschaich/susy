@@ -856,7 +856,7 @@ void DminusTbtoSeb(matrix *src[NUMLINK], matrix *dest) {
 void DplusSebtoSz(matrix *src, matrix *dest) {
   register int i;
   register site *s;
-  msg_tag *tag[0];
+  msg_tag *tag;
   matrix tmat;
 
 
@@ -864,44 +864,43 @@ void DplusSebtoSz(matrix *src, matrix *dest) {
     clear_mat(&(dest[i])); }
 
 
-  tag[0] = start_gather_field(src, sizeof(matrix), goffset[0],  // gen_pt[0]=eb(i+0)
+  tag = start_gather_field(src, sizeof(matrix), goffset[0],  // gen_pt[0]=eb(i+0)
                               EVENANDODD, gen_pt[0]);
 
 
-    wait_gather(tag[0]);
+    wait_gather(tag);
     FORALLSITES(i, s) {
       mult_nn( &(s->varphi),(matrix *)(gen_pt[0][i]), &tmat);           // tmat = varphi(i)eb(i+0)
       //scalar_mult_matrix(&tmat, s->bc[mu], &tmat);           
       mult_nn_dif(&(src[i]), &(s->varphi), &tmat);                       // tmat = varphi(i)eb(i+0) - eb(i)varphi(i)
       scalar_mult_sum_matrix(&tmat, 0.5, &(dest[i]));                  // dest[mu][i] += 0.5 { varphi(i)eb(i+0) - eb(i)varphi(i) }
     }
-    cleanup_gather(tag[0]);
+    cleanup_gather(tag);
 
 }
 
 void DminusSztoSeb(matrix *src, matrix *dest) {
   register int i;
   register site *s;
-  matrix *mat[2];
-  msg_tag *tag[0];
+  matrix *mat;
+  msg_tag *tag;
 
-  mat[0] = tempmat;
-  mat[1] = tempmat2;
+  mat = tempmat;
 
   FORALLSITES(i, s) {           // Set up first gather
     clear_mat(&(dest[i]));      // Initialize
-    mult_nn(&(src[i]),&(s->varphi), &(mat[0][i])); //mat[0][i]=z*varphi
+    mult_nn(&(src[i]),&(s->varphi), &(mat[i])); //mat[0][i]=z*varphi
   }
-  tag[0] = start_gather_field(mat[0], sizeof(matrix),
+  tag = start_gather_field(mat, sizeof(matrix),
                               goffset[0] + 1, EVENANDODD, gen_pt[0]);  //gen_pt[0]=z(i-0)*varphi(i-0)
 
-    wait_gather(tag[0]);
+    wait_gather(tag);
     FORALLSITES(i, s) {
       scalar_mult_dif_matrix((matrix *)(gen_pt[0][i]), 1.0,
                              &(dest[i]));                                 // dest[i]= dest[i]-z(i-0)*varphi(i-0)
       mult_nn_sum( &(s->varphi),&(src[i]), &(dest[i]));             // dest[i]= dest[i]-z(i-0)*varphi(i-0) + varphi(i)z(i)
     }
-    cleanup_gather(tag[0]);
+    cleanup_gather(tag);
 
   // Overall factor of 1/2
   FORALLSITES(i, s)

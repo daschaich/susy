@@ -373,22 +373,20 @@ double gauge_force(Real eps) {
 double scalar_force(Real eps) {
   register int i, mu;
   register site *s;
-  //char **local_pt[2][2];
-  //---edited----- char **local_pt[2][2];
-  char **local_pt[2][3];
-  //int a, b, gather, flip = 0, index, next;
   double returnit = 0.0, tr;
   matrix tmat;
 
-  msg_tag *tag[NUMLINK], *tag0[2];
+  msg_tag *tag_link, *tag_phi, *tag_varphi;
 
  // (1.0) contribution from 1/2*phi_commut^2, DmuUmu*phi_commut , [phi^bar,phi]*[varphi^bar,varphi],-2|[varphi,phi]|^2  wrt phi
 
   // Zero force collectors
 
-  //----edited----
-  FORALLSITES(i, s)
+  FORALLSITES(i, s) {
     clear_mat(&(s->f_phi));
+    clear_mat(&(s->f_varphi));
+    }
+
 
   FORALLSITES(i, s) {
       mult_na(&(phi_commut[i]),  &(s->phi), &tmat);   // Initialize c= a*bdag => f_U_a[n] =phi_commut(n)phi^dag(n) // a = mu
@@ -409,16 +407,12 @@ double scalar_force(Real eps) {
       mult_an(&(vp_commut[i]),&(s->varphi),&tmat);   // Initialize c= a*bdag => f_U_a[n] =phi_commut(n)phi^dag(n) // a = mu
       mult_na_dif(&(s->varphi),&(vp_commut[i]),&tmat);  // c=c-adag*b => f_U_a[n] = phi_commut(n)phi^dag(n) - phi^dag(n)phi_commut(n)
       scalar_mult_sum_matrix(&tmat,2.0, &(s->f_phi)); // c = c + s * b => f_U[mu] = f_U[mu]
-    }
+
 
  // (2.0) contribution from 1/2*varphi_commut^2, DmuUmu*varphi_commut,  [phi^bar,phi]*[varphi^bar,varphi], -2|[varphi,phi]|^2 wrt varphi
   // Zero force collectors
-  //----edited----
-  FORALLSITES(i, s)
-    clear_mat(&(s->f_varphi));
+  
 
-  FORALLSITES(i, s) {
-      //clear_mat(&tmat);
       mult_na(&(varphi_commut[i]), &(s->varphi), &tmat);   // Initialize c= a*bdag => f_U_a[n] =varphi_commut(n)varphi^dag(n) // a = mu
       mult_an_dif(&(s->varphi),&(varphi_commut[i]),&tmat);  // c=c-adag*b => f_U_a[n] = varphi_commut(n)varphi^dag(n) - varphi^dag(n)varphi_commut(n)
       scalar_mult_sum_matrix(&tmat,1.0, &(s->f_varphi)); // c = c + s * b => f_U[mu] = f_U[mu] +
@@ -438,57 +432,76 @@ double scalar_force(Real eps) {
 
    // D+ original
 
-  //(3.0) contribution from -2|Dmuphi|^2 term wrt phi field
+// (3.0) Contribution from -2|Dmu phi|^2 to phi force
+// (4.0) Contribution from -2|Dmu varphi|^2 to varphi force
 
-   for (mu = 0; mu < 3; mu++) {
-    local_pt[0][mu] = gen_pt[mu]; //  gen_pt[10 array element]
-    local_pt[1][mu] = gen_pt[3 + mu];
-   }
+FORALLDIR(mu) {
 
-  FORALLDIR(mu) {
-   tag[0] = start_gather_site(F_OFFSET(link[mu]), sizeof(matrix),
-                              goffset[mu]+1, EVENANDODD, local_pt[0][0] );// local_pt[0][0] = U_mu(n-mu)
-   tag0[0] = start_gather_field(Dmuphi[mu], sizeof(matrix),
-                              goffset[mu]+1, EVENANDODD, local_pt[1][0]);// local_pt[1][0] = DmuPhi[mu](n-mu)
+    // -------------------------------------------------
+    // 1. Gather backward link U_mu(n-mu)
+    // -------------------------------------------------
 
-    wait_gather(tag[0]);
-    wait_gather(tag0[0]);
+    tag_link = start_gather_site(
+        F_OFFSET(link[mu]), sizeof(matrix),
+        goffset[mu]+1, EVENANDODD, gen_pt[0]);
 
-    FORALLSITES(i, s) {
-      mult_an((matrix *)(local_pt[1][0][i]),(matrix *)(local_pt[0][0][i]), &tmat);   // Initialize c= adag*b => tmat = Dmuphi[mu]^dag(n-mu)U_mu(n-mu) // a = mu
-      mult_na_dif(&(s->link[mu]),&(Dmuphi[mu][i]),  &tmat); //c=c-a*bdag => tmat = Dmuphi[mu]^dag(n-mu)U_mu(n-mu) - U_mu(n)Dmuphi[mu]^dag(n)
-      scalar_mult_sum_matrix(&tmat,2.0, &(s->f_phi)); // c = c + s * b => f_phi = f_phi + Dmuphi[mu]^dag(n-mu)U_mu(n-mu) - U_mu(n)Dmuphi[mu]^dag(n)
-    }
+    // -------------------------------------------------
+    // 2. Gather backward D_mu phi
+    // -------------------------------------------------
 
-    cleanup_gather(tag[0]);
-    cleanup_gather(tag0[0]);
-  }
+    tag_phi = start_gather_field(
+        Dmuphi[mu], sizeof(matrix),
+        goffset[mu]+1, EVENANDODD, gen_pt[3]);
 
-  //(4.0) contribution from -2|Dmuvarphi|^2 term wrt varphi field
-   for (mu = 0; mu < 3; mu++) {
-    local_pt[0][mu] = gen_pt[mu]; //  gen_pt[10 array element]
-    local_pt[1][mu] = gen_pt[3 + mu];
-   }
+    wait_gather(tag_link);
+    wait_gather(tag_phi);
 
-  FORALLDIR(mu) {
-   tag[0] = start_gather_site(F_OFFSET(link[mu]), sizeof(matrix),
-                              goffset[mu]+1, EVENANDODD, local_pt[0][0] );// local_pt[0][0] = U_mu(n-mu)
-   tag0[0] = start_gather_field(Dmuvarphi[mu], sizeof(matrix),
-                              goffset[mu]+1, EVENANDODD, local_pt[1][0]);// local_pt[1][0] = DmuPhi[mu](n-mu)
-
-    wait_gather(tag[0]);
-    wait_gather(tag0[0]);
+    // -------------------------------------------------
+    // 3. Calculate phi force
+    // -------------------------------------------------
 
     FORALLSITES(i, s) {
-      mult_an((matrix *)(local_pt[1][0][i]),(matrix *)(local_pt[0][0][i]), &tmat);   // Initialize c= adag*b => tmat = Dmuphi[mu]^dag(n-mu)U_mu(n-mu) // a = mu
-      mult_na_dif(&(s->link[mu]),&(Dmuvarphi[mu][i]),  &tmat); //c=c-a*bdag => tmat = Dmuphi[mu]^dag(n-mu)U_mu(n-mu) - U_mu(n)Dmuphi[mu]^dag(n)
-      scalar_mult_sum_matrix(&tmat,2.0, &(s->f_varphi)); // c = c + s * b => f_phi = f_phi + Dmuphi[mu]^dag(n-mu)U_mu(n-mu) - U_mu(n)Dmuphi[mu]^dag(n)
+
+        mult_an((matrix *)(gen_pt[3][i]),
+                (matrix *)(gen_pt[0][i]), &tmat);
+
+        mult_na_dif(&(s->link[mu]),
+                    &(Dmuphi[mu][i]), &tmat);
+
+        scalar_mult_sum_matrix(&tmat, 2.0, &(s->f_phi));
     }
 
+    cleanup_gather(tag_phi);
 
-    cleanup_gather(tag[0]);
-    cleanup_gather(tag0[0]);
-  }
+
+    // -------------------------------------------------
+    // 4. Gather backward D_mu varphi
+    // -------------------------------------------------
+
+    tag_varphi = start_gather_field(
+        Dmuvarphi[mu], sizeof(matrix),
+        goffset[mu]+1, EVENANDODD, gen_pt[3]);
+
+    wait_gather(tag_varphi);
+
+    // -------------------------------------------------
+    // 5. Calculate varphi force
+    // -------------------------------------------------
+
+    FORALLSITES(i, s) {
+
+        mult_an((matrix *)(gen_pt[3][i]),
+                (matrix *)(gen_pt[0][i]), &tmat);
+
+        mult_na_dif(&(s->link[mu]),
+                    &(Dmuvarphi[mu][i]), &tmat);
+
+        scalar_mult_sum_matrix(&tmat, 2.0, &(s->f_varphi));
+    }
+
+    cleanup_gather(tag_varphi);
+    cleanup_gather(tag_link);
+}
 
      // Only compute susy-breaking scalar potential term if bmass non-zero
   if (bmass > IMAG_TOL) {
