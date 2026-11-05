@@ -239,18 +239,31 @@ void PtoLb(matrix *src[NPLAQ], matrix *dest[NUMLINK]) {
 
 //--------
 
+        tag0[0] = start_gather_site(F_OFFSET(phi), sizeof(matrix),
+                                         goffset[0] , EVENANDODD,
+                                         local_pt[0][0]);             //phi(n+0)
+                            
+        tag1[0] = start_gather_field(src[0], sizeof(matrix),
+                                          goffset[0], EVENANDODD,
+                                          local_pt[1][0]);              // chi_0(n+0)   
+
+
 
   FORALLDIR(mu) {
 
         Real SIGN = SIGN_array[mu];
+        
+        if (mu < NUMLINK - 1) {    // Start next gather
 
-        tag0[mu] = start_gather_site(F_OFFSET(phi), sizeof(matrix),
-                                         goffset[mu] , EVENANDODD,
-                                         local_pt[0][mu]);             //phi(n+mu)
-                            
-        tag1[mu] = start_gather_field(src[mu], sizeof(matrix),
-                                          goffset[mu], EVENANDODD,
-                                          local_pt[1][mu]);              // chi_mu(n+mu)     
+        tag0[mu + 1] = start_gather_site(F_OFFSET(phi), sizeof(matrix),
+                                         goffset[mu + 1] , EVENANDODD,
+                                         local_pt[0][mu + 1]);             //phi(n+mu)
+                           
+        tag1[mu + 1] = start_gather_field(src[mu + 1], sizeof(matrix),
+                                          goffset[mu + 1], EVENANDODD,
+                                          local_pt[1][mu + 1]);              // chi_mu(n+mu)    
+                                          
+        }                                   
 
       wait_gather(tag0[mu]);
       wait_gather(tag1[mu]);
@@ -296,18 +309,30 @@ void LbtoP(matrix *src[NUMLINK], matrix *dest[NPLAQ]) {
 
 //--------
 
+        tag0[0] = start_gather_site(F_OFFSET(phi), sizeof(matrix),
+                                         goffset[0] + 1, EVENANDODD,
+                                         local_pt[0][0]);             //phi(n-0)
+                            
+        tag1[0] = start_gather_field(src[0], sizeof(matrix),
+                                          goffset[0] + 1, EVENANDODD,
+                                          local_pt[1][0]);              // psib_0(n-0)   
+
 
   FORALLDIR(mu) {
 
         Real SIGN = SIGN_array[mu];
+        
+        if (mu < NUMLINK - 1) {    // Start next gather
 
-        tag0[mu] = start_gather_site(F_OFFSET(phi), sizeof(matrix),
-                                         goffset[mu] + 1, EVENANDODD,
-                                         local_pt[0][mu]);             //phi(n-mu)
+        tag0[mu + 1] = start_gather_site(F_OFFSET(phi), sizeof(matrix),
+                                         goffset[mu + 1] + 1, EVENANDODD,
+                                         local_pt[0][mu + 1]);             //phi(n-mu)
                             
-        tag1[mu] = start_gather_field(src[mu], sizeof(matrix),
-                                          goffset[mu] + 1, EVENANDODD,
-                                          local_pt[1][mu]);              // psib_mu(n-mu)     
+        tag1[mu + 1] = start_gather_field(src[mu + 1], sizeof(matrix),
+                                          goffset[mu + 1] + 1, EVENANDODD,
+                                          local_pt[1][mu + 1]);              // psib_mu(n-mu)    
+                                          
+        }                                   
 
       wait_gather(tag0[mu]);
       wait_gather(tag1[mu]);
@@ -355,18 +380,29 @@ void PtoTb(matrix *src[NPLAQ], matrix *dest[NUMLINK]) {
   FORALLSITES(i, s) {           // edited ----- to initialize otherwise lead to NAN
     clear_mat(&(dest[mu][i])); }
   }
+  
+        tag0[0] = start_gather_site(F_OFFSET(varphi), sizeof(matrix),
+                                         goffset[0] , EVENANDODD,
+                                         local_pt[0][0]);             //varphi(n+0)
+                            
+        tag1[0] = start_gather_field(src[0], sizeof(matrix),
+                                          goffset[0], EVENANDODD,
+                                          local_pt[1][0]);              // chi_0(n+0)  
+
 
   FORALLDIR(mu) {
         SIGN = SIGN_array[mu];
+        
+        if (mu < NUMLINK - 1) {    // Start next gather
 
-        tag0[mu] = start_gather_site(F_OFFSET(varphi), sizeof(matrix),
-                                         goffset[mu] , EVENANDODD,
-                                         local_pt[0][mu]);             //varphi(n+mu)
+        tag0[mu + 1] = start_gather_site(F_OFFSET(varphi), sizeof(matrix),
+                                         goffset[mu + 1] , EVENANDODD,
+                                         local_pt[0][mu + 1]);             //varphi(n+mu)
                             
-        tag1[mu] = start_gather_field(src[mu], sizeof(matrix),
-                                          goffset[mu], EVENANDODD,
-                                          local_pt[1][mu]);              // chi_mu(n+mu)     
-
+        tag1[mu + 1] = start_gather_field(src[mu + 1], sizeof(matrix),
+                                          goffset[mu + 1], EVENANDODD,
+                                          local_pt[1][mu + 1]);              // chi_mu(n+mu)     
+        }
       wait_gather(tag0[mu]);
       wait_gather(tag1[mu]);
       FORALLSITES(i, s) {
@@ -395,15 +431,29 @@ void TbtoP(matrix *src[NUMLINK], matrix *dest[NPLAQ]) {
     local_pt[0][mu] = gen_pt[mu];
     local_pt[1][mu] = gen_pt[3 + mu];
   }
+  
+        tag0[0] = start_gather_site(F_OFFSET(varphi), sizeof(matrix),
+                                         goffset[0] + 1, EVENANDODD,
+                                         local_pt[0][0]);             //varphi(n-0)
+                            
+        tag1[0] = start_gather_field(src[0], sizeof(matrix),
+                                          goffset[0] + 1, EVENANDODD,
+                                          local_pt[1][0]);              // psib_0(n-0)     
 
   FORALLDIR(mu) {
-        tag0[mu] = start_gather_site(F_OFFSET(varphi), sizeof(matrix),
-                                         goffset[mu] + 1, EVENANDODD,
-                                         local_pt[0][mu]);             //varphi(n-mu)
+  
+  
+       if (mu < NUMLINK - 1) {    // Start next gather
+  
+        tag0[mu + 1] = start_gather_site(F_OFFSET(varphi), sizeof(matrix),
+                                         goffset[mu + 1] + 1, EVENANDODD,
+                                         local_pt[0][mu + 1]);             //varphi(n-mu)
                             
-        tag1[mu] = start_gather_field(src[mu], sizeof(matrix),
-                                          goffset[mu] + 1, EVENANDODD,
-                                          local_pt[1][mu]);              // psib_mu(n-mu)     
+        tag1[mu + 1] = start_gather_field(src[mu + 1], sizeof(matrix),
+                                          goffset[mu + 1] + 1, EVENANDODD,
+                                          local_pt[1][mu + 1]);              // psib_mu(n-mu)     
+                                          
+        }                                  
 
       wait_gather(tag0[mu]);
       wait_gather(tag1[mu]);
@@ -850,63 +900,8 @@ void DminusTbtoSeb(matrix *src[NUMLINK], matrix *dest) {
 }
 #endif
 
-//*********** correction made here on 15/5/2026 #ifdef SV to #ifdef SS *********//
-//********** maybe not in use  ***************
-#ifdef SS
-void DplusSebtoSz(matrix *src, matrix *dest) {
-  register int i;
-  register site *s;
-  msg_tag *tag;
-  matrix tmat;
 
 
-  FORALLSITES(i, s) {           // edited ----- to initialize otherwise lead to NAN
-    clear_mat(&(dest[i])); }
-
-
-  tag = start_gather_field(src, sizeof(matrix), goffset[0],  // gen_pt[0]=eb(i+0)
-                              EVENANDODD, gen_pt[0]);
-
-
-    wait_gather(tag);
-    FORALLSITES(i, s) {
-      mult_nn( &(s->varphi),(matrix *)(gen_pt[0][i]), &tmat);           // tmat = varphi(i)eb(i+0)
-      //scalar_mult_matrix(&tmat, s->bc[mu], &tmat);           
-      mult_nn_dif(&(src[i]), &(s->varphi), &tmat);                       // tmat = varphi(i)eb(i+0) - eb(i)varphi(i)
-      scalar_mult_sum_matrix(&tmat, 0.5, &(dest[i]));                  // dest[mu][i] += 0.5 { varphi(i)eb(i+0) - eb(i)varphi(i) }
-    }
-    cleanup_gather(tag);
-
-}
-
-void DminusSztoSeb(matrix *src, matrix *dest) {
-  register int i;
-  register site *s;
-  matrix *mat;
-  msg_tag *tag;
-
-  mat = tempmat;
-
-  FORALLSITES(i, s) {           // Set up first gather
-    clear_mat(&(dest[i]));      // Initialize
-    mult_nn(&(src[i]),&(s->varphi), &(mat[i])); //mat[0][i]=z*varphi
-  }
-  tag = start_gather_field(mat, sizeof(matrix),
-                              goffset[0] + 1, EVENANDODD, gen_pt[0]);  //gen_pt[0]=z(i-0)*varphi(i-0)
-
-    wait_gather(tag);
-    FORALLSITES(i, s) {
-      scalar_mult_dif_matrix((matrix *)(gen_pt[0][i]), 1.0,
-                             &(dest[i]));                                 // dest[i]= dest[i]-z(i-0)*varphi(i-0)
-      mult_nn_sum( &(s->varphi),&(src[i]), &(dest[i]));             // dest[i]= dest[i]-z(i-0)*varphi(i-0) + varphi(i)z(i)
-    }
-    cleanup_gather(tag);
-
-  // Overall factor of 1/2
-  FORALLSITES(i, s)
-    scalar_mult_matrix(&(dest[i]), 0.5, &(dest[i]));
-}
-#endif
 // -----------------------------------------------------------------
 
 
@@ -1390,20 +1385,30 @@ void DbplusPtoSz(matrix *src[NPLAQ], matrix *dest) {
 
   Real SIGN_array[3] = {-1.0, 1.0, -1.0};
 
-//--------
+        tag0[0] = start_gather_site(F_OFFSET(link[0]), sizeof(matrix),
+                                         goffset[0] + 1, EVENANDODD,
+                                         local_pt[0][0]);             //U_0(n-0)
+ 
+        tag1[0] = start_gather_field(src[0], sizeof(matrix),
+                                          goffset[0], EVENANDODD,
+                                          local_pt[1][0]);              // chi_0(n+0)
 
 
   FORALLDIR(mu) {
 
         Real SIGN = SIGN_array[mu];
+        
+        if (mu < NUMLINK - 1) {    // Start next gather
 
-        tag0[mu] = start_gather_site(F_OFFSET(link[mu]), sizeof(matrix),
-                                         goffset[mu] + 1, EVENANDODD,
-                                         local_pt[0][mu]);             //U_a(n-a)
+        tag0[mu + 1] = start_gather_site(F_OFFSET(link[mu + 1]), sizeof(matrix),
+                                         goffset[mu + 1] + 1, EVENANDODD,
+                                         local_pt[0][mu + 1]);             //U_a(n-a)
  
-        tag1[mu] = start_gather_field(src[mu], sizeof(matrix),
-                                          goffset[mu], EVENANDODD,
-                                          local_pt[1][mu]);              // chi_mu(n+mu)
+        tag1[mu + 1] = start_gather_field(src[mu + 1], sizeof(matrix),
+                                          goffset[mu + 1], EVENANDODD,
+                                          local_pt[1][mu + 1]);              // chi_mu(n+mu)
+                                          
+        }                                  
 
       wait_gather(tag0[mu]);
       wait_gather(tag1[mu]);
@@ -1438,18 +1443,30 @@ void DbminusSztoP(matrix *src, matrix *dest[NPLAQ]) {
 
   Real SIGN_array[3] = {-1.0, 1.0, -1.0};
 
-//--------
+        tag0[0] = start_gather_site(F_OFFSET(link[0]), sizeof(matrix),
+                                         goffset[0] + 1, EVENANDODD,
+                                         local_pt[0][0]);             //U_0(n-0)
+
+        tag1[0] = start_gather_field(src, sizeof(matrix),
+                                          goffset[0]+1, EVENANDODD,
+                                          local_pt[1][0]);              // zeta(n-0)
+
+
   FORALLDIR(mu) {
 
         Real SIGN = SIGN_array[mu];
+               
+        if (mu < NUMLINK - 1) {    // Start next gather
 
-        tag0[mu] = start_gather_site(F_OFFSET(link[mu]), sizeof(matrix),
-                                         goffset[mu] + 1, EVENANDODD,
-                                         local_pt[0][mu]);             //U_a(n-a)
+        tag0[mu + 1] = start_gather_site(F_OFFSET(link[mu + 1]), sizeof(matrix),
+                                         goffset[mu + 1] + 1, EVENANDODD,
+                                         local_pt[0][mu + 1]);             //U_a(n-a)
 
-        tag1[mu] = start_gather_field(src, sizeof(matrix),
-                                          goffset[mu]+1, EVENANDODD,
-                                          local_pt[1][mu]);              // zeta(n-mu)
+        tag1[mu + 1] = start_gather_field(src, sizeof(matrix),
+                                          goffset[mu + 1]+1, EVENANDODD,
+                                          local_pt[1][mu + 1]);              // zeta(n-mu)
+                                          
+        }                                  
 
       wait_gather(tag0[mu]);
       wait_gather(tag1[mu]);
