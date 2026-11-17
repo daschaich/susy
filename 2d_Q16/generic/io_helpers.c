@@ -50,11 +50,12 @@ gauge_file *save_lattice(int flag, char *filename) {
 
 
 // -----------------------------------------------------------------
-// Set link to unit matrices
+// Set link & scalar fiels to unit matrices
 void coldlat() {
   register int i, j, k, dir;
   register site *s;
 
+  /* Initialize gauge links to identity */
   FORALLDIR(dir) {
     FORALLSITES(i, s) {
       for (j = 0; j < NCOL; j++) {
@@ -66,7 +67,24 @@ void coldlat() {
       }
     }
   }
-  node0_printf("unit gauge NUMLINK configuration loaded\n");
+
+  /* Initialize phi and varphi to identity */
+  FORALLSITES(i, s) {
+    for (j = 0; j < NCOL; j++) {
+      s->phi.e[j][j] = cmplx(1.0, 0.0);
+      s->varphi.e[j][j] = cmplx(1.0, 0.0);
+
+      for (k = j + 1; k < NCOL; k++) {
+        s->phi.e[j][k] = cmplx(0.0, 0.0);
+        s->phi.e[k][j] = cmplx(0.0, 0.0);
+
+        s->varphi.e[j][k] = cmplx(0.0, 0.0);
+        s->varphi.e[k][j] = cmplx(0.0, 0.0);
+      }
+    }
+  }
+
+  node0_printf("Unit gauge and identity scalar configuration loaded\n");
 }
 // -----------------------------------------------------------------
 
