@@ -109,7 +109,8 @@ void make_fields() {
   FIELD_ALLOC(tr_eta, complex);
   FIELD_ALLOC(tr_dest, complex);
 
-  size += (Real)(2.0 * (1.0 + NUMLINK + NPLAQ) * sizeof(matrix));
+
+  size += (Real)(2.0 * (4.0 + 3.0 * NUMLINK + NPLAQ) * sizeof(matrix));
   FIELD_ALLOC(site_src, matrix);
   FIELD_ALLOC(siteeb_src, matrix);
   FIELD_ALLOC(sitez_src, matrix);
@@ -128,26 +129,22 @@ void make_fields() {
   FIELD_ALLOC_VEC(plaq_dest, matrix, NPLAQ);
 
   // For convenience in calculating action and force
-  size += (Real)(1.0 + NPLAQ + 3.0 * NUMLINK) * sizeof(matrix);
-  size += (Real)(NUMLINK + 6.0 * NPLAQ) * sizeof(complex);
-  FIELD_ALLOC(DmuUmu, matrix);
+
+  size += (Real)(4.0 + NPLAQ + 5.0 * NUMLINK) * sizeof(matrix);
   
-  //--edited-13-9-23----------
-  //FIELD_ALLOC(Dmuphi, matrix);
-  //FIELD_ALLOC(Dmuvarphi, matrix);
+  size += (Real)(NUMLINK + 6.0 * NPLAQ) * sizeof(complex);
+  
+  FIELD_ALLOC(DmuUmu, matrix);
   FIELD_ALLOC(vp_commut, matrix);
   FIELD_ALLOC(phi_commut, matrix);
   FIELD_ALLOC(varphi_commut, matrix);
-
-  //---end--------------
-  
   FIELD_ALLOC_VEC(Fmunu, matrix, NPLAQ);
-  //--edited
   FIELD_ALLOC_VEC(Dmuphi, matrix, NUMLINK);
   FIELD_ALLOC_VEC(Dmuvarphi, matrix, NUMLINK);
   FIELD_ALLOC_VEC(Uinv, matrix, NUMLINK);
   FIELD_ALLOC_VEC(Udag_inv, matrix, NUMLINK);
   FIELD_ALLOC_VEC(UpsiU, matrix, NUMLINK);
+  
   FIELD_ALLOC_VEC(Tr_Uinv, complex, NUMLINK);
   FIELD_ALLOC_MAT_OFFDIAG(plaqdet, complex, NUMLINK);
   FIELD_ALLOC_MAT_OFFDIAG(tempdet, complex, NUMLINK);
