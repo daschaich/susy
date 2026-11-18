@@ -67,7 +67,7 @@ void scalar_eig(int project, double *ave_eigs, double *eig_widths,
 //---edited----------
 double action(Twist_Fermion **source, Twist_Fermion ***sol);
 double gauge_action(int do_det);
-double sa(int do_det);
+double scalar_action(int do_det);
 double bmass_action();
 
 // Force routines

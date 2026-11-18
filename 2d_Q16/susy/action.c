@@ -204,18 +204,11 @@ double gauge_action(int do_det) {
     mult_nn(&(DmuUmu[i]), &(DmuUmu[i]), &tmat);
     scalar_mult_matrix(&tmat, norm, &tmat);
 
-
     // F^2 term
-
-
-
     for (index = 0; index < NPLAQ; index++) {
       mult_an(&(Fmunu[index][i]), &(Fmunu[index][i]), &tmat2);
       scalar_mult_sum_matrix(&tmat2, 2.0, &tmat); //2
     }
-
-
-    //---------edited 7/9/23 end----------------
 
     if (do_det == 1) {
       det_project(&tmat, &tmat2);
@@ -225,13 +218,9 @@ double gauge_action(int do_det) {
       tc = trace(&tmat);
 
     g_action += tc.real;
-
-   // printf("node = %d site = %d trace gauge = %f\n",this_node,i,tc.real); //FORALLSITE(i,s)=for(i=0,s=lattice;i<sites_on_node;i++,s++)
-
-   // printf("trace gauge = %d\n",tc.real);
 #ifdef DEBUG_CHECK
     if (fabs(tc.imag) > IMAG_TOL)
-      printf("node%d WARNING: Im[s_B[%d]] = %.4g\n", this_node, i, tc.imag);
+      printf("node%d WARNING: Im[s_G[%d]] = %.4g\n", this_node, i, tc.imag);
 #endif
   }
   g_action *= kappa;      // kappa = N/4*lambda
@@ -240,137 +229,81 @@ double gauge_action(int do_det) {
 }
 // -----------------------------------------------------------------
 
-//---edited-----------------
-// scalar action
 
 
-
-double sa(int do_det) {
+// -----------------------------------------------------------------
+// Scalar action
+double scalar_action(int do_det) {
   register int i;
   register site *s;
-  double s_a = 0.0;
+  double s_act = 0.0;
   int index;
   complex tc;
   matrix tmat, tmat2;
 
 
+  // 1/2 [phi^bar,phi]^2 term
   FORALLSITES(i, s) {
-
-    clear_mat(&tmat);
-
-
-
-
-  // 1/2[phi^bar,phi]^2 term
-
-  //  mult_nn(&(phi_commut[i]), &(phi_commut[i]), &tmat2); // c <-- a * b
-  //  scalar_mult_sum_matrix(&tmat2,0.5, &tmat); // c <-- c + s * b
-
-
-
    mult_nn(&(phi_commut[i]), &(phi_commut[i]), &tmat); // c <-- a * b
    scalar_mult_matrix(&tmat, 0.5, &tmat);
 
-
     // 1/2[varphi^bar,varphi]^2 term
-
-
-    // mult_nn(&(varphi_commut[i]), &(phi_commut[i]), &tmat); // c <-- a * b
-    // scalar_mult_matrix(&tmat, 0.5, &tmat);
-
-
-
     mult_nn(&(varphi_commut[i]), &(varphi_commut[i]), &tmat2); // c <-- a * b
     scalar_mult_sum_matrix(&tmat2, 0.5, &tmat);
 
-
-
     // DmuUmu*[phi^bar,phi] term --->FD + Incorrect force
-
     mult_nn(&(DmuUmu[i]),&(phi_commut[i]), &tmat2); // c <-- a * b
     scalar_mult_sum_matrix(&tmat2, 1.0, &tmat); // c <-- c + s * b
 
-
-
    // DmuUmu*[varphi^bar,varphi] term --->FD + incorrect force
-
     mult_nn(&(DmuUmu[i]),&(varphi_commut[i]), &tmat2); // c <-- a * b
     scalar_mult_sum_matrix(&tmat2, 1.0, &tmat); // c <-- c + s * b
 
-
-
     // -2|Dmuphi|^2 term  --->FD + Incorrect force
-
     for (index = 0; index < NUMLINK; index++) {
-
-    mult_an(&(Dmuphi[index][i]), &(Dmuphi[index][i]), &tmat2); // c <-- adag * b => tmat2 = Dmuphi^bar[index][i]*Dmuphi[index][i]
-    scalar_mult_sum_matrix(&tmat2, 2.0, &tmat); // c <-- c + s * b  => tmat = tmat + Dmuphi^bar[index][i]*Dmuphi[index][i]
-
+      mult_an(&(Dmuphi[index][i]), &(Dmuphi[index][i]), &tmat2); // c <-- adag * b => tmat2 = Dmuphi^bar[index][i]*Dmuphi[index][i]
+      scalar_mult_sum_matrix(&tmat2, 2.0, &tmat); // c <-- c + s * b  => tmat = tmat + Dmuphi^bar[index][i]*Dmuphi[index][i]
     }
 
     // -2|Dmuvarphi|^2 term  --->FD+Incorrect force
-
     for (index = 0; index < NUMLINK; index++) {
-
-    mult_an(&(Dmuvarphi[index][i]), &(Dmuvarphi[index][i]), &tmat2); // c <-- adag * b => tmat2 = Dmuvarphi^bar[index][i]*Dmuvarphi[index][i]
-    scalar_mult_sum_matrix(&tmat2, 2.0, &tmat); // c <-- c + s * b  => tmat = tmat + Dmuvarphi^bar[index][i]*Dmuvarphi[index][i]
-
+      mult_an(&(Dmuvarphi[index][i]), &(Dmuvarphi[index][i]), &tmat2); // c <-- adag * b => tmat2 = Dmuvarphi^bar[index][i]*Dmuvarphi[index][i]
+      scalar_mult_sum_matrix(&tmat2, 2.0, &tmat); // c <-- c + s * b  => tmat = tmat + Dmuvarphi^bar[index][i]*Dmuvarphi[index][i]
     }
 
-
-
     // [phi^bar,phi]*[varphi^bar,varphi] term FD + incorrect force
-
-
     mult_nn(&(phi_commut[i]), &(varphi_commut[i]), &tmat2); // c <-- a * b
     scalar_mult_sum_matrix(&tmat2, 1.0, &tmat);
 
-
-
-
-
     // -2|[varphi,phi]|^2 term-----> FD + incorrect Force
-
     mult_an(&(vp_commut[i]), &(vp_commut[i]), &tmat2); // c <-- adag * b => tmat2 = Dmuvarphi^bar[index][i]*Dmuvarphi[index][i]
     scalar_mult_sum_matrix(&tmat2, 2.0, &tmat); // c <-- c + s * b  => tmat = tmat + Dmuvarphi^bar[index][i]*Dmuvarphi[index][i]
-
-
-
-    //---------7/9/23 end----------------
-
 
     if (do_det == 1) {
       det_project(&tmat, &tmat2);
       tc = trace(&tmat2);
     }
-
     else
       tc = trace(&tmat);
 
-    s_a += tc.real;
-
-  //  printf("node = %d site = %d trace scalar = %f\n",this_node,i,tc.real);
+    s_act += tc.real;
 
 #ifdef DEBUG_CHECK
     if (fabs(tc.imag) > IMAG_TOL)
-      printf("node%d WARNING: Im[s_B[%d]] = %.4g\n", this_node, i, tc.imag);
+      printf("node%d WARNING: Im[s_S[%d]] = %.4g\n", this_node, i, tc.imag);
 #endif
   }
-  s_a *= kappa;      // kappa = N/4*lambda
-  g_doublesum(&s_a); // Sum a double over all nodes of mpi
-  return s_a;
+  s_act *= kappa;
+  g_doublesum(&s_act);
+  return s_act;
 }
+// -----------------------------------------------------------------
 
 
 
-//term action
-
-
-
-
-// flat direction
-
-
+// -----------------------------------------------------------------
+// Scalar potential contribution to the action
+// Note factor of kappa
 double bmass_action() {
   register int i, a;
   register site *s;
@@ -381,45 +314,34 @@ double bmass_action() {
   Real tr;
 #endif
 
-  FORALLSITES(i, s)   {
-
-      //FORALLDIR(a) {
+  FORALLSITES(i, s) {
+    FORALLDIR(a) {
 #ifdef EIG_POT
-
-      //Tr [U_a(x) Ubar_a(x) - I]^2
-      FORALLDIR(a) {
-
       mult_na(&(s->link[a]), &(s->link[a]), &tmat);
       scalar_add_diag(&tmat, -1.0);
-      sum += realtrace(&tmat, &tmat); // tr([U_a(x) Ubar_a(x) - I]^dag*[U_a(x) Ubar_a(x) - I])
+      sum += realtrace(&tmat, &tmat);
+    }
 
-                   }
+    // Tr[phi(x)phi^bar(x)]^2
+    mult_na(&(s->phi), &(s->phi), &tmat);
+    scalar_add_diag(&tmat, -1.0);
+    sum += realtrace(&tmat, &tmat);
 
-
-      // Tr[phi(x)phi^bar(x)]^2
-      mult_na(&(s->phi), &(s->phi), &tmat);
-      scalar_add_diag(&tmat, -1.0);
-      sum += realtrace(&tmat, &tmat);       //**correct*** not Tr[tmat^bar*tmat] but   Tr[tmat]
-
-      
-      // Tr[varphi(x)varphi^bar(x)]^2
-      mult_na(&(s->varphi), &(s->varphi), &tmat);
-      scalar_add_diag(&tmat, -1.0);
-      sum += realtrace(&tmat, &tmat);       //**correct*** not Tr[tmat^bar*tmat] but   Tr[tmat]
+    // Tr[varphi(x)varphi^bar(x)]^2
+    mult_na(&(s->varphi), &(s->varphi), &tmat);
+    scalar_add_diag(&tmat, -1.0);
+    sum += realtrace(&tmat, &tmat);
 #else
-
-      FORALLDIR(a) {
-        // tr = one_ov_N * realtrace(&(s->link[a]), &(s->link[a])) + one_ov_N * realtrace(&(s->phi), &(s->phi)) + one_ov_N * realtrace(&(s->varphi), &(s->varphi)) - 1.0;
-        tr = one_ov_N * realtrace(&(s->link[a]), &(s->link[a])) - 1.0;
-        sum += tr * tr;
-      }
+      tr = one_ov_N * realtrace(&(s->link[a]), &(s->link[a])) - 1.0;
+      sum += tr * tr;
+    }
           
-     tr = one_ov_N * realtrace(&(s->phi), &(s->phi)) - 1.0 ;
-     sum += tr * tr;
-     tr = one_ov_N * realtrace(&(s->varphi), &(s->varphi)) - 1.0 ;
-     sum += tr * tr;    
+    tr = one_ov_N * realtrace(&(s->phi), &(s->phi)) - 1.0 ;
+    sum += tr * tr;
+    tr = one_ov_N * realtrace(&(s->varphi), &(s->varphi)) - 1.0 ;
+    sum += tr * tr;    
 #endif     
-                     }
+  }
   sum *= kappa * bmass * bmass;
   g_doublesum(&sum);
   return sum;
@@ -450,14 +372,10 @@ double det_action() {
       }
     }
   }
-  det_action *= kappa_u1; // Plaquette determinant coupling 'k'
+  det_action *= kappa_u1;
   g_doublesum(&det_action);
   return det_action;
 }
-
-//-----end-------------
-
-
 // -----------------------------------------------------------------
 
 
@@ -523,10 +441,11 @@ double mom_action() {
 // -----------------------------------------------------------------
 // Print out zeros for pieces of the action that aren't included
 double action(Twist_Fermion **src, Twist_Fermion ***sol) {
-  double g_act, sca, bmass_act = 0.0, p_act, f_act, det_act = 0.0;
+  double g_act, s_act, bmass_act = 0.0, p_act, f_act, det_act = 0.0;
   double total;
+
   g_act = gauge_action(NODET);
-  sca   = sa(NODET);
+  s_act = scalar_action(NODET);
 
   if (bmass > IMAG_TOL)
     bmass_act = bmass_action();
@@ -534,14 +453,10 @@ double action(Twist_Fermion **src, Twist_Fermion ***sol) {
     det_act = det_action();
 
   node0_printf("action: ");
-  node0_printf("gauge %.8g bmass %.8g scalar %.8g ", g_act, bmass_act, sca);
-
-  //node0_printf("gauge %.8g bmass %.8g ", g_act, bmass_act);
+  node0_printf("gauge %.8g scalar %.8g bmass %.8g", g_act, s_act, bmass_act);
   node0_printf("det %.8g ", det_act);
 
-  total = g_act + bmass_act + det_act + sca;
-
- //node0_printf("scalar_action = %.8g ", sca);
+  total = g_act + bmass_act + det_act + s_act;
 #ifndef PUREGAUGE
   int n;
   for (n = 0; n < Nroot; n++) {
@@ -556,6 +471,4 @@ double action(Twist_Fermion **src, Twist_Fermion ***sol) {
   node0_printf("sum %.8g\n", total);
   return total;
 }
-
-
 // -----------------------------------------------------------------

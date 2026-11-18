@@ -38,6 +38,7 @@ int main(int argc, char *argv[]) {
   plaquette(&ss_plaq, &st_plaq);
   node0_printf("START %.8g %.8g %.8g ", ss_plaq, st_plaq, ss_plaq + st_plaq);
   ss_plaq = gauge_action(NODET);
+  ss_plaq += scalar_action(NODET);
   node0_printf("%.8g\n", ss_plaq / (double)volume);
 
   // Do "local" measurements to check configuration

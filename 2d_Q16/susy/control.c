@@ -42,7 +42,8 @@ int main(int argc, char *argv[]) {
   // Check: compute initial plaquette and bosonic action
   plaquette(&ss_plaq, &st_plaq);
   node0_printf("START %.8g %.8g %.8g ", ss_plaq, st_plaq, ss_plaq + st_plaq);
-  ss_plaq = gauge_action(NODET);//+sa(NODET)+bmass_action();// edited-------
+  ss_plaq = gauge_action(NODET);
+  ss_plaq += scalar_action(NODET);
   node0_printf("%.8g\n", ss_plaq / (double)volume);
   // N>2 determinant of traceless part of U.Udag crashes with unit config
   if (startflag != FRESH) {
@@ -90,15 +91,14 @@ int main(int argc, char *argv[]) {
 
     // Bosonic action (printed twice by request)
     // Might as well spit out volume average of Polyakov loop modulus
-
-    
-    ss_plaq = gauge_action(NODET) + sa(NODET); // for BACTION
+    ss_plaq = gauge_action(NODET);
+    ss_plaq += scalar_action(NODET);
     node0_printf("%.8g ", ss_plaq / (double)volume);
     node0_printf("%.8g\n", plpMod);
-    node0_printf("BACTION %.8g\n", (ss_plaq )/ (double)volume);
+    node0_printf("BACTION %.8g\n", (ss_plaq / (double)volume));
 
     // Full and polar-projected Wilson lines in all directions
-    node0_printf("LINES      "); // FORALLDIR for (dir = XUP; dir < NUMLINK; dir++), XUP = 0, int dir
+    node0_printf("LINES      ");
     FORALLDIR(dir) {
       plp = ploop(dir, NODET, &plpMod);
       node0_printf(" %.6g %.6g", plp.real, plp.imag);
@@ -167,13 +167,14 @@ int main(int argc, char *argv[]) {
       compute_Uinv();
       compute_DmuUmu();
       compute_Fmunu();
-
       /*
       compute_Dmuphi();
       compute_Dmuvarphi();
       compute_varphi_phi_commutator();
       compute_phi_commutator();
       compute_varphi_commutator();
+      compute_Trm1();
+      compute_Trm2();
       */
 #endif
 
@@ -277,21 +278,21 @@ int main(int argc, char *argv[]) {
   // Reset DmuUmu and Fmunu in case they were smeared above
   compute_DmuUmu();
   compute_Fmunu();
-  
+
   //---edited----
   /*
   compute_Dmuphi();
   compute_Dmuvarphi();
   compute_varphi_phi_commutator();
   compute_phi_commutator();
-  compute_varphi_commutator();    
+  compute_varphi_commutator();
   */
-  
-  
+
   plaquette(&ss_plaq, &st_plaq);
   node0_printf("STOP %.8g %.8g %.8g ",
                ss_plaq, st_plaq, ss_plaq + st_plaq);
-  ss_plaq = gauge_action(NODET);//+sa(NODET)+bmass_action();// edited--------
+  ss_plaq = gauge_action(NODET);
+  ss_plaq += scalar_action(NODET);
   node0_printf("%.8g\n", ss_plaq / (double)volume);
 
   node0_printf("Average CG iters for steps: %.4g\n",
