@@ -40,16 +40,11 @@ void setup_rhmc();
 void compute_plaqdet();
 void compute_Uinv();
 void compute_DmuUmu();
-//--edited 13-9-23-----
 void compute_Dmuphi();
 void compute_Dmuvarphi();
 void compute_varphi_phi_commutator();
 void compute_phi_commutator();
 void compute_varphi_commutator();
-//void compute_Trm1();
-//void compute_Trm2();
-
-//---end----
 void compute_Fmunu();
 
 // Gaussian random momentum matrices and pseudofermions

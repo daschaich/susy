@@ -50,7 +50,7 @@ gauge_file *save_lattice(int flag, char *filename) {
 
 
 // -----------------------------------------------------------------
-// Set link & scalar fiels to unit matrices
+// Set link & scalar fields to unit matrices
 void coldlat() {
   register int i, j, k, dir;
   register site *s;

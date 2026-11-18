@@ -90,12 +90,12 @@ int main(int argc, char *argv[]) {
 
     // Bosonic action (printed twice by request)
     // Might as well spit out volume average of Polyakov loop modulus
-    //----edited-------
+
     
-    ss_plaq = gauge_action(NODET) + sa(NODET); // mpi will work here for sa(NODET)
+    ss_plaq = gauge_action(NODET) + sa(NODET); // for BACTION
     node0_printf("%.8g ", ss_plaq / (double)volume);
     node0_printf("%.8g\n", plpMod);
-    node0_printf("BACTION %.8g\n", (ss_plaq /*+ sa(NODET)*/)/ (double)volume);// edited with + sa(NODET) inside print[ss_plaq + sa(NODET))/ (double)volume)] mpi will not work
+    node0_printf("BACTION %.8g\n", (ss_plaq )/ (double)volume);
 
     // Full and polar-projected Wilson lines in all directions
     node0_printf("LINES      "); // FORALLDIR for (dir = XUP; dir < NUMLINK; dir++), XUP = 0, int dir
@@ -167,15 +167,13 @@ int main(int argc, char *argv[]) {
       compute_Uinv();
       compute_DmuUmu();
       compute_Fmunu();
-      //----edited------
+
       /*
       compute_Dmuphi();
       compute_Dmuvarphi();
       compute_varphi_phi_commutator();
       compute_phi_commutator();
       compute_varphi_commutator();
-      compute_Trm1();
-      compute_Trm2();
       */
 #endif
 
