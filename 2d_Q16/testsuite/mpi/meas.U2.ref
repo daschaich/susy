@@ -2,7 +2,7 @@ N=(8,8) SYM, Nc = 2, DIMF = 4, fermion rep = adjoint
 Microcanonical simulation with refreshing
 Machine = MPI (portable), with 2 nodes
 Phi algorithm
-start: Fri Oct 16 14:47:34 2026
+start: Fri Nov 20 16:06:01 2026
 
 type 0 for no prompts or 1 for prompts
 nx 4
@@ -44,10 +44,10 @@ C2=1
 Restored binary gauge and scalar configuration serially from file config.U2.44
 Time stamp Thu Oct 15 23:01:17 2026
 Checksums b0a72f29 8e0544ed OK
-Time to reload gauge configuration = 1.049042e-04
+Time to reload gauge configuration = 8.606911e-05
 CHECK PLAQ: 1.2739630524815184e+00 3.3516863136474693e+00
 CHECK NERSC LINKTR: -1.5660938457585871e-01 CKSUM: 0
-START 1.2739631 3.3516863 4.6256494 8.4983647
+START 1.2739631 3.3516863 4.6256494 15.654238
 FLINK 0.822077 1.92425 1.19846 1.31493 0.522343
 FLINK_DET -0.228058 -0.276622 -0.389221 -0.297967 0.285437
 GMES 0.23077336 4.2657608 0 1.2739631 3.3516863 8.4983647 4.6491186
@@ -96,7 +96,7 @@ RSYMM 2 [2] 2 [1] 10.028665 0.83831282
 MONOPOLE 2 -2    0 4
 Fixing to Coulomb gauge...
 GFIX ended at step 10. Ave gf action 0.524503, delta 5.17e-08
-GFIX time = 0.0001349 seconds
+GFIX time = 0.0001221 seconds
 BEFORE 1.453638 3.5524804
 AFTER  -0.18603544 1.5148383
 hvy_pot: MAX_T = 2, MAX_X = 1
@@ -118,6 +118,6 @@ RUNNING COMPLETED
 CG iters for measurements: 1250
 total_iters = 1250
 
-Time = 0.2896 seconds
-exit: Fri Oct 16 14:47:34 2026
+Time = 0.2903 seconds
+exit: Fri Nov 20 16:06:01 2026
 

@@ -453,7 +453,7 @@ double action(Twist_Fermion **src, Twist_Fermion ***sol) {
     det_act = det_action();
 
   node0_printf("action: ");
-  node0_printf("gauge %.8g scalar %.8g bmass %.8g", g_act, s_act, bmass_act);
+  node0_printf("gauge %.8g scalar %.8g bmass %.8g ", g_act, s_act, bmass_act);
   node0_printf("det %.8g ", det_act);
 
   total = g_act + bmass_act + det_act + s_act;

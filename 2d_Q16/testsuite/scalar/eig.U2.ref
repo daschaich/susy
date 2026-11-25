@@ -2,7 +2,7 @@ N=(8,8) SYM, Nc = 2, DIMF = 4, fermion rep = adjoint
 Microcanonical simulation with refreshing
 Machine = Scalar processor, with 1 nodes
 Phi algorithm
-start: Fri Oct 16 14:38:43 2026
+start: Fri Nov 20 15:56:25 2026
 
 type 0 for no prompts or 1 for prompts
 nx 4
@@ -16,7 +16,7 @@ ON EACH NODE 4 x 4
 Mallocing 0.0 MBytes per core for lattice
 Antiperiodic temporal boundary conditions
 Single-trace scalar potential
-Mallocing 0.1 MBytes per core for fields
+Mallocing 0.2 MBytes per core for fields
 
 
 warms 0
@@ -42,10 +42,10 @@ C2=1
 Restored binary gauge and scalar configuration serially from file config.U2.44
 Time stamp Thu Oct 15 23:01:17 2026
 Checksums b0a72f29 8e0544ed OK
-Time to reload gauge configuration = 4.601479e-05
+Time to reload gauge configuration = 1.099110e-04
 CHECK PLAQ: 1.2739630524815186e+00 3.3516863136474697e+00
 CHECK NERSC LINKTR: -1.5660938457585871e-01 CKSUM: 0
-START 1.2739631 3.3516863 4.6256494 8.4983647
+START 1.2739631 3.3516863 4.6256494 15.654238
 FLINK 0.822077 1.92425 1.19846 1.31493 0.522343
 FLINK_DET -0.228058 -0.276622 -0.389221 -0.297967 0.285437
 GMES 0.23077336 4.2657608 0 1.2739631 3.3516863 8.4983647 4.6491186
@@ -102,7 +102,7 @@ BIGEIGVAL  10 20.547744 14.514367
 BIGEIGVAL  11 20.073274 14.417783
 RUNNING COMPLETED
 
-Time = 11.95 seconds
+Time = 11.4 seconds
 total_iters = 77
-exit: Fri Oct 16 14:38:55 2026
+exit: Fri Nov 20 15:56:36 2026
 

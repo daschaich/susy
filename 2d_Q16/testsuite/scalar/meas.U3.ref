@@ -2,7 +2,7 @@ N=(8,8) SYM, Nc = 3, DIMF = 9, fermion rep = adjoint
 Microcanonical simulation with refreshing
 Machine = Scalar processor, with 1 nodes
 Phi algorithm
-start: Fri Oct 16 14:39:02 2026
+start: Fri Nov 20 15:58:11 2026
 
 type 0 for no prompts or 1 for prompts
 nx 4
@@ -16,7 +16,7 @@ ON EACH NODE 4 x 4
 Mallocing 0.0 MBytes per core for lattice
 Antiperiodic temporal boundary conditions
 Single-trace scalar potential
-Mallocing 0.2 MBytes per core for fields
+Mallocing 0.3 MBytes per core for fields
 
 
 warms 0
@@ -44,10 +44,10 @@ C2=1
 Restored binary gauge and scalar configuration serially from file config.U3.44
 Time stamp Fri Oct 16 00:24:39 2026
 Checksums 4b826af7 1504372b OK
-Time to reload gauge configuration = 6.103516e-05
+Time to reload gauge configuration = 1.430511e-04
 CHECK PLAQ: 4.1460163692833314e+00 6.5326041272431068e+00
 CHECK NERSC LINKTR: 3.0453549329346664e-02 CKSUM: 0
-START 4.1460164 6.5326041 10.67862 21.626008
+START 4.1460164 6.5326041 10.67862 38.270358
 FLINK 1.2129 1.91957 1.41685 1.51644 0.334385
 FLINK_DET 0.00151821 -0.0269961 0.00591525 -0.00652088 0.0932461
 GMES 2.3482622 -4.7934497 0 4.1460164 6.5326041 21.626008 5.6308362
@@ -98,7 +98,7 @@ RSYMM 2 [2] 2 [1] 20.438914 1.7048108
 MONOPOLE 3 -3    0 6
 Fixing to Coulomb gauge...
 GFIX ended at step 11. Ave gf action 0.870276, delta 5.06e-08
-GFIX time = 0.0001421 seconds
+GFIX time = 0.0001099 seconds
 BEFORE 4.3796824 6.8706244
 AFTER  0.18115974 2.8096631
 hvy_pot: MAX_T = 2, MAX_X = 1
@@ -120,6 +120,6 @@ RUNNING COMPLETED
 CG iters for measurements: 2637
 total_iters = 2637
 
-Time = 0.6842 seconds
-exit: Fri Oct 16 14:39:03 2026
+Time = 0.6344 seconds
+exit: Fri Nov 20 15:58:12 2026
 

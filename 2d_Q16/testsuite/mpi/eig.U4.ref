@@ -2,7 +2,7 @@ N=(8,8) SYM, Nc = 4, DIMF = 16, fermion rep = adjoint
 Microcanonical simulation with refreshing
 Machine = MPI (portable), with 2 nodes
 Phi algorithm
-start: Fri Oct 16 14:49:18 2026
+start: Fri Nov 20 16:14:39 2026
 
 type 0 for no prompts or 1 for prompts
 nx 4
@@ -42,10 +42,10 @@ C2=1
 Restored binary gauge and scalar configuration serially from file config.U4.44
 Time stamp Fri Oct 16 13:55:26 2026
 Checksums e908d3a5 f4648687 OK
-Time to reload gauge configuration = 1.049042e-04
+Time to reload gauge configuration = 8.797646e-05
 CHECK PLAQ: 6.4447284618854956e+00 9.0364698345742909e+00
 CHECK NERSC LINKTR: 3.8393795621232130e-03 CKSUM: 0
-START 6.4447285 9.0364698 15.481198 38.327178
+START 6.4447285 9.0364698 15.481198 66.113643
 FLINK 1.41292 1.89594 1.34747 1.55211 0.281452
 FLINK_DET 0.0489988 0.0594178 0.037516 0.0486442 0.0575192
 GMES -3.3931218 4.8004896 0 6.4447285 9.0364698 38.327178 5.9951807
@@ -102,7 +102,7 @@ BIGEIGVAL  10 28.261581 17.14707
 BIGEIGVAL  11 28.086475 18.512965
 RUNNING COMPLETED
 
-Time = 34.34 seconds
+Time = 33.79 seconds
 total_iters = 108
-exit: Fri Oct 16 14:49:52 2026
+exit: Fri Nov 20 16:15:12 2026
 
